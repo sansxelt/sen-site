@@ -408,10 +408,10 @@ export default function HomePage() {
       </section>
 
       <section id="auth" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[1fr_.95fr]">
+        <div className="grid gap-8 xl:grid-cols-[1.08fr_.92fr] xl:items-start">
           <AuthPanel />
 
-          <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 sm:p-10">
+          <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 sm:p-10 xl:mt-6">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
               Trust
             </div>

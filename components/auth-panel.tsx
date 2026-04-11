@@ -247,7 +247,7 @@ export function AuthPanel() {
 
   return (
     <div className="rounded-[32px] border border-white/12 bg-black/25 p-6 sm:p-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Secure Access
@@ -336,8 +336,8 @@ export function AuthPanel() {
         </div>
       )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+      <div className="mt-8 grid items-start gap-5 2xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)]">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
           <div>
             <div className="text-sm font-medium text-white">
               Email and password
@@ -410,7 +410,7 @@ export function AuthPanel() {
           </form>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-black/20 p-4 sm:p-5">
+        <div className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6">
           <div>
             <div className="text-sm font-medium text-white">
               More sign-in methods
@@ -421,7 +421,7 @@ export function AuthPanel() {
               them.
             </p>
           </div>
-          <div className="mt-4 space-y-3">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
             {oauthProviders.map((option) => {
               const providerEnabled = authReady && option.enabled;
               const providerLoading =
@@ -443,8 +443,8 @@ export function AuthPanel() {
                       : "cursor-not-allowed border-white/10 bg-white/[0.025]"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
                       <div className="text-sm font-medium text-white">
                         Continue with {option.label}
                       </div>
@@ -454,7 +454,7 @@ export function AuthPanel() {
                           : `${option.label} sign-in is coming soon for this build.`}
                       </div>
                     </div>
-                    <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
+                    <span className="w-fit rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
                       {providerLoading
                         ? "Opening"
                         : providerEnabled
@@ -471,8 +471,8 @@ export function AuthPanel() {
               disabled
               className="w-full cursor-not-allowed rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-4 py-4 text-left"
             >
-              <div className="flex items-center justify-between gap-4">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <div className="text-sm font-medium text-white">
                     Continue with {appleAuthOption.label}
                   </div>
@@ -480,7 +480,7 @@ export function AuthPanel() {
                     {appleAuthOption.description}
                   </div>
                 </div>
-                <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
+                <span className="w-fit rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
                   Coming soon
                 </span>
               </div>
