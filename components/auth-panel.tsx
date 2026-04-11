@@ -296,11 +296,11 @@ export function AuthPanel() {
           </h3>
         </div>
 
-        <div className="grid w-full grid-cols-2 rounded-2xl border border-white/10 bg-white/5 p-1 text-sm sm:inline-flex sm:w-auto">
+        <div className="grid w-full grid-cols-2 overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm sm:inline-flex sm:w-auto">
           <button
             type="button"
             onClick={() => setMode("signup")}
-            className={`rounded-xl px-4 py-2 transition ${
+            className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
               mode === "signup"
                 ? "sansxel-white-button bg-white text-black"
                 : "text-neutral-200 hover:text-white"
@@ -311,7 +311,7 @@ export function AuthPanel() {
           <button
             type="button"
             onClick={() => setMode("signin")}
-            className={`rounded-xl px-4 py-2 transition ${
+            className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
               mode === "signin"
                 ? "sansxel-white-button bg-white text-black"
                 : "text-neutral-200 hover:text-white"
