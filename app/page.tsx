@@ -421,7 +421,7 @@ export default function HomePage() {
             <div className="mt-6 space-y-3 text-sm text-neutral-200">
               {[
                 "Email and password auth stays inside sansxel's own UI.",
-                "Additional sign-in options only go live when they are ready.",
+                "Google and GitHub are live now, while Microsoft and Apple stay disabled until their setup is finished.",
                 "Privacy, terms, pricing, and support all have real routes.",
                 "Invite requests stay attached to the same account path.",
                 "Secure account handling stays visible throughout the journey.",

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import {
-  appleAuthOption,
   getAuthErrorMessage,
+  getAuthCallbackUrl,
   getAuthUnavailableMessage,
   getSupabaseBrowserClient,
   isProviderEnabled,
@@ -101,7 +101,7 @@ export function AuthPanel() {
               display_name: name.trim() || null,
               source: "website",
             },
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=/account`,
+            emailRedirectTo: getAuthCallbackUrl(),
           },
         });
 
@@ -168,7 +168,7 @@ export function AuthPanel() {
     if (!isProviderEnabled(provider)) {
       setStatus({
         tone: "info",
-        message: `${providerLabels[provider]} sign-in is coming soon for this build. Use email for now.`,
+        message: `${providerLabels[provider]} sign-in is not available in this build yet.`,
       });
       return;
     }
@@ -182,12 +182,10 @@ export function AuthPanel() {
     try {
       const supabase = getSupabaseBrowserClient();
 
-      // TODO: Mark each provider as enabled in the auth dashboard and set the
-      // public flags only after local and production callbacks are working.
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/account`,
+          redirectTo: getAuthCallbackUrl(),
           queryParams:
             provider === "google" ? { prompt: "select_account" } : undefined,
         },
@@ -284,8 +282,8 @@ export function AuthPanel() {
       </div>
 
       <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
-        Email and password are live now. Additional sign-in methods will
-        unlock as this build is configured.
+        Email, Google, and GitHub are live now. Microsoft and Apple will
+        appear here when their production auth setup is ready.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-3 text-sm text-neutral-100">
@@ -416,9 +414,8 @@ export function AuthPanel() {
               More sign-in methods
             </div>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
-              These options stay visible so the sign-in path feels complete,
-              but they only unlock when this build is fully configured for
-              them.
+              Use the provider you want and return straight into your
+              account flow on sansxel.ai.
             </p>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
@@ -431,16 +428,12 @@ export function AuthPanel() {
                 <button
                   key={option.provider}
                   type="button"
-                  onClick={
-                    providerEnabled
-                      ? () => void handleOAuth(option.provider)
-                      : undefined
-                  }
+                  onClick={providerEnabled ? () => void handleOAuth(option.provider) : undefined}
                   disabled={!providerEnabled || Boolean(loadingAction)}
                   className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
                     providerEnabled
                       ? "border-white/10 bg-white/5 hover:bg-white/10"
-                      : "cursor-not-allowed border-white/10 bg-white/[0.025]"
+                      : "cursor-not-allowed border-dashed border-white/10 bg-white/[0.025]"
                   }`}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -451,7 +444,7 @@ export function AuthPanel() {
                       <div className="mt-1 text-sm text-neutral-200">
                         {providerEnabled
                           ? option.description
-                          : `${option.label} sign-in is coming soon for this build.`}
+                          : `${option.label} sign-in will unlock once it is configured for production.`}
                       </div>
                     </div>
                     <span className="w-fit rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
@@ -465,26 +458,6 @@ export function AuthPanel() {
                 </button>
               );
             })}
-
-            <button
-              type="button"
-              disabled
-              className="w-full cursor-not-allowed rounded-2xl border border-dashed border-white/10 bg-white/[0.025] px-4 py-4 text-left"
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-white">
-                    Continue with {appleAuthOption.label}
-                  </div>
-                  <div className="mt-1 text-sm text-neutral-200">
-                    {appleAuthOption.description}
-                  </div>
-                </div>
-                <span className="w-fit rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
-                  Coming soon
-                </span>
-              </div>
-            </button>
           </div>
         </div>
       </div>

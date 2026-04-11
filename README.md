@@ -13,9 +13,6 @@ npm install
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-NEXT_PUBLIC_AUTH_GOOGLE_ENABLED=false
-NEXT_PUBLIC_AUTH_GITHUB_ENABLED=false
-NEXT_PUBLIC_AUTH_MICROSOFT_ENABLED=false
 ```
 
 3. Start the development server:
@@ -31,17 +28,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 ### Auth providers
 
 - Email and password auth works with the existing public Supabase keys.
-- Google, GitHub, and Microsoft stay disabled in the UI until their matching
-  `NEXT_PUBLIC_AUTH_*_ENABLED` flag is set to `true`.
-- Enable each provider in Supabase Auth before turning its flag on.
+- Google and GitHub use Supabase OAuth with the shared callback route at
+  `app/auth/callback/route.ts`.
+- Microsoft and Apple stay disabled in the UI until their provider setup is
+  finished.
 - Add these callback URLs in Supabase Auth:
 
 ```text
 http://localhost:3000/auth/callback
-https://your-production-domain.com/auth/callback
+https://sansxel.ai/auth/callback
 ```
-
-- Apple stays as a UI-ready placeholder until Apple Sign In credentials are configured in Supabase.
 
 ### Early access storage
 
@@ -75,8 +71,8 @@ with check (true);
 ## What Is Implemented
 
 - Custom email and password auth UI
-- OAuth buttons for Google, GitHub, and Microsoft via Supabase
-- Apple placeholder button with setup note
+- OAuth buttons for Google and GitHub via Supabase
+- Disabled Microsoft and Apple cards until those providers are configured
 - Real routes for pricing, download, privacy, terms, and contact
 - Supabase-backed early access form through `/api/early-access`
 - Shared header and footer with meaningful navigation and CTA links

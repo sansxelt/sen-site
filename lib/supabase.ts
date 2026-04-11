@@ -1,16 +1,14 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const oauthRolloutEnabled = isEnabled(process.env.NEXT_PUBLIC_AUTH_OAUTH_ENABLED);
+const productionAppOrigin = "https://sansxel.ai";
 
 let browserClient: SupabaseClient | null = null;
 
-function isEnabled(value: string | undefined) {
-  return /^(1|true|yes|on)$/i.test(value ?? "");
-}
-
 export const providerLabels = {
+  apple: "Apple",
   azure: "Microsoft",
   github: "GitHub",
   google: "Google",
@@ -31,52 +29,69 @@ export const oauthProviders: Array<{
   label: string;
   provider: OauthProvider;
 }> = [
-  // TODO(google): Add the real Google OAuth client ID and client secret in
-  // the auth provider settings before enabling Google sign-in for this build.
   {
     description: "Use your Google account to continue with sansxel.",
-    enabled:
-      oauthRolloutEnabled &&
-      isEnabled(process.env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED),
+    enabled: true,
     label: "Google",
     provider: "google",
   },
-  // TODO(github): Add the real GitHub OAuth app client ID and client secret
-  // before enabling GitHub sign-in for this build.
   {
     description: "Use your GitHub account to continue with sansxel.",
-    enabled:
-      oauthRolloutEnabled &&
-      isEnabled(process.env.NEXT_PUBLIC_AUTH_GITHUB_ENABLED),
+    enabled: true,
     label: "GitHub",
     provider: "github",
   },
-  // TODO(microsoft): Add the real Microsoft / Azure app client ID and client
-  // secret before enabling Microsoft sign-in for this build.
+  // TODO(microsoft): Enable this after the Azure provider is configured in Supabase.
   {
     description: "Use your Microsoft account to continue with sansxel.",
-    enabled:
-      oauthRolloutEnabled &&
-      isEnabled(process.env.NEXT_PUBLIC_AUTH_MICROSOFT_ENABLED),
+    enabled: false,
     label: "Microsoft",
     provider: "azure",
   },
+  // TODO(apple): Enable this after the Apple provider is configured in Supabase.
+  {
+    description: "Use your Apple account to continue with sansxel.",
+    enabled: false,
+    label: "Apple",
+    provider: "apple",
+  },
 ];
-
-export const appleAuthOption = {
-  // TODO(apple): Add the real Apple Sign In credentials before enabling Apple
-  // sign-in for this build.
-  description:
-    "Apple sign-in will appear once this workspace is ready for it.",
-  label: "Apple",
-};
 
 export function isSupabaseConfigured() {
   return Boolean(supabaseUrl && supabaseAnonKey);
 }
 
+export function getSupabaseConfig() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return null;
+  }
+
+  return {
+    anonKey: supabaseAnonKey,
+    url: supabaseUrl,
+  };
+}
+
+export function getAppOrigin() {
+  if (typeof window !== "undefined") {
+    const { hostname, origin } = window.location;
+
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return origin;
+    }
+  }
+
+  return productionAppOrigin;
+}
+
+export function getAuthCallbackUrl(next = "/account") {
+  const searchParams = new URLSearchParams({ next });
+
+  return `${getAppOrigin()}/auth/callback?${searchParams.toString()}`;
+}
+
 export function isProviderEnabled(provider: OauthProvider) {
-  return oauthProviders.find((option) => option.provider === provider)?.enabled;
+  return oauthProviders.find((option) => option.provider === provider)?.enabled ?? false;
 }
 
 export function getAuthUnavailableMessage() {
@@ -147,19 +162,18 @@ export function getAuthErrorMessage(
 }
 
 export function getSupabaseBrowserClient() {
-  if (!supabaseUrl || !supabaseAnonKey) {
+  const config = getSupabaseConfig();
+
+  if (!config) {
     throw new Error(
       "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.",
     );
   }
 
   if (!browserClient) {
-    browserClient = createClient(supabaseUrl, supabaseAnonKey, {
+    browserClient = createBrowserClient(config.url, config.anonKey, {
       auth: {
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
         flowType: "pkce",
-        persistSession: true,
       },
     });
   }

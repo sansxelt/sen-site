@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  appleAuthOption,
   getAuthErrorMessage,
   getAuthUnavailableMessage,
   getSupabaseBrowserClient,
@@ -627,7 +626,7 @@ export function AccountPanel() {
                   <div className="mt-1 text-sm text-neutral-200">
                     {provider.enabled
                       ? "Ready to use in this build."
-                      : `${provider.label} sign-in is staged and waiting for final credentials.`}
+                      : `${provider.label} stays disabled until its provider setup is finished.`}
                   </div>
                 </div>
                 <span
@@ -641,20 +640,6 @@ export function AccountPanel() {
                 </span>
               </div>
             ))}
-
-            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-white">
-                  {appleAuthOption.label}
-                </div>
-                <div className="mt-1 text-sm text-neutral-200">
-                  {appleAuthOption.description}
-                </div>
-              </div>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-neutral-200">
-                Coming soon
-              </span>
-            </div>
           </div>
         </div>
 
