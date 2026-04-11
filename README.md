@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is the marketing and onboarding site for `sen`, built with Next.js and Supabase.
 
-## Getting Started
+## Run Locally
 
-First, run the development server:
+1. Install dependencies if needed:
+
+```bash
+npm install
+```
+
+2. Add these variables to `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_AUTH_GOOGLE_ENABLED=false
+NEXT_PUBLIC_AUTH_GITHUB_ENABLED=false
+NEXT_PUBLIC_AUTH_MICROSOFT_ENABLED=false
+```
+
+3. Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Supabase Setup Notes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Auth providers
 
-## Learn More
+- Email and password auth works with the existing public Supabase keys.
+- Google, GitHub, and Microsoft stay disabled in the UI until their matching
+  `NEXT_PUBLIC_AUTH_*_ENABLED` flag is set to `true`.
+- Enable each provider in Supabase Auth before turning its flag on.
+- Add these callback URLs in Supabase Auth:
 
-To learn more about Next.js, take a look at the following resources:
+```text
+http://localhost:3000/auth/callback
+https://your-production-domain.com/auth/callback
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Apple stays as a UI-ready placeholder until Apple Sign In credentials are configured in Supabase.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Early access storage
 
-## Deploy on Vercel
+Create a table named `early_access_signups` and allow inserts and updates from the anon role.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```sql
+create table if not exists public.early_access_signups (
+  email text primary key,
+  name text,
+  focus_area text,
+  source text not null default 'website',
+  created_at timestamptz not null default now()
+);
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+alter table public.early_access_signups enable row level security;
+
+create policy "Allow public early access inserts"
+on public.early_access_signups
+for insert
+to anon
+with check (true);
+
+create policy "Allow public early access updates"
+on public.early_access_signups
+for update
+to anon
+using (true)
+with check (true);
+```
+
+## What Is Implemented
+
+- Custom email and password auth UI
+- OAuth buttons for Google, GitHub, and Microsoft via Supabase
+- Apple placeholder button with setup note
+- Real routes for pricing, download, privacy, terms, and contact
+- Supabase-backed early access form through `/api/early-access`
+- Shared header and footer with meaningful navigation and CTA links
+
+## Checks
+
+Run these before shipping:
+
+```bash
+npm run lint
+npm run build
+```
