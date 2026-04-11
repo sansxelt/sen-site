@@ -1,9 +1,14 @@
 "use client";
 
-import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  type ReleaseChannel,
+  readSessionState,
+  type SessionState,
+  type SummaryStyle,
+} from "../lib/account-session";
 import {
   getAuthErrorMessage,
   getAuthUnavailableMessage,
@@ -11,28 +16,12 @@ import {
   isSupabaseConfigured,
   oauthProviders,
   providerLabels,
-  type OauthProvider,
 } from "../lib/supabase";
 
 type StatusTone = "error" | "info" | "success";
 type Status = {
   message: string;
   tone: StatusTone;
-};
-
-type SummaryStyle = "concise" | "balanced" | "detailed";
-type ReleaseChannel = "stable" | "preview";
-
-type SessionState = {
-  displayName: string;
-  earlyAccessRequestedAt: string | null;
-  email: string | null;
-  emailConfirmed: boolean;
-  focusArea: string;
-  releaseChannel: ReleaseChannel;
-  signInMethod: string;
-  summaryStyle: SummaryStyle;
-  workStyle: string;
 };
 
 const summaryStyleOptions: Array<{
@@ -86,55 +75,6 @@ function statusClasses(tone: StatusTone) {
   return "border-white/10 bg-white/5 text-neutral-100";
 }
 
-function isSummaryStyle(value: unknown): value is SummaryStyle {
-  return value === "concise" || value === "balanced" || value === "detailed";
-}
-
-function isReleaseChannel(value: unknown): value is ReleaseChannel {
-  return value === "stable" || value === "preview";
-}
-
-function getSignInMethod(user: User) {
-  const provider =
-    typeof user.app_metadata?.provider === "string"
-      ? user.app_metadata.provider
-      : "email";
-
-  if (provider === "email") {
-    return "Email";
-  }
-
-  return providerLabels[provider as OauthProvider] ?? provider;
-}
-
-function readSessionState(user: User | null): SessionState | null {
-  if (!user) {
-    return null;
-  }
-
-  const metadata = user.user_metadata ?? {};
-
-  return {
-    displayName:
-      typeof metadata.display_name === "string" ? metadata.display_name : "",
-    earlyAccessRequestedAt:
-      typeof metadata.early_access_requested_at === "string"
-        ? metadata.early_access_requested_at
-        : null,
-    email: user.email ?? null,
-    emailConfirmed: Boolean(user.email_confirmed_at),
-    focusArea: typeof metadata.focus_area === "string" ? metadata.focus_area : "",
-    releaseChannel: isReleaseChannel(metadata.release_channel)
-      ? metadata.release_channel
-      : "stable",
-    signInMethod: getSignInMethod(user),
-    summaryStyle: isSummaryStyle(metadata.summary_style)
-      ? metadata.summary_style
-      : "balanced",
-    workStyle: typeof metadata.work_style === "string" ? metadata.work_style : "",
-  };
-}
-
 function formatRequestedAt(value: string | null) {
   if (!value) {
     return "Not requested yet";
@@ -151,19 +91,33 @@ function formatRequestedAt(value: string | null) {
   }).format(date);
 }
 
-export function AccountPanel() {
+export function AccountPanel({
+  initialSessionState,
+}: {
+  initialSessionState: SessionState | null;
+}) {
   const router = useRouter();
   const authReady = isSupabaseConfigured();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(initialSessionState ? false : true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const [sessionState, setSessionState] = useState<SessionState | null>(null);
-  const [displayName, setDisplayName] = useState("");
-  const [workStyle, setWorkStyle] = useState("");
-  const [focusArea, setFocusArea] = useState("");
-  const [summaryStyle, setSummaryStyle] = useState<SummaryStyle>("balanced");
+  const [sessionState, setSessionState] = useState<SessionState | null>(
+    initialSessionState,
+  );
+  const [displayName, setDisplayName] = useState(
+    initialSessionState?.displayName ?? "",
+  );
+  const [workStyle, setWorkStyle] = useState(
+    initialSessionState?.workStyle ?? "",
+  );
+  const [focusArea, setFocusArea] = useState(
+    initialSessionState?.focusArea ?? "",
+  );
+  const [summaryStyle, setSummaryStyle] = useState<SummaryStyle>(
+    initialSessionState?.summaryStyle ?? "balanced",
+  );
   const [releaseChannel, setReleaseChannel] =
-    useState<ReleaseChannel>("stable");
+    useState<ReleaseChannel>(initialSessionState?.releaseChannel ?? "stable");
   const [status, setStatus] = useState<Status | null>(
     authReady
       ? null
@@ -192,7 +146,10 @@ export function AccountPanel() {
         return;
       }
 
-      const nextState = readSessionState(data.session?.user ?? null);
+      const nextState = readSessionState(
+        data.session?.user ?? null,
+        providerLabels,
+      );
       setSessionState(nextState);
       setDisplayName(nextState?.displayName ?? "");
       setWorkStyle(nextState?.workStyle ?? "");
@@ -205,7 +162,7 @@ export function AccountPanel() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      const nextState = readSessionState(session?.user ?? null);
+      const nextState = readSessionState(session?.user ?? null, providerLabels);
       setSessionState(nextState);
       setDisplayName(nextState?.displayName ?? "");
       setWorkStyle(nextState?.workStyle ?? "");
@@ -243,7 +200,7 @@ export function AccountPanel() {
         throw error;
       }
 
-      const nextState = readSessionState(data.user);
+      const nextState = readSessionState(data.user, providerLabels);
 
       setSessionState(nextState);
       setDisplayName(nextState?.displayName ?? "");
@@ -296,7 +253,7 @@ export function AccountPanel() {
 
   if (loading) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
           Account
         </div>
@@ -309,11 +266,11 @@ export function AccountPanel() {
 
   if (!sessionState) {
     return (
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
           Account
         </div>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           Sign in to open your sansxel workspace.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
@@ -329,16 +286,16 @@ export function AccountPanel() {
             {status.message}
           </div>
         )}
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
           <Link
             href="/#auth"
-            className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
+            className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
           >
             Create account or sign in
           </Link>
           <Link
             href="/download#early-access"
-            className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+            className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
           >
             Request invite
           </Link>
@@ -350,12 +307,12 @@ export function AccountPanel() {
   const inviteRequested = Boolean(sessionState.earlyAccessRequestedAt);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr]">
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(19rem,0.9fr)]">
+      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
           Workspace Setup
         </div>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+        <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
           Your sansxel workspace is live on this device.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
@@ -364,7 +321,7 @@ export function AccountPanel() {
           you want to follow.
         </p>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-4">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[
             ["Access", "Account active"],
             [
@@ -386,7 +343,7 @@ export function AccountPanel() {
           ))}
         </div>
 
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 space-y-5">
           <div>
             <label className="block text-sm font-medium text-white">
               Display name
@@ -496,7 +453,7 @@ export function AccountPanel() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3 pt-2">
+          <div className="grid gap-3 pt-2 sm:flex sm:flex-wrap">
             <button
               type="button"
               onClick={() => void handleProfileSave()}
@@ -507,7 +464,7 @@ export function AccountPanel() {
             </button>
             <Link
               href="/download#early-access"
-              className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+              className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
             >
               {inviteRequested ? "Review invite request" : "Request invite"}
             </Link>
@@ -533,8 +490,8 @@ export function AccountPanel() {
         )}
       </div>
 
-      <div className="space-y-6">
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+      <div className="space-y-4 sm:space-y-6">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
             Status
           </div>
@@ -547,7 +504,7 @@ export function AccountPanel() {
             ].map(([label, value]) => (
               <div
                 key={label}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3"
+                className="flex flex-col gap-1 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="text-sm text-neutral-200">{label}</div>
                 <div className="text-sm font-medium text-white">{value}</div>
@@ -556,7 +513,7 @@ export function AccountPanel() {
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
             Continue
           </div>
@@ -586,7 +543,7 @@ export function AccountPanel() {
               <Link
                 key={href}
                 href={href}
-                className="rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:bg-white/5"
+                className="rounded-2xl border border-white/10 bg-black/20 p-4 sm:p-5 transition hover:bg-white/5"
               >
                 <div className="text-sm font-medium text-white">{label}</div>
                 <div className="mt-1 text-sm leading-6 text-neutral-200">
@@ -597,12 +554,12 @@ export function AccountPanel() {
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
             Sign-in Options
           </div>
           <div className="mt-5 space-y-3">
-            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+            <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="text-sm font-medium text-white">Email</div>
                   <div className="mt-1 text-sm text-neutral-200">
@@ -617,7 +574,7 @@ export function AccountPanel() {
             {oauthProviders.map((provider) => (
               <div
                 key={provider.provider}
-                className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3"
+                className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <div className="text-sm font-medium text-white">
@@ -636,14 +593,14 @@ export function AccountPanel() {
                       : "border border-white/10 bg-white/5 text-neutral-200"
                   }`}
                 >
-                  {provider.enabled ? "Live" : "Coming soon"}
+                  {provider.enabled ? "Live" : "Unavailable"}
                 </span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-8">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
             Trust
           </div>

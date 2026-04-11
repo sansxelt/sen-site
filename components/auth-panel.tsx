@@ -42,8 +42,16 @@ export function AuthPanel() {
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<Status | null>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
-  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [activeProvider, setActiveProvider] = useState<OauthProvider | null>(
+    null,
+  );
+  const [loadingAction, setLoadingAction] = useState<AuthMode | "signout" | null>(
+    null,
+  );
   const authReady = isSupabaseConfigured();
+  const liveProviders = oauthProviders.filter((option) => option.enabled);
+  const upcomingProviders = oauthProviders.filter((option) => !option.enabled);
+  const emailBusy = loadingAction === "signup" || loadingAction === "signin";
   const visibleStatus =
     status ??
     (!authReady
@@ -68,12 +76,48 @@ export function AuthPanel() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSessionEmail(session?.user.email ?? null);
+      setActiveProvider(null);
     });
 
     return () => {
       subscription.unsubscribe();
     };
   }, [authReady]);
+
+  useEffect(() => {
+    if (!activeProvider) {
+      return;
+    }
+
+    const resetProviderState = () => {
+      setActiveProvider((current) =>
+        current === activeProvider ? null : current,
+      );
+    };
+
+    const timeoutId = window.setTimeout(resetProviderState, 4500);
+
+    const handleFocus = () => {
+      resetProviderState();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        resetProviderState();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("pageshow", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pageshow", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [activeProvider]);
 
   async function handleEmailAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -173,11 +217,8 @@ export function AuthPanel() {
       return;
     }
 
-    setStatus({
-      tone: "info",
-      message: `Opening ${providerLabels[provider]} sign-in...`,
-    });
-    setLoadingAction(`provider-${provider}`);
+    setStatus(null);
+    setActiveProvider(provider);
 
     try {
       const supabase = getSupabaseBrowserClient();
@@ -203,11 +244,11 @@ export function AuthPanel() {
       throw new Error("No redirect URL returned.");
     } catch (error) {
       console.error("Provider auth failed:", error);
+      setActiveProvider(null);
       setStatus({
         tone: "error",
         message: getAuthErrorMessage(error, "provider"),
       });
-      setLoadingAction(null);
     }
   }
 
@@ -244,7 +285,7 @@ export function AuthPanel() {
   }
 
   return (
-    <div className="rounded-[32px] border border-white/12 bg-black/25 p-6 sm:p-8">
+    <div className="rounded-[32px] border border-white/12 bg-black/25 p-5 sm:p-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
@@ -255,7 +296,7 @@ export function AuthPanel() {
           </h3>
         </div>
 
-        <div className="inline-flex rounded-2xl border border-white/10 bg-white/5 p-1 text-sm">
+        <div className="grid w-full grid-cols-2 rounded-2xl border border-white/10 bg-white/5 p-1 text-sm sm:inline-flex sm:w-auto">
           <button
             type="button"
             onClick={() => setMode("signup")}
@@ -282,16 +323,12 @@ export function AuthPanel() {
       </div>
 
       <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
-        Email, Google, and GitHub are live now. Microsoft and Apple will
-        appear here when their production auth setup is ready.
+        Email, Google, and GitHub are ready now. Microsoft and Apple stay
+        disabled until their production setup is complete.
       </p>
 
-      <div className="mt-5 flex flex-wrap gap-3 text-sm text-neutral-100">
-        {[
-          "Secure account handling",
-          "Privacy-first product decisions",
-          "Clear control over access and data",
-        ].map((item) => (
+      <div className="mt-5 flex flex-wrap gap-2.5 text-sm text-neutral-100">
+        {["Secure handling", "Fast return", "Clear support"].map((item) => (
           <div
             key={item}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5"
@@ -309,16 +346,16 @@ export function AuthPanel() {
           <div className="mt-2 text-sm leading-6 text-emerald-50/90">
             {sessionEmail}
           </div>
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="mt-4 grid gap-3 sm:flex sm:flex-wrap">
             <Link
               href="/account"
-              className="sansxel-white-button rounded-2xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
+              className="sansxel-white-button rounded-2xl bg-white px-4 py-2 text-center text-sm font-medium text-black transition hover:opacity-90"
             >
               Open workspace
             </Link>
             <Link
               href="/download#early-access"
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
+              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-center text-sm text-white transition hover:bg-white/10"
             >
               Request invite
             </Link>
@@ -334,7 +371,7 @@ export function AuthPanel() {
         </div>
       )}
 
-      <div className="mt-8 grid items-start gap-5 2xl:grid-cols-[minmax(0,1.1fr)_minmax(22rem,0.9fr)]">
+      <div className="mt-8 grid items-start gap-5 xl:grid-cols-[minmax(0,1.02fr)_minmax(18rem,0.98fr)]">
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
           <div>
             <div className="text-sm font-medium text-white">
@@ -352,7 +389,7 @@ export function AuthPanel() {
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Name"
-                disabled={!authReady || Boolean(loadingAction)}
+                disabled={!authReady || emailBusy}
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
               />
             )}
@@ -361,7 +398,7 @@ export function AuthPanel() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="Email address"
-              disabled={!authReady || Boolean(loadingAction)}
+              disabled={!authReady || emailBusy}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
               required
             />
@@ -370,14 +407,14 @@ export function AuthPanel() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Password"
-              disabled={!authReady || Boolean(loadingAction)}
+              disabled={!authReady || emailBusy}
               className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
               required
               minLength={8}
             />
             <button
               type="submit"
-              disabled={!authReady || Boolean(loadingAction)}
+              disabled={!authReady || emailBusy}
               className="sansxel-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
             >
               {loadingAction === "signup"
@@ -411,60 +448,79 @@ export function AuthPanel() {
         <div className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6">
           <div>
             <div className="text-sm font-medium text-white">
-              More sign-in methods
+              Continue with
             </div>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
-              Use the provider you want and return straight into your
-              account flow on sansxel.ai.
+              Fast provider sign-in with a secure return to your account.
             </p>
           </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 2xl:grid-cols-1">
-            {oauthProviders.map((option) => {
-              const providerEnabled = authReady && option.enabled;
-              const providerLoading =
-                loadingAction === `provider-${option.provider}`;
+          <div className="mt-5 grid gap-3">
+            {liveProviders.map((option) => {
+              const providerBusy = activeProvider === option.provider;
+              const providerMark = option.provider === "github" ? "GH" : "G";
 
               return (
                 <button
                   key={option.provider}
                   type="button"
-                  onClick={providerEnabled ? () => void handleOAuth(option.provider) : undefined}
-                  disabled={!providerEnabled || Boolean(loadingAction)}
-                  className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
-                    providerEnabled
-                      ? "border-white/10 bg-white/5 hover:bg-white/10"
-                      : "cursor-not-allowed border-dashed border-white/10 bg-white/[0.025]"
-                  }`}
+                  onClick={() => void handleOAuth(option.provider)}
+                  disabled={!authReady || providerBusy}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-wait disabled:opacity-80"
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-sm font-medium text-white">
+                      {providerMark}
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-white">
-                        Continue with {option.label}
+                        {option.label}
                       </div>
-                      <div className="mt-1 text-sm text-neutral-200">
-                        {providerEnabled
-                          ? option.description
-                          : `${option.label} sign-in will unlock once it is configured for production.`}
+                      <div className="mt-1 text-xs uppercase tracking-[0.18em] text-neutral-400">
+                        Secure redirect
                       </div>
                     </div>
-                    <span className="w-fit rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
-                      {providerLoading
-                        ? "Opening"
-                        : providerEnabled
-                          ? "Live"
-                          : "Coming soon"}
+                    <span className="shrink-0 rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
+                      {providerBusy ? "Redirecting..." : "Live"}
                     </span>
                   </div>
                 </button>
               );
             })}
           </div>
+
+          <div className="mt-5 border-t border-white/10 pt-5">
+            <div className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
+              More soon
+            </div>
+            <div className="mt-3 grid gap-2.5">
+              {upcomingProviders.map((option) => (
+                <div
+                  key={option.provider}
+                  className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-3 opacity-75"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-medium text-neutral-200">
+                        {option.label}
+                      </div>
+                      <div className="mt-1 text-sm text-neutral-400">
+                        Unavailable for now
+                      </div>
+                    </div>
+                    <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-300">
+                      Disabled
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {visibleStatus && (
         <div
-          className={`mt-6 rounded-2xl border px-4 py-3 text-sm ${statusClasses(
+          className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${statusClasses(
             visibleStatus.tone,
           )}`}
         >
@@ -472,7 +528,7 @@ export function AuthPanel() {
         </div>
       )}
 
-      <div className="mt-6 flex flex-wrap gap-5 text-sm text-neutral-100">
+      <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm text-neutral-100">
         <Link href="/privacy" className="transition hover:text-white">
           Privacy Policy
         </Link>

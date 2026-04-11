@@ -11,12 +11,12 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <SiteShell>
-      <section className="mx-auto max-w-5xl px-6 py-16 lg:px-8 lg:py-24">
+      <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="max-w-3xl">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Contact / Support
           </div>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
             Support should be easy to reach before and after access opens.
           </h1>
           <p className="mt-5 text-base leading-7 text-neutral-200">
@@ -25,7 +25,7 @@ export default function ContactPage() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[
             [
               "General support",
@@ -46,7 +46,7 @@ export default function ContactPage() {
             <a
               key={email}
               href={`mailto:${email}`}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6 transition hover:bg-white/10"
+              className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6 transition hover:bg-white/10"
             >
               <div className="text-lg font-medium text-white">{title}</div>
               <div className="mt-3 text-sm font-medium text-neutral-200">
@@ -59,8 +59,8 @@ export default function ContactPage() {
           ))}
         </div>
 
-        <div className="mt-10 rounded-[32px] border border-white/10 bg-white/5 p-8">
-          <div className="grid gap-5 md:grid-cols-2">
+        <div className="mt-10 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
+          <div className="grid gap-5 lg:grid-cols-2">
             <div>
               <div className="text-lg font-medium text-white">
                 Suggested support flow

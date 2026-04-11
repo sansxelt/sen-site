@@ -183,7 +183,7 @@ export function EarlyAccessForm() {
   const existingRequestMessage = formatRequestedAt(accountContext?.requestedAt ?? null);
 
   return (
-    <div className="rounded-[32px] border border-white/12 bg-black/25 p-6 sm:p-8">
+    <div className="rounded-[32px] border border-white/12 bg-black/25 p-5 sm:p-8">
       <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
         Early Access
       </div>
@@ -196,7 +196,7 @@ export function EarlyAccessForm() {
       </p>
 
       {accountContext && (
-        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
           <div className="text-sm font-medium text-white">
             Signed in as {accountContext.email}
           </div>
@@ -244,7 +244,7 @@ export function EarlyAccessForm() {
         </button>
       </form>
 
-      <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+      <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
         <div className="text-sm font-medium text-white">
           Built for trust from the start
         </div>
@@ -252,7 +252,7 @@ export function EarlyAccessForm() {
           We review access carefully, keep the path intentional, and link the
           policies you need before installer access opens up.
         </p>
-        <div className="mt-4 flex flex-wrap gap-5 text-sm text-neutral-100">
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm text-neutral-100">
           <Link href="/privacy" className="transition hover:text-white">
             Privacy Policy
           </Link>

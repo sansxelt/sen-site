@@ -24,55 +24,86 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(96,165,250,0.12),transparent_22%)]" />
 
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-neutral-950/88 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <div>
-              <div className="text-lg font-semibold tracking-tight text-white">
-                sansxel
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+          <div className="flex items-start justify-between gap-4 md:items-center">
+            <Link href="/" className="flex min-w-0 items-center gap-3">
+              <div className="min-w-0">
+                <div className="text-lg font-semibold tracking-tight text-white">
+                  sansxel
+                </div>
+                <div className="truncate text-xs text-neutral-200">
+                  Ambient workspace memory
+                </div>
               </div>
-              <div className="text-xs text-neutral-200">
-                Ambient workspace memory
-              </div>
-            </div>
-          </Link>
+            </Link>
 
-          <nav className="hidden items-center gap-8 text-sm text-neutral-200 md:flex">
-            {primaryLinks.map((link) => (
+            <nav className="hidden items-center gap-6 text-sm text-neutral-200 md:flex">
+              {primaryLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="whitespace-nowrap transition hover:text-white"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="hidden items-center gap-3 sm:flex">
               <Link
-                key={link.href}
-                href={link.href}
-                className="transition hover:text-white"
+                href="/#auth"
+                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-neutral-100 transition hover:bg-white/5"
               >
-                {link.label}
+                Sign in
               </Link>
-            ))}
-          </nav>
+              <Link
+                href="/account"
+                className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
+              >
+                Open workspace
+              </Link>
+            </div>
+          </div>
 
-          <div className="flex items-center gap-3">
+          <div className="mt-3 flex gap-3 sm:hidden">
             <Link
               href="/#auth"
-              className="hidden rounded-xl border border-white/10 px-4 py-2 text-sm text-neutral-100 transition hover:bg-white/5 sm:inline-flex"
+              className="flex-1 rounded-xl border border-white/10 px-4 py-2 text-center text-sm text-neutral-100 transition hover:bg-white/5"
             >
               Sign in
             </Link>
             <Link
               href="/account"
-              className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
+              className="sansxel-white-button flex-1 rounded-xl bg-white px-4 py-2 text-center text-sm font-medium text-black transition hover:opacity-90"
             >
               Open workspace
             </Link>
           </div>
+
+          <nav className="mt-3 flex gap-2 overflow-x-auto pb-1 text-sm text-neutral-200 md:hidden">
+            {primaryLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="whitespace-nowrap rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 transition hover:bg-white/10 hover:text-white"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 pt-20 md:pt-24">{children}</main>
+      <main className="relative z-10 flex-1 pt-32 sm:pt-24 md:pt-24">
+        {children}
+      </main>
 
       <footer className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-6 py-8 text-sm text-neutral-200 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <div>
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-8 text-sm text-neutral-200 sm:px-6 lg:px-8">
+          <div className="max-w-xl">
             Copyright 2026 sansxel. Built for context, memory, and flow.
           </div>
-          <div className="flex flex-wrap gap-5">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-5">
             {footerLinks.map((link) => (
               <Link
                 key={link.href}

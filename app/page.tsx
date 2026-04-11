@@ -85,18 +85,18 @@ const pricingPreview = [
 export default function HomePage() {
   return (
     <SiteShell>
-      <section className="mx-auto grid max-w-7xl gap-16 px-6 pb-20 pt-16 lg:grid-cols-[1.1fr_.9fr] lg:px-8 lg:pb-28 lg:pt-24">
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:px-8 lg:pb-28 lg:pt-24">
         <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-200">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-neutral-200 sm:text-xs">
             <span className="h-2 w-2 rounded-full bg-white/80" />
             Premium workspace memory for focused work
           </div>
 
-          <h1 className="mt-6 text-5xl font-semibold leading-[1.02] tracking-tight text-white sm:text-6xl lg:text-7xl">
+          <h1 className="mt-6 text-4xl font-semibold leading-[1.02] tracking-tight text-white sm:text-5xl lg:text-7xl">
             The AI that remembers what you were doing.
           </h1>
 
-          <p className="mt-6 max-w-xl text-base leading-7 text-neutral-200 sm:text-lg">
+          <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-200 sm:mt-6 sm:text-lg">
             sansxel quietly captures work context, keeps it organized, and
             gives you a calm way to resume, reflect, and move forward without
             losing the thread.
@@ -105,19 +105,19 @@ export default function HomePage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/account"
-              className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+              className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
             >
               Open workspace
             </Link>
             <Link
               href="/#auth"
-              className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+              className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
             >
               Create account
             </Link>
           </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {[
               ["Fast", "Resume work instantly with a lightweight desktop feel."],
               ["Private", "Clear controls for pause, export, and deletion."],
@@ -136,10 +136,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="relative">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 shadow-2xl shadow-black/30 backdrop-blur-xl">
-            <div className="rounded-[24px] border border-white/10 bg-neutral-900/90 p-5">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-4">
+            <div className="rounded-[24px] border border-white/10 bg-neutral-900/90 p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
                 <div>
                   <div className="text-sm font-medium text-white">Today</div>
                   <div className="text-xs text-neutral-200">
@@ -166,7 +166,7 @@ export default function HomePage() {
                 ].map(([app, time, description]) => (
                   <div
                     key={app}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 sm:p-4"
                   >
                     <div className="flex items-center justify-between">
                       <div className="text-sm font-medium text-white">{app}</div>
@@ -205,12 +205,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="features" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+      <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="max-w-2xl">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Features
           </div>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
             Context first. Friction low.
           </h2>
           <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
@@ -219,11 +219,11 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6"
+              className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6"
             >
               <div className="text-lg font-medium text-white">
                 {feature.title}
@@ -236,13 +236,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="how" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+      <section id="how" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
               How it works
             </div>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
               A simpler way to recover your work context.
             </h2>
           </div>
@@ -251,7 +251,7 @@ export default function HomePage() {
             {steps.map((step) => (
               <div
                 key={step.number}
-                className="flex gap-4 rounded-3xl border border-white/10 bg-white/5 p-6"
+                className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 sm:flex-row sm:p-6"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-sm font-semibold text-white">
                   {step.number}
@@ -270,14 +270,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 sm:p-12">
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-12">
           <div className="grid gap-10 lg:grid-cols-[1fr_.8fr] lg:items-center">
             <div>
               <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
                 Early access
               </div>
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
                 Early access should feel trustworthy before it feels flashy.
               </h2>
               <p className="mt-4 max-w-2xl text-base leading-7 text-neutral-200">
@@ -302,7 +302,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-neutral-900/70 p-6">
+            <div className="rounded-3xl border border-white/10 bg-neutral-900/70 p-5 sm:p-6">
               <div className="text-sm font-medium text-white">
                 Launch checklist
               </div>
@@ -329,13 +329,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="pricing" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
+      <section id="pricing" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
               Pricing
             </div>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
               Start free. Upgrade when you want deeper memory.
             </h2>
           </div>
@@ -347,11 +347,11 @@ export default function HomePage() {
           </Link>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-5xl gap-5 md:grid-cols-3">
+        <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {pricingPreview.map((plan) => (
             <div
               key={plan.name}
-              className={`rounded-3xl border p-7 ${
+              className={`rounded-3xl border p-6 sm:p-7 ${
                 plan.featured
                   ? "border-white bg-white text-neutral-950"
                   : "border-white/10 bg-white/5 text-white"
@@ -407,11 +407,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="auth" className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
-        <div className="grid gap-8 xl:grid-cols-[1.08fr_.92fr] xl:items-start">
+      <section id="auth" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        <div className="grid gap-6 xl:grid-cols-[1.08fr_.92fr] xl:items-start">
           <AuthPanel />
 
-          <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 sm:p-10 xl:mt-6">
+          <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10 xl:mt-4">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
               Trust
             </div>
@@ -441,12 +441,12 @@ export default function HomePage() {
 
       <section
         id="early-access"
-        className="mx-auto max-w-7xl px-6 pb-24 pt-8 lg:px-8"
+        className="mx-auto max-w-7xl px-4 pb-20 pt-2 sm:px-6 sm:pb-24 sm:pt-8 lg:px-8"
       >
-        <div className="grid gap-8 lg:grid-cols-[1fr_.95fr]">
+        <div className="grid gap-6 lg:grid-cols-[1fr_.95fr]">
           <EarlyAccessForm />
 
-          <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 sm:p-10">
+          <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
               Support
             </div>

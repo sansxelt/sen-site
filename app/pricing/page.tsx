@@ -59,12 +59,12 @@ const plans = [
 export default function PricingPage() {
   return (
     <SiteShell>
-      <section className="mx-auto max-w-7xl px-6 py-16 lg:px-8 lg:py-24">
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="max-w-3xl">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Pricing
           </div>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
             Simple pricing for individual focus and team continuity.
           </h1>
           <p className="mt-5 text-base leading-7 text-neutral-200">
@@ -73,11 +73,11 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 sm:mt-12">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`rounded-3xl border p-7 ${
+              className={`rounded-3xl border p-6 sm:p-7 ${
                 plan.featured
                   ? "border-white bg-white text-neutral-950"
                   : "border-white/10 bg-white/5 text-white"
@@ -141,8 +141,8 @@ export default function PricingPage() {
           ))}
         </div>
 
-        <div className="mt-12 rounded-[32px] border border-white/10 bg-white/5 p-8">
-          <div className="grid gap-6 lg:grid-cols-3">
+        <div className="mt-10 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:mt-12 sm:p-8">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 sm:gap-6">
             {[
               [
                 "What changes at Pro",
@@ -159,7 +159,7 @@ export default function PricingPage() {
             ].map(([title, description]) => (
               <div
                 key={title}
-                className="rounded-3xl border border-white/10 bg-black/20 p-6"
+                className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6"
               >
                 <div className="text-lg font-medium text-white">{title}</div>
                 <p className="mt-3 text-sm leading-6 text-neutral-300">

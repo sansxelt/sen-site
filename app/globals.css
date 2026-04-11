@@ -88,3 +88,14 @@ div[id] {
 ::selection {
   background: rgba(255, 255, 255, 0.18);
 }
+
+@media (max-width: 767px) {
+  html {
+    scroll-padding-top: 8.75rem;
+  }
+
+  section[id],
+  div[id] {
+    scroll-margin-top: 8.75rem;
+  }
+}

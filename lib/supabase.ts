@@ -114,7 +114,7 @@ export function getAuthErrorMessage(
     message.includes("provider is not enabled") ||
     message.includes("validation_failed")
   ) {
-    return "That sign-in option is not available yet in this build. Use email for now.";
+    return "That sign-in option is not available yet.";
   }
 
   if (message.includes("invalid login credentials")) {
@@ -153,9 +153,9 @@ export function getAuthErrorMessage(
     case "signout":
       return "We couldn't sign you out right now. Please try again.";
     case "provider":
-      return "We couldn't start that sign-in option right now. Use email for now or try again later.";
+      return "We couldn't connect that sign-in option right now. Try again.";
     case "callback":
-      return "We couldn't finish sign-in. Please go back and try again.";
+      return "We couldn't finish sign-in. Please try again.";
     default:
       return "We couldn't complete that account action right now. Please try again.";
   }

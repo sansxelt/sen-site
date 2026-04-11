@@ -33,11 +33,11 @@ const sections = [
 export default function TermsPage() {
   return (
     <SiteShell>
-      <section className="mx-auto max-w-4xl px-6 py-16 lg:px-8 lg:py-24">
+      <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
           Terms of Service
         </div>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
           Clear terms help early access feel reliable.
         </h1>
         <p className="mt-5 text-base leading-7 text-neutral-200">
@@ -45,11 +45,11 @@ export default function TermsPage() {
           pre-release desktop experience.
         </p>
 
-        <div className="mt-10 space-y-5">
+        <div className="mt-10 space-y-4 sm:space-y-5">
           {sections.map((section) => (
             <div
               key={section.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6"
+              className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6"
             >
               <h2 className="text-lg font-medium text-white">{section.title}</h2>
               <p className="mt-3 text-sm leading-7 text-neutral-200">
