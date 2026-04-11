@@ -7,7 +7,7 @@ const features = [
   {
     title: "Automatic context",
     description:
-      "sen quietly understands what you were doing across desktop sessions so resuming work feels instant instead of reconstructive.",
+      "sansxel quietly understands what you were doing across desktop sessions so resuming work feels instant instead of reconstructive.",
   },
   {
     title: "Ask your timeline",
@@ -26,13 +26,13 @@ const steps = [
     number: "01",
     title: "Create your account",
     description:
-      "Use email and password inside sen's own UI or choose a provider only when you are ready.",
+      "Use email and password inside sansxel's own UI or choose a provider only when you are ready.",
   },
   {
     number: "02",
     title: "Set up your workspace",
     description:
-      "Save how you work, what you want sen to remember, and which release track fits you best.",
+      "Save how you work, what you want sansxel to remember, and which release track fits you best.",
   },
   {
     number: "03",
@@ -97,15 +97,15 @@ export default function HomePage() {
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-7 text-neutral-200 sm:text-lg">
-            sen quietly captures work context, keeps it organized, and gives
-            you a calm way to resume, reflect, and move forward without losing
-            the thread.
+            sansxel quietly captures work context, keeps it organized, and
+            gives you a calm way to resume, reflect, and move forward without
+            losing the thread.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/account"
-              className="sen-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+              className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
             >
               Open workspace
             </Link>
@@ -181,7 +181,7 @@ export default function HomePage() {
 
               <div className="mt-5 rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4">
                 <div className="text-xs font-medium uppercase tracking-[0.18em] text-sky-200">
-                  sen summary
+                  sansxel summary
                 </div>
                 <p className="mt-2 text-sm leading-6 text-neutral-200">
                   You spent most of your time building, with your strongest
@@ -195,7 +195,7 @@ export default function HomePage() {
                 href="/account"
                 className="mt-5 block rounded-2xl border border-white/10 bg-black/30 p-4 transition hover:bg-white/5"
               >
-                <div className="text-xs text-neutral-300">Ask sen</div>
+                <div className="text-xs text-neutral-300">Ask sansxel</div>
                 <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-200">
                   What was I doing before Discord?
                 </div>
@@ -214,7 +214,7 @@ export default function HomePage() {
             Context first. Friction low.
           </h2>
           <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
-            sen is designed to stay out of the way until you need memory,
+            sansxel is designed to stay out of the way until you need memory,
             continuity, and fast re-entry into real work.
           </p>
         </div>
@@ -289,7 +289,7 @@ export default function HomePage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/download#early-access"
-                  className="sen-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+                  className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
                 >
                   Request invite
                 </Link>
@@ -396,7 +396,7 @@ export default function HomePage() {
                 href={plan.href}
                 className={`mt-8 block w-full rounded-2xl px-5 py-3 text-center text-sm font-medium transition ${
                   plan.featured
-                    ? "sen-dark-button bg-neutral-950 text-white hover:opacity-90"
+                    ? "sansxel-dark-button bg-neutral-950 text-white hover:opacity-90"
                     : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
                 }`}
               >
@@ -420,7 +420,7 @@ export default function HomePage() {
             </h3>
             <div className="mt-6 space-y-3 text-sm text-neutral-200">
               {[
-                "Email and password auth stays inside sen's own UI.",
+                "Email and password auth stays inside sansxel's own UI.",
                 "Additional sign-in options only go live when they are ready.",
                 "Privacy, terms, pricing, and support all have real routes.",
                 "Invite requests stay attached to the same account path.",
@@ -470,7 +470,7 @@ export default function HomePage() {
                 [
                   "/privacy",
                   "Privacy Policy",
-                  "Explain what sen collects and why.",
+                  "Explain what sansxel collects and why.",
                 ],
                 ["/contact", "Contact / Support", "Reach support directly."],
               ].map(([href, label, description]) => (

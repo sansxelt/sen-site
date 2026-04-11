@@ -5,7 +5,7 @@ import { SiteShell } from "../../components/site-shell";
 export const metadata: Metadata = {
   title: "Account",
   description:
-    "Manage your sen account, review rollout status, and keep setup moving before desktop access opens more broadly.",
+    "Manage your sansxel account, review rollout status, and keep setup moving before desktop access opens more broadly.",
 };
 
 export default function AccountPage() {

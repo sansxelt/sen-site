@@ -5,7 +5,7 @@ import { SiteShell } from "../../components/site-shell";
 export const metadata: Metadata = {
   title: "Contact / Support",
   description:
-    "Contact sen for support, privacy questions, or early-access and team rollout conversations.",
+    "Contact sansxel for support, privacy questions, or early-access and team rollout conversations.",
 };
 
 export default function ContactPage() {
@@ -29,17 +29,17 @@ export default function ContactPage() {
           {[
             [
               "General support",
-              "hello@sen.app",
+              "hello@sansxel.app",
               "Questions about accounts, auth, access, and onboarding.",
             ],
             [
               "Privacy requests",
-              "privacy@sen.app",
+              "privacy@sansxel.app",
               "Requests related to account data, deletion, export, or policy questions.",
             ],
             [
               "Teams / sales",
-              "sales@sen.app",
+              "sales@sansxel.app",
               "Workspace rollout, pricing conversations, and private onboarding.",
             ],
           ].map(([title, email, description]) => (
@@ -66,7 +66,7 @@ export default function ContactPage() {
                 Suggested support flow
               </div>
               <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-200">
-                <p>1. Include the email address tied to your sen account.</p>
+                <p>1. Include the email address tied to your sansxel account.</p>
                 <p>2. Mention whether the issue is auth, early access, billing, or privacy-related.</p>
                 <p>3. Add screenshots or the exact error message when available.</p>
               </div>

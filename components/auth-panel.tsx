@@ -114,7 +114,8 @@ export function AuthPanel() {
         if (data.session?.user) {
           setStatus({
             tone: "success",
-            message: "Your sen account is ready. Taking you to your account.",
+            message:
+              "Your sansxel account is ready. Taking you to your account.",
           });
           router.push("/account");
           return;
@@ -123,7 +124,7 @@ export function AuthPanel() {
         setStatus({
           tone: "success",
           message:
-            "Your sen account is almost ready. Check your inbox to confirm your email and finish signing in.",
+            "Your sansxel account is almost ready. Check your inbox to confirm your email and finish signing in.",
         });
 
         return;
@@ -252,7 +253,7 @@ export function AuthPanel() {
             Secure Access
           </div>
           <h3 className="mt-3 text-2xl font-semibold tracking-tight text-white">
-            Sign in to sen your way.
+            Sign in to sansxel.
           </h3>
         </div>
 
@@ -262,7 +263,7 @@ export function AuthPanel() {
             onClick={() => setMode("signup")}
             className={`rounded-xl px-4 py-2 transition ${
               mode === "signup"
-                ? "sen-white-button bg-white text-black"
+                ? "sansxel-white-button bg-white text-black"
                 : "text-neutral-200 hover:text-white"
             }`}
           >
@@ -273,7 +274,7 @@ export function AuthPanel() {
             onClick={() => setMode("signin")}
             className={`rounded-xl px-4 py-2 transition ${
               mode === "signin"
-                ? "sen-white-button bg-white text-black"
+                ? "sansxel-white-button bg-white text-black"
                 : "text-neutral-200 hover:text-white"
             }`}
           >
@@ -313,7 +314,7 @@ export function AuthPanel() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href="/account"
-              className="sen-white-button rounded-2xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
+              className="sansxel-white-button rounded-2xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
             >
               Open workspace
             </Link>
@@ -379,7 +380,7 @@ export function AuthPanel() {
             <button
               type="submit"
               disabled={!authReady || Boolean(loadingAction)}
-              className="sen-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+              className="sansxel-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
             >
               {loadingAction === "signup"
                 ? "Creating account..."
@@ -390,7 +391,7 @@ export function AuthPanel() {
                     : "Sign in"}
             </button>
             <p className="text-sm leading-6 text-neutral-200">
-              By continuing, you agree to sen&apos;s{" "}
+              By continuing, you agree to sansxel&apos;s{" "}
               <Link
                 href="/terms"
                 className="text-white transition hover:opacity-80"

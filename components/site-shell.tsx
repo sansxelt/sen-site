@@ -28,7 +28,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           <Link href="/" className="flex items-center gap-3">
             <div>
               <div className="text-lg font-semibold tracking-tight text-white">
-                sen
+                sansxel
               </div>
               <div className="text-xs text-neutral-200">
                 Ambient workspace memory
@@ -57,7 +57,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </Link>
             <Link
               href="/account"
-              className="sen-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
+              className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
             >
               Open workspace
             </Link>
@@ -69,7 +69,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
       <footer className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-6 py-8 text-sm text-neutral-200 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <div>Copyright 2026 sen. Built for context, memory, and flow.</div>
+          <div>
+            Copyright 2026 sansxel. Built for context, memory, and flow.
+          </div>
           <div className="flex flex-wrap gap-5">
             {footerLinks.map((link) => (
               <Link
@@ -81,7 +83,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
             <a
-              href="mailto:hello@sen.app"
+              href="mailto:hello@sansxel.app"
               className="transition hover:text-white"
             >
               Support

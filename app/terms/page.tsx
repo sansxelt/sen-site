@@ -4,13 +4,13 @@ import { SiteShell } from "../../components/site-shell";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "Review the baseline terms for sen account access, early-access usage, and support expectations.",
+    "Review the baseline terms for sansxel account access, early-access usage, and support expectations.",
 };
 
 const sections = [
   {
     title: "Service scope",
-    body: "sen currently offers a website experience, account creation, and invite-based early access for a Windows-first desktop product. Features may evolve as the product matures.",
+    body: "sansxel currently offers a website experience, account creation, and invite-based early access for a Windows-first desktop product. Features may evolve as the product matures.",
   },
   {
     title: "Account responsibilities",
@@ -18,15 +18,15 @@ const sections = [
   },
   {
     title: "Early-access availability",
-    body: "Desktop access may be limited, delayed, or adjusted while sen remains in a pre-release state. Features, timing, and pricing may change before general availability.",
+    body: "Desktop access may be limited, delayed, or adjusted while sansxel remains in a pre-release state. Features, timing, and pricing may change before general availability.",
   },
   {
     title: "Acceptable use",
-    body: "Do not attempt to disrupt the service, bypass access controls, misuse other people's accounts, or use sen in a way that harms others or violates applicable law.",
+    body: "Do not attempt to disrupt the service, bypass access controls, misuse other people's accounts, or use sansxel in a way that harms others or violates applicable law.",
   },
   {
     title: "Contact",
-    body: "Questions about these terms can be sent to hello@sen.app.",
+    body: "Questions about these terms can be sent to hello@sansxel.app.",
   },
 ];
 

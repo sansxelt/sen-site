@@ -231,14 +231,14 @@ export function EarlyAccessForm() {
         <textarea
           value={focusArea}
           onChange={(event) => setFocusArea(event.target.value)}
-          placeholder="What do you want sen to help you recover or remember?"
+          placeholder="What do you want sansxel to help you recover or remember?"
           rows={4}
           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25"
         />
         <button
           type="submit"
           disabled={loading}
-          className="sen-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+          className="sansxel-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
         >
           {loading ? "Saving request..." : "Join early access"}
         </button>

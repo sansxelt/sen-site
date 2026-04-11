@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "sen | Ambient desktop memory",
-    template: "%s | sen",
+    default: "sansxel | Ambient desktop memory",
+    template: "%s | sansxel",
   },
   description:
-    "sen turns desktop activity into calm, searchable memory with premium desktop onboarding and flexible sign-in.",
+    "sansxel turns desktop activity into calm, searchable memory with premium desktop onboarding and flexible sign-in.",
 };
 
 export default function RootLayout({

@@ -38,35 +38,35 @@ a {
   text-decoration: none;
 }
 
-.sen-white-button {
+.sansxel-white-button {
   color: #000;
 }
 
-.sen-white-button:hover,
-.sen-white-button:focus-visible,
-.sen-white-button:visited {
+.sansxel-white-button:hover,
+.sansxel-white-button:focus-visible,
+.sansxel-white-button:visited {
   color: #000;
 }
 
-.sen-white-button:disabled,
-.sen-white-button[aria-disabled="true"] {
+.sansxel-white-button:disabled,
+.sansxel-white-button[aria-disabled="true"] {
   background: #e5e5e5;
   color: #000;
   opacity: 1;
 }
 
-.sen-dark-button {
+.sansxel-dark-button {
   color: #fff;
 }
 
-.sen-dark-button:hover,
-.sen-dark-button:focus-visible,
-.sen-dark-button:visited {
+.sansxel-dark-button:hover,
+.sansxel-dark-button:focus-visible,
+.sansxel-dark-button:visited {
   color: #fff;
 }
 
-.sen-dark-button:disabled,
-.sen-dark-button[aria-disabled="true"] {
+.sansxel-dark-button:disabled,
+.sansxel-dark-button[aria-disabled="true"] {
   background: #0a0a0a;
   color: #fff;
   opacity: 1;

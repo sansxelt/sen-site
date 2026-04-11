@@ -33,7 +33,7 @@ export function AuthCallbackClient() {
       : null;
   const [status, setStatus] = useState<Status>({
     tone: "success",
-    message: "Finishing your sen sign-in...",
+    message: "Finishing your sansxel sign-in...",
   });
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export function AuthCallbackClient() {
           </Link>
           <Link
             href="/account"
-            className="sen-white-button rounded-2xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
+            className="sansxel-white-button rounded-2xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
           >
             Go to account
           </Link>

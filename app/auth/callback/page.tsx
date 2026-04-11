@@ -4,7 +4,7 @@ import { AuthCallbackClient } from "../../../components/auth-callback-client";
 
 export const metadata: Metadata = {
   title: "Auth Callback",
-  description: "Completes secure sign-in and routes you back into sen.",
+  description: "Completes secure sign-in and routes you back into sansxel.",
 };
 
 export default function AuthCallbackPage() {

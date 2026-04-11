@@ -315,7 +315,7 @@ export function AccountPanel() {
           Account
         </div>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-          Sign in to open your sen workspace.
+          Sign in to open your sansxel workspace.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
           Your account gives you a place to manage identity, tune workspace
@@ -333,7 +333,7 @@ export function AccountPanel() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/#auth"
-            className="sen-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
+            className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
           >
             Create account or sign in
           </Link>
@@ -357,12 +357,12 @@ export function AccountPanel() {
           Workspace Setup
         </div>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-          Your sen workspace is live on this device.
+          Your sansxel workspace is live on this device.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
           Keep the setup moving even before desktop access opens up. Save how
-          you work, what you want sen to remember, and which release track you
-          want to follow.
+          you work, what you want sansxel to remember, and which release track
+          you want to follow.
         </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
@@ -396,7 +396,7 @@ export function AccountPanel() {
               type="text"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="How should sen address you?"
+              placeholder="How should sansxel address you?"
               disabled={savingProfile || signingOut}
               className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
             />
@@ -418,7 +418,7 @@ export function AccountPanel() {
 
           <div>
             <label className="block text-sm font-medium text-white">
-              What should sen help you recover?
+              What should sansxel help you recover?
             </label>
             <textarea
               value={focusArea}
@@ -502,7 +502,7 @@ export function AccountPanel() {
               type="button"
               onClick={() => void handleProfileSave()}
               disabled={savingProfile || signingOut}
-              className="sen-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+              className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
             >
               {savingProfile ? "Saving workspace..." : "Save workspace"}
             </button>
@@ -576,7 +576,7 @@ export function AccountPanel() {
               [
                 "/privacy",
                 "Review privacy",
-                "Read how sen handles account details, context, deletion, and support.",
+                "Read how sansxel handles account details, context, deletion, and support.",
               ],
               [
                 "/contact",
@@ -604,12 +604,12 @@ export function AccountPanel() {
           </div>
           <div className="mt-5 space-y-3">
             <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-white">Email</div>
-                <div className="mt-1 text-sm text-neutral-200">
-                  Available now in the Sen workspace.
+                <div>
+                  <div className="text-sm font-medium text-white">Email</div>
+                  <div className="mt-1 text-sm text-neutral-200">
+                    Available now in the sansxel workspace.
+                  </div>
                 </div>
-              </div>
               <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-100">
                 Live
               </span>

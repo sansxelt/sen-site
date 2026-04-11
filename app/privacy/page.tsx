@@ -4,13 +4,13 @@ import { SiteShell } from "../../components/site-shell";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "Read how sen handles account access, usage context, support requests, and privacy controls.",
+    "Read how sansxel handles account access, usage context, support requests, and privacy controls.",
 };
 
 const sections = [
   {
-    title: "What sen collects",
-    body: "sen may collect the account details you provide, sign-in activity, product usage context, support messages, and early-access requests you explicitly submit.",
+    title: "What sansxel collects",
+    body: "sansxel may collect the account details you provide, sign-in activity, product usage context, support messages, and early-access requests you explicitly submit.",
   },
   {
     title: "Why it is collected",
@@ -18,15 +18,15 @@ const sections = [
   },
   {
     title: "How control stays visible",
-    body: "sen is designed around clear account access, visible policies, and product controls that make it easier to understand how information is handled over time.",
+    body: "sansxel is designed around clear account access, visible policies, and product controls that make it easier to understand how information is handled over time.",
   },
   {
     title: "Security and trusted infrastructure",
-    body: "We use trusted infrastructure partners to support secure account access and data handling, while keeping the experience branded and managed as sen.",
+    body: "We use trusted infrastructure partners to support secure account access and data handling, while keeping the experience branded and managed as sansxel.",
   },
   {
     title: "Privacy questions",
-    body: "For privacy questions, export requests, or account deletion inquiries, contact hello@sen.app from the email address tied to your sen account.",
+    body: "For privacy questions, export requests, or account deletion inquiries, contact hello@sansxel.app from the email address tied to your sansxel account.",
   },
 ];
 
@@ -41,8 +41,9 @@ export default function PrivacyPage() {
           Privacy should be explicit, understandable, and easy to find.
         </h1>
         <p className="mt-5 text-base leading-7 text-neutral-200">
-          This policy outlines the baseline expectations for sen&apos;s website,
-          account system, and early-access experience.
+          This policy outlines the baseline expectations for
+          sansxel&apos;s website, account system, and early-access
+          experience.
         </p>
 
         <div className="mt-10 space-y-5">

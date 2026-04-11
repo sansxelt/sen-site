@@ -34,7 +34,7 @@ export const oauthProviders: Array<{
   // TODO(google): Add the real Google OAuth client ID and client secret in
   // the auth provider settings before enabling Google sign-in for this build.
   {
-    description: "Use your Google account to continue with sen.",
+    description: "Use your Google account to continue with sansxel.",
     enabled:
       oauthRolloutEnabled &&
       isEnabled(process.env.NEXT_PUBLIC_AUTH_GOOGLE_ENABLED),
@@ -44,7 +44,7 @@ export const oauthProviders: Array<{
   // TODO(github): Add the real GitHub OAuth app client ID and client secret
   // before enabling GitHub sign-in for this build.
   {
-    description: "Use your GitHub account to continue with sen.",
+    description: "Use your GitHub account to continue with sansxel.",
     enabled:
       oauthRolloutEnabled &&
       isEnabled(process.env.NEXT_PUBLIC_AUTH_GITHUB_ENABLED),
@@ -54,7 +54,7 @@ export const oauthProviders: Array<{
   // TODO(microsoft): Add the real Microsoft / Azure app client ID and client
   // secret before enabling Microsoft sign-in for this build.
   {
-    description: "Use your Microsoft account to continue with sen.",
+    description: "Use your Microsoft account to continue with sansxel.",
     enabled:
       oauthRolloutEnabled &&
       isEnabled(process.env.NEXT_PUBLIC_AUTH_MICROSOFT_ENABLED),
@@ -115,7 +115,7 @@ export function getAuthErrorMessage(
     message.includes("already exists") ||
     message.includes("user already registered")
   ) {
-    return "That email already has a sen account. Sign in instead.";
+    return "That email already has a sansxel account. Sign in instead.";
   }
 
   if (message.includes("password") && message.includes("at least")) {

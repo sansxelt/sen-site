@@ -6,7 +6,7 @@ import { SiteShell } from "../../components/site-shell";
 export const metadata: Metadata = {
   title: "Access",
   description:
-    "Request sen early access, review launch status, and see what is needed before broader desktop access opens.",
+    "Request sansxel early access, review launch status, and see what is needed before broader desktop access opens.",
 };
 
 export default function DownloadPage() {
@@ -22,17 +22,17 @@ export default function DownloadPage() {
             <h1 className="mt-6 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               Access should feel clear, stable, and earned.
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
-              sen is positioned as a premium Windows-first early-access release.
-              People should understand what is available now, what is still
-              being prepared, and where support lives before they install
-              anything.
-            </p>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
+            sansxel is positioned as a premium Windows-first early-access
+            release. People should understand what is available now, what is
+            still being prepared, and where support lives before they install
+            anything.
+          </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/account"
-                className="sen-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+                className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
               >
                 Open workspace
               </Link>
@@ -107,7 +107,7 @@ export default function DownloadPage() {
             <div className="mt-6 space-y-4 text-sm leading-6 text-neutral-300">
               <p>
                 Submit your request to reserve a place in the launch queue and
-                keep your access path connected to your sen account.
+                keep your access path connected to your sansxel account.
               </p>
               <p>
                 Once invites are approved, signed-in members can return here

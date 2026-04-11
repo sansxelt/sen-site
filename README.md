@@ -1,4 +1,4 @@
-This is the marketing and onboarding site for `sen`, built with Next.js and Supabase.
+This is the marketing and onboarding site for `sansxel`, built with Next.js and Supabase.
 
 ## Run Locally
 

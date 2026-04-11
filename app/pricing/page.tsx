@@ -5,7 +5,7 @@ import { SiteShell } from "../../components/site-shell";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Review sen pricing for Starter, Pro, and Teams before requesting access.",
+    "Review sansxel pricing for Starter, Pro, and Teams before requesting access.",
 };
 
 const plans = [
@@ -131,7 +131,7 @@ export default function PricingPage() {
                 href={plan.href}
                 className={`mt-8 block rounded-2xl px-5 py-3 text-center text-sm font-medium transition ${
                   plan.featured
-                    ? "sen-dark-button bg-neutral-950 text-white hover:opacity-90"
+                    ? "sansxel-dark-button bg-neutral-950 text-white hover:opacity-90"
                     : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
                 }`}
               >
