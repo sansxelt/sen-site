@@ -664,40 +664,55 @@ function SessionLayout({ s }: { s: Extract<Scenario, { layout: "session" }> }) {
 
 function TraceLayout({ s }: { s: Extract<Scenario, { layout: "trace" }> }) {
   const icon = (status: "pass" | "fail" | "warn") =>
-    status === "pass" ? "✓" : status === "fail" ? "✗" : "⚠";
+    status === "pass" ? "✓" : status === "fail" ? "✗" : "!";
   const cls = (status: "pass" | "fail" | "warn") =>
-    status === "pass"
-      ? "text-emerald-400"
-      : status === "fail"
-        ? "text-rose-400"
-        : "text-amber-400";
+    status === "pass" ? "text-emerald-400" : status === "fail" ? "text-rose-400" : "text-amber-400";
 
   return (
-    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4 rounded-2xl border border-white/10 bg-black/40 p-3.5 font-mono">
-        <div className="mb-2 text-[10px] uppercase tracking-[0.15em] text-neutral-500">
-          Trace · {s.traces.length} events
+    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="overflow-hidden rounded-[22px] border border-rose-400/30 bg-[#110608] shadow-2xl shadow-rose-900/10">
+        {/* macOS title bar */}
+        <div className="flex items-center gap-2 border-b border-white/[0.07] bg-white/[0.02] px-4 py-3">
+          <div className="flex gap-1.5">
+            <div className="h-2.5 w-2.5 rounded-full bg-rose-500/80" />
+            <div className="h-2.5 w-2.5 rounded-full bg-amber-400/50" />
+            <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/30" />
+          </div>
+          <span className="ml-2 font-mono text-[10px] text-neutral-600">sansxel — debug trace</span>
+          <div className="ml-auto rounded-full border border-rose-400/25 bg-rose-400/10 px-2.5 py-0.5 text-[10px] text-rose-300">
+            {s.accentLabel}
+          </div>
         </div>
-        <div className="space-y-2">
-          {s.traces.map((t) => (
-            <div key={t.line} className="flex items-start gap-2.5 text-xs">
-              <span className={`mt-0.5 shrink-0 text-[11px] font-bold ${cls(t.status)}`}>
-                {icon(t.status)}
-              </span>
-              <span className="shrink-0 text-neutral-500">{t.line}</span>
-              <span className="text-neutral-300">{t.msg}</span>
-            </div>
-          ))}
+        {/* Console output */}
+        <div className="px-4 pt-4 pb-3 font-mono">
+          <div className="mb-3 text-[10px] text-neutral-700">$ sansxel trace --session=last</div>
+          <div className="space-y-1.5">
+            {s.traces.map((t) => (
+              <div
+                key={t.line}
+                className={`flex items-start gap-3 rounded-lg px-2 py-1.5 text-xs ${t.status === "fail" ? "bg-rose-400/[0.07]" : "bg-transparent"}`}
+              >
+                <span className={`mt-px shrink-0 font-bold ${cls(t.status)}`}>[{icon(t.status)}]</span>
+                <span className="shrink-0 text-neutral-600">{t.line}</span>
+                <span className={t.status === "fail" ? "text-rose-300" : "text-neutral-400"}>{t.msg}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-xl border border-rose-400/20 bg-rose-400/[0.07] px-3 py-2.5">
+            <div className="mb-1 text-[9px] font-medium uppercase tracking-[0.18em] text-rose-500">error</div>
+            <div className="text-xs text-rose-300">{s.errorMsg}</div>
+          </div>
+        </div>
+        {/* Bottom prompt bar */}
+        <div className="border-t border-white/[0.06] bg-black/20 px-4 py-3 font-mono">
+          <div className="text-[10px] text-neutral-700 mb-1.5">{s.promptLabel}</div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-rose-400/60">❯</span>
+            <span className="text-neutral-400">{s.prompt}</span>
+          </div>
         </div>
       </div>
-      <div className="mt-3 rounded-2xl border border-rose-400/20 bg-rose-400/10 p-3.5">
-        <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-rose-300">
-          Last error
-        </div>
-        <p className="mt-1.5 font-mono text-xs text-rose-200">{s.errorMsg}</p>
-      </div>
-      <Prompt label={s.promptLabel} question={s.prompt} />
-    </HeroFrame>
+    </div>
   );
 }
 
@@ -746,56 +761,130 @@ function RoadmapLayout({ s }: { s: Extract<Scenario, { layout: "roadmap" }> }) {
 // ─── Layout: metrics (analyzing) ─────────────────────────────────────────
 
 function MetricsLayout({ s }: { s: Extract<Scenario, { layout: "metrics" }> }) {
+  const primary = s.metrics[0];
+  const rest = s.metrics.slice(1);
+  const maxBar = Math.max(...s.bars);
   return (
-    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        {s.metrics.map((m) => (
-          <div key={m.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-            <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-400">{m.label}</div>
-            <div className="mt-2 text-xl font-semibold text-white">{m.value}</div>
+    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="overflow-hidden rounded-[28px] border border-cyan-400/30 bg-cyan-950/40 shadow-2xl shadow-cyan-900/10">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] px-5 pb-4 pt-5">
+          <div>
+            <div className="text-sm font-medium text-white">{s.header}</div>
+            <div className="text-xs text-neutral-500">Thursday · 4h 18m tracked</div>
           </div>
-        ))}
-      </div>
-      <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
-        <div className="flex h-20 items-end gap-1.5">
+          <div className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-cyan-300">
+            {s.accentLabel}
+          </div>
+        </div>
+        {/* Hero metric */}
+        <div className="px-5 pt-5 text-center">
+          <div className="text-[52px] font-bold leading-none tracking-tight text-white">{primary.value}</div>
+          <div className="mt-1.5 text-sm text-cyan-300/80">{primary.label}</div>
+        </div>
+        {/* Sparkline */}
+        <div className="mx-5 mt-4 flex items-end gap-1 overflow-hidden rounded-2xl border border-white/[0.07] bg-black/20 px-4 pb-3 pt-4" style={{ height: "72px" }}>
           {s.bars.map((h, i) => (
-            <div key={i} className="flex-1 rounded-t-lg bg-gradient-to-t from-cyan-500/30 via-sky-400/45 to-white/70" style={{ height: `${h}px` }} />
+            <div
+              key={i}
+              className="flex-1 rounded-t-sm bg-gradient-to-t from-cyan-500/60 to-cyan-300/90"
+              style={{ height: `${Math.round((h / maxBar) * 38)}px` }}
+            />
           ))}
         </div>
-        <p className="mt-3 text-xs leading-relaxed text-neutral-400">{s.summary}</p>
+        {/* Secondary metrics */}
+        <div className="grid grid-cols-2 gap-2 p-5">
+          {rest.map((m) => (
+            <div key={m.label} className="rounded-2xl border border-white/[0.08] bg-black/20 p-3.5">
+              <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">{m.label}</div>
+              <div className="mt-1.5 text-xl font-semibold text-white">{m.value}</div>
+            </div>
+          ))}
+        </div>
+        {/* Insight */}
+        <div className="border-t border-white/[0.07] px-5 pb-5">
+          <p className="text-xs leading-relaxed text-neutral-500">{s.summary}</p>
+        </div>
+        <div className="border-t border-white/[0.07] px-5 pb-5 pt-3">
+          <div className="text-[10px] text-neutral-600 mb-1.5">{s.promptLabel}</div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-neutral-200">{s.prompt}</div>
+        </div>
       </div>
-      <Prompt label={s.promptLabel} question={s.prompt} />
-    </HeroFrame>
+    </div>
   );
 }
 
 // ─── Layout: editor (writing) ─────────────────────────────────────────────
 
 function EditorLayout({ s }: { s: Extract<Scenario, { layout: "editor" }> }) {
+  const lines = s.draft.split(". ").filter(Boolean).slice(0, 5);
   return (
-    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3.5">
-        <div className="flex items-center justify-between">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Draft continuation</div>
-          <div className="text-[10px] text-neutral-600">{s.wordCount}</div>
-        </div>
-        <p className="mt-2.5 text-xs leading-[1.75] text-neutral-300 line-clamp-4">{s.draft}</p>
-        <div className="mt-2 h-px w-8 rounded-full bg-white/20" />
-        <div className="mt-2 flex items-center gap-1.5">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-white/40" />
-          <span className="text-[10px] text-neutral-500">Cursor position saved</span>
-        </div>
-      </div>
-      <div className="mt-3 space-y-1.5">
-        {s.revisions.map((r) => (
-          <div key={r.time} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
-            <span className="shrink-0 font-mono text-[10px] text-neutral-500">{r.time}</span>
-            <span className="text-xs text-neutral-400">{r.note}</span>
+    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="overflow-hidden rounded-[22px] border border-emerald-400/30 bg-[#080f0b] shadow-2xl shadow-emerald-900/10">
+        {/* Editor title bar */}
+        <div className="flex items-center gap-2 border-b border-white/[0.07] bg-white/[0.015] px-4 py-2.5">
+          <div className="flex gap-1.5">
+            <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" />
+            <div className="h-2.5 w-2.5 rounded-full bg-amber-400/50" />
+            <div className="h-2.5 w-2.5 rounded-full bg-rose-400/30" />
           </div>
-        ))}
+          <div className="ml-3 flex items-end gap-0.5">
+            <div className="rounded-t-md border-t border-l border-r border-emerald-400/20 bg-emerald-400/[0.07] px-3 py-1 text-[10px] text-emerald-300">
+              draft.md
+            </div>
+            <div className="px-3 py-1 text-[10px] text-neutral-700">outline.md</div>
+          </div>
+          <div className="ml-auto rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-0.5 text-[10px] text-emerald-300">
+            {s.accentLabel}
+          </div>
+        </div>
+        {/* Line-numbered editor area */}
+        <div className="flex px-0 py-4">
+          <div className="select-none space-y-1 px-4 text-right font-mono text-[10px] text-neutral-700">
+            {lines.map((_, i) => <div key={i}>{i + 1}</div>)}
+            <div className="text-emerald-900">▶</div>
+          </div>
+          <div className="flex-1 space-y-1 border-l border-white/[0.05] px-4 font-mono text-[11px] leading-[1.65] text-neutral-300">
+            {lines.map((line, i) => (
+              <div key={i} className={i === lines.length - 1 ? "text-neutral-500" : ""}>
+                {line}{i < lines.length - 1 ? "." : ""}
+                {i === lines.length - 1 && (
+                  <span className="ml-px inline-block h-[11px] w-0.5 animate-pulse rounded-sm bg-emerald-400/70 align-middle" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Status bar */}
+        <div className="flex items-center justify-between border-t border-white/[0.06] bg-emerald-400/[0.03] px-4 py-2">
+          <div className="flex gap-4 font-mono text-[10px] text-neutral-700">
+            <span>Ln {lines.length + 1}, Col 1</span>
+            <span>{s.wordCount}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400/60" />
+            <span className="text-[10px] text-neutral-600">Cursor saved</span>
+          </div>
+        </div>
+        {/* Revision log */}
+        <div className="border-t border-white/[0.06] p-4">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-700 mb-2">Session log</div>
+          <div className="space-y-1.5">
+            {s.revisions.map((r) => (
+              <div key={r.time} className="flex items-start gap-3 rounded-lg bg-white/[0.02] px-3 py-2">
+                <span className="shrink-0 font-mono text-[10px] text-neutral-700">{r.time}</span>
+                <span className="text-[11px] text-neutral-400">{r.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Prompt */}
+        <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
+          <div className="text-[10px] text-neutral-700 mb-1.5">{s.promptLabel}</div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-neutral-200">{s.prompt}</div>
+        </div>
       </div>
-      <Prompt label={s.promptLabel} question={s.prompt} />
-    </HeroFrame>
+    </div>
   );
 }
 
@@ -902,47 +991,70 @@ function ResearchLayout({ s }: { s: Extract<Scenario, { layout: "research" }> })
 // ─── Layout: pipeline (shipping) ─────────────────────────────────────────
 
 function PipelineLayout({ s }: { s: Extract<Scenario, { layout: "pipeline" }> }) {
-  const stageCls = (status: "done" | "running" | "waiting") => {
-    if (status === "done") return { dot: "bg-emerald-400", label: "text-emerald-300", bar: "bg-emerald-400/40" };
-    if (status === "running") return { dot: "bg-amber-400 animate-pulse", label: "text-amber-300", bar: "bg-amber-400/30" };
-    return { dot: "bg-neutral-700", label: "text-neutral-600", bar: "bg-white/5" };
+  const stageStyle = (status: "done" | "running" | "waiting") => {
+    if (status === "done")    return { ring: "border-emerald-400/50 bg-emerald-400/10", dot: "bg-emerald-400", text: "text-emerald-300", label: "text-emerald-400/70" };
+    if (status === "running") return { ring: "border-amber-400/50 bg-amber-400/10",   dot: "bg-amber-400 animate-pulse", text: "text-amber-300", label: "text-amber-400/70" };
+    return { ring: "border-white/10 bg-white/[0.02]", dot: "bg-neutral-700", text: "text-neutral-600", label: "text-neutral-700" };
   };
 
   return (
-    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4">
-        <div className="mb-3 text-[10px] uppercase tracking-[0.15em] text-neutral-500">Deploy stages</div>
-        <div className="flex items-center gap-1.5">
-          {s.stages.map((stage, i) => {
-            const c = stageCls(stage.status);
-            return (
-              <div key={stage.name} className="flex flex-1 flex-col items-center gap-1.5">
-                <div className={`h-1.5 w-full rounded-full ${c.bar}`} />
-                <div className={`h-2 w-2 rounded-full ${c.dot}`} />
-                <div className={`text-[9px] text-center leading-tight ${c.label}`}>{stage.name}</div>
-              </div>
-            );
-          })}
+    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="overflow-hidden rounded-[28px] border border-emerald-400/30 bg-emerald-950/35 shadow-2xl shadow-emerald-900/10">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] px-5 pb-4 pt-5">
+          <div>
+            <div className="text-sm font-medium text-white">{s.header}</div>
+            <div className="text-xs text-neutral-500">Thursday · 4h 18m tracked</div>
+          </div>
+          <div className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-300">
+            {s.accentLabel}
+          </div>
+        </div>
+        {/* Pipeline flow */}
+        <div className="px-5 py-5">
+          <div className="flex items-center">
+            {s.stages.map((stage, i) => {
+              const st = stageStyle(stage.status);
+              return (
+                <div key={stage.name} className="flex flex-1 items-center">
+                  <div className="flex flex-1 flex-col items-center gap-2">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-full border ${st.ring}`}>
+                      <div className={`h-2.5 w-2.5 rounded-full ${st.dot}`} />
+                    </div>
+                    <div className={`text-center text-[10px] leading-tight ${st.label}`}>{stage.name}</div>
+                  </div>
+                  {i < s.stages.length - 1 && (
+                    <div className={`h-px flex-1 -translate-y-2.5 ${stage.status === "done" ? "bg-emerald-400/40" : "bg-white/10"}`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        {/* Details */}
+        <div className="border-t border-white/[0.07] px-5 pb-5 pt-4">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-2xl border border-white/[0.08] bg-black/20 p-3.5">
+              <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-600">Test results</div>
+              <div className="mt-1.5 text-xs text-emerald-300">{s.testSummary}</div>
+            </div>
+            <div className="rounded-2xl border border-white/[0.08] bg-black/20 p-3.5">
+              <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-600">Deploy target</div>
+              <div className="mt-1.5 text-xs text-neutral-300">{s.deployTarget}</div>
+            </div>
+          </div>
+          <div className="mt-2 rounded-2xl border border-amber-400/20 bg-amber-400/[0.07] p-3.5">
+            <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-amber-400/80">Preview deploying</div>
+            <p className="mt-1 text-xs text-neutral-400">Production waiting on preview sign-off.</p>
+          </div>
+        </div>
+        {/* Prompt */}
+        <div className="border-t border-white/[0.07] px-5 pb-5 pt-3">
+          <div className="text-[10px] text-neutral-700 mb-1.5">{s.promptLabel}</div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-neutral-200">{s.prompt}</div>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Tests</div>
-          <div className="mt-1.5 text-xs text-emerald-300">{s.testSummary}</div>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Target</div>
-          <div className="mt-1.5 text-xs text-neutral-300">{s.deployTarget}</div>
-        </div>
-      </div>
-      <div className="mt-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3.5">
-        <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-amber-300">
-          Preview deploying
-        </div>
-        <p className="mt-1 text-xs text-neutral-300">Production stage waiting on preview sign-off.</p>
-      </div>
-      <Prompt label={s.promptLabel} question={s.prompt} />
-    </HeroFrame>
+    </div>
   );
 }
 
@@ -981,24 +1093,63 @@ function KanbanLayout({ s }: { s: Extract<Scenario, { layout: "kanban" }> }) {
 
 function ReviewLayout({ s }: { s: Extract<Scenario, { layout: "review" }> }) {
   return (
-    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-3.5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 text-sm font-medium text-white">{s.pr}</div>
-          <div className="shrink-0 font-mono text-xs text-neutral-400">{s.changes}</div>
-        </div>
-        <div className="mt-2 text-[10px] text-neutral-500">{s.approvalStatus}</div>
-      </div>
-      <div className="mt-3 space-y-2">
-        {s.comments.map((c, i) => (
-          <div key={i} className="rounded-xl border border-violet-400/15 bg-violet-400/5 p-3">
-            <div className="font-mono text-[10px] text-violet-400">{c.file}</div>
-            <p className="mt-1.5 text-xs leading-relaxed text-neutral-300">{c.text}</p>
+    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="overflow-hidden rounded-[22px] border border-violet-400/30 bg-[#0c0a14] shadow-2xl shadow-violet-900/10">
+        {/* PR header */}
+        <div className="border-b border-white/[0.07] px-4 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-violet-400/30 bg-violet-500/20">
+                <svg viewBox="0 0 12 12" fill="none" className="h-2.5 w-2.5">
+                  <circle cx="3" cy="3" r="1.5" fill="#a78bfa" />
+                  <circle cx="3" cy="9" r="1.5" fill="#a78bfa" />
+                  <circle cx="9" cy="3" r="1.5" fill="#a78bfa" />
+                  <path d="M3 4.5v3M3 4.5C3 4.5 9 6 9 3" stroke="#a78bfa" strokeWidth="1.1" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-white leading-snug">{s.pr}</div>
+                <div className="mt-0.5 text-[10px] text-neutral-500">{s.approvalStatus}</div>
+              </div>
+            </div>
+            <div className="shrink-0 rounded-full border border-violet-400/25 bg-violet-400/10 px-2.5 py-0.5 font-mono text-[10px] text-violet-300">
+              {s.changes}
+            </div>
           </div>
-        ))}
+          {/* Diff bar */}
+          <div className="mt-3 flex h-2 gap-0.5 overflow-hidden rounded-full">
+            <div className="flex-[4] rounded-l-full bg-emerald-400/50" />
+            <div className="flex-1 rounded-r-full bg-rose-400/50" />
+          </div>
+          <div className="mt-1 flex justify-between text-[9px] text-neutral-700">
+            <span>additions</span>
+            <span>deletions</span>
+          </div>
+        </div>
+        {/* File comments (diff-viewer style) */}
+        <div className="p-4 space-y-2">
+          {s.comments.map((c, i) => (
+            <div key={i} className="overflow-hidden rounded-xl border border-violet-400/15">
+              <div className="flex items-center gap-2 border-b border-violet-400/10 bg-violet-400/[0.06] px-3 py-2 font-mono">
+                <svg viewBox="0 0 10 10" fill="none" className="h-2.5 w-2.5 shrink-0 text-violet-500">
+                  <rect x="1" y="1" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.2" />
+                  <path d="M3 4h4M3 6h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                </svg>
+                <span className="text-[10px] text-violet-400">{c.file}</span>
+              </div>
+              <div className="bg-white/[0.02] px-3 py-2.5">
+                <p className="text-xs leading-relaxed text-neutral-300">{c.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Prompt */}
+        <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
+          <div className="text-[10px] text-neutral-700 mb-1.5">{s.promptLabel}</div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-neutral-200">{s.prompt}</div>
+        </div>
       </div>
-      <Prompt label={s.promptLabel} question={s.prompt} />
-    </HeroFrame>
+    </div>
   );
 }
 
