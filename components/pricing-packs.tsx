@@ -96,11 +96,11 @@ function CardPack({
     const opacity = hovered
       ? 1
       : locked
-        ? [0.35, 0.25, 0.18][depth]
+        ? [0.72, 0.38, 0.22][depth]
         : [1, 0.65, 0.42][depth];
     const blurPx = hovered
       ? locked ? [0, 1, 2][depth]   : [0, 0.5, 1][depth]
-      : locked ? [4, 7, 9][depth]   : [0, 1, 2][depth];
+      : locked ? [1, 5, 8][depth]   : [0, 1, 2][depth];
 
     return {
       position: "absolute",

@@ -338,10 +338,10 @@ export function AuthPanel({
             Continue into sansxel.
           </h3>
           {sessionEmail && (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href={safeRedirectPath}
-                className="sansxel-white-button rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-black transition hover:opacity-90"
+                className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
               >
                 Open workspace
               </Link>
@@ -349,7 +349,7 @@ export function AuthPanel({
                 type="button"
                 onClick={() => void handleSignOut()}
                 disabled={loadingAction === "signout"}
-                className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-neutral-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loadingAction === "signout" ? "Signing out…" : "Sign out"}
               </button>
