@@ -34,6 +34,7 @@ const footerGroups = [
 ];
 
 const primaryLinks = [
+  { href: "/home", label: "Home" },
   { href: "/features", label: "Features" },
   { href: "/function", label: "Function" },
   { href: "/pricing", label: "Pricing" },
