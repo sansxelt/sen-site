@@ -62,11 +62,13 @@ function CardPack({
   label,
   locked = false,
   fanDir = "left",
+  dotsAlign = "right",
 }: {
   plans: PricingPlan[];
   label: string;
   locked?: boolean;
   fanDir?: "left" | "right";
+  dotsAlign?: "left" | "right";
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
@@ -153,7 +155,7 @@ function CardPack({
       </div>
 
       {/* Dot indicators */}
-      <div className="flex items-center justify-end gap-1.5">
+      <div className={`flex items-center gap-1.5 ${dotsAlign === "left" ? "justify-start" : "justify-end"}`}>
         {plans.map((_, i) => (
           <button
             key={i}
@@ -175,8 +177,8 @@ function CardPack({
 export function PricingPacks() {
   return (
     <div className="mt-16 flex flex-col items-center gap-12 sm:mt-20 lg:flex-row lg:items-start lg:justify-center lg:gap-16 xl:gap-24">
-      <CardPack plans={basicPlans}    label="Basic Plans"            fanDir="left"  />
-      <CardPack plans={advancedPlans} label="Advanced & Corporate"   fanDir="right" locked />
+      <CardPack plans={basicPlans}    label="Basic Plans"            fanDir="left"  dotsAlign="right" />
+      <CardPack plans={advancedPlans} label="Advanced & Corporate"   fanDir="right" locked dotsAlign="left" />
     </div>
   );
 }
