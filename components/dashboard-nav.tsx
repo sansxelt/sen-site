@@ -56,6 +56,23 @@ function SignOutIcon() {
   );
 }
 
+function HomeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M2 7l6-5 6 5v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6 14V9h4v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M2 4h12M5 4V2.5A.5.5 0 0 1 5.5 2h5a.5.5 0 0 1 .5.5V4M6 7v5M10 7v5M3 4l1 9.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5L13 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 const navItems: NavItem[] = [
   { href: "/account", label: "Overview", icon: <OverviewIcon /> },
   { href: "/account/keys", label: "API Keys", icon: <KeyIcon /> },
@@ -103,9 +120,18 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           {navItems.map(navLink)}
         </nav>
 
-        {/* User + sign out */}
+        {/* User + actions */}
         <div className="mt-auto pb-6 pt-4">
           <div className="mb-2 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
+
+          <Link
+            href="/"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+          >
+            <HomeIcon />
+            Return to home
+          </Link>
+
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
@@ -113,6 +139,16 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
             <SignOutIcon />
             Sign out
           </button>
+
+          <div className="my-2 border-t border-white/[0.06]" />
+
+          <Link
+            href="/account/settings#danger"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500/70 transition hover:bg-red-500/5 hover:text-red-400"
+          >
+            <TrashIcon />
+            Delete account
+          </Link>
         </div>
       </aside>
 
@@ -145,6 +181,13 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           >
             <SignOutIcon />
           </button>
+          <Link
+            href="/"
+            title="Return to home"
+            className="rounded-lg p-2 text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+          >
+            <HomeIcon />
+          </Link>
         </nav>
       </header>
     </>

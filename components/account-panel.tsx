@@ -704,7 +704,7 @@ export function AccountPanel({
           </div>
         )}
 
-        <div className="rounded-[32px] border border-rose-400/10 bg-rose-400/5 p-6 sm:p-8">
+        <div id="danger" className="rounded-[32px] border border-rose-400/10 bg-rose-400/5 p-6 sm:p-8">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-rose-300">
             Danger Zone
           </div>
