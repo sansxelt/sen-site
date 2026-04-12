@@ -19,7 +19,8 @@
 html {
   color-scheme: dark;
   scroll-behavior: smooth;
-  scroll-padding-top: 6.5rem;
+  /* single-row header is ~66px; give 16px breathing room */
+  scroll-padding-top: 5.125rem;
 }
 
 body {
@@ -82,20 +83,9 @@ textarea {
 
 section[id],
 div[id] {
-  scroll-margin-top: 6.5rem;
+  scroll-margin-top: 5.125rem;
 }
 
 ::selection {
   background: rgba(255, 255, 255, 0.18);
-}
-
-@media (max-width: 767px) {
-  html {
-    scroll-padding-top: 8.75rem;
-  }
-
-  section[id],
-  div[id] {
-    scroll-margin-top: 8.75rem;
-  }
 }

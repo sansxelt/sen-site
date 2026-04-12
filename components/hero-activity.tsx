@@ -1277,22 +1277,43 @@ function DeckLayout({ s }: { s: Extract<Scenario, { layout: "deck" }> }) {
 // ─── Layout: eval (interviewing) ─────────────────────────────────────────
 
 function EvalLayout({ s }: { s: Extract<Scenario, { layout: "eval" }> }) {
+  const scoreStyle = (score: number) => {
+    if (score >= 4) return { bar: "bg-emerald-400/80", text: "text-emerald-400", label: "Strong" };
+    if (score >= 3) return { bar: "bg-amber-400/80",   text: "text-amber-400",   label: "Good" };
+    return              { bar: "bg-rose-400/70",        text: "text-rose-400",    label: "Weak" };
+  };
+
+  const avgScore = Math.round(s.questions.reduce((a, q) => a + q.score, 0) / s.questions.length * 10) / 10;
+
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+      {/* Candidate header with avg score */}
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
         <div className="text-sm font-medium text-white">{s.candidate}</div>
+        <div className="flex items-center gap-1.5">
+          <div className="font-mono text-lg font-semibold text-white">{avgScore}</div>
+          <div className="text-[10px] text-neutral-500">/ 5 avg</div>
+        </div>
       </div>
+      {/* Question scores */}
       <div className="mt-3 space-y-2">
-        {s.questions.map((q, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
-            <div className="min-w-0 flex-1 text-xs text-neutral-300">{q.q}</div>
-            <div className="flex shrink-0 gap-0.5">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <div key={n} className={`h-2 w-2 rounded-full ${n <= q.score ? "bg-white/70" : "bg-white/10"}`} />
-              ))}
+        {s.questions.map((q, i) => {
+          const st = scoreStyle(q.score);
+          return (
+            <div key={i} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1 text-xs text-neutral-300">{q.q}</div>
+                <div className={`shrink-0 font-mono text-sm font-semibold ${st.text}`}>{q.score}/5</div>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+                  <div className={`h-full rounded-full ${st.bar}`} style={{ width: `${(q.score / 5) * 100}%` }} />
+                </div>
+                <span className={`shrink-0 text-[10px] ${st.text}`}>{st.label}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className={`mt-3 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
         <div className="text-[10px] font-medium uppercase tracking-[0.18em]">Recommendation</div>
@@ -1306,19 +1327,74 @@ function EvalLayout({ s }: { s: Extract<Scenario, { layout: "eval" }> }) {
 // ─── Layout: portfolio (investing) ───────────────────────────────────────
 
 function PortfolioLayout({ s }: { s: Extract<Scenario, { layout: "portfolio" }> }) {
-  const chgCls = (c: string) => c.startsWith("+") ? "text-emerald-400" : "text-rose-400";
+  const positive = (c: string) => c.startsWith("+");
+  const chgCls   = (c: string) => positive(c) ? "text-emerald-400" : "text-rose-400";
+
+  // Deterministic sparkline paths: up-trend vs down-trend with slight noise
+  const upPath   = "0,19 8,16 16,14 24,11 32,9 40,6 48,3 56,1";
+  const downPath = "0,1 8,4 16,7 24,10 32,13 40,16 48,18 56,19";
+
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4 divide-y divide-white/5 rounded-2xl border border-white/10 bg-black/20">
-        {s.positions.map((pos) => (
-          <div key={pos.ticker} className="flex items-center gap-3 px-4 py-3">
-            <div className="w-12 shrink-0 font-mono text-sm font-semibold text-white">{pos.ticker}</div>
-            <div className="min-w-0 flex-1 text-xs text-neutral-400">{pos.note}</div>
-            <div className={`shrink-0 font-mono text-xs font-semibold ${chgCls(pos.change)}`}>{pos.change}</div>
-          </div>
-        ))}
+      <div className="mt-4 space-y-2">
+        {s.positions.map((pos) => {
+          const up = positive(pos.change);
+          return (
+            <div key={pos.ticker} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+              <div className="flex items-start gap-3">
+                {/* Ticker badge */}
+                <div className="flex h-9 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/40 font-mono text-xs font-bold text-white">
+                  {pos.ticker}
+                </div>
+                {/* Note */}
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] leading-relaxed text-neutral-400">{pos.note}</p>
+                </div>
+                {/* Change + sparkline */}
+                <div className="shrink-0 flex flex-col items-end gap-1.5">
+                  <span className={`font-mono text-sm font-semibold leading-none ${chgCls(pos.change)}`}>
+                    {pos.change}
+                  </span>
+                  <svg
+                    viewBox="0 0 56 20"
+                    className="h-5 w-14"
+                    fill="none"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <polyline
+                      points={up ? upPath : downPath}
+                      stroke={up ? "#34d399" : "#f87171"}
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity="0.85"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <div className={`mt-3 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
+      {/* Mini portfolio bar */}
+      <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.08] bg-black/20 p-3">
+        <div className="mb-1.5 flex items-center justify-between text-[10px] text-neutral-600">
+          <span>Portfolio exposure</span>
+          <span>3 positions</span>
+        </div>
+        <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
+          <div className="flex-[3] bg-emerald-400/70" title="NVDA" />
+          <div className="flex-[2] bg-sky-400/60"     title="MSFT" />
+          <div className="flex-[2] bg-amber-400/50"   title="BTC" />
+        </div>
+        <div className="mt-1.5 flex gap-3 text-[9px] text-neutral-600">
+          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400/70 inline-block" />NVDA</span>
+          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-sky-400/60 inline-block" />MSFT</span>
+          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-400/50 inline-block" />BTC</span>
+        </div>
+      </div>
+      <div className={`mt-2 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
         <div className="text-[10px] font-medium uppercase tracking-[0.18em]">Signal</div>
         <p className="mt-1.5 text-xs leading-relaxed text-neutral-300">{s.signal}</p>
       </div>
@@ -1762,11 +1838,14 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
     Array.from({ length: scenarios.length }, (_, i) => i),
   );
 
-  // Shuffle on mount + drive the interval
+  // Shuffle on mount + drive the interval.
+  // Pause on tab hide, restart on tab show — prevents catch-up burst on return.
   useEffect(() => {
     orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
 
-    const interval = setInterval(() => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const advance = () => {
       posRef.current += 1;
       if (posRef.current >= orderRef.current.length) {
         orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
@@ -1776,9 +1855,28 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
       setPrevIdx(currRef.current);
       currRef.current = next;
       setCurrIdx(next);
-    }, CYCLE_MS);
+    };
 
-    return () => clearInterval(interval);
+    const start = () => {
+      if (timer) clearInterval(timer);
+      timer = setInterval(advance, CYCLE_MS);
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        if (timer) { clearInterval(timer); timer = null; }
+      } else {
+        start();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    start();
+
+    return () => {
+      if (timer) clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   // Once prev+curr are rendered: start crossfade on panels/body + quick dip on word
@@ -1881,15 +1979,17 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
         </div>
       </div>
 
-      {/* ── Right side ─────────────────────────────────────────── */}
-      <div style={{ display: "grid" }}>
-        {prev && (
-          <div key={prevIdx} style={layer(outOp)}>
-            <ScenarioPanel s={prev} />
+      {/* ── Right side — hidden on mobile, shown lg+ ─────────────── */}
+      <div className="hidden lg:block">
+        <div style={{ display: "grid" }}>
+          {prev && (
+            <div key={prevIdx} style={layer(outOp)}>
+              <ScenarioPanel s={prev} />
+            </div>
+          )}
+          <div key={currIdx} style={layer(inOp)}>
+            <ScenarioPanel s={curr} />
           </div>
-        )}
-        <div key={currIdx} style={layer(inOp)}>
-          <ScenarioPanel s={curr} />
         </div>
       </div>
     </>

@@ -94,12 +94,12 @@ function IntegrationsIcon() {
 }
 
 const navItems: NavItem[] = [
-  { href: "/account", label: "Overview", icon: <OverviewIcon /> },
-  { href: "/account/memory", label: "Memory", icon: <MemoryIcon /> },
-  { href: "/account/keys", label: "API Keys", icon: <KeyIcon /> },
+  { href: "/account",              label: "Overview",     icon: <OverviewIcon /> },
+  { href: "/account/memory",       label: "Memory",       icon: <MemoryIcon /> },
+  { href: "/account/keys",         label: "API Keys",     icon: <KeyIcon /> },
   { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
-  { href: "/account/usage", label: "Usage", icon: <UsageIcon /> },
-  { href: "/account/settings", label: "Settings", icon: <SettingsIcon /> },
+  { href: "/account/usage",        label: "Usage",        icon: <UsageIcon /> },
+  { href: "/account/settings",     label: "Settings",     icon: <SettingsIcon /> },
 ];
 
 export function DashboardNav({ userEmail }: { userEmail: string }) {
@@ -129,7 +129,6 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
     <>
       {/* ── Desktop sidebar ──────────────────────────────────────── */}
       <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
-        {/* Logo */}
         <Link href="/#top" className="flex items-center gap-2.5 py-6">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
             <Image src="/icon.png" alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
@@ -137,12 +136,10 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           <span className="text-sm font-semibold text-white">sansxel</span>
         </Link>
 
-        {/* Nav */}
         <nav className="flex flex-col gap-0.5">
           {navItems.map(navLink)}
         </nav>
 
-        {/* User + actions */}
         <div className="mt-auto pb-6 pt-4">
           <div className="mb-2 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
 
@@ -174,44 +171,51 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
         </div>
       </aside>
 
-      {/* ── Mobile top bar ───────────────────────────────────────── */}
-      <header className="flex items-center justify-between border-b border-white/10 bg-neutral-950/90 px-4 py-3 backdrop-blur lg:hidden">
+      {/* ── Mobile: sticky top bar (logo + sign out only) ────────────── */}
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/[0.08] bg-neutral-950/95 px-4 py-3 backdrop-blur-xl lg:hidden">
         <Link href="/#top" className="flex items-center gap-2">
-          <Image src="/icon.png" alt="sansxel" width={22} height={22} className="h-5.5 w-5.5 object-contain" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1">
+            <Image src="/icon.png" alt="sansxel" width={18} height={18} className="h-full w-full object-contain" priority />
+          </div>
           <span className="text-sm font-semibold text-white">sansxel</span>
         </Link>
 
-        <nav className="flex items-center gap-0.5">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={item.label}
-              className={`rounded-lg p-2 transition-colors ${
-                isActive(item.href)
-                  ? "bg-white/10 text-white"
-                  : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100"
-              }`}
-            >
-              {item.icon}
-            </Link>
-          ))}
+        <div className="flex items-center gap-2">
+          {userEmail && (
+            <span className="hidden max-w-[160px] truncate text-xs text-neutral-500 sm:block">
+              {userEmail}
+            </span>
+          )}
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            title="Sign out"
-            className="rounded-lg p-2 text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+            className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-neutral-400 transition hover:bg-white/10 hover:text-white"
           >
             <SignOutIcon />
+            Sign out
           </button>
-          <Link
-            href="/#top"
-            title="Return to home"
-            className="rounded-lg p-2 text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
-          >
-            <HomeIcon />
-          </Link>
-        </nav>
+        </div>
       </header>
+
+      {/* ── Mobile: fixed bottom nav bar ─────────────────────────────── */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 flex items-stretch border-t border-white/[0.08] bg-neutral-950/95 backdrop-blur-xl lg:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        {navItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-center transition-colors ${
+              isActive(item.href)
+                ? "text-white"
+                : "text-neutral-600 hover:text-neutral-300"
+            }`}
+          >
+            {item.icon}
+            <span className="text-[9px] leading-none">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
     </>
   );
 }
