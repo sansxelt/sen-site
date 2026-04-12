@@ -107,7 +107,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 </Link>
               )}
               <Link
-                href="/account"
+                href={signedIn ? "/account" : "/download"}
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
                 {signedIn ? "My Account" : "Get started"}
