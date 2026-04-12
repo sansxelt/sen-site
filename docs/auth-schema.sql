@@ -38,7 +38,19 @@ create table if not exists public.password_reset_tokens (
   created_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.api_keys (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  name text not null,
+  key_hash text not null unique,
+  key_prefix text not null,
+  created_at timestamptz not null default timezone('utc', now()),
+  last_used_at timestamptz,
+  revoked_at timestamptz
+);
+
 alter table public.early_access_signups enable row level security;
 alter table public.user_profiles enable row level security;
 alter table public.user_credentials enable row level security;
 alter table public.password_reset_tokens enable row level security;
+alter table public.api_keys enable row level security;

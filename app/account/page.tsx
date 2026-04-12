@@ -1,42 +1,122 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { auth } from "../../auth";
-import { AccountPanel } from "../../components/account-panel";
-import { readSessionState } from "../../lib/account-session";
-import { SiteShell } from "../../components/site-shell";
+import { listApiKeys } from "../../lib/api-keys";
 import { getUserProfileByEmail } from "../../lib/user-profile";
 
 export const metadata: Metadata = {
-  title: "Account",
-  description:
-    "Manage your sansxel account, review rollout status, and keep setup moving before desktop access opens more broadly.",
+  title: "Overview",
+  description: "Your sansxel account overview.",
 };
 
 export default async function AccountPage() {
   const session = await auth();
-  const profile = await getUserProfileByEmail(session?.user?.email);
-  const initialSessionState = readSessionState(session, profile);
+  const email = session?.user?.email ?? "";
+  const profile = await getUserProfileByEmail(email);
+  const keys = await listApiKeys(email);
+
+  const displayName =
+    profile?.display_name ??
+    (typeof session?.user?.name === "string" ? session.user.name : null) ??
+    email.split("@")[0];
+
+  const releaseChannel = profile?.release_channel ?? "stable";
 
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
-        <div className="max-w-3xl">
-          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-            Account Workspace
-          </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-            Keep going after sign-in.
-          </h1>
-          <p className="mt-5 text-base leading-7 text-neutral-200">
-            Desktop access is still invite-based, but your account should
-            already give you a meaningful place to manage identity, save setup
-            preferences, and stay oriented.
-          </p>
-        </div>
+    <div className="max-w-3xl">
+      {/* Greeting */}
+      <h1 className="text-2xl font-semibold text-white">
+        Hey, {displayName}
+      </h1>
+      <p className="mt-1 text-sm text-neutral-400">
+        Welcome to your sansxel control center.
+      </p>
 
-        <div className="mt-10 sm:mt-12">
-          <AccountPanel initialSessionState={initialSessionState} />
+      {/* Stats row */}
+      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <StatCard label="API keys" value={String(keys.length)} href="/account/keys" />
+        <StatCard
+          label="Release channel"
+          value={releaseChannel === "preview" ? "Preview" : "Stable"}
+          href="/account/settings"
+        />
+        <StatCard label="Usage this month" value="0 req" href="/account/usage" />
+      </div>
+
+      {/* Quick links */}
+      <div className="mt-10">
+        <h2 className="text-xs font-medium uppercase tracking-widest text-neutral-500">
+          Quick actions
+        </h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <QuickLink
+            href="/account/keys"
+            title="Create an API key"
+            description="Generate a key to authenticate requests from your desktop client."
+          />
+          <QuickLink
+            href="/account/settings"
+            title="Configure preferences"
+            description="Set your display name, summary style, and release channel."
+          />
+          <QuickLink
+            href="/account/usage"
+            title="View usage"
+            description="Monitor API request usage for the current billing period."
+          />
+          <QuickLink
+            href="/download"
+            title="Download desktop app"
+            description="Get the sansxel desktop client and start building ambient memory."
+          />
         </div>
-      </section>
-    </SiteShell>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-xl border border-white/10 bg-white/[0.03] p-4 transition hover:bg-white/[0.06]"
+    >
+      <div className="text-2xl font-semibold text-white">{value}</div>
+      <div className="mt-1 text-xs text-neutral-400 group-hover:text-neutral-300">
+        {label}
+      </div>
+    </Link>
+  );
+}
+
+function QuickLink({
+  href,
+  title,
+  description,
+}: {
+  href: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition hover:bg-white/[0.06]"
+    >
+      <div className="text-sm font-medium text-white group-hover:text-white">
+        {title}
+      </div>
+      <div className="text-xs leading-relaxed text-neutral-400 group-hover:text-neutral-300">
+        {description}
+      </div>
+    </Link>
   );
 }

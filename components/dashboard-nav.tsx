@@ -1,0 +1,152 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+};
+
+function OverviewIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function KeyIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="6" cy="8" r="4" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M9.5 8h5M13 6.5V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function UsageIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M2 12 L5 8 L8 10 L11 5 L14 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 1.5V3M8 13v1.5M1.5 8H3M13 8h1.5M3.2 3.2l1.06 1.06M11.74 11.74l1.06 1.06M3.2 12.8l1.06-1.06M11.74 4.26l1.06-1.06" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SignOutIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3M10.5 11 14 8l-3.5-3M14 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const navItems: NavItem[] = [
+  { href: "/account", label: "Overview", icon: <OverviewIcon /> },
+  { href: "/account/keys", label: "API Keys", icon: <KeyIcon /> },
+  { href: "/account/usage", label: "Usage", icon: <UsageIcon /> },
+  { href: "/account/settings", label: "Settings", icon: <SettingsIcon /> },
+];
+
+export function DashboardNav({ userEmail }: { userEmail: string }) {
+  const pathname = usePathname();
+
+  function isActive(href: string) {
+    if (href === "/account") return pathname === "/account";
+    return pathname.startsWith(href);
+  }
+
+  const navLink = (item: NavItem) => (
+    <Link
+      key={item.href}
+      href={item.href}
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+        isActive(item.href)
+          ? "bg-white/10 text-white"
+          : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100"
+      }`}
+    >
+      {item.icon}
+      {item.label}
+    </Link>
+  );
+
+  return (
+    <>
+      {/* ── Desktop sidebar ──────────────────────────────────────── */}
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 py-6">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
+            <Image src="/icon.png" alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
+          </div>
+          <span className="text-sm font-semibold text-white">sansxel</span>
+        </Link>
+
+        {/* Nav */}
+        <nav className="flex flex-col gap-0.5">
+          {navItems.map(navLink)}
+        </nav>
+
+        {/* User + sign out */}
+        <div className="mt-auto pb-6 pt-4">
+          <div className="mb-2 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+          >
+            <SignOutIcon />
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Mobile top bar ───────────────────────────────────────── */}
+      <header className="flex items-center justify-between border-b border-white/10 bg-neutral-950/90 px-4 py-3 backdrop-blur lg:hidden">
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/icon.png" alt="sansxel" width={22} height={22} className="h-5.5 w-5.5 object-contain" />
+          <span className="text-sm font-semibold text-white">sansxel</span>
+        </Link>
+
+        <nav className="flex items-center gap-0.5">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={item.label}
+              className={`rounded-lg p-2 transition-colors ${
+                isActive(item.href)
+                  ? "bg-white/10 text-white"
+                  : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100"
+              }`}
+            >
+              {item.icon}
+            </Link>
+          ))}
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            title="Sign out"
+            className="rounded-lg p-2 text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+          >
+            <SignOutIcon />
+          </button>
+        </nav>
+      </header>
+    </>
+  );
+}

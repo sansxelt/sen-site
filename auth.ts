@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { getSafeRedirectPath } from "./lib/auth-ui";
+import { sendWelcomeEmail } from "./lib/email";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
@@ -67,16 +68,31 @@ const authResult = NextAuth({
     strategy: "jwt",
   },
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account }) {
       if (!user.email) {
         return true;
       }
 
+      // Only run profile sync + welcome email for OAuth providers.
+      // Credentials sign-in already creates the profile at registration.
+      if (account?.provider === "credentials") {
+        return true;
+      }
+
       try {
+        const isNewUser = !(await getUserProfileByEmail(user.email));
+
         await syncUserProfileIdentity({
           email: user.email,
           name: typeof user.name === "string" ? user.name : null,
         });
+
+        if (isNewUser) {
+          void sendWelcomeEmail(
+            user.email,
+            typeof user.name === "string" ? user.name : undefined,
+          );
+        }
       } catch (error) {
         console.error("User profile sync failed during sign-in:", error);
       }
