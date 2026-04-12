@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
 
 const primaryLinks = [
@@ -20,7 +21,10 @@ const footerLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-export function SiteShell({ children }: { children: ReactNode }) {
+export async function SiteShell({ children }: { children: ReactNode }) {
+  const session = await auth();
+  const signedIn = Boolean(session?.user?.email);
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-neutral-950 text-neutral-100">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(96,165,250,0.12),transparent_22%)]" />
@@ -62,33 +66,37 @@ export function SiteShell({ children }: { children: ReactNode }) {
             </nav>
 
             <div className="hidden items-center gap-3 sm:flex">
-              <Link
-                href={getSignInPath("/account")}
-                className="rounded-xl border border-white/10 px-4 py-2 text-sm text-neutral-100 transition hover:bg-white/5"
-              >
-                Sign in
-              </Link>
+              {!signedIn && (
+                <Link
+                  href={getSignInPath("/account")}
+                  className="rounded-xl border border-white/10 px-4 py-2 text-sm text-neutral-100 transition hover:bg-white/5"
+                >
+                  Sign in
+                </Link>
+              )}
               <Link
                 href="/account"
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
-                Open workspace
+                {signedIn ? "Account" : "Open workspace"}
               </Link>
             </div>
           </div>
 
           <div className="mt-3 flex gap-3 sm:hidden">
-            <Link
-              href={getSignInPath("/account")}
-              className="flex-1 rounded-xl border border-white/10 px-4 py-2 text-center text-sm text-neutral-100 transition hover:bg-white/5"
-            >
-              Sign in
-            </Link>
+            {!signedIn && (
+              <Link
+                href={getSignInPath("/account")}
+                className="flex-1 rounded-xl border border-white/10 px-4 py-2 text-center text-sm text-neutral-100 transition hover:bg-white/5"
+              >
+                Sign in
+              </Link>
+            )}
             <Link
               href="/account"
-              className="sansxel-white-button flex-1 rounded-xl bg-white px-4 py-2 text-center text-sm font-medium text-black transition hover:opacity-90"
+              className={`sansxel-white-button rounded-xl bg-white px-4 py-2 text-center text-sm font-medium text-black transition hover:opacity-90 ${signedIn ? "flex-none" : "flex-1"}`}
             >
-              Open workspace
+              {signedIn ? "Account" : "Open workspace"}
             </Link>
           </div>
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendWelcomeEmail } from "../../../../lib/email";
 import { isDatabaseConfigured } from "../../../../lib/supabase-admin";
 import { syncUserProfileIdentity } from "../../../../lib/user-profile";
 import {
@@ -62,10 +63,8 @@ export async function POST(request: Request) {
 
   try {
     await createUserCredential(email, password);
-    await syncUserProfileIdentity({
-      email,
-      name,
-    });
+    await syncUserProfileIdentity({ email, name });
+    void sendWelcomeEmail(email, name);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -114,14 +114,16 @@ export default async function HomePage() {
               href="/account"
               className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
             >
-              Open workspace
+              {initialAccountContext ? "Open workspace" : "Get started"}
             </Link>
-            <Link
-              href="/#auth"
-              className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
-            >
-              Create account
-            </Link>
+            {!initialAccountContext && (
+              <Link
+                href="/#auth"
+                className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
+              >
+                Create account
+              </Link>
+            )}
           </div>
 
           <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

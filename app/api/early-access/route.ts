@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../auth";
+import { sendEarlyAccessEmail } from "../../../lib/email";
 import { isDatabaseConfigured } from "../../../lib/supabase-admin";
 import {
   getUserProfileByEmail,
@@ -66,6 +67,8 @@ export async function POST(request: Request) {
         workStyle: existingProfile?.work_style,
       });
     }
+
+    void sendEarlyAccessEmail(email, name);
 
     return NextResponse.json({
       ok: true,

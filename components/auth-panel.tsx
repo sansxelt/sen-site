@@ -361,6 +361,16 @@ export function AuthPanel({
                     ? "Create account"
                     : "Sign in"}
             </button>
+            {mode === "signin" && (
+              <div className="flex justify-end">
+                <Link
+                  href="/auth/reset-password"
+                  className="text-sm text-neutral-200 transition hover:text-white"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+            )}
             <p className="text-sm leading-6 text-neutral-200">
               {mode === "signup"
                 ? "Create your email account here, or use Google or GitHub below if you want a faster start."

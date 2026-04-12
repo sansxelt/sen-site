@@ -2,13 +2,19 @@
 
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   type ReleaseChannel,
   type SessionState,
   type SummaryStyle,
 } from "../lib/account-session";
 import { getAuthErrorMessage, getSignInPath, oauthProviders } from "../lib/auth-ui";
+
+type BackendStatus = {
+  status: "healthy" | "degraded";
+  database: { configured: boolean; connected: boolean };
+  auth: { configured: boolean };
+};
 
 type StatusTone = "error" | "info" | "success";
 type Status = {
@@ -109,6 +115,41 @@ export function AccountPanel({
     useState<ReleaseChannel>(initialSessionState?.releaseChannel ?? "stable");
   const [status, setStatus] = useState<Status | null>(null);
 
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState<Status | null>(null);
+
+  // Delete account state
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteStatus, setDeleteStatus] = useState<Status | null>(null);
+
+  // Backend status state
+  const [backendStatus, setBackendStatus] = useState<BackendStatus | null>(null);
+  const [checkingBackend, setCheckingBackend] = useState(false);
+
+  async function checkBackendStatus() {
+    setCheckingBackend(true);
+    try {
+      const response = await fetch("/api/status");
+      const data = (await response.json()) as BackendStatus;
+      setBackendStatus(data);
+    } catch {
+      setBackendStatus(null);
+    } finally {
+      setCheckingBackend(false);
+    }
+  }
+
+  useEffect(() => {
+    if (initialSessionState) {
+      void checkBackendStatus();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleProfileSave() {
     if (!sessionState) {
       return;
@@ -178,6 +219,58 @@ export function AccountPanel({
       setStatus({
         tone: "error",
         message: getAuthErrorMessage(error, "signout"),
+      });
+    }
+  }
+
+  async function handlePasswordChange() {
+    setChangingPassword(true);
+    setPasswordStatus(null);
+
+    try {
+      const response = await fetch("/api/account/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const payload = (await response.json()) as { error?: string; ok?: boolean };
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error ?? "We couldn't update your password.");
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setPasswordStatus({ tone: "success", message: "Password updated successfully." });
+    } catch (error) {
+      setPasswordStatus({
+        tone: "error",
+        message: error instanceof Error ? error.message : "We couldn't update your password.",
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeletingAccount(true);
+    setDeleteStatus(null);
+
+    try {
+      const response = await fetch("/api/account/delete", { method: "DELETE" });
+      const payload = (await response.json()) as { error?: string; ok?: boolean };
+
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error ?? "We couldn't delete your account.");
+      }
+
+      await signOut({ redirectTo: "/" });
+    } catch (error) {
+      setDeletingAccount(false);
+      setDeleteStatus({
+        tone: "error",
+        message: error instanceof Error ? error.message : "We couldn't delete your account.",
       });
     }
   }
@@ -519,6 +612,135 @@ export function AccountPanel({
               Desktop access remains invite-based until the rollout is ready to
               widen.
             </p>
+          </div>
+        </div>
+
+        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
+          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
+            Backend Status
+          </div>
+          <div className="mt-5 space-y-3">
+            {backendStatus ? (
+              <>
+                {[
+                  ["Overall", backendStatus.status === "healthy" ? "Healthy" : "Degraded", backendStatus.status === "healthy"],
+                  ["Database", backendStatus.database.connected ? "Connected" : backendStatus.database.configured ? "Unreachable" : "Not configured", backendStatus.database.connected],
+                  ["Auth", backendStatus.auth.configured ? "Configured" : "Not configured", backendStatus.auth.configured],
+                ].map(([label, value, ok]) => (
+                  <div
+                    key={label as string}
+                    className="flex flex-col gap-1 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="text-sm text-neutral-200">{label as string}</div>
+                    <span className={`rounded-full border px-3 py-1 text-xs font-medium ${ok ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100" : "border-rose-400/20 bg-rose-400/10 text-rose-100"}`}>
+                      {value as string}
+                    </span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="text-sm text-neutral-200">
+                {checkingBackend ? "Checking..." : "Status unavailable."}
+              </div>
+            )}
+          </div>
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => void checkBackendStatus()}
+              disabled={checkingBackend}
+              className="rounded-2xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {checkingBackend ? "Checking..." : "Re-check"}
+            </button>
+          </div>
+        </div>
+
+        {sessionState.signInMethod === "Email" && (
+          <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
+            <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
+              Change Password
+            </div>
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white">
+                  Current password
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  disabled={changingPassword}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white">
+                  New password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={changingPassword}
+                  placeholder="At least 8 characters"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </div>
+              {passwordStatus && (
+                <div className={`rounded-2xl border px-4 py-3 text-sm ${statusClasses(passwordStatus.tone)}`}>
+                  {passwordStatus.message}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => void handlePasswordChange()}
+                disabled={changingPassword || !currentPassword || !newPassword}
+                className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+              >
+                {changingPassword ? "Updating..." : "Update password"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-[32px] border border-rose-400/10 bg-rose-400/5 p-6 sm:p-8">
+          <div className="text-sm font-medium uppercase tracking-[0.2em] text-rose-300">
+            Danger Zone
+          </div>
+          <h3 className="mt-3 text-lg font-semibold text-white">
+            Delete your account
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-neutral-200">
+            This permanently removes your profile, preferences, and invite
+            request. It cannot be undone.
+          </p>
+          <div className="mt-4 space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-white">
+                Type <span className="font-mono text-rose-300">DELETE</span> to confirm
+              </label>
+              <input
+                type="text"
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                disabled={deletingAccount}
+                className="mt-2 w-full rounded-2xl border border-rose-400/20 bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-rose-400/40 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
+            {deleteStatus && (
+              <div className={`rounded-2xl border px-4 py-3 text-sm ${statusClasses(deleteStatus.tone)}`}>
+                {deleteStatus.message}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => void handleDeleteAccount()}
+              disabled={deletingAccount || deleteConfirm !== "DELETE"}
+              className="rounded-2xl border border-rose-400/30 bg-rose-400/10 px-5 py-3 text-sm font-medium text-rose-100 transition hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {deletingAccount ? "Deleting account..." : "Delete my account"}
+            </button>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteShell } from "../../components/site-shell";
+import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = {
   title: "Contact / Support",
@@ -20,8 +21,8 @@ export default function ContactPage() {
             Support should be easy to reach before and after access opens.
           </h1>
           <p className="mt-5 text-base leading-7 text-neutral-200">
-            Use the direct channels below for product questions, privacy
-            requests, early-access issues, or team rollout conversations.
+            Use the form below or reach us directly through any of the channels
+            listed here.
           </p>
         </div>
 
@@ -59,7 +60,11 @@ export default function ContactPage() {
           ))}
         </div>
 
-        <div className="mt-10 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
+        <div className="mt-10">
+          <ContactForm />
+        </div>
+
+        <div className="mt-8 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="grid gap-5 lg:grid-cols-2">
             <div>
               <div className="text-lg font-medium text-white">
@@ -67,7 +72,10 @@ export default function ContactPage() {
               </div>
               <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-200">
                 <p>1. Include the email address tied to your sansxel account.</p>
-                <p>2. Mention whether the issue is auth, early access, billing, or privacy-related.</p>
+                <p>
+                  2. Mention whether the issue is auth, early access, billing,
+                  or privacy-related.
+                </p>
                 <p>3. Add screenshots or the exact error message when available.</p>
               </div>
             </div>

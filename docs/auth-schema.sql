@@ -30,6 +30,15 @@ create table if not exists public.user_credentials (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.password_reset_tokens (
+  token text primary key,
+  email text not null,
+  expires_at timestamptz not null,
+  used_at timestamptz,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
 alter table public.early_access_signups enable row level security;
 alter table public.user_profiles enable row level security;
 alter table public.user_credentials enable row level security;
+alter table public.password_reset_tokens enable row level security;
