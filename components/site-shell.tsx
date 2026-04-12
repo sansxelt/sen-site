@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getSignInPath } from "../lib/auth-ui";
@@ -28,6 +29,16 @@ export function SiteShell({ children }: { children: ReactNode }) {
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-start justify-between gap-4 md:items-center">
             <Link href="/" className="flex min-w-0 items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-2">
+                <Image
+                  src="/icon.png"
+                  alt="sansxel"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 object-contain"
+                  priority
+                />
+              </div>
               <div className="min-w-0">
                 <div className="text-lg font-semibold tracking-tight text-white">
                   sansxel
