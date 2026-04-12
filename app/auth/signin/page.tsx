@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { auth } from "../../../auth";
-import { AuthPanel } from "../../../components/auth-panel";
+import { AuthPanel, OAuthSection } from "../../../components/auth-panel";
 import { SiteShell } from "../../../components/site-shell";
 import { getSafeRedirectPath } from "../../../lib/auth-ui";
 
@@ -38,10 +38,13 @@ export default async function SignInPage({
         </div>
 
         <div className="mx-auto mt-10 max-w-4xl sm:mt-12">
-          <AuthPanel
-            callbackUrl={getSafeRedirectPath(callbackUrl)}
-            initialSessionEmail={session?.user?.email ?? null}
-          />
+          <div className="grid gap-6 xl:grid-cols-[1.08fr_.92fr] xl:items-start">
+            <AuthPanel
+              callbackUrl={getSafeRedirectPath(callbackUrl)}
+              initialSessionEmail={session?.user?.email ?? null}
+            />
+            <OAuthSection />
+          </div>
         </div>
       </section>
     </SiteShell>

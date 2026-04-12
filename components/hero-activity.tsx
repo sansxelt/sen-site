@@ -1917,12 +1917,6 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   const outOp: React.CSSProperties["opacity"] = crossfading ? 0 : 1;
   const inOp:  React.CSSProperties["opacity"] = crossfading ? 1 : prev === null ? 1 : 0;
 
-  const layer = (op: React.CSSProperties["opacity"]): React.CSSProperties => ({
-    gridArea: "1/1",
-    opacity: op,
-    transition: `opacity ${FADE_MS}ms ease`,
-    pointerEvents: op === 0 ? "none" : "auto",
-  });
 
   return (
     <>
@@ -1945,22 +1939,24 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           </span>
         </h1>
 
-        {/* Crossfading: body only — fixed height prevents page shift */}
-        <div className="relative mt-5 sm:mt-6" style={{ minHeight: "9rem" }}>
-          <div style={{ display: "grid", position: "absolute", inset: 0 }}>
+        {/* Crossfading: body — outgoing is absolute so it never shifts layout */}
+        <div className="relative mt-5 sm:mt-6">
           {prev && (
-            <div key={prevIdx} style={layer(outOp)}>
-              <p className="max-w-xl text-sm leading-7 text-neutral-300 sm:text-base">
-                {prev.body}
-              </p>
-            </div>
-          )}
-          <div key={currIdx} style={layer(inOp)}>
-            <p className="max-w-xl text-sm leading-7 text-neutral-300 sm:text-base">
-              {curr.body}
+            <p
+              key={`body-out-${prevIdx}`}
+              className="absolute top-0 left-0 max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
+              style={{ opacity: outOp, transition: `opacity ${FADE_MS}ms ease`, pointerEvents: "none" }}
+            >
+              {prev.body}
             </p>
-          </div>
-          </div>
+          )}
+          <p
+            key={`body-in-${currIdx}`}
+            className="max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
+            style={{ opacity: inOp, transition: `opacity ${FADE_MS}ms ease` }}
+          >
+            {curr.body}
+          </p>
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -1998,14 +1994,27 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           </Link>
         </div>
 
-        {/* Crossfading panel */}
-        <div style={{ display: "grid" }}>
+        {/* Crossfading panel — fixed height so no scenario can shift the page */}
+        <div className="relative" style={{ height: "540px" }}>
           {prev && (
-            <div key={prevIdx} style={layer(outOp)}>
+            <div
+              key={prevIdx}
+              style={{
+                position: "absolute", inset: 0,
+                opacity: outOp, transition: `opacity ${FADE_MS}ms ease`,
+                pointerEvents: "none",
+              }}
+            >
               <ScenarioPanel s={prev} />
             </div>
           )}
-          <div key={currIdx} style={layer(inOp)}>
+          <div
+            key={currIdx}
+            style={{
+              position: "absolute", inset: 0,
+              opacity: inOp, transition: `opacity ${FADE_MS}ms ease`,
+            }}
+          >
             <ScenarioPanel s={curr} />
           </div>
         </div>
