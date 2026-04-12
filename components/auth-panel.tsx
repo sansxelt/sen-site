@@ -325,41 +325,39 @@ export function AuthPanel({
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className={!onModeChange ? "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" : undefined}>
         <div>
-          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-            Secure Access
+          <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+            <span className="uppercase tracking-[0.2em] text-neutral-300">Secure Access</span>
+            {sessionEmail && (
+              <>
+                <span className="text-neutral-600">·</span>
+                <span className="text-emerald-400">{sessionEmail}</span>
+              </>
+            )}
           </div>
           <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white">
             Continue into sansxel.
           </h3>
+          {sessionEmail && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href={safeRedirectPath}
+                className="sansxel-white-button rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-black transition hover:opacity-90"
+              >
+                Open workspace
+              </Link>
+              <button
+                type="button"
+                onClick={() => void handleSignOut()}
+                disabled={loadingAction === "signout"}
+                className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loadingAction === "signout" ? "Signing out…" : "Sign out"}
+              </button>
+            </div>
+          )}
         </div>
         {!onModeChange && <ModeSwitcher mode={mode} onModeChange={setMode} />}
       </div>
-
-      {/* ── Session banner ──────────────────────────────────────── */}
-      {sessionEmail && (
-        <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-          <div className="text-sm font-medium text-emerald-100">
-            Signed in on this device
-          </div>
-          <div className="mt-1 text-sm text-emerald-50/80">{sessionEmail}</div>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href={safeRedirectPath}
-              className="sansxel-white-button rounded-2xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
-            >
-              Open workspace
-            </Link>
-            <button
-              type="button"
-              onClick={() => void handleSignOut()}
-              disabled={loadingAction === "signout"}
-              className="rounded-2xl border border-white/10 bg-black/20 px-4 py-2 text-sm text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loadingAction === "signout" ? "Signing out..." : "Sign out"}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Email card ──────────────────────────────────────────── */}
       <div className="mt-6">

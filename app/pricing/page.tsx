@@ -1,7 +1,6 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 import { SiteShell } from "../../components/site-shell";
-import { getPlanActionHref, pricingPlans } from "../../lib/pricing";
+import { PricingPacks } from "../../components/pricing-packs";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -27,81 +26,7 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 sm:mt-12">
-          {pricingPlans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`rounded-3xl border p-6 sm:p-7 ${
-                plan.featured
-                  ? "border-white bg-white text-neutral-950"
-                  : "border-white/10 bg-white/5 text-white"
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-lg font-medium">{plan.name}</div>
-                  <div
-                    className={`mt-1 text-sm ${
-                      plan.featured ? "text-neutral-700" : "text-neutral-300"
-                    }`}
-                  >
-                    {plan.note}
-                  </div>
-                </div>
-                {(plan.badge || plan.featured) && (
-                  <div className="rounded-full bg-neutral-950 px-3 py-1 text-xs font-medium text-white">
-                    {plan.badge ?? "Popular"}
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6">
-                <div className="text-3xl font-semibold tracking-tight">
-                  {plan.monthlyLabel}
-                </div>
-                <div
-                  className={`mt-2 text-sm ${
-                    plan.featured ? "text-neutral-700" : "text-neutral-300"
-                  }`}
-                >
-                  {plan.yearlyLabel ?? plan.description}
-                </div>
-              </div>
-
-              <p
-                className={`mt-4 text-sm leading-6 ${
-                  plan.featured ? "text-neutral-700" : "text-neutral-300"
-                }`}
-              >
-                {plan.description}
-              </p>
-
-              <div className="mt-6 space-y-3">
-                {plan.points.map((point) => (
-                  <div key={point} className="flex items-center gap-3 text-sm">
-                    <div
-                      className={`h-2 w-2 rounded-full ${
-                        plan.featured ? "bg-neutral-950" : "bg-white"
-                      }`}
-                    />
-                    <span>{point}</span>
-                  </div>
-                ))}
-              </div>
-
-              <Link
-                href={getPlanActionHref(plan)}
-                className={`mt-8 block rounded-2xl px-5 py-3 text-center text-sm font-medium transition ${
-                  plan.featured
-                    ? "sansxel-dark-button bg-neutral-950 text-white hover:opacity-90"
-                    : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
-                }`}
-              >
-                {plan.ctaLabel}
-              </Link>
-            </div>
-          ))}
-        </div>
+        <PricingPacks />
 
         <div className="mt-10 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:mt-12 sm:p-8">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 sm:gap-6">

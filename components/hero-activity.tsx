@@ -1945,19 +1945,21 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           </span>
         </h1>
 
-        {/* Crossfading: body only */}
-        <div style={{ display: "grid" }}>
+        {/* Crossfading: body only — fixed height prevents page shift */}
+        <div className="relative mt-5 sm:mt-6" style={{ minHeight: "9rem" }}>
+          <div style={{ display: "grid", position: "absolute", inset: 0 }}>
           {prev && (
             <div key={prevIdx} style={layer(outOp)}>
-              <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-300 sm:mt-6 sm:text-base">
+              <p className="max-w-xl text-sm leading-7 text-neutral-300 sm:text-base">
                 {prev.body}
               </p>
             </div>
           )}
           <div key={currIdx} style={layer(inOp)}>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-300 sm:mt-6 sm:text-base">
+            <p className="max-w-xl text-sm leading-7 text-neutral-300 sm:text-base">
               {curr.body}
             </p>
+          </div>
           </div>
         </div>
 

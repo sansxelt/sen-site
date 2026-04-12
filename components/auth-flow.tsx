@@ -22,7 +22,9 @@ export function AuthFlow({
 
         {/* Right: toggle + OAuth */}
         <div className="flex flex-col gap-4">
-          <ModeSwitcher mode={mode} onModeChange={setMode} />
+          <div className="flex justify-center">
+            <ModeSwitcher mode={mode} onModeChange={setMode} />
+          </div>
           <OAuthSection />
         </div>
       </div>
