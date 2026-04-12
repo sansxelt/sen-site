@@ -45,7 +45,7 @@ function baseHtml(content: string) {
 </html>`;
 }
 
-function welcomeHtml(name: string) {
+function welcomeHtml(name?: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#a3a3a3;">Welcome</p>
@@ -101,7 +101,7 @@ function supportHtml(opts: {
 // Send helpers — all fire-and-forget safe (never throw to callers)
 // ---------------------------------------------------------------------------
 
-export async function sendWelcomeEmail(email: string, name: string) {
+export async function sendWelcomeEmail(email: string, name?: string) {
   const resend = getResend();
   if (!resend) return;
 

@@ -90,7 +90,7 @@ const authResult = NextAuth({
         if (isNewUser) {
           void sendWelcomeEmail(
             user.email,
-            typeof user.name === "string" ? user.name : undefined,
+            typeof user.name === "string" ? user.name : "",
           );
         }
       } catch (error) {
