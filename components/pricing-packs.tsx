@@ -166,13 +166,13 @@ export function PricingPacks() {
   const [hoveredSide, setHoveredSide] = useState<"left" | "right" | null>(null);
 
   const sideStyle = (side: "left" | "right"): React.CSSProperties => ({
-    opacity:    hoveredSide !== null && hoveredSide !== side ? 0.35 : 1,
-    filter:     hoveredSide !== null && hoveredSide !== side ? "blur(4px)" : "none",
+    opacity:    hoveredSide !== null && hoveredSide !== side ? 0.55 : 1,
+    filter:     hoveredSide !== null && hoveredSide !== side ? "blur(1.5px)" : "none",
     transition: "opacity 0.4s ease, filter 0.4s ease",
   });
 
   return (
-    <div className="mt-16 flex flex-col items-center gap-12 sm:mt-20 lg:flex-row lg:items-start lg:justify-center lg:gap-16 xl:gap-24">
+    <div className="mt-8 flex flex-col items-center gap-12 sm:mt-10 lg:flex-row lg:items-start lg:justify-center lg:gap-16 xl:gap-24">
       <div style={sideStyle("left")} onMouseEnter={() => setHoveredSide("left")} onMouseLeave={() => setHoveredSide(null)}>
         <CardPack plans={basicPlans}    label="Basic Plans"          fanDir="left"  dotsAlign="right" />
       </div>
