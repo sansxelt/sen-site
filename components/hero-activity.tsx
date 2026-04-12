@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type ActivityCard = {
   description: string;
@@ -20,231 +20,307 @@ type MemoryItem = {
   title: string;
 };
 
+type InsightCard = {
+  label: string;
+  value: string;
+};
+
 type HeroScenario = {
   accent: string;
   ask: string;
+  assistantCards?: InsightCard[];
   header: string;
   insight: string;
   metrics?: MetricCard[];
-  mode: "activity" | "metrics" | "memory";
+  mode: "activity" | "assistant" | "metrics" | "memory";
+  modeLabel: string;
   previewLabel: string;
+  promptLabel: string;
   summary: string;
   timeline?: ActivityCard[];
   trail?: MemoryItem[];
   word: string;
 };
 
+const WORD_CYCLE_MS = 5200;
+const WORD_FADE_MS = 450;
+
 const scenarios: HeroScenario[] = [
   {
     accent: "Today",
-    ask: "What was I creating before Discord?",
+    ask: "What was I creating before feedback pulled me away?",
     header: "Workspace",
-    insight: "Strongest focus block happened inside your editor before references and team replies.",
+    insight:
+      "Your deepest flow stayed in the editor until feedback checks started to fragment the session.",
     mode: "activity",
-    previewLabel: "Activity recall",
+    modeLabel: "Live activity",
+    previewLabel: "Creative recall",
+    promptLabel: "Resume creation",
     summary:
-      "You spent most of your time creating, with your clearest momentum showing up before the first context switch.",
+      "sansxel rebuilds the exact stretch where you were creating, so you can return to the same momentum instead of rethinking the work.",
     timeline: [
       {
-        description: "Blocking out gameplay systems and testing flow.",
+        description: "Blocking out interaction states and scene flow.",
         name: "Roblox Studio",
-        time: "1h 42m",
+        time: "1h 38m",
       },
       {
-        description: "References, docs, and quick examples.",
+        description: "Reference pulls and quick implementation checks.",
         name: "Browser",
-        time: "48m",
+        time: "41m",
       },
       {
-        description: "Feedback loops and quick team replies.",
+        description: "Feedback notes and next edits.",
         name: "Discord",
-        time: "21m",
+        time: "18m",
       },
     ],
     word: "creating",
   },
   {
-    accent: "Signals",
-    ask: "Where was I losing momentum while planning?",
-    header: "Workspace",
-    insight: "Most hesitation happened after the outline was set and before the next step was chosen.",
-    metrics: [
-      { label: "Focus score", value: "82%" },
-      { label: "Context saved", value: "14 notes" },
-      { label: "Next actions", value: "3 clear" },
+    accent: "Workspace",
+    ask: "What was I making right before I switched projects?",
+    assistantCards: [
+      { label: "Primary block", value: "Homepage auth polish" },
+      { label: "Next move", value: "Tighten provider spacing" },
+      { label: "Confidence", value: "High" },
     ],
-    mode: "metrics",
-    previewLabel: "Planning signals",
+    header: "Builder",
+    insight:
+      "The strongest block happened before the second context switch, when the task stack was still clean.",
+    mode: "assistant",
+    modeLabel: "Direct answer",
+    previewLabel: "Resume answer",
+    promptLabel: "Resume making",
     summary:
-      "You were planning in structured bursts, with the AI surfacing where the next decision was getting sticky.",
-    word: "planning",
-  },
-  {
-    accent: "Memory",
-    ask: "What was I designing before feedback came in?",
-    header: "Workspace",
-    insight: "The last stable design direction was saved before feedback started to fragment the session.",
-    mode: "memory",
-    previewLabel: "Design trail",
-    summary:
-      "You were designing through layout and state decisions, then breaking into short feedback checks before returning.",
-    trail: [
-      {
-        note: "Locked spacing and card rhythm for the auth screen.",
-        time: "2:14 PM",
-        title: "Checkpoint saved",
-      },
-      {
-        note: "Compared reference flows and removed two crowded blocks.",
-        time: "2:36 PM",
-        title: "Pattern review",
-      },
-      {
-        note: "Prepared the next revision before opening comments.",
-        time: "2:52 PM",
-        title: "Ready to resume",
-      },
-    ],
-    word: "designing",
-  },
-  {
-    accent: "Revenue",
-    ask: "How was monetization trending while I was analyzing?",
-    header: "Workspace",
-    insight: "Retention and conversion improved together once onboarding friction dropped.",
-    metrics: [
-      { label: "Day-7 retention", value: "+8.4%" },
-      { label: "Trial conversion", value: "12.8%" },
-      { label: "MRR trend", value: "+$4.2k" },
-    ],
-    mode: "metrics",
-    previewLabel: "Monetization view",
-    summary:
-      "You were analyzing product health across retention and revenue, with the clearest lift tied to smoother onboarding.",
-    word: "analyzing",
+      "The AI answers in plain language, with the exact block, intent, and next step already surfaced for you.",
+    word: "making",
   },
   {
     accent: "Today",
-    ask: "What was I building before I switched tabs?",
+    ask: "Where did I leave off while building?",
     header: "Workspace",
-    insight: "The main build block stayed intact until you broke for implementation checks.",
+    insight:
+      "The build path stayed focused until you paused for docs and repo checks.",
     mode: "activity",
+    modeLabel: "Live activity",
     previewLabel: "Build recall",
+    promptLabel: "Resume build",
     summary:
-      "You were building steadily, with the session centered around shipping core behavior before checking documentation.",
+      "Building sessions stay readable, so the system can show what you touched, why you switched, and where to pick back up.",
     timeline: [
       {
-        description: "Shipping core systems and tightening logic.",
+        description: "Shipping core logic and wiring account state.",
         name: "VS Code",
-        time: "1h 31m",
+        time: "1h 29m",
       },
       {
-        description: "Patterns, docs, and implementation checks.",
+        description: "Library docs and route checks.",
         name: "Browser",
-        time: "47m",
+        time: "36m",
       },
       {
-        description: "Commit notes and quick repo cleanup.",
+        description: "Commit cleanup and issue review.",
         name: "GitHub",
-        time: "18m",
+        time: "16m",
       },
     ],
     word: "building",
   },
   {
     accent: "Memory",
-    ask: "What was I writing before I paused?",
+    ask: "What direction was I crafting before the review?",
     header: "Workspace",
-    insight: "The draft had a stable shape before messages pulled you away from the writing block.",
+    insight:
+      "The design direction was already narrowing before comments introduced new branches.",
     mode: "memory",
-    previewLabel: "Writing trail",
+    modeLabel: "Memory trail",
+    previewLabel: "Design trail",
+    promptLabel: "Resume craft",
     summary:
-      "You were writing in long stretches, then briefly stepping into references and replies before returning to the draft.",
+      "Crafting work is saved as checkpoints, so you can re-enter the same visual direction without hunting through tabs.",
     trail: [
       {
-        note: "Locked the opening paragraph and shortened the supporting copy.",
+        note: "Locked the cleaner card rhythm for the auth panel.",
+        time: "2:14 PM",
+        title: "Checkpoint saved",
+      },
+      {
+        note: "Removed the noisy provider copy and tightened spacing.",
+        time: "2:28 PM",
+        title: "Polish pass",
+      },
+      {
+        note: "Queued one final mobile alignment pass.",
+        time: "2:37 PM",
+        title: "Resume point",
+      },
+    ],
+    word: "crafting",
+  },
+  {
+    accent: "Memory",
+    ask: "What was I writing before chat opened?",
+    header: "Workspace",
+    insight:
+      "The draft had a clear shape before incoming messages broke the writing block.",
+    mode: "memory",
+    modeLabel: "Memory trail",
+    previewLabel: "Writing trail",
+    promptLabel: "Resume writing",
+    summary:
+      "Writing sessions keep their structure, so sansxel can bring you back to the paragraph, source, and next sentence that mattered.",
+    trail: [
+      {
+        note: "Locked the opening paragraph and shortened the support copy.",
         time: "11:08 AM",
         title: "Draft checkpoint",
       },
       {
-        note: "Pulled two examples to support the argument.",
+        note: "Pulled two examples to strengthen the CTA.",
         time: "11:21 AM",
         title: "Reference pass",
       },
       {
-        note: "Left off near the close and CTA language.",
+        note: "Left off near the closing line and next section handoff.",
         time: "11:34 AM",
-        title: "Resume point",
+        title: "Ready to resume",
       },
     ],
     word: "writing",
   },
   {
     accent: "Signals",
-    ask: "What was I refining before the next review?",
-    header: "Workspace",
-    insight: "Most refinements happened in small polish loops, not in large structural changes.",
+    ask: "Where was I planning too slowly?",
+    header: "Planner",
+    insight:
+      "Momentum dipped after the outline was set, not while the ideas were still forming.",
     metrics: [
-      { label: "Polish passes", value: "9" },
-      { label: "UI issues closed", value: "6" },
-      { label: "Open blockers", value: "1" },
+      { label: "Decision lag", value: "14 min" },
+      { label: "Clear next steps", value: "3" },
+      { label: "Saved notes", value: "11" },
     ],
     mode: "metrics",
-    previewLabel: "Refinement signals",
+    modeLabel: "Signal view",
+    previewLabel: "Planning signals",
+    promptLabel: "Planning answer",
     summary:
-      "You were refining the experience in short focused passes, with the AI showing where the rough edges were disappearing.",
-    word: "refining",
+      "Planning views show where direction was clear, where it slowed down, and what should happen next without extra guesswork.",
+    word: "planning",
   },
   {
     accent: "Today",
-    ask: "What was I researching before chat opened?",
+    ask: "What was I researching before I replied?",
     header: "Workspace",
-    insight: "The strongest source cluster stayed around implementation references and competitive patterns.",
+    insight:
+      "The strongest source cluster stayed around implementation references and competitive patterns.",
     mode: "activity",
+    modeLabel: "Live activity",
     previewLabel: "Research recall",
+    promptLabel: "Resume research",
     summary:
-      "You were researching across multiple sources, then consolidating takeaways before moving into discussion.",
+      "Research sessions stay organized by source and purpose, so resuming feels like opening a map instead of redoing the search.",
     timeline: [
       {
-        description: "Comparing sources and gathering references.",
+        description: "Comparing examples and implementation references.",
         name: "Browser",
-        time: "1h 27m",
+        time: "1h 16m",
       },
       {
-        description: "Collecting notes and saving takeaways.",
+        description: "Saving notes and short takeaways.",
         name: "Notion",
-        time: "36m",
+        time: "33m",
       },
       {
-        description: "Questions, updates, and clarifications.",
+        description: "Questions and quick team clarifications.",
         name: "Discord",
-        time: "17m",
+        time: "14m",
       },
     ],
     word: "researching",
   },
   {
-    accent: "Memory",
-    ask: "Where was I iterating before I stopped?",
-    header: "Workspace",
-    insight: "The strongest progress came from tight iteration loops with quick validation in between.",
-    mode: "memory",
-    previewLabel: "Iteration trail",
+    accent: "Revenue",
+    ask: "How was retention trending while I was analyzing?",
+    header: "Signals",
+    insight:
+      "Retention and conversion both lifted after onboarding friction dropped and the first-value moment got faster.",
+    metrics: [
+      { label: "Day-7 retention", value: "+8.4%" },
+      { label: "Trial conversion", value: "12.8%" },
+      { label: "MRR trend", value: "+$4.2k" },
+    ],
+    mode: "metrics",
+    modeLabel: "Signal view",
+    previewLabel: "Growth signals",
+    promptLabel: "Growth answer",
     summary:
-      "You were iterating rapidly, keeping changes small enough that the session still has a clean path back in.",
+      "When the work turns analytical, the interface shifts into retention, monetization, and conversion views that explain what changed.",
+    word: "analyzing",
+  },
+  {
+    accent: "Forecast",
+    ask: "What changed in revenue while I was forecasting?",
+    header: "Forecast",
+    insight:
+      "The clearest upside came from better team retention, not from pushing trial volume harder.",
+    metrics: [
+      { label: "Projected MRR", value: "$28.4k" },
+      { label: "Expansion lift", value: "+17%" },
+      { label: "Churn risk", value: "Low" },
+    ],
+    mode: "metrics",
+    modeLabel: "Forecast view",
+    previewLabel: "Forecast view",
+    promptLabel: "Forecast answer",
+    summary:
+      "Forecasting should look different from simple activity recall, so sansxel pivots into forward-looking revenue and retention signals.",
+    word: "forecasting",
+  },
+  {
+    accent: "Workspace",
+    ask: "What part was I refining before the next pass?",
+    assistantCards: [
+      { label: "Polish passes", value: "9" },
+      { label: "Issues closed", value: "6" },
+      { label: "Next fix", value: "Mobile header spacing" },
+    ],
+    header: "Refinement",
+    insight:
+      "Most refinements happened in small loops, not through large rewrites.",
+    mode: "assistant",
+    modeLabel: "Direct answer",
+    previewLabel: "Refinement answer",
+    promptLabel: "Refinement answer",
+    summary:
+      "Refinement mode answers what changed, what improved, and what still needs attention without drowning the screen in noise.",
+    word: "refining",
+  },
+  {
+    accent: "Memory",
+    ask: "Where did I leave off while iterating?",
+    header: "Workspace",
+    insight:
+      "The strongest progress came from quick iteration loops with tight validation in between.",
+    mode: "memory",
+    modeLabel: "Memory trail",
+    previewLabel: "Iteration trail",
+    promptLabel: "Resume iteration",
+    summary:
+      "Iteration mode keeps the path back clean, so you can jump into the next pass instead of replaying every previous tweak.",
     trail: [
       {
-        note: "Adjusted spacing, tested, then kept the cleaner version.",
+        note: "Adjusted spacing, tested it, and kept the cleaner version.",
         time: "4:02 PM",
         title: "Iteration 04",
       },
       {
-        note: "Changed hierarchy and removed one noisy detail.",
+        note: "Changed hierarchy and removed one noisy element.",
         time: "4:11 PM",
         title: "Iteration 05",
       },
       {
-        note: "Left off with one more pass clearly queued.",
+        note: "Left off with one final pass already queued.",
         time: "4:19 PM",
         title: "Next pass ready",
       },
@@ -253,86 +329,135 @@ const scenarios: HeroScenario[] = [
   },
   {
     accent: "Signals",
-    ask: "What was I debugging before the fix landed?",
-    header: "Workspace",
-    insight: "The error cluster narrowed fast once the reproduction path was stable.",
+    ask: "What was breaking while I was debugging?",
+    header: "Debugger",
+    insight:
+      "The failure cluster narrowed fast once the reproduction path stayed stable for a full pass.",
     metrics: [
       { label: "Repros captured", value: "4" },
       { label: "Crash rate", value: "-63%" },
       { label: "Likely causes", value: "2 left" },
     ],
     mode: "metrics",
+    modeLabel: "Signal view",
     previewLabel: "Debug signals",
+    promptLabel: "Debug answer",
     summary:
-      "You were debugging with a cleaner signal than before, with the AI reducing the search space around the likely cause.",
+      "Debugging mode trades generic history for sharper signals, so the likely cause and last stable state are visible right away.",
     word: "debugging",
   },
   {
     accent: "Today",
-    ask: "What was I reviewing before I replied?",
+    ask: "What risks was I reviewing before I answered?",
     header: "Workspace",
-    insight: "Most review time went into finding risks and tightening the next response.",
+    insight:
+      "Most review time went into identifying regression risk and choosing the next fix with confidence.",
     mode: "activity",
+    modeLabel: "Live activity",
     previewLabel: "Review recall",
+    promptLabel: "Review answer",
     summary:
-      "You were reviewing carefully, balancing detail checks with fast decisions about what needed to change next.",
+      "Review mode shows the files, checks, and responses around a decision so you can reply with context instead of memory alone.",
     timeline: [
       {
-        description: "Scanning diffs and identifying regressions.",
+        description: "Scanning diffs and spotting regressions.",
         name: "GitHub",
-        time: "52m",
+        time: "54m",
       },
       {
         description: "Opening files and validating behavior.",
         name: "VS Code",
-        time: "39m",
+        time: "37m",
       },
       {
-        description: "Writing feedback and next-step notes.",
+        description: "Writing review notes and next steps.",
         name: "Slack",
-        time: "14m",
+        time: "13m",
       },
     ],
     word: "reviewing",
   },
   {
-    accent: "Memory",
-    ask: "What was I shipping before the release note?",
-    header: "Workspace",
-    insight: "The release path was already clear before the final packaging step started.",
-    mode: "memory",
-    previewLabel: "Release trail",
+    accent: "Customers",
+    ask: "What was moving conversion while I was selling?",
+    assistantCards: [
+      { label: "Conversion lift", value: "+14%" },
+      { label: "Best closer", value: "Clear Pro value" },
+      { label: "Next test", value: "Annual CTA" },
+    ],
+    header: "Revenue",
+    insight:
+      "The sharpest conversion lift came after pricing clarity improved, not after adding more traffic.",
+    mode: "assistant",
+    modeLabel: "Direct answer",
+    previewLabel: "Sales answer",
+    promptLabel: "Sales answer",
     summary:
-      "You were shipping with the key milestones already in place, so coming back in should feel direct and low-friction.",
+      "Selling mode turns memory into a readable revenue answer, with the clearest conversion levers already highlighted.",
+    word: "selling",
+  },
+  {
+    accent: "Memory",
+    ask: "What was I onboarding before I paused?",
+    header: "Workspace",
+    insight:
+      "The flow was smooth until the last setup step, where the new user path needed one clearer handoff.",
+    mode: "memory",
+    modeLabel: "Memory trail",
+    previewLabel: "Onboarding trail",
+    promptLabel: "Onboarding answer",
+    summary:
+      "Onboarding work stays legible as a sequence, so you can reopen the exact blocker instead of re-walking the whole flow.",
     trail: [
       {
-        note: "Finalized the last release blocker and marked it ready.",
-        time: "6:03 PM",
-        title: "Release checkpoint",
+        note: "Tightened the welcome copy and removed one extra CTA.",
+        time: "9:18 AM",
+        title: "Setup pass",
       },
       {
-        note: "Prepared notes and confirmed the version details.",
-        time: "6:12 PM",
-        title: "Release notes",
+        note: "Matched the callback state to the first account screen.",
+        time: "9:29 AM",
+        title: "Flow alignment",
       },
       {
-        note: "Left off right before the publish step.",
-        time: "6:18 PM",
-        title: "Ready to ship",
+        note: "Left one final empty-state clarification to resolve.",
+        time: "9:37 AM",
+        title: "Next fix",
       },
     ],
+    word: "onboarding",
+  },
+  {
+    accent: "Release",
+    ask: "What was left before I started shipping?",
+    assistantCards: [
+      { label: "Last blocker", value: "Resolved" },
+      { label: "Release notes", value: "Ready" },
+      { label: "Next step", value: "Publish build" },
+    ],
+    header: "Workspace",
+    insight:
+      "The release path was already clean before the final packaging step began.",
+    mode: "assistant",
+    modeLabel: "Direct answer",
+    previewLabel: "Release answer",
+    promptLabel: "Release answer",
+    summary:
+      "Shipping mode answers the last blocker, the release state, and the next step in a single glance.",
     word: "shipping",
   },
 ];
 
-const playOrder = [0, 4, 1, 7, 3, 10, 2, 8, 5, 11, 6, 9];
+const playOrder = [0, 7, 2, 11, 4, 14, 1, 9, 5, 13, 3, 10, 6, 15, 8, 12];
 
 function DashboardFrame({
   children,
   label,
+  modeLabel,
 }: {
   children: React.ReactNode;
   label: string;
+  modeLabel: string;
 }) {
   return (
     <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
@@ -342,15 +467,20 @@ function DashboardFrame({
             <div>
               <div className="text-sm font-medium text-white">{label}</div>
               <div className="text-xs text-neutral-200">
-                Thursday - 4h 18m tracked
+                Thursday · 4h 18m tracked
               </div>
             </div>
-            <Link
-              href="/account"
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-300 transition hover:bg-white/10"
-            >
-              Workspace
-            </Link>
+            <div className="flex items-center gap-2">
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-neutral-300">
+                {modeLabel}
+              </div>
+              <Link
+                href="/account"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-300 transition hover:bg-white/10"
+              >
+                {label}
+              </Link>
+            </div>
           </div>
 
           {children}
@@ -360,18 +490,38 @@ function DashboardFrame({
   );
 }
 
+function PromptCard({
+  ask,
+  promptLabel,
+}: {
+  ask: string;
+  promptLabel: string;
+}) {
+  return (
+    <Link
+      href="/account"
+      className="mt-5 block rounded-2xl border border-white/10 bg-black/30 p-4 transition hover:bg-white/5"
+    >
+      <div className="text-xs text-neutral-300">{promptLabel}</div>
+      <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-200">
+        {ask}
+      </div>
+    </Link>
+  );
+}
+
 function ActivityPreview({ scenario }: { scenario: HeroScenario }) {
   return (
-    <DashboardFrame label={scenario.accent}>
+    <DashboardFrame label={scenario.header} modeLabel={scenario.modeLabel}>
       <div className="mt-5 space-y-3">
         {scenario.timeline?.map((app) => (
           <div
             key={`${scenario.word}-${app.name}`}
             className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 sm:p-4"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-medium text-white">{app.name}</div>
-              <div className="text-xs text-neutral-200">{app.time}</div>
+              <div className="text-xs text-neutral-300">{app.time}</div>
             </div>
             <div className="mt-2 text-sm leading-6 text-neutral-200">
               {app.description}
@@ -389,24 +539,23 @@ function ActivityPreview({ scenario }: { scenario: HeroScenario }) {
         </p>
       </div>
 
-      <Link
-        href="/account"
-        className="mt-5 block rounded-2xl border border-white/10 bg-black/30 p-4 transition hover:bg-white/5"
-      >
-        <div className="text-xs text-neutral-300">Ask sansxel</div>
-        <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-200">
-          {scenario.ask}
-        </div>
-      </Link>
+      <PromptCard ask={scenario.ask} promptLabel={scenario.promptLabel} />
     </DashboardFrame>
   );
 }
 
 function MetricsPreview({ scenario }: { scenario: HeroScenario }) {
-  const bars = [44, 68, 57, 81, 73, 90, 76];
+  const barSets: Record<string, number[]> = {
+    analyzing: [28, 42, 54, 61, 66, 74, 82],
+    debugging: [61, 54, 48, 32, 26, 21, 18],
+    forecasting: [34, 39, 48, 57, 68, 79, 88],
+    planning: [46, 58, 52, 67, 63, 76, 72],
+  };
+
+  const bars = barSets[scenario.word] ?? [40, 52, 60, 55, 68, 74, 81];
 
   return (
-    <DashboardFrame label={scenario.accent}>
+    <DashboardFrame label={scenario.header} modeLabel={scenario.modeLabel}>
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         {scenario.metrics?.map((metric) => (
           <div
@@ -424,11 +573,11 @@ function MetricsPreview({ scenario }: { scenario: HeroScenario }) {
       </div>
 
       <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-        <div className="flex items-end gap-2">
+        <div className="flex h-28 items-end gap-2">
           {bars.map((bar, index) => (
             <div key={`${scenario.word}-bar-${index}`} className="flex-1">
               <div
-                className="rounded-t-xl bg-gradient-to-t from-white/20 to-white/70 transition-all duration-700"
+                className="rounded-t-xl bg-gradient-to-t from-cyan-500/30 via-sky-400/45 to-white/80 transition-all duration-700"
                 style={{ height: `${bar}px` }}
               />
             </div>
@@ -439,22 +588,14 @@ function MetricsPreview({ scenario }: { scenario: HeroScenario }) {
         </p>
       </div>
 
-      <Link
-        href="/account"
-        className="mt-5 block rounded-2xl border border-white/10 bg-black/30 p-4 transition hover:bg-white/5"
-      >
-        <div className="text-xs text-neutral-300">Ask sansxel</div>
-        <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-200">
-          {scenario.ask}
-        </div>
-      </Link>
+      <PromptCard ask={scenario.ask} promptLabel={scenario.promptLabel} />
     </DashboardFrame>
   );
 }
 
 function MemoryPreview({ scenario }: { scenario: HeroScenario }) {
   return (
-    <DashboardFrame label={scenario.accent}>
+    <DashboardFrame label={scenario.header} modeLabel={scenario.modeLabel}>
       <div className="mt-5 space-y-3">
         {scenario.trail?.map((item) => (
           <div
@@ -481,15 +622,47 @@ function MemoryPreview({ scenario }: { scenario: HeroScenario }) {
         </p>
       </div>
 
-      <Link
-        href="/account"
-        className="mt-5 block rounded-2xl border border-white/10 bg-black/30 p-4 transition hover:bg-white/5"
-      >
-        <div className="text-xs text-neutral-300">Ask sansxel</div>
-        <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-200">
-          {scenario.ask}
+      <PromptCard ask={scenario.ask} promptLabel={scenario.promptLabel} />
+    </DashboardFrame>
+  );
+}
+
+function AssistantPreview({ scenario }: { scenario: HeroScenario }) {
+  return (
+    <DashboardFrame label={scenario.header} modeLabel={scenario.modeLabel}>
+      <div className="mt-5 rounded-2xl border border-violet-400/20 bg-violet-400/10 p-4">
+        <div className="text-xs font-medium uppercase tracking-[0.18em] text-violet-200">
+          {scenario.previewLabel}
         </div>
-      </Link>
+        <p className="mt-2 text-sm leading-6 text-neutral-200">
+          {scenario.summary}
+        </p>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+        <div className="text-xs uppercase tracking-[0.18em] text-neutral-400">
+          sansxel response
+        </div>
+        <p className="mt-3 text-sm leading-6 text-white">{scenario.insight}</p>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        {scenario.assistantCards?.map((item) => (
+          <div
+            key={`${scenario.word}-${item.label}`}
+            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+          >
+            <div className="text-xs uppercase tracking-[0.18em] text-neutral-400">
+              {item.label}
+            </div>
+            <div className="mt-3 text-sm font-medium text-white">
+              {item.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <PromptCard ask={scenario.ask} promptLabel={scenario.promptLabel} />
     </DashboardFrame>
   );
 }
@@ -522,12 +695,12 @@ export function HeroActivity({
 
     const fadeTimer = window.setTimeout(() => {
       setVisible(false);
-    }, 5600);
+    }, WORD_CYCLE_MS - WORD_FADE_MS);
 
     const swapTimer = window.setTimeout(() => {
       setStep((current) => (current + 1) % playOrder.length);
       setVisible(true);
-    }, 6400);
+    }, WORD_CYCLE_MS);
 
     return () => {
       window.clearTimeout(fadeTimer);
@@ -536,6 +709,10 @@ export function HeroActivity({
   }, [reducedMotion, step]);
 
   const activeScenario = scenarios[playOrder[step]];
+  const cycleLabel = useMemo(
+    () => `${activeScenario.word} mode`,
+    [activeScenario.word],
+  );
 
   return (
     <>
@@ -553,12 +730,12 @@ export function HeroActivity({
           </span>
           <span className="block" aria-hidden="true">
             you were{" "}
-            <span className="relative inline-flex min-h-[1.1em] min-w-[8ch] items-center">
+            <span className="relative inline-flex min-h-[1.1em] min-w-[9ch] items-center overflow-hidden align-bottom">
               <span
-                className={`inline-block transition-all duration-700 ease-out ${
+                className={`inline-block transition-all duration-500 ease-out ${
                   visible || reducedMotion
                     ? "translate-y-0 opacity-100"
-                    : "translate-y-2 opacity-0"
+                    : "translate-y-3 opacity-0"
                 }`}
               >
                 {activeScenario.word}.
@@ -572,6 +749,21 @@ export function HeroActivity({
           gives you a calm way to resume, reflect, and move forward without
           losing the thread.
         </p>
+
+        <div className="mt-5 max-w-xl">
+          <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.18em] text-neutral-400 sm:text-xs">
+            <span>Live homepage scenario</span>
+            <span>{cycleLabel}</span>
+          </div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div
+              key={`progress-${activeScenario.word}`}
+              className={`h-full rounded-full bg-white ${
+                reducedMotion ? "w-full" : "animate-[heroCycle_5200ms_linear_forwards]"
+              }`}
+            />
+          </div>
+        </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link
@@ -609,13 +801,35 @@ export function HeroActivity({
         </div>
       </div>
 
-      {activeScenario.mode === "metrics" ? (
-        <MetricsPreview scenario={activeScenario} />
-      ) : activeScenario.mode === "memory" ? (
-        <MemoryPreview scenario={activeScenario} />
-      ) : (
-        <ActivityPreview scenario={activeScenario} />
-      )}
+      <div
+        key={activeScenario.word}
+        className={`transition-all duration-500 ease-out ${
+          visible || reducedMotion
+            ? "translate-y-0 opacity-100"
+            : "translate-y-2 opacity-0"
+        }`}
+      >
+        {activeScenario.mode === "metrics" ? (
+          <MetricsPreview scenario={activeScenario} />
+        ) : activeScenario.mode === "memory" ? (
+          <MemoryPreview scenario={activeScenario} />
+        ) : activeScenario.mode === "assistant" ? (
+          <AssistantPreview scenario={activeScenario} />
+        ) : (
+          <ActivityPreview scenario={activeScenario} />
+        )}
+      </div>
+
+      <style jsx>{`
+        @keyframes heroCycle {
+          from {
+            width: 0%;
+          }
+          to {
+            width: 100%;
+          }
+        }
+      `}</style>
     </>
   );
 }
