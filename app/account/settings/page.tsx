@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { auth } from "../../../auth";
-import { AccountPanel } from "../../../components/account-panel";
 import { readSessionState } from "../../../lib/account-session";
 import { getUserProfileByEmail } from "../../../lib/user-profile";
+import { SettingsPanel } from "./settings-panel";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -18,11 +18,11 @@ export default async function SettingsPage() {
     <div className="max-w-3xl">
       <h1 className="text-2xl font-semibold text-white">Settings</h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Manage your profile, preferences, and account security.
+        Profile, preferences, and account security.
       </p>
 
       <div className="mt-8">
-        <AccountPanel initialSessionState={initialSessionState} />
+        <SettingsPanel initialSessionState={initialSessionState} />
       </div>
     </div>
   );

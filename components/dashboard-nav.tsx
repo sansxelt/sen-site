@@ -73,9 +73,31 @@ function TrashIcon() {
   );
 }
 
+function MemoryIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M8 2C5.24 2 3 4.02 3 6.5c0 1.3.57 2.48 1.5 3.3V12a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V9.8A4.43 4.43 0 0 0 13 6.5C13 4.02 10.76 2 8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6 12.5V14M10 12.5V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IntegrationsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <rect x="1" y="5" width="5" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="10" y="5" width="5" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M6 7.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M8 3v2M8 11v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const navItems: NavItem[] = [
   { href: "/account", label: "Overview", icon: <OverviewIcon /> },
+  { href: "/account/memory", label: "Memory", icon: <MemoryIcon /> },
   { href: "/account/keys", label: "API Keys", icon: <KeyIcon /> },
+  { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
   { href: "/account/usage", label: "Usage", icon: <UsageIcon /> },
   { href: "/account/settings", label: "Settings", icon: <SettingsIcon /> },
 ];

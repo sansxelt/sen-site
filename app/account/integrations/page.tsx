@@ -1,0 +1,150 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Integrations",
+  description: "Connect sansxel to your desktop and tools.",
+};
+
+type Integration = {
+  name: string;
+  description: string;
+  status: "available" | "coming_soon" | "beta";
+  href?: string;
+  cta: string;
+};
+
+const integrations: Integration[] = [
+  {
+    name: "Desktop app",
+    description:
+      "The core sansxel client. Runs in the background and captures ambient context from your active windows, files, and sessions.",
+    status: "available",
+    href: "/download",
+    cta: "Download",
+  },
+  {
+    name: "Browser extension",
+    description:
+      "Captures browsing context — tabs, search trails, and visited pages — and ties them to active work sessions.",
+    status: "coming_soon",
+    cta: "Coming soon",
+  },
+  {
+    name: "VS Code extension",
+    description:
+      "Surfaces relevant memory and prior context directly in your editor while you code.",
+    status: "coming_soon",
+    cta: "Coming soon",
+  },
+  {
+    name: "Slack",
+    description:
+      "Pull conversation context into your memory graph and surface relevant threads when you switch tasks.",
+    status: "coming_soon",
+    cta: "Coming soon",
+  },
+  {
+    name: "Notion",
+    description:
+      "Link pages and databases to your workspace so sansxel can reference your notes and docs during recall.",
+    status: "coming_soon",
+    cta: "Coming soon",
+  },
+  {
+    name: "GitHub",
+    description:
+      "Attach commit history, PR context, and issue threads to sessions automatically.",
+    status: "coming_soon",
+    cta: "Coming soon",
+  },
+  {
+    name: "Linear",
+    description:
+      "Bring issue and project context into your memory graph so task state follows your focus.",
+    status: "coming_soon",
+    cta: "Coming soon",
+  },
+  {
+    name: "REST API",
+    description:
+      "Build your own integrations. Use your API key to read, write, and query workspace memory programmatically.",
+    status: "beta",
+    href: "/account/keys",
+    cta: "Get API key",
+  },
+];
+
+function statusBadge(status: Integration["status"]) {
+  if (status === "available")
+    return (
+      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-0.5 text-xs text-emerald-300">
+        Available
+      </span>
+    );
+  if (status === "beta")
+    return (
+      <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-2.5 py-0.5 text-xs text-blue-300">
+        Beta
+      </span>
+    );
+  return (
+    <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-xs text-neutral-500">
+      Coming soon
+    </span>
+  );
+}
+
+export default function IntegrationsPage() {
+  return (
+    <div className="max-w-3xl">
+      <h1 className="text-2xl font-semibold text-white">Integrations</h1>
+      <p className="mt-1 text-sm text-neutral-400">
+        Connect sansxel to your desktop, tools, and workflows.
+      </p>
+
+      <div className="mt-8 space-y-3">
+        {integrations.map((item) => (
+          <div
+            key={item.name}
+            className="flex items-start gap-4 rounded-xl border border-white/10 bg-white/[0.02] p-4 transition hover:bg-white/[0.04]"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-neutral-100">{item.name}</span>
+                {statusBadge(item.status)}
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                {item.description}
+              </p>
+            </div>
+            <div className="shrink-0">
+              {item.href && item.status !== "coming_soon" ? (
+                <Link
+                  href={item.href}
+                  className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"
+                >
+                  {item.cta}
+                </Link>
+              ) : (
+                <span className="rounded-lg border border-white/[0.06] px-3 py-1.5 text-xs text-neutral-600">
+                  {item.cta}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-6 text-xs text-neutral-600">
+        Want an integration that isn&apos;t listed?{" "}
+        <a
+          href="mailto:hello@sansxel.app?subject=Integration request"
+          className="underline underline-offset-2 transition hover:text-neutral-400"
+        >
+          Let us know →
+        </a>
+      </p>
+    </div>
+  );
+}
