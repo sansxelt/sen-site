@@ -11,7 +11,7 @@ import {
   type OauthProvider,
 } from "../lib/auth-ui";
 
-type AuthMode = "signup" | "signin";
+export type AuthMode = "signup" | "signin";
 type StatusTone = "error" | "info" | "success";
 type Status = {
   message: string;
@@ -177,15 +177,56 @@ export function OAuthSection({
   );
 }
 
+export function ModeSwitcher({
+  mode,
+  onModeChange,
+}: {
+  mode: AuthMode;
+  onModeChange: (mode: AuthMode) => void;
+}) {
+  return (
+    <div className="inline-flex overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm">
+      <button
+        type="button"
+        onClick={() => onModeChange("signup")}
+        className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
+          mode === "signup"
+            ? "sansxel-white-button bg-white text-black"
+            : "text-neutral-200 hover:text-white"
+        }`}
+      >
+        Create account
+      </button>
+      <button
+        type="button"
+        onClick={() => onModeChange("signin")}
+        className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
+          mode === "signin"
+            ? "sansxel-white-button bg-white text-black"
+            : "text-neutral-200 hover:text-white"
+        }`}
+      >
+        Sign in
+      </button>
+    </div>
+  );
+}
+
 export function AuthPanel({
+  mode: modeProp,
+  onModeChange,
   callbackUrl = "/account",
   initialSessionEmail = null,
 }: {
+  mode?: AuthMode;
+  onModeChange?: (mode: AuthMode) => void;
   callbackUrl?: string;
   initialSessionEmail?: string | null;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>("signup");
+  const [modeInternal, setModeInternal] = useState<AuthMode>("signup");
+  const mode = modeProp ?? modeInternal;
+  const setMode = onModeChange ?? setModeInternal;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -282,7 +323,7 @@ export function AuthPanel({
   return (
     <div>
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className={!onModeChange ? "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" : undefined}>
         <div>
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Secure Access
@@ -291,31 +332,7 @@ export function AuthPanel({
             Continue into sansxel.
           </h3>
         </div>
-
-        <div className="inline-flex overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm">
-          <button
-            type="button"
-            onClick={() => setMode("signup")}
-            className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
-              mode === "signup"
-                ? "sansxel-white-button bg-white text-black"
-                : "text-neutral-200 hover:text-white"
-            }`}
-          >
-            Create account
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("signin")}
-            className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
-              mode === "signin"
-                ? "sansxel-white-button bg-white text-black"
-                : "text-neutral-200 hover:text-white"
-            }`}
-          >
-            Sign in
-          </button>
-        </div>
+        {!onModeChange && <ModeSwitcher mode={mode} onModeChange={setMode} />}
       </div>
 
       {/* ── Session banner ──────────────────────────────────────── */}

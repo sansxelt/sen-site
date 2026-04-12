@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { auth } from "../auth";
-import { AuthPanel, OAuthSection } from "../components/auth-panel";
+import { AuthFlow } from "../components/auth-flow";
 import { EarlyAccessForm } from "../components/early-access-form";
 import { HeroActivity } from "../components/hero-activity";
 import { SiteShell } from "../components/site-shell";
@@ -277,40 +277,7 @@ export default async function HomePage() {
       </section>
 
       <section id="auth" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-        <div className="grid gap-6 xl:grid-cols-[1.08fr_.92fr] xl:items-start">
-          <AuthPanel initialSessionEmail={session?.user?.email ?? null} />
-
-          <div className="flex flex-col gap-6 xl:mt-4">
-            <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
-              <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-                Trust
-              </div>
-              <h3 className="mt-3 text-2xl font-semibold tracking-tight text-white">
-                Credibility has to be visible.
-              </h3>
-              <div className="mt-6 space-y-3 text-sm text-neutral-200">
-                {[
-                  "Email, Google, and GitHub all start from sansxel's own sign-in flow before handing off when needed.",
-                  "The callback returns to sansxel routes instead of a third-party auth hostname.",
-                  "New email accounts are created inside the same auth surface and land in the same workspace flow.",
-                  "Privacy, terms, pricing, and support all have real routes.",
-                  "Invite requests stay attached to the same account path.",
-                  "Secure account handling stays visible throughout the journey.",
-                ].map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3"
-                  >
-                    <div className="mt-1 h-2.5 w-2.5 rounded-full bg-white" />
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <OAuthSection />
-          </div>
-        </div>
+        <AuthFlow initialSessionEmail={session?.user?.email ?? null} />
       </section>
 
       <section
