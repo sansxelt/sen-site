@@ -473,6 +473,83 @@ const scenarios = [
     uptime: "99.94%",
     since: "14 days",
   },
+  {
+    word: "finding",
+    accent: "sky" as AccentKey,
+    body: "sansxel searches across everything on your machine — files, repos, open windows, settings panels — so 'where was I?' has a sharp answer in under a second.",
+    layout: "spotlight" as const,
+    accentLabel: "Ambient search",
+    header: "Finder",
+    prompt: "Find the auth handler I was editing before the meeting.",
+    promptLabel: "Search your PC",
+    query: "auth session handler",
+    groups: [
+      {
+        label: "Files",
+        items: [
+          { iconType: "ts",  iconLabel: "TS",  name: "auth.ts",      path: "~/sen-site/auth.ts",          meta: "3m ago",  highlighted: true  },
+          { iconType: "ts",  iconLabel: "TS",  name: "auth-ui.ts",   path: "~/sen-site/lib/auth-ui.ts",   meta: "1h ago",  highlighted: false },
+        ],
+      },
+      {
+        label: "Repos",
+        items: [
+          { iconType: "git", iconLabel: "GIT", name: "sen-site",     path: "~/Projects/sen-site",         meta: "main ↑3", highlighted: false },
+          { iconType: "git", iconLabel: "GIT", name: "sansxel-app",  path: "~/Projects/sansxel-app",      meta: "feat/auth", highlighted: false },
+        ],
+      },
+      {
+        label: "Windows",
+        items: [
+          { iconType: "app", iconLabel: "VS",  name: "VS Code",      path: "auth.ts — sen-site",          meta: "active",  highlighted: false },
+          { iconType: "sys", iconLabel: "⌘",   name: "Terminal",     path: "~/sen-site · npm run dev",    meta: "2 tabs",  highlighted: false },
+        ],
+      },
+    ],
+  },
+  {
+    word: "locating",
+    accent: "blue" as AccentKey,
+    body: "sansxel knows which repositories were active, what branch you were on, and which files you last touched — so you pick up exactly where the session ended.",
+    layout: "filetree" as const,
+    accentLabel: "Repo finder",
+    header: "Repository",
+    prompt: "Which repo was I in and what files changed?",
+    promptLabel: "Locate repo",
+    repo: "sen-site",
+    branch: "main",
+    remotePath: "github.com/sansxelt/sen-site",
+    status: "3 modified · last active 8m ago",
+    tree: [
+      { depth: 0, type: "dir"  as const, name: "app/",                 change: undefined },
+      { depth: 1, type: "dir"  as const, name: "account/",             change: undefined },
+      { depth: 2, type: "file" as const, name: "page.tsx",             change: "M" as const },
+      { depth: 2, type: "file" as const, name: "layout.tsx",           change: undefined },
+      { depth: 0, type: "dir"  as const, name: "components/",          change: undefined },
+      { depth: 1, type: "file" as const, name: "hero-activity.tsx",    change: "M" as const },
+      { depth: 1, type: "file" as const, name: "auth-panel.tsx",       change: "+" as const },
+      { depth: 0, type: "dir"  as const, name: "lib/",                 change: undefined },
+      { depth: 1, type: "file" as const, name: "api-keys.ts",          change: undefined },
+    ],
+  },
+  {
+    word: "exploring",
+    accent: "violet" as AccentKey,
+    body: "sansxel maps every open app, window, and system panel during your session — so when you come back, the full picture of what was live is already waiting.",
+    layout: "sysfinder" as const,
+    accentLabel: "PC context",
+    header: "Session map",
+    prompt: "What was open and in focus during my last session?",
+    promptLabel: "Explore context",
+    recentApps: [
+      { name: "VS Code",   subtitle: "sen-site · hero-activity.tsx",  icon: "⬡", bg: "#0066B8", last: "3m ago"  },
+      { name: "Chrome",    subtitle: "4 tabs · supabase.com active",  icon: "◉", bg: "#4285F4", last: "12m ago" },
+      { name: "Terminal",  subtitle: "~/sen-site · npm run dev",       icon: "▸", bg: "#555",    last: "18m ago" },
+      { name: "Figma",     subtitle: "sansxel — landing page v2",      icon: "◈", bg: "#A259FF", last: "1h ago"  },
+    ],
+    openFiles: "12 files · 3 apps",
+    activeRepo: "sen-site · main",
+  },
 ] as const;
 
 type Scenario = (typeof scenarios)[number];
@@ -490,10 +567,32 @@ function HeroFrame({
   accent: string;
   accentKey: AccentKey;
 }) {
+  const outerBorder: Record<AccentKey, string> = {
+    sky:     "border-sky-400/30",
+    rose:    "border-rose-400/30",
+    amber:   "border-amber-400/30",
+    cyan:    "border-cyan-400/30",
+    emerald: "border-emerald-400/30",
+    blue:    "border-blue-400/30",
+    violet:  "border-violet-400/30",
+    indigo:  "border-indigo-400/30",
+    orange:  "border-orange-400/30",
+  };
+  const innerBg: Record<AccentKey, string> = {
+    sky:     "bg-sky-950/40",
+    rose:    "bg-rose-950/40",
+    amber:   "bg-amber-950/40",
+    cyan:    "bg-cyan-950/40",
+    emerald: "bg-emerald-950/40",
+    blue:    "bg-blue-950/40",
+    violet:  "bg-violet-950/40",
+    indigo:  "bg-indigo-950/40",
+    orange:  "bg-orange-950/40",
+  };
   return (
     <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-4">
-        <div className="rounded-[24px] border border-white/10 bg-neutral-900/90 p-4 sm:p-5">
+      <div className={`rounded-[28px] border p-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-4 bg-white/[0.03] ${outerBorder[accentKey]}`}>
+        <div className={`rounded-[24px] border border-white/10 p-4 sm:p-5 ${innerBg[accentKey]}`}>
           <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
             <div>
               <div className="text-sm font-medium text-white">{header}</div>
@@ -527,14 +626,26 @@ function Prompt({ label, question }: { label: string; question: string }) {
 // ─── Layout: session (creating, building) ─────────────────────────────────
 
 function SessionLayout({ s }: { s: Extract<Scenario, { layout: "session" }> }) {
+  // Visual timeline widths derived from time strings (rough minutes)
+  const timeToWidth = (t: string) => {
+    const m = t.match(/(\d+)h\s*(\d+)m/);
+    if (m) return Math.min(100, Math.round(((parseInt(m[1]) * 60 + parseInt(m[2])) / 120) * 100));
+    const m2 = t.match(/(\d+)m/);
+    if (m2) return Math.min(100, Math.round((parseInt(m2[1]) / 120) * 100));
+    return 30;
+  };
+  const barColors = ["bg-sky-400/70", "bg-sky-400/40", "bg-sky-400/25"];
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
       <div className="mt-4 space-y-2">
-        {s.sessions.map((item) => (
+        {s.sessions.map((item, i) => (
           <div key={item.app} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-medium text-white">{item.app}</div>
               <div className="shrink-0 font-mono text-xs text-neutral-400">{item.time}</div>
+            </div>
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+              <div className={`h-full rounded-full ${barColors[i] ?? barColors[2]}`} style={{ width: `${timeToWidth(item.time)}%` }} />
             </div>
             <div className="mt-1.5 text-xs leading-relaxed text-neutral-400">{item.detail}</div>
           </div>
@@ -960,14 +1071,25 @@ function ClusterLayout({ s }: { s: Extract<Scenario, { layout: "cluster" }> }) {
     if (tag === "trust")   return "border-emerald-400/25 bg-emerald-400/10 text-emerald-300";
     return "border-white/10 bg-white/5 text-neutral-400";
   };
+  const maxVotes = Math.max(...s.ideas.map((i) => i.votes));
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
       <div className="mt-4 space-y-2">
         {s.ideas.map((idea, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black/30 text-sm font-semibold text-white">{idea.votes}</div>
-            <div className="min-w-0 flex-1 text-xs text-neutral-200">{idea.label}</div>
-            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${tagCls(idea.tag)}`}>{idea.tag}</span>
+          <div key={i} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium text-neutral-200">{idea.label}</span>
+              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${tagCls(idea.tag)}`}>{idea.tag}</span>
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-amber-400/70"
+                  style={{ width: `${Math.round((idea.votes / maxVotes) * 100)}%` }}
+                />
+              </div>
+              <span className="shrink-0 font-mono text-[10px] text-amber-400/80">{idea.votes}</span>
+            </div>
           </div>
         ))}
       </div>
@@ -1057,15 +1179,25 @@ function PortfolioLayout({ s }: { s: Extract<Scenario, { layout: "portfolio" }> 
 // ─── Layout: candidates (hiring) ─────────────────────────────────────────
 
 function CandidatesLayout({ s }: { s: Extract<Scenario, { layout: "candidates" }> }) {
+  const maxCount = s.stages[0].count;
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4 flex gap-2">
-        {s.stages.map((stage, i) => (
-          <div key={stage.label} className={`flex flex-1 flex-col items-center gap-1.5 rounded-xl border p-3 ${i === 0 ? "border-white/15 bg-white/5" : "border-white/[0.07] bg-white/[0.02]"}`}>
-            <div className="text-xl font-semibold text-white">{stage.count}</div>
-            <div className="text-center text-[10px] leading-tight text-neutral-500">{stage.label}</div>
-          </div>
-        ))}
+      <div className="mt-4 space-y-1.5">
+        {s.stages.map((stage, i) => {
+          const pct = Math.round((stage.count / maxCount) * 100);
+          const intensity = i === 0 ? "bg-orange-400/80" : i === 1 ? "bg-orange-400/55" : i === 2 ? "bg-orange-400/35" : "bg-orange-400/20";
+          return (
+            <div key={stage.label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-neutral-400">{stage.label}</span>
+                <span className="font-mono text-sm font-semibold text-white">{stage.count}</span>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className={`h-full rounded-full ${intensity}`} style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
       <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
         <div className="mb-1 text-[10px] uppercase tracking-[0.15em] text-neutral-500">Top candidate</div>
@@ -1113,16 +1245,35 @@ function ProgressLayout({ s }: { s: Extract<Scenario, { layout: "progress" }> })
 // ─── Layout: contacts (networking) ───────────────────────────────────────
 
 function ContactsLayout({ s }: { s: Extract<Scenario, { layout: "contacts" }> }) {
+  const avatarColors = [
+    "border-violet-400/30 bg-violet-500/20 text-violet-300",
+    "border-indigo-400/30 bg-indigo-500/20 text-indigo-300",
+    "border-sky-400/30 bg-sky-500/20 text-sky-300",
+  ];
+  const statusDot = (last: string) => {
+    const days = parseInt(last);
+    if (days <= 3) return "bg-emerald-400";
+    if (days <= 7) return "bg-amber-400";
+    return "bg-neutral-600";
+  };
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
       <div className="mt-4 space-y-2">
-        {s.contacts.map((c) => (
-          <div key={c.name} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-sm font-medium text-neutral-100">{c.name}</div>
-              <div className="shrink-0 text-[10px] text-neutral-600">{c.last}</div>
+        {s.contacts.map((c, i) => (
+          <div key={c.name} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+            <div className="relative shrink-0">
+              <div className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold ${avatarColors[i % avatarColors.length]}`}>
+                {c.name[0]}
+              </div>
+              <div className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-black/50 ${statusDot(c.last)}`} />
             </div>
-            <p className="mt-1 text-xs leading-relaxed text-neutral-500">{c.context}</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-medium text-neutral-100">{c.name}</span>
+                <span className="shrink-0 text-[10px] text-neutral-600">{c.last}</span>
+              </div>
+              <p className="mt-0.5 text-xs leading-relaxed text-neutral-500">{c.context}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -1258,6 +1409,162 @@ function AlertsLayout({ s }: { s: Extract<Scenario, { layout: "alerts" }> }) {
   );
 }
 
+// ─── Layout: spotlight (finding) ─────────────────────────────────────────
+
+function SpotlightLayout({ s }: { s: Extract<Scenario, { layout: "spotlight" }> }) {
+  const iconCls: Record<string, string> = {
+    ts:  "border-blue-400/25 bg-blue-400/10 text-blue-300",
+    git: "border-orange-400/25 bg-orange-400/10 text-orange-300",
+    app: "border-violet-400/25 bg-violet-400/10 text-violet-300",
+    sys: "border-sky-400/25 bg-sky-400/10 text-sky-300",
+  };
+
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      {/* Search bar */}
+      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/15 bg-black/50 px-4 py-3">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" className="shrink-0 text-neutral-400">
+          <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        <span className="text-sm text-neutral-200">{s.query}</span>
+        <span className="inline-block h-3.5 w-0.5 animate-pulse rounded-full bg-white/50" />
+        <span className="ml-auto font-mono text-[10px] text-neutral-600">↵</span>
+      </div>
+
+      {/* Result groups */}
+      <div className="mt-3 space-y-2.5">
+        {s.groups.map((group) => (
+          <div key={group.label}>
+            <div className="mb-1 px-0.5 text-[10px] font-medium uppercase tracking-[0.15em] text-neutral-600">
+              {group.label}
+            </div>
+            <div className="overflow-hidden rounded-xl border border-white/[0.07]">
+              {group.items.map((item, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-3 px-3 py-2 ${
+                    item.highlighted
+                      ? "bg-white/10"
+                      : "bg-white/[0.02]"
+                  } ${i < group.items.length - 1 ? "border-b border-white/[0.05]" : ""}`}
+                >
+                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-[9px] font-bold ${iconCls[item.iconType] ?? iconCls.app}`}>
+                    {item.iconLabel}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-medium text-neutral-100">{item.name}</div>
+                    <div className="truncate font-mono text-[10px] text-neutral-500">{item.path}</div>
+                  </div>
+                  <div className="shrink-0 text-[10px] text-neutral-600">{item.meta}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: filetree (locating) ─────────────────────────────────────────
+
+function FileTreeLayout({ s }: { s: Extract<Scenario, { layout: "filetree" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      {/* Repo header */}
+      <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-orange-400/20 bg-orange-400/10 font-mono text-[10px] font-bold text-orange-300">
+          git
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-semibold text-white">{s.repo}</div>
+          <div className="truncate font-mono text-[10px] text-neutral-500">{s.remotePath}</div>
+        </div>
+        <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 font-mono text-[10px] text-neutral-400">
+          {s.branch}
+        </span>
+      </div>
+
+      {/* File tree */}
+      <div className="mt-3 rounded-2xl border border-white/10 bg-black/25 p-3.5 font-mono">
+        <div className="mb-2.5 text-[10px] uppercase tracking-[0.12em] text-neutral-500">
+          {s.status}
+        </div>
+        <div className="space-y-[3px]">
+          {s.tree.map((node, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-1.5"
+              style={{ paddingLeft: `${node.depth * 14}px` }}
+            >
+              <span className={`shrink-0 text-[10px] ${node.type === "dir" ? "text-neutral-600" : "text-neutral-700"}`}>
+                {node.type === "dir" ? "▸" : "·"}
+              </span>
+              <span className={`text-xs ${
+                node.change
+                  ? "text-neutral-100"
+                  : node.type === "dir"
+                    ? "text-neutral-400"
+                    : "text-neutral-600"
+              }`}>
+                {node.name}
+              </span>
+              {node.change === "M" && (
+                <span className="ml-auto shrink-0 rounded px-1 text-[9px] font-bold text-amber-400">M</span>
+              )}
+              {node.change === "+" && (
+                <span className="ml-auto shrink-0 rounded px-1 text-[9px] font-bold text-emerald-400">+</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: sysfinder (exploring) ───────────────────────────────────────
+
+function SysfinderLayout({ s }: { s: Extract<Scenario, { layout: "sysfinder" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 space-y-2">
+        {s.recentApps.map((app) => (
+          <div key={app.name} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-sm"
+              style={{ background: `${app.bg}22` }}
+            >
+              {app.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-sm font-medium text-neutral-100">{app.name}</div>
+              <div className="truncate text-[10px] text-neutral-500">{app.subtitle}</div>
+            </div>
+            <div className="shrink-0 text-[10px] text-neutral-600">{app.last}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Open files</div>
+          <div className="mt-1.5 text-xs text-neutral-200">{s.openFiles}</div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Active repo</div>
+          <div className="mt-1.5 text-xs text-neutral-200">{s.activeRepo}</div>
+        </div>
+      </div>
+
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
 // ─── Route to the right layout ────────────────────────────────────────────
 
 function ScenarioPanel({ s }: { s: Scenario }) {
@@ -1284,6 +1591,9 @@ function ScenarioPanel({ s }: { s: Scenario }) {
   if (s.layout === "suite")       return <SuiteLayout s={s} />;
   if (s.layout === "config")      return <ConfigLayout s={s} />;
   if (s.layout === "alerts")      return <AlertsLayout s={s} />;
+  if (s.layout === "spotlight")   return <SpotlightLayout s={s} />;
+  if (s.layout === "filetree")    return <FileTreeLayout s={s} />;
+  if (s.layout === "sysfinder")   return <SysfinderLayout s={s} />;
   return <SessionLayout s={s} />;
 }
 

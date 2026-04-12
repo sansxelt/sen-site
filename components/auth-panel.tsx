@@ -228,18 +228,19 @@ export function AuthPanel({
   }
 
   return (
-    <div className="rounded-[32px] border border-white/12 bg-black/25 p-5 sm:p-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div>
+      {/* ── Header ──────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Secure Access
           </div>
-          <h3 className="mt-3 text-2xl font-semibold tracking-tight text-white">
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white">
             Continue into sansxel.
           </h3>
         </div>
 
-        <div className="grid w-full grid-cols-2 overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm sm:inline-flex sm:w-auto">
+        <div className="inline-flex overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm">
           <button
             type="button"
             onClick={() => setMode("signup")}
@@ -265,34 +266,17 @@ export function AuthPanel({
         </div>
       </div>
 
-      <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
-        Email, Google, and GitHub all start here on sansxel and return to the
-        same workspace flow when they finish.
-      </p>
-
-      <div className="mt-5 flex flex-wrap gap-2.5 text-sm text-neutral-100">
-        {["Email live", "Google live", "GitHub live"].map((item) => (
-          <div
-            key={item}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5"
-          >
-            {item}
-          </div>
-        ))}
-      </div>
-
+      {/* ── Session banner ──────────────────────────────────────── */}
       {sessionEmail && (
-        <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+        <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
           <div className="text-sm font-medium text-emerald-100">
             Signed in on this device
           </div>
-          <div className="mt-2 text-sm leading-6 text-emerald-50/90">
-            {sessionEmail}
-          </div>
-          <div className="mt-4 grid gap-3 sm:flex sm:flex-wrap">
+          <div className="mt-1 text-sm text-emerald-50/80">{sessionEmail}</div>
+          <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href={safeRedirectPath}
-              className="sansxel-white-button rounded-2xl bg-white px-4 py-2 text-center text-sm font-medium text-black transition hover:opacity-90"
+              className="sansxel-white-button rounded-2xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
             >
               Open workspace
             </Link>
@@ -308,43 +292,47 @@ export function AuthPanel({
         </div>
       )}
 
-      <div className="mt-8 grid items-start gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)]">
-        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
-          <div>
-            <div className="text-sm font-medium text-white">Email sign-in</div>
-            <p className="mt-2 text-sm leading-6 text-neutral-200">
-              Use a password-based sansxel account or switch to Google and
-              GitHub below.
-            </p>
+      {/* ── Two separate cards ───────────────────────────────────── */}
+      <div className="mt-6 grid items-start gap-4 xl:grid-cols-2">
+
+        {/* Email */}
+        <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5 sm:p-6">
+          <div className="text-sm font-medium text-white">
+            {mode === "signup" ? "Create with email" : "Sign in with email"}
           </div>
+          <p className="mt-1.5 text-sm leading-6 text-neutral-400">
+            {mode === "signup"
+              ? "Password-based account on sansxel."
+              : "Use your email and password."}
+          </p>
 
           <form onSubmit={handleEmailAuth} className="mt-5 space-y-3">
             {mode === "signup" && (
               <input
                 type="text"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
                 disabled={emailBusy}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-400 focus:border-white/25 disabled:opacity-60"
               />
             )}
             <input
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Email address"
               disabled={emailBusy}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-400 focus:border-white/25 disabled:opacity-60"
               required
             />
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
               disabled={emailBusy}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-400 focus:border-white/25 disabled:opacity-60"
               required
               minLength={8}
             />
@@ -365,31 +353,25 @@ export function AuthPanel({
               <div className="flex justify-end">
                 <Link
                   href="/auth/reset-password"
-                  className="text-sm text-neutral-200 transition hover:text-white"
+                  className="text-xs text-neutral-400 transition hover:text-neutral-200"
                 >
                   Forgot password?
                 </Link>
               </div>
             )}
-            <p className="text-sm leading-6 text-neutral-200">
-              {mode === "signup"
-                ? "Create your email account here, or use Google or GitHub below if you want a faster start."
-                : "Sign in with your email and password, or continue with a provider below."}
-            </p>
           </form>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6">
-          <div className="text-sm font-medium text-white">Continue with</div>
-          <p className="mt-2 text-sm leading-6 text-neutral-200">
-            Choose the provider you already use and come straight back into
-            your workspace.
+        {/* OAuth */}
+        <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 sm:p-6">
+          <div className="text-sm font-medium text-white">Continue with a provider</div>
+          <p className="mt-1.5 text-sm leading-6 text-neutral-400">
+            Faster start — picks up in the same workspace flow.
           </p>
 
           <div className="mt-5 grid gap-3">
             {oauthProviders.map((option) => {
               const providerBusy = activeProvider === option.provider;
-
               return (
                 <button
                   key={option.provider}
@@ -399,21 +381,19 @@ export function AuthPanel({
                   className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-wait disabled:opacity-80"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06]">
                       <ProviderIcon provider={option.provider} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-white">
                         Continue with {option.label}
                       </div>
-                      <div className="mt-1 text-sm text-neutral-300">
-                        {option.provider === "google"
-                          ? "Use your Google account"
-                          : "Use your GitHub account"}
+                      <div className="mt-0.5 text-xs text-neutral-400">
+                        {option.provider === "google" ? "Use your Google account" : "Use your GitHub account"}
                       </div>
                     </div>
-                    <span className="shrink-0 rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
-                      {providerBusy ? "Redirecting..." : "Live"}
+                    <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-neutral-400">
+                      {providerBusy ? "Redirecting…" : "Live"}
                     </span>
                   </div>
                 </button>
@@ -421,11 +401,11 @@ export function AuthPanel({
             })}
           </div>
 
-          <div className="mt-5 border-t border-white/10 pt-5">
-            <div className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
+          <div className="mt-5 border-t border-white/[0.08] pt-4">
+            <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
               Destination
             </div>
-            <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-neutral-100">
+            <div className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-neutral-400">
               {safeRedirectPath}
             </div>
           </div>
@@ -433,11 +413,7 @@ export function AuthPanel({
       </div>
 
       {status && (
-        <div
-          className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${statusClasses(
-            status.tone,
-          )}`}
-        >
+        <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${statusClasses(status.tone)}`}>
           {status.message}
         </div>
       )}
