@@ -1983,20 +1983,14 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
       <div className="hidden lg:flex lg:flex-col lg:gap-4">
 
         {/* Callout — context setter above the panel */}
-        <div className="flex items-start justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3.5">
+        <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
           <div className="min-w-0">
-            <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
-              Compressed preview
-            </div>
-            <p className="mt-1 text-sm leading-relaxed text-neutral-400">
-              Each panel is a fraction of what sansxel actually captures.
-              The live app holds your full session history, file-level context,
-              and a searchable timeline across every tool — updated continuously.
-            </p>
+            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Quick summary </span>
+            <span className="text-sm text-neutral-400">— the in-app experience is significantly deeper.</span>
           </div>
           <Link
             href="/account"
-            className="mt-0.5 shrink-0 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white whitespace-nowrap"
+            className="shrink-0 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white whitespace-nowrap"
           >
             See full app →
           </Link>
