@@ -78,6 +78,17 @@ function passwordResetHtml(resetUrl: string) {
   `);
 }
 
+function contactConfirmHtml(name: string, subject: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#a3a3a3;">Message Received</p>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#f5f5f5;line-height:1.3;">We got your message.</h1>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#d4d4d4;">${greeting} we received your message about <strong style="color:#f5f5f5;">${subject}</strong> and will follow up to your email address directly. For urgent issues, reply to this email.</p>
+    <a href="https://sansxel.app/contact" style="display:inline-block;background:#fff;color:#000;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Back to contact</a>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If you didn't submit this form, you can safely ignore this email.</p>
+  `);
+}
+
 function supportHtml(opts: {
   email: string;
   name: string;
@@ -146,6 +157,22 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
     });
   } catch (error) {
     console.error("sendPasswordResetEmail failed:", error);
+  }
+}
+
+export async function sendContactConfirmEmail(email: string, name: string, subject: string) {
+  const resend = getResend();
+  if (!resend) return;
+
+  try {
+    await resend.emails.send({
+      from,
+      to: email,
+      subject: `We received your message — ${subject}`,
+      html: contactConfirmHtml(name, subject),
+    });
+  } catch (error) {
+    console.error("sendContactConfirmEmail failed:", error);
   }
 }
 

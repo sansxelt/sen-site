@@ -144,8 +144,8 @@ export const pricingPlans: PricingPlan[] = [
   },
   {
     apiRequestLimit: 300000,
-    ctaLabel: "Set up Teams",
-    ctaVariant: "account",
+    ctaLabel: "Contact for Teams",
+    ctaVariant: "contact",
     description:
       "A per-seat team tier for shared workspaces, onboarding, and admin controls without enterprise overhead.",
     key: "teams",

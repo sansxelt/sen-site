@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
+import { NavArrows } from "./nav-arrows";
 
 const footerGroups = [
   {
@@ -98,25 +99,19 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
             {/* Actions */}
             <div className="flex shrink-0 items-center gap-2">
-              {!signedIn && (
-                <Link
-                  href={getSignInPath("/account")}
-                  className="hidden rounded-xl border border-white/10 px-3.5 py-2 text-sm text-neutral-300 transition hover:bg-white/5 hover:text-white sm:block"
-                >
-                  Sign in
-                </Link>
-              )}
               <Link
                 href={signedIn ? "/account" : "/download"}
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
-                {signedIn ? "My Account" : "Get started"}
+                {signedIn ? "My Account" : "Access"}
               </Link>
             </div>
 
           </div>
         </div>
       </header>
+
+      <NavArrows />
 
       {/* pt-[66px] clears the ~65px fixed header */}
       <main className="relative z-10 flex-1 pt-[66px]">

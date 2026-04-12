@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendSupportEmail } from "../../../lib/email";
+import { sendContactConfirmEmail, sendSupportEmail } from "../../../lib/email";
 
 type ContactPayload = {
   email?: string;
@@ -46,7 +46,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    await sendSupportEmail({ email, name, subject, message });
+    await Promise.all([
+      sendSupportEmail({ email, name, subject, message }),
+      sendContactConfirmEmail(email, name, subject),
+    ]);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Contact form send failed:", error);
