@@ -185,11 +185,11 @@ export function ModeSwitcher({
   onModeChange: (mode: AuthMode) => void;
 }) {
   return (
-    <div className="inline-flex overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm">
+    <div className="flex w-full overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm">
       <button
         type="button"
         onClick={() => onModeChange("signup")}
-        className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
+        className={`flex-1 whitespace-nowrap rounded-[16px] px-5 py-2.5 leading-none transition focus-visible:outline-none ${
           mode === "signup"
             ? "sansxel-white-button bg-white text-black"
             : "text-neutral-200 hover:text-white"
@@ -200,7 +200,7 @@ export function ModeSwitcher({
       <button
         type="button"
         onClick={() => onModeChange("signin")}
-        className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
+        className={`flex-1 whitespace-nowrap rounded-[16px] px-5 py-2.5 leading-none transition focus-visible:outline-none ${
           mode === "signin"
             ? "sansxel-white-button bg-white text-black"
             : "text-neutral-200 hover:text-white"
