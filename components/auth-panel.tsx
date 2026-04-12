@@ -18,6 +18,45 @@ type Status = {
   tone: StatusTone;
 };
 
+function GoogleIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
+      <path
+        d="M21.64 12.2c0-.68-.06-1.34-.17-1.98H12v3.74h5.41a4.63 4.63 0 0 1-2.01 3.04v2.52h3.25c1.9-1.75 2.99-4.33 2.99-7.32Z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 22c2.7 0 4.97-.9 6.63-2.43l-3.25-2.52c-.9.6-2.05.96-3.38.96-2.6 0-4.8-1.76-5.58-4.12H3.06v2.6A9.99 9.99 0 0 0 12 22Z"
+        fill="#34A853"
+      />
+      <path
+        d="M6.42 13.89A5.98 5.98 0 0 1 6.1 12c0-.66.11-1.3.32-1.89V7.51H3.06A10 10 0 0 0 2 12c0 1.61.39 3.13 1.06 4.49l3.36-2.6Z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.98c1.47 0 2.79.5 3.83 1.48l2.87-2.87C16.97 2.98 14.7 2 12 2a9.99 9.99 0 0 0-8.94 5.51l3.36 2.6c.78-2.36 2.98-4.13 5.58-4.13Z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
+
+function GitHubIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-5 w-5 fill-white"
+    >
+      <path d="M12 .5a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.73-4.04-1.42-4.04-1.42-.55-1.38-1.33-1.75-1.33-1.75-1.09-.74.08-.73.08-.73 1.2.09 1.83 1.23 1.83 1.23 1.08 1.84 2.82 1.31 3.5 1 .11-.78.42-1.31.77-1.61-2.66-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.39 1.23-3.23-.12-.3-.53-1.52.12-3.17 0 0 1.01-.32 3.3 1.23A11.48 11.48 0 0 1 12 6.3c1.02 0 2.05.14 3.01.4 2.29-1.55 3.29-1.23 3.29-1.23.66 1.65.25 2.87.13 3.17.77.84 1.23 1.92 1.23 3.23 0 4.61-2.81 5.62-5.49 5.92.43.38.82 1.1.82 2.22v3.3c0 .32.21.7.83.58A12 12 0 0 0 12 .5Z" />
+    </svg>
+  );
+}
+
+function ProviderIcon({ provider }: { provider: OauthProvider }) {
+  return provider === "google" ? <GoogleIcon /> : <GitHubIcon />;
+}
+
 function statusClasses(tone: StatusTone) {
   if (tone === "success") {
     return "border-emerald-400/20 bg-emerald-400/10 text-emerald-100";
@@ -333,14 +372,13 @@ export function AuthPanel({
         <div className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6">
           <div className="text-sm font-medium text-white">Continue with</div>
           <p className="mt-2 text-sm leading-6 text-neutral-200">
-            Premium OAuth starts here on sansxel before you continue to the
-            provider.
+            Choose the provider you already use and come straight back into
+            your workspace.
           </p>
 
           <div className="mt-5 grid gap-3">
             {oauthProviders.map((option) => {
               const providerBusy = activeProvider === option.provider;
-              const providerMark = option.provider === "github" ? "GH" : "G";
 
               return (
                 <button
@@ -351,15 +389,17 @@ export function AuthPanel({
                   className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-wait disabled:opacity-80"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-sm font-medium text-white">
-                      {providerMark}
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06]">
+                      <ProviderIcon provider={option.provider} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-white">
                         Continue with {option.label}
                       </div>
-                      <div className="mt-1 text-xs uppercase tracking-[0.18em] text-neutral-400">
-                        Redirect on sansxel
+                      <div className="mt-1 text-sm text-neutral-300">
+                        {option.provider === "google"
+                          ? "Use your Google account"
+                          : "Use your GitHub account"}
                       </div>
                     </div>
                     <span className="shrink-0 rounded-full border border-white/10 px-3 py-1 text-xs text-neutral-100">
