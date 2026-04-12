@@ -1985,8 +1985,8 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
         {/* Callout — context setter above the panel */}
         <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
           <div className="min-w-0">
-            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Quick summary </span>
-            <span className="text-sm text-neutral-400">— the in-app experience is significantly deeper.</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Important</span>
+            <span className="text-sm text-neutral-400">— This is a mere quick review, the in-app experience is significantly deeper.</span>
           </div>
           <Link
             href="/account"
