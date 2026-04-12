@@ -1,10 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const CYCLE_MS = 5400;
 const FADE_MS = 420;
+
+// ─── Shuffle helper ───────────────────────────────────────────────────────
+
+function shuffle(arr: number[]): number[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 // ─── Accent helpers ───────────────────────────────────────────────────────
 
@@ -728,9 +739,12 @@ function ScenarioPanel({ s }: { s: Scenario }) {
 // ─── Main component ───────────────────────────────────────────────────────
 
 export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
-  const [step, setStep] = useState(0);
+  const [idx, setIdx] = useState(0);
   const [visible, setVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const orderRef = useRef<number[]>(
+    shuffle(Array.from({ length: scenarios.length }, (_, i) => i)),
+  );
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -745,7 +759,16 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
 
     const fadeOut = window.setTimeout(() => setVisible(false), CYCLE_MS - FADE_MS);
     const swap = window.setTimeout(() => {
-      setStep((c) => (c + 1) % scenarios.length);
+      setIdx((prev) => {
+        const next = prev + 1;
+        if (next >= orderRef.current.length) {
+          orderRef.current = shuffle(
+            Array.from({ length: scenarios.length }, (_, i) => i),
+          );
+          return 0;
+        }
+        return next;
+      });
       setVisible(true);
     }, CYCLE_MS);
 
@@ -753,9 +776,9 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
       window.clearTimeout(fadeOut);
       window.clearTimeout(swap);
     };
-  }, [reducedMotion, step]);
+  }, [reducedMotion, idx]);
 
-  const s = scenarios[step];
+  const s = scenarios[orderRef.current[idx]];
   const show = visible || reducedMotion;
 
   return (
@@ -799,19 +822,6 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           )}
         </div>
 
-        {/* Mode indicator dots */}
-        <div className="mt-8 flex items-center gap-1.5">
-          {scenarios.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => { setStep(i); setVisible(true); }}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                i === step ? `w-5 ${wordCls(s.accent)} bg-current` : "w-1 bg-white/20"
-              }`}
-              aria-label={`Mode ${i + 1}`}
-            />
-          ))}
-        </div>
       </div>
 
       {/* ── Right side ─────────────────────────────────────────── */}
