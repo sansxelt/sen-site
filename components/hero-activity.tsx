@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const CYCLE_MS = 4000;
-const FADE_MS = 520;
+const FADE_MS  = 420;
 
 // ─── Shuffle helper ───────────────────────────────────────────────────────
 
@@ -276,6 +276,201 @@ const scenarios = [
       { label: "Top signal", value: "Pricing clarity" },
       { label: "Next test", value: "Annual CTA" },
     ],
+  },
+  {
+    word: "studying",
+    accent: "cyan" as AccentKey,
+    body: "Study sessions leave a trail. sansxel logs what you read, where you paused, and which concepts were forming — so picking back up takes seconds, not rereading.",
+    layout: "notes" as const,
+    accentLabel: "Study session",
+    header: "Notes",
+    prompt: "Where did I leave off and what was I building toward?",
+    promptLabel: "Resume studying",
+    sections: [
+      { title: "Ch. 4 — Context windows", progress: 80 },
+      { title: "Ch. 5 — Retrieval strategies", progress: 35 },
+      { title: "Ch. 6 — Memory architectures", progress: 0 },
+    ],
+    highlight: "Sparse attention patterns reduce quadratic complexity to near-linear for long sequences.",
+    cards: ["What is RAG?", "Attention head roles", "KV cache tradeoffs"],
+  },
+  {
+    word: "brainstorming",
+    accent: "amber" as AccentKey,
+    body: "Brainstorms scatter fast. sansxel captures the ideas gaining traction, the ones you set aside, and the thread you were about to chase before the session ended.",
+    layout: "cluster" as const,
+    accentLabel: "Idea cluster",
+    header: "Ideas",
+    prompt: "Which idea was I about to develop further?",
+    promptLabel: "Resume brainstorm",
+    ideas: [
+      { label: "Ambient session replay", votes: 8, tag: "core" },
+      { label: "Ask your timeline", votes: 6, tag: "feature" },
+      { label: "Multi-device sync", votes: 4, tag: "infra" },
+      { label: "Privacy-first export", votes: 3, tag: "trust" },
+      { label: "Team memory sharing", votes: 2, tag: "teams" },
+    ],
+  },
+  {
+    word: "presenting",
+    accent: "blue" as AccentKey,
+    body: "Presentations have live state. sansxel holds the slide you were on, the notes you were pulling from, and the questions that surfaced — so the follow-through stays sharp.",
+    layout: "deck" as const,
+    accentLabel: "Deck state",
+    header: "Presentation",
+    prompt: "Where was I in the deck and what questions came up?",
+    promptLabel: "Resume presenting",
+    slide: { num: 7, total: 14, title: "How context capture works" },
+    notes: "Emphasise privacy-first. Mention the session timeline demo. Don't skip the retention question.",
+    elapsed: "14m 38s",
+  },
+  {
+    word: "interviewing",
+    accent: "indigo" as AccentKey,
+    body: "Interview signals fade fast. sansxel captures the answers, the gaps, and the reasoning behind the score — so the decision stays grounded when you loop in the team.",
+    layout: "eval" as const,
+    accentLabel: "Eval notes",
+    header: "Interview",
+    prompt: "What were the key signals from the last candidate?",
+    promptLabel: "Review eval",
+    candidate: "Jordan Lee · Senior Engineer",
+    questions: [
+      { q: "System design — distributed cache", score: 4 },
+      { q: "Debugging a live production issue", score: 5 },
+      { q: "Cross-team communication example", score: 3 },
+    ],
+    note: "Strong on depth. Weaker on stakeholder framing. Recommend a second round.",
+  },
+  {
+    word: "investing",
+    accent: "cyan" as AccentKey,
+    body: "Markets move while you work. sansxel captures the signals, position context, and the thesis you were forming — so conviction doesn't scatter between sessions.",
+    layout: "portfolio" as const,
+    accentLabel: "Portfolio signals",
+    header: "Portfolio",
+    prompt: "What signals changed since I last checked in?",
+    promptLabel: "Review signals",
+    positions: [
+      { ticker: "NVDA", change: "+3.4%", note: "Earnings beat — GPU demand holding" },
+      { ticker: "MSFT", change: "+1.1%", note: "Azure growth inline with estimates" },
+      { ticker: "BTC",  change: "-2.8%", note: "Macro pressure, still above support" },
+    ],
+    signal: "Portfolio overweight AI infrastructure. Rebalance trigger at +15% concentration.",
+  },
+  {
+    word: "hiring",
+    accent: "orange" as AccentKey,
+    body: "Pipelines move fast and lose signal. sansxel keeps the candidate state, the blocker, and the next step visible — so nothing gets dropped between rounds.",
+    layout: "candidates" as const,
+    accentLabel: "Hiring pipeline",
+    header: "Candidates",
+    prompt: "Where does the pipeline stand and what is blocked?",
+    promptLabel: "Review pipeline",
+    stages: [
+      { label: "Applied",   count: 42 },
+      { label: "Screen",    count: 11 },
+      { label: "Interview", count: 4  },
+      { label: "Offer",     count: 1  },
+    ],
+    topCandidate: "Jordan Lee — final round pending feedback",
+    blocker: "Eng panel slot not confirmed for Thursday",
+  },
+  {
+    word: "onboarding",
+    accent: "sky" as AccentKey,
+    body: "Onboarding is context-dense. sansxel tracks who's ahead, what's blocked, and what each person needs next — so the first few weeks stay structured without constant check-ins.",
+    layout: "progress" as const,
+    accentLabel: "Onboarding state",
+    header: "Team progress",
+    prompt: "Who needs a check-in and what is next for each person?",
+    promptLabel: "Check progress",
+    people: [
+      { name: "Alex R.",   done: 5, total: 7 },
+      { name: "Sam T.",    done: 3, total: 7 },
+      { name: "Casey M.", done: 7, total: 7 },
+    ],
+    nextTask: "Schedule 1:1 kickoff with Alex and Sam before end of week",
+  },
+  {
+    word: "networking",
+    accent: "violet" as AccentKey,
+    body: "Relationship context fades. sansxel remembers who you met where, what you knew when, and what the next move was — so follow-through happens before the window closes.",
+    layout: "contacts" as const,
+    accentLabel: "Contact context",
+    header: "Connections",
+    prompt: "Who needs a follow-up and what was the context?",
+    promptLabel: "Review contacts",
+    contacts: [
+      { name: "Jamie Chen",    context: "Met at Config — building ambient tooling at Linear",  last: "3d ago" },
+      { name: "Morgan Voss",   context: "Intro via Tyler. Interested in early access",          last: "1w ago" },
+      { name: "Alex Rivera",   context: "Ex-Notion. Advising AI workspace startups",            last: "2w ago" },
+    ],
+    followUp: "Send Jamie the API docs before their sprint planning Friday",
+  },
+  {
+    word: "reading",
+    accent: "rose" as AccentKey,
+    body: "Reading is thinking. sansxel holds the passage, the chapter, and the argument you were building around the text — so returning means continuing, not restarting.",
+    layout: "book" as const,
+    accentLabel: "Reading trail",
+    header: "Reading",
+    prompt: "Where did I stop and what was I thinking about?",
+    promptLabel: "Resume reading",
+    title: "The Design of Everyday Things",
+    author: "Don Norman",
+    chapter: "Ch. 5 — Human Error? No, Bad Design",
+    progress: 64,
+    highlight: "\"The mistake is not in the person but in the design that fails to account for human behaviour.\"",
+  },
+  {
+    word: "testing",
+    accent: "emerald" as AccentKey,
+    body: "Test failures have context. sansxel captures which suite was running, what failed, and the fix thread — so debugging picks up with full state intact, not from scratch.",
+    layout: "suite" as const,
+    accentLabel: "Test run",
+    header: "Test suite",
+    prompt: "What failed and where was the fix headed?",
+    promptLabel: "Resume testing",
+    suites: [
+      { name: "Auth flows",     passed: 18, failed: 0 },
+      { name: "API routes",     passed: 31, failed: 2 },
+      { name: "UI components",  passed: 44, failed: 0 },
+    ],
+    coverage: 78,
+    failingSummary: "api/keys/route.ts — missing header check on DELETE",
+  },
+  {
+    word: "configuring",
+    accent: "blue" as AccentKey,
+    body: "Config work is detail-dense. sansxel tracks what's wired, what's missing, and the last error — so environment debugging doesn't restart from scratch every time.",
+    layout: "config" as const,
+    accentLabel: "Config state",
+    header: "Environment",
+    prompt: "What is missing and what was the last error?",
+    promptLabel: "Check config",
+    groups: [
+      { name: "Auth",     vars: [{ key: "NEXTAUTH_SECRET", ok: true }, { key: "AUTH_GOOGLE_ID", ok: true }, { key: "AUTH_GITHUB_ID", ok: true }] },
+      { name: "Database", vars: [{ key: "SUPABASE_URL", ok: true }, { key: "SUPABASE_SERVICE_ROLE_KEY", ok: true }] },
+      { name: "Email",    vars: [{ key: "RESEND_API_KEY", ok: false }] },
+    ],
+    warning: "RESEND_API_KEY is missing — welcome emails will not send",
+  },
+  {
+    word: "monitoring",
+    accent: "rose" as AccentKey,
+    body: "Incidents have timelines. sansxel keeps the alert sequence, the signals you were watching, and the state you were in — so handoffs and post-mortems start with facts.",
+    layout: "alerts" as const,
+    accentLabel: "Alert state",
+    header: "Monitoring",
+    prompt: "What was active and what changed while I was away?",
+    promptLabel: "Check alerts",
+    alerts: [
+      { severity: "warn" as const, msg: "API p99 latency up 18% — auth endpoints" },
+      { severity: "info" as const, msg: "Deploy completed — v0.4.2 live on production" },
+      { severity: "warn" as const, msg: "3 failed login attempts from the same IP" },
+    ],
+    uptime: "99.94%",
+    since: "14 days",
   },
 ] as const;
 
@@ -719,6 +914,349 @@ function AnswerLayout({ s }: { s: Extract<Scenario, { layout: "answer" }> }) {
   );
 }
 
+// ─── Layout: notes (studying) ────────────────────────────────────────────
+
+function NotesLayout({ s }: { s: Extract<Scenario, { layout: "notes" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 space-y-2">
+        {s.sections.map((sec) => (
+          <div key={sec.title} className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-xs text-neutral-300">{sec.title}</div>
+              <div className="text-[10px] text-neutral-500">{sec.progress}%</div>
+            </div>
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-cyan-400/60" style={{ width: `${sec.progress}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className={`mt-3 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em]">Highlight</div>
+        <p className="mt-1.5 text-xs italic leading-relaxed text-neutral-300">{s.highlight}</p>
+      </div>
+      <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
+        <div className="mb-2 text-[10px] uppercase tracking-[0.15em] text-neutral-500">Review queue</div>
+        <div className="flex flex-wrap gap-1.5">
+          {s.cards.map((card) => (
+            <span key={card} className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[11px] text-neutral-300">{card}</span>
+          ))}
+        </div>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: cluster (brainstorming) ─────────────────────────────────────
+
+function ClusterLayout({ s }: { s: Extract<Scenario, { layout: "cluster" }> }) {
+  const tagCls = (tag: string) => {
+    if (tag === "core")    return "border-amber-400/25 bg-amber-400/10 text-amber-300";
+    if (tag === "feature") return "border-sky-400/25 bg-sky-400/10 text-sky-300";
+    if (tag === "infra")   return "border-blue-400/25 bg-blue-400/10 text-blue-300";
+    if (tag === "trust")   return "border-emerald-400/25 bg-emerald-400/10 text-emerald-300";
+    return "border-white/10 bg-white/5 text-neutral-400";
+  };
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 space-y-2">
+        {s.ideas.map((idea, i) => (
+          <div key={i} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-black/30 text-sm font-semibold text-white">{idea.votes}</div>
+            <div className="min-w-0 flex-1 text-xs text-neutral-200">{idea.label}</div>
+            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${tagCls(idea.tag)}`}>{idea.tag}</span>
+          </div>
+        ))}
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: deck (presenting) ────────────────────────────────────────────
+
+function DeckLayout({ s }: { s: Extract<Scenario, { layout: "deck" }> }) {
+  const pct = Math.round((s.slide.num / s.slide.total) * 100);
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm font-medium text-white">{s.slide.title}</div>
+          <div className="shrink-0 font-mono text-xs text-neutral-400">{s.slide.num} / {s.slide.total}</div>
+        </div>
+        <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-blue-400/60" style={{ width: `${pct}%` }} />
+        </div>
+        <div className="mt-2 text-[10px] text-neutral-500">Elapsed: {s.elapsed}</div>
+      </div>
+      <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
+        <div className="mb-2 text-[10px] uppercase tracking-[0.15em] text-neutral-500">Speaker notes</div>
+        <p className="text-xs leading-relaxed text-neutral-300">{s.notes}</p>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: eval (interviewing) ─────────────────────────────────────────
+
+function EvalLayout({ s }: { s: Extract<Scenario, { layout: "eval" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+        <div className="text-sm font-medium text-white">{s.candidate}</div>
+      </div>
+      <div className="mt-3 space-y-2">
+        {s.questions.map((q, i) => (
+          <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+            <div className="min-w-0 flex-1 text-xs text-neutral-300">{q.q}</div>
+            <div className="flex shrink-0 gap-0.5">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <div key={n} className={`h-2 w-2 rounded-full ${n <= q.score ? "bg-white/70" : "bg-white/10"}`} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className={`mt-3 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em]">Recommendation</div>
+        <p className="mt-1.5 text-xs leading-relaxed text-neutral-300">{s.note}</p>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: portfolio (investing) ───────────────────────────────────────
+
+function PortfolioLayout({ s }: { s: Extract<Scenario, { layout: "portfolio" }> }) {
+  const chgCls = (c: string) => c.startsWith("+") ? "text-emerald-400" : "text-rose-400";
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 divide-y divide-white/5 rounded-2xl border border-white/10 bg-black/20">
+        {s.positions.map((pos) => (
+          <div key={pos.ticker} className="flex items-center gap-3 px-4 py-3">
+            <div className="w-12 shrink-0 font-mono text-sm font-semibold text-white">{pos.ticker}</div>
+            <div className="min-w-0 flex-1 text-xs text-neutral-400">{pos.note}</div>
+            <div className={`shrink-0 font-mono text-xs font-semibold ${chgCls(pos.change)}`}>{pos.change}</div>
+          </div>
+        ))}
+      </div>
+      <div className={`mt-3 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em]">Signal</div>
+        <p className="mt-1.5 text-xs leading-relaxed text-neutral-300">{s.signal}</p>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: candidates (hiring) ─────────────────────────────────────────
+
+function CandidatesLayout({ s }: { s: Extract<Scenario, { layout: "candidates" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 flex gap-2">
+        {s.stages.map((stage, i) => (
+          <div key={stage.label} className={`flex flex-1 flex-col items-center gap-1.5 rounded-xl border p-3 ${i === 0 ? "border-white/15 bg-white/5" : "border-white/[0.07] bg-white/[0.02]"}`}>
+            <div className="text-xl font-semibold text-white">{stage.count}</div>
+            <div className="text-center text-[10px] leading-tight text-neutral-500">{stage.label}</div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
+        <div className="mb-1 text-[10px] uppercase tracking-[0.15em] text-neutral-500">Top candidate</div>
+        <div className="text-xs text-neutral-200">{s.topCandidate}</div>
+      </div>
+      <div className={`mt-2 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em]">Blocker</div>
+        <p className="mt-1 text-xs text-neutral-300">{s.blocker}</p>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: progress (onboarding) ───────────────────────────────────────
+
+function ProgressLayout({ s }: { s: Extract<Scenario, { layout: "progress" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 space-y-3">
+        {s.people.map((person) => (
+          <div key={person.name} className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm text-neutral-200">{person.name}</div>
+              <div className="text-xs text-neutral-500">{person.done}/{person.total}</div>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div
+                className={`h-full rounded-full ${person.done === person.total ? "bg-emerald-400/70" : "bg-sky-400/60"}`}
+                style={{ width: `${Math.round((person.done / person.total) * 100)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
+        <div className="mb-1 text-[10px] uppercase tracking-[0.15em] text-neutral-500">Next action</div>
+        <div className="text-xs text-neutral-200">{s.nextTask}</div>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: contacts (networking) ───────────────────────────────────────
+
+function ContactsLayout({ s }: { s: Extract<Scenario, { layout: "contacts" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 space-y-2">
+        {s.contacts.map((c) => (
+          <div key={c.name} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium text-neutral-100">{c.name}</div>
+              <div className="shrink-0 text-[10px] text-neutral-600">{c.last}</div>
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-neutral-500">{c.context}</p>
+          </div>
+        ))}
+      </div>
+      <div className={`mt-3 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em]">Follow-up</div>
+        <p className="mt-1.5 text-xs leading-relaxed text-neutral-300">{s.followUp}</p>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: book (reading) ──────────────────────────────────────────────
+
+function BookLayout({ s }: { s: Extract<Scenario, { layout: "book" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-4">
+        <div className="text-sm font-semibold text-white">{s.title}</div>
+        <div className="mt-0.5 text-xs text-neutral-500">{s.author}</div>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-rose-400/60" style={{ width: `${s.progress}%` }} />
+        </div>
+        <div className="mt-1.5 flex items-center justify-between text-[10px] text-neutral-500">
+          <span>{s.chapter}</span>
+          <span>{s.progress}% read</span>
+        </div>
+      </div>
+      <div className={`mt-3 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em]">Last highlight</div>
+        <p className="mt-1.5 text-xs italic leading-relaxed text-neutral-300">{s.highlight}</p>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: suite (testing) ─────────────────────────────────────────────
+
+function SuiteLayout({ s }: { s: Extract<Scenario, { layout: "suite" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 space-y-2">
+        {s.suites.map((suite) => (
+          <div key={suite.name} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="min-w-0 flex-1 text-xs text-neutral-300">{suite.name}</div>
+            <div className="shrink-0 font-mono text-[11px] text-emerald-400">{suite.passed} pass</div>
+            {suite.failed > 0 && (
+              <div className="shrink-0 font-mono text-[11px] text-rose-400">{suite.failed} fail</div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
+        <div className="mb-2 flex items-center justify-between text-[10px] text-neutral-500">
+          <span className="uppercase tracking-[0.15em]">Coverage</span>
+          <span>{s.coverage}%</span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-emerald-400/50" style={{ width: `${s.coverage}%` }} />
+        </div>
+      </div>
+      <div className="mt-2 rounded-2xl border border-rose-400/20 bg-rose-400/10 p-3.5">
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-rose-300">Failing</div>
+        <p className="mt-1 font-mono text-xs text-rose-200">{s.failingSummary}</p>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: config (configuring) ────────────────────────────────────────
+
+function ConfigLayout({ s }: { s: Extract<Scenario, { layout: "config" }> }) {
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 space-y-2">
+        {s.groups.map((group) => (
+          <div key={group.name} className="rounded-xl border border-white/10 bg-black/20 p-3.5">
+            <div className="mb-2 text-[10px] font-medium uppercase tracking-[0.15em] text-neutral-500">{group.name}</div>
+            <div className="space-y-1.5">
+              {group.vars.map((v) => (
+                <div key={v.key} className="flex items-center gap-2 font-mono text-xs">
+                  <span className={v.ok ? "text-emerald-400" : "text-rose-400"}>{v.ok ? "✓" : "✗"}</span>
+                  <span className={v.ok ? "text-neutral-300" : "text-rose-300"}>{v.key}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3.5">
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-amber-300">Warning</div>
+        <p className="mt-1 text-xs text-neutral-300">{s.warning}</p>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
+// ─── Layout: alerts (monitoring) ─────────────────────────────────────────
+
+function AlertsLayout({ s }: { s: Extract<Scenario, { layout: "alerts" }> }) {
+  const sevCls = (sev: string) => {
+    if (sev === "crit") return "border-rose-400/25 bg-rose-400/10 text-rose-300";
+    if (sev === "warn") return "border-amber-400/25 bg-amber-400/10 text-amber-300";
+    return "border-sky-400/25 bg-sky-400/10 text-sky-300";
+  };
+  return (
+    <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
+      <div className="mt-4 space-y-2">
+        {s.alerts.map((alert, i) => (
+          <div key={i} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+            <span className={`mt-0.5 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${sevCls(alert.severity)}`}>
+              {alert.severity}
+            </span>
+            <span className="text-xs text-neutral-300">{alert.msg}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Uptime</div>
+          <div className="mt-1.5 text-lg font-semibold text-emerald-300">{s.uptime}</div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Clean streak</div>
+          <div className="mt-1.5 text-lg font-semibold text-white">{s.since}</div>
+        </div>
+      </div>
+      <Prompt label={s.promptLabel} question={s.prompt} />
+    </HeroFrame>
+  );
+}
+
 // ─── Route to the right layout ────────────────────────────────────────────
 
 function ScenarioPanel({ s }: { s: Scenario }) {
@@ -732,74 +1270,121 @@ function ScenarioPanel({ s }: { s: Scenario }) {
   if (s.layout === "pipeline") return <PipelineLayout s={s} />;
   if (s.layout === "kanban") return <KanbanLayout s={s} />;
   if (s.layout === "review") return <ReviewLayout s={s} />;
-  if (s.layout === "answer") return <AnswerLayout s={s} />;
+  if (s.layout === "answer")      return <AnswerLayout s={s} />;
+  if (s.layout === "notes")       return <NotesLayout s={s} />;
+  if (s.layout === "cluster")     return <ClusterLayout s={s} />;
+  if (s.layout === "deck")        return <DeckLayout s={s} />;
+  if (s.layout === "eval")        return <EvalLayout s={s} />;
+  if (s.layout === "portfolio")   return <PortfolioLayout s={s} />;
+  if (s.layout === "candidates")  return <CandidatesLayout s={s} />;
+  if (s.layout === "progress")    return <ProgressLayout s={s} />;
+  if (s.layout === "contacts")    return <ContactsLayout s={s} />;
+  if (s.layout === "book")        return <BookLayout s={s} />;
+  if (s.layout === "suite")       return <SuiteLayout s={s} />;
+  if (s.layout === "config")      return <ConfigLayout s={s} />;
+  if (s.layout === "alerts")      return <AlertsLayout s={s} />;
   return <SessionLayout s={s} />;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────
 
 export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
-  const [idx, setIdx] = useState(0);
-  const [visible, setVisible] = useState(true);
+  const [currIdx, setCurrIdx] = useState(0);
+  const [prevIdx, setPrevIdx] = useState<number | null>(null);
+  const [crossfading, setCrossfading] = useState(false);
+  const currRef = useRef(0);
+  const posRef  = useRef(0);
   const orderRef = useRef<number[]>(
     Array.from({ length: scenarios.length }, (_, i) => i),
   );
 
+  // Shuffle on mount + drive the interval
   useEffect(() => {
-    // Randomise the first pass on mount
     orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
 
-    let swapTimer: ReturnType<typeof setTimeout>;
-
     const interval = setInterval(() => {
-      setVisible(false);
-      swapTimer = setTimeout(() => {
-        setIdx((prev) => {
-          const next = prev + 1;
-          if (next >= orderRef.current.length) {
-            orderRef.current = shuffle(
-              Array.from({ length: scenarios.length }, (_, i) => i),
-            );
-            return 0;
-          }
-          return next;
-        });
-        setVisible(true);
-      }, FADE_MS);
+      posRef.current += 1;
+      if (posRef.current >= orderRef.current.length) {
+        orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
+        posRef.current = 0;
+      }
+      const next = orderRef.current[posRef.current];
+      setPrevIdx(currRef.current);
+      currRef.current = next;
+      setCurrIdx(next);
     }, CYCLE_MS);
 
-    return () => {
-      clearInterval(interval);
-      clearTimeout(swapTimer);
-    };
-  }, []); // run once — interval never re-creates
+    return () => clearInterval(interval);
+  }, []);
 
-  const s = scenarios[orderRef.current[idx]];
-  const show = visible;
+  // Once prev+curr are both rendered, kick off the crossfade on the next frame
+  useEffect(() => {
+    if (prevIdx === null) return;
+    const raf = requestAnimationFrame(() => setCrossfading(true));
+    return () => cancelAnimationFrame(raf);
+  }, [prevIdx]);
+
+  // After the fade completes, clean up the outgoing layer
+  useEffect(() => {
+    if (!crossfading) return;
+    const t = setTimeout(() => {
+      setCrossfading(false);
+      setPrevIdx(null);
+    }, FADE_MS);
+    return () => clearTimeout(t);
+  }, [crossfading]);
+
+  const curr = scenarios[currIdx];
+  const prev = prevIdx !== null ? scenarios[prevIdx] : null;
+
+  // outgoing: starts at 1, fades to 0 when crossfading
+  // incoming: starts at 0, fades to 1 when crossfading (or stays 1 if no prev)
+  const outOp: React.CSSProperties["opacity"] = crossfading ? 0 : 1;
+  const inOp:  React.CSSProperties["opacity"] = crossfading ? 1 : prev === null ? 1 : 0;
+
+  const layer = (op: React.CSSProperties["opacity"]): React.CSSProperties => ({
+    gridArea: "1/1",
+    opacity: op,
+    transition: `opacity ${FADE_MS}ms ease`,
+    pointerEvents: op === 0 ? "none" : "auto",
+  });
 
   return (
     <>
       {/* ── Left side ──────────────────────────────────────────── */}
-      <div
-        className="max-w-2xl transition-opacity duration-500"
-        style={{ opacity: show ? 1 : 0 }}
-      >
+      <div className="max-w-2xl">
         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-neutral-300 sm:text-xs">
           <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
           Premium workspace memory for focused work
         </div>
 
-        <h1 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
-          <span className="block">The AI that</span>
-          <span className="block">remembers</span>
-          <span className={`block transition-colors duration-500 ${wordCls(s.accent)}`}>
-            {s.word}.
-          </span>
-        </h1>
+        {/* Static heading lines — always visible */}
+        <div className="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
+          <div>The AI that</div>
+          <div>remembers</div>
+        </div>
 
-        <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-300 sm:mt-6 sm:text-base">
-          {s.body}
-        </p>
+        {/* Crossfading: word + body */}
+        <div style={{ display: "grid" }}>
+          {prev && (
+            <div key={prevIdx} style={layer(outOp)}>
+              <div className="text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-7xl">
+                <span className={wordCls(prev.accent)}>{prev.word}.</span>
+              </div>
+              <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-300 sm:mt-6 sm:text-base">
+                {prev.body}
+              </p>
+            </div>
+          )}
+          <div key={currIdx} style={layer(inOp)}>
+            <div className="text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-7xl">
+              <span className={wordCls(curr.accent)}>{curr.word}.</span>
+            </div>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-300 sm:mt-6 sm:text-base">
+              {curr.body}
+            </p>
+          </div>
+        </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link
@@ -817,15 +1402,18 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
             </Link>
           )}
         </div>
-
       </div>
 
       {/* ── Right side ─────────────────────────────────────────── */}
-      <div
-        className="transition-opacity duration-500"
-        style={{ opacity: show ? 1 : 0 }}
-      >
-        <ScenarioPanel s={s} />
+      <div style={{ display: "grid" }}>
+        {prev && (
+          <div key={prevIdx} style={layer(outOp)}>
+            <ScenarioPanel s={prev} />
+          </div>
+        )}
+        <div key={currIdx} style={layer(inOp)}>
+          <ScenarioPanel s={curr} />
+        </div>
       </div>
     </>
   );
