@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-const CYCLE_MS = 5400;
-const FADE_MS = 420;
+const CYCLE_MS = 4000;
+const FADE_MS = 520;
 
 // ─── Shuffle helper ───────────────────────────────────────────────────────
 
@@ -743,8 +743,13 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   const [visible, setVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const orderRef = useRef<number[]>(
-    shuffle(Array.from({ length: scenarios.length }, (_, i) => i)),
+    Array.from({ length: scenarios.length }, (_, i) => i),
   );
+
+  // Shuffle order once on mount
+  useEffect(() => {
+    orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -757,26 +762,30 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   useEffect(() => {
     if (reducedMotion) return;
 
-    const fadeOut = window.setTimeout(() => setVisible(false), CYCLE_MS - FADE_MS);
-    const swap = window.setTimeout(() => {
-      setIdx((prev) => {
-        const next = prev + 1;
-        if (next >= orderRef.current.length) {
-          orderRef.current = shuffle(
-            Array.from({ length: scenarios.length }, (_, i) => i),
-          );
-          return 0;
-        }
-        return next;
-      });
-      setVisible(true);
+    let swapTimer: ReturnType<typeof setTimeout>;
+
+    const interval = setInterval(() => {
+      setVisible(false);
+      swapTimer = setTimeout(() => {
+        setIdx((prev) => {
+          const next = prev + 1;
+          if (next >= orderRef.current.length) {
+            orderRef.current = shuffle(
+              Array.from({ length: scenarios.length }, (_, i) => i),
+            );
+            return 0;
+          }
+          return next;
+        });
+        setVisible(true);
+      }, FADE_MS);
     }, CYCLE_MS);
 
     return () => {
-      window.clearTimeout(fadeOut);
-      window.clearTimeout(swap);
+      clearInterval(interval);
+      clearTimeout(swapTimer);
     };
-  }, [reducedMotion, idx]);
+  }, [reducedMotion]);
 
   const s = scenarios[orderRef.current[idx]];
   const show = visible || reducedMotion;
