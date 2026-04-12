@@ -293,7 +293,7 @@ export function AuthPanel({
       )}
 
       {/* ── Two separate cards ───────────────────────────────────── */}
-      <div className="mt-6 grid items-start gap-4 xl:grid-cols-2">
+      <div className="mt-6 grid items-start gap-4">
 
         {/* Email */}
         <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5 sm:p-6">
