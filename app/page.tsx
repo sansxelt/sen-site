@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "../auth";
 import { AuthPanel } from "../components/auth-panel";
 import { EarlyAccessForm } from "../components/early-access-form";
+import { HeroActivity } from "../components/hero-activity";
 import { SiteShell } from "../components/site-shell";
 import { readAccountContext } from "../lib/account-session";
 import { pricingPlans } from "../lib/pricing";
@@ -60,125 +61,7 @@ export default async function HomePage() {
         id="top"
         className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:px-8 lg:pb-28 lg:pt-24"
       >
-        <div className="max-w-2xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-neutral-200 sm:text-xs">
-            <span className="h-2 w-2 rounded-full bg-white/80" />
-            Premium workspace memory for focused work
-          </div>
-
-          <h1 className="mt-6 text-4xl font-semibold leading-[1.02] tracking-tight text-white sm:text-5xl lg:text-7xl">
-            The AI that remembers what you were doing.
-          </h1>
-
-          <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-200 sm:mt-6 sm:text-lg">
-            sansxel quietly captures work context, keeps it organized, and
-            gives you a calm way to resume, reflect, and move forward without
-            losing the thread.
-          </p>
-
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/account"
-              className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-            >
-              {initialAccountContext ? "Open workspace" : "Get started"}
-            </Link>
-            {!initialAccountContext && (
-              <Link
-                href="/#auth"
-                className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
-              >
-                Create account
-              </Link>
-            )}
-          </div>
-
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {[
-              ["Fast", "Resume work instantly with a lightweight desktop feel."],
-              ["Private", "Clear controls for pause, export, and deletion."],
-              ["Useful", "Built around context, not generic busywork."],
-            ].map(([title, text]) => (
-              <div
-                key={title}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4"
-              >
-                <div className="text-sm font-medium text-white">{title}</div>
-                <div className="mt-1 text-sm leading-6 text-neutral-200">
-                  {text}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-4">
-            <div className="rounded-[24px] border border-white/10 bg-neutral-900/90 p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
-                <div>
-                  <div className="text-sm font-medium text-white">Today</div>
-                  <div className="text-xs text-neutral-200">
-                    Thursday - 4h 18m tracked
-                  </div>
-                </div>
-                <Link
-                  href="/account"
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-300 transition hover:bg-white/10"
-                >
-                  Workspace
-                </Link>
-              </div>
-
-              <div className="mt-5 space-y-3">
-                {[
-                  [
-                    "Roblox Studio",
-                    "1h 42m",
-                    "Working on gameplay systems and UI polish.",
-                  ],
-                  ["Browser", "56m", "Research, docs, and references."],
-                  ["Discord", "34m", "Team messages and updates."],
-                ].map(([app, time, description]) => (
-                  <div
-                    key={app}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 sm:p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-white">{app}</div>
-                      <div className="text-xs text-neutral-200">{time}</div>
-                    </div>
-                    <div className="mt-2 text-sm leading-6 text-neutral-200">
-                      {description}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4">
-                <div className="text-xs font-medium uppercase tracking-[0.18em] text-sky-200">
-                  sansxel summary
-                </div>
-                <p className="mt-2 text-sm leading-6 text-neutral-200">
-                  You spent most of your time building, with your strongest
-                  focus block in the first half of the session. Recent activity
-                  suggests you left off while refining systems and checking
-                  references.
-                </p>
-              </div>
-
-              <Link
-                href="/account"
-                className="mt-5 block rounded-2xl border border-white/10 bg-black/30 p-4 transition hover:bg-white/5"
-              >
-                <div className="text-xs text-neutral-300">Ask sansxel</div>
-                <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-200">
-                  What was I doing before Discord?
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
+        <HeroActivity isSignedIn={Boolean(initialAccountContext)} />
       </section>
 
       <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
