@@ -53,7 +53,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       {/* ── Header — single clean row at every size ─────────────────── */}
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.08] bg-neutral-950/95 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
+          <div className="relative flex items-center justify-between gap-4">
 
             {/* Logo */}
             <Link href="/#top" className="flex shrink-0 items-center gap-2.5">
@@ -77,8 +77,8 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               </div>
             </Link>
 
-            {/* Desktop nav — lg and above */}
-            <nav className="hidden items-center gap-5 text-sm text-neutral-400 lg:flex">
+            {/* Desktop nav — absolutely centered */}
+            <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 text-sm text-neutral-400 lg:flex">
               {primaryLinks.map((link) => (
                 <Link
                   key={link.href}
@@ -88,6 +88,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                   {link.label}
                 </Link>
               ))}
+              <Link
+                href="/contact"
+                className="whitespace-nowrap transition hover:text-white"
+              >
+                Contact
+              </Link>
             </nav>
 
             {/* Actions */}

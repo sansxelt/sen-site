@@ -122,21 +122,16 @@ function CardPack({
     <div className="flex flex-col gap-5">
       {/* Label + hint */}
       <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-500">
-            {label}
-          </span>
-          {locked && (
-            <span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-0.5 text-[10px] text-neutral-500">
-              {hovered ? "Click card to browse" : "Hover to preview"}
-            </span>
-          )}
-        </div>
-        {!locked && (
-          <p className="text-[11px] text-neutral-600">
-            Click the card to browse plans · {plans.length} total
-          </p>
-        )}
+        <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
+          {label}
+        </span>
+        <p className="text-[11px] text-neutral-400">
+          {locked
+            ? hovered
+              ? `Click any card to browse · ${plans.length} total`
+              : `Hover to preview · ${plans.length} plans`
+            : `Click any card to browse · ${plans.length} total`}
+        </p>
       </div>
 
       {/* Stack */}
