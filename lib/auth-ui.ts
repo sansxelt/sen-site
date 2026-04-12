@@ -47,7 +47,7 @@ export function getSignInPath(callbackUrl = "/account") {
     callbackUrl: safeCallbackUrl,
   });
 
-  return `/auth/signin?${searchParams.toString()}`;
+  return `/signin?${searchParams.toString()}`;
 }
 
 export function getAuthUnavailableMessage() {

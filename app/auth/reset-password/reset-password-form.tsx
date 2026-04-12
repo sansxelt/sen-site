@@ -65,7 +65,7 @@ export function ResetPasswordForm() {
           link shortly. It expires in one hour.
         </p>
         <Link
-          href="/auth/signin"
+          href="/signin"
           className="mt-6 inline-block text-sm text-neutral-200 transition hover:text-white"
         >
           ← Back to sign in
@@ -110,7 +110,7 @@ export function ResetPasswordForm() {
       </form>
 
       <Link
-        href="/auth/signin"
+        href="/signin"
         className="mt-5 inline-block text-sm text-neutral-200 transition hover:text-white"
       >
         ← Back to sign in

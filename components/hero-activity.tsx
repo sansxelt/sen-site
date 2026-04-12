@@ -1968,7 +1968,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           </Link>
           {!isSignedIn && (
             <Link
-              href="/#auth"
+              href="/signin"
               className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
             >
               Create account

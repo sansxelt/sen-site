@@ -8,10 +8,10 @@ const footerGroups = [
   {
     label: "Product",
     links: [
-      { href: "/#features", label: "Features" },
-      { href: "/#how", label: "How it works" },
+      { href: "/features", label: "Features" },
+      { href: "/function", label: "Function" },
       { href: "/pricing", label: "Pricing" },
-      { href: "/download", label: "Access" },
+      { href: "/download", label: "Download" },
     ],
   },
   {
@@ -34,11 +34,10 @@ const footerGroups = [
 ];
 
 const primaryLinks = [
-  { href: "/#features", label: "Features" },
-  { href: "/#how", label: "How it works" },
+  { href: "/features", label: "Features" },
+  { href: "/function", label: "Function" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/account", label: "Account" },
-  { href: "/download", label: "Access" },
+  { href: "/download", label: "Download" },
 ];
 
 
@@ -56,7 +55,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <div className="relative flex items-center justify-between gap-4">
 
             {/* Logo */}
-            <Link href="/#top" className="flex shrink-0 items-center gap-2.5">
+            <Link href="/home" className="flex shrink-0 items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-2">
                 <Image
                   src="/icon.png"
@@ -129,7 +128,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <div className="grid gap-10 sm:grid-cols-[1fr_auto] lg:grid-cols-[1.4fr_repeat(3,auto)] lg:gap-16">
             {/* Brand */}
             <div className="flex flex-col gap-4">
-              <Link href="/#top" className="flex items-center gap-2.5">
+              <Link href="/home" className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
                   <Image src="/icon.png" alt="sansxel" width={18} height={18} className="h-full w-full object-contain" />
                 </div>

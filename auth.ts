@@ -11,7 +11,7 @@ const authResult = NextAuth({
   trustHost: true,
   pages: {
     error: "/auth/error",
-    signIn: "/auth/signin",
+    signIn: "/signin",
   },
   providers: [
     Credentials({
@@ -113,7 +113,7 @@ const authResult = NextAuth({
       }
 
       const callbackUrl = getSafeRedirectPath(`${pathname}${search}`);
-      const signInUrl = new URL("/auth/signin", request.nextUrl.origin);
+      const signInUrl = new URL("/signin", request.nextUrl.origin);
       signInUrl.searchParams.set("callbackUrl", callbackUrl);
 
       return Response.redirect(signInUrl);

@@ -139,7 +139,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
     <>
       {/* ── Desktop sidebar ──────────────────────────────────────── */}
       <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
-        <Link href="/#top" className="flex items-center gap-2.5 py-6">
+        <Link href="/home" className="flex items-center gap-2.5 py-6">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
             <Image src="/icon.png" alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
           </div>
@@ -154,7 +154,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           <div className="mb-2 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
 
           <Link
-            href="/#top"
+            href="/home"
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
           >
             <HomeIcon />
@@ -183,7 +183,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
 
       {/* ── Mobile: sticky top bar (logo + sign out only) ────────────── */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/[0.08] bg-neutral-950/95 px-4 py-3 backdrop-blur-xl lg:hidden">
-        <Link href="/#top" className="flex items-center gap-2">
+        <Link href="/home" className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1">
             <Image src="/icon.png" alt="sansxel" width={18} height={18} className="h-full w-full object-contain" priority />
           </div>

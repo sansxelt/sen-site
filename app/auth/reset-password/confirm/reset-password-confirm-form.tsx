@@ -47,7 +47,7 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
           Your password has been changed. Sign in with your new credentials.
         </p>
         <Link
-          href="/auth/signin"
+          href="/signin"
           className="sansxel-white-button mt-6 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
         >
           Sign in
