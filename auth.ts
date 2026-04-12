@@ -1,7 +1,10 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { getSafeRedirectPath } from "./lib/auth-ui";
+import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
+import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
 const authResult = NextAuth({
   trustHost: true,
@@ -9,11 +12,77 @@ const authResult = NextAuth({
     error: "/auth/error",
     signIn: "/auth/signin",
   },
-  providers: [Google, GitHub],
+  providers: [
+    Credentials({
+      credentials: {
+        email: {
+          label: "Email",
+          type: "email",
+        },
+        password: {
+          label: "Password",
+          type: "password",
+        },
+      },
+      async authorize(credentials) {
+        const email =
+          typeof credentials.email === "string"
+            ? credentials.email.trim().toLowerCase()
+            : "";
+        const password =
+          typeof credentials.password === "string" ? credentials.password : "";
+
+        if (!email || !password) {
+          return null;
+        }
+
+        const userCredential = await getUserCredentialByEmail(email);
+
+        if (!userCredential) {
+          return null;
+        }
+
+        const passwordValid = await verifyPassword(
+          password,
+          userCredential.password_hash,
+        );
+
+        if (!passwordValid) {
+          return null;
+        }
+
+        const profile = await getUserProfileByEmail(email);
+
+        return {
+          email,
+          id: email,
+          name: profile?.display_name ?? email.split("@")[0],
+        };
+      },
+    }),
+    Google,
+    GitHub,
+  ],
   session: {
     strategy: "jwt",
   },
   callbacks: {
+    async signIn({ user }) {
+      if (!user.email) {
+        return true;
+      }
+
+      try {
+        await syncUserProfileIdentity({
+          email: user.email,
+          name: typeof user.name === "string" ? user.name : null,
+        });
+      } catch (error) {
+        console.error("User profile sync failed during sign-in:", error);
+      }
+
+      return true;
+    },
     authorized({ auth, request }) {
       const { pathname, search } = request.nextUrl;
       const requiresAuth =

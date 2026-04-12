@@ -1,10 +1,17 @@
 export const providerLabels = {
+  credentials: "Email",
   github: "GitHub",
   google: "Google",
 } as const;
 
-export type OauthProvider = keyof typeof providerLabels;
-export type AuthMessageContext = "account" | "provider" | "profile" | "signout";
+export type OauthProvider = Exclude<keyof typeof providerLabels, "credentials">;
+export type AuthMessageContext =
+  | "account"
+  | "provider"
+  | "profile"
+  | "signin"
+  | "signout"
+  | "signup";
 
 export const oauthProviders: Array<{
   description: string;
@@ -71,11 +78,33 @@ export function getAuthErrorMessage(
     return "That sign-in request was declined.";
   }
 
+  if (
+    message.includes("credentialssignin") ||
+    message.includes("invalid login credentials")
+  ) {
+    return "We couldn't verify that email and password. Please try again.";
+  }
+
+  if (
+    message.includes("already has a sansxel account") ||
+    message.includes("already exists")
+  ) {
+    return "That email already has a sansxel account. Sign in instead.";
+  }
+
+  if (message.includes("at least 8 characters")) {
+    return "Use a password with at least 8 characters.";
+  }
+
   if (message.includes("callbackrouteerror") || message.includes("oauth")) {
     return "We couldn't finish that sign-in. Please try again.";
   }
 
   switch (context) {
+    case "signup":
+      return "We couldn't create your account right now. Please try again.";
+    case "signin":
+      return "We couldn't sign you in right now. Please try again.";
     case "signout":
       return "We couldn't sign you out right now. Please try again.";
     case "profile":

@@ -245,7 +245,7 @@ export function AccountPanel({
               "Invite",
               inviteRequested ? "Request on file" : "Ready when you are",
             ],
-            ["Security", "OAuth session active"],
+            ["Security", `${sessionState.signInMethod} session active`],
             ["Sign-in", sessionState.signInMethod],
           ].map(([title, text]) => (
             <div
@@ -364,8 +364,8 @@ export function AccountPanel({
               {sessionState.email}
             </div>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
-              OAuth keeps the session branded and app-hosted before you ever
-              reach Google or GitHub.
+              sansxel keeps sign-in and return routes on the same account
+              surface, whether you use email, Google, or GitHub.
             </p>
           </div>
 
@@ -475,6 +475,18 @@ export function AccountPanel({
             Sign-in Options
           </div>
           <div className="mt-5 space-y-3">
+            <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-medium text-white">Email</div>
+                <div className="mt-1 text-sm text-neutral-200">
+                  Live now through the Auth.js credentials flow.
+                </div>
+              </div>
+              <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-100">
+                Live
+              </span>
+            </div>
+
             {oauthProviders.map((provider) => (
               <div
                 key={provider.provider}
@@ -493,18 +505,6 @@ export function AccountPanel({
                 </span>
               </div>
             ))}
-
-            <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-sm font-medium text-white">Email</div>
-                <div className="mt-1 text-sm text-neutral-200">
-                  Planned for later once the provider-first flow is fully settled.
-                </div>
-              </div>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-neutral-200">
-                Later
-              </span>
-            </div>
           </div>
         </div>
 

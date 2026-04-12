@@ -23,5 +23,13 @@ create table if not exists public.user_profiles (
     check (release_channel in ('stable', 'preview'))
 );
 
+create table if not exists public.user_credentials (
+  email text primary key,
+  password_hash text not null,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 alter table public.early_access_signups enable row level security;
 alter table public.user_profiles enable row level security;
+alter table public.user_credentials enable row level security;

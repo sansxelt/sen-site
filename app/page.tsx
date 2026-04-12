@@ -29,7 +29,7 @@ const steps = [
     number: "01",
     title: "Create your account",
     description:
-      "Start on sansxel and continue with Google or GitHub through the branded app-hosted flow.",
+      "Start on sansxel and continue with email, Google, or GitHub through the branded app-hosted flow.",
   },
   {
     number: "02",
@@ -427,9 +427,9 @@ export default async function HomePage() {
             </h3>
             <div className="mt-6 space-y-3 text-sm text-neutral-200">
               {[
-                "Google and GitHub start from sansxel's own sign-in flow before handing off to the provider.",
+                "Email, Google, and GitHub all start from sansxel's own sign-in flow before handing off when needed.",
                 "The callback returns to sansxel routes instead of a third-party auth hostname.",
-                "Email sign-in can be added later without reworking the whole auth surface.",
+                "New email accounts are created inside the same auth surface and land in the same workspace flow.",
                 "Privacy, terms, pricing, and support all have real routes.",
                 "Invite requests stay attached to the same account path.",
                 "Secure account handling stays visible throughout the journey.",

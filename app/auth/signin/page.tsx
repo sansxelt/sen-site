@@ -7,7 +7,7 @@ import { getSafeRedirectPath } from "../../../lib/auth-ui";
 export const metadata: Metadata = {
   title: "Sign In",
   description:
-    "Continue into sansxel with Google or GitHub through a branded, app-hosted sign-in flow.",
+    "Continue into sansxel with app-hosted email, Google, and GitHub sign-in flows.",
 };
 
 export default async function SignInPage({
@@ -32,8 +32,8 @@ export default async function SignInPage({
             Sign in without leaving the sansxel flow.
           </h1>
           <p className="mt-5 text-base leading-7 text-neutral-200">
-            Start here, choose Google or GitHub, and come straight back into
-            your workspace on the same domain.
+            Email, Google, and GitHub all start from the same branded sansxel
+            sign-in surface now.
           </p>
         </div>
 
@@ -41,7 +41,6 @@ export default async function SignInPage({
           <AuthPanel
             callbackUrl={getSafeRedirectPath(callbackUrl)}
             initialSessionEmail={session?.user?.email ?? null}
-            standalone
           />
         </div>
       </section>

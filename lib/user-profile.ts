@@ -22,6 +22,11 @@ type UserProfileUpdate = {
   workStyle?: string | null;
 };
 
+type UserIdentityInput = {
+  email: string;
+  name?: string | null;
+};
+
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
@@ -113,6 +118,24 @@ export async function upsertUserProfile(
   }
 
   return normalizeProfileRecord(data);
+}
+
+export async function syncUserProfileIdentity(input: UserIdentityInput) {
+  if (!input.email || !isDatabaseConfigured()) {
+    return null;
+  }
+
+  const existingProfile = await getUserProfileByEmail(input.email);
+  const normalizedName = input.name?.trim() || null;
+
+  return upsertUserProfile(input.email, {
+    displayName: existingProfile?.display_name || normalizedName,
+    earlyAccessRequestedAt: existingProfile?.early_access_requested_at ?? null,
+    focusArea: existingProfile?.focus_area,
+    releaseChannel: existingProfile?.release_channel,
+    summaryStyle: existingProfile?.summary_style,
+    workStyle: existingProfile?.work_style,
+  });
 }
 
 export async function saveEarlyAccessRequest(

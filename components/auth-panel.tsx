@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn, signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   getAuthErrorMessage,
   getSafeRedirectPath,
@@ -10,6 +11,7 @@ import {
   type OauthProvider,
 } from "../lib/auth-ui";
 
+type AuthMode = "signup" | "signin";
 type StatusTone = "error" | "info" | "success";
 type Status = {
   message: string;
@@ -31,19 +33,25 @@ function statusClasses(tone: StatusTone) {
 export function AuthPanel({
   callbackUrl = "/account",
   initialSessionEmail = null,
-  standalone = false,
 }: {
   callbackUrl?: string;
   initialSessionEmail?: string | null;
-  standalone?: boolean;
 }) {
+  const router = useRouter();
+  const [mode, setMode] = useState<AuthMode>("signup");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [status, setStatus] = useState<Status | null>(null);
   const [sessionEmail] = useState(initialSessionEmail);
   const [activeProvider, setActiveProvider] = useState<OauthProvider | null>(
     null,
   );
-  const [signingOut, setSigningOut] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<
+    AuthMode | "signout" | null
+  >(null);
   const safeRedirectPath = getSafeRedirectPath(callbackUrl);
+  const emailBusy = loadingAction === "signup" || loadingAction === "signin";
 
   useEffect(() => {
     if (!activeProvider) {
@@ -80,6 +88,70 @@ export function AuthPanel({
     };
   }, [activeProvider]);
 
+  async function finishCredentialsSignIn() {
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      redirectTo: safeRedirectPath,
+    });
+
+    if (result?.error) {
+      throw new Error(result.error);
+    }
+
+    setPassword("");
+    router.push(result?.url ?? safeRedirectPath);
+    router.refresh();
+  }
+
+  async function handleEmailAuth(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setStatus(null);
+    setLoadingAction(mode);
+
+    try {
+      if (mode === "signup") {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            name,
+            password,
+          }),
+        });
+
+        const payload = (await response.json()) as { error?: string };
+
+        if (!response.ok) {
+          throw new Error(
+            payload.error ?? "We couldn't create your account right now.",
+          );
+        }
+      }
+
+      await finishCredentialsSignIn();
+      setStatus({
+        tone: "success",
+        message:
+          mode === "signup"
+            ? "Your sansxel account is ready. Opening your workspace."
+            : "Welcome back. Opening your workspace.",
+      });
+    } catch (error) {
+      console.error("Email auth failed:", error);
+      setStatus({
+        tone: "error",
+        message: getAuthErrorMessage(error, mode),
+      });
+    } finally {
+      setLoadingAction(null);
+    }
+  }
+
   async function handleOAuth(provider: OauthProvider) {
     setStatus(null);
     setActiveProvider(provider);
@@ -99,7 +171,7 @@ export function AuthPanel({
   }
 
   async function handleSignOut() {
-    setSigningOut(true);
+    setLoadingAction("signout");
     setStatus(null);
 
     try {
@@ -108,7 +180,7 @@ export function AuthPanel({
       });
     } catch (error) {
       console.error("Sign out failed:", error);
-      setSigningOut(false);
+      setLoadingAction(null);
       setStatus({
         tone: "error",
         message: getAuthErrorMessage(error, "signout"),
@@ -128,18 +200,39 @@ export function AuthPanel({
           </h3>
         </div>
 
-        <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-emerald-100">
-          App-hosted auth
+        <div className="grid w-full grid-cols-2 overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm sm:inline-flex sm:w-auto">
+          <button
+            type="button"
+            onClick={() => setMode("signup")}
+            className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
+              mode === "signup"
+                ? "sansxel-white-button bg-white text-black"
+                : "text-neutral-200 hover:text-white"
+            }`}
+          >
+            Create account
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("signin")}
+            className={`rounded-[16px] px-4 py-2.5 leading-none transition focus-visible:outline-none ${
+              mode === "signin"
+                ? "sansxel-white-button bg-white text-black"
+                : "text-neutral-200 hover:text-white"
+            }`}
+          >
+            Sign in
+          </button>
         </div>
       </div>
 
       <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
-        Start on sansxel, choose Google or GitHub, and return straight to your
-        workspace with your session already ready.
+        Email, Google, and GitHub all start here on sansxel and return to the
+        same workspace flow when they finish.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2.5 text-sm text-neutral-100">
-        {["Google live", "GitHub live", "Email later"].map((item) => (
+        {["Email live", "Google live", "GitHub live"].map((item) => (
           <div
             key={item}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5"
@@ -167,10 +260,10 @@ export function AuthPanel({
             <button
               type="button"
               onClick={() => void handleSignOut()}
-              disabled={signingOut}
+              disabled={loadingAction === "signout"}
               className="rounded-2xl border border-white/10 bg-black/20 px-4 py-2 text-sm text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {signingOut ? "Signing out..." : "Sign out"}
+              {loadingAction === "signout" ? "Signing out..." : "Sign out"}
             </button>
           </div>
         </div>
@@ -179,14 +272,70 @@ export function AuthPanel({
       <div className="mt-8 grid items-start gap-5 xl:grid-cols-[minmax(0,1.05fr)_minmax(18rem,0.95fr)]">
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-6">
           <div>
-            <div className="text-sm font-medium text-white">
-              Choose a provider
-            </div>
+            <div className="text-sm font-medium text-white">Email sign-in</div>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
-              Premium OAuth starts here on sansxel before you continue to the
-              provider.
+              Use a password-based sansxel account or switch to Google and
+              GitHub below.
             </p>
           </div>
+
+          <form onSubmit={handleEmailAuth} className="mt-5 space-y-3">
+            {mode === "signup" && (
+              <input
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Name"
+                disabled={emailBusy}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            )}
+            <input
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="Email address"
+              disabled={emailBusy}
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+              required
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Password"
+              disabled={emailBusy}
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+              required
+              minLength={8}
+            />
+            <button
+              type="submit"
+              disabled={emailBusy}
+              className="sansxel-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+            >
+              {loadingAction === "signup"
+                ? "Creating account..."
+                : loadingAction === "signin"
+                  ? "Signing in..."
+                  : mode === "signup"
+                    ? "Create account"
+                    : "Sign in"}
+            </button>
+            <p className="text-sm leading-6 text-neutral-200">
+              {mode === "signup"
+                ? "Create your email account here, or use Google or GitHub below if you want a faster start."
+                : "Sign in with your email and password, or continue with a provider below."}
+            </p>
+          </form>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6">
+          <div className="text-sm font-medium text-white">Continue with</div>
+          <p className="mt-2 text-sm leading-6 text-neutral-200">
+            Premium OAuth starts here on sansxel before you continue to the
+            provider.
+          </p>
 
           <div className="mt-5 grid gap-3">
             {oauthProviders.map((option) => {
@@ -221,24 +370,6 @@ export function AuthPanel({
               );
             })}
           </div>
-        </div>
-
-        <div className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6">
-          <div className="text-sm font-medium text-white">What changes now</div>
-          <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-200">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              The sign-in entry point, error handling, and return flow stay on
-              the `sansxel.ai` domain.
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              Google and GitHub are ready now. Email sign-in can be added later
-              without rebuilding the whole auth surface.
-            </div>
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-4 text-neutral-300">
-              Microsoft and Apple are intentionally out of the way until they
-              are actually configured.
-            </div>
-          </div>
 
           <div className="mt-5 border-t border-white/10 pt-5">
             <div className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
@@ -260,23 +391,6 @@ export function AuthPanel({
           {status.message}
         </div>
       )}
-
-      <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm text-neutral-100">
-        <Link href="/privacy" className="transition hover:text-white">
-          Privacy Policy
-        </Link>
-        <Link href="/terms" className="transition hover:text-white">
-          Terms of Service
-        </Link>
-        <Link href="/contact" className="transition hover:text-white">
-          Contact / Support
-        </Link>
-        {standalone && (
-          <Link href="/" className="transition hover:text-white">
-            Back home
-          </Link>
-        )}
-      </div>
     </div>
   );
 }

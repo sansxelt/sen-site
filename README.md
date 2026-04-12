@@ -56,24 +56,28 @@ https://sansxel.ai/api/auth/callback/github
 
 ## Supabase Database Setup
 
-Auth is no longer handled by Supabase Auth. Supabase is now used only for app data.
+Auth is no longer handled by Supabase Auth. Supabase is now used only for app data and secure server-side storage for account records.
 
 Run the SQL in [docs/auth-schema.sql](./docs/auth-schema.sql) to create:
 
 - `public.early_access_signups`
 - `public.user_profiles`
+- `public.user_credentials`
 
 The app uses the service role key from server-side route handlers, so public anon
 insert policies are no longer required for the auth or early-access flow.
 
 ## What Is Implemented
 
+- Auth.js email/password credentials flow with bcrypt password hashing
 - Auth.js OAuth flow for Google and GitHub
 - App-hosted sign-in and error routes on `sansxel.ai`
 - JWT-based secure session handling through Auth.js
 - Protected account routes through `proxy.ts`
 - Supabase-backed workspace profile storage in `public.user_profiles`
+- Supabase-backed password credential storage in `public.user_credentials`
 - Supabase-backed early access storage in `public.early_access_signups`
+- Account registration route at `/api/auth/register`
 - Premium responsive auth UI across the landing page and dedicated sign-in page
 - Shared header and footer with meaningful navigation and CTA links
 
