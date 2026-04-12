@@ -741,26 +741,13 @@ function ScenarioPanel({ s }: { s: Scenario }) {
 export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   const [idx, setIdx] = useState(0);
   const [visible, setVisible] = useState(true);
-  const [reducedMotion, setReducedMotion] = useState(false);
   const orderRef = useRef<number[]>(
     Array.from({ length: scenarios.length }, (_, i) => i),
   );
 
-  // Shuffle order once on mount
   useEffect(() => {
+    // Randomise the first pass on mount
     orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
-  }, []);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReducedMotion(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  useEffect(() => {
-    if (reducedMotion) return;
 
     let swapTimer: ReturnType<typeof setTimeout>;
 
@@ -785,10 +772,10 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
       clearInterval(interval);
       clearTimeout(swapTimer);
     };
-  }, [reducedMotion]);
+  }, []); // run once — interval never re-creates
 
   const s = scenarios[orderRef.current[idx]];
-  const show = visible || reducedMotion;
+  const show = visible;
 
   return (
     <>
