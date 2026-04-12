@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
+import { auth } from "../../auth";
 import { AccountPanel } from "../../components/account-panel";
 import { readSessionState } from "../../lib/account-session";
-import { providerLabels } from "../../lib/supabase";
-import { getSupabaseServerClient } from "../../lib/supabase-server";
 import { SiteShell } from "../../components/site-shell";
+import { getUserProfileByEmail } from "../../lib/user-profile";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -12,11 +12,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AccountPage() {
-  const supabase = await getSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const initialSessionState = readSessionState(user, providerLabels);
+  const session = await auth();
+  const profile = await getUserProfileByEmail(session?.user?.email);
+  const initialSessionState = readSessionState(session, profile);
 
   return (
     <SiteShell>

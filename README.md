@@ -1,4 +1,4 @@
-This is the marketing and onboarding site for `sansxel`, built with Next.js and Supabase.
+This is the marketing and onboarding site for `sansxel`, built with Next.js, Auth.js, and Supabase as the database layer.
 
 ## Run Locally
 
@@ -8,11 +8,17 @@ This is the marketing and onboarding site for `sansxel`, built with Next.js and 
 npm install
 ```
 
-2. Add these variables to `.env.local`:
+2. Copy `.env.example` to `.env.local` and fill in every value:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+AUTH_SECRET=replace-with-a-long-random-secret
+AUTH_URL=http://localhost:3000
+AUTH_GOOGLE_ID=replace-with-google-client-id
+AUTH_GOOGLE_SECRET=replace-with-google-client-secret
+AUTH_GITHUB_ID=replace-with-github-client-id
+AUTH_GITHUB_SECRET=replace-with-github-client-secret
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=replace-with-supabase-service-role-key
 ```
 
 3. Start the development server:
@@ -23,58 +29,52 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-## Supabase Setup Notes
+## Auth.js Setup
 
-### Auth providers
+### Live providers
 
-- Email and password auth works with the existing public Supabase keys.
-- Google and GitHub use Supabase OAuth with the shared callback route at
-  `app/auth/callback/route.ts`.
-- Microsoft and Apple stay disabled in the UI until their provider setup is
-  finished.
-- Add these callback URLs in Supabase Auth:
+- Google uses Auth.js with the callback URL:
 
 ```text
-http://localhost:3000/auth/callback
-https://sansxel.ai/auth/callback
+http://localhost:3000/api/auth/callback/google
+https://sansxel.ai/api/auth/callback/google
 ```
 
-### Early access storage
+- GitHub uses Auth.js with the callback URL:
 
-Create a table named `early_access_signups` and allow inserts and updates from the anon role.
-
-```sql
-create table if not exists public.early_access_signups (
-  email text primary key,
-  name text,
-  focus_area text,
-  source text not null default 'website',
-  created_at timestamptz not null default now()
-);
-
-alter table public.early_access_signups enable row level security;
-
-create policy "Allow public early access inserts"
-on public.early_access_signups
-for insert
-to anon
-with check (true);
-
-create policy "Allow public early access updates"
-on public.early_access_signups
-for update
-to anon
-using (true)
-with check (true);
+```text
+http://localhost:3000/api/auth/callback/github
+https://sansxel.ai/api/auth/callback/github
 ```
+
+### App-hosted auth routes
+
+- Custom sign-in page: `/auth/signin`
+- Custom error page: `/auth/error`
+- Auth.js handler route: `/api/auth/[...nextauth]`
+- Protected workspace route: `/account`
+
+## Supabase Database Setup
+
+Auth is no longer handled by Supabase Auth. Supabase is now used only for app data.
+
+Run the SQL in [docs/auth-schema.sql](./docs/auth-schema.sql) to create:
+
+- `public.early_access_signups`
+- `public.user_profiles`
+
+The app uses the service role key from server-side route handlers, so public anon
+insert policies are no longer required for the auth or early-access flow.
 
 ## What Is Implemented
 
-- Custom email and password auth UI
-- OAuth buttons for Google and GitHub via Supabase
-- Disabled Microsoft and Apple cards until those providers are configured
-- Real routes for pricing, download, privacy, terms, and contact
-- Supabase-backed early access form through `/api/early-access`
+- Auth.js OAuth flow for Google and GitHub
+- App-hosted sign-in and error routes on `sansxel.ai`
+- JWT-based secure session handling through Auth.js
+- Protected account routes through `proxy.ts`
+- Supabase-backed workspace profile storage in `public.user_profiles`
+- Supabase-backed early access storage in `public.early_access_signups`
+- Premium responsive auth UI across the landing page and dedicated sign-in page
 - Shared header and footer with meaningful navigation and CTA links
 
 ## Checks

@@ -1,22 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { signOut } from "next-auth/react";
+import { useState } from "react";
 import {
   type ReleaseChannel,
-  readSessionState,
   type SessionState,
   type SummaryStyle,
 } from "../lib/account-session";
-import {
-  getAuthErrorMessage,
-  getAuthUnavailableMessage,
-  getSupabaseBrowserClient,
-  isSupabaseConfigured,
-  oauthProviders,
-  providerLabels,
-} from "../lib/supabase";
+import { getAuthErrorMessage, getSignInPath, oauthProviders } from "../lib/auth-ui";
 
 type StatusTone = "error" | "info" | "success";
 type Status = {
@@ -96,9 +88,6 @@ export function AccountPanel({
 }: {
   initialSessionState: SessionState | null;
 }) {
-  const router = useRouter();
-  const authReady = isSupabaseConfigured();
-  const [loading, setLoading] = useState(initialSessionState ? false : true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [sessionState, setSessionState] = useState<SessionState | null>(
@@ -118,66 +107,10 @@ export function AccountPanel({
   );
   const [releaseChannel, setReleaseChannel] =
     useState<ReleaseChannel>(initialSessionState?.releaseChannel ?? "stable");
-  const [status, setStatus] = useState<Status | null>(
-    authReady
-      ? null
-      : {
-          tone: "info",
-          message: getAuthUnavailableMessage(),
-        },
-  );
-
-  useEffect(() => {
-    if (!authReady) {
-      setLoading(false);
-      return;
-    }
-
-    const supabase = getSupabaseBrowserClient();
-
-    void supabase.auth.getSession().then(({ data, error }) => {
-      if (error) {
-        console.error("Account session lookup failed:", error);
-        setStatus({
-          tone: "error",
-          message: getAuthErrorMessage(error, "account"),
-        });
-        setLoading(false);
-        return;
-      }
-
-      const nextState = readSessionState(
-        data.session?.user ?? null,
-        providerLabels,
-      );
-      setSessionState(nextState);
-      setDisplayName(nextState?.displayName ?? "");
-      setWorkStyle(nextState?.workStyle ?? "");
-      setFocusArea(nextState?.focusArea ?? "");
-      setSummaryStyle(nextState?.summaryStyle ?? "balanced");
-      setReleaseChannel(nextState?.releaseChannel ?? "stable");
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const nextState = readSessionState(session?.user ?? null, providerLabels);
-      setSessionState(nextState);
-      setDisplayName(nextState?.displayName ?? "");
-      setWorkStyle(nextState?.workStyle ?? "");
-      setFocusArea(nextState?.focusArea ?? "");
-      setSummaryStyle(nextState?.summaryStyle ?? "balanced");
-      setReleaseChannel(nextState?.releaseChannel ?? "stable");
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [authReady]);
+  const [status, setStatus] = useState<Status | null>(null);
 
   async function handleProfileSave() {
-    if (!authReady || !sessionState) {
+    if (!sessionState) {
       return;
     }
 
@@ -185,29 +118,37 @@ export function AccountPanel({
     setStatus(null);
 
     try {
-      const supabase = getSupabaseBrowserClient();
-      const { data, error } = await supabase.auth.updateUser({
-        data: {
-          display_name: displayName.trim() || null,
-          focus_area: focusArea.trim() || null,
-          release_channel: releaseChannel,
-          summary_style: summaryStyle,
-          work_style: workStyle.trim() || null,
+      const response = await fetch("/api/account/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          displayName,
+          focusArea,
+          releaseChannel,
+          summaryStyle,
+          workStyle,
+        }),
       });
 
-      if (error) {
-        throw error;
+      const payload = (await response.json()) as {
+        error?: string;
+        sessionState?: SessionState | null;
+      };
+
+      if (!response.ok || !payload.sessionState) {
+        throw new Error(
+          payload.error ?? "We couldn't save your workspace settings right now.",
+        );
       }
 
-      const nextState = readSessionState(data.user, providerLabels);
-
-      setSessionState(nextState);
-      setDisplayName(nextState?.displayName ?? "");
-      setWorkStyle(nextState?.workStyle ?? "");
-      setFocusArea(nextState?.focusArea ?? "");
-      setSummaryStyle(nextState?.summaryStyle ?? "balanced");
-      setReleaseChannel(nextState?.releaseChannel ?? "stable");
+      setSessionState(payload.sessionState);
+      setDisplayName(payload.sessionState.displayName);
+      setWorkStyle(payload.sessionState.workStyle);
+      setFocusArea(payload.sessionState.focusArea);
+      setSummaryStyle(payload.sessionState.summaryStyle);
+      setReleaseChannel(payload.sessionState.releaseChannel);
       setStatus({
         tone: "success",
         message: "Your workspace settings were saved.",
@@ -216,7 +157,7 @@ export function AccountPanel({
       console.error("Profile update failed:", error);
       setStatus({
         tone: "error",
-        message: getAuthErrorMessage(error, "account"),
+        message: getAuthErrorMessage(error, "profile"),
       });
     } finally {
       setSavingProfile(false);
@@ -224,44 +165,21 @@ export function AccountPanel({
   }
 
   async function handleSignOut() {
-    if (!authReady) {
-      return;
-    }
-
     setSigningOut(true);
     setStatus(null);
 
     try {
-      const supabase = getSupabaseBrowserClient();
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        throw error;
-      }
-
-      router.push("/#auth");
-      router.refresh();
+      await signOut({
+        redirectTo: "/",
+      });
     } catch (error) {
       console.error("Account sign out failed:", error);
+      setSigningOut(false);
       setStatus({
         tone: "error",
         message: getAuthErrorMessage(error, "signout"),
       });
-      setSigningOut(false);
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
-        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
-          Account
-        </div>
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-100">
-          Loading your workspace...
-        </div>
-      </div>
-    );
   }
 
   if (!sessionState) {
@@ -288,10 +206,10 @@ export function AccountPanel({
         )}
         <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
           <Link
-            href="/#auth"
+            href={getSignInPath("/account")}
             className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
           >
-            Create account or sign in
+            Sign in
           </Link>
           <Link
             href="/download#early-access"
@@ -316,9 +234,8 @@ export function AccountPanel({
           Your sansxel workspace is live on this device.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
-          Keep the setup moving even before desktop access opens up. Save how
-          you work, what you want sansxel to remember, and which release track
-          you want to follow.
+          Save how you work, what you want sansxel to remember, and which
+          release track you want to follow.
         </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -328,7 +245,7 @@ export function AccountPanel({
               "Invite",
               inviteRequested ? "Request on file" : "Ready when you are",
             ],
-            ["Security", sessionState.emailConfirmed ? "Email confirmed" : "Verify soon"],
+            ["Security", "OAuth session active"],
             ["Sign-in", sessionState.signInMethod],
           ].map(([title, text]) => (
             <div
@@ -447,9 +364,8 @@ export function AccountPanel({
               {sessionState.email}
             </div>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
-              {sessionState.emailConfirmed
-                ? "Your email is confirmed and ready for account access."
-                : "Confirm your email when the verification message arrives to keep access smooth across devices."}
+              OAuth keeps the session branded and app-hosted before you ever
+              reach Google or GitHub.
             </p>
           </div>
 
@@ -559,18 +475,6 @@ export function AccountPanel({
             Sign-in Options
           </div>
           <div className="mt-5 space-y-3">
-            <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="text-sm font-medium text-white">Email</div>
-                  <div className="mt-1 text-sm text-neutral-200">
-                    Available now in the sansxel workspace.
-                  </div>
-                </div>
-              <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-100">
-                Live
-              </span>
-            </div>
-
             {oauthProviders.map((provider) => (
               <div
                 key={provider.provider}
@@ -581,22 +485,26 @@ export function AccountPanel({
                     {provider.label}
                   </div>
                   <div className="mt-1 text-sm text-neutral-200">
-                    {provider.enabled
-                      ? "Ready to use in this build."
-                      : `${provider.label} stays disabled until its provider setup is finished.`}
+                    Live now through the sansxel-hosted Auth.js flow.
                   </div>
                 </div>
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    provider.enabled
-                      ? "border border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
-                      : "border border-white/10 bg-white/5 text-neutral-200"
-                  }`}
-                >
-                  {provider.enabled ? "Live" : "Unavailable"}
+                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-100">
+                  Live
                 </span>
               </div>
             ))}
+
+            <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-sm font-medium text-white">Email</div>
+                <div className="mt-1 text-sm text-neutral-200">
+                  Planned for later once the provider-first flow is fully settled.
+                </div>
+              </div>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-neutral-200">
+                Later
+              </span>
+            </div>
           </div>
         </div>
 

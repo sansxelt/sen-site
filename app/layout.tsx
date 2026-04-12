@@ -18,7 +18,12 @@ export const metadata: Metadata = {
     template: "%s | sansxel",
   },
   description:
-    "sansxel turns desktop activity into calm, searchable memory with premium desktop onboarding and flexible sign-in.",
+    "sansxel turns desktop activity into calm, searchable memory with premium desktop onboarding and app-hosted sign-in.",
+  icons: {
+    apple: "/icon.png",
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+  },
 };
 
 export default function RootLayout({

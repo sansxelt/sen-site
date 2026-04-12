@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { auth } from "../auth";
 import { AuthPanel } from "../components/auth-panel";
 import { EarlyAccessForm } from "../components/early-access-form";
 import { SiteShell } from "../components/site-shell";
+import { readAccountContext } from "../lib/account-session";
+import { getUserProfileByEmail } from "../lib/user-profile";
 
 const features = [
   {
@@ -26,7 +29,7 @@ const steps = [
     number: "01",
     title: "Create your account",
     description:
-      "Use email and password inside sansxel's own UI or choose a provider only when you are ready.",
+      "Start on sansxel and continue with Google or GitHub through the branded app-hosted flow.",
   },
   {
     number: "02",
@@ -82,7 +85,11 @@ const pricingPreview = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth();
+  const profile = await getUserProfileByEmail(session?.user?.email);
+  const initialAccountContext = readAccountContext(session, profile);
+
   return (
     <SiteShell>
       <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:px-8 lg:pb-28 lg:pt-24">
@@ -409,7 +416,7 @@ export default function HomePage() {
 
       <section id="auth" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="grid gap-6 xl:grid-cols-[1.08fr_.92fr] xl:items-start">
-          <AuthPanel />
+          <AuthPanel initialSessionEmail={session?.user?.email ?? null} />
 
           <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10 xl:mt-4">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
@@ -420,8 +427,9 @@ export default function HomePage() {
             </h3>
             <div className="mt-6 space-y-3 text-sm text-neutral-200">
               {[
-                "Email and password auth stays inside sansxel's own UI.",
-                "Google and GitHub are live now, while Microsoft and Apple stay disabled until their setup is finished.",
+                "Google and GitHub start from sansxel's own sign-in flow before handing off to the provider.",
+                "The callback returns to sansxel routes instead of a third-party auth hostname.",
+                "Email sign-in can be added later without reworking the whole auth surface.",
                 "Privacy, terms, pricing, and support all have real routes.",
                 "Invite requests stay attached to the same account path.",
                 "Secure account handling stays visible throughout the journey.",
@@ -444,7 +452,7 @@ export default function HomePage() {
         className="mx-auto max-w-7xl px-4 pb-20 pt-2 sm:px-6 sm:pb-24 sm:pt-8 lg:px-8"
       >
         <div className="grid gap-6 lg:grid-cols-[1fr_.95fr]">
-          <EarlyAccessForm />
+          <EarlyAccessForm initialAccountContext={initialAccountContext} />
 
           <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">

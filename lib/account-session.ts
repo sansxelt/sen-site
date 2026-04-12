@@ -1,4 +1,6 @@
-import type { User } from "@supabase/supabase-js";
+import type { Session } from "next-auth";
+import { providerLabels } from "./auth-ui";
+import type { UserProfileRecord } from "./user-profile";
 
 export type SummaryStyle = "concise" | "balanced" | "detailed";
 export type ReleaseChannel = "stable" | "preview";
@@ -24,38 +26,62 @@ function isReleaseChannel(value: unknown): value is ReleaseChannel {
 }
 
 export function readSessionState(
-  user: User | null,
-  providerLabels: Record<string, string>,
+  session: Session | null,
+  profile: UserProfileRecord | null,
 ): SessionState | null {
-  if (!user) {
+  const user = session?.user;
+  const email = user?.email ?? null;
+
+  if (!email || !user) {
     return null;
   }
 
-  const metadata = user.user_metadata ?? {};
   const provider =
-    typeof user.app_metadata?.provider === "string"
-      ? user.app_metadata.provider
-      : "email";
+    typeof user.provider === "string" ? user.provider : "oauth";
+  const profileDisplayName = profile?.display_name ?? "";
+  const sessionDisplayName =
+    typeof user.name === "string" ? user.name : "";
 
   return {
-    displayName:
-      typeof metadata.display_name === "string" ? metadata.display_name : "",
-    earlyAccessRequestedAt:
-      typeof metadata.early_access_requested_at === "string"
-        ? metadata.early_access_requested_at
-        : null,
-    email: user.email ?? null,
-    emailConfirmed: Boolean(user.email_confirmed_at),
-    focusArea:
-      typeof metadata.focus_area === "string" ? metadata.focus_area : "",
-    releaseChannel: isReleaseChannel(metadata.release_channel)
-      ? metadata.release_channel
+    displayName: profileDisplayName || sessionDisplayName,
+    earlyAccessRequestedAt: profile?.early_access_requested_at ?? null,
+    email,
+    emailConfirmed: Boolean(email),
+    focusArea: profile?.focus_area ?? "",
+    releaseChannel: isReleaseChannel(profile?.release_channel)
+      ? profile.release_channel
       : "stable",
-    signInMethod: provider === "email" ? "Email" : providerLabels[provider] ?? provider,
-    summaryStyle: isSummaryStyle(metadata.summary_style)
-      ? metadata.summary_style
+    signInMethod: providerLabels[provider as keyof typeof providerLabels] ?? "OAuth",
+    summaryStyle: isSummaryStyle(profile?.summary_style)
+      ? profile.summary_style
       : "balanced",
-    workStyle:
-      typeof metadata.work_style === "string" ? metadata.work_style : "",
+    workStyle: profile?.work_style ?? "",
+  };
+}
+
+export type AccountContext = {
+  email: string;
+  name: string;
+  requestedAt: string | null;
+} | null;
+
+export function readAccountContext(
+  session: Session | null,
+  profile: UserProfileRecord | null,
+): AccountContext {
+  const user = session?.user;
+  const email = user?.email ?? null;
+
+  if (!email || !user) {
+    return null;
+  }
+
+  return {
+    email,
+    name:
+      profile?.display_name ??
+      (typeof user.name === "string" ? user.name : "") ??
+      "",
+    requestedAt: profile?.early_access_requested_at ?? null,
   };
 }

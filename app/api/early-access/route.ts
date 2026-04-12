@@ -1,5 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { auth } from "../../../auth";
+import { isDatabaseConfigured } from "../../../lib/supabase-admin";
+import {
+  getUserProfileByEmail,
+  saveEarlyAccessRequest,
+  upsertUserProfile,
+} from "../../../lib/user-profile";
 
 type EarlyAccessPayload = {
   email?: string;
@@ -10,10 +16,7 @@ type EarlyAccessPayload = {
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!isDatabaseConfigured()) {
     return NextResponse.json(
       {
         error:
@@ -42,20 +45,33 @@ export async function POST(request: Request) {
     );
   }
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
-  const { error } = await supabase.from("early_access_signups").upsert(
-    [
-      {
-        email,
-        focus_area: focusArea || null,
-        name: name || null,
-        source: "website",
-      },
-    ],
-    { onConflict: "email" },
-  );
+  try {
+    const requestedAt = await saveEarlyAccessRequest(email, {
+      focusArea,
+      name,
+      source: "website",
+    });
+    const session = await auth();
+    const sessionEmail = session?.user?.email?.trim().toLowerCase() ?? null;
 
-  if (error) {
+    if (sessionEmail && sessionEmail === email) {
+      const existingProfile = await getUserProfileByEmail(email);
+
+      await upsertUserProfile(email, {
+        displayName: name || existingProfile?.display_name,
+        earlyAccessRequestedAt: requestedAt,
+        focusArea: focusArea || existingProfile?.focus_area,
+        releaseChannel: existingProfile?.release_channel,
+        summaryStyle: existingProfile?.summary_style,
+        workStyle: existingProfile?.work_style,
+      });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      requestedAt,
+    });
+  } catch (error) {
     console.error("Early access save failed:", error);
 
     return NextResponse.json(
@@ -66,8 +82,4 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-
-  return NextResponse.json({
-    ok: true,
-  });
 }

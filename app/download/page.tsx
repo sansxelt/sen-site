@@ -1,7 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { auth } from "../../auth";
 import { EarlyAccessForm } from "../../components/early-access-form";
 import { SiteShell } from "../../components/site-shell";
+import { readAccountContext } from "../../lib/account-session";
+import { getUserProfileByEmail } from "../../lib/user-profile";
 
 export const metadata: Metadata = {
   title: "Access",
@@ -9,7 +12,11 @@ export const metadata: Metadata = {
     "Request sansxel early access, review launch status, and see what is needed before broader desktop access opens.",
 };
 
-export default function DownloadPage() {
+export default async function DownloadPage() {
+  const session = await auth();
+  const profile = await getUserProfileByEmail(session?.user?.email);
+  const initialAccountContext = readAccountContext(session, profile);
+
   return (
     <SiteShell>
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
@@ -98,7 +105,7 @@ export default function DownloadPage() {
           id="early-access"
           className="mt-10 grid gap-6 lg:grid-cols-[1fr_.95fr] sm:mt-12"
         >
-          <EarlyAccessForm />
+          <EarlyAccessForm initialAccountContext={initialAccountContext} />
 
           <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">

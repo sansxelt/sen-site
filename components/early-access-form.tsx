@@ -1,12 +1,8 @@
 "use client";
 
-import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { useEffect, useState, type FormEvent } from "react";
-import {
-  getSupabaseBrowserClient,
-  isSupabaseConfigured,
-} from "../lib/supabase";
+import { useState, type FormEvent } from "react";
+import type { AccountContext } from "../lib/account-session";
 
 type StatusTone = "error" | "success";
 type Status = {
@@ -14,33 +10,10 @@ type Status = {
   tone: StatusTone;
 };
 
-type AccountContext = {
-  email: string;
-  name: string;
-  requestedAt: string | null;
-} | null;
-
 function statusClasses(tone: StatusTone) {
   return tone === "success"
     ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100"
     : "border-rose-400/20 bg-rose-400/10 text-rose-100";
-}
-
-function readAccountContext(user: User | null): AccountContext {
-  if (!user?.email) {
-    return null;
-  }
-
-  const metadata = user.user_metadata ?? {};
-
-  return {
-    email: user.email,
-    name: typeof metadata.display_name === "string" ? metadata.display_name : "",
-    requestedAt:
-      typeof metadata.early_access_requested_at === "string"
-        ? metadata.early_access_requested_at
-        : null,
-  };
 }
 
 function formatRequestedAt(value: string | null) {
@@ -59,48 +32,18 @@ function formatRequestedAt(value: string | null) {
   }).format(date)}.`;
 }
 
-export function EarlyAccessForm() {
-  const authReady = isSupabaseConfigured();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+export function EarlyAccessForm({
+  initialAccountContext,
+}: {
+  initialAccountContext: AccountContext;
+}) {
+  const [name, setName] = useState(initialAccountContext?.name ?? "");
+  const [email, setEmail] = useState(initialAccountContext?.email ?? "");
   const [focusArea, setFocusArea] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
-  const [accountContext, setAccountContext] = useState<AccountContext>(null);
-
-  useEffect(() => {
-    if (!authReady) {
-      return;
-    }
-
-    const supabase = getSupabaseBrowserClient();
-
-    const applyUser = (user: User | null) => {
-      const nextContext = readAccountContext(user);
-      setAccountContext(nextContext);
-
-      if (!nextContext) {
-        return;
-      }
-
-      setName((current) => current || nextContext.name);
-      setEmail((current) => current || nextContext.email);
-    };
-
-    void supabase.auth.getSession().then(({ data }) => {
-      applyUser(data.session?.user ?? null);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      applyUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [authReady]);
+  const [accountContext, setAccountContext] =
+    useState<AccountContext>(initialAccountContext);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,7 +63,10 @@ export function EarlyAccessForm() {
         }),
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as {
+        error?: string;
+        requestedAt?: string;
+      };
 
       if (!response.ok) {
         throw new Error(
@@ -128,34 +74,15 @@ export function EarlyAccessForm() {
         );
       }
 
-      if (authReady && accountContext?.email) {
-        try {
-          const supabase = getSupabaseBrowserClient();
-          const requestedAt = new Date().toISOString();
-          const { error } = await supabase.auth.updateUser({
-            data: {
-              display_name: name.trim() || null,
-              early_access_requested_at: requestedAt,
-              focus_area: focusArea.trim() || null,
-            },
-          });
-
-          if (error) {
-            throw error;
-          }
-
-          setAccountContext((current) =>
-            current
-              ? {
-                  ...current,
-                  name: name.trim() || current.name,
-                  requestedAt,
-                }
-              : current,
-          );
-        } catch (metadataError) {
-          console.error("Early access metadata update failed:", metadataError);
-        }
+      if (
+        accountContext?.email &&
+        accountContext.email.toLowerCase() === email.trim().toLowerCase()
+      ) {
+        setAccountContext({
+          email: accountContext.email,
+          name: name.trim() || accountContext.name,
+          requestedAt: payload.requestedAt ?? accountContext.requestedAt,
+        });
       }
 
       setStatus({

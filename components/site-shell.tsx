@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { getSignInPath } from "../lib/auth-ui";
 
 const primaryLinks = [
   { href: "/#features", label: "Features" },
@@ -51,7 +52,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
             <div className="hidden items-center gap-3 sm:flex">
               <Link
-                href="/#auth"
+                href={getSignInPath("/account")}
                 className="rounded-xl border border-white/10 px-4 py-2 text-sm text-neutral-100 transition hover:bg-white/5"
               >
                 Sign in
@@ -67,7 +68,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
 
           <div className="mt-3 flex gap-3 sm:hidden">
             <Link
-              href="/#auth"
+              href={getSignInPath("/account")}
               className="flex-1 rounded-xl border border-white/10 px-4 py-2 text-center text-sm text-neutral-100 transition hover:bg-white/5"
             >
               Sign in
