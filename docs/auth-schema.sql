@@ -49,8 +49,29 @@ create table if not exists public.api_keys (
   revoked_at timestamptz
 );
 
+create table if not exists public.account_subscriptions (
+  email text primary key,
+  plan_key text not null default 'free',
+  billing_cycle text not null default 'monthly',
+  status text not null default 'free',
+  seat_count integer not null default 1,
+  enterprise_verified_business boolean not null default false,
+  current_period_end timestamptz,
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now()),
+  constraint account_subscriptions_plan_key_check
+    check (plan_key in ('free', 'apprentice', 'studio', 'pro', 'teams', 'enterprise')),
+  constraint account_subscriptions_billing_cycle_check
+    check (billing_cycle in ('monthly', 'yearly', 'custom')),
+  constraint account_subscriptions_status_check
+    check (status in ('free', 'selection_pending', 'active', 'contact_required', 'canceled')),
+  constraint account_subscriptions_seat_count_check
+    check (seat_count >= 1)
+);
+
 alter table public.early_access_signups enable row level security;
 alter table public.user_profiles enable row level security;
 alter table public.user_credentials enable row level security;
 alter table public.password_reset_tokens enable row level security;
 alter table public.api_keys enable row level security;
+alter table public.account_subscriptions enable row level security;

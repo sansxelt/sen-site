@@ -4,6 +4,7 @@ import { AuthPanel } from "../components/auth-panel";
 import { EarlyAccessForm } from "../components/early-access-form";
 import { SiteShell } from "../components/site-shell";
 import { readAccountContext } from "../lib/account-session";
+import { pricingPlans } from "../lib/pricing";
 import { getUserProfileByEmail } from "../lib/user-profile";
 
 const features = [
@@ -39,49 +40,9 @@ const steps = [
   },
   {
     number: "03",
-    title: "Request access when ready",
+    title: "Pick your tier when ready",
     description:
-      "Keep invite requests, support, and launch status attached to the same account instead of bouncing between dead ends.",
-  },
-];
-
-const pricingPreview = [
-  {
-    cta: "Open workspace",
-    href: "/account",
-    name: "Starter",
-    note: "Free while early access is limited",
-    price: "$0",
-    points: [
-      "Basic desktop timeline",
-      "Recent activity history",
-      "7-day searchable memory",
-    ],
-  },
-  {
-    cta: "Request Pro access",
-    featured: true,
-    href: "/download#early-access",
-    name: "Pro",
-    note: "Premium memory and AI features",
-    price: "$12",
-    points: [
-      "AI day summaries",
-      "Ask your timeline",
-      "90-day memory",
-    ],
-  },
-  {
-    cta: "Contact support",
-    href: "/contact",
-    name: "Teams",
-    note: "Private rollout for shared workspaces",
-    price: "$29",
-    points: [
-      "Shared workspaces",
-      "Admin controls",
-      "Priority onboarding",
-    ],
+      "Move from the limited free tier into stronger personal or team plans without rebuilding your account path.",
   },
 ];
 
@@ -89,10 +50,16 @@ export default async function HomePage() {
   const session = await auth();
   const profile = await getUserProfileByEmail(session?.user?.email);
   const initialAccountContext = readAccountContext(session, profile);
+  const pricingPreview = pricingPlans.filter(
+    (plan) => plan.key === "free" || plan.key === "pro" || plan.key === "teams",
+  );
 
   return (
     <SiteShell>
-      <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:px-8 lg:pb-28 lg:pt-24">
+      <section
+        id="top"
+        className="mx-auto grid max-w-7xl gap-10 px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 lg:grid-cols-[1.1fr_.9fr] lg:gap-16 lg:px-8 lg:pb-28 lg:pt-24"
+      >
         <div className="max-w-2xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-neutral-200 sm:text-xs">
             <span className="h-2 w-2 rounded-full bg-white/80" />
@@ -345,7 +312,7 @@ export default async function HomePage() {
               Pricing
             </div>
             <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
-              Start free. Upgrade when you want deeper memory.
+              Start free. Upgrade when you want stronger AI and more headroom.
             </h2>
           </div>
           <Link
@@ -377,15 +344,15 @@ export default async function HomePage() {
                     {plan.note}
                   </div>
                 </div>
-                {plan.featured && (
+                {(plan.badge || plan.featured) && (
                   <div className="rounded-full bg-neutral-950 px-3 py-1 text-xs font-medium text-white">
-                    Popular
+                    {plan.badge ?? "Popular"}
                   </div>
                 )}
               </div>
 
               <div className="mt-6 text-4xl font-semibold tracking-tight">
-                {plan.price}
+                {plan.monthlyLabel.replace(" / month", "")}
               </div>
 
               <div className="mt-6 space-y-3">
@@ -402,14 +369,24 @@ export default async function HomePage() {
               </div>
 
               <Link
-                href={plan.href}
+                href={
+                  plan.key === "free"
+                    ? "/account"
+                    : plan.key === "teams"
+                      ? "/contact"
+                      : "/pricing"
+                }
                 className={`mt-8 block w-full rounded-2xl px-5 py-3 text-center text-sm font-medium transition ${
                   plan.featured
                     ? "sansxel-dark-button bg-neutral-950 text-white hover:opacity-90"
                     : "border border-white/10 bg-white/5 text-white hover:bg-white/10"
                 }`}
               >
-                {plan.cta}
+                {plan.key === "free"
+                  ? "Open workspace"
+                  : plan.key === "teams"
+                    ? "Contact support"
+                    : "Review Pro"}
               </Link>
             </div>
           ))}

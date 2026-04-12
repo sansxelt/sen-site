@@ -130,7 +130,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
       {/* ── Desktop sidebar ──────────────────────────────────────── */}
       <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 py-6">
+        <Link href="/#top" className="flex items-center gap-2.5 py-6">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
             <Image src="/icon.png" alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
           </div>
@@ -147,7 +147,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           <div className="mb-2 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
 
           <Link
-            href="/"
+            href="/#top"
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
           >
             <HomeIcon />
@@ -176,7 +176,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
 
       {/* ── Mobile top bar ───────────────────────────────────────── */}
       <header className="flex items-center justify-between border-b border-white/10 bg-neutral-950/90 px-4 py-3 backdrop-blur lg:hidden">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/#top" className="flex items-center gap-2">
           <Image src="/icon.png" alt="sansxel" width={22} height={22} className="h-5.5 w-5.5 object-contain" />
           <span className="text-sm font-semibold text-white">sansxel</span>
         </Link>
@@ -204,7 +204,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
             <SignOutIcon />
           </button>
           <Link
-            href="/"
+            href="/#top"
             title="Return to home"
             className="rounded-lg p-2 text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
           >
