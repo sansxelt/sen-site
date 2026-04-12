@@ -153,7 +153,7 @@ function CardPack({
       </div>
 
       {/* Dot indicators */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-end gap-1.5">
         {plans.map((_, i) => (
           <button
             key={i}
