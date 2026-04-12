@@ -323,40 +323,44 @@ export function AuthPanel({
   return (
     <div>
       {/* ── Header ──────────────────────────────────────────────── */}
-      <div className={!onModeChange ? "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" : undefined}>
-        <div>
-          <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
-            <span className="uppercase tracking-[0.2em] text-neutral-300">Secure Access</span>
-            {sessionEmail && (
-              <>
-                <span className="text-neutral-600">·</span>
-                <span className="text-emerald-400">{sessionEmail}</span>
-              </>
-            )}
-          </div>
-          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white">
-            Continue into sansxel.
-          </h3>
+      <div>
+        {/* SECURE ACCESS line — always one line */}
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <span className="whitespace-nowrap uppercase tracking-[0.2em] text-neutral-300">Secure Access</span>
           {sessionEmail && (
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href={safeRedirectPath}
-                className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
-              >
-                Open workspace
-              </Link>
-              <button
-                type="button"
-                onClick={() => void handleSignOut()}
-                disabled={loadingAction === "signout"}
-                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-neutral-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loadingAction === "signout" ? "Signing out…" : "Sign out"}
-              </button>
-            </div>
+            <>
+              <span className="text-neutral-600">·</span>
+              <span className="truncate text-emerald-400">{sessionEmail}</span>
+            </>
           )}
         </div>
-        {!onModeChange && <ModeSwitcher mode={mode} onModeChange={setMode} />}
+
+        {/* Heading + toggle in the same row, centered with each other */}
+        <div className="mt-2 flex items-center justify-between gap-4">
+          <h3 className="text-2xl font-semibold tracking-tight text-white">
+            Continue into sansxel.
+          </h3>
+          {!onModeChange && <ModeSwitcher mode={mode} onModeChange={setMode} />}
+        </div>
+
+        {sessionEmail && (
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href={safeRedirectPath}
+              className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+            >
+              Open workspace
+            </Link>
+            <button
+              type="button"
+              onClick={() => void handleSignOut()}
+              disabled={loadingAction === "signout"}
+              className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-neutral-300 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loadingAction === "signout" ? "Signing out…" : "Sign out"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Email card ──────────────────────────────────────────── */}
