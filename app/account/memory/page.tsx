@@ -107,7 +107,7 @@ export default function MemoryPage() {
           </p>
           <Link
             href="/download"
-            className="mt-4 inline-block rounded-lg border border-white/10 bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
+            className="sansxel-white-button mt-4 inline-block rounded-lg border border-white/10 bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
           >
             Get desktop app
           </Link>
