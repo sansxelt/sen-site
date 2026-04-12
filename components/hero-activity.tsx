@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-const CYCLE_MS = 4000;
-const FADE_MS  = 420;
+const CYCLE_MS  = 4000;
+const FADE_MS   = 420;
+const WORD_FADE = 140; // quick black dip on the word only
 
 // ─── Shuffle helper ───────────────────────────────────────────────────────
 
@@ -1292,6 +1293,8 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   const [currIdx, setCurrIdx] = useState(0);
   const [prevIdx, setPrevIdx] = useState<number | null>(null);
   const [crossfading, setCrossfading] = useState(false);
+  const [wordIdx, setWordIdx] = useState(0);
+  const [wordVisible, setWordVisible] = useState(true);
   const currRef = useRef(0);
   const posRef  = useRef(0);
   const orderRef = useRef<number[]>(
@@ -1317,11 +1320,24 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Once prev+curr are both rendered, kick off the crossfade on the next frame
+  // Once prev+curr are rendered: start crossfade on panels/body + quick dip on word
   useEffect(() => {
     if (prevIdx === null) return;
+
+    // Word: fade out → swap → fade in
+    setWordVisible(false);
+    const wordSwap = setTimeout(() => {
+      setWordIdx(currRef.current);
+      setWordVisible(true);
+    }, WORD_FADE);
+
+    // Panels + body: crossfade on next frame
     const raf = requestAnimationFrame(() => setCrossfading(true));
-    return () => cancelAnimationFrame(raf);
+
+    return () => {
+      clearTimeout(wordSwap);
+      cancelAnimationFrame(raf);
+    };
   }, [prevIdx]);
 
   // After the fade completes, clean up the outgoing layer
@@ -1358,28 +1374,28 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           Premium workspace memory for focused work
         </div>
 
-        {/* Static heading lines — always visible */}
-        <div className="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
-          <div>The AI that</div>
-          <div>remembers</div>
-        </div>
+        {/* Heading: static lines + word with its own quick dip */}
+        <h1 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
+          <span className="block">The AI that</span>
+          <span className="block">remembers</span>
+          <span
+            className={`block ${wordCls(scenarios[wordIdx].accent)}`}
+            style={{ opacity: wordVisible ? 1 : 0, transition: `opacity ${WORD_FADE}ms ease` }}
+          >
+            {scenarios[wordIdx].word}.
+          </span>
+        </h1>
 
-        {/* Crossfading: word + body */}
+        {/* Crossfading: body only */}
         <div style={{ display: "grid" }}>
           {prev && (
             <div key={prevIdx} style={layer(outOp)}>
-              <div className="text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-7xl">
-                <span className={wordCls(prev.accent)}>{prev.word}.</span>
-              </div>
               <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-300 sm:mt-6 sm:text-base">
                 {prev.body}
               </p>
             </div>
           )}
           <div key={currIdx} style={layer(inOp)}>
-            <div className="text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-7xl">
-              <span className={wordCls(curr.accent)}>{curr.word}.</span>
-            </div>
             <p className="mt-5 max-w-xl text-sm leading-7 text-neutral-300 sm:mt-6 sm:text-base">
               {curr.body}
             </p>
