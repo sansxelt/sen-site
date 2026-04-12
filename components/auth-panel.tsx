@@ -69,6 +69,114 @@ function statusClasses(tone: StatusTone) {
   return "border-white/10 bg-white/5 text-neutral-100";
 }
 
+export function OAuthSection({
+  callbackUrl = "/account",
+}: {
+  callbackUrl?: string;
+}) {
+  const safeRedirectPath = getSafeRedirectPath(callbackUrl);
+  const [activeProvider, setActiveProvider] = useState<OauthProvider | null>(null);
+  const [status, setStatus] = useState<Status | null>(null);
+
+  useEffect(() => {
+    if (!activeProvider) return;
+
+    const resetProviderState = () => {
+      setActiveProvider((current) =>
+        current === activeProvider ? null : current,
+      );
+    };
+
+    const timeoutId = window.setTimeout(resetProviderState, 4500);
+    const handleFocus = () => resetProviderState();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") resetProviderState();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("pageshow", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pageshow", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [activeProvider]);
+
+  async function handleOAuth(provider: OauthProvider) {
+    setStatus(null);
+    setActiveProvider(provider);
+    try {
+      await signIn(provider, { redirectTo: safeRedirectPath });
+    } catch (error) {
+      console.error("Provider auth failed:", error);
+      setActiveProvider(null);
+      setStatus({
+        tone: "error",
+        message: getAuthErrorMessage(error, "provider"),
+      });
+    }
+  }
+
+  return (
+    <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 sm:p-6">
+      <div className="text-sm font-medium text-white">Continue with a provider</div>
+      <p className="mt-1.5 text-sm leading-6 text-neutral-400">
+        Faster start — picks up in the same workspace flow.
+      </p>
+
+      <div className="mt-5 grid gap-3">
+        {oauthProviders.map((option) => {
+          const providerBusy = activeProvider === option.provider;
+          return (
+            <button
+              key={option.provider}
+              type="button"
+              onClick={() => void handleOAuth(option.provider)}
+              disabled={providerBusy}
+              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-wait disabled:opacity-80"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06]">
+                  <ProviderIcon provider={option.provider} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium text-white">
+                    Continue with {option.label}
+                  </div>
+                  <div className="mt-0.5 text-xs text-neutral-400">
+                    {option.provider === "google" ? "Use your Google account" : "Use your GitHub account"}
+                  </div>
+                </div>
+                <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-neutral-400">
+                  {providerBusy ? "Redirecting…" : "Live"}
+                </span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 border-t border-white/[0.08] pt-4">
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
+          Destination
+        </div>
+        <div className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-neutral-400">
+          {safeRedirectPath}
+        </div>
+      </div>
+
+      {status && (
+        <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${statusClasses(status.tone)}`}>
+          {status.message}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AuthPanel({
   callbackUrl = "/account",
   initialSessionEmail = null,
@@ -83,49 +191,11 @@ export function AuthPanel({
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<Status | null>(null);
   const [sessionEmail] = useState(initialSessionEmail);
-  const [activeProvider, setActiveProvider] = useState<OauthProvider | null>(
-    null,
-  );
   const [loadingAction, setLoadingAction] = useState<
     AuthMode | "signout" | null
   >(null);
   const safeRedirectPath = getSafeRedirectPath(callbackUrl);
   const emailBusy = loadingAction === "signup" || loadingAction === "signin";
-
-  useEffect(() => {
-    if (!activeProvider) {
-      return;
-    }
-
-    const resetProviderState = () => {
-      setActiveProvider((current) =>
-        current === activeProvider ? null : current,
-      );
-    };
-
-    const timeoutId = window.setTimeout(resetProviderState, 4500);
-
-    const handleFocus = () => {
-      resetProviderState();
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        resetProviderState();
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-    window.addEventListener("pageshow", handleFocus);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      window.removeEventListener("focus", handleFocus);
-      window.removeEventListener("pageshow", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [activeProvider]);
 
   async function finishCredentialsSignIn() {
     const result = await signIn("credentials", {
@@ -188,24 +258,6 @@ export function AuthPanel({
       });
     } finally {
       setLoadingAction(null);
-    }
-  }
-
-  async function handleOAuth(provider: OauthProvider) {
-    setStatus(null);
-    setActiveProvider(provider);
-
-    try {
-      await signIn(provider, {
-        redirectTo: safeRedirectPath,
-      });
-    } catch (error) {
-      console.error("Provider auth failed:", error);
-      setActiveProvider(null);
-      setStatus({
-        tone: "error",
-        message: getAuthErrorMessage(error, "provider"),
-      });
     }
   }
 
@@ -292,10 +344,9 @@ export function AuthPanel({
         </div>
       )}
 
-      {/* ── Two separate cards ───────────────────────────────────── */}
-      <div className="mt-6 grid items-start gap-4">
+      {/* ── Email card ──────────────────────────────────────────── */}
+      <div className="mt-6">
 
-        {/* Email */}
         <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5 sm:p-6">
           <div className="text-sm font-medium text-white">
             {mode === "signup" ? "Create with email" : "Sign in with email"}
@@ -360,55 +411,6 @@ export function AuthPanel({
               </div>
             )}
           </form>
-        </div>
-
-        {/* OAuth */}
-        <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 sm:p-6">
-          <div className="text-sm font-medium text-white">Continue with a provider</div>
-          <p className="mt-1.5 text-sm leading-6 text-neutral-400">
-            Faster start — picks up in the same workspace flow.
-          </p>
-
-          <div className="mt-5 grid gap-3">
-            {oauthProviders.map((option) => {
-              const providerBusy = activeProvider === option.provider;
-              return (
-                <button
-                  key={option.provider}
-                  type="button"
-                  onClick={() => void handleOAuth(option.provider)}
-                  disabled={providerBusy}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-4 text-left transition hover:border-white/20 hover:bg-white/[0.07] disabled:cursor-wait disabled:opacity-80"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06]">
-                      <ProviderIcon provider={option.provider} />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-white">
-                        Continue with {option.label}
-                      </div>
-                      <div className="mt-0.5 text-xs text-neutral-400">
-                        {option.provider === "google" ? "Use your Google account" : "Use your GitHub account"}
-                      </div>
-                    </div>
-                    <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px] text-neutral-400">
-                      {providerBusy ? "Redirecting…" : "Live"}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="mt-5 border-t border-white/[0.08] pt-4">
-            <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
-              Destination
-            </div>
-            <div className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-neutral-400">
-              {safeRedirectPath}
-            </div>
-          </div>
         </div>
       </div>
 
