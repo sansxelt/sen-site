@@ -16,14 +16,6 @@ type Integration = {
 
 const integrations: Integration[] = [
   {
-    name: "Desktop app",
-    description:
-      "The core sansxel client. Runs in the background and captures ambient context from your active windows, files, and sessions.",
-    status: "available",
-    href: "/download",
-    cta: "Download",
-  },
-  {
     name: "Browser extension",
     description:
       "Captures browsing context — tabs, search trails, and visited pages — and ties them to active work sessions.",
@@ -103,7 +95,14 @@ export default function IntegrationsPage() {
         Connect sansxel to your desktop, tools, and workflows.
       </p>
 
-      <div className="mt-8 space-y-3">
+      <div className="mt-6 flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-sm">
+        <span className="text-neutral-400">Looking for the desktop app?</span>
+        <Link href="/account/updates" className="ml-auto shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white">
+          Downloads &amp; updates →
+        </Link>
+      </div>
+
+      <div className="mt-4 space-y-3">
         {integrations.map((item) => (
           <div
             key={item.name}

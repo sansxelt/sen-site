@@ -93,11 +93,21 @@ function IntegrationsIcon() {
   );
 }
 
+function UpdatesIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M8 2v7M5 6l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M2 11v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 const navItems: NavItem[] = [
   { href: "/account",              label: "Overview",     icon: <OverviewIcon /> },
   { href: "/account/memory",       label: "Memory",       icon: <MemoryIcon /> },
   { href: "/account/keys",         label: "API Keys",     icon: <KeyIcon /> },
   { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
+  { href: "/account/updates",      label: "Updates",      icon: <UpdatesIcon /> },
   { href: "/account/usage",        label: "Usage",        icon: <UsageIcon /> },
   { href: "/account/settings",     label: "Settings",     icon: <SettingsIcon /> },
 ];
