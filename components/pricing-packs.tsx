@@ -60,13 +60,11 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
 function CardPack({
   plans,
   label,
-  locked = false,
   fanDir = "left",
   dotsAlign = "right",
 }: {
   plans: PricingPlan[];
   label: string;
-  locked?: boolean;
   fanDir?: "left" | "right";
   dotsAlign?: "left" | "right";
 }) {
@@ -94,15 +92,9 @@ function CardPack({
       : isMid  ? `rotate(${2.5 * d}deg) translateX(${9  * d}px) translateY(5px)`
                : "rotate(0deg)";
 
-    const zIndex  = depth === 0 ? 30 : depth === 1 ? 20 : 10;
-    const opacity = hovered
-      ? 1
-      : locked
-        ? [0.72, 0.38, 0.22][depth]
-        : [1, 0.65, 0.42][depth];
-    const blurPx = hovered
-      ? locked ? [0, 1, 2][depth]   : [0, 0.5, 1][depth]
-      : locked ? [1, 5, 8][depth]   : [0, 1, 2][depth];
+    const zIndex   = depth === 0 ? 30 : depth === 1 ? 20 : 10;
+    const opacity  = hovered ? 1 : [1, 0.65, 0.42][depth];
+    const blurPx   = hovered ? [0, 0.5, 1][depth] : [0, 1, 2][depth];
 
     return {
       position: "absolute",
@@ -128,11 +120,7 @@ function CardPack({
           {label}
         </span>
         <p className="text-[11px] text-neutral-400">
-          {locked
-            ? hovered
-              ? `Click any card to browse · ${plans.length} total`
-              : `Hover to preview · ${plans.length} plans`
-            : `Click any card to browse · ${plans.length} total`}
+          Click any card to browse · {plans.length} total
         </p>
       </div>
 
@@ -175,10 +163,22 @@ function CardPack({
 // ─── Export ───────────────────────────────────────────────────────────────
 
 export function PricingPacks() {
+  const [hoveredSide, setHoveredSide] = useState<"left" | "right" | null>(null);
+
+  const sideStyle = (side: "left" | "right"): React.CSSProperties => ({
+    opacity:    hoveredSide !== null && hoveredSide !== side ? 0.35 : 1,
+    filter:     hoveredSide !== null && hoveredSide !== side ? "blur(4px)" : "none",
+    transition: "opacity 0.4s ease, filter 0.4s ease",
+  });
+
   return (
     <div className="mt-16 flex flex-col items-center gap-12 sm:mt-20 lg:flex-row lg:items-start lg:justify-center lg:gap-16 xl:gap-24">
-      <CardPack plans={basicPlans}    label="Basic Plans"            fanDir="left"  dotsAlign="right" />
-      <CardPack plans={advancedPlans} label="Advanced & Corporate"   fanDir="right" locked dotsAlign="left" />
+      <div style={sideStyle("left")} onMouseEnter={() => setHoveredSide("left")} onMouseLeave={() => setHoveredSide(null)}>
+        <CardPack plans={basicPlans}    label="Basic Plans"          fanDir="left"  dotsAlign="right" />
+      </div>
+      <div style={sideStyle("right")} onMouseEnter={() => setHoveredSide("right")} onMouseLeave={() => setHoveredSide(null)}>
+        <CardPack plans={advancedPlans} label="Advanced & Corporate" fanDir="right" dotsAlign="left" />
+      </div>
     </div>
   );
 }
