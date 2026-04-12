@@ -128,7 +128,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
   return (
     <>
       {/* ── Desktop sidebar ──────────────────────────────────────── */}
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
+      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
         {/* Logo */}
         <Link href="/#top" className="flex items-center gap-2.5 py-6">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
