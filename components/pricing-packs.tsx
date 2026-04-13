@@ -49,12 +49,10 @@ function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle
     }
   }
 
-  const r = subAlign === "right";
-
   return (
     <div className="flex h-full flex-col rounded-[28px] border border-white/[0.12] bg-neutral-950 p-6">
-      <div className={`flex items-start gap-3 ${r ? "flex-row-reverse" : "justify-between"}`}>
-        <div className={r ? "text-right" : ""}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
           <div className="text-sm font-semibold text-white">{plan.name}</div>
           <div className="mt-0.5 text-xs text-neutral-500">{plan.note}</div>
         </div>
@@ -65,22 +63,22 @@ function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle
         )}
       </div>
 
-      <div className={`mt-5 ${r ? "text-right" : ""}`}>
+      <div className="mt-5">
         <div className="text-2xl font-semibold tracking-tight text-white transition-all duration-300">
           {mainLabel}
         </div>
         {subLabel && (
-          <div className="mt-0.5 text-xs text-neutral-600 transition-all duration-300">
+          <div className={`mt-0.5 text-xs text-neutral-600 transition-all duration-300 ${subAlign === "right" ? "text-right" : ""}`}>
             {showYearly ? `or ${subLabel}` : subLabel}
           </div>
         )}
       </div>
 
-      <p className={`mt-3 text-xs leading-relaxed text-neutral-500 ${r ? "text-right" : ""}`}>{plan.description}</p>
+      <p className="mt-3 text-xs leading-relaxed text-neutral-500">{plan.description}</p>
 
       <ul className="mt-4 space-y-2">
         {plan.points.map((point) => (
-          <li key={point} className={`flex items-center gap-2.5 text-xs text-neutral-300 ${r ? "flex-row-reverse" : ""}`}>
+          <li key={point} className="flex items-center gap-2.5 text-xs text-neutral-300">
             <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/30" />
             {point}
           </li>
@@ -163,7 +161,9 @@ function CardPack({
           {label}
         </span>
         <p className="text-[11px] text-neutral-400">
-          Click any card to browse · {plans.length} total
+          {labelAlign === "right"
+            ? `${plans.length} total · Click any card to browse`
+            : `Click any card to browse · ${plans.length} total`}
         </p>
       </div>
 
