@@ -32,27 +32,33 @@ export async function POST(request: Request) {
     );
   }
 
-  const stripe = getStripe();
-
-  const checkoutSession = await stripe.checkout.sessions.create({
-    mode: "subscription",
-    customer_email: session.user.email,
-    line_items: [{ price: priceId, quantity: seats }],
-    success_url: `${APP_URL}/account?upgrade=success&plan=${planKey}&cycle=${cycle}`,
-    cancel_url:  `${APP_URL}/pricing`,
-    metadata: {
-      userEmail: session.user.email,
-      planKey,
-      cycle,
-    },
-    subscription_data: {
+  let checkoutSession;
+  try {
+    const stripe = getStripe();
+    checkoutSession = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer_email: session.user.email,
+      line_items: [{ price: priceId, quantity: seats }],
+      success_url: `${APP_URL}/account?upgrade=success&plan=${planKey}&cycle=${cycle}`,
+      cancel_url:  `${APP_URL}/pricing`,
       metadata: {
         userEmail: session.user.email,
         planKey,
         cycle,
       },
-    },
-  });
+      subscription_data: {
+        metadata: {
+          userEmail: session.user.email,
+          planKey,
+          cycle,
+        },
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Stripe error.";
+    console.error("[checkout] Stripe session creation failed:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   return NextResponse.json({ url: checkoutSession.url });
 }

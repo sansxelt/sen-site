@@ -26,13 +26,16 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planKey: plan.key, cycle: "monthly" }),
       });
-      const data = await res.json() as { url?: string; error?: string };
+      const text = await res.text();
+      let data: { url?: string; error?: string } = {};
+      try { data = JSON.parse(text); } catch { /* non-JSON response */ }
+
       if (data.url) {
         window.location.href = data.url;
-      } else if (data.error === "Sign in to upgrade your plan.") {
+      } else if (res.status === 401) {
         window.location.href = "/auth/signin?callbackUrl=/pricing";
       } else {
-        alert(data.error ?? "Something went wrong. Please try again.");
+        alert(data.error ?? `Error ${res.status}. Please try again.`);
         setLoading(false);
       }
     } catch {
