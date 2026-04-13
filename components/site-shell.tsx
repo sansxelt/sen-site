@@ -39,7 +39,7 @@ const primaryLinks = [
   { href: "/features", label: "Features" },
   { href: "/function", label: "Function" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Download" },
+  { href: "/download", label: "Download", guestOnly: true },
 ];
 
 
@@ -80,7 +80,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
             {/* Desktop nav — absolutely centered */}
             <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 text-sm text-neutral-400 lg:flex">
-              {primaryLinks.map((link) => (
+              {primaryLinks.filter((link) => !link.guestOnly || !signedIn).map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -100,10 +100,10 @@ export async function SiteShell({ children }: { children: ReactNode }) {
             {/* Actions */}
             <div className="flex shrink-0 items-center gap-2">
               <Link
-                href={signedIn ? "/account" : "/download"}
+                href={signedIn ? "/account" : getSignInPath()}
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
-                {signedIn ? "My Account" : "Download"}
+                {signedIn ? "My Account" : "Access"}
               </Link>
             </div>
 
