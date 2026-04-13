@@ -11,7 +11,7 @@ function getResend() {
 }
 
 const from =
-  process.env.RESEND_FROM_EMAIL ?? "sansxel <hello@sansxel.app>";
+  process.env.RESEND_FROM_EMAIL ?? "sansxel <hello@sansxel.ai>";
 
 export function isEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY);
@@ -36,7 +36,7 @@ function baseHtml(content: string) {
           ${content}
         </td></tr>
         <tr><td style="padding-top:24px;font-size:12px;color:#737373;line-height:1.6;">
-          sansxel · <a href="https://sansxel.app/privacy" style="color:#737373;">Privacy</a> · <a href="https://sansxel.app/contact" style="color:#737373;">Support</a>
+          sansxel · <a href="https://sansxel.ai/privacy" style="color:#737373;">Privacy</a> · <a href="https://sansxel.ai/contact" style="color:#737373;">Support</a>
         </td></tr>
       </table>
     </td></tr>
@@ -51,7 +51,7 @@ function welcomeHtml(name?: string) {
     <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#a3a3a3;">Welcome</p>
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#f5f5f5;line-height:1.3;">Your sansxel account is ready.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#d4d4d4;">${greeting} your account is set up. Sign in any time to manage your workspace, track your invite status, and keep your setup preferences saved.</p>
-    <a href="https://sansxel.app/account" style="display:inline-block;background:#fff;color:#000;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Open workspace</a>
+    <a href="https://sansxel.ai/account" style="display:inline-block;background:#fff;color:#000;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Open workspace</a>
     <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If you didn't create this account, you can safely ignore this email.</p>
   `);
 }
@@ -62,8 +62,8 @@ function earlyAccessHtml(name: string) {
     <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#a3a3a3;">Early Access</p>
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#f5f5f5;line-height:1.3;">Your invite request is on file.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#d4d4d4;">${greeting} we've saved your place in the rollout. We review access carefully and will reach out directly as access opens for your account.</p>
-    <a href="https://sansxel.app/account" style="display:inline-block;background:#fff;color:#000;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">View your account</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Questions? Reply to this email or visit <a href="https://sansxel.app/contact" style="color:#a3a3a3;">sansxel.app/contact</a>.</p>
+    <a href="https://sansxel.ai/account" style="display:inline-block;background:#fff;color:#000;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">View your account</a>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Questions? Reply to this email or visit <a href="https://sansxel.ai/contact" style="color:#a3a3a3;">sansxel.ai/contact</a>.</p>
   `);
 }
 
@@ -84,7 +84,7 @@ function contactConfirmHtml(name: string, subject: string) {
     <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#a3a3a3;">Message Received</p>
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#f5f5f5;line-height:1.3;">We got your message.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#d4d4d4;">${greeting} we received your message about <strong style="color:#f5f5f5;">${subject}</strong> and will follow up to your email address directly. For urgent issues, reply to this email.</p>
-    <a href="https://sansxel.app/contact" style="display:inline-block;background:#fff;color:#000;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Back to contact</a>
+    <a href="https://sansxel.ai/contact" style="display:inline-block;background:#fff;color:#000;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Back to contact</a>
     <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If you didn't submit this form, you can safely ignore this email.</p>
   `);
 }
@@ -188,7 +188,7 @@ export async function sendSupportEmail(opts: {
   try {
     await resend.emails.send({
       from,
-      to: "hello@sansxel.app",
+      to: "hello@sansxel.ai",
       replyTo: opts.email,
       subject: `[Support] ${opts.subject}`,
       html: supportHtml(opts),
