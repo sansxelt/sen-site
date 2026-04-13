@@ -16,11 +16,14 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
 
   console.log(`[stripe webhook] subscription ${subscription.status} for ${email} / plan: ${planKey}`);
 
+  // current_period_end was removed from the root type in newer Stripe API versions
+  const periodEnd = (subscription as unknown as Record<string, unknown>)["current_period_end"];
+
   await upsertActiveSubscription({
     email,
     planKey,
     billingCycle: cycle,
-    currentPeriodEnd: subscription.current_period_end ?? null,
+    currentPeriodEnd: typeof periodEnd === "number" ? periodEnd : null,
     stripeStatus: subscription.status,
   });
 }
