@@ -34,7 +34,13 @@ const footerGroups = [
   },
 ];
 
-const primaryLinks = [
+type SiteNavLink = {
+  href: string;
+  label: string;
+  authOnly?: boolean;
+};
+
+const primaryLinks: SiteNavLink[] = [
   { href: "/home", label: "Home" },
   { href: "/features", label: "Features" },
   { href: "/function", label: "Function" },
