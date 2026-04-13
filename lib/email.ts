@@ -11,7 +11,7 @@ function getResend() {
 }
 
 const from =
-  process.env.RESEND_FROM_EMAIL ?? "sansxel <hello@sansxel.ai>";
+  process.env.RESEND_FROM_EMAIL ?? "sansxel <help@sansxel.ai>";
 
 export function isEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY);

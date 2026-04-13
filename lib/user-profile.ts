@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { ReleaseChannel, SummaryStyle } from "./account-session";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 
@@ -57,7 +58,9 @@ function normalizeProfileRecord(data: Partial<UserProfileRecord> & { email: stri
   } satisfies UserProfileRecord;
 }
 
-export async function getUserProfileByEmail(email: string | null | undefined) {
+export const getUserProfileByEmail = cache(async function getUserProfileByEmail(
+  email: string | null | undefined,
+) {
   if (!email || !isDatabaseConfigured()) {
     return null;
   }
@@ -82,7 +85,7 @@ export async function getUserProfileByEmail(email: string | null | undefined) {
     console.error("Profile lookup threw:", error);
     return null;
   }
-}
+});
 
 export async function upsertUserProfile(
   email: string,

@@ -138,7 +138,7 @@ export default function IntegrationsPage() {
       <p className="mt-6 text-xs text-neutral-600">
         Want an integration that isn&apos;t listed?{" "}
         <a
-          href="mailto:hello@sansxel.ai?subject=Integration request"
+          href="mailto:help@sansxel.ai?subject=Integration request"
           className="underline underline-offset-2 transition hover:text-neutral-400"
         >
           Let us know →

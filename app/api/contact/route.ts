@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "We couldn't send your message right now. Email us directly at hello@sansxel.ai.",
+          "We couldn't send your message right now. Email us directly at help@sansxel.ai.",
       },
       { status: 400 },
     );

@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { cache } from "react";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 
 export type ApiKeyRecord = {
@@ -24,7 +25,9 @@ function keyPrefix(raw: string): string {
   return raw.slice(0, 14) + "...";
 }
 
-export async function listApiKeys(email: string): Promise<ApiKeyRecord[]> {
+export const listApiKeys = cache(async function listApiKeys(
+  email: string,
+): Promise<ApiKeyRecord[]> {
   if (!isDatabaseConfigured()) return [];
 
   const supabase = getSupabaseAdminClient();
@@ -41,7 +44,7 @@ export async function listApiKeys(email: string): Promise<ApiKeyRecord[]> {
   }
 
   return (data ?? []) as ApiKeyRecord[];
-}
+});
 
 export async function createApiKey(
   email: string,

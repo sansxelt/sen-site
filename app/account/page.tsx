@@ -30,9 +30,12 @@ function formatSubscriptionStatus(value: string) {
 export default async function AccountPage() {
   const session = await auth();
   const email = session?.user?.email ?? "";
-  const profile = await getUserProfileByEmail(email);
-  const keys = await listApiKeys(email);
-  const subscription = readPricingSnapshot(await getSubscriptionByEmail(email));
+  const [profile, keys, rawSubscription] = await Promise.all([
+    getUserProfileByEmail(email),
+    listApiKeys(email),
+    getSubscriptionByEmail(email),
+  ]);
+  const subscription = readPricingSnapshot(rawSubscription);
   const sessionState = readSessionState(session, profile);
 
   const displayName =

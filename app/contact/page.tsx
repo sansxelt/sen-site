@@ -30,7 +30,7 @@ export default function ContactPage() {
           {[
             [
               "General support",
-              "hello@sansxel.ai",
+              "help@sansxel.ai",
               "Questions about accounts, auth, access, and onboarding.",
             ],
             [

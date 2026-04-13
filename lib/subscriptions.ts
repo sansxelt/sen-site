@@ -1,3 +1,4 @@
+import { cache } from "react";
 import {
   type BillingCycle,
   getDefaultPricingSnapshot,
@@ -118,7 +119,7 @@ export function readPricingSnapshot(
   };
 }
 
-export async function getSubscriptionByEmail(
+export const getSubscriptionByEmail = cache(async function getSubscriptionByEmail(
   email: string | null | undefined,
 ) {
   if (!email || !isDatabaseConfigured()) {
@@ -145,7 +146,7 @@ export async function getSubscriptionByEmail(
     console.error("Subscription lookup threw:", error);
     return null;
   }
-}
+});
 
 export async function upsertActiveSubscription(input: {
   email: string;
