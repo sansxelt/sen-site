@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     const stripe = getStripe();
     checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
+      payment_method_types: ["card"],
       customer_email: session.user.email,
       line_items: [{ price: priceId, quantity: seats }],
       success_url: `${APP_URL}/account?upgrade=success&plan=${planKey}&cycle=${cycle}`,
