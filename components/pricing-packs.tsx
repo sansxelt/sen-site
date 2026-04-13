@@ -13,7 +13,7 @@ const advancedPlans = pricingPlans.slice(3);    // Pro, Teams, Enterprise
 function PlanCard({ plan, cycle }: { plan: PricingPlan; cycle: Cycle }) {
   const [loading, setLoading] = useState(false);
 
-  const showYearly = plan.key !== "free" && plan.key !== "enterprise" && cycle === "yearly" && !!plan.yearlyLabel;
+  const showYearly = plan.key !== "free" && cycle === "yearly" && !!plan.yearlyLabel;
 
   const mainLabel = showYearly ? plan.yearlyLabel! : plan.monthlyLabel;
   const subLabel  = showYearly ? plan.monthlyLabel  : plan.yearlyLabel;
@@ -236,7 +236,7 @@ export function PricingPacks() {
     <div className="mt-8 flex flex-col items-center sm:mt-10">
       <CycleToggle cycle={cycle} onChange={setCycle} />
 
-      <div className="mt-8 flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16 xl:gap-24">
+      <div className="mt-8 flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-center lg:gap-16 xl:gap-24">
         <div style={sideStyle("left")} onMouseEnter={() => setHoveredSide("left")} onMouseLeave={() => setHoveredSide(null)}>
           <CardPack plans={basicPlans}    label="Basic Plans"          cycle={cycle} fanDir="left"  dotsAlign="right" />
         </div>

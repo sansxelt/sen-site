@@ -171,7 +171,7 @@ export const pricingPlans: PricingPlan[] = [
     ctaLabel: "Contact enterprise",
     ctaVariant: "contact",
     description:
-      "Pricing is negotiated based on company size, longevity, and deployment scope. Starts at $500/mo and scales to $5k+ for large organizations.",
+      "Base pricing starts at $5k/yr for small LLCs and scales higher based on company size, longevity, and deployment scope. All contracts are negotiated.",
     key: "enterprise",
     memoryWindow: "Custom retention",
     monthlyCredits: "Unlimited credits and API",
@@ -188,7 +188,7 @@ export const pricingPlans: PricingPlan[] = [
     seats: "Custom",
     segment: "team",
     support: "Dedicated support",
-    yearlyLabel: "Scales to $5k+ / mo",
+    yearlyLabel: "From $5k+ / yr",
   },
 ];
 
