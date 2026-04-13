@@ -69,7 +69,7 @@ function PlanCard({ plan, cycle }: { plan: PricingPlan; cycle: Cycle }) {
         </div>
         {subLabel && (
           <div className="mt-0.5 text-xs text-neutral-600 transition-all duration-300">
-            {showYearly ? `or ${subLabel} / mo` : subLabel}
+            {showYearly ? `or ${subLabel}` : subLabel}
           </div>
         )}
       </div>
@@ -193,7 +193,7 @@ function CardPack({
 
 function CycleToggle({ cycle, onChange }: { cycle: Cycle; onChange: (c: Cycle) => void }) {
   return (
-    <div className="mx-auto flex w-fit items-center gap-3">
+    <div className="flex w-full items-center justify-center gap-3">
       <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-1">
         {(["monthly", "yearly"] as Cycle[]).map((c) => (
           <button
@@ -233,10 +233,10 @@ export function PricingPacks() {
   });
 
   return (
-    <div className="mt-8 flex flex-col items-center sm:mt-10">
+    <div className="mt-8 sm:mt-10" style={{ width: "fit-content", margin: "0 auto" }}>
       <CycleToggle cycle={cycle} onChange={setCycle} />
 
-      <div className="mt-8 flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-center lg:gap-16 xl:gap-24">
+      <div className="mt-8 flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16 xl:gap-24">
         <div style={sideStyle("left")} onMouseEnter={() => setHoveredSide("left")} onMouseLeave={() => setHoveredSide(null)}>
           <CardPack plans={basicPlans}    label="Basic Plans"          cycle={cycle} fanDir="left"  dotsAlign="right" />
         </div>
