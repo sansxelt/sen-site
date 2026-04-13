@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-const CYCLE_MS  = 4000;
+const CYCLE_MS  = 2500;
 const FADE_MS   = 420;
 const WORD_FADE = 140; // quick black dip on the word only
 
