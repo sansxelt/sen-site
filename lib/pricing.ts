@@ -53,7 +53,7 @@ export const pricingPlans: PricingPlan[] = [
     key: "free",
     memoryWindow: "7-day memory",
     monthlyCredits: "Light credits",
-    monthlyLabel: "$0 / month",
+    monthlyLabel: "Free",
     monthlyValue: 0,
     name: "Free",
     note: "Limited early-access plan",
@@ -66,7 +66,7 @@ export const pricingPlans: PricingPlan[] = [
     seats: "1 seat",
     segment: "individual",
     support: "Community support",
-    yearlyLabel: "$0 / year",
+    yearlyLabel: undefined,
   },
   {
     apiRequestLimit: 50000,

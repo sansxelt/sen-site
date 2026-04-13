@@ -120,11 +120,18 @@ function CardPack({
 
   const d = fanDir === "right" ? 1 : -1;
 
-  const slots = [
-    { plan: plans[(activeIdx + 2) % plans.length], depth: 2 },
-    { plan: plans[(activeIdx + 1) % plans.length], depth: 1 },
-    { plan: plans[activeIdx],                       depth: 0 },
-  ];
+  const slots = plans.length >= 3
+    ? [
+        { plan: plans[(activeIdx + 2) % plans.length], depth: 2 },
+        { plan: plans[(activeIdx + 1) % plans.length], depth: 1 },
+        { plan: plans[activeIdx],                       depth: 0 },
+      ]
+    : plans.length === 2
+    ? [
+        { plan: plans[(activeIdx + 1) % 2], depth: 2 },
+        { plan: plans[activeIdx],           depth: 0 },
+      ]
+    : [{ plan: plans[0], depth: 0 }];
 
   function styleFor(depth: number): React.CSSProperties {
     const isBack = depth === 2;
