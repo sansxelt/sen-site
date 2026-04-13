@@ -39,7 +39,7 @@ const primaryLinks = [
   { href: "/features", label: "Features" },
   { href: "/function", label: "Function" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Download", guestOnly: true },
+  { href: "/download", label: "Download", authOnly: true },
 ];
 
 
@@ -80,7 +80,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
             {/* Desktop nav — absolutely centered */}
             <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 text-sm text-neutral-400 lg:flex">
-              {primaryLinks.filter((link) => !link.guestOnly || !signedIn).map((link) => (
+              {primaryLinks.filter((link) => !link.authOnly || signedIn).map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
