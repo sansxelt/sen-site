@@ -196,6 +196,11 @@ function CardPack({
 function CycleToggle({ cycle, onChange }: { cycle: Cycle; onChange: (c: Cycle) => void }) {
   return (
     <div className="flex w-full items-center justify-center gap-3">
+      {/* invisible spacer mirrors the badge so the pill stays truly centered */}
+      <span className="invisible rounded-full px-2.5 py-1 text-[11px] font-medium" aria-hidden>
+        Save ~17%
+      </span>
+
       <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-1">
         {(["monthly", "yearly"] as Cycle[]).map((c) => (
           <button
@@ -212,6 +217,7 @@ function CycleToggle({ cycle, onChange }: { cycle: Cycle; onChange: (c: Cycle) =
           </button>
         ))}
       </div>
+
       <span
         className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-neutral-300 transition-all duration-300"
         style={{ opacity: cycle === "yearly" ? 1 : 0, pointerEvents: "none" }}
