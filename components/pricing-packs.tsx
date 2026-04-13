@@ -194,34 +194,29 @@ function CardPack({
 
 function CycleToggle({ cycle, onChange }: { cycle: Cycle; onChange: (c: Cycle) => void }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center justify-center gap-3">
       <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-1">
-        <button
-          onClick={() => onChange("monthly")}
-          className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200 ${
-            cycle === "monthly"
-              ? "bg-white text-black"
-              : "text-neutral-400 hover:text-neutral-200"
-          }`}
-        >
-          Monthly
-        </button>
-        <button
-          onClick={() => onChange("yearly")}
-          className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200 ${
-            cycle === "yearly"
-              ? "bg-white text-black"
-              : "text-neutral-400 hover:text-neutral-200"
-          }`}
-        >
-          Yearly
-        </button>
+        {(["monthly", "yearly"] as Cycle[]).map((c) => (
+          <button
+            key={c}
+            onClick={() => onChange(c)}
+            className="rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200"
+            style={
+              cycle === c
+                ? { background: "#fff", color: "#000" }
+                : { color: "rgba(255,255,255,0.45)" }
+            }
+          >
+            {c.charAt(0).toUpperCase() + c.slice(1)}
+          </button>
+        ))}
       </div>
-      {cycle === "yearly" && (
-        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-neutral-300">
-          Save ~17%
-        </span>
-      )}
+      <span
+        className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-neutral-300 transition-all duration-300"
+        style={{ opacity: cycle === "yearly" ? 1 : 0, pointerEvents: "none" }}
+      >
+        Save ~17%
+      </span>
     </div>
   );
 }
