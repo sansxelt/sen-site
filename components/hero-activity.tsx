@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-const CYCLE_MS  = 2500;
-const FADE_MS   = 420;
-const WORD_FADE = 140; // quick black dip on the word only
+const CYCLE_MS = 2500;
+const FADE_MS  = 420;
 
 // ─── Shuffle helper ───────────────────────────────────────────────────────
 
@@ -1829,11 +1828,8 @@ function ScenarioPanel({ s }: { s: Scenario }) {
 export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   const [currIdx, setCurrIdx] = useState(0);
   const [prevIdx, setPrevIdx] = useState<number | null>(null);
-  const [crossfading, setCrossfading] = useState(false);
-  const [wordIdx, setWordIdx] = useState(0);
-  const [wordVisible, setWordVisible] = useState(true);
-  const currRef = useRef(0);
-  const posRef  = useRef(0);
+  const currRef  = useRef(0);
+  const posRef   = useRef(0);
   const orderRef = useRef<number[]>(
     Array.from({ length: scenarios.length }, (_, i) => i),
   );
@@ -1879,47 +1875,28 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
     };
   }, []);
 
-  // Once prev+curr are rendered: start crossfade on panels/body + quick dip on word
+  // Remove the outgoing layer once the CSS animation has finished
   useEffect(() => {
     if (prevIdx === null) return;
-
-    // Word: fade out → swap → fade in
-    setWordVisible(false);
-    const wordSwap = setTimeout(() => {
-      setWordIdx(currRef.current);
-      setWordVisible(true);
-    }, WORD_FADE);
-
-    // Panels + body: crossfade on next frame
-    const raf = requestAnimationFrame(() => setCrossfading(true));
-
-    return () => {
-      clearTimeout(wordSwap);
-      cancelAnimationFrame(raf);
-    };
-  }, [prevIdx]);
-
-  // After the fade completes, clean up the outgoing layer
-  useEffect(() => {
-    if (!crossfading) return;
-    const t = setTimeout(() => {
-      setCrossfading(false);
-      setPrevIdx(null);
-    }, FADE_MS);
+    const t = setTimeout(() => setPrevIdx(null), FADE_MS);
     return () => clearTimeout(t);
-  }, [crossfading]);
+  }, [prevIdx]);
 
   const curr = scenarios[currIdx];
   const prev = prevIdx !== null ? scenarios[prevIdx] : null;
 
-  // outgoing: starts at 1, fades to 0 when crossfading
-  // incoming: starts at 0, fades to 1 when crossfading (or stays 1 if no prev)
-  const outOp: React.CSSProperties["opacity"] = crossfading ? 0 : 1;
-  const inOp:  React.CSSProperties["opacity"] = crossfading ? 1 : prev === null ? 1 : 0;
-
+  // CSS animation styles — triggered purely by element mount (new key = new node)
+  const fadeIn:  React.CSSProperties = { animation: `sxFadeIn  ${FADE_MS}ms ease forwards` };
+  const fadeOut: React.CSSProperties = { animation: `sxFadeOut ${FADE_MS}ms ease forwards`, pointerEvents: "none" };
 
   return (
     <>
+      {/* Keyframes injected once — no external CSS file needed */}
+      <style>{`
+        @keyframes sxFadeIn  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes sxFadeOut { from { opacity: 1 } to { opacity: 0 } }
+      `}</style>
+
       {/* ── Left side ──────────────────────────────────────────── */}
       <div className="max-w-2xl">
         <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-neutral-300 sm:text-xs">
@@ -1927,25 +1904,26 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           Premium workspace memory for focused work
         </div>
 
-        {/* Heading: static lines + word with its own quick dip */}
+        {/* Heading: static lines + cycling word */}
         <h1 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
           <span className="block">The AI that</span>
           <span className="block">remembers</span>
           <span
-            className={`block ${wordCls(scenarios[wordIdx].accent)}`}
-            style={{ opacity: wordVisible ? 1 : 0, transition: `opacity ${WORD_FADE}ms ease` }}
+            key={currIdx}
+            className={`block ${wordCls(curr.accent)}`}
+            style={prev ? fadeIn : undefined}
           >
-            {scenarios[wordIdx].word}.
+            {curr.word}.
           </span>
         </h1>
 
-        {/* Crossfading: body — outgoing is absolute so it never shifts layout */}
-        <div className="relative mt-5 sm:mt-6">
+        {/* Crossfading body — outgoing is absolute so layout never shifts */}
+        <div className="relative mt-5 sm:mt-6" style={{ minHeight: "6rem" }}>
           {prev && (
             <p
               key={`body-out-${prevIdx}`}
               className="absolute top-0 left-0 max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
-              style={{ opacity: outOp, transition: `opacity ${FADE_MS}ms ease`, pointerEvents: "none" }}
+              style={fadeOut}
             >
               {prev.body}
             </p>
@@ -1953,7 +1931,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           <p
             key={`body-in-${currIdx}`}
             className="max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
-            style={{ opacity: inOp, transition: `opacity ${FADE_MS}ms ease` }}
+            style={prev ? fadeIn : undefined}
           >
             {curr.body}
           </p>
@@ -1999,21 +1977,14 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           {prev && (
             <div
               key={prevIdx}
-              style={{
-                position: "absolute", inset: 0,
-                opacity: outOp, transition: `opacity ${FADE_MS}ms ease`,
-                pointerEvents: "none",
-              }}
+              style={{ position: "absolute", inset: 0, ...fadeOut }}
             >
               <ScenarioPanel s={prev} />
             </div>
           )}
           <div
             key={currIdx}
-            style={{
-              position: "absolute", inset: 0,
-              opacity: inOp, transition: `opacity ${FADE_MS}ms ease`,
-            }}
+            style={{ position: "absolute", inset: 0, ...(prev ? fadeIn : undefined) }}
           >
             <ScenarioPanel s={curr} />
           </div>
