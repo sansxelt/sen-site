@@ -104,12 +104,14 @@ function CardPack({
   cycle,
   fanDir = "left",
   dotsAlign = "right",
+  labelAlign = "left",
 }: {
   plans: PricingPlan[];
   label: string;
   cycle: Cycle;
   fanDir?: "left" | "right";
   dotsAlign?: "left" | "right";
+  labelAlign?: "left" | "right";
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
@@ -151,8 +153,8 @@ function CardPack({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-5" style={{ width: 336 }}>
+      <div className={`flex flex-col gap-1.5 ${labelAlign === "right" ? "items-end text-right" : "items-start text-left"}`}>
         <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
           {label}
         </span>
@@ -238,7 +240,7 @@ export function PricingPacks() {
 
       <div className="mt-8 flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16 xl:gap-24">
         <div style={sideStyle("left")} onMouseEnter={() => setHoveredSide("left")} onMouseLeave={() => setHoveredSide(null)}>
-          <CardPack plans={basicPlans}    label="Basic Plans"          cycle={cycle} fanDir="left"  dotsAlign="right" />
+          <CardPack plans={basicPlans}    label="Basic Plans"          cycle={cycle} fanDir="left"  dotsAlign="right" labelAlign="right" />
         </div>
         <div style={sideStyle("right")} onMouseEnter={() => setHoveredSide("right")} onMouseLeave={() => setHoveredSide(null)}>
           <CardPack plans={advancedPlans} label="Advanced & Corporate" cycle={cycle} fanDir="right" dotsAlign="left" />
