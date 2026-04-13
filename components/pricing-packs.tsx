@@ -10,7 +10,7 @@ const advancedPlans = pricingPlans.slice(3);    // Pro, Teams, Enterprise
 
 // ─── Single card face ─────────────────────────────────────────────────────
 
-function PlanCard({ plan, cycle }: { plan: PricingPlan; cycle: Cycle }) {
+function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle: Cycle; subAlign?: "left" | "right" }) {
   const [loading, setLoading] = useState(false);
 
   const showYearly = plan.key !== "free" && cycle === "yearly" && !!plan.yearlyLabel;
@@ -68,7 +68,7 @@ function PlanCard({ plan, cycle }: { plan: PricingPlan; cycle: Cycle }) {
           {mainLabel}
         </div>
         {subLabel && (
-          <div className="mt-0.5 text-xs text-neutral-600 transition-all duration-300">
+          <div className={`mt-0.5 text-xs text-neutral-600 transition-all duration-300 ${subAlign === "right" ? "text-right" : ""}`}>
             {showYearly ? `or ${subLabel}` : subLabel}
           </div>
         )}
@@ -105,6 +105,7 @@ function CardPack({
   fanDir = "left",
   dotsAlign = "right",
   labelAlign = "left",
+  subAlign = "left",
 }: {
   plans: PricingPlan[];
   label: string;
@@ -112,6 +113,7 @@ function CardPack({
   fanDir?: "left" | "right";
   dotsAlign?: "left" | "right";
   labelAlign?: "left" | "right";
+  subAlign?: "left" | "right";
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
@@ -171,7 +173,7 @@ function CardPack({
       >
         {slots.map(({ plan, depth }) => (
           <div key={plan.key} style={styleFor(depth)} onClick={() => setActiveIdx((i) => (i + 1) % plans.length)}>
-            <PlanCard plan={plan} cycle={cycle} />
+            <PlanCard plan={plan} cycle={cycle} subAlign={subAlign} />
           </div>
         ))}
       </div>
@@ -249,7 +251,7 @@ export function PricingPacks() {
           <CardPack plans={basicPlans}    label="Basic Plans"          cycle={cycle} fanDir="left"  dotsAlign="right" labelAlign="right" />
         </div>
         <div style={sideStyle("right")} onMouseEnter={() => setHoveredSide("right")} onMouseLeave={() => setHoveredSide(null)}>
-          <CardPack plans={advancedPlans} label="Advanced & Corporate" cycle={cycle} fanDir="right" dotsAlign="left" />
+          <CardPack plans={advancedPlans} label="Advanced & Corporate" cycle={cycle} fanDir="right" dotsAlign="left" subAlign="right" />
         </div>
       </div>
     </div>
