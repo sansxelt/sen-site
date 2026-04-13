@@ -151,7 +151,7 @@ export const pricingPlans: PricingPlan[] = [
     key: "teams",
     memoryWindow: "Shared workspace memory",
     monthlyCredits: "Per-seat shared credits",
-    monthlyLabel: "$25 / seat / month",
+    monthlyLabel: "$25 / seat",
     monthlyValue: 25,
     name: "Teams",
     note: "Starts at 3 seats",
@@ -164,7 +164,7 @@ export const pricingPlans: PricingPlan[] = [
     seats: "3+ seats",
     segment: "team",
     support: "Team support",
-    yearlyLabel: "$240 / seat / year",
+    yearlyLabel: "$240 / seat / yr",
   },
   {
     apiRequestLimit: null,
