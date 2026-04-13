@@ -4,6 +4,7 @@ import { auth } from "../../auth";
 import { EarlyAccessForm } from "../../components/early-access-form";
 import { SiteShell } from "../../components/site-shell";
 import { readAccountContext } from "../../lib/account-session";
+import { getSignInPath } from "../../lib/auth-ui";
 import { getUserProfileByEmail } from "../../lib/user-profile";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function DownloadPage() {
   const session = await auth();
+  const signedIn = Boolean(session?.user?.email);
   const profile = await getUserProfileByEmail(session?.user?.email);
   const initialAccountContext = readAccountContext(session, profile);
 
@@ -37,12 +39,21 @@ export default async function DownloadPage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/account"
-                className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-              >
-                Open workspace
-              </Link>
+              {signedIn ? (
+                <Link
+                  href="/account"
+                  className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+                >
+                  Open workspace
+                </Link>
+              ) : (
+                <Link
+                  href={getSignInPath("/account")}
+                  className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+                >
+                  Create account
+                </Link>
+              )}
               <Link
                 href="#early-access"
                 className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"

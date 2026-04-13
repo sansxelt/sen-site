@@ -5,6 +5,7 @@ import { EarlyAccessForm } from "../../components/early-access-form";
 import { HeroActivity } from "../../components/hero-activity";
 import { SiteShell } from "../../components/site-shell";
 import { readAccountContext } from "../../lib/account-session";
+import { getSignInPath } from "../../lib/auth-ui";
 import { pricingPlans } from "../../lib/pricing";
 import { getUserProfileByEmail } from "../../lib/user-profile";
 
@@ -49,6 +50,7 @@ const steps = [
 
 export default async function HomePage() {
   const session = await auth();
+  const signedIn = Boolean(session?.user?.email);
   const profile = await getUserProfileByEmail(session?.user?.email);
   const initialAccountContext = readAccountContext(session, profile);
   const pricingPreview = pricingPlans.filter(
@@ -146,18 +148,29 @@ export default async function HomePage() {
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/download#early-access"
-                  className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
-                >
-                  Request invite
-                </Link>
-                <Link
-                  href="/account"
-                  className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
-                >
-                  Open workspace
-                </Link>
+                {signedIn ? (
+                  <Link
+                    href="/account"
+                    className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+                  >
+                    Open workspace
+                  </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/download#early-access"
+                      className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+                    >
+                      Request invite
+                    </Link>
+                    <Link
+                      href={getSignInPath("/account")}
+                      className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+                    >
+                      Sign in
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 

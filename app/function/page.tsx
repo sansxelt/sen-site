@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { auth } from "../../auth";
 import { SiteShell } from "../../components/site-shell";
+import { getSignInPath } from "../../lib/auth-ui";
 
 export const metadata: Metadata = {
   title: "Function",
@@ -35,7 +37,10 @@ const steps = [
   },
 ];
 
-export default function FunctionPage() {
+export default async function FunctionPage() {
+  const session = await auth();
+  const signedIn = Boolean(session?.user?.email);
+
   return (
     <SiteShell>
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
@@ -73,10 +78,10 @@ export default function FunctionPage() {
 
         <div className="mt-16 flex flex-col gap-3 sm:flex-row">
           <Link
-            href="/download"
+            href={signedIn ? "/account" : getSignInPath("/account")}
             className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
           >
-            Get access
+            {signedIn ? "Open workspace" : "Get started"}
           </Link>
           <Link
             href="/features"
