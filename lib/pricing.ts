@@ -171,14 +171,14 @@ export const pricingPlans: PricingPlan[] = [
     ctaLabel: "Contact enterprise",
     ctaVariant: "contact",
     description:
-      "Custom deployment, expanded device coverage, and the highest API and credit ceilings for verified businesses.",
+      "Pricing is negotiated based on company size, longevity, and deployment scope. Starts at $500/mo and scales to $5k+ for large organizations.",
     key: "enterprise",
     memoryWindow: "Custom retention",
     monthlyCredits: "Unlimited credits and API",
-    monthlyLabel: "From $500 / month",
+    monthlyLabel: "$500+ / mo",
     monthlyValue: 500,
     name: "Enterprise",
-    note: "Verified LLC or corporation required",
+    note: "Negotiated · verified business required",
     points: [
       "Unlimited API and credits",
       "Expanded device usage",
@@ -188,6 +188,7 @@ export const pricingPlans: PricingPlan[] = [
     seats: "Custom",
     segment: "team",
     support: "Dedicated support",
+    yearlyLabel: "Scales to $5k+ / mo",
   },
 ];
 

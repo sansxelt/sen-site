@@ -13,7 +13,7 @@ const advancedPlans = pricingPlans.slice(3);    // Pro, Teams, Enterprise
 function PlanCard({ plan, cycle }: { plan: PricingPlan; cycle: Cycle }) {
   const [loading, setLoading] = useState(false);
 
-  const showYearly = plan.key !== "free" && cycle === "yearly" && !!plan.yearlyLabel;
+  const showYearly = plan.key !== "free" && plan.key !== "enterprise" && cycle === "yearly" && !!plan.yearlyLabel;
 
   const mainLabel = showYearly ? plan.yearlyLabel! : plan.monthlyLabel;
   const subLabel  = showYearly ? plan.monthlyLabel  : plan.yearlyLabel;
