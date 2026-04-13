@@ -67,7 +67,7 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
     >
       {/* Composer card */}
       <div
-        className="w-full max-w-lg rounded-[28px] border border-white/10 bg-[#0c0c0c] shadow-2xl"
+        className="w-full max-w-lg rounded-[28px] border border-white/[0.18] bg-[#0c0c0c] shadow-2xl"
         style={{ animation: "composerIn 180ms ease forwards" }}
       >
         <style>{`
@@ -78,7 +78,7 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
         `}</style>
 
         {/* Title bar */}
-        <div className="flex items-center justify-between border-b border-white/[0.07] px-5 py-4">
+        <div className="flex items-center justify-between border-b border-white/[0.12] px-5 py-4">
           <span className="text-sm font-medium text-white">New message</span>
           <button
             type="button"
@@ -126,7 +126,7 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
               style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
             />
             {/* To row */}
-            <div className="flex items-center gap-3 border-b border-white/[0.06] px-5 py-3">
+            <div className="flex items-center gap-3 border-b border-white/[0.12] px-5 py-3">
               <span className="shrink-0 text-xs text-neutral-600">To</span>
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs text-neutral-200">
@@ -138,10 +138,10 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
               </div>
             </div>
 
-            <div className="space-y-0 divide-y divide-white/[0.06]">
+            <div className="space-y-0 divide-y divide-white/[0.12]">
               {/* Name + Email row */}
               <div className="grid grid-cols-2">
-                <div className="border-r border-white/[0.06]">
+                <div className="border-r border-white/[0.12]">
                   <input
                     type="text"
                     placeholder="Your name"
@@ -188,7 +188,7 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between border-t border-white/[0.07] px-5 py-4">
+            <div className="flex items-center justify-between border-t border-white/[0.12] px-5 py-4">
               {error ? (
                 <p className="text-xs text-rose-400">{error}</p>
               ) : (

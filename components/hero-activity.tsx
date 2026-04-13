@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 const CYCLE_MS = 2500;
-const FADE_MS  = 420;
+const FADE_MS  = 340;
 
 // ─── Shuffle helper ───────────────────────────────────────────────────────
 
@@ -1886,15 +1886,21 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   const prev = prevIdx !== null ? scenarios[prevIdx] : null;
 
   // CSS animation styles — triggered purely by element mount (new key = new node)
-  const fadeIn:  React.CSSProperties = { animation: `sxFadeIn  ${FADE_MS}ms ease forwards` };
-  const fadeOut: React.CSSProperties = { animation: `sxFadeOut ${FADE_MS}ms ease forwards`, pointerEvents: "none" };
+  const fadeIn:  React.CSSProperties = { animation: `sxSlideIn  ${FADE_MS}ms cubic-bezier(0.22,1,0.36,1) forwards` };
+  const fadeOut: React.CSSProperties = { animation: `sxSlideOut ${FADE_MS}ms cubic-bezier(0.22,1,0.36,1) forwards`, pointerEvents: "none" };
 
   return (
     <>
       {/* Keyframes injected once — no external CSS file needed */}
       <style>{`
-        @keyframes sxFadeIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes sxFadeOut { from { opacity: 1 } to { opacity: 0 } }
+        @keyframes sxSlideIn  {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+        @keyframes sxSlideOut {
+          from { opacity: 1; transform: translateY(0);     }
+          to   { opacity: 0; transform: translateY(-10px); }
+        }
       `}</style>
 
       {/* ── Left side ──────────────────────────────────────────── */}
