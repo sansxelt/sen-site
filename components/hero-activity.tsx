@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const CYCLE_MS = 2500;
-const FADE_MS  = 340;
+const CYCLE_MS   = 2500;
+const ANIM_MS    = 180;
+const CLEANUP_MS = 260;
 
 // ─── Shuffle helper ───────────────────────────────────────────────────────
 
@@ -1830,77 +1831,77 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   const [prevIdx, setPrevIdx] = useState<number | null>(null);
   const currRef  = useRef(0);
   const posRef   = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const orderRef = useRef<number[]>(
     Array.from({ length: scenarios.length }, (_, i) => i),
   );
+
+  const go = useCallback((dir: 1 | -1 = 1) => {
+    if (dir === 1) {
+      posRef.current += 1;
+      if (posRef.current >= orderRef.current.length) {
+        orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
+        posRef.current = 0;
+      }
+    } else {
+      posRef.current -= 1;
+      if (posRef.current < 0) posRef.current = orderRef.current.length - 1;
+    }
+    const next = orderRef.current[posRef.current];
+    setPrevIdx(currRef.current);
+    currRef.current = next;
+    setCurrIdx(next);
+  }, []);
+
+  const startTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => go(1), CYCLE_MS);
+  }, [go]);
 
   // Shuffle on mount + drive the interval.
   // Pause on tab hide, restart on tab show — prevents catch-up burst on return.
   useEffect(() => {
     orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
 
-    let timer: ReturnType<typeof setInterval> | null = null;
-
-    const advance = () => {
-      posRef.current += 1;
-      if (posRef.current >= orderRef.current.length) {
-        orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
-        posRef.current = 0;
-      }
-      const next = orderRef.current[posRef.current];
-      setPrevIdx(currRef.current);
-      currRef.current = next;
-      setCurrIdx(next);
-    };
-
-    const start = () => {
-      if (timer) clearInterval(timer);
-      timer = setInterval(advance, CYCLE_MS);
-    };
-
     const handleVisibility = () => {
       if (document.visibilityState === "hidden") {
-        if (timer) { clearInterval(timer); timer = null; }
+        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       } else {
-        start();
+        startTimer();
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
-    start();
+    startTimer();
 
     return () => {
-      if (timer) clearInterval(timer);
+      if (timerRef.current) clearInterval(timerRef.current);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, []);
+  }, [startTimer]);
 
-  // Remove the outgoing layer once the CSS animation has finished
+  // Remove the outgoing layer once the animation finishes
   useEffect(() => {
     if (prevIdx === null) return;
-    const t = setTimeout(() => setPrevIdx(null), FADE_MS);
+    const t = setTimeout(() => setPrevIdx(null), CLEANUP_MS);
     return () => clearTimeout(t);
   }, [prevIdx]);
 
   const curr = scenarios[currIdx];
   const prev = prevIdx !== null ? scenarios[prevIdx] : null;
 
-  // CSS animation styles — triggered purely by element mount (new key = new node)
-  const fadeIn:  React.CSSProperties = { animation: `sxSlideIn  ${FADE_MS}ms cubic-bezier(0.22,1,0.36,1) forwards` };
-  const fadeOut: React.CSSProperties = { animation: `sxSlideOut ${FADE_MS}ms cubic-bezier(0.22,1,0.36,1) forwards`, pointerEvents: "none" };
+  // Incoming fades in immediately (0→1 over 180ms).
+  // Outgoing waits 50ms then fades out — old content stays fully visible
+  // while new content builds up, so there's no dark gap at the midpoint.
+  const fadeIn:  React.CSSProperties = { animation: `sxFadeIn  ${ANIM_MS}ms ease forwards` };
+  const fadeOut: React.CSSProperties = { animation: `sxFadeOut ${ANIM_MS}ms ease 50ms both`, pointerEvents: "none" };
 
   return (
     <>
       {/* Keyframes injected once — no external CSS file needed */}
       <style>{`
-        @keyframes sxSlideIn  {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0);    }
-        }
-        @keyframes sxSlideOut {
-          from { opacity: 1; transform: translateY(0);     }
-          to   { opacity: 0; transform: translateY(-10px); }
-        }
+        @keyframes sxFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes sxFadeOut { from { opacity: 1; } to { opacity: 0; } }
       `}</style>
 
       {/* ── Left side ──────────────────────────────────────────── */}
@@ -1914,12 +1915,23 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
         <h1 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
           <span className="block">The AI that</span>
           <span className="block">remembers</span>
-          <span
-            key={currIdx}
-            className={`block ${wordCls(curr.accent)}`}
-            style={prev ? fadeIn : undefined}
-          >
-            {curr.word}.
+          <span className="relative block" style={{ minHeight: "1.1em" }}>
+            {prev && (
+              <span
+                key={`word-out-${prevIdx}`}
+                className={`absolute inset-0 ${wordCls(prev.accent)}`}
+                style={fadeOut}
+              >
+                {prev.word}.
+              </span>
+            )}
+            <span
+              key={`word-in-${currIdx}`}
+              className={`block ${wordCls(curr.accent)}`}
+              style={prev ? fadeIn : undefined}
+            >
+              {curr.word}.
+            </span>
           </span>
         </h1>
 
@@ -1958,6 +1970,31 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
               Create account
             </Link>
           )}
+        </div>
+
+        {/* Scenario controls */}
+        <div className="mt-6 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => { go(-1); startTimer(); }}
+            aria-label="Previous scenario"
+            className="group flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition hover:border-white/25 hover:bg-white/10"
+          >
+            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-neutral-500 transition group-hover:text-white" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 3L5 8l5 5" />
+            </svg>
+          </button>
+          <span className="text-xs text-neutral-600">{curr.word}</span>
+          <button
+            type="button"
+            onClick={() => { go(1); startTimer(); }}
+            aria-label="Next scenario"
+            className="group flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition hover:border-white/25 hover:bg-white/10"
+          >
+            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-neutral-500 transition group-hover:text-white" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 3l5 5-5 5" />
+            </svg>
+          </button>
         </div>
       </div>
 
