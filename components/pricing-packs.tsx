@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { pricingPlans, getPlanActionHref, type PricingPlan } from "../lib/pricing";
+import { pricingPlans, type PricingPlan } from "../lib/pricing";
 
 const basicPlans    = pricingPlans.slice(0, 3); // Free, Apprentice, Studio
 const advancedPlans = pricingPlans.slice(3);    // Pro, Teams, Enterprise
@@ -10,6 +10,37 @@ const advancedPlans = pricingPlans.slice(3);    // Pro, Teams, Enterprise
 // ─── Single card face ─────────────────────────────────────────────────────
 
 function PlanCard({ plan }: { plan: PricingPlan }) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleCta(e: React.MouseEvent) {
+    e.stopPropagation();
+
+    // Free → go to account, contact plans → go to /contact
+    if (plan.key === "free") { window.location.href = "/account"; return; }
+    if (plan.ctaVariant === "contact") { window.location.href = "/contact"; return; }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planKey: plan.key, cycle: "monthly" }),
+      });
+      const data = await res.json() as { url?: string; error?: string };
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.error === "Sign in to upgrade your plan.") {
+        window.location.href = "/auth/signin?callbackUrl=/pricing";
+      } else {
+        alert(data.error ?? "Something went wrong. Please try again.");
+        setLoading(false);
+      }
+    } catch {
+      alert("Network error. Please try again.");
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="flex h-full flex-col rounded-[28px] border border-white/[0.12] bg-neutral-950 p-6">
       <div className="flex items-start justify-between gap-3">
@@ -44,13 +75,13 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
         ))}
       </ul>
 
-      <Link
-        href={getPlanActionHref(plan)}
-        className="mt-auto block rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-xs font-medium text-white transition hover:bg-white/10"
-        onClick={(e) => e.stopPropagation()}
+      <button
+        onClick={handleCta}
+        disabled={loading}
+        className="mt-auto block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-xs font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
       >
-        {plan.ctaLabel}
-      </Link>
+        {loading ? "Redirecting…" : plan.ctaLabel}
+      </button>
     </div>
   );
 }

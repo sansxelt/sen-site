@@ -2,18 +2,27 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "../../../../lib/stripe";
+import { upsertActiveSubscription } from "../../../../lib/subscriptions";
 
-// Store subscription state — extend this to write to your DB (Supabase) as needed
 async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   const email = subscription.metadata?.userEmail;
-  const planKey = subscription.metadata?.planKey;
-  const status = subscription.status;
+  const planKey = subscription.metadata?.planKey ?? "free";
+  const cycle  = subscription.metadata?.cycle ?? "monthly";
 
-  console.log(`[stripe webhook] subscription ${status} for ${email} / plan: ${planKey}`);
+  if (!email) {
+    console.warn("[stripe webhook] no userEmail in subscription metadata — skipping");
+    return;
+  }
 
-  // TODO: Update user's plan in Supabase based on status
-  // if (status === "active") { await updateUserPlan(email, planKey); }
-  // if (status === "canceled" || status === "unpaid") { await downgradeUser(email); }
+  console.log(`[stripe webhook] subscription ${subscription.status} for ${email} / plan: ${planKey}`);
+
+  await upsertActiveSubscription({
+    email,
+    planKey,
+    billingCycle: cycle,
+    currentPeriodEnd: subscription.current_period_end ?? null,
+    stripeStatus: subscription.status,
+  });
 }
 
 export async function POST(request: Request) {

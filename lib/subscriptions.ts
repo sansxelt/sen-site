@@ -147,6 +147,54 @@ export async function getSubscriptionByEmail(
   }
 }
 
+export async function upsertActiveSubscription(input: {
+  email: string;
+  planKey: string;
+  billingCycle: string;
+  currentPeriodEnd: number | null; // unix timestamp from Stripe
+  stripeStatus: string; // Stripe subscription status
+}) {
+  const planKey = normalizePlanKey(input.planKey);
+  const billingCycle = normalizeBillingCycle(input.billingCycle);
+
+  const isActive = input.stripeStatus === "active" || input.stripeStatus === "trialing";
+  const isCanceled =
+    input.stripeStatus === "canceled" ||
+    input.stripeStatus === "unpaid" ||
+    input.stripeStatus === "incomplete_expired";
+
+  const status: SubscriptionStatus = isActive
+    ? "active"
+    : isCanceled
+    ? "canceled"
+    : "selection_pending";
+
+  const now = new Date().toISOString();
+  const supabase = getSupabaseAdminClient();
+
+  const payload = {
+    email: normalizeEmail(input.email),
+    plan_key: isActive ? planKey : "free",
+    billing_cycle: billingCycle,
+    status,
+    current_period_end: input.currentPeriodEnd
+      ? new Date(input.currentPeriodEnd * 1000).toISOString()
+      : null,
+    enterprise_verified_business: false,
+    seat_count: normalizeSeatCount(1, planKey),
+    updated_at: now,
+  };
+
+  const { error } = await supabase
+    .from("account_subscriptions" as never)
+    .upsert(payload as never, { onConflict: "email" });
+
+  if (error) {
+    console.error("[subscriptions] upsertActiveSubscription failed:", error);
+    throw error;
+  }
+}
+
 export async function upsertSubscriptionSelection(
   email: string,
   input: SubscriptionSelectionInput,
