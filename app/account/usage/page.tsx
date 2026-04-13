@@ -86,7 +86,7 @@ export default async function UsagePage() {
       <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-neutral-400">
         Usage resets on the 1st of each month. Need higher limits?{" "}
         <a
-          href="mailto:hello@sansxel.app"
+          href="mailto:hello@sansxel.ai"
           className="text-neutral-300 underline underline-offset-2 transition hover:text-white"
         >
           Contact us.

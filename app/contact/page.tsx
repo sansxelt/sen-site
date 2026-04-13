@@ -30,17 +30,17 @@ export default function ContactPage() {
           {[
             [
               "General support",
-              "hello@sansxel.app",
+              "hello@sansxel.ai",
               "Questions about accounts, auth, access, and onboarding.",
             ],
             [
               "Privacy requests",
-              "privacy@sansxel.app",
+              "privacy@sansxel.ai",
               "Requests related to account data, deletion, export, or policy questions.",
             ],
             [
               "Teams / sales",
-              "sales@sansxel.app",
+              "sales@sansxel.ai",
               "Workspace rollout, pricing conversations, and private onboarding.",
             ],
           ].map(([title, email, description]) => (

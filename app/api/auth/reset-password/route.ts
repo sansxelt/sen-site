@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       const baseUrl =
         process.env.AUTH_URL ??
         process.env.NEXTAUTH_URL ??
-        "https://sansxel.app";
+        "https://sansxel.ai";
       const resetUrl = `${baseUrl}/auth/reset-password/confirm?token=${token}`;
 
       await sendPasswordResetEmail(email, resetUrl);

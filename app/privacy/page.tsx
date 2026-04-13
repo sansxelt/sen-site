@@ -26,7 +26,7 @@ const sections = [
   },
   {
     title: "Privacy questions",
-    body: "For privacy questions, export requests, or account deletion inquiries, contact hello@sansxel.app from the email address tied to your sansxel account.",
+    body: "For privacy questions, export requests, or account deletion inquiries, contact hello@sansxel.ai from the email address tied to your sansxel account.",
   },
 ];
 

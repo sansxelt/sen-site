@@ -188,7 +188,7 @@ export async function sendSupportEmail(opts: {
   try {
     await resend.emails.send({
       from,
-      to: "hello@sansxel.ai",
+      to: "contact@sansxel.ai",
       replyTo: opts.email,
       subject: `[Support] ${opts.subject}`,
       html: supportHtml(opts),

@@ -51,4 +51,4 @@ export function getPriceId(planKey: string, cycle: BillingCycle): string | null 
 export const APP_URL =
   process.env.AUTH_URL ??
   process.env.NEXTAUTH_URL ??
-  "https://sansxel.app";
+  "https://sansxel.ai";

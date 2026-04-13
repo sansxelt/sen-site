@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "We couldn't save your request right now. Please try again or contact hello@sansxel.app.",
+          "We couldn't save your request right now. Please try again or contact hello@sansxel.ai.",
       },
       { status: 400 },
     );

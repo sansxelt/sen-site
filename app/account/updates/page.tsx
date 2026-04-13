@@ -112,7 +112,7 @@ export default function UpdatesPage() {
         <div className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/60" />
         <p className="text-xs leading-relaxed text-neutral-500">
           macOS and Linux builds are on the roadmap. Early access is Windows-first.
-          <a href="mailto:hello@sansxel.app" className="ml-1 underline underline-offset-2 transition hover:text-neutral-300">
+          <a href="mailto:hello@sansxel.ai" className="ml-1 underline underline-offset-2 transition hover:text-neutral-300">
             Notify me when available →
           </a>
         </p>
@@ -162,7 +162,7 @@ export default function UpdatesPage() {
         <p className="text-xs text-neutral-600">
           Release notes are published with each stable build.{" "}
           <a
-            href="mailto:hello@sansxel.app?subject=Update feedback"
+            href="mailto:hello@sansxel.ai?subject=Update feedback"
             className="underline underline-offset-2 transition hover:text-neutral-400"
           >
             Report an issue →

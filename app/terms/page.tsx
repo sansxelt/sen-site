@@ -26,7 +26,7 @@ const sections = [
   },
   {
     title: "Contact",
-    body: "Questions about these terms can be sent to hello@sansxel.app.",
+    body: "Questions about these terms can be sent to hello@sansxel.ai.",
   },
 ];
 
