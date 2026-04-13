@@ -1,34 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { pricingPlans, type PricingPlan } from "../lib/pricing";
+
+type Cycle = "monthly" | "yearly";
 
 const basicPlans    = pricingPlans.slice(0, 3); // Free, Apprentice, Studio
 const advancedPlans = pricingPlans.slice(3);    // Pro, Teams, Enterprise
 
 // ─── Single card face ─────────────────────────────────────────────────────
 
-function PlanCard({ plan }: { plan: PricingPlan }) {
+function PlanCard({ plan, cycle }: { plan: PricingPlan; cycle: Cycle }) {
   const [loading, setLoading] = useState(false);
+
+  const hasPricing = plan.key !== "free" && plan.ctaVariant !== "contact";
+  const showYearly = hasPricing && cycle === "yearly" && plan.yearlyLabel;
+
+  const mainLabel = showYearly ? plan.yearlyLabel! : plan.monthlyLabel;
+  const subLabel  = showYearly ? plan.monthlyLabel  : plan.yearlyLabel;
 
   async function handleCta(e: React.MouseEvent) {
     e.stopPropagation();
 
-    // Free → go to account, contact plans → go to /contact
-    if (plan.key === "free") { window.location.href = "/account"; return; }
-    if (plan.ctaVariant === "contact") { window.location.href = "/contact"; return; }
+    if (plan.key === "free")             { window.location.href = "/account"; return; }
+    if (plan.ctaVariant === "contact")   { window.location.href = "/contact"; return; }
 
     setLoading(true);
     try {
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planKey: plan.key, cycle: "monthly" }),
+        body: JSON.stringify({ planKey: plan.key, cycle }),
       });
       const text = await res.text();
       let data: { url?: string; error?: string } = {};
-      try { data = JSON.parse(text); } catch { /* non-JSON response */ }
+      try { data = JSON.parse(text); } catch { /* non-JSON */ }
 
       if (data.url) {
         window.location.href = data.url;
@@ -59,11 +65,13 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
       </div>
 
       <div className="mt-5">
-        <div className="text-2xl font-semibold tracking-tight text-white">
-          {plan.monthlyLabel}
+        <div className="text-2xl font-semibold tracking-tight text-white transition-all duration-300">
+          {mainLabel}
         </div>
-        {plan.yearlyLabel && (
-          <div className="mt-0.5 text-xs text-neutral-600">{plan.yearlyLabel}</div>
+        {subLabel && (
+          <div className="mt-0.5 text-xs text-neutral-600 transition-all duration-300">
+            {showYearly ? `or ${subLabel} billed monthly` : subLabel}
+          </div>
         )}
       </div>
 
@@ -94,24 +102,25 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
 function CardPack({
   plans,
   label,
+  cycle,
   fanDir = "left",
   dotsAlign = "right",
 }: {
   plans: PricingPlan[];
   label: string;
+  cycle: Cycle;
   fanDir?: "left" | "right";
   dotsAlign?: "left" | "right";
 }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [hovered, setHovered] = useState(false);
 
-  const d = fanDir === "right" ? 1 : -1; // direction multiplier
+  const d = fanDir === "right" ? 1 : -1;
 
-  // Render order: back → mid → front (so front paints last / on top)
   const slots = [
-    { plan: plans[(activeIdx + 2) % plans.length], planIdx: (activeIdx + 2) % plans.length, depth: 2 },
-    { plan: plans[(activeIdx + 1) % plans.length], planIdx: (activeIdx + 1) % plans.length, depth: 1 },
-    { plan: plans[activeIdx],                       planIdx: activeIdx,                       depth: 0 },
+    { plan: plans[(activeIdx + 2) % plans.length], depth: 2 },
+    { plan: plans[(activeIdx + 1) % plans.length], depth: 1 },
+    { plan: plans[activeIdx],                       depth: 0 },
   ];
 
   function styleFor(depth: number): React.CSSProperties {
@@ -126,9 +135,9 @@ function CardPack({
       : isMid  ? `rotate(${2.5 * d}deg) translateX(${9  * d}px) translateY(5px)`
                : "rotate(0deg)";
 
-    const zIndex   = depth === 0 ? 30 : depth === 1 ? 20 : 10;
-    const opacity  = hovered ? 1 : [1, 0.65, 0.42][depth];
-    const blurPx   = hovered ? [0, 0.5, 1][depth] : [0, 1, 2][depth];
+    const zIndex  = depth === 0 ? 30 : depth === 1 ? 20 : 10;
+    const opacity = hovered ? 1 : [1, 0.65, 0.42][depth];
+    const blurPx  = hovered ? [0, 0.5, 1][depth] : [0, 1, 2][depth];
 
     return {
       position: "absolute",
@@ -142,13 +151,8 @@ function CardPack({
     };
   }
 
-  function advance() {
-    setActiveIdx((i) => (i + 1) % plans.length);
-  }
-
   return (
     <div className="flex flex-col gap-5">
-      {/* Label + hint */}
       <div className="flex flex-col gap-1.5">
         <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
           {label}
@@ -158,7 +162,6 @@ function CardPack({
         </p>
       </div>
 
-      {/* Stack */}
       <div
         className="relative"
         style={{ width: 336, height: 468 }}
@@ -166,26 +169,19 @@ function CardPack({
         onMouseLeave={() => setHovered(false)}
       >
         {slots.map(({ plan, depth }) => (
-          <div
-            key={plan.key}
-            style={styleFor(depth)}
-            onClick={advance}
-          >
-            <PlanCard plan={plan} />
+          <div key={plan.key} style={styleFor(depth)} onClick={() => setActiveIdx((i) => (i + 1) % plans.length)}>
+            <PlanCard plan={plan} cycle={cycle} />
           </div>
         ))}
       </div>
 
-      {/* Dot indicators */}
       <div className={`flex items-center gap-1.5 ${dotsAlign === "left" ? "justify-start" : "justify-end"}`}>
         {plans.map((_, i) => (
           <button
             key={i}
             onClick={() => setActiveIdx(i)}
             className={`h-1 rounded-full transition-all duration-300 ${
-              i === activeIdx
-                ? "w-5 bg-white/60"
-                : "w-1.5 bg-white/15 hover:bg-white/30"
+              i === activeIdx ? "w-5 bg-white/60" : "w-1.5 bg-white/15 hover:bg-white/30"
             }`}
           />
         ))}
@@ -194,9 +190,46 @@ function CardPack({
   );
 }
 
+// ─── Billing toggle ───────────────────────────────────────────────────────
+
+function CycleToggle({ cycle, onChange }: { cycle: Cycle; onChange: (c: Cycle) => void }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-1">
+        <button
+          onClick={() => onChange("monthly")}
+          className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200 ${
+            cycle === "monthly"
+              ? "bg-white text-black"
+              : "text-neutral-400 hover:text-neutral-200"
+          }`}
+        >
+          Monthly
+        </button>
+        <button
+          onClick={() => onChange("yearly")}
+          className={`rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200 ${
+            cycle === "yearly"
+              ? "bg-white text-black"
+              : "text-neutral-400 hover:text-neutral-200"
+          }`}
+        >
+          Yearly
+        </button>
+      </div>
+      {cycle === "yearly" && (
+        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-medium text-neutral-300">
+          Save ~17%
+        </span>
+      )}
+    </div>
+  );
+}
+
 // ─── Export ───────────────────────────────────────────────────────────────
 
 export function PricingPacks() {
+  const [cycle, setCycle] = useState<Cycle>("monthly");
   const [hoveredSide, setHoveredSide] = useState<"left" | "right" | null>(null);
 
   const sideStyle = (side: "left" | "right"): React.CSSProperties => ({
@@ -206,12 +239,16 @@ export function PricingPacks() {
   });
 
   return (
-    <div className="mt-8 flex flex-col items-center gap-12 sm:mt-10 lg:flex-row lg:items-start lg:justify-center lg:gap-16 xl:gap-24">
-      <div style={sideStyle("left")} onMouseEnter={() => setHoveredSide("left")} onMouseLeave={() => setHoveredSide(null)}>
-        <CardPack plans={basicPlans}    label="Basic Plans"          fanDir="left"  dotsAlign="right" />
-      </div>
-      <div style={sideStyle("right")} onMouseEnter={() => setHoveredSide("right")} onMouseLeave={() => setHoveredSide(null)}>
-        <CardPack plans={advancedPlans} label="Advanced & Corporate" fanDir="right" dotsAlign="left" />
+    <div className="mt-8 sm:mt-10">
+      <CycleToggle cycle={cycle} onChange={setCycle} />
+
+      <div className="mt-8 flex flex-col items-center gap-12 lg:flex-row lg:items-start lg:justify-center lg:gap-16 xl:gap-24">
+        <div style={sideStyle("left")} onMouseEnter={() => setHoveredSide("left")} onMouseLeave={() => setHoveredSide(null)}>
+          <CardPack plans={basicPlans}    label="Basic Plans"          cycle={cycle} fanDir="left"  dotsAlign="right" />
+        </div>
+        <div style={sideStyle("right")} onMouseEnter={() => setHoveredSide("right")} onMouseLeave={() => setHoveredSide(null)}>
+          <CardPack plans={advancedPlans} label="Advanced & Corporate" cycle={cycle} fanDir="right" dotsAlign="left" />
+        </div>
       </div>
     </div>
   );
