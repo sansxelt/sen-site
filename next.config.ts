@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   experimental: {
     // Tree-shake heavy packages so only used exports are bundled
     optimizePackageImports: ["resend", "@supabase/supabase-js", "stripe"],
-    viewTransition: true,
   },
   // Compress responses
   compress: true,
