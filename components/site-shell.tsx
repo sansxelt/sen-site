@@ -45,7 +45,7 @@ const primaryLinks: SiteNavLink[] = [
   { href: "/features", label: "Features" },
   { href: "/function", label: "Function" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Download" },
+  { href: "/download", label: "Download", authOnly: true },
 ];
 
 
@@ -105,19 +105,11 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
             {/* Actions */}
             <div className="flex shrink-0 items-center gap-2">
-              {!signedIn && (
-                <Link
-                  href={getSignInPath()}
-                  className="hidden rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 sm:block"
-                >
-                  Sign in
-                </Link>
-              )}
               <Link
-                href={signedIn ? "/account" : "/download"}
+                href={signedIn ? "/account" : getSignInPath()}
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
-                {signedIn ? "My Account" : "Get started"}
+                {signedIn ? "My Account" : "Access"}
               </Link>
             </div>
 

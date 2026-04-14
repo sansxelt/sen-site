@@ -1893,7 +1893,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   // Incoming fades in immediately (0→1 over 180ms).
   // Outgoing waits 50ms then fades out — old content stays fully visible
   // while new content builds up, so there's no dark gap at the midpoint.
-  const fadeIn:  React.CSSProperties = { animation: `sxFadeIn  ${ANIM_MS}ms ease forwards` };
+  const fadeIn:  React.CSSProperties = { animation: `sxFadeIn  ${ANIM_MS}ms ease both` };
   const fadeOut: React.CSSProperties = { animation: `sxFadeOut ${ANIM_MS}ms ease 50ms both`, pointerEvents: "none" };
 
   return (
@@ -1972,30 +1972,6 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           )}
         </div>
 
-        {/* Scenario controls */}
-        <div className="mt-6 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => { go(-1); startTimer(); }}
-            aria-label="Previous scenario"
-            className="group flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition hover:border-white/25 hover:bg-white/10"
-          >
-            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-neutral-500 transition group-hover:text-white" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 3L5 8l5 5" />
-            </svg>
-          </button>
-          <span className="text-xs text-neutral-600">{curr.word}</span>
-          <button
-            type="button"
-            onClick={() => { go(1); startTimer(); }}
-            aria-label="Next scenario"
-            className="group flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] transition hover:border-white/25 hover:bg-white/10"
-          >
-            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-neutral-500 transition group-hover:text-white" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 3l5 5-5 5" />
-            </svg>
-          </button>
-        </div>
       </div>
 
       {/* ── Right side — hidden on mobile, shown lg+ ─────────────── */}
