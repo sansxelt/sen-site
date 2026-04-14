@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
-import { NavArrows } from "./nav-arrows";
 
 const footerGroups = [
   {
@@ -116,8 +115,6 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-
-      <NavArrows />
 
       {/* pt-[66px] clears the ~65px fixed header */}
       <main className="relative z-10 flex-1 pt-[66px]">
