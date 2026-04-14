@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { ViewTransition, type ReactNode } from "react";
 import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
 
@@ -57,7 +57,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(96,165,250,0.12),transparent_22%)]" />
 
       {/* ── Header — single clean row at every size ─────────────────── */}
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.08] bg-neutral-950/95 backdrop-blur-xl">
+      <header style={{ viewTransitionName: "site-header" }} className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.08] bg-neutral-950/95 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <div className="relative flex items-center justify-between gap-4">
 
@@ -118,7 +118,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
       {/* pt-[66px] clears the ~65px fixed header */}
       <main className="relative z-10 flex-1 pt-[66px]">
-        {children}
+        <ViewTransition>{children}</ViewTransition>
       </main>
 
       <footer className="mt-auto border-t border-white/[0.08]">
