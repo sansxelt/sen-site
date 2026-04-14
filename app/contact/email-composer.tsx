@@ -199,7 +199,7 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-white px-5 py-2 text-sm font-medium text-black transition hover:opacity-90 disabled:opacity-50"
+                className="sansxel-white-button rounded-xl bg-white px-5 py-2 text-sm font-medium transition hover:opacity-90 disabled:opacity-50"
               >
                 {loading ? "Sending…" : "Send"}
               </button>
