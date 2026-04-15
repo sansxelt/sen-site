@@ -2,64 +2,64 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Memory",
-  description: "Browse and manage your sansxel workspace memory.",
+  title: "Library",
+  description: "Browse and manage your saved Sansxel outputs.",
 };
 
 const categories = [
   {
-    label: "Active tasks",
-    description: "Interrupted work, open loops, and in-progress decisions.",
+    label: "Answers",
+    description: "Quick responses, explanations, and recommendations you saved.",
     count: 0,
     icon: "◎",
   },
   {
-    label: "Recent context",
-    description: "Files, tabs, apps, and sessions from the last 7 days.",
+    label: "Plans",
+    description: "Roadmaps, structured breakdowns, timelines, and next steps.",
     count: 0,
     icon: "⊙",
   },
   {
-    label: "Code snapshots",
-    description: "Functions, errors, and repo states captured during work.",
-    count: 0,
-    icon: "⌥",
-  },
-  {
-    label: "Decisions",
-    description: "Notes and reasoning captured from focused work sessions.",
+    label: "Builds",
+    description: "Product concepts, landing pages, pricing, and system designs.",
     count: 0,
     icon: "◈",
   },
   {
-    label: "Browsing trail",
-    description: "Visited pages and research threads tied to work sessions.",
+    label: "Research",
+    description: "Grouped insights, comparisons, and analysis results.",
     count: 0,
     icon: "◇",
   },
   {
-    label: "Conversations",
-    description: "Messages and threads that shaped your recent work.",
+    label: "Visuals",
+    description: "Layouts, concept previews, and visual outputs.",
+    count: 0,
+    icon: "⌥",
+  },
+  {
+    label: "Exports",
+    description: "Outputs you exported or shared externally.",
     count: 0,
     icon: "◌",
   },
 ];
 
-export default function MemoryPage() {
+export default function LibraryPage() {
   const totalEntries = 0;
 
   return (
     <div className="max-w-3xl">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Memory</h1>
+          <h1 className="text-2xl font-semibold text-white">Library</h1>
           <p className="mt-1 text-sm text-neutral-400">
-            Everything sansxel has captured from your desktop sessions.
+            Saved outputs from your Sansxel sessions. Revisit, refine, and build forward.
           </p>
         </div>
         {totalEntries > 0 && (
           <button className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-neutral-400 transition hover:bg-white/5 hover:text-neutral-200">
-            Search memory
+            Search library
           </button>
         )}
       </div>
@@ -68,15 +68,15 @@ export default function MemoryPage() {
       <div className="mt-6 grid grid-cols-3 gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
         <div className="text-center">
           <div className="text-xl font-semibold text-white">{totalEntries}</div>
-          <div className="mt-0.5 text-xs text-neutral-500">Total entries</div>
+          <div className="mt-0.5 text-xs text-neutral-500">Saved outputs</div>
         </div>
         <div className="text-center">
           <div className="text-xl font-semibold text-white">0</div>
-          <div className="mt-0.5 text-xs text-neutral-500">Sessions captured</div>
+          <div className="mt-0.5 text-xs text-neutral-500">Sessions</div>
         </div>
         <div className="text-center">
           <div className="text-xl font-semibold text-white">—</div>
-          <div className="mt-0.5 text-xs text-neutral-500">Last capture</div>
+          <div className="mt-0.5 text-xs text-neutral-500">Last saved</div>
         </div>
       </div>
 
@@ -103,7 +103,7 @@ export default function MemoryPage() {
       {totalEntries === 0 && (
         <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.02] p-6 text-center">
           <p className="text-sm text-neutral-400">
-            No memory captured yet. Install the desktop app to start building ambient context.
+            No saved outputs yet. Start a session and save results to build your library.
           </p>
           <Link
             href="/download"
@@ -114,10 +114,10 @@ export default function MemoryPage() {
         </div>
       )}
 
-      {/* Retention note */}
+      {/* Note */}
       <p className="mt-6 text-xs text-neutral-600">
-        Memory is stored privately and linked to your account.{" "}
-        <Link href="/privacy" className="underline underline-offset-2 hover:text-neutral-400 transition">
+        Your library is stored privately and linked to your account.{" "}
+        <Link href="/privacy" className="underline underline-offset-2 transition hover:text-neutral-400">
           Privacy policy →
         </Link>
       </p>

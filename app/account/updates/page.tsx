@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Updates",
-  description: "Download sansxel and review release notes.",
+  description: "Sansxel release notes and version history.",
 };
 
 const releases = [
@@ -37,12 +37,12 @@ const releases = [
     version: "0.4.0",
     date: "Mar 24, 2026",
     channel: "stable" as const,
-    summary: "Workspace memory, ambient capture, and first desktop build.",
+    summary: "Response engine, output library, and first desktop build.",
     changes: [
-      { type: "new", text: "Ambient session capture running as a background service." },
-      { type: "new", text: "Memory graph — searchable timeline of files, windows, and context." },
+      { type: "new", text: "Layered response system — answers that escalate into structure, visuals, and actions." },
+      { type: "new", text: "Output library — save, revisit, refine, and export results." },
       { type: "new", text: "First signed Windows installer available for early access accounts." },
-      { type: "new", text: "REST API in beta — read and query workspace memory programmatically." },
+      { type: "new", text: "REST API in beta — query and manage outputs programmatically." },
     ],
   },
 ];
@@ -78,11 +78,11 @@ export default function UpdatesPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-lg font-semibold text-white">sansxel {latest.version}</span>
+              <span className="text-lg font-semibold text-white">Sansxel {latest.version}</span>
               {channelBadge(latest.channel)}
             </div>
             <p className="mt-1 text-sm text-neutral-400">
-              Windows desktop app — ambient session capture, memory graph, and workspace recall.
+              Windows desktop app — layered responses, output library, and universal input.
             </p>
             <div className="mt-3 flex flex-wrap gap-4 text-xs text-neutral-500">
               <span>Released {latest.date}</span>

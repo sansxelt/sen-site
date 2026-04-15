@@ -104,7 +104,7 @@ function UpdatesIcon() {
 
 const navItems: NavItem[] = [
   { href: "/account",              label: "Overview",     icon: <OverviewIcon /> },
-  { href: "/account/memory",       label: "Memory",       icon: <MemoryIcon /> },
+  { href: "/account/memory",       label: "Library",      icon: <MemoryIcon /> },
   { href: "/account/keys",         label: "API Keys",     icon: <KeyIcon /> },
   { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
   { href: "/account/updates",      label: "Updates",      icon: <UpdatesIcon /> },

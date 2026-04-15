@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Integrations",
-  description: "Connect sansxel to your desktop and tools.",
+  description: "Connect Sansxel to your tools and workflows.",
 };
 
 type Integration = {
@@ -18,49 +18,49 @@ const integrations: Integration[] = [
   {
     name: "Browser extension",
     description:
-      "Captures browsing context — tabs, search trails, and visited pages — and ties them to active work sessions.",
+      "Send pages, articles, and research directly into Sansxel for structured summaries and analysis.",
     status: "coming_soon",
     cta: "Coming soon",
   },
   {
     name: "VS Code extension",
     description:
-      "Surfaces relevant memory and prior context directly in your editor while you code.",
+      "Use Sansxel inside your editor — generate plans, explain code, and build structured outputs without switching context.",
     status: "coming_soon",
     cta: "Coming soon",
   },
   {
     name: "Slack",
     description:
-      "Pull conversation context into your memory graph and surface relevant threads when you switch tasks.",
+      "Send messages and threads to Sansxel for summaries, action items, and structured follow-ups.",
     status: "coming_soon",
     cta: "Coming soon",
   },
   {
     name: "Notion",
     description:
-      "Link pages and databases to your workspace so sansxel can reference your notes and docs during recall.",
+      "Connect pages and databases so Sansxel can reference your docs when building outputs.",
     status: "coming_soon",
     cta: "Coming soon",
   },
   {
     name: "GitHub",
     description:
-      "Attach commit history, PR context, and issue threads to sessions automatically.",
+      "Pull in repos, PRs, and issues for code analysis, review summaries, and project planning.",
     status: "coming_soon",
     cta: "Coming soon",
   },
   {
     name: "Linear",
     description:
-      "Bring issue and project context into your memory graph so task state follows your focus.",
+      "Bring issue and project context into Sansxel for roadmap planning and sprint summaries.",
     status: "coming_soon",
     cta: "Coming soon",
   },
   {
     name: "REST API",
     description:
-      "Build your own integrations. Use your API key to read, write, and query workspace memory programmatically.",
+      "Build your own integrations. Use your API key to create, read, and manage outputs programmatically.",
     status: "beta",
     href: "/account/keys",
     cta: "Get API key",
@@ -92,7 +92,7 @@ export default function IntegrationsPage() {
     <div className="max-w-3xl">
       <h1 className="text-2xl font-semibold text-white">Integrations</h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Connect sansxel to your desktop, tools, and workflows.
+        Connect Sansxel to your tools and workflows.
       </p>
 
       <div className="mt-6 flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-sm">

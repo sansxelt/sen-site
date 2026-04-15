@@ -58,7 +58,6 @@ export default async function AccountPage() {
     : null;
 
   const releaseChannel = profile?.release_channel ?? "stable";
-  const summaryStyle = profile?.summary_style ?? "balanced";
   const hasEarlyAccess = Boolean(profile?.early_access_requested_at);
   const usedRequests = 0;
   const monthlyLimit = subscription.plan.apiRequestLimit;
@@ -134,9 +133,9 @@ export default async function AccountPage() {
           href="/account/usage"
         />
         <MiniStat
-          label="Summary style"
-          value={summaryStyle.charAt(0).toUpperCase() + summaryStyle.slice(1)}
-          href="/account/settings"
+          label="Library"
+          value="0 saved"
+          href="/account/memory"
         />
       </div>
 
@@ -242,10 +241,6 @@ export default async function AccountPage() {
               {subscription.plan.description}
             </div>
             <ul className="mt-4 space-y-1.5 text-xs text-neutral-400">
-              <li className="flex items-center gap-2">
-                <span className="text-neutral-500">—</span>
-                {subscription.plan.memoryWindow}
-              </li>
               <li className="flex items-center gap-2">
                 <span className="text-neutral-500">—</span>
                 {subscription.plan.monthlyCredits}
