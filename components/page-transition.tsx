@@ -7,16 +7,20 @@ const MS = 120;
 
 function isAccount(p: string) { return p.startsWith("/account"); }
 
+function getContent() {
+  return document.querySelector("[data-page-content]") as HTMLElement | null;
+}
+
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const ref = useRef<HTMLDivElement>(null);
   const navRef = useRef(false);
 
-  /* ── Enter: fade in on every pathname change + first load ── */
+  /* ── Enter: fade in the <main> content only (header stays visible) ── */
   useEffect(() => {
-    const el = ref.current;
-    if (!el || isAccount(pathname)) return;
+    if (isAccount(pathname)) return;
+    const el = getContent();
+    if (!el) return;
 
     el.style.transition = "none";
     el.style.opacity = "0";
@@ -29,7 +33,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
     });
   }, [pathname]);
 
-  /* ── Exit: intercept clicks, quick fade out, then navigate ── */
+  /* ── Exit: intercept clicks, fade out content, then navigate ── */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -44,7 +48,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
       e.preventDefault();
       navRef.current = true;
 
-      const el = ref.current;
+      const el = getContent();
       if (el) {
         el.style.transition = `opacity ${MS}ms ease-in, transform ${MS}ms ease-in`;
         el.style.opacity = "0";
@@ -61,5 +65,5 @@ export function PageTransition({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("click", handleClick, true);
   }, [pathname, router]);
 
-  return <div ref={ref}>{children}</div>;
+  return <>{children}</>;
 }

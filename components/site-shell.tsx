@@ -117,7 +117,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       </header>
 
       {/* pt-[66px] clears the ~65px fixed header */}
-      <main className="relative z-10 flex-1 pt-[66px]">
+      <main data-page-content className="relative z-10 flex-1 pt-[66px]">
         {children}
       </main>
 
