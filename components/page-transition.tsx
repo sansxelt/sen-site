@@ -66,11 +66,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
   }, [pathname, router]);
 
   return (
-    <div
-      data-route-transition
-      style={{ ["--route-transition-ms" as string]: `${ENTER_MS}ms` }}
-    >
-      {children}
+    <div data-route-transition-root>
+      <div
+        key={pathname}
+        data-route-transition
+        style={{ ["--route-transition-ms" as string]: `${ENTER_MS}ms` }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
