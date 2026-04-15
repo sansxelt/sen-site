@@ -44,7 +44,7 @@ const primaryLinks: SiteNavLink[] = [
   { href: "/features", label: "Features" },
   { href: "/function", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Download" },
+  { href: "/download", label: "Download", authOnly: true },
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
