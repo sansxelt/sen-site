@@ -16,8 +16,11 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const router = useRouter();
   const navRef = useRef(false);
 
-  /* ── Enter: fade in the <main> content only (header stays visible) ── */
+  /* ── Enter: fade in content + clean up any header clone ── */
   useEffect(() => {
+    // Remove header clone from previous transition
+    document.querySelector("[data-header-clone]")?.remove();
+
     if (isAccount(pathname)) return;
     const el = getContent();
     if (!el) return;
@@ -33,7 +36,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
     });
   }, [pathname]);
 
-  /* ── Exit: intercept clicks, fade out content, then navigate ── */
+  /* ── Exit: fade out content, pin header clone, then navigate ── */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -47,6 +50,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
       e.preventDefault();
       navRef.current = true;
+
+      // Clone the header so it stays on screen during page swap
+      const header = document.querySelector("header");
+      if (header) {
+        const clone = header.cloneNode(true) as HTMLElement;
+        clone.setAttribute("data-header-clone", "");
+        document.body.appendChild(clone);
+      }
 
       const el = getContent();
       if (el) {
