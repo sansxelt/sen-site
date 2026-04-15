@@ -3,9 +3,9 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 
-const ENTER_MS = 120;
-const EXIT_MS = 95;
-const EXIT_SHIFT = 4;
+const ENTER_MS = 145;
+const EXIT_MS = 120;
+const EXIT_SHIFT = 3;
 
 function isAccount(pathname: string) {
   return pathname.startsWith("/account");
@@ -54,9 +54,9 @@ export function PageTransition({ children }: { children: ReactNode }) {
       if (transitionNode) {
         transitionNode.style.animation = "none";
         transitionNode.style.transition =
-          `opacity ${EXIT_MS}ms cubic-bezier(0.4, 0, 1, 1), ` +
-          `transform ${EXIT_MS}ms cubic-bezier(0.4, 0, 1, 1)`;
-        transitionNode.style.opacity = "0";
+          `opacity ${EXIT_MS}ms cubic-bezier(0.32, 0.72, 0, 1), ` +
+          `transform ${EXIT_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`;
+        transitionNode.style.opacity = "0.18";
         transitionNode.style.transform = `translate3d(0, -${EXIT_SHIFT}px, 0)`;
       }
 
