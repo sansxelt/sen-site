@@ -5,68 +5,110 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 const MS = 120;
 
-function isAccount(p: string) { return p.startsWith("/account"); }
+function isAccount(pathname: string) {
+  return pathname.startsWith("/account");
+}
 
 function getContent() {
   return document.querySelector("[data-page-content]") as HTMLElement | null;
+}
+
+function getHeader() {
+  return document.querySelector("[data-site-header]") as HTMLElement | null;
 }
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const navRef = useRef(false);
+  const cleanupRef = useRef<number | null>(null);
 
-  /* ── Enter: fade in content + clean up any header clone ── */
   useEffect(() => {
-    // Remove header clone from previous transition
-    document.querySelector("[data-header-clone]")?.remove();
+    if (cleanupRef.current) {
+      window.clearTimeout(cleanupRef.current);
+      cleanupRef.current = null;
+    }
 
     if (isAccount(pathname)) return;
-    const el = getContent();
-    if (!el) return;
 
-    el.style.transition = "none";
-    el.style.opacity = "0";
-    el.style.transform = "translateY(10px)";
+    const content = getContent();
+    const headerClone = document.querySelector("[data-header-clone]") as HTMLElement | null;
+
+    if (!content) {
+      headerClone?.remove();
+      return;
+    }
+
+    content.style.transition = "none";
+    content.style.opacity = "0";
+    content.style.transform = "translateY(10px)";
 
     requestAnimationFrame(() => {
-      el.style.transition = `opacity ${MS}ms ease-out, transform ${MS}ms ease-out`;
-      el.style.opacity = "1";
-      el.style.transform = "translateY(0)";
+      content.style.transition = `opacity ${MS}ms ease-out, transform ${MS}ms ease-out`;
+      content.style.opacity = "1";
+      content.style.transform = "translateY(0)";
     });
+
+    cleanupRef.current = window.setTimeout(() => {
+      headerClone?.remove();
+      cleanupRef.current = null;
+    }, MS + 34);
+
+    return () => {
+      if (cleanupRef.current) {
+        window.clearTimeout(cleanupRef.current);
+        cleanupRef.current = null;
+      }
+    };
   }, [pathname]);
 
-  /* ── Exit: fade out content, pin header clone, then navigate ── */
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-      const a = (e.target as HTMLElement).closest("a");
-      if (!a || (a.target && a.target !== "_self")) return;
-      const href = a.getAttribute("href");
+    function handleClick(event: MouseEvent) {
+      if (
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const anchor = (event.target as HTMLElement).closest("a");
+      if (!anchor || (anchor.target && anchor.target !== "_self")) return;
+
+      const href = anchor.getAttribute("href");
       if (!href || href === pathname) return;
-      if (href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:")) return;
+      if (
+        href.startsWith("http") ||
+        href.startsWith("#") ||
+        href.startsWith("mailto:")
+      ) {
+        return;
+      }
       if (navRef.current) return;
       if (isAccount(href) || isAccount(pathname)) return;
 
-      e.preventDefault();
+      event.preventDefault();
       navRef.current = true;
 
-      // Clone the header so it stays on screen during page swap
-      const header = document.querySelector("header");
+      document.querySelector("[data-header-clone]")?.remove();
+
+      const header = getHeader();
       if (header) {
         const clone = header.cloneNode(true) as HTMLElement;
         clone.setAttribute("data-header-clone", "");
         document.body.appendChild(clone);
       }
 
-      const el = getContent();
-      if (el) {
-        el.style.transition = `opacity ${MS}ms ease-in, transform ${MS}ms ease-in`;
-        el.style.opacity = "0";
-        el.style.transform = "translateY(-10px)";
+      const content = getContent();
+      if (content) {
+        content.style.transition = `opacity ${MS}ms ease-in, transform ${MS}ms ease-in`;
+        content.style.opacity = "0";
+        content.style.transform = "translateY(-10px)";
       }
 
-      setTimeout(() => {
+      window.setTimeout(() => {
         navRef.current = false;
         router.push(href);
       }, MS);
