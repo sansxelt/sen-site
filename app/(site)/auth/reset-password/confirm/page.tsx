@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { SiteShell } from "../../../../components/site-shell";
 import { ResetPasswordConfirmForm } from "./reset-password-confirm-form";
 
 export const metadata: Metadata = {
@@ -17,8 +16,7 @@ export default async function ResetPasswordConfirmPage({
     typeof params.token === "string" ? params.token : "";
 
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-md">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Account Access
@@ -34,7 +32,6 @@ export default async function ResetPasswordConfirmPage({
             <ResetPasswordConfirmForm token={token} />
           </div>
         </div>
-      </section>
-    </SiteShell>
+    </section>
   );
 }

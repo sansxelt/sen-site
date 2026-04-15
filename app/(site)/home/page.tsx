@@ -1,13 +1,12 @@
 import Link from "next/link";
-import { auth } from "../../auth";
-import { AuthFlow } from "../../components/auth-flow";
-import { EarlyAccessForm } from "../../components/early-access-form";
-import { HeroActivity } from "../../components/hero-activity";
-import { SiteShell } from "../../components/site-shell";
-import { readAccountContext } from "../../lib/account-session";
-import { getSignInPath } from "../../lib/auth-ui";
-import { pricingPlans } from "../../lib/pricing";
-import { getUserProfileByEmail } from "../../lib/user-profile";
+import { auth } from "@/auth";
+import { AuthFlow } from "@/components/auth-flow";
+import { EarlyAccessForm } from "@/components/early-access-form";
+import { HeroActivity } from "@/components/hero-activity";
+import { readAccountContext } from "@/lib/account-session";
+import { getSignInPath } from "@/lib/auth-ui";
+import { pricingPlans } from "@/lib/pricing";
+import { getUserProfileByEmail } from "@/lib/user-profile";
 
 const features = [
   {
@@ -58,7 +57,7 @@ export default async function HomePage() {
   );
 
   return (
-    <SiteShell>
+    <>
       <section
         id="top"
         className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.1fr_.9fr] lg:items-start lg:gap-16 lg:px-8 lg:pb-16 lg:pt-16"
@@ -343,6 +342,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-    </SiteShell>
+    </>
   );
 }

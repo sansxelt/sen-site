@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SiteShell } from "../../../components/site-shell";
-import { getSignInPath } from "../../../lib/auth-ui";
+import { getSignInPath } from "@/lib/auth-ui";
 
 const errorMessages: Record<string, string> = {
   AccessDenied: "That sign-in request was declined before the session could be created.",
@@ -36,8 +35,7 @@ export default async function AuthErrorPage({
     "We couldn't finish that sign-in. Please try again.";
 
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Auth Error
@@ -66,7 +64,6 @@ export default async function AuthErrorPage({
             </Link>
           </div>
         </div>
-      </section>
-    </SiteShell>
+    </section>
   );
 }

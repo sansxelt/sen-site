@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "../../auth";
-import { SiteShell } from "../../components/site-shell";
-import { getSignInPath } from "../../lib/auth-ui";
+import { auth } from "@/auth";
+import { getSignInPath } from "@/lib/auth-ui";
 
 export const metadata: Metadata = {
   title: "Features",
@@ -48,8 +47,7 @@ export default async function FeaturesPage() {
   const signedIn = Boolean(session?.user?.email);
 
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="max-w-3xl">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Features
@@ -91,7 +89,6 @@ export default async function FeaturesPage() {
             {signedIn ? "Open workspace" : "Get started"}
           </Link>
         </div>
-      </section>
-    </SiteShell>
+    </section>
   );
 }

@@ -13,31 +13,16 @@ function getContent() {
   return document.querySelector("[data-page-content]") as HTMLElement | null;
 }
 
-function getHeader() {
-  return document.querySelector("[data-site-header]") as HTMLElement | null;
-}
-
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const navRef = useRef(false);
-  const cleanupRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (cleanupRef.current) {
-      window.clearTimeout(cleanupRef.current);
-      cleanupRef.current = null;
-    }
-
     if (isAccount(pathname)) return;
 
     const content = getContent();
-    const headerClone = document.querySelector("[data-header-clone]") as HTMLElement | null;
-
-    if (!content) {
-      headerClone?.remove();
-      return;
-    }
+    if (!content) return;
 
     content.style.transition = "none";
     content.style.opacity = "0";
@@ -48,18 +33,6 @@ export function PageTransition({ children }: { children: ReactNode }) {
       content.style.opacity = "1";
       content.style.transform = "translateY(0)";
     });
-
-    cleanupRef.current = window.setTimeout(() => {
-      headerClone?.remove();
-      cleanupRef.current = null;
-    }, MS + 34);
-
-    return () => {
-      if (cleanupRef.current) {
-        window.clearTimeout(cleanupRef.current);
-        cleanupRef.current = null;
-      }
-    };
   }, [pathname]);
 
   useEffect(() => {
@@ -91,15 +64,6 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
       event.preventDefault();
       navRef.current = true;
-
-      document.querySelector("[data-header-clone]")?.remove();
-
-      const header = getHeader();
-      if (header) {
-        const clone = header.cloneNode(true) as HTMLElement;
-        clone.setAttribute("data-header-clone", "");
-        document.body.appendChild(clone);
-      }
 
       const content = getContent();
       if (content) {

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { SiteShell } from "../../components/site-shell";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -32,8 +31,7 @@ const sections = [
 
 export default function PrivacyPage() {
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
           Privacy Policy
         </div>
@@ -59,7 +57,6 @@ export default function PrivacyPage() {
             </div>
           ))}
         </div>
-      </section>
-    </SiteShell>
+    </section>
   );
 }

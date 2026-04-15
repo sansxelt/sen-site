@@ -1,11 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { auth } from "../../auth";
-import { EarlyAccessForm } from "../../components/early-access-form";
-import { SiteShell } from "../../components/site-shell";
-import { readAccountContext } from "../../lib/account-session";
-import { getSignInPath } from "../../lib/auth-ui";
-import { getUserProfileByEmail } from "../../lib/user-profile";
+import { auth } from "@/auth";
+import { EarlyAccessForm } from "@/components/early-access-form";
+import { readAccountContext } from "@/lib/account-session";
+import { getSignInPath } from "@/lib/auth-ui";
+import { getUserProfileByEmail } from "@/lib/user-profile";
 
 export const metadata: Metadata = {
   title: "Access",
@@ -20,8 +19,7 @@ export default async function DownloadPage() {
   const initialAccountContext = readAccountContext(session, profile);
 
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="grid gap-8 lg:grid-cols-[1.05fr_.95fr]">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-200">
@@ -155,7 +153,6 @@ export default async function DownloadPage() {
             </div>
           </div>
         </div>
-      </section>
-    </SiteShell>
+    </section>
   );
 }

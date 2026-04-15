@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SiteShell } from "../../components/site-shell";
 import { ContactForm } from "./contact-form";
 import { ContactChannels } from "./contact-channels";
 
@@ -12,8 +11,7 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         {/* ── Header ──────────────────────────────────────────────────── */}
         <div className="max-w-3xl">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
@@ -95,7 +93,6 @@ export default function ContactPage() {
             </div>
           </div>
         </div>
-      </section>
-    </SiteShell>
+    </section>
   );
 }

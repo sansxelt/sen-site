@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { auth } from "../../auth";
-import { AuthPanel, OAuthSection } from "../../components/auth-panel";
-import { SiteShell } from "../../components/site-shell";
-import { getSafeRedirectPath } from "../../lib/auth-ui";
+import { auth } from "@/auth";
+import { AuthPanel, OAuthSection } from "@/components/auth-panel";
+import { getSafeRedirectPath } from "@/lib/auth-ui";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -22,8 +21,7 @@ export default async function SignInPage({
     : params.callbackUrl;
 
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-3xl text-center">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Account Access
@@ -46,7 +44,6 @@ export default async function SignInPage({
             <OAuthSection />
           </div>
         </div>
-      </section>
-    </SiteShell>
+    </section>
   );
 }

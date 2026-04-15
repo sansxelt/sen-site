@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { SiteShell } from "../../components/site-shell";
-import { PricingPacks } from "../../components/pricing-packs";
+import { PricingPacks } from "@/components/pricing-packs";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -10,8 +9,7 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <SiteShell>
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
         <div className="max-w-3xl">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Pricing
@@ -56,7 +54,6 @@ export default function PricingPage() {
             ))}
           </div>
         </div>
-      </section>
-    </SiteShell>
+    </section>
   );
 }
