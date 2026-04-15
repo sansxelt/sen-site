@@ -1,67 +1,66 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, type ReactNode } from "react";
 
-const FADE_MS = 220;
+const FADE_MS = 200;
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const prevPathRef = useRef(pathname);
-  const prevChildRef = useRef<ReactNode>(children);
-  const [old, setOld] = useState<ReactNode>(null);
+  const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const navigatingRef = useRef(false);
 
+  // Scroll to top on every mount (new page)
   useEffect(() => {
-    // No navigation — just keep the snapshot up to date
-    if (prevPathRef.current === pathname) {
-      prevChildRef.current = children;
-      return;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
+
+  // Intercept internal link clicks: fade out current page, then navigate
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (!anchor) return;
+      if (anchor.target && anchor.target !== "_self") return;
+
+      const href = anchor.getAttribute("href");
+      if (!href) return;
+      if (href === pathname) return;
+      if (href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:")) return;
+      if (navigatingRef.current) return;
+
+      // Prevent Next.js Link from navigating (it checks e.defaultPrevented)
+      e.preventDefault();
+      navigatingRef.current = true;
+
+      // Fade out
+      const el = containerRef.current;
+      if (el) {
+        el.style.transition = `opacity ${FADE_MS}ms ease`;
+        el.style.opacity = "0";
+      }
+
+      // Navigate after fade completes
+      setTimeout(() => {
+        router.push(href);
+        navigatingRef.current = false;
+      }, FADE_MS);
     }
 
-    // Navigation detected — grab the old content before updating refs
-    const snapshot = prevChildRef.current;
-    prevPathRef.current = pathname;
-    prevChildRef.current = children;
-
-    setOld(snapshot);
-    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-
-    const timer = setTimeout(() => setOld(null), FADE_MS + 30);
-    return () => clearTimeout(timer);
-  }, [pathname, children]);
+    document.addEventListener("click", handleClick, true);
+    return () => document.removeEventListener("click", handleClick, true);
+  }, [pathname, router]);
 
   return (
     <>
-      <style>{`
-        @keyframes ptIn  { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes ptOut { from { opacity: 1 } to { opacity: 0 } }
-      `}</style>
-      <div style={{ display: "grid" }}>
-        {/* New page — fades in */}
-        <div
-          key={pathname}
-          style={{
-            gridArea: "1/1",
-            animation: old ? `ptIn ${FADE_MS}ms ease both` : undefined,
-            zIndex: 1,
-          }}
-        >
-          {children}
-        </div>
-
-        {/* Old page — fades out, removed after animation */}
-        {old && (
-          <div
-            style={{
-              gridArea: "1/1",
-              animation: `ptOut ${FADE_MS}ms ease both`,
-              pointerEvents: "none",
-              zIndex: 0,
-            }}
-          >
-            {old}
-          </div>
-        )}
+      <style>{`@keyframes ptIn{from{opacity:0}to{opacity:1}}`}</style>
+      <div
+        ref={containerRef}
+        style={{ animation: `ptIn ${FADE_MS}ms ease both` }}
+      >
+        {children}
       </div>
     </>
   );
