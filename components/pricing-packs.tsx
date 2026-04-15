@@ -5,8 +5,8 @@ import { pricingPlans, type PricingPlan } from "../lib/pricing";
 
 type Cycle = "monthly" | "yearly";
 
-const personalPlans  = pricingPlans.slice(0, 4); // Free, Apprentice, Studio, Pro
-const businessPlans  = pricingPlans.slice(4);    // Teams, Enterprise
+const personalPlans = pricingPlans.slice(0, 4);
+const businessPlans = pricingPlans.slice(4);
 
 // ─── Single card face ─────────────────────────────────────────────────────
 
@@ -257,10 +257,10 @@ export function PricingPacks() {
 
       <div className="mt-8 flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16 xl:gap-24">
         <div style={sideStyle("left")} onMouseEnter={() => setHoveredSide("left")} onMouseLeave={() => setHoveredSide(null)}>
-          <CardPack plans={personalPlans}  label="Personal Plans"             cycle={cycle} fanDir="left"  dotsAlign="right" labelAlign="right" />
+          <CardPack plans={personalPlans} label="Personal Plans" cycle={cycle} fanDir="left" dotsAlign="right" labelAlign="right" />
         </div>
         <div style={sideStyle("right")} onMouseEnter={() => setHoveredSide("right")} onMouseLeave={() => setHoveredSide(null)}>
-          <CardPack plans={businessPlans}  label="Corporate Plans" cycle={cycle} fanDir="right" dotsAlign="left" subAlign="right" />
+          <CardPack plans={businessPlans} label="Team Plans" cycle={cycle} fanDir="right" dotsAlign="left" subAlign="right" />
         </div>
       </div>
     </div>

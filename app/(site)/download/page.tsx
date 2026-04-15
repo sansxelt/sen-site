@@ -9,7 +9,7 @@ import { getUserProfileByEmail } from "@/lib/user-profile";
 export const metadata: Metadata = {
   title: "Access",
   description:
-    "Request sansxel early access. See launch status, platform availability, and what to expect.",
+    "Request early access to Sansxel and get the universal input-to-output AI experience first.",
 };
 
 export default async function DownloadPage() {
@@ -27,12 +27,12 @@ export default async function DownloadPage() {
             Early access open
           </div>
           <h1 className="mt-6 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-            Get early access to sansxel.
+            Get early access to Sansxel.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
-            sansxel is currently in early access on Windows. Create an account,
-            request an invite, and start materializing ideas into visual outputs
-            as soon as your access is approved.
+            Start with the full product story from day one: Ask, Explore,
+            Create, and Build from one place, with results that come back as
+            something structured, visual, and usable.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -41,7 +41,7 @@ export default async function DownloadPage() {
                 href="/account"
                 className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
               >
-                Open workspace
+                Open Sansxel
               </Link>
             ) : (
               <Link
@@ -61,9 +61,9 @@ export default async function DownloadPage() {
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {[
-              ["Status", "Early access — invite-based onboarding."],
-              ["Platform", "Windows first. macOS coming next."],
-              ["What you get", "Full visual AI output system from day one."],
+              ["Status", "Early access with invite-based onboarding."],
+              ["Platform", "Windows first today, with broader surfaces coming later."],
+              ["What you get", "The full Sansxel output experience from your first session."],
             ].map(([title, description]) => (
               <div
                 key={title}
@@ -80,16 +80,16 @@ export default async function DownloadPage() {
 
         <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-            What&apos;s included
+            What is included
           </div>
           <div className="mt-6 space-y-3">
             {[
-              "Full visual output system (cards, grids, tables, flows)",
-              "Desktop app with native integration",
+              "Universal input for questions, notes, links, screenshots, and files",
+              "Visual results for Ask, Explore, Create, and Build workflows",
+              "Saved history and reusable output library",
               "Account and workspace management",
               "Export and sharing controls",
-              "Privacy controls and data management",
-              "Direct support channel",
+              "Direct support channel during rollout",
             ].map((item) => (
               <div
                 key={item}
@@ -115,25 +115,25 @@ export default async function DownloadPage() {
           </div>
           <div className="mt-6 space-y-4 text-sm leading-6 text-neutral-300">
             <p>
-              Submit your request to reserve a place in the launch queue.
-              Your account stays connected to your invite status.
+              Submit your request to hold a place in the queue. Your account
+              stays connected to your invite status and future access.
             </p>
             <p>
-              Once approved, you get full access to sansxel — the desktop app,
-              the visual output system, and your workspace.
+              Once approved, you get the full Sansxel experience - not just an
+              assistant, but a product that turns rough input into real output.
             </p>
             <p>
-              Start on the free tier and upgrade whenever your output needs
-              grow.
+              Start on the free tier and expand into stronger personal or team
+              workflows when Sansxel becomes part of your day-to-day work.
             </p>
           </div>
 
           <div className="mt-6 grid gap-3">
             {[
-              ["/account", "Open your workspace"],
+              ["/features", "See features"],
+              ["/function", "See how it works"],
               ["/pricing", "Review pricing"],
-              ["/privacy", "Read the privacy policy"],
-              ["/terms", "Read the terms"],
+              ["/contact", "Talk to support"],
             ].map(([href, label]) => (
               <Link
                 key={href}
