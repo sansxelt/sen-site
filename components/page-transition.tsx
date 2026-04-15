@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 const variants = {
   initial: { y: -24, opacity: 0 },
@@ -17,6 +17,10 @@ const transition = {
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname]);
 
   return (
     <AnimatePresence mode="wait" initial={false}>
