@@ -3,37 +3,20 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 
-const MS = 120;
+const MS = 160;
 
 function isAccount(pathname: string) {
   return pathname.startsWith("/account");
 }
 
-function getContent() {
-  return document.querySelector("[data-page-content]") as HTMLElement | null;
+function getTransitionNode() {
+  return document.querySelector("[data-route-transition]") as HTMLElement | null;
 }
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const navRef = useRef(false);
-
-  useEffect(() => {
-    if (isAccount(pathname)) return;
-
-    const content = getContent();
-    if (!content) return;
-
-    content.style.transition = "none";
-    content.style.opacity = "0";
-    content.style.transform = "translateY(10px)";
-
-    requestAnimationFrame(() => {
-      content.style.transition = `opacity ${MS}ms ease-out, transform ${MS}ms ease-out`;
-      content.style.opacity = "1";
-      content.style.transform = "translateY(0)";
-    });
-  }, [pathname]);
 
   useEffect(() => {
     function handleClick(event: MouseEvent) {
@@ -65,11 +48,12 @@ export function PageTransition({ children }: { children: ReactNode }) {
       event.preventDefault();
       navRef.current = true;
 
-      const content = getContent();
-      if (content) {
-        content.style.transition = `opacity ${MS}ms ease-in, transform ${MS}ms ease-in`;
-        content.style.opacity = "0";
-        content.style.transform = "translateY(-10px)";
+      const transitionNode = getTransitionNode();
+      if (transitionNode) {
+        transitionNode.style.animation = "none";
+        transitionNode.style.transition = `opacity ${MS}ms ease-in, transform ${MS}ms ease-in`;
+        transitionNode.style.opacity = "0";
+        transitionNode.style.transform = "translateY(-10px)";
       }
 
       window.setTimeout(() => {
@@ -82,5 +66,17 @@ export function PageTransition({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("click", handleClick, true);
   }, [pathname, router]);
 
-  return <>{children}</>;
+  if (isAccount(pathname)) {
+    return <>{children}</>;
+  }
+
+  return (
+    <div
+      key={pathname}
+      data-route-transition
+      style={{ ["--route-transition-ms" as string]: `${MS}ms` }}
+    >
+      {children}
+    </div>
+  );
 }
