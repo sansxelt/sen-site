@@ -3,7 +3,9 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 
-const MS = 160;
+const ENTER_MS = 120;
+const EXIT_MS = 95;
+const EXIT_SHIFT = 4;
 
 function isAccount(pathname: string) {
   return pathname.startsWith("/account");
@@ -51,15 +53,17 @@ export function PageTransition({ children }: { children: ReactNode }) {
       const transitionNode = getTransitionNode();
       if (transitionNode) {
         transitionNode.style.animation = "none";
-        transitionNode.style.transition = `opacity ${MS}ms ease-in, transform ${MS}ms ease-in`;
+        transitionNode.style.transition =
+          `opacity ${EXIT_MS}ms cubic-bezier(0.4, 0, 1, 1), ` +
+          `transform ${EXIT_MS}ms cubic-bezier(0.4, 0, 1, 1)`;
         transitionNode.style.opacity = "0";
-        transitionNode.style.transform = "translateY(-10px)";
+        transitionNode.style.transform = `translate3d(0, -${EXIT_SHIFT}px, 0)`;
       }
 
       window.setTimeout(() => {
         navRef.current = false;
         router.push(href);
-      }, MS);
+      }, EXIT_MS);
     }
 
     document.addEventListener("click", handleClick, true);
@@ -74,7 +78,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
     <div
       key={pathname}
       data-route-transition
-      style={{ ["--route-transition-ms" as string]: `${MS}ms` }}
+      style={{ ["--route-transition-ms" as string]: `${ENTER_MS}ms` }}
     >
       {children}
     </div>
