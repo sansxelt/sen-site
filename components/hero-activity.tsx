@@ -1639,54 +1639,51 @@ function AlertsLayout({ s }: { s: Extract<Scenario, { layout: "alerts" }> }) {
 // ─── Layout: spotlight (finding) ─────────────────────────────────────────
 
 function SpotlightLayout({ s }: { s: Extract<Scenario, { layout: "spotlight" }> }) {
-  const iconCls: Record<string, string> = {
-    ts:  "border-blue-400/25 bg-blue-400/10 text-blue-300",
-    git: "border-orange-400/25 bg-orange-400/10 text-orange-300",
-    app: "border-violet-400/25 bg-violet-400/10 text-violet-300",
-    sys: "border-sky-400/25 bg-sky-400/10 text-sky-300",
+  const chipCls: Record<string, string> = {
+    ts:  "bg-blue-500/20 text-blue-300",
+    git: "bg-orange-500/20 text-orange-300",
+    app: "bg-violet-500/20 text-violet-300",
+    sys: "bg-neutral-500/20 text-neutral-300",
   };
 
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      {/* Search bar */}
-      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/15 bg-black/50 px-4 py-3">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" className="shrink-0 text-neutral-400">
+      {/* Spotlight search bar */}
+      <div className="mt-4 flex items-center gap-3 rounded-2xl border border-sky-400/30 bg-black/60 px-4 py-3.5 shadow-[0_0_0_3px_rgba(56,189,248,0.06)]">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="shrink-0 text-sky-400/70">
           <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.5" />
           <path d="M10.5 10.5L14 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
-        <span className="text-sm text-neutral-200">{s.query}</span>
-        <span className="inline-block h-3.5 w-0.5 animate-pulse rounded-full bg-white/50" />
-        <span className="ml-auto font-mono text-[10px] text-neutral-600">↵</span>
+        <span className="flex-1 text-sm text-neutral-100">{s.query}</span>
+        <span className="inline-block h-4 w-[1.5px] animate-pulse rounded-full bg-sky-300/70" />
       </div>
 
-      {/* Result groups */}
-      <div className="mt-3 space-y-2.5">
-        {s.groups.map((group) => (
+      {/* Results — flat list, Spotlight style */}
+      <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-black/30">
+        {s.groups.map((group, gi) => (
           <div key={group.label}>
-            <div className="mb-1 px-0.5 text-[10px] font-medium uppercase tracking-[0.15em] text-neutral-600">
+            <div className={`px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-600 ${gi > 0 ? "border-t border-white/[0.06]" : ""}`}>
               {group.label}
             </div>
-            <div className="overflow-hidden rounded-xl border border-white/[0.07]">
-              {group.items.map((item, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center gap-3 px-3 py-2 ${
-                    item.highlighted
-                      ? "bg-white/10"
-                      : "bg-white/[0.02]"
-                  } ${i < group.items.length - 1 ? "border-b border-white/[0.05]" : ""}`}
-                >
-                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border text-[9px] font-bold ${iconCls[item.iconType] ?? iconCls.app}`}>
-                    {item.iconLabel}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-medium text-neutral-100">{item.name}</div>
-                    <div className="truncate font-mono text-[10px] text-neutral-500">{item.path}</div>
-                  </div>
-                  <div className="shrink-0 text-[10px] text-neutral-600">{item.meta}</div>
-                </div>
-              ))}
-            </div>
+            {group.items.map((item, i) => (
+              <div
+                key={i}
+                className={`flex items-center gap-3 px-3 py-2.5 ${
+                  item.highlighted
+                    ? "border-l-2 border-sky-400 bg-sky-400/10"
+                    : "border-l-2 border-transparent bg-transparent hover:bg-white/[0.03]"
+                }`}
+              >
+                <span className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-[9px] font-bold ${chipCls[item.iconType] ?? chipCls.app}`}>
+                  {item.iconLabel}
+                </span>
+                <span className={`min-w-0 flex-1 truncate text-xs ${item.highlighted ? "font-medium text-white" : "text-neutral-300"}`}>
+                  {item.name}
+                </span>
+                <span className="shrink-0 truncate font-mono text-[10px] text-neutral-600">{item.path}</span>
+                <span className="shrink-0 text-[10px] text-neutral-700">{item.meta}</span>
+              </div>
+            ))}
           </div>
         ))}
       </div>
@@ -1697,55 +1694,57 @@ function SpotlightLayout({ s }: { s: Extract<Scenario, { layout: "spotlight" }> 
 // ─── Layout: filetree (locating) ─────────────────────────────────────────
 
 function FileTreeLayout({ s }: { s: Extract<Scenario, { layout: "filetree" }> }) {
+  const extCls = (name: string) => {
+    if (name.endsWith(".tsx")) return "text-violet-300";
+    if (name.endsWith(".ts"))  return "text-blue-300";
+    if (name.endsWith(".json")) return "text-yellow-300";
+    return "text-neutral-300";
+  };
+
+  // Build tree-drawing prefix
+  const prefix = (depth: number, type: "dir" | "file") => {
+    if (depth === 0) return "";
+    const indent = "    ".repeat(depth - 1);
+    return indent + (type === "dir" ? "├─ " : "│  ");
+  };
+
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      {/* Repo header */}
-      <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-black/30 px-4 py-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-orange-400/20 bg-orange-400/10 font-mono text-[10px] font-bold text-orange-300">
+      {/* Repo pill */}
+      <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-black/40 px-4 py-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/15 font-mono text-[10px] font-bold text-orange-300">
           git
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-white">{s.repo}</div>
-          <div className="truncate font-mono text-[10px] text-neutral-500">{s.remotePath}</div>
+          <span className="text-sm font-semibold text-white">{s.repo}</span>
+          <span className="ml-2 font-mono text-[10px] text-neutral-500">{s.branch}</span>
         </div>
-        <span className="shrink-0 rounded-full border border-white/10 px-2.5 py-1 font-mono text-[10px] text-neutral-400">
-          {s.branch}
-        </span>
+        <span className="shrink-0 font-mono text-[10px] text-neutral-500">{s.status}</span>
       </div>
 
       {/* File tree */}
-      <div className="mt-3 rounded-2xl border border-white/10 bg-black/25 p-3.5 font-mono">
-        <div className="mb-2.5 text-[10px] uppercase tracking-[0.12em] text-neutral-500">
-          {s.status}
-        </div>
-        <div className="space-y-[3px]">
-          {s.tree.map((node, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-1.5"
-              style={{ paddingLeft: `${node.depth * 14}px` }}
-            >
-              <span className={`shrink-0 text-[10px] ${node.type === "dir" ? "text-neutral-600" : "text-neutral-700"}`}>
-                {node.type === "dir" ? "▸" : "·"}
-              </span>
-              <span className={`text-xs ${
-                node.change
-                  ? "text-neutral-100"
-                  : node.type === "dir"
-                    ? "text-neutral-400"
-                    : "text-neutral-600"
-              }`}>
-                {node.name}
-              </span>
-              {node.change === "M" && (
-                <span className="ml-auto shrink-0 rounded px-1 text-[9px] font-bold text-amber-400">M</span>
-              )}
-              {node.change === "+" && (
-                <span className="ml-auto shrink-0 rounded px-1 text-[9px] font-bold text-emerald-400">+</span>
-              )}
-            </div>
-          ))}
-        </div>
+      <div className="mt-3 rounded-2xl border border-white/[0.08] bg-black/30 p-4 font-mono text-xs">
+        {s.tree.map((node, i) => (
+          <div key={i} className="flex items-center leading-[1.85]">
+            {/* Tree drawing */}
+            <span className="shrink-0 whitespace-pre text-neutral-700">{prefix(node.depth, node.type)}</span>
+            {/* Icon */}
+            <span className="mr-1.5 shrink-0 text-[10px]">
+              {node.type === "dir" ? "📁" : "📄"}
+            </span>
+            {/* Name */}
+            <span className={node.type === "dir" ? "text-neutral-300" : node.change ? extCls(node.name) : "text-neutral-500"}>
+              {node.name}
+            </span>
+            {/* Change badge */}
+            {node.change === "M" && (
+              <span className="ml-auto shrink-0 rounded-sm bg-amber-400/20 px-1 text-[9px] font-bold text-amber-400">M</span>
+            )}
+            {node.change === "+" && (
+              <span className="ml-auto shrink-0 rounded-sm bg-emerald-400/20 px-1 text-[9px] font-bold text-emerald-400">+</span>
+            )}
+          </div>
+        ))}
       </div>
 
       <Prompt label={s.promptLabel} question={s.prompt} />
@@ -1758,32 +1757,47 @@ function FileTreeLayout({ s }: { s: Extract<Scenario, { layout: "filetree" }> })
 function SysfinderLayout({ s }: { s: Extract<Scenario, { layout: "sysfinder" }> }) {
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
-      <div className="mt-4 space-y-2">
-        {s.recentApps.map((app) => (
-          <div key={app.name} className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+      {/* App rows */}
+      <div className="mt-4 space-y-1.5">
+        {s.recentApps.map((app, i) => (
+          <div
+            key={app.name}
+            className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${
+              i === 0
+                ? "border-violet-400/20 bg-violet-400/[0.07]"
+                : "border-white/[0.06] bg-white/[0.02]"
+            }`}
+          >
+            {/* App icon */}
             <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 text-sm"
-              style={{ background: `${app.bg}22` }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-base font-bold"
+              style={{ background: `${app.bg}28`, border: `1px solid ${app.bg}30` }}
             >
               {app.icon}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-neutral-100">{app.name}</div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-white">{app.name}</span>
+                {i === 0 && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                )}
+              </div>
               <div className="truncate text-[10px] text-neutral-500">{app.subtitle}</div>
             </div>
-            <div className="shrink-0 text-[10px] text-neutral-600">{app.last}</div>
+            <span className="shrink-0 text-[10px] text-neutral-600">{app.last}</span>
           </div>
         ))}
       </div>
 
+      {/* Stats row */}
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Open files</div>
-          <div className="mt-1.5 text-xs text-neutral-200">{s.openFiles}</div>
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
+          <div className="text-[10px] uppercase tracking-[0.14em] text-neutral-600">Open files</div>
+          <div className="mt-1 text-sm font-semibold text-white">{s.openFiles}</div>
         </div>
-        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <div className="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Active repo</div>
-          <div className="mt-1.5 text-xs text-neutral-200">{s.activeRepo}</div>
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
+          <div className="text-[10px] uppercase tracking-[0.14em] text-neutral-600">Active repo</div>
+          <div className="mt-1 text-sm font-semibold text-white">{s.activeRepo}</div>
         </div>
       </div>
 
