@@ -3,8 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 
-const ENTER_MS = 500;
-const EXIT_MS  = 380;
+const ENTER_MS = 260;
+const EXIT_MS  = 180;
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
