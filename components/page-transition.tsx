@@ -3,50 +3,57 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 
-const FADE_MS = 200;
+const ENTER_MS = 500;
+const EXIT_MS = 180;
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const navigatingRef = useRef(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const navRef = useRef(false);
 
-  // Scroll to top on every mount (new page)
+  /* scroll to top on mount */
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
-  // Intercept internal link clicks: fade out current page, then navigate
+  /* after enter animation finishes, clear it so the exit opacity override works */
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const done = () => {
+      el.style.animation = "none";
+      el.style.opacity = "1";
+    };
+    el.addEventListener("animationend", done, { once: true });
+    return () => el.removeEventListener("animationend", done);
+  }, []);
+
+  /* intercept link clicks → fade-out → navigate */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
-      const anchor = (e.target as HTMLElement).closest("a");
-      if (!anchor) return;
-      if (anchor.target && anchor.target !== "_self") return;
-
-      const href = anchor.getAttribute("href");
-      if (!href) return;
-      if (href === pathname) return;
+      const a = (e.target as HTMLElement).closest("a");
+      if (!a) return;
+      if (a.target && a.target !== "_self") return;
+      const href = a.getAttribute("href");
+      if (!href || href === pathname) return;
       if (href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:")) return;
-      if (navigatingRef.current) return;
+      if (navRef.current) return;
 
-      // Prevent Next.js Link from navigating (it checks e.defaultPrevented)
       e.preventDefault();
-      navigatingRef.current = true;
+      navRef.current = true;
 
-      // Fade out
-      const el = containerRef.current;
+      const el = ref.current;
       if (el) {
-        el.style.transition = `opacity ${FADE_MS}ms ease`;
+        el.style.transition = `opacity ${EXIT_MS}ms ease`;
         el.style.opacity = "0";
       }
 
-      // Navigate after fade completes
       setTimeout(() => {
         router.push(href);
-        navigatingRef.current = false;
-      }, FADE_MS);
+        navRef.current = false;
+      }, EXIT_MS);
     }
 
     document.addEventListener("click", handleClick, true);
@@ -55,10 +62,24 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <style>{`@keyframes ptIn{from{opacity:0}to{opacity:1}}`}</style>
+      <style>{`
+        @keyframes ptIn {
+          0%   { opacity: 0;  -webkit-mask-position: 0 100%; mask-position: 0 100%; }
+          15%  { opacity: 1; }
+          100% { opacity: 1;  -webkit-mask-position: 0 0;   mask-position: 0 0; }
+        }
+      `}</style>
       <div
-        ref={containerRef}
-        style={{ animation: `ptIn ${FADE_MS}ms ease both` }}
+        ref={ref}
+        style={{
+          WebkitMaskImage: "linear-gradient(to bottom, black 50%, transparent)",
+          maskImage: "linear-gradient(to bottom, black 50%, transparent)",
+          WebkitMaskSize: "100% 300%",
+          maskSize: "100% 300%",
+          WebkitMaskRepeat: "no-repeat",
+          maskRepeat: "no-repeat",
+          animation: `ptIn ${ENTER_MS}ms cubic-bezier(0.16,1,0.3,1) both`,
+        }}
       >
         {children}
       </div>
