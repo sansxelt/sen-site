@@ -6,33 +6,66 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "Function",
   description:
-    "How sansxel works - from account creation to workspace setup and picking the right tier.",
+    "How sansxel works — from raw input to polished visual output in one step.",
 };
 
 const steps = [
   {
     number: "01",
-    title: "Create your account",
+    title: "You bring the input",
     description:
-      "Start on sansxel and continue with email, Google, or GitHub through the branded app-hosted flow. No third-party auth hostnames - everything stays inside the sansxel surface.",
+      "A rough idea, a question, raw data, a screenshot, a half-written doc — anything. sansxel doesn't need clean prompts. It takes what you have.",
   },
   {
     number: "02",
-    title: "Set up your workspace",
+    title: "sansxel understands the shape",
     description:
-      "Save how you work, what you want sansxel to remember, and which release track fits you best. Your preferences are stored against your account from day one.",
+      "The AI reads your intent and selects the right output format — table, flow, grid, card, metric — based on what you're actually trying to do.",
   },
   {
     number: "03",
-    title: "Install the desktop app",
+    title: "Output materializes instantly",
     description:
-      "The sansxel desktop client runs quietly in the background and tracks session activity, app state, and context signals - all stored locally first.",
+      "A polished, structured visual block appears. Not a paragraph of text. Not a draft. A finished output you can use, export, or chain into the next step.",
   },
   {
     number: "04",
-    title: "Pick your tier when ready",
+    title: "Refine or chain forward",
     description:
-      "Move from the limited free tier into stronger personal or team plans without rebuilding your account path. Billing upgrades are non-destructive.",
+      "Adjust any output in place. Or feed it into the next request — a table becomes a flow, a flow becomes a checklist, a checklist becomes a deck.",
+  },
+];
+
+const transforms = [
+  {
+    input: "Meeting notes",
+    output: "Action items + owner grid",
+    arrow: "→",
+  },
+  {
+    input: "Competitor URLs",
+    output: "Feature comparison table",
+    arrow: "→",
+  },
+  {
+    input: "Product idea",
+    output: "Pitch deck outline",
+    arrow: "→",
+  },
+  {
+    input: "CSV data",
+    output: "Metric dashboard cards",
+    arrow: "→",
+  },
+  {
+    input: "User feedback",
+    output: "Theme cluster grid",
+    arrow: "→",
+  },
+  {
+    input: "Process description",
+    output: "Step-by-step flow",
+    arrow: "→",
   },
 ];
 
@@ -47,14 +80,16 @@ export default async function FunctionPage() {
           Function
         </div>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-          A simpler way to recover your work context.
+          Input in. Output out. That&apos;s it.
         </h1>
         <p className="mt-5 text-base leading-7 text-neutral-200">
-          sansxel doesn&apos;t interrupt the way you work. It runs alongside it
-          while tracking what matters and surfacing it when you need it.
+          sansxel is a single-step materializer. You give it something rough — it
+          gives you back something finished and visual. No prompt engineering. No
+          iteration loops. No conversation.
         </p>
       </div>
 
+      {/* Steps */}
       <div className="mt-12 grid gap-5 lg:grid-cols-2">
         {steps.map((step) => (
           <div
@@ -74,12 +109,31 @@ export default async function FunctionPage() {
         ))}
       </div>
 
+      {/* Transform examples */}
+      <div className="mt-20">
+        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+          Example transforms
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {transforms.map((t) => (
+            <div
+              key={t.input}
+              className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+            >
+              <div className="text-sm text-neutral-400">{t.input}</div>
+              <span className="shrink-0 text-emerald-400">{t.arrow}</span>
+              <div className="text-sm font-medium text-white">{t.output}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="mt-16 flex flex-col gap-3 sm:flex-row">
         <Link
           href={signedIn ? "/account" : getSignInPath("/account")}
           className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
         >
-          {signedIn ? "Open workspace" : "Get started"}
+          {signedIn ? "Open workspace" : "Get started free"}
         </Link>
         <Link
           href="/features"

@@ -17,20 +17,20 @@ const BASE = "https://www.sansxel.ai";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
-    default: "sansxel — Ambient AI Workspace Memory",
+    default: "sansxel — From Thought to Thing",
     template: "%s | sansxel",
   },
   description:
-    "sansxel is an ambient AI workspace that turns your desktop activity into calm, searchable memory. Personal AI plans starting free — scale to Pro, Teams, and Enterprise.",
+    "sansxel is the universal AI that materializes your ideas into polished, visual outputs. Bring anything — get something better back. Free to start.",
   keywords: [
     "sansxel",
     "sansxel ai",
-    "ambient AI",
+    "AI materializer",
+    "visual AI",
+    "AI output",
     "AI workspace",
-    "desktop memory",
-    "AI memory app",
-    "personal AI assistant",
     "AI productivity",
+    "idea to output",
   ],
   authors: [{ name: "sansxel", url: BASE }],
   creator: "sansxel",
@@ -41,16 +41,16 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE,
     siteName: "sansxel",
-    title: "sansxel — Ambient AI Workspace Memory",
+    title: "sansxel — From Thought to Thing",
     description:
-      "An ambient AI workspace that turns your desktop activity into calm, searchable memory. Free to start.",
+      "The universal AI that materializes your ideas into polished, visual outputs. Bring anything — get something better back.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "sansxel — Ambient AI Workspace Memory",
+    title: "sansxel — From Thought to Thing",
     description:
-      "An ambient AI workspace that turns your desktop activity into calm, searchable memory.",
+      "The universal AI that materializes your ideas into polished, visual outputs. Bring anything — get something better back.",
     images: ["/og-image.png"],
     creator: "@sansxel",
   },
@@ -88,7 +88,7 @@ export default function RootLayout({
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "sansxel is an ambient AI workspace that turns desktop activity into calm, searchable memory.",
+                "sansxel is the universal AI that materializes ideas into polished, visual outputs.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",

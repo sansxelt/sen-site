@@ -78,7 +78,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                   sansxel
                 </div>
                 <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
-                  Ambient workspace memory
+                  From thought to thing
                 </div>
               </div>
             </Link>
@@ -134,7 +134,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 <span className="text-sm font-semibold text-white">sansxel</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
-                Ambient workspace memory that keeps context between sessions, so resuming work feels instant.
+                The universal AI that turns your ideas into polished, visual outputs — instantly.
               </p>
             </div>
 

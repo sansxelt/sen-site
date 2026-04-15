@@ -6,39 +6,72 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Automatic context, timeline search, and privacy-first design — everything sansxel tracks so you don't have to.",
+    "Visual output blocks, instant materialization, and a production-grade AI that builds instead of talks.",
 };
 
-const features = [
+const outputTypes = [
   {
-    title: "Automatic context",
+    title: "Card",
     description:
-      "sansxel quietly understands what you were doing across desktop sessions so resuming work feels instant instead of reconstructive.",
+      "Rich previews, summaries, and standalone content blocks. The default when sansxel needs to present a single idea clearly.",
   },
   {
-    title: "Ask your timeline",
+    title: "Grid",
     description:
-      "Search, summarize, and recover momentum from your own activity history without digging through tabs and chat threads.",
+      "Side-by-side layouts for collections, galleries, comparisons, and multi-item overviews.",
   },
   {
-    title: "Built for privacy",
+    title: "Table",
     description:
-      "Clear controls, visible tracking, and product language that treats sensitive context like a responsibility.",
+      "Structured data with sortable columns. Comparisons, inventories, ranked lists, and analysis results.",
   },
   {
-    title: "Session continuity",
+    title: "Flow",
     description:
-      "Pick up exactly where you left off — sansxel holds the thread between sessions so context doesn't leak between task switches.",
+      "Step-by-step processes, user journeys, decision trees, and any sequence with direction.",
   },
   {
-    title: "Workspace memory",
+    title: "Metric",
     description:
-      "Your tools, your patterns, and your active state are all tracked so your environment reflects where you actually are in the work.",
+      "Numbers that matter — KPIs, scores, trends, and change indicators presented with visual weight.",
   },
   {
-    title: "Deep AI integration",
+    title: "Canvas",
     description:
-      "Query your own history with natural language. sansxel turns your activity log into something you can actually reason with.",
+      "Freeform spatial layouts for brainstorming, mind maps, architecture diagrams, and relationship mapping.",
+  },
+  {
+    title: "Checklist",
+    description:
+      "Actionable task lists, launch checklists, audit trails, and anything with completion state.",
+  },
+  {
+    title: "Preview",
+    description:
+      "Rich link previews, document summaries, and content cards that show you what something is before you open it.",
+  },
+];
+
+const principles = [
+  {
+    title: "Output over conversation",
+    description:
+      "sansxel is built to produce, not to chat. Every interaction ends with something visual and usable — not a paragraph.",
+  },
+  {
+    title: "Structure by default",
+    description:
+      "Responses are never raw text dumps. sansxel automatically selects the right block type for what you asked.",
+  },
+  {
+    title: "Refinement, not regeneration",
+    description:
+      "Outputs are designed to be edited, not rerolled. Adjust what's there instead of starting from scratch.",
+  },
+  {
+    title: "Composable blocks",
+    description:
+      "Chain outputs together. A table can feed a flow, a flow can produce a checklist, a checklist can become a card.",
   },
 ];
 
@@ -53,26 +86,55 @@ export default async function FeaturesPage() {
           Features
         </div>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-          Context first. Friction low.
+          An AI that builds, not talks.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-100 sm:text-xl">
-          sansxel is designed to stay out of the way until you need memory,
-          continuity, and fast re-entry into real work.
+          sansxel materializes your thinking into structured visual outputs.
+          Cards, grids, tables, flows — every response is something you can
+          actually use.
         </p>
       </div>
 
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {features.map((feature) => (
-          <div
-            key={feature.title}
-            className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7"
-          >
-            <div className="text-xl font-semibold text-white">{feature.title}</div>
-            <p className="mt-4 text-base leading-7 text-neutral-100/85 sm:text-[1.05rem]">
-              {feature.description}
-            </p>
-          </div>
-        ))}
+      {/* Output block types */}
+      <div className="mt-16">
+        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+          Output types
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {outputTypes.map((type) => (
+            <div
+              key={type.title}
+              className="rounded-3xl border border-white/10 bg-white/5 p-6"
+            >
+              <div className="text-lg font-semibold text-white">
+                {type.title}
+              </div>
+              <p className="mt-3 text-sm leading-6 text-neutral-200">
+                {type.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Design principles */}
+      <div className="mt-20">
+        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+          Design principles
+        </div>
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {principles.map((p) => (
+            <div
+              key={p.title}
+              className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7"
+            >
+              <div className="text-xl font-semibold text-white">{p.title}</div>
+              <p className="mt-4 text-base leading-7 text-neutral-100/85">
+                {p.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="mt-16 flex flex-col gap-3 sm:flex-row">
@@ -86,7 +148,7 @@ export default async function FeaturesPage() {
           href={signedIn ? "/account" : getSignInPath("/account")}
           className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
         >
-          {signedIn ? "Open workspace" : "Get started"}
+          {signedIn ? "Open workspace" : "Get started free"}
         </Link>
       </div>
     </section>

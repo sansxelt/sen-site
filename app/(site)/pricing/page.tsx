@@ -4,7 +4,7 @@ import { PricingPacks } from "@/components/pricing-packs";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Review sansxel pricing for Free, Apprentice, Studio, Pro, Teams, and Enterprise.",
+    "sansxel pricing — start free, scale to Pro, Teams, or Enterprise as your output needs grow.",
 };
 
 export default function PricingPage() {
@@ -15,12 +15,11 @@ export default function PricingPage() {
             Pricing
           </div>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-            Pricing that scales from limited access to full AI operations.
+            Start free. Scale when your output needs grow.
           </h1>
           <p className="mt-5 text-base leading-7 text-neutral-200">
-            Start on a limited free tier, move into stronger personal AI plans,
-            and expand into team or enterprise rollout once the workflow is
-            proven.
+            Every plan gives you the full visual output system. Higher tiers
+            unlock more capacity, stronger AI, and team features.
           </p>
         </div>
 
@@ -31,15 +30,15 @@ export default function PricingPage() {
             {[
               [
                 "What changes at Pro",
-                "Higher AI ceilings, personal API access, and a much more complete day-to-day AI workspace.",
+                "Higher output capacity, personal API access, and the strongest individual AI tier for daily production work.",
               ],
               [
                 "What Teams adds",
-                "Shared workspaces, admin controls, seat-based billing, and a cleaner path for collaborative rollout.",
+                "Shared workspaces, admin controls, seat-based billing, and a clean path for collaborative output at scale.",
               ],
               [
                 "Enterprise qualification",
-                "Enterprise is manual by design. It requires verified business details and is positioned for organizations that need the highest limits and rollout support.",
+                "Enterprise is manual by design. Verified business details required — built for organizations that need unlimited output capacity and custom rollout.",
               ],
             ].map(([title, description]) => (
               <div
