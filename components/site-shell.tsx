@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
-import { PageTransition } from "./page-transition";
 
 const footerGroups = [
   {
@@ -119,7 +118,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
       {/* pt-[66px] clears the ~65px fixed header */}
       <main className="relative z-10 flex-1 pt-[66px]">
-        <PageTransition>{children}</PageTransition>
+        {children}
       </main>
 
       <footer className="mt-auto border-t border-white/[0.08]">
