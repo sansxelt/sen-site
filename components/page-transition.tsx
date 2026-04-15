@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 
 const ENTER_MS = 500;
-const EXIT_MS = 180;
+const EXIT_MS  = 380;
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -12,24 +12,20 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const navRef = useRef(false);
 
-  /* scroll to top on mount */
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
-  /* after enter animation finishes, clear it so the exit opacity override works */
+  /* after enter animation finishes, clear it so the exit animation can take over */
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const done = () => {
-      el.style.animation = "none";
-      el.style.opacity = "1";
-    };
+    const done = () => { el.style.animation = "none"; };
     el.addEventListener("animationend", done, { once: true });
     return () => el.removeEventListener("animationend", done);
   }, []);
 
-  /* intercept link clicks → fade-out → navigate */
+  /* intercept link clicks → sweep-up exit → navigate */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
@@ -46,8 +42,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
       const el = ref.current;
       if (el) {
-        el.style.transition = `opacity ${EXIT_MS}ms ease`;
-        el.style.opacity = "0";
+        el.style.animation = `ptOut ${EXIT_MS}ms cubic-bezier(0.16,1,0.3,1) both`;
       }
 
       setTimeout(() => {
@@ -64,9 +59,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
     <>
       <style>{`
         @keyframes ptIn {
-          0%   { opacity: 0;  -webkit-mask-position: 0 100%; mask-position: 0 100%; }
+          0%   { opacity: 0; -webkit-mask-position: 0 100%; mask-position: 0 100%; }
           15%  { opacity: 1; }
-          100% { opacity: 1;  -webkit-mask-position: 0 0;   mask-position: 0 0; }
+          100% { opacity: 1; -webkit-mask-position: 0 0;   mask-position: 0 0; }
+        }
+        @keyframes ptOut {
+          0%   { opacity: 1; -webkit-mask-position: 0 0;   mask-position: 0 0; }
+          85%  { opacity: 1; }
+          100% { opacity: 0; -webkit-mask-position: 0 100%; mask-position: 0 100%; }
         }
       `}</style>
       <div
