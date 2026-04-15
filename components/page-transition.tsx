@@ -7,10 +7,6 @@ const ENTER_MS = 145;
 const EXIT_MS = 120;
 const EXIT_SHIFT = 3;
 
-function isAccount(pathname: string) {
-  return pathname.startsWith("/account");
-}
-
 function getTransitionNode() {
   return document.querySelector("[data-route-transition]") as HTMLElement | null;
 }
@@ -45,7 +41,6 @@ export function PageTransition({ children }: { children: ReactNode }) {
         return;
       }
       if (navRef.current) return;
-      if (isAccount(href) || isAccount(pathname)) return;
 
       event.preventDefault();
       navRef.current = true;
@@ -70,13 +65,8 @@ export function PageTransition({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("click", handleClick, true);
   }, [pathname, router]);
 
-  if (isAccount(pathname)) {
-    return <>{children}</>;
-  }
-
   return (
     <div
-      key={pathname}
       data-route-transition
       style={{ ["--route-transition-ms" as string]: `${ENTER_MS}ms` }}
     >
