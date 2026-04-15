@@ -1,13 +1,8 @@
 "use client";
 
-import { AnimatePresence, MotionConfig, motion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
-
-const transition = {
-  duration: 0.28,
-  ease: [0.25, 0.46, 0.45, 0.94] as const,
-};
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -18,21 +13,14 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
   return (
     <MotionConfig reducedMotion="never">
-      {/* Outer div gives the stacking context so exiting/entering pages overlap */}
-      <div style={{ display: "grid" }}>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={pathname}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={transition}
-            style={{ gridArea: "1/1" }}
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+      >
+        {children}
+      </motion.div>
     </MotionConfig>
   );
 }
