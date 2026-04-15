@@ -9,7 +9,7 @@ import { getUserProfileByEmail } from "@/lib/user-profile";
 export const metadata: Metadata = {
   title: "Access",
   description:
-    "Request early access to Sansxel and get the universal input-to-output AI experience first.",
+    "Request early access to Sansxel and try the layered AI response engine first.",
 };
 
 export default async function DownloadPage() {
@@ -30,9 +30,9 @@ export default async function DownloadPage() {
             Get early access to Sansxel.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
-            Start with the full product story from day one: Ask, Explore,
-            Create, and Build from one place, with results that come back as
-            something structured, visual, and usable.
+            Start with one chat surface and get the real product from day one:
+            responses that can expand from quick clarity into structure,
+            visuals, systems, and next actions.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -63,7 +63,7 @@ export default async function DownloadPage() {
             {[
               ["Status", "Early access with invite-based onboarding."],
               ["Platform", "Windows first today, with broader surfaces coming later."],
-              ["What you get", "The full Sansxel output experience from your first session."],
+              ["What you get", "The full Sansxel layered response experience from your first session."],
             ].map(([title, description]) => (
               <div
                 key={title}
@@ -85,8 +85,8 @@ export default async function DownloadPage() {
           <div className="mt-6 space-y-3">
             {[
               "Universal input for questions, notes, links, screenshots, and files",
-              "Visual results for Ask, Explore, Create, and Build workflows",
-              "Saved history and reusable output library",
+              "Layered responses that scale with the size of the request",
+              "Saved history you can refine forward from",
               "Account and workspace management",
               "Export and sharing controls",
               "Direct support channel during rollout",
@@ -120,7 +120,8 @@ export default async function DownloadPage() {
             </p>
             <p>
               Once approved, you get the full Sansxel experience - not just an
-              assistant, but a product that turns rough input into real output.
+              assistant, but a response engine that turns rough input into
+              clearer, more usable output.
             </p>
             <p>
               Start on the free tier and expand into stronger personal or team

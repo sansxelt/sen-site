@@ -21,15 +21,15 @@ export const metadata: Metadata = {
     template: "%s | sansxel",
   },
   description:
-    "sansxel is a universal input-to-output AI. Bring questions, notes, links, screenshots, files, and ideas. Get something clearer, more visual, and more usable back.",
+    "sansxel is a layered AI response engine. Bring questions, notes, links, screenshots, files, and ideas. Get back clarity first, then structure, visuals, systems, and next actions when useful.",
   keywords: [
     "sansxel",
     "sansxel ai",
-    "universal ai",
-    "input to output ai",
+    "response engine",
+    "layered ai",
     "visual ai",
     "ai outputs",
-    "ai builder",
+    "chat to output",
     "AI productivity",
     "idea to output",
   ],
@@ -44,14 +44,14 @@ export const metadata: Metadata = {
     siteName: "sansxel",
     title: "sansxel - Bring anything. Get something real.",
     description:
-      "A universal input-to-output AI that turns anything you bring it into something clearer, more visual, and more usable.",
+      "A layered AI response engine that turns prompts into clarity, structure, visuals, systems, and usable next steps.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "sansxel - Bring anything. Get something real.",
     description:
-      "A universal input-to-output AI that turns anything you bring it into something clearer, more visual, and more usable.",
+      "A layered AI response engine that turns prompts into clarity, structure, visuals, systems, and usable next steps.",
     images: ["/og-image.png"],
     creator: "@sansxel",
   },
@@ -89,7 +89,7 @@ export default function RootLayout({
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "sansxel is a universal input-to-output AI that turns rough input into structured, visual, usable output.",
+                "sansxel is a layered AI response engine that turns rough input into clear answers, structure, visuals, and buildable next steps.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",

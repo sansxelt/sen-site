@@ -6,29 +6,29 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Ask, Explore, Create, and Build — a universal AI where every response can escalate into something structured, visual, and usable.",
+    "Ask, Explore, Create, and Build with a layered AI response engine that can turn one prompt into something real.",
 };
 
 const modes = [
   {
     title: "Ask",
     description:
-      "Handle everyday questions, explanations, and quick help. Small questions get fast answers — not long chat walls.",
+      "Handle everyday questions, explanations, and quick help. Small asks stay quick and clear.",
   },
   {
     title: "Explore",
     description:
-      "Discover news, recommendations, ranked options, and context. Results feel like a research brief, not a conversation.",
+      "Get discovery, recommendations, news context, and ranked options that feel more like a brief than a conversation.",
   },
   {
     title: "Create",
     description:
-      "Turn rough notes, screenshots, drafts, and ideas into structured outputs — plans, summaries, concepts, and systems.",
+      "Turn rough notes, screenshots, drafts, and ideas into structured outputs like plans, summaries, concepts, and systems.",
   },
   {
     title: "Build",
     description:
-      "Generate full packages: landing pages, pricing, product structure, brand direction. One prompt can spawn a mini-product.",
+      "Generate fuller outputs like landing pages, pricing, product structure, and startup-ready direction from a single prompt.",
   },
 ];
 
@@ -36,27 +36,27 @@ const responseLayers = [
   {
     title: "Direct answer",
     description:
-      "Every response starts with clarity. A short, useful answer before anything else — so small questions stay small.",
+      "Every response starts with clarity. A short useful answer comes first so simple questions stay simple.",
   },
   {
     title: "Structured breakdown",
     description:
-      "For bigger requests, the answer expands into sections, steps, comparisons, or frameworks. Structure appears when it's needed.",
+      "For larger asks, the response expands into sections, steps, comparisons, and frameworks when that structure helps.",
   },
   {
     title: "Visual output",
     description:
-      "When the intent calls for it — layouts, previews, concept mockups, and spatial organization. Not every time. Only when useful.",
+      "Layouts, previews, concept views, and spatial organization appear when the problem benefits from seeing it, not just reading it.",
   },
   {
     title: "System expansion",
     description:
-      "Complex prompts get system-level thinking: architecture, pricing models, onboarding flows, product structure. The response becomes a build.",
+      "Complex prompts can widen into architecture, pricing models, onboarding, feature sets, and product logic.",
   },
   {
     title: "Action layer",
     description:
-      "Export, refine, expand, chain into the next step. Every response that warrants it includes clear actions — not just text.",
+      "When there is a clear next move, Sansxel can let you refine, export, expand, or build forward without restarting.",
   },
 ];
 
@@ -73,24 +73,24 @@ const inputs = [
 
 const principles = [
   {
-    title: "Universal, not niche",
+    title: "Universal, not boxed in",
     description:
-      "Sansxel is designed to feel useful to anyone without being branded for one narrow audience or workflow.",
+      "Sansxel should feel useful to anyone without feeling built only for one role, industry, or workflow.",
   },
   {
-    title: "Better response design, not more features",
+    title: "Response design over feature sprawl",
     description:
-      "The real upgrade is how responses are structured — layered, visual when useful, and scaled to intent.",
+      "The real upgrade is how the answer is shaped: layered, visual when useful, and scaled to intent.",
   },
   {
-    title: "Chat is the surface, not the product",
+    title: "Chat is the surface",
     description:
-      "The interface is a text box. The product is what comes back — and how far it can go with a single prompt.",
+      "The interface is familiar on purpose. The product value is what the response can become from the same prompt.",
   },
   {
     title: "Refine forward",
     description:
-      "Outputs improve in place and chain naturally into the next result instead of forcing prompt restarts.",
+      "Outputs improve in place and chain into the next result instead of forcing you to restart every time.",
   },
 ];
 
@@ -105,16 +105,15 @@ export default async function FeaturesPage() {
           Features
         </div>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-          A normal AI on the surface. Way more powerful underneath.
+          A normal AI on the surface. A response engine underneath.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-200">
-          Sansxel handles everyday asks like any assistant. But its real strength
-          is that every response can escalate — from a quick answer into
-          something structured, visual, and usable.
+          Sansxel can answer everyday questions like any assistant. The
+          difference is that responses can expand into structure, visuals,
+          systems, and actions when the ask is bigger.
         </p>
       </div>
 
-      {/* Modes */}
       <div className="mt-16">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
           Core modes
@@ -136,17 +135,16 @@ export default async function FeaturesPage() {
         </div>
       </div>
 
-      {/* Response layers */}
       <div className="mt-20">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
           Response layers
         </div>
         <h2 className="mt-3 max-w-2xl text-2xl font-semibold tracking-tight text-white sm:text-4xl">
-          Every response is layered. The AI decides the depth.
+          Every answer can grow into something more useful.
         </h2>
         <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
-          Small questions stay fast. Bigger requests expand into structured
-          breakdowns, visuals, systems, and actions — automatically.
+          Sansxel does not force the same output every time. It stays fast for
+          small prompts and expands automatically for larger requests.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {responseLayers.map((layer) => (
@@ -165,7 +163,6 @@ export default async function FeaturesPage() {
         </div>
       </div>
 
-      {/* Input types */}
       <div className="mt-20 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
@@ -175,8 +172,8 @@ export default async function FeaturesPage() {
             Anything in. Not just prompts.
           </h2>
           <p className="mt-4 text-base leading-7 text-neutral-200">
-            You shouldn&apos;t have to translate your work into the perfect AI
-            request. Questions, screenshots, links, notes, files, and datasets
+            You should not have to translate your work into the perfect AI
+            command. Questions, screenshots, links, notes, files, and datasets
             all belong here.
           </p>
         </div>
@@ -193,7 +190,6 @@ export default async function FeaturesPage() {
         </div>
       </div>
 
-      {/* Principles */}
       <div className="mt-20">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
           Product principles

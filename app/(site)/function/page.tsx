@@ -6,61 +6,61 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "See how Sansxel moves from universal input to a result canvas and saved output library.",
+    "See how Sansxel turns a normal prompt into a layered response you can refine, expand, and use.",
 };
 
 const structure = [
   {
-    title: "Input",
+    title: "Start simple",
     description:
-      "A single entry for text, files, links, screenshots, notes, data, and ideas. No prompt engineering required.",
+      "One chat entry for questions, files, links, screenshots, notes, data, and ideas. No workflow setup first.",
   },
   {
-    title: "Result Canvas",
+    title: "Response engine",
     description:
-      "The place where Sansxel returns answers, concepts, plans, comparisons, layouts, and builds in a visual form.",
+      "Sansxel decides the depth of the reply: direct answer, structure, visual output, system thinking, and actions when useful.",
   },
   {
-    title: "Library",
+    title: "Build forward",
     description:
-      "A saved layer for results worth keeping. Revisit, refine, share, and build from what is already there.",
+      "Keep what is strong, refine it in place, and turn one response into the next step instead of starting from zero.",
   },
 ];
 
 const lifecycle = [
   {
     step: "01",
-    title: "Bring raw intent",
+    title: "Ask normally",
     description:
-      "Start with something messy. A question, a screenshot, a dataset, a note, a product idea, or a list of links.",
+      "Start with a simple question, rough note, screenshot, dataset, or idea. The entry should feel familiar and frictionless.",
   },
   {
     step: "02",
-    title: "Sansxel reads the shape",
+    title: "Sansxel reads intent",
     description:
-      "It decides whether the right result is an answer, a comparison, a system, a concept, or a fuller build package.",
+      "It decides whether the right reply is just a fast answer or something deeper with structure, visuals, systems, and actions.",
   },
   {
     step: "03",
-    title: "Get a real output back",
+    title: "The response expands",
     description:
-      "The response arrives as something usable: a structured brief, visual concept, ranked table, launch plan, or operating view.",
+      "You get clarity first, then the next layers only when they help: sections, plans, previews, architecture, or build-ready outputs.",
   },
   {
     step: "04",
-    title: "Refine or build forward",
+    title: "Refine or act",
     description:
-      "Keep improving what is already good. Expand a summary into a plan, a plan into a system, or a system into a product package.",
+      "Push the response further, export it, improve it, or turn it into the next asset without losing the thread.",
   },
 ];
 
 const examples = [
-  ["Question", "Recommendation brief"],
-  ["Screenshot", "Explained UI concept"],
-  ["Meeting notes", "Roadmap and owner plan"],
-  ["Research links", "Clustered insight board"],
-  ["Product idea", "Landing page and pricing"],
-  ["CSV data", "Metric summary and key trends"],
+  ["Question", "Quick answer with ranked options"],
+  ["Screenshot", "Explained interface with suggestions"],
+  ["Meeting notes", "Roadmap with owners and timing"],
+  ["Research links", "Patterns, clusters, and takeaways"],
+  ["Product idea", "Concept, pricing, and landing page direction"],
+  ["Raw data", "Metrics summary and clear insights"],
 ];
 
 export default async function FunctionPage() {
@@ -74,12 +74,12 @@ export default async function FunctionPage() {
           How it works
         </div>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-          Start with chat. End with something usable.
+          It starts like chat. The response does the heavy lifting.
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
-          Sansxel is designed around a clean product loop: universal input,
-          visual output, and a saved library of results that can keep improving
-          over time.
+          Sansxel feels familiar when you begin. The difference is the shape of
+          the reply: it can stay light, or grow into something structured,
+          visual, and buildable when the request needs more.
         </p>
       </div>
 
@@ -99,7 +99,7 @@ export default async function FunctionPage() {
 
       <div className="mt-20">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-          Request lifecycle
+          Response flow
         </div>
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
           {lifecycle.map((item) => (

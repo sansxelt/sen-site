@@ -130,8 +130,8 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 <span className="text-sm font-semibold text-white">sansxel</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
-                The universal AI that turns rough input into structured, visual,
-                usable output.
+                A layered AI response engine for turning rough input into clear
+                answers, structure, visuals, and next steps.
               </p>
             </div>
 
@@ -156,7 +156,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="mt-10 border-t border-white/[0.06] pt-6 text-xs text-neutral-600">
-            Copyright 2026 sansxel. Built for output, clarity, and momentum.
+            Copyright 2026 sansxel. Built for clarity, usable output, and momentum.
           </div>
         </div>
       </footer>
