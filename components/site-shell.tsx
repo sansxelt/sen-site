@@ -50,7 +50,6 @@ const primaryLinks: SiteNavLink[] = [
 export async function SiteShell({ children }: { children: ReactNode }) {
   const session = await auth();
   const signedIn = Boolean(session?.user?.email);
-  const downloadHref = signedIn ? "/download" : getSignInPath("/download");
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-neutral-950 text-neutral-100">
@@ -84,7 +83,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               {primaryLinks.filter((link) => !link.authOnly || signedIn).map((link) => (
                 <Link
                   key={link.href}
-                  href={link.href === "/download" ? downloadHref : link.href}
+                  href={link.href}
                   className="whitespace-nowrap transition hover:text-white"
                 >
                   {link.label}
@@ -100,14 +99,10 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
             <div className="flex shrink-0 items-center gap-2">
               <Link
-                href={downloadHref}
-                className={
-                  signedIn
-                    ? "sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
-                    : "rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-neutral-300 transition hover:bg-white/[0.1] hover:text-white"
-                }
+                href={signedIn ? "/account" : getSignInPath()}
+                className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
-                Download
+                {signedIn ? "My Account" : "Access"}
               </Link>
             </div>
           </div>
@@ -149,7 +144,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                   {group.links.map((link) => (
                     <Link
                       key={link.href}
-                      href={link.href === "/download" ? downloadHref : link.href}
+                      href={link.href}
                       className="text-sm text-neutral-400 transition hover:text-white"
                     >
                       {link.label}
