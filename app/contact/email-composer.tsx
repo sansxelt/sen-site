@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 
 interface Props {
   to: string;
@@ -58,7 +59,7 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
     }
   }
 
-  return (
+  return createPortal(
     /* Backdrop */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -207,6 +208,7 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
