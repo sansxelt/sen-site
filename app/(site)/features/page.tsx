@@ -48,47 +48,47 @@ export default async function FeaturesPage() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
-        <div className="max-w-3xl">
-          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-            Features
+      <div className="max-w-3xl">
+        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
+          Features
+        </div>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+          Context first. Friction low.
+        </h1>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-100 sm:text-xl">
+          sansxel is designed to stay out of the way until you need memory,
+          continuity, and fast re-entry into real work.
+        </p>
+      </div>
+
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {features.map((feature) => (
+          <div
+            key={feature.title}
+            className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7"
+          >
+            <div className="text-xl font-semibold text-white">{feature.title}</div>
+            <p className="mt-4 text-base leading-7 text-neutral-100/85 sm:text-[1.05rem]">
+              {feature.description}
+            </p>
           </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-            Context first. Friction low.
-          </h1>
-          <p className="mt-5 text-base leading-7 text-neutral-200">
-            sansxel is designed to stay out of the way until you need memory,
-            continuity, and fast re-entry into real work.
-          </p>
-        </div>
+        ))}
+      </div>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {features.map((feature) => (
-            <div
-              key={feature.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6"
-            >
-              <div className="text-lg font-medium text-white">{feature.title}</div>
-              <p className="mt-3 text-sm leading-6 text-neutral-200">
-                {feature.description}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-16 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/pricing"
-            className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-          >
-            See pricing
-          </Link>
-          <Link
-            href={signedIn ? "/account" : getSignInPath("/account")}
-            className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
-          >
-            {signedIn ? "Open workspace" : "Get started"}
-          </Link>
-        </div>
+      <div className="mt-16 flex flex-col gap-3 sm:flex-row">
+        <Link
+          href="/pricing"
+          className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+        >
+          See pricing
+        </Link>
+        <Link
+          href={signedIn ? "/account" : getSignInPath("/account")}
+          className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
+        >
+          {signedIn ? "Open workspace" : "Get started"}
+        </Link>
+      </div>
     </section>
   );
 }
