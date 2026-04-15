@@ -3,46 +3,66 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-const FADE_MS = 180;
+const FADE_MS = 220;
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const [visible, setVisible] = useState(true);
-  const [content, setContent] = useState(children);
-  const latestChildren = useRef(children);
-  const prevPathname = useRef(pathname);
-  latestChildren.current = children;
+  const prevPathRef = useRef(pathname);
+  const prevChildRef = useRef<ReactNode>(children);
+  const [old, setOld] = useState<ReactNode>(null);
 
   useEffect(() => {
-    // Skip initial render
-    if (prevPathname.current === pathname) return;
-    prevPathname.current = pathname;
+    // No navigation — just keep the snapshot up to date
+    if (prevPathRef.current === pathname) {
+      prevChildRef.current = children;
+      return;
+    }
 
-    // Fade out — old content stays visible during the fade
-    setVisible(false);
+    // Navigation detected — grab the old content before updating refs
+    const snapshot = prevChildRef.current;
+    prevPathRef.current = pathname;
+    prevChildRef.current = children;
 
-    const timer = setTimeout(() => {
-      // Swap content while fully invisible
-      setContent(latestChildren.current);
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    setOld(snapshot);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
 
-      // Wait one frame so the browser paints at opacity 0, then fade in
-      requestAnimationFrame(() => {
-        setVisible(true);
-      });
-    }, FADE_MS);
-
+    const timer = setTimeout(() => setOld(null), FADE_MS + 30);
     return () => clearTimeout(timer);
-  }, [pathname]);
+  }, [pathname, children]);
 
   return (
-    <div
-      style={{
-        opacity: visible ? 1 : 0,
-        transition: `opacity ${FADE_MS}ms ease`,
-      }}
-    >
-      {content}
-    </div>
+    <>
+      <style>{`
+        @keyframes ptIn  { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes ptOut { from { opacity: 1 } to { opacity: 0 } }
+      `}</style>
+      <div style={{ display: "grid" }}>
+        {/* New page — fades in */}
+        <div
+          key={pathname}
+          style={{
+            gridArea: "1/1",
+            animation: old ? `ptIn ${FADE_MS}ms ease both` : undefined,
+            zIndex: 1,
+          }}
+        >
+          {children}
+        </div>
+
+        {/* Old page — fades out, removed after animation */}
+        {old && (
+          <div
+            style={{
+              gridArea: "1/1",
+              animation: `ptOut ${FADE_MS}ms ease both`,
+              pointerEvents: "none",
+              zIndex: 0,
+            }}
+          >
+            {old}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
