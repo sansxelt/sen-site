@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 
-const MS = 200;
+const MS = 180;
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -12,17 +12,19 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const navRef = useRef(false);
   const prevPath = useRef(pathname);
 
-  /* ── Enter: when pathname changes, animate new content in from below ── */
+  const isAccount = (p: string) => p.startsWith("/account");
+
+  /* ── Enter animation (skip for account pages) ── */
   useEffect(() => {
     if (prevPath.current === pathname) return;
     prevPath.current = pathname;
 
     const el = ref.current;
-    if (!el) return;
+    if (!el || isAccount(pathname)) return;
 
     el.style.transition = "none";
     el.style.opacity = "0";
-    el.style.transform = "translateY(16px)";
+    el.style.transform = "translateY(14px)";
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -33,17 +35,22 @@ export function PageTransition({ children }: { children: ReactNode }) {
     });
   }, [pathname]);
 
-  /* ── Exit: intercept link clicks, animate out upward, then navigate ── */
+  /* ── Exit animation on link click (skip for account links) ── */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
       const a = (e.target as HTMLElement).closest("a");
       if (!a) return;
       if (a.target && a.target !== "_self") return;
+
       const href = a.getAttribute("href");
       if (!href || href === pathname) return;
       if (href.startsWith("http") || href.startsWith("#") || href.startsWith("mailto:")) return;
       if (navRef.current) return;
+
+      // Skip animation for account pages — let Next.js navigate instantly
+      if (isAccount(href) || isAccount(pathname)) return;
 
       e.preventDefault();
       navRef.current = true;
@@ -52,12 +59,12 @@ export function PageTransition({ children }: { children: ReactNode }) {
       if (el) {
         el.style.transition = `opacity ${MS}ms ease-in, transform ${MS}ms ease-in`;
         el.style.opacity = "0";
-        el.style.transform = "translateY(-16px)";
+        el.style.transform = "translateY(-14px)";
       }
 
       setTimeout(() => {
-        router.push(href);
         navRef.current = false;
+        router.push(href);
       }, MS);
     }
 
