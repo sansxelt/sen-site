@@ -1,20 +1,67 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
-const ENTER_MS = 145;
-const EXIT_MS = 120;
-const EXIT_SHIFT = 3;
+const HEADER_OFFSET = "var(--site-header-height, 66px)";
+const BLACKOUT_IN_MS = 220;
+const BLACKOUT_SETTLE_MS = 20;
+const BLACKOUT_HOLD_MS = 40;
+const BLACKOUT_OUT_MS = 260;
 
-function getTransitionNode() {
+function getTransitionNode(): HTMLElement | null {
   return document.querySelector("[data-route-transition]") as HTMLElement | null;
+}
+
+function isHome(path: string): boolean {
+  return path === "/" || path === "/home";
 }
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const navRef = useRef(false);
+  const firstMount = useRef(true);
+  const releaseTimerRef = useRef<number | null>(null);
+  const navigationTimerRef = useRef<number | null>(null);
+  const [blackout, setBlackout] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setMounted(true);
+
+    return () => {
+      if (releaseTimerRef.current) {
+        window.clearTimeout(releaseTimerRef.current);
+      }
+
+      if (navigationTimerRef.current) {
+        window.clearTimeout(navigationTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (firstMount.current) {
+      firstMount.current = false;
+      return;
+    }
+
+    navRef.current = false;
+    getTransitionNode()?.removeAttribute("data-exiting");
+
+    if (releaseTimerRef.current) {
+      window.clearTimeout(releaseTimerRef.current);
+    }
+
+    releaseTimerRef.current = window.setTimeout(() => {
+      setBlackout(0);
+      releaseTimerRef.current = null;
+    }, BLACKOUT_HOLD_MS);
+  }, [pathname]);
 
   useEffect(() => {
     function handleClick(event: MouseEvent) {
@@ -29,10 +76,15 @@ export function PageTransition({ children }: { children: ReactNode }) {
       }
 
       const anchor = (event.target as HTMLElement).closest("a");
-      if (!anchor || (anchor.target && anchor.target !== "_self")) return;
+      if (!anchor || (anchor.target && anchor.target !== "_self")) {
+        return;
+      }
 
       const href = anchor.getAttribute("href");
-      if (!href || href === pathname) return;
+      if (!href || href === pathname) {
+        return;
+      }
+
       if (
         href.startsWith("http") ||
         href.startsWith("#") ||
@@ -40,40 +92,79 @@ export function PageTransition({ children }: { children: ReactNode }) {
       ) {
         return;
       }
-      if (navRef.current) return;
+
+      if (navRef.current) {
+        return;
+      }
 
       event.preventDefault();
       navRef.current = true;
 
-      const transitionNode = getTransitionNode();
-      if (transitionNode) {
-        transitionNode.style.animation = "none";
-        transitionNode.style.transition =
-          `opacity ${EXIT_MS}ms cubic-bezier(0.32, 0.72, 0, 1), ` +
-          `transform ${EXIT_MS}ms cubic-bezier(0.32, 0.72, 0, 1)`;
-        transitionNode.style.opacity = "0.18";
-        transitionNode.style.transform = `translate3d(0, -${EXIT_SHIFT}px, 0)`;
+      if (releaseTimerRef.current) {
+        window.clearTimeout(releaseTimerRef.current);
+        releaseTimerRef.current = null;
       }
 
-      window.setTimeout(() => {
-        navRef.current = false;
-        router.push(href);
-      }, EXIT_MS);
+      const node = getTransitionNode();
+      if (node) {
+        node.setAttribute("data-exiting", "");
+      }
+
+      setBlackout(1);
+
+      if (navigationTimerRef.current) {
+        window.clearTimeout(navigationTimerRef.current);
+      }
+
+      navigationTimerRef.current = window.setTimeout(() => {
+        startTransition(() => router.push(href));
+        navigationTimerRef.current = null;
+      }, BLACKOUT_IN_MS + BLACKOUT_SETTLE_MS);
     }
 
     document.addEventListener("click", handleClick, true);
     return () => document.removeEventListener("click", handleClick, true);
-  }, [pathname, router]);
+  }, [pathname, router, startTransition]);
+
+  const home = isHome(pathname);
 
   return (
-    <div data-route-transition-root>
-      <div
-        key={pathname}
-        data-route-transition
-        style={{ ["--route-transition-ms" as string]: `${ENTER_MS}ms` }}
-      >
-        {children}
+    <>
+      {mounted &&
+        createPortal(
+          <motion.div
+            aria-hidden
+            initial={false}
+            animate={{ opacity: blackout }}
+            transition={{
+              duration: blackout === 1 ? BLACKOUT_IN_MS / 1000 : BLACKOUT_OUT_MS / 1000,
+              ease: blackout === 1 ? [0.16, 1, 0.3, 1] : [0.22, 1, 0.36, 1],
+            }}
+            style={{
+              position: "fixed",
+              top: HEADER_OFFSET,
+              right: 0,
+              bottom: 0,
+              left: 0,
+              zIndex: 40,
+              background: "#000",
+              pointerEvents: "none",
+            }}
+          />,
+          document.body,
+        )}
+
+      <div data-route-transition-root>
+        <div aria-hidden data-nav-progress={isPending ? "active" : "idle"} />
+
+        <div
+          key={pathname}
+          data-route-transition
+          data-is-home={home ? "" : undefined}
+        >
+          {children}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
