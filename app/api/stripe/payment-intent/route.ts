@@ -13,19 +13,46 @@ import { upsertSubscriptionSelection } from "../../../../lib/subscriptions";
 import type { PricingPlanKey } from "../../../../lib/pricing";
 
 /**
- * POST /api/stripe/payment-intent
- *
- * Creates (or reuses) a Stripe Customer, then creates a Subscription with
- * `payment_behavior: "default_incomplete"`.  Returns the PaymentIntent
- * client_secret for the browser to confirm via Stripe Payment Element.
- *
- * Body: { planKey?: string, addonKey?: string, cycle?: "monthly"|"yearly", seats?: number }
- *
- * - If `planKey` is set, the subscription's base line item is the plan.
- * - If `addonKey` is set and the user already has a subscription, we attach
- *   the addon as an extra line item on that subscription (no new sub created).
- * - Teams/Enterprise always redirect to /contact and never hit this route.
+ * Extract a human-readable error message from anything Stripe/Supabase/native
+ * throws at us.  Without this we were falling back to a blanket "Stripe error."
+ * that hid the actual problem.
  */
+function extractErrorMessage(err: unknown): string {
+  if (!err) return "Unknown error.";
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === "string") return err;
+  if (typeof err === "object") {
+    const obj = err as Record<string, unknown>;
+    if (typeof obj.message === "string") return obj.message;
+    if (typeof obj.raw === "object" && obj.raw !== null) {
+      const raw = obj.raw as Record<string, unknown>;
+      if (typeof raw.message === "string") return raw.message;
+    }
+    try { return JSON.stringify(err); } catch { /* fall through */ }
+  }
+  return String(err);
+}
+
+/**
+ * Pull the PaymentIntent client_secret off the subscription's latest invoice.
+ * Stripe's 2025.x API renamed `payment_intent` → `confirmation_secret`;
+ * older versions still use `payment_intent`.  Handle both so an API-version
+ * mismatch doesn't kill the checkout.
+ */
+function extractClientSecret(subscription: Stripe.Subscription): string | null {
+  const invoice = subscription.latest_invoice as (Stripe.Invoice | string | null);
+  if (!invoice || typeof invoice === "string") return null;
+  const raw = invoice as unknown as {
+    confirmation_secret?: { client_secret?: string } | null;
+    payment_intent?: { client_secret?: string } | string | null;
+  };
+  if (raw.confirmation_secret?.client_secret) return raw.confirmation_secret.client_secret;
+  if (raw.payment_intent && typeof raw.payment_intent === "object" && raw.payment_intent.client_secret) {
+    return raw.payment_intent.client_secret;
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
   if (!isStripeConfigured()) {
     return NextResponse.json({ error: "Billing is not configured yet." }, { status: 503 });
@@ -56,7 +83,7 @@ export async function POST(request: Request) {
   const priceId = getPriceId(pricedKey, cycle);
   if (!priceId) {
     return NextResponse.json(
-      { error: `No Stripe price configured for "${pricedKey}" (${cycle}).` },
+      { error: `No Stripe price configured for "${pricedKey}" (${cycle}). Add STRIPE_PRICE_${pricedKey.toUpperCase()}_${cycle.toUpperCase()} to Vercel env vars.` },
       { status: 400 },
     );
   }
@@ -67,7 +94,7 @@ export async function POST(request: Request) {
     const stripe = getStripe();
     const customer = await getOrCreateCustomer(email);
 
-    // Addon purchase on top of an existing subscription: add a line item.
+    // ── Addon on top of existing subscription ────────────────────────
     if (addonKey) {
       const existing = await findUsableSubscription(customer.id);
       if (existing) {
@@ -81,35 +108,34 @@ export async function POST(request: Request) {
           quantity: 1,
           proration_behavior: "create_prorations",
         });
-        // Stripe generates a prorated invoice that may require payment
-        // confirmation.  If so we return its client_secret; otherwise no
-        // payment action is needed and we tell the client "done".
-        return NextResponse.json({
-          status: "addon_added",
-          subscriptionId: existing.id,
-        });
+        return NextResponse.json({ status: "addon_added", subscriptionId: existing.id });
       }
-      // No existing subscription — user needs a plan first.
-      return NextResponse.json(
-        { error: "Pick a plan before adding addons." },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Pick a plan before adding addons." }, { status: 400 });
     }
 
-    // Plan purchase: create a new incomplete subscription, return its
-    // PaymentIntent client_secret for the browser to confirm.
-    await upsertSubscriptionSelection(email, {
-      planKey: planKey as PricingPlanKey,
-      billingCycle: cycle,
-      seatCount: seats,
-    });
+    // ── Plan purchase: create incomplete subscription ───────────────
+    // Persist the user's selection in Supabase.  Wrap in try/catch so a
+    // Supabase misconfiguration never blocks the Stripe payment — the
+    // webhook will sync the final state anyway.
+    try {
+      await upsertSubscriptionSelection(email, {
+        planKey: planKey as PricingPlanKey,
+        billingCycle: cycle,
+        seatCount: seats,
+      });
+    } catch (dbErr) {
+      console.error("[payment-intent] Supabase upsert failed (non-fatal):", extractErrorMessage(dbErr));
+    }
 
     const subscription = await stripe.subscriptions.create({
       customer: customer.id,
       items: [{ price: priceId, quantity: seats }],
       payment_behavior: "default_incomplete",
       payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.confirmation_secret"],
+      // Expand BOTH field names — Stripe returns whichever matches the
+      // account's API version.  The expand itself is tolerant of unknown
+      // fields in newer API versions.
+      expand: ["latest_invoice.confirmation_secret", "latest_invoice.payment_intent"],
       metadata: {
         cycle,
         planKey,
@@ -118,15 +144,11 @@ export async function POST(request: Request) {
       },
     });
 
-    // Newer Stripe API: pull the PaymentIntent client_secret from the
-    // latest invoice's confirmation_secret.
-    const invoice = subscription.latest_invoice as Stripe.Invoice | null;
-    const secret = (invoice as unknown as { confirmation_secret?: { client_secret?: string } } | null)
-      ?.confirmation_secret?.client_secret ?? null;
-
+    const secret = extractClientSecret(subscription);
     if (!secret) {
+      console.error("[payment-intent] no client_secret on subscription", subscription.id);
       return NextResponse.json(
-        { error: "Stripe did not return a client secret." },
+        { error: "Stripe did not return a client secret. Check the Stripe dashboard — subscription may have been created but requires manual cleanup." },
         { status: 500 },
       );
     }
@@ -138,8 +160,8 @@ export async function POST(request: Request) {
       customerId: customer.id,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Stripe error.";
-    console.error("[payment-intent] failed:", message);
+    const message = extractErrorMessage(err);
+    console.error("[payment-intent] failed:", message, err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
