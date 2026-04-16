@@ -6,6 +6,11 @@ export type PricingPlanKey =
   | "teams"
   | "enterprise";
 
+export type BillingAddonKey =
+  | "memory_boost"
+  | "api_boost"
+  | "key_pack";
+
 export type BillingCycle = "monthly" | "yearly" | "custom";
 export type SubscriptionStatus =
   | "free"
@@ -41,6 +46,18 @@ export type PricingSnapshot = {
   plan: PricingPlan;
   seatCount: number;
   status: SubscriptionStatus;
+};
+
+export type BillingAddon = {
+  ctaLabel: string;
+  description: string;
+  key: BillingAddonKey;
+  monthlyLabel: string;
+  monthlyValue: number;
+  name: string;
+  note: string;
+  points: string[];
+  yearlyLabel?: string;
 };
 
 export const pricingPlans: PricingPlan[] = [
@@ -192,12 +209,71 @@ export const pricingPlans: PricingPlan[] = [
   },
 ];
 
+export const billingAddons: BillingAddon[] = [
+  {
+    ctaLabel: "Add Memory Boost",
+    description:
+      "For people saving more screenshots, exports, files, and reference material inside Sansxel.",
+    key: "memory_boost",
+    monthlyLabel: "$8 / month",
+    monthlyValue: 8,
+    name: "Memory Boost",
+    note: "More saved context + library space",
+    points: [
+      "Extra storage for saved outputs and project files",
+      "More room for longer-lived research and context",
+      "Built for media-heavy AI workflows",
+    ],
+    yearlyLabel: "$80 / year",
+  },
+  {
+    ctaLabel: "Add API Boost",
+    description:
+      "For builders who need more request headroom when Sansxel is wired into real tools and workflows.",
+    key: "api_boost",
+    monthlyLabel: "$15 / month",
+    monthlyValue: 15,
+    name: "API Boost",
+    note: "Higher request volume",
+    points: [
+      "Extra monthly API allowance",
+      "Better burst room for automations and scripts",
+      "Made for heavier build workflows",
+    ],
+    yearlyLabel: "$150 / year",
+  },
+  {
+    ctaLabel: "Add Key Pack",
+    description:
+      "For people running multiple apps, staging environments, desktop installs, or shared integrations.",
+    key: "key_pack",
+    monthlyLabel: "$6 / month",
+    monthlyValue: 6,
+    name: "Key Pack",
+    note: "More key slots for real usage",
+    points: [
+      "Additional API key capacity",
+      "Cleaner separation for dev, prod, and personal use",
+      "More room for service accounts and experiments",
+    ],
+    yearlyLabel: "$60 / year",
+  },
+];
+
 export const pricingPlanMap = Object.fromEntries(
   pricingPlans.map((plan) => [plan.key, plan]),
 ) as Record<PricingPlanKey, PricingPlan>;
 
+export const billingAddonMap = Object.fromEntries(
+  billingAddons.map((addon) => [addon.key, addon]),
+) as Record<BillingAddonKey, BillingAddon>;
+
 export function getPricingPlan(planKey: PricingPlanKey) {
   return pricingPlanMap[planKey];
+}
+
+export function getBillingAddon(addonKey: BillingAddonKey) {
+  return billingAddonMap[addonKey];
 }
 
 export function getDefaultPricingSnapshot(): PricingSnapshot {
@@ -211,9 +287,7 @@ export function getDefaultPricingSnapshot(): PricingSnapshot {
 }
 
 export function getPlanActionHref(plan: PricingPlan) {
-  if (plan.ctaVariant === "contact") {
-    return "/contact";
-  }
-
-  return "/account?section=billing";
+  if (plan.ctaVariant === "contact") return "/contact";
+  if (plan.key === "free") return "/account";
+  return `/checkout?plan=${plan.key}`;
 }

@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import type { BillingAddonKey, PricingPlanKey } from "./pricing";
 
 let stripeClient: Stripe | null = null;
 
@@ -18,6 +19,10 @@ export function isStripeConfigured() {
   return Boolean(process.env.STRIPE_SECRET_KEY);
 }
 
+export function getStripePublishableKey(): string | null {
+  return process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? null;
+}
+
 // ---------------------------------------------------------------------------
 // Plan × billing cycle → Stripe price ID
 // Each paid plan needs two products/prices in your Stripe dashboard:
@@ -28,8 +33,10 @@ export function isStripeConfigured() {
 
 export type BillingCycle = "monthly" | "yearly";
 
-// Teams and Enterprise go via /contact — no Stripe prices needed for them.
-export const STRIPE_PRICES: Record<string, Partial<Record<BillingCycle, string | undefined>>> = {
+export type StripePricedItemKey = PricingPlanKey | BillingAddonKey;
+
+export const STRIPE_PRICES: Record<StripePricedItemKey, Partial<Record<BillingCycle, string | undefined>>> = {
+  free: {},
   apprentice: {
     monthly: process.env.STRIPE_PRICE_APPRENTICE_MONTHLY,
     yearly:  process.env.STRIPE_PRICE_APPRENTICE_YEARLY,
@@ -42,10 +49,58 @@ export const STRIPE_PRICES: Record<string, Partial<Record<BillingCycle, string |
     monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
     yearly:  process.env.STRIPE_PRICE_PRO_YEARLY,
   },
+  teams: {},
+  enterprise: {},
+  memory_boost: {
+    monthly: process.env.STRIPE_PRICE_MEMORY_BOOST_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_MEMORY_BOOST_YEARLY,
+  },
+  api_boost: {
+    monthly: process.env.STRIPE_PRICE_API_BOOST_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_API_BOOST_YEARLY,
+  },
+  key_pack: {
+    monthly: process.env.STRIPE_PRICE_KEY_PACK_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_KEY_PACK_YEARLY,
+  },
 };
 
-export function getPriceId(planKey: string, cycle: BillingCycle): string | null {
-  return STRIPE_PRICES[planKey]?.[cycle] ?? null;
+export function getPriceId(itemKey: string, cycle: BillingCycle): string | null {
+  return STRIPE_PRICES[itemKey as StripePricedItemKey]?.[cycle] ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Customer + subscription helpers used by the native checkout flow.
+// ---------------------------------------------------------------------------
+
+/**
+ * Look up an existing Stripe customer by email, or create one.  Callers should
+ * pass the user's canonical email (lowercased) so repeat lookups stay stable.
+ */
+export async function getOrCreateCustomer(email: string): Promise<Stripe.Customer> {
+  const stripe = getStripe();
+  const existing = await stripe.customers.list({ email, limit: 1 });
+  if (existing.data[0]) return existing.data[0];
+  return await stripe.customers.create({ email });
+}
+
+/**
+ * Find the user's active/incomplete subscription (if any).  Prefers active
+ * subscriptions so addon purchases attach to the existing plan.
+ */
+export async function findUsableSubscription(customerId: string): Promise<Stripe.Subscription | null> {
+  const stripe = getStripe();
+  const list = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "all",
+    limit: 10,
+  });
+  const priority = ["active", "trialing", "past_due", "incomplete"];
+  for (const status of priority) {
+    const match = list.data.find((s) => s.status === status);
+    if (match) return match;
+  }
+  return null;
 }
 
 export const APP_URL =

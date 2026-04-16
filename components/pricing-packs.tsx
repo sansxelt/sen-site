@@ -24,29 +24,9 @@ function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle
     if (plan.key === "free")             { window.location.href = "/account"; return; }
     if (plan.ctaVariant === "contact")   { window.location.href = "/contact"; return; }
 
+    // Native checkout — stay on sansxel.ai, no redirect to Stripe.com.
     setLoading(true);
-    try {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planKey: plan.key, cycle }),
-      });
-      const text = await res.text();
-      let data: { url?: string; error?: string } = {};
-      try { data = JSON.parse(text); } catch { /* non-JSON */ }
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else if (res.status === 401) {
-        window.location.href = "/auth/signin?callbackUrl=/pricing";
-      } else {
-        alert(data.error ?? `Error ${res.status}. Please try again.`);
-        setLoading(false);
-      }
-    } catch {
-      alert("Network error. Please try again.");
-      setLoading(false);
-    }
+    window.location.href = `/checkout?plan=${plan.key}&cycle=${cycle}`;
   }
 
   return (
