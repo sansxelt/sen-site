@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ComparePlans } from "@/components/compare-plans";
 import { PricingPacks } from "@/components/pricing-packs";
 
 export const metadata: Metadata = {
@@ -10,6 +11,11 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+      {/* Top-left utility row: guided comparison link */}
+      <div className="mb-6 flex items-center">
+        <ComparePlans />
+      </div>
+
       <div className="max-w-3xl">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
           Pricing

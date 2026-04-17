@@ -6,7 +6,7 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Ask, Explore, Create, and Build with a layered AI response engine that can turn one prompt into something real.",
+    "Ask, Explore, Create, and Build with a layered AI response engine that turns one prompt into something you can actually use.",
 };
 
 const modes = [
