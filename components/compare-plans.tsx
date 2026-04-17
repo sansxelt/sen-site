@@ -4,17 +4,22 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { pricingPlans, type PricingPlan, type PricingPlanKey } from "../lib/pricing";
+import {
+  buildExplanation,
+  recommendPlanKey,
+  type CompareAnswers,
+} from "../lib/compare-explanations";
 
 /**
- * "Compare" — a guided pick-a-plan flow powered by Claude.
+ * "Compare" — a guided pick-a-plan flow.
  *
  * Wizard:
  *   1. Pick plans to compare
  *   2. Answer 3 short questions
- *   3. Claude streams a recommendation — first token hits the UI in
- *      ~500ms, full response in ~1.5s.  recommendPlan() is kept as a
- *      fallback for when ANTHROPIC_API_KEY is missing or the stream
- *      errors out, so the flow never blocks on an AI failure.
+ *   3. The result step picks the right plan from the user's answers and
+ *      reveals a tailored 2-sentence explanation character-by-character,
+ *      so it reads like a model is typing.  All client-side — no API
+ *      calls, no credits, no network round-trip.
  */
 
 // ── Question set ───────────────────────────────────────────────────────────
@@ -59,26 +64,6 @@ const QUESTIONS = [
     ],
   },
 ] as const;
-
-// ── Scoring ────────────────────────────────────────────────────────────────
-
-function recommendPlan(answers: Answers): PricingPlanKey {
-  // Team / org first — short-circuit.
-  if (answers.audience === "org")  return "enterprise";
-  if (answers.audience === "team") return "teams";
-
-  // API access with personal use forces the Pro tier (only personal plan with API).
-  if (answers.api === "yes") return "pro";
-
-  // Otherwise scale by usage intensity.
-  switch (answers.usage) {
-    case "light":    return "free";
-    case "daily":    return "apprentice";
-    case "heavy":    return "studio";
-    case "hardcore": return "pro";
-    default:         return "apprentice";
-  }
-}
 
 // ── Component ──────────────────────────────────────────────────────────────
 
@@ -220,7 +205,6 @@ export function ComparePlans() {
                     <ResultStep
                       answers={answers as Required<Answers>}
                       comparedPlans={selectedPlans}
-                      selectedPlanKeys={[...selected]}
                       onRestart={() => { reset(); }}
                       onClose={handleClose}
                     />
@@ -418,96 +402,51 @@ function QuestionStep({
 type ResultStatus = "loading" | "streaming" | "done" | "error";
 
 function ResultStep({
-  answers, comparedPlans, selectedPlanKeys, onRestart, onClose,
+  answers, comparedPlans, onRestart, onClose,
 }: {
-  answers:          Required<Answers>;
-  comparedPlans:    PricingPlan[];
-  selectedPlanKeys: PricingPlanKey[];
-  onRestart:        () => void;
-  onClose:          () => void;
+  answers:       Required<Answers>;
+  comparedPlans: PricingPlan[];
+  onRestart:     () => void;
+  onClose:       () => void;
 }) {
-  // Heuristic fallback — used if Anthropic isn't configured or streaming fails.
-  const fallbackKey = recommendPlan(answers);
+  // Deterministic pick from the user's answers.  Pure fn, runs in render.
+  const planKey = useMemo(
+    () => recommendPlanKey(answers as CompareAnswers),
+    [answers.audience, answers.usage, answers.api],
+  );
+  const recommended = pricingPlans.find((p) => p.key === planKey)!;
 
-  const [planKey, setPlanKey] = useState<PricingPlanKey>(fallbackKey);
   const [explanation, setExplanation] = useState<string>("");
   const [status,      setStatus]      = useState<ResultStatus>("loading");
 
-  // Fire the stream on mount.  Abort if the user closes the modal or hits Back.
+  // Reveal the templated explanation character-by-character.  This is what
+  // gives the "AI is typing" feel without any API call — the copy was built
+  // synchronously in buildExplanation() and is just being unveiled over
+  // time.  ~12 ms per char ≈ natural typing speed.
   useEffect(() => {
-    const ctrl = new AbortController();
+    const fullText = buildExplanation(planKey, answers as CompareAnswers);
+    let i = 0;
+    let intervalId: number | undefined;
 
-    (async () => {
-      try {
-        const res = await fetch("/api/compare/recommend", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify({ answers, selectedPlanKeys }),
-          signal:  ctrl.signal,
-        });
-
-        if (!res.ok || !res.body) {
-          // Fall back to heuristic with the plan's static description.
-          const plan = pricingPlans.find((p) => p.key === fallbackKey)!;
-          setExplanation(plan.description);
+    // Short pause first so the "thinking" pill registers visually — it
+    // reinforces the sense that something is being reasoned about.
+    const startDelay = window.setTimeout(() => {
+      setStatus("streaming");
+      intervalId = window.setInterval(() => {
+        i++;
+        setExplanation(fullText.slice(0, i));
+        if (i >= fullText.length) {
+          window.clearInterval(intervalId);
           setStatus("done");
-          return;
         }
+      }, 12);
+    }, 180);
 
-        setStatus("streaming");
-        const reader  = res.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let planKeyParsed = false;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-
-          // Parse "PLAN_KEY=<key>" off the first line as soon as it's there.
-          if (!planKeyParsed) {
-            const match = buffer.match(/PLAN_KEY\s*=\s*(\w+)/i);
-            if (match) {
-              const key = match[1].toLowerCase() as PricingPlanKey;
-              if (pricingPlans.some((p) => p.key === key)) {
-                setPlanKey(key);
-                planKeyParsed = true;
-              }
-            }
-          }
-
-          // Everything after the first blank line is the prose explanation.
-          const parts = buffer.split(/\n\s*\n/);
-          if (parts.length > 1) {
-            setExplanation(parts.slice(1).join("\n\n").trim());
-          }
-        }
-
-        // Stream closed cleanly — but if nothing came through (AI errored
-        // out server-side, credits exhausted, etc.) fall back to the
-        // plan's own description so the panel is never blank.
-        setExplanation((prev) => {
-          if (prev.trim().length > 0) return prev;
-          const plan = pricingPlans.find((p) => p.key === fallbackKey)!;
-          return plan.description;
-        });
-        setStatus("done");
-      } catch (err) {
-        if (ctrl.signal.aborted) return;
-        console.error("[compare] stream failed:", err);
-        const plan = pricingPlans.find((p) => p.key === fallbackKey)!;
-        setExplanation(plan.description);
-        setStatus("error");
-      }
-    })();
-
-    return () => ctrl.abort();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const recommended = pricingPlans.find((p) => p.key === planKey)
-                   ?? pricingPlans.find((p) => p.key === fallbackKey)!;
+    return () => {
+      window.clearTimeout(startDelay);
+      if (intervalId !== undefined) window.clearInterval(intervalId);
+    };
+  }, [answers, planKey]);
 
   const goHref =
     recommended.key === "free"       ? "/account"
