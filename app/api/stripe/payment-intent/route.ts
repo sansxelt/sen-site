@@ -131,10 +131,13 @@ export async function POST(request: Request) {
       customer: customer.id,
       items: [{ price: priceId, quantity: seats }],
       payment_behavior: "default_incomplete",
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      // Expand BOTH field names — Stripe returns whichever matches the
-      // account's API version.  The expand itself is tolerant of unknown
-      // fields in newer API versions.
+      payment_settings: {
+        save_default_payment_method: "on_subscription",
+        // Card covers Apple Pay + Google Pay automatically (shown as
+        // wallet buttons on compatible devices).  PayPal and Link add
+        // extra checkout options if enabled in Stripe Dashboard.
+        payment_method_types: ["card", "link", "paypal"],
+      },
       expand: ["latest_invoice.confirmation_secret", "latest_invoice.payment_intent"],
       metadata: {
         cycle,

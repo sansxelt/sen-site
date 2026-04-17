@@ -26,10 +26,10 @@ export default async function AccountBillingPage() {
   const state = await getBillingState(session.user.email.toLowerCase());
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-white">Billing</h1>
-        <p className="mt-2 text-sm text-neutral-400">
+        <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Billing</h1>
+        <p className="mt-1.5 text-sm text-neutral-400 sm:mt-2">
           Manage your plan, addons, payment method, and invoices.
         </p>
       </div>

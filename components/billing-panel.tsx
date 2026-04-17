@@ -92,29 +92,29 @@ export function BillingPanel({ state, publishableKey }: Props) {
   const availableAddons = billingAddons.filter((a) => !activeAddonKeys.has(a.key));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {error && (
-        <div className="rounded-2xl border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-400/20 bg-red-400/5 p-3 text-sm text-red-200 sm:p-4">
           {error}
         </div>
       )}
 
       {/* ── Current plan ────────────────────────────────────────────── */}
-      <section className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
+      <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
               Current plan
             </div>
-            <div className="mt-2 text-2xl font-semibold text-white">
+            <div className="mt-1.5 text-xl font-semibold text-white sm:mt-2 sm:text-2xl">
               {state.plan?.name ?? "Free"}
             </div>
-            <div className="mt-1 text-sm text-neutral-400">
+            <div className="mt-0.5 text-xs text-neutral-400 sm:mt-1 sm:text-sm">
               {state.cycle === "yearly" ? "Yearly billing" : state.cycle === "monthly" ? "Monthly billing" : "No billing active"}
             </div>
           </div>
           {hasPlan && state.cancelAtPeriodEnd && (
-            <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-300">
+            <span className="whitespace-nowrap rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-[10px] font-medium text-amber-300 sm:text-xs">
               Cancels {formatDate(state.currentPeriodEnd)}
             </span>
           )}
@@ -180,11 +180,11 @@ export function BillingPanel({ state, publishableKey }: Props) {
 
       {/* ── Addons ─────────────────────────────────────────────────── */}
       {hasPlan && (
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7">
-          <div className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6">
+          <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
             Addons
           </div>
-          <div className="mt-4 space-y-3">
+          <div className="mt-3 space-y-2.5 sm:mt-4 sm:space-y-3">
             {state.activeAddons.length === 0 && availableAddons.length === 0 ? (
               <div className="text-sm text-neutral-500">No addons available.</div>
             ) : (
@@ -228,29 +228,29 @@ export function BillingPanel({ state, publishableKey }: Props) {
       )}
 
       {/* ── Payment method ─────────────────────────────────────────── */}
-      <section className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
+      <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
               Payment method
             </div>
             {state.paymentMethod ? (
-              <div className="mt-2 text-sm text-white">
+              <div className="mt-1.5 text-sm text-white sm:mt-2">
                 <span className="font-medium uppercase">{state.paymentMethod.brand}</span>{" "}
                 ending in {state.paymentMethod.last4}
-                <span className="ml-2 text-xs text-neutral-400">
+                <span className="ml-1.5 block text-xs text-neutral-400 sm:ml-2 sm:inline">
                   expires {String(state.paymentMethod.expMonth).padStart(2, "0")}/{state.paymentMethod.expYear}
                 </span>
               </div>
             ) : (
-              <div className="mt-2 text-sm text-neutral-500">No payment method on file.</div>
+              <div className="mt-1.5 text-sm text-neutral-500 sm:mt-2">No payment method on file.</div>
             )}
           </div>
           {publishableKey && (
             <button
               type="button"
               onClick={() => setPmOpen(true)}
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition hover:bg-white/10 sm:rounded-2xl sm:px-4 sm:text-sm"
             >
               {state.paymentMethod ? "Update card" : "Add card"}
             </button>
@@ -260,15 +260,15 @@ export function BillingPanel({ state, publishableKey }: Props) {
 
       {/* ── Invoices ───────────────────────────────────────────────── */}
       {state.invoices.length > 0 && (
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7">
-          <div className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
+        <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6">
+          <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
             Recent invoices
           </div>
-          <div className="mt-4 divide-y divide-white/5">
+          <div className="mt-3 divide-y divide-white/5 sm:mt-4">
             {state.invoices.map((invoice) => (
-              <div key={invoice.number ?? invoice.date} className="flex items-center justify-between py-3">
-                <div>
-                  <div className="text-sm text-white">
+              <div key={invoice.number ?? invoice.date} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <div className="min-w-0">
+                  <div className="truncate text-sm text-white">
                     {invoice.number ?? "Invoice"} · {formatMoney(invoice.amountDue, invoice.currency)}
                   </div>
                   <div className="mt-0.5 text-xs text-neutral-500">
