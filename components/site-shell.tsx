@@ -74,7 +74,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                   sansxel
                 </div>
                 <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
-                  Bring anything. Get something real.
+                  Build something REAL.
                 </div>
               </div>
             </Link>

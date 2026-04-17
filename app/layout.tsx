@@ -17,7 +17,7 @@ const BASE = "https://www.sansxel.ai";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
-    default: "sansxel - Bring anything. Get something real.",
+    default: "sansxel - Build something REAL.",
     template: "%s | sansxel",
   },
   description:
@@ -42,14 +42,14 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE,
     siteName: "sansxel",
-    title: "sansxel - Bring anything. Get something real.",
+    title: "sansxel - Build something REAL.",
     description:
       "A layered AI response engine that turns prompts into clarity, structure, visuals, systems, and usable next steps.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "sansxel - Bring anything. Get something real.",
+    title: "sansxel - Build something REAL.",
     description:
       "A layered AI response engine that turns prompts into clarity, structure, visuals, systems, and usable next steps.",
     images: ["/og-image.png"],
