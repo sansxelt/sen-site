@@ -53,6 +53,31 @@ function extractClientSecret(subscription: Stripe.Subscription): string | null {
   return null;
 }
 
+/**
+ * Decide which payment methods to offer on the subscription's invoice.
+ * If STRIPE_PAYMENT_METHOD_CONFIG is set (e.g. "cpmt_..."), Stripe uses
+ * whatever methods are enabled in that Payment Method Configuration —
+ * the user can toggle PayPal / Cash App / Link / etc. in the dashboard
+ * without any code changes.  Otherwise we fall back to a hardcoded list
+ * of subscription-capable methods.
+ */
+function buildPaymentSettings(): Stripe.SubscriptionCreateParams.PaymentSettings {
+  const configId = process.env.STRIPE_PAYMENT_METHOD_CONFIG?.trim();
+  const base = { save_default_payment_method: "on_subscription" as const };
+
+  if (configId) {
+    return {
+      ...base,
+      payment_method_configuration: configId,
+    } as Stripe.SubscriptionCreateParams.PaymentSettings;
+  }
+
+  return {
+    ...base,
+    payment_method_types: ["card", "link", "cashapp"],
+  };
+}
+
 export async function POST(request: Request) {
   if (!isStripeConfigured()) {
     return NextResponse.json({ error: "Billing is not configured yet." }, { status: 503 });
@@ -131,14 +156,7 @@ export async function POST(request: Request) {
       customer: customer.id,
       items: [{ price: priceId, quantity: seats }],
       payment_behavior: "default_incomplete",
-      payment_settings: {
-        save_default_payment_method: "on_subscription",
-        // Subscription-compatible methods only.  Stripe rejects one-time
-        // methods (Klarna, Bancontact, BLIK, Amazon Pay, etc.) on
-        // recurring invoices.  Apple Pay + Google Pay ride on "card" as
-        // wallet buttons — no separate type needed.
-        payment_method_types: ["card", "link", "cashapp"],
-      },
+      payment_settings: buildPaymentSettings(),
       expand: ["latest_invoice.confirmation_secret", "latest_invoice.payment_intent"],
       metadata: {
         cycle,
