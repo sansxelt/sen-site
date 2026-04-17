@@ -54,16 +54,18 @@ function extractClientSecret(subscription: Stripe.Subscription): string | null {
 }
 
 /**
- * Subscription-compatible payment methods.  Stripe silently skips any
- * method that isn't enabled for your account, so listing "paypal" here
- * is a no-op until you turn PayPal on in the Stripe Dashboard.  One-time
- * methods (Klarna, Bancontact, Amazon Pay, etc.) would raise an error
- * on a recurring invoice so we deliberately leave them out.
+ * Subscription-compatible payment methods.  Every type here must be
+ * activated in the Stripe Dashboard (Settings → Payment methods) or
+ * Stripe rejects the whole subscription create call.  Add a type here
+ * ONLY after confirming it's switched on in the dashboard.
+ *
+ * Card covers Apple Pay + Google Pay automatically as wallet buttons.
+ * To add PayPal later: enable in Stripe → add "paypal" to this list.
  */
 function buildPaymentSettings(): Stripe.SubscriptionCreateParams.PaymentSettings {
   return {
     save_default_payment_method: "on_subscription",
-    payment_method_types: ["card", "link", "cashapp", "paypal"],
+    payment_method_types: ["card", "link", "cashapp"],
   };
 }
 
