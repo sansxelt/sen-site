@@ -176,24 +176,60 @@ export async function sendContactConfirmEmail(email: string, name: string, subje
   }
 }
 
+/**
+ * Allowlist of inboxes the contact form may route to.  Any value coming
+ * from the client must match one of these — otherwise we silently fall
+ * back to help@ so a stray/malicious payload can't be used to spam a
+ * third-party address.
+ */
+export const SUPPORT_INBOXES = [
+  "help@sansxel.ai",
+  "sales@sansxel.ai",
+  "privacy@sansxel.ai",
+] as const;
+export type SupportInbox = (typeof SUPPORT_INBOXES)[number];
+
+export function resolveSupportInbox(candidate: string | null | undefined): SupportInbox {
+  const v = (candidate ?? "").trim().toLowerCase();
+  return SUPPORT_INBOXES.find((addr) => addr === v) ?? "help@sansxel.ai";
+}
+
+/**
+ * Send the actual support email.  Routes to one of the three support
+ * inboxes (defaults to help@ if no routing supplied).
+ *
+ * Throws on Resend failure — the caller (the API route) surfaces the
+ * error back to the client so the UI doesn't lie about having sent.
+ */
 export async function sendSupportEmail(opts: {
-  email: string;
-  name: string;
+  email:   string;
+  name:    string;
   subject: string;
   message: string;
+  /** One of SUPPORT_INBOXES.  Unsupported values fall back to help@. */
+  to?: string;
 }) {
   const resend = getResend();
-  if (!resend) return;
+  if (!resend) {
+    throw new Error("Email service is not configured (RESEND_API_KEY missing).");
+  }
 
-  try {
-    await resend.emails.send({
-      from,
-      to: "contact@sansxel.ai",
-      replyTo: opts.email,
-      subject: `[Support] ${opts.subject}`,
-      html: supportHtml(opts),
-    });
-  } catch (error) {
-    console.error("sendSupportEmail failed:", error);
+  const toAddress = resolveSupportInbox(opts.to);
+  const result = await resend.emails.send({
+    from,
+    to: toAddress,
+    replyTo: opts.email,
+    subject: `[Support] ${opts.subject}`,
+    html: supportHtml(opts),
+  });
+
+  // Resend returns { data, error } instead of throwing on 4xx — turn it
+  // into a throw so the API route can surface the real reason (unverified
+  // sender domain, wrong key, etc.).
+  if (result.error) {
+    const detail = typeof result.error === "object" && "message" in result.error
+      ? String((result.error as { message: unknown }).message)
+      : String(result.error);
+    throw new Error(`Resend rejected support email to ${toAddress}: ${detail}`);
   }
 }

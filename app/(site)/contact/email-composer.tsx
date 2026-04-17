@@ -46,6 +46,7 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
           email,
           subject: `[${toLabel}] ${subject}`,
           message,
+          to,            // routes server-side to help@/sales@/privacy@
           website,
         }),
       });

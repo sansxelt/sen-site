@@ -1,6 +1,10 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-import { sendContactConfirmEmail, sendSupportEmail } from "../../../lib/email";
+import {
+  resolveSupportInbox,
+  sendContactConfirmEmail,
+  sendSupportEmail,
+} from "../../../lib/email";
 import { checkRateLimit } from "../../../lib/rate-limit";
 
 type ContactPayload = {
@@ -8,6 +12,8 @@ type ContactPayload = {
   name?: string;
   subject?: string;
   message?: string;
+  /** Target inbox — help@, sales@, or privacy@sansxel.ai.  Validated server-side. */
+  to?: string;
   // honeypot — bots fill this, humans never see it
   website?: string;
 };
@@ -68,21 +74,29 @@ export async function POST(request: Request) {
     );
   }
 
+  // Validate + normalize the destination inbox (help@/sales@/privacy@ only).
+  const to = resolveSupportInbox(payload.to);
+
   try {
-    await Promise.all([
-      sendSupportEmail({ email, name, subject, message }),
-      sendContactConfirmEmail(email, name, subject),
-    ]);
-    return NextResponse.json({ ok: true });
+    // sendSupportEmail is the one that actually ships to the routed inbox;
+    // we await it and surface real failures.  The confirmation email to
+    // the user is best-effort — if it fails (e.g. their inbox bounces),
+    // we don't want to lose the actual support request.
+    await sendSupportEmail({ email, name, subject, message, to });
+    try { await sendContactConfirmEmail(email, name, subject); }
+    catch (err) { console.warn("Contact confirmation email failed:", err); }
+
+    return NextResponse.json({ ok: true, to });
   } catch (error) {
     console.error("Contact form send failed:", error);
+    const detail = error instanceof Error ? error.message : String(error);
 
     return NextResponse.json(
       {
         error:
-          "We couldn't send your message right now. Email us directly at help@sansxel.ai.",
+          `We couldn't send your message. ${detail}. If this keeps happening, email us directly at help@sansxel.ai.`,
       },
-      { status: 400 },
+      { status: 502 },
     );
   }
 }
