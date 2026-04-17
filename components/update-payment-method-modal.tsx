@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { loadStripe, type Stripe as StripeJs } from "@stripe/stripe-js";
 import {
   Elements,
@@ -50,7 +51,13 @@ export function UpdatePaymentMethodModal({ onClose, onSuccess, publishableKey }:
 
   const stripeP = useMemo(() => stripePromise(publishableKey), [publishableKey]);
 
-  return (
+  // Portal target guard — document.body only exists client-side.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -111,7 +118,8 @@ export function UpdatePaymentMethodModal({ onClose, onSuccess, publishableKey }:
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

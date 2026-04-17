@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { pricingPlans, type PricingPlan, type PricingPlanKey } from "../lib/pricing";
 import {
   buildExplanation,
@@ -105,6 +106,14 @@ export function ComparePlans() {
     };
   }, [open]);
 
+  // Portal target — document.body only exists client-side, and we have
+  // to portal because [data-route-transition] uses will-change:transform
+  // which turns any fixed-position descendant into a relative-positioned
+  // one (containing block swap).  Without this the modal appears below
+  // the fold instead of centered in the viewport.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   function togglePlan(key: PricingPlanKey) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -149,13 +158,13 @@ export function ComparePlans() {
       </button>
 
       {/*
-        Modal shell.
-        - Always vertically centered (items-center) on every viewport.
-        - Height capped at calc(100dvh - 24px/48px) so it never exceeds
-          the screen on phones; body scrolls internally.
-        - Header is a pinned flex-shrink-0 bar so the close button is
-          always reachable no matter how tall the content grows.
+        Modal shell — portalled to document.body so will-change:transform
+        on [data-route-transition] doesn't turn our fixed position into
+        a relative-to-ancestor position.  Always vertically centered;
+        height capped at calc(100dvh - 24px) so it never exceeds the
+        screen on phones; body scrolls internally.
       */}
+      {mounted && createPortal(
       <AnimatePresence>
         {open && (
           <motion.div
@@ -226,7 +235,9 @@ export function ComparePlans() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body,
+      )}
     </>
   );
 }
