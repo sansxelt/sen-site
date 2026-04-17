@@ -6,18 +6,15 @@ import { useEffect, useMemo, useState } from "react";
 import { pricingPlans, type PricingPlan, type PricingPlanKey } from "../lib/pricing";
 
 /**
- * "Compare" — a guided pick-a-plan flow.
- *
- * Client-side only.  No API calls, no waiting, no loading states.  The
- * feeling of an AI assistant is all UI craft: fast transitions, confident
- * copy, clear visual hierarchy.  Replace the scoring fn later if you want
- * to swap in a real LLM call.
+ * "Compare" — a guided pick-a-plan flow powered by Claude.
  *
  * Wizard:
- *   1. "Who's this for?"         → narrows to personal vs team/org
- *   2. "How heavy is your use?"  → scales within the chosen lane
- *   3. "Do you need API access?" → bumps to Pro/Enterprise when yes
- * Then: a single recommendation + a side-by-side of the plans picked.
+ *   1. Pick plans to compare
+ *   2. Answer 3 short questions
+ *   3. Claude streams a recommendation — first token hits the UI in
+ *      ~500ms, full response in ~1.5s.  recommendPlan() is kept as a
+ *      fallback for when ANTHROPIC_API_KEY is missing or the stream
+ *      errors out, so the flow never blocks on an AI failure.
  */
 
 // ── Question set ───────────────────────────────────────────────────────────
@@ -155,11 +152,6 @@ export function ComparePlans() {
     [selected],
   );
 
-  const recommended: PricingPlan | null =
-    step === "result"
-      ? pricingPlans.find((p) => p.key === recommendPlan(answers)) ?? null
-      : null;
-
   return (
     <>
       {/* ── Trigger link ────────────────────────────────────────── */}
@@ -223,11 +215,12 @@ export function ComparePlans() {
                   </StepFrame>
                 )}
 
-                {step === "result" && recommended && (
+                {step === "result" && answers.audience && answers.usage && answers.api && (
                   <StepFrame key="result">
                     <ResultStep
-                      recommended={recommended}
+                      answers={answers as Required<Answers>}
                       comparedPlans={selectedPlans}
+                      selectedPlanKeys={[...selected]}
                       onRestart={() => { reset(); }}
                       onClose={handleClose}
                     />
@@ -421,31 +414,125 @@ function QuestionStep({
   );
 }
 
-// ── Step 3: recommendation + compare ───────────────────────────────────────
+// ── Step 3: recommendation + compare (streams from Claude) ────────────────
+type ResultStatus = "loading" | "streaming" | "done" | "error";
+
 function ResultStep({
-  recommended, comparedPlans, onRestart, onClose,
+  answers, comparedPlans, selectedPlanKeys, onRestart, onClose,
 }: {
-  recommended:   PricingPlan;
-  comparedPlans: PricingPlan[];
-  onRestart:     () => void;
-  onClose:       () => void;
+  answers:          Required<Answers>;
+  comparedPlans:    PricingPlan[];
+  selectedPlanKeys: PricingPlanKey[];
+  onRestart:        () => void;
+  onClose:          () => void;
 }) {
+  // Heuristic fallback — used if Anthropic isn't configured or streaming fails.
+  const fallbackKey = recommendPlan(answers);
+
+  const [planKey, setPlanKey] = useState<PricingPlanKey>(fallbackKey);
+  const [explanation, setExplanation] = useState<string>("");
+  const [status,      setStatus]      = useState<ResultStatus>("loading");
+
+  // Fire the stream on mount.  Abort if the user closes the modal or hits Back.
+  useEffect(() => {
+    const ctrl = new AbortController();
+
+    (async () => {
+      try {
+        const res = await fetch("/api/compare/recommend", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ answers, selectedPlanKeys }),
+          signal:  ctrl.signal,
+        });
+
+        if (!res.ok || !res.body) {
+          // Fall back to heuristic with the plan's static description.
+          const plan = pricingPlans.find((p) => p.key === fallbackKey)!;
+          setExplanation(plan.description);
+          setStatus("done");
+          return;
+        }
+
+        setStatus("streaming");
+        const reader  = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let planKeyParsed = false;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          // Parse "PLAN_KEY=<key>" off the first line as soon as it's there.
+          if (!planKeyParsed) {
+            const match = buffer.match(/PLAN_KEY\s*=\s*(\w+)/i);
+            if (match) {
+              const key = match[1].toLowerCase() as PricingPlanKey;
+              if (pricingPlans.some((p) => p.key === key)) {
+                setPlanKey(key);
+                planKeyParsed = true;
+              }
+            }
+          }
+
+          // Everything after the first blank line is the prose explanation.
+          const parts = buffer.split(/\n\s*\n/);
+          if (parts.length > 1) {
+            setExplanation(parts.slice(1).join("\n\n").trim());
+          }
+        }
+
+        setStatus("done");
+      } catch (err) {
+        if (ctrl.signal.aborted) return;
+        console.error("[compare] stream failed:", err);
+        const plan = pricingPlans.find((p) => p.key === fallbackKey)!;
+        setExplanation(plan.description);
+        setStatus("error");
+      }
+    })();
+
+    return () => ctrl.abort();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const recommended = pricingPlans.find((p) => p.key === planKey)
+                   ?? pricingPlans.find((p) => p.key === fallbackKey)!;
+
   const goHref =
     recommended.key === "free"       ? "/account"
   : recommended.key === "teams"      ? "/contact"
   : recommended.key === "enterprise" ? "/contact"
                                      : `/checkout?plan=${recommended.key}&cycle=monthly`;
 
+  const loadingHeadline = status === "loading";
+
   return (
     <div>
-      <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
-        Recommendation
+      <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.2em] text-neutral-500">
+        <span>Recommendation</span>
+        {status === "streaming" && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] normal-case tracking-normal text-neutral-300">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+            thinking
+          </span>
+        )}
       </div>
+
       <h2 className="mt-1 text-xl font-semibold tracking-tight text-white sm:text-2xl">
-        {recommended.name} fits you best.
+        {loadingHeadline ? (
+          <span className="inline-block h-7 w-56 animate-pulse rounded bg-white/5" />
+        ) : (
+          <>{recommended.name} fits you best.</>
+        )}
       </h2>
-      <p className="mt-2 text-sm leading-6 text-neutral-300">
-        {recommended.description}
+
+      <p className="mt-2 min-h-[3rem] text-sm leading-6 text-neutral-300">
+        {explanation || (
+          <span className="inline-block h-4 w-full animate-pulse rounded bg-white/5" />
+        )}
       </p>
 
       {/* Side-by-side compare of what the user picked */}
