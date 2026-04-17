@@ -9,21 +9,29 @@ type Snapshot = {
   };
 };
 
+type Props = {
+  expectedPlanKey: string;
+  planName:        string;
+  cycle:           "monthly" | "yearly";
+};
+
+type State = "confirming" | "active" | "still-pending";
+
 /**
- * Polls /api/account/subscription until the webhook-driven subscription
- * record in Supabase matches the plan the user just bought.  Gives us a
- * "nothing is happening, your account is still updating" → "you're in" UX
- * without needing realtime / WebSockets.
+ * Owns the headline on the success page.  We only show the celebratory
+ * "Welcome to {plan}" copy once the webhook has updated Supabase to
+ * status = "active" with a matching plan.  Until then we show "Confirming
+ * payment" — because that is literally what is happening.
  */
-export function CheckoutSuccessPoller({ expectedPlanKey }: { expectedPlanKey: string }) {
-  const [state, setState] = useState<"waiting" | "confirmed" | "slow">("waiting");
+export function CheckoutSuccessPoller({ expectedPlanKey, planName, cycle }: Props) {
+  const [state, setState] = useState<State>(expectedPlanKey === "free" ? "active" : "confirming");
 
   useEffect(() => {
-    if (expectedPlanKey === "free") return;
+    if (state === "active") return;
 
     let cancelled = false;
     const start = Date.now();
-    const maxMs = 20000; // give up after 20 s; webhook may be delayed
+    const maxMs = 20_000;
 
     async function tick() {
       if (cancelled) return;
@@ -31,18 +39,19 @@ export function CheckoutSuccessPoller({ expectedPlanKey }: { expectedPlanKey: st
         const res = await fetch("/api/account/subscription", { cache: "no-store" });
         if (res.ok) {
           const data = (await res.json()) as Snapshot;
-          const planKey = data.subscription?.plan?.key;
-          const status  = data.subscription?.status;
-          if (planKey === expectedPlanKey && status === "active") {
-            setState("confirmed");
+          if (
+            data.subscription?.plan?.key === expectedPlanKey &&
+            data.subscription?.status    === "active"
+          ) {
+            setState("active");
             return;
           }
         }
       } catch {
-        // swallow — we'll retry
+        // retry on the next tick
       }
       if (Date.now() - start > maxMs) {
-        setState("slow");
+        setState("still-pending");
         return;
       }
       window.setTimeout(tick, 1200);
@@ -50,29 +59,60 @@ export function CheckoutSuccessPoller({ expectedPlanKey }: { expectedPlanKey: st
 
     tick();
     return () => { cancelled = true; };
-  }, [expectedPlanKey]);
+  }, [expectedPlanKey, state]);
 
-  if (state === "confirmed") {
+  if (state === "active") {
     return (
-      <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 p-4 text-sm text-emerald-200">
-        Your plan is active. You can close this page.
-      </div>
+      <>
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          Subscription active
+        </div>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          Welcome to {planName}.
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-neutral-300">
+          Your {cycle === "yearly" ? "annual" : "monthly"} subscription is live.
+          A receipt from Stripe is on its way.
+        </p>
+      </>
     );
   }
 
-  if (state === "slow") {
+  if (state === "still-pending") {
     return (
-      <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-neutral-300">
-        Your payment went through but the subscription is still activating on
-        our end. Refresh the account page in a minute if it hasn&apos;t updated.
-      </div>
+      <>
+        <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-medium text-amber-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          Still processing
+        </div>
+        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+          Almost there.
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-neutral-300">
+          Your payment went through, but Stripe hasn&apos;t finished notifying
+          us that the subscription is active yet. This usually resolves in
+          under a minute — refresh the billing page shortly.
+        </p>
+      </>
     );
   }
 
+  // state === "confirming"
   return (
-    <div className="mt-6 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-neutral-300">
-      <span className="h-2 w-2 animate-pulse rounded-full bg-neutral-400" />
-      Activating your subscription…
-    </div>
+    <>
+      <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-neutral-300">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-neutral-400" />
+        Confirming payment
+      </div>
+      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+        Verifying your subscription…
+      </h1>
+      <p className="mt-2 text-sm leading-6 text-neutral-300">
+        Waiting for Stripe to confirm the payment and activate your{" "}
+        {planName} ({cycle === "yearly" ? "annual" : "monthly"}) plan.
+        Usually takes a few seconds — don&apos;t close the tab.
+      </p>
+    </>
   );
 }

@@ -146,11 +146,12 @@ function PaymentForm({ cycle, plan, seats, userEmail }: {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const returnUrl = `${origin}/checkout/success?plan=${plan.key}&cycle=${cycle}&seats=${seats}`;
 
-    const { error: stripeError } = await stripe.confirmPayment({
+    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: returnUrl },
-      // Redirect "if_required" keeps the user on-site when the card doesn't
-      // need 3DS; we handle the follow-up manually.
+      // Redirect "if_required" keeps the user on-site when possible; Stripe
+      // only navigates away for flows that genuinely need it (3DS, PayPal,
+      // bank redirects).  On return we re-verify status.
       redirect: "if_required",
     });
 
@@ -160,8 +161,35 @@ function PaymentForm({ cycle, plan, seats, userEmail }: {
       return;
     }
 
-    // Successful same-page confirmation — forward manually.
-    router.push(`/checkout/success?plan=${plan.key}&cycle=${cycle}&seats=${seats}`);
+    // If confirmPayment redirected away, the browser is already navigating
+    // and paymentIntent is undefined — don't do anything here.
+    if (!paymentIntent) return;
+
+    // Only "succeeded" (card cleared) and "processing" (async settlement
+    // like bank debit) count as real success.  Everything else — including
+    // requires_payment_method (user cancelled Cash App QR, card was declined
+    // post-auth, etc.) — must NOT send the user to the success page.
+    switch (paymentIntent.status) {
+      case "succeeded":
+      case "processing":
+        router.push(`/checkout/success?plan=${plan.key}&cycle=${cycle}&seats=${seats}`);
+        return;
+      case "requires_payment_method":
+        setError("Payment was not completed. Try a different method or try again.");
+        setSubmitting(false);
+        return;
+      case "requires_action":
+        setError("Extra verification is required. Follow the prompt that appeared, or try again.");
+        setSubmitting(false);
+        return;
+      case "canceled":
+        setError("This payment was canceled. Try again when you're ready.");
+        setSubmitting(false);
+        return;
+      default:
+        setError(`Payment is in an unexpected state (${paymentIntent.status}). Contact support if this persists.`);
+        setSubmitting(false);
+    }
   }
 
   const amount = cycle === "yearly" ? plan.yearlyLabel ?? plan.monthlyLabel : plan.monthlyLabel;
