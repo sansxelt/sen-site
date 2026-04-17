@@ -54,27 +54,16 @@ function extractClientSecret(subscription: Stripe.Subscription): string | null {
 }
 
 /**
- * Decide which payment methods to offer on the subscription's invoice.
- * If STRIPE_PAYMENT_METHOD_CONFIG is set (e.g. "cpmt_..."), Stripe uses
- * whatever methods are enabled in that Payment Method Configuration —
- * the user can toggle PayPal / Cash App / Link / etc. in the dashboard
- * without any code changes.  Otherwise we fall back to a hardcoded list
- * of subscription-capable methods.
+ * Subscription-compatible payment methods.  Stripe silently skips any
+ * method that isn't enabled for your account, so listing "paypal" here
+ * is a no-op until you turn PayPal on in the Stripe Dashboard.  One-time
+ * methods (Klarna, Bancontact, Amazon Pay, etc.) would raise an error
+ * on a recurring invoice so we deliberately leave them out.
  */
 function buildPaymentSettings(): Stripe.SubscriptionCreateParams.PaymentSettings {
-  const configId = process.env.STRIPE_PAYMENT_METHOD_CONFIG?.trim();
-  const base = { save_default_payment_method: "on_subscription" as const };
-
-  if (configId) {
-    return {
-      ...base,
-      payment_method_configuration: configId,
-    } as Stripe.SubscriptionCreateParams.PaymentSettings;
-  }
-
   return {
-    ...base,
-    payment_method_types: ["card", "link", "cashapp"],
+    save_default_payment_method: "on_subscription",
+    payment_method_types: ["card", "link", "cashapp", "paypal"],
   };
 }
 
