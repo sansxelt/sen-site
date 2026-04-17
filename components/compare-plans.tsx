@@ -148,11 +148,18 @@ export function ComparePlans() {
         Compare plans with AI
       </button>
 
-      {/* ── Modal ───────────────────────────────────────────────── */}
+      {/*
+        Modal shell.
+        - Always vertically centered (items-center) on every viewport.
+        - Height capped at calc(100dvh - 24px/48px) so it never exceeds
+          the screen on phones; body scrolls internally.
+        - Header is a pinned flex-shrink-0 bar so the close button is
+          always reachable no matter how tall the content grows.
+      */}
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[9990] flex items-start justify-center overflow-y-auto bg-black/75 p-4 backdrop-blur-md sm:items-center sm:p-8"
+            className="fixed inset-0 z-[9990] flex items-center justify-center bg-black/75 p-3 backdrop-blur-md sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -167,50 +174,55 @@ export function ComparePlans() {
               animate={{ opacity: 1, scale: 1,    y: 0  }}
               exit={{    opacity: 0, scale: 0.96, y: 10 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-3xl rounded-[32px] border border-white/10 bg-neutral-950 p-5 sm:p-8"
+              className="flex w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-white/10 bg-neutral-950 sm:rounded-[32px]"
+              style={{ maxHeight: "calc(100dvh - 24px)" }}
             >
-              <Header
-                step={step}
-                qIndex={qIndex}
-                totalQs={QUESTIONS.length}
-                onBack={step === "pick" ? null : backStep}
-                onClose={handleClose}
-              />
+              <div className="flex-shrink-0 border-b border-white/5 px-4 py-4 sm:px-7 sm:py-5">
+                <Header
+                  step={step}
+                  qIndex={qIndex}
+                  totalQs={QUESTIONS.length}
+                  onBack={step === "pick" ? null : backStep}
+                  onClose={handleClose}
+                />
+              </div>
 
-              <AnimatePresence mode="wait" initial={false}>
-                {step === "pick" && (
-                  <StepFrame key="pick">
-                    <PickPlansStep
-                      selected={selected}
-                      onToggle={togglePlan}
-                      onNext={() => setStep("questions")}
-                    />
-                  </StepFrame>
-                )}
+              <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-7 sm:py-6">
+                <AnimatePresence mode="wait" initial={false}>
+                  {step === "pick" && (
+                    <StepFrame key="pick">
+                      <PickPlansStep
+                        selected={selected}
+                        onToggle={togglePlan}
+                        onNext={() => setStep("questions")}
+                      />
+                    </StepFrame>
+                  )}
 
-                {step === "questions" && (
-                  <StepFrame key={`q-${qIndex}`}>
-                    <QuestionStep
-                      index={qIndex}
-                      total={QUESTIONS.length}
-                      question={QUESTIONS[qIndex]}
-                      selected={answers[QUESTIONS[qIndex].key]}
-                      onAnswer={answerQuestion}
-                    />
-                  </StepFrame>
-                )}
+                  {step === "questions" && (
+                    <StepFrame key={`q-${qIndex}`}>
+                      <QuestionStep
+                        index={qIndex}
+                        total={QUESTIONS.length}
+                        question={QUESTIONS[qIndex]}
+                        selected={answers[QUESTIONS[qIndex].key]}
+                        onAnswer={answerQuestion}
+                      />
+                    </StepFrame>
+                  )}
 
-                {step === "result" && answers.audience && answers.usage && answers.api && (
-                  <StepFrame key="result">
-                    <ResultStep
-                      answers={answers as Required<Answers>}
-                      comparedPlans={selectedPlans}
-                      onRestart={() => { reset(); }}
-                      onClose={handleClose}
-                    />
-                  </StepFrame>
-                )}
-              </AnimatePresence>
+                  {step === "result" && answers.audience && answers.usage && answers.api && (
+                    <StepFrame key="result">
+                      <ResultStep
+                        answers={answers as Required<Answers>}
+                        comparedPlans={selectedPlans}
+                        onRestart={() => { reset(); }}
+                        onClose={handleClose}
+                      />
+                    </StepFrame>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -248,28 +260,28 @@ function Header({
                  : 1;
 
   return (
-    <div className="mb-6 flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-3">
         {onBack ? (
           <button
             type="button"
             onClick={onBack}
-            className="rounded-full border border-white/10 bg-white/5 p-1.5 text-neutral-300 transition hover:bg-white/10 hover:text-white"
+            className="shrink-0 rounded-full border border-white/10 bg-white/5 p-1.5 text-neutral-300 transition hover:bg-white/10 hover:text-white"
             aria-label="Back"
           >
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
               <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-        ) : <div className="w-[30px]" />}
+        ) : <div className="w-[30px] shrink-0" />}
 
-        <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
+        <div className="truncate text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
           Compare plans
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="h-1 w-24 overflow-hidden rounded-full bg-white/10">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="h-1 w-16 overflow-hidden rounded-full bg-white/10 sm:w-24">
           <motion.div
             className="h-full bg-white"
             animate={{ width: `${Math.round(progress * 100)}%` }}

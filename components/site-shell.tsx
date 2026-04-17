@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
+import { MobileNav } from "./mobile-nav";
 
 const footerGroups = [
   {
@@ -98,6 +99,16 @@ export async function SiteShell({ children }: { children: ReactNode }) {
             </nav>
 
             <div className="flex shrink-0 items-center gap-2">
+              {/* Mobile drawer trigger — only renders on <lg screens */}
+              <MobileNav
+                links={[
+                  ...primaryLinks.filter((l) => !l.authOnly || signedIn),
+                  { href: "/contact", label: "Contact" },
+                ]}
+                signedIn={signedIn}
+                accessHref={signedIn ? "/account" : getSignInPath()}
+              />
+
               <Link
                 href={signedIn ? "/account" : getSignInPath()}
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
