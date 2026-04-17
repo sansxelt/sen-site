@@ -36,28 +36,36 @@ export function PayPalCheckoutButton({ clientId, cycle, plan }: Props) {
     currency: "USD",
     intent: "subscription",
     vault: true,
-    // Only load the subscription-related components to keep the bundle small.
     components: "buttons",
+    // Hide the secondary buttons the SDK auto-renders (PayPal Credit,
+    // "Debit or Credit Card", Pay Later).  We only want a single clean
+    // PayPal button since Stripe already handles cards above.
+    "disable-funding": "credit,card,paylater",
   }), [clientId]);
 
   return (
     <div>
-      <div className="mb-2 flex items-center gap-2">
+      {/*
+        Mobile portrait: "—— or pay with ——" centered (both lines visible).
+        Larger screens (sm+): text pinned to the right, single line fills
+        the space on the left, right side has no line.
+      */}
+      <div className="mb-3 flex items-center gap-3">
         <div className="h-px flex-1 bg-white/10" />
-        <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-neutral-500">
+        <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
           or pay with
         </span>
-        <div className="h-px flex-1 bg-white/10" />
+        <div className="h-px flex-1 bg-white/10 sm:hidden" />
       </div>
 
       <PayPalScriptProvider options={scriptOptions}>
         <PayPalButtons
           style={{
             layout: "vertical",
-            color:  "black",
+            color:  "gold",   // PayPal's official recommended button — higher conversion than muted "black"
             shape:  "rect",
             label:  "paypal",
-            height: 44,
+            height: 48,
           }}
           createSubscription={async () => {
             setError(null);
