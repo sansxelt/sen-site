@@ -45,17 +45,12 @@ export function PayPalCheckoutButton({ clientId, cycle, plan }: Props) {
 
   return (
     <div>
-      {/*
-        Mobile portrait: "—— or pay with ——" centered (both lines visible).
-        Larger screens (sm+): text pinned to the right, single line fills
-        the space on the left, right side has no line.
-      */}
       <div className="mb-3 flex items-center gap-3">
         <div className="h-px flex-1 bg-white/10" />
         <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
           or pay with
         </span>
-        <div className="h-px flex-1 bg-white/10 sm:hidden" />
+        <div className="h-px flex-1 bg-white/10" />
       </div>
 
       <PayPalScriptProvider options={scriptOptions}>
