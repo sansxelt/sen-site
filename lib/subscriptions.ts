@@ -152,8 +152,10 @@ export async function upsertActiveSubscription(input: {
   email: string;
   planKey: string;
   billingCycle: string;
-  currentPeriodEnd: number | null; // unix timestamp from Stripe
-  stripeStatus: string; // Stripe subscription status
+  currentPeriodEnd: number | null; // unix timestamp from Stripe/PayPal
+  stripeStatus: string;            // Stripe / PayPal normalized status
+  provider?: "stripe" | "paypal";
+  providerSubscriptionId?: string;
 }) {
   const planKey = normalizePlanKey(input.planKey);
   const billingCycle = normalizeBillingCycle(input.billingCycle);
@@ -173,7 +175,7 @@ export async function upsertActiveSubscription(input: {
   const now = new Date().toISOString();
   const supabase = getSupabaseAdminClient();
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     email: normalizeEmail(input.email),
     plan_key: isActive ? planKey : "free",
     billing_cycle: billingCycle,
@@ -185,6 +187,8 @@ export async function upsertActiveSubscription(input: {
     seat_count: normalizeSeatCount(1, planKey),
     updated_at: now,
   };
+  if (input.provider) payload.provider = input.provider;
+  if (input.providerSubscriptionId) payload.provider_subscription_id = input.providerSubscriptionId;
 
   const { error } = await supabase
     .from("account_subscriptions" as never)

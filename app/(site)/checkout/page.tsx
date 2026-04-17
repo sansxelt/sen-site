@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "../../../auth";
 import { CheckoutForm } from "../../../components/checkout-form";
+import { PayPalCheckoutButton } from "../../../components/paypal-checkout-button";
 import { getSignInPath } from "../../../lib/auth-ui";
 import { getPricingPlan, pricingPlanMap } from "../../../lib/pricing";
+import { getPaypalPlanId } from "../../../lib/paypal";
 import { getStripePublishableKey, isStripeConfigured } from "../../../lib/stripe";
 
 export const metadata = {
@@ -129,6 +131,27 @@ export default async function CheckoutPage({
               userEmail={session.user.email}
             />
           </div>
+
+          {/*
+            Show PayPal below the Stripe form only when:
+            - NEXT_PUBLIC_PAYPAL_CLIENT_ID is set on the server
+            - a matching PayPal billing plan id is configured for this
+              pricing tier + cycle (set up via /api/paypal/setup-plans)
+          */}
+          {(() => {
+            const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+            const paypalPlanId   = getPaypalPlanId(plan.key, cycle);
+            if (!paypalClientId || !paypalPlanId) return null;
+            return (
+              <div className="mt-5 sm:mt-6">
+                <PayPalCheckoutButton
+                  clientId={paypalClientId}
+                  cycle={cycle}
+                  plan={plan}
+                />
+              </div>
+            );
+          })()}
         </div>
       </section>
     </div>
