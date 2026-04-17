@@ -11,11 +11,6 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
-      {/* Top-left utility row: guided comparison link */}
-      <div className="mb-6 flex items-center">
-        <ComparePlans />
-      </div>
-
       <div className="max-w-3xl">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
           Pricing
@@ -27,6 +22,12 @@ export default function PricingPage() {
           Start free for everyday use, then scale into heavier create and build
           workflows. Every paid tier expands how far Sansxel can go with you.
         </p>
+
+        {/* Guided comparison — sits under the hero copy, tuned to match
+            the surrounding text tone (muted grey, soft underline). */}
+        <div className="mt-5 text-sm text-neutral-500">
+          Not sure which one? <ComparePlans />
+        </div>
       </div>
 
       <PricingPacks />

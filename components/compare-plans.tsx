@@ -154,13 +154,13 @@ export function ComparePlans() {
 
   return (
     <>
-      {/* ── Trigger link ────────────────────────────────────────── */}
+      {/* ── Trigger link — designed to inline inside body copy ────── */}
       <button
         type="button"
         onClick={handleOpen}
-        className="text-sm text-neutral-400 underline decoration-neutral-500 underline-offset-4 transition hover:text-white hover:decoration-white"
+        className="inline text-neutral-300 underline decoration-neutral-600 decoration-1 underline-offset-[3px] transition hover:text-white hover:decoration-neutral-400"
       >
-        Compare
+        Compare plans with AI
       </button>
 
       {/* ── Modal ───────────────────────────────────────────────── */}
@@ -484,6 +484,14 @@ function ResultStep({
           }
         }
 
+        // Stream closed cleanly — but if nothing came through (AI errored
+        // out server-side, credits exhausted, etc.) fall back to the
+        // plan's own description so the panel is never blank.
+        setExplanation((prev) => {
+          if (prev.trim().length > 0) return prev;
+          const plan = pricingPlans.find((p) => p.key === fallbackKey)!;
+          return plan.description;
+        });
         setStatus("done");
       } catch (err) {
         if (ctrl.signal.aborted) return;
@@ -584,7 +592,7 @@ function ResultStep({
           onClick={onClose}
           className="sansxel-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
         >
-          Go with {recommended.name}
+          {recommended.ctaLabel}
         </Link>
         <button
           type="button"

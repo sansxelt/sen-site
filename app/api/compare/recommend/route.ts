@@ -65,6 +65,11 @@ export async function POST(request: Request) {
 
   // Forward every text delta from the SDK stream to the browser as plain
   // UTF-8 bytes.  Client reads with a TextDecoder and appends to state.
+  //
+  // If Anthropic throws (credits exhausted, auth failure, rate limit, etc.),
+  // close the stream silently.  The client sees an empty stream and falls
+  // back to the heuristic recommendation + plan description — no raw error
+  // JSON leaks into the UI.
   const stream = new ReadableStream({
     async start(controller) {
       try {
@@ -77,15 +82,14 @@ export async function POST(request: Request) {
           }
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        console.error("[compare/recommend] stream error:", message);
-        controller.enqueue(encoder.encode(`\n\n[ERROR] ${message}`));
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("[compare/recommend] upstream error:", message);
+        // Close silently — do NOT enqueue the error into the stream body.
       } finally {
         controller.close();
       }
     },
     cancel() {
-      // Client closed the tab / aborted — abort the upstream call too.
       anthropicStream.controller.abort();
     },
   });
