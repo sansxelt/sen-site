@@ -295,6 +295,10 @@ function Header({
         <div className="h-1 w-16 overflow-hidden rounded-full bg-white/10 sm:w-24">
           <motion.div
             className="h-full bg-white"
+            // Explicit initial so Framer Motion doesn't briefly render
+            // an auto/default width on mount — without this a ~2px nub
+            // shows on the "pick plans" step where progress is 0.
+            initial={{ width: "0%" }}
             animate={{ width: `${Math.round(progress * 100)}%` }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           />
