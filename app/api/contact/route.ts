@@ -14,6 +14,8 @@ type ContactPayload = {
   message?: string;
   /** Target inbox — help@, sales@, or privacy@sansxel.ai.  Validated server-side. */
   to?: string;
+  /** Human-readable channel ("General support", "Teams / sales", etc.).  Surfaced inside the email body. */
+  channel?: string;
   // honeypot — bots fill this, humans never see it
   website?: string;
 };
@@ -76,13 +78,15 @@ export async function POST(request: Request) {
 
   // Validate + normalize the destination inbox (help@/sales@/privacy@ only).
   const to = resolveSupportInbox(payload.to);
+  // Channel label — free-form from the client, we just strip to 64 chars.
+  const channel = (payload.channel ?? "").trim().slice(0, 64) || null;
 
   try {
     // sendSupportEmail is the one that actually ships to the routed inbox;
     // we await it and surface real failures.  The confirmation email to
     // the user is best-effort — if it fails (e.g. their inbox bounces),
     // we don't want to lose the actual support request.
-    await sendSupportEmail({ email, name, subject, message, to });
+    await sendSupportEmail({ email, name, subject, message, to, channel });
     try { await sendContactConfirmEmail(email, name, subject); }
     catch (err) { console.warn("Contact confirmation email failed:", err); }
 

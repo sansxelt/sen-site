@@ -44,9 +44,10 @@ export function EmailComposer({ to, toLabel, onClose }: Props) {
         body: JSON.stringify({
           name,
           email,
-          subject: `[${toLabel}] ${subject}`,
+          subject,          // raw, no prefix — server handles channel tagging
           message,
-          to,            // routes server-side to help@/sales@/privacy@
+          to,               // routes server-side to help@/sales@/privacy@
+          channel: toLabel, // shown inside the support email body
           website,
         }),
       });

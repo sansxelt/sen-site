@@ -90,15 +90,20 @@ function contactConfirmHtml(name: string, subject: string) {
 }
 
 function supportHtml(opts: {
-  email: string;
-  name: string;
-  subject: string;
-  message: string;
+  email:    string;
+  name:     string;
+  subject:  string;
+  message:  string;
+  channel?: string | null;
 }) {
+  const channelRow = opts.channel
+    ? `<tr><td style="padding:4px 0;font-size:13px;color:#737373;">Channel</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${opts.channel}</td></tr>`
+    : "";
   return baseHtml(`
     <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Support Request</p>
     <h1 style="margin:0 0 24px;font-size:20px;font-weight:600;color:#0a0a0a;line-height:1.3;">${opts.subject}</h1>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+      ${channelRow}
       <tr><td style="padding:4px 0;font-size:13px;color:#737373;width:80px;">From</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${opts.name || "—"}</td></tr>
       <tr><td style="padding:4px 0;font-size:13px;color:#737373;">Email</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${opts.email}</td></tr>
     </table>
@@ -207,7 +212,9 @@ export async function sendSupportEmail(opts: {
   subject: string;
   message: string;
   /** One of SUPPORT_INBOXES.  Unsupported values fall back to help@. */
-  to?: string;
+  to?:      string;
+  /** Human-readable channel label surfaced inside the email body. */
+  channel?: string | null;
 }) {
   const resend = getResend();
   if (!resend) {
@@ -215,11 +222,14 @@ export async function sendSupportEmail(opts: {
   }
 
   const toAddress = resolveSupportInbox(opts.to);
+  // Subject is the user's raw subject — no "[Support]" prefix (the
+  // destination inbox is already a support inbox) and no "[Channel]"
+  // prefix (that lives in the body now).
   const result = await resend.emails.send({
     from,
     to: toAddress,
     replyTo: opts.email,
-    subject: `[Support] ${opts.subject}`,
+    subject: opts.subject,
     html: supportHtml(opts),
   });
 
