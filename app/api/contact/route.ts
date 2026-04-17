@@ -87,7 +87,7 @@ export async function POST(request: Request) {
     // the user is best-effort — if it fails (e.g. their inbox bounces),
     // we don't want to lose the actual support request.
     await sendSupportEmail({ email, name, subject, message, to, channel });
-    try { await sendContactConfirmEmail(email, name, subject); }
+    try { await sendContactConfirmEmail(email, name, subject, to); }
     catch (err) { console.warn("Contact confirmation email failed:", err); }
 
     return NextResponse.json({ ok: true, to });

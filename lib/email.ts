@@ -10,8 +10,28 @@ function getResend() {
   return resendClient;
 }
 
+/**
+ * Default sender — used by automated flows (welcome, password reset, etc.)
+ * that aren't tied to a specific support channel.
+ */
 const from =
   process.env.RESEND_FROM_EMAIL ?? "sansxel <help@sansxel.ai>";
+
+/**
+ * Departmental sender.  For contact-form traffic the `from` address should
+ * match the inbox the message was routed to, so both sides of the thread
+ * (the support email and the confirmation to the user) read as coming
+ * from that department — sales@ writes to the user about sales inquiries,
+ * privacy@ writes about privacy, help@ for everything else.
+ */
+function fromForInbox(inbox: SupportInbox): string {
+  switch (inbox) {
+    case "sales@sansxel.ai":   return "sansxel sales <sales@sansxel.ai>";
+    case "privacy@sansxel.ai": return "sansxel privacy <privacy@sansxel.ai>";
+    case "help@sansxel.ai":
+    default:                   return "sansxel <help@sansxel.ai>";
+  }
+}
 
 export function isEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY);
@@ -165,13 +185,20 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
   }
 }
 
-export async function sendContactConfirmEmail(email: string, name: string, subject: string) {
+export async function sendContactConfirmEmail(
+  email:   string,
+  name:    string,
+  subject: string,
+  /** Inbox the message was routed to — controls the `from` so the
+      confirmation comes from the same department the user contacted. */
+  inbox:   SupportInbox = "help@sansxel.ai",
+) {
   const resend = getResend();
   if (!resend) return;
 
   try {
     await resend.emails.send({
-      from,
+      from: fromForInbox(inbox),
       to: email,
       subject: `We received your message — ${subject}`,
       html: contactConfirmHtml(name, subject),
@@ -224,10 +251,11 @@ export async function sendSupportEmail(opts: {
   const toAddress = resolveSupportInbox(opts.to);
   // Subject is the user's raw subject — no "[Support]" prefix (the
   // destination inbox is already a support inbox) and no "[Channel]"
-  // prefix (that lives in the body now).
+  // prefix (that lives in the body now).  `from` matches the target
+  // inbox's department (sales→sales, privacy→privacy, help→help).
   const result = await resend.emails.send({
-    from,
-    to: toAddress,
+    from: fromForInbox(toAddress),
+    to:   toAddress,
     replyTo: opts.email,
     subject: opts.subject,
     html: supportHtml(opts),
