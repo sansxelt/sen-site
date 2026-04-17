@@ -47,6 +47,12 @@ const releases = [
   },
 ];
 
+const platformRequestHref =
+  "/contact?subject=Platform%20availability&message=Please%20notify%20me%20when%20macOS%20or%20Linux%20builds%20are%20available.%20I%20plan%20to%20use%20sansxel%20for%3A%20#contact-form";
+
+const issueReportHref =
+  "/contact?subject=Issue%20report&message=What%20happened%3F%0AWhat%20were%20you%20trying%20to%20do%3F%0AHow%20can%20we%20reproduce%20it%3F%0AAny%20screenshots%20or%20error%20messages%3F%0A#contact-form";
+
 const channelBadge = (channel: "stable" | "beta" | "alpha") => {
   if (channel === "stable")
     return <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-300">Stable</span>;
@@ -112,9 +118,9 @@ export default function UpdatesPage() {
         <div className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/60" />
         <p className="text-xs leading-relaxed text-neutral-500">
           macOS and Linux builds are on the roadmap. Early access is Windows-first.
-          <a href="mailto:help@sansxel.ai" className="ml-1 underline underline-offset-2 transition hover:text-neutral-300">
+          <Link href={platformRequestHref} className="sansxel-subtle-link ml-1">
             Notify me when available →
-          </a>
+          </Link>
         </p>
       </div>
 
@@ -161,12 +167,12 @@ export default function UpdatesPage() {
       <div className="mt-10 border-t border-white/[0.06] pt-6">
         <p className="text-xs text-neutral-600">
           Release notes are published with each stable build.{" "}
-          <a
-            href="mailto:help@sansxel.ai?subject=Update feedback"
-            className="underline underline-offset-2 transition hover:text-neutral-400"
+          <Link
+            href={issueReportHref}
+            className="sansxel-subtle-link"
           >
             Report an issue →
-          </a>
+          </Link>
         </p>
       </div>
     </div>

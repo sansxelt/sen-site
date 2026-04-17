@@ -133,10 +133,11 @@ export async function POST(request: Request) {
       payment_behavior: "default_incomplete",
       payment_settings: {
         save_default_payment_method: "on_subscription",
-        // Card covers Apple Pay + Google Pay automatically (shown as
-        // wallet buttons on compatible devices).  PayPal and Link add
-        // extra checkout options if enabled in Stripe Dashboard.
-        payment_method_types: ["card", "link", "paypal"],
+        // Subscription-compatible methods only.  Stripe rejects one-time
+        // methods (Klarna, Bancontact, BLIK, Amazon Pay, etc.) on
+        // recurring invoices.  Apple Pay + Google Pay ride on "card" as
+        // wallet buttons — no separate type needed.
+        payment_method_types: ["card", "link", "cashapp"],
       },
       expand: ["latest_invoice.confirmation_secret", "latest_invoice.payment_intent"],
       metadata: {

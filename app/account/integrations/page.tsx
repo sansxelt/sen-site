@@ -67,6 +67,9 @@ const integrations: Integration[] = [
   },
 ];
 
+const integrationRequestHref =
+  "/contact?subject=Integration%20request&message=Which%20integration%20do%20you%20want%3F%0AHow%20would%20you%20use%20it%20inside%20sansxel%3F%0A#contact-form";
+
 function statusBadge(status: Integration["status"]) {
   if (status === "available")
     return (
@@ -137,12 +140,12 @@ export default function IntegrationsPage() {
 
       <p className="mt-6 text-xs text-neutral-600">
         Want an integration that isn&apos;t listed?{" "}
-        <a
-          href="mailto:help@sansxel.ai?subject=Integration request"
-          className="underline underline-offset-2 transition hover:text-neutral-400"
+        <Link
+          href={integrationRequestHref}
+          className="sansxel-subtle-link"
         >
           Let us know →
-        </a>
+        </Link>
       </p>
     </div>
   );

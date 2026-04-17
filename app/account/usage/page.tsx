@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { auth } from "../../../auth";
 import { getSubscriptionByEmail, readPricingSnapshot } from "../../../lib/subscriptions";
@@ -6,6 +7,9 @@ export const metadata: Metadata = {
   title: "Usage",
   description: "API usage for your sansxel account.",
 };
+
+const usageSupportHref =
+  "/contact?subject=Higher%20usage%20limits&message=I%20need%20more%20usage%20for%3A%20#contact-form";
 
 export default async function UsagePage() {
   const session = await auth();
@@ -85,12 +89,12 @@ export default async function UsagePage() {
 
       <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-neutral-400">
         Usage resets on the 1st of each month. Need higher limits?{" "}
-        <a
-          href="mailto:help@sansxel.ai"
-          className="text-neutral-300 underline underline-offset-2 transition hover:text-white"
+        <Link
+          href={usageSupportHref}
+          className="sansxel-subtle-link"
         >
           Contact us.
-        </a>
+        </Link>
       </div>
     </div>
   );

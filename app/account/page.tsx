@@ -146,7 +146,7 @@ export default async function AccountPage() {
               <span className="text-sm font-medium text-white">Usage</span>
               <Link
                 href="/account/usage"
-                className="text-xs text-neutral-400 transition hover:text-neutral-200"
+                className="sansxel-subtle-link text-xs"
               >
                 Details →
               </Link>
@@ -178,7 +178,7 @@ export default async function AccountPage() {
               <span className="text-sm font-medium text-white">API Keys</span>
               <Link
                 href="/account/keys"
-                className="text-xs text-neutral-400 transition hover:text-neutral-200"
+                className="sansxel-subtle-link text-xs"
               >
                 Manage →
               </Link>
@@ -257,7 +257,7 @@ export default async function AccountPage() {
             <div className="mt-4 border-t border-white/10 pt-3">
               <Link
                 href="/pricing"
-                className="text-xs text-neutral-400 underline-offset-2 transition hover:text-neutral-200 hover:underline"
+                className="sansxel-subtle-link text-xs"
               >
                 Review all plans →
               </Link>
@@ -336,7 +336,7 @@ export default async function AccountPage() {
             <div className="mt-4">
               <Link
                 href="/account/settings"
-                className="text-xs text-neutral-400 underline-offset-2 transition hover:text-neutral-200 hover:underline"
+                className="sansxel-subtle-link text-xs"
               >
                 Edit settings →
               </Link>

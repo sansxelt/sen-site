@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 type StatusTone = "error" | "success";
 type Status = { message: string; tone: StatusTone };
@@ -11,15 +11,29 @@ function statusClasses(tone: StatusTone) {
     : "border-rose-400/20 bg-rose-400/10 text-rose-100";
 }
 
-export function ContactForm() {
+export function ContactForm({
+  initialMessage = "",
+  initialSubject = "",
+}: {
+  initialMessage?: string;
+  initialSubject?: string;
+}) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
-  const [website, setWebsite] = useState(""); // honeypot
+  const [subject, setSubject] = useState(initialSubject);
+  const [message, setMessage] = useState(initialMessage);
+  const [website, setWebsite] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    setSubject(initialSubject);
+  }, [initialSubject]);
+
+  useEffect(() => {
+    setMessage(initialMessage);
+  }, [initialMessage]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,15 +80,18 @@ export function ContactForm() {
           We received your message.
         </h2>
         <p className="mt-3 text-sm leading-6 text-neutral-200">
-          We will reply to{" "}
-          <span className="text-white">{email}</span> as soon as possible.
+          We will reply to <span className="text-white">{email}</span> as soon as
+          possible.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
+    <div
+      id="contact-form"
+      className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8"
+    >
       <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-200">
         Send a message
       </div>
@@ -87,7 +104,6 @@ export function ContactForm() {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        {/* Honeypot — hidden from real users, bots fill it and get silently dropped */}
         <input
           type="text"
           name="website"
@@ -96,7 +112,13 @@ export function ContactForm() {
           tabIndex={-1}
           autoComplete="off"
           aria-hidden="true"
-          style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            width: "1px",
+            height: "1px",
+            opacity: 0,
+          }}
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -160,7 +182,9 @@ export function ContactForm() {
 
         {status && (
           <div
-            className={`rounded-2xl border px-4 py-3 text-sm ${statusClasses(status.tone)}`}
+            className={`rounded-2xl border px-4 py-3 text-sm ${statusClasses(
+              status.tone,
+            )}`}
           >
             {status.message}
           </div>

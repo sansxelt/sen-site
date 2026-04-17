@@ -180,13 +180,13 @@ export function EarlyAccessForm({
           policies you need before installer access opens up.
         </p>
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm text-neutral-100">
-          <Link href="/privacy" className="transition hover:text-white">
+          <Link href="/privacy" className="sansxel-subtle-link">
             Privacy Policy
           </Link>
-          <Link href="/terms" className="transition hover:text-white">
+          <Link href="/terms" className="sansxel-subtle-link">
             Terms of Service
           </Link>
-          <Link href="/contact" className="transition hover:text-white">
+          <Link href="/contact" className="sansxel-subtle-link">
             Contact / Support
           </Link>
         </div>

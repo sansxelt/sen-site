@@ -117,7 +117,7 @@ export default function LibraryPage() {
       {/* Note */}
       <p className="mt-6 text-xs text-neutral-600">
         Your library is stored privately and linked to your account.{" "}
-        <Link href="/privacy" className="underline underline-offset-2 transition hover:text-neutral-400">
+        <Link href="/privacy" className="sansxel-subtle-link">
           Privacy policy →
         </Link>
       </p>
