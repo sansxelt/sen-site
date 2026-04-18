@@ -53,6 +53,44 @@ export function isEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
+/**
+ * Dev-only raw sender.  Used by /dev/emails to deliver templates whose
+ * normal `send*` helpers route to internal inboxes (e.g. support mail
+ * goes to help@) — the dev tool overrides the destination so the
+ * tester can see what would land in ops' queue.
+ *
+ * Do NOT use this for real product flows; it bypasses routing allowlists.
+ */
+export async function sendRawForDev(opts: {
+  to:      string;
+  subject: string;
+  html:    string;
+  from?:   "account" | "billing" | "support";
+}): Promise<void> {
+  const resend = getResend();
+  if (!resend) throw new Error("RESEND_API_KEY missing");
+
+  const from =
+    opts.from === "billing" ? fromBilling
+  : opts.from === "support" ? fromForInbox("help@sansxel.ai")
+                            : fromAccount;
+
+  const result = await resend.emails.send({
+    from,
+    replyTo: REPLY_TO,
+    to:      opts.to,
+    subject: opts.subject,
+    html:    opts.html,
+  });
+  if (result.error) {
+    const detail =
+      typeof result.error === "object" && "message" in result.error
+        ? String((result.error as { message: unknown }).message)
+        : String(result.error);
+    throw new Error(`Resend: ${detail}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Templates
 // ---------------------------------------------------------------------------
@@ -153,7 +191,7 @@ function detailsTable(rows: Array<[string, string]>): string {
 
 // ── Account templates (from hello@) ────────────────────────────────────────
 
-function welcomeHtml(name?: string) {
+export function welcomeHtml(name?: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Welcome to sansxel</p>
@@ -174,7 +212,7 @@ function welcomeHtml(name?: string) {
   `);
 }
 
-function earlyAccessHtml(name: string) {
+export function earlyAccessHtml(name: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Early Access Requested</p>
@@ -193,7 +231,7 @@ function earlyAccessHtml(name: string) {
   `);
 }
 
-function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: string) {
+export function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Confirm your email</p>
@@ -210,7 +248,7 @@ function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: string)
   `);
 }
 
-function passwordResetHtml(resetUrl: string) {
+export function passwordResetHtml(resetUrl: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Password Reset</p>
     <h1 style="${H1_STYLE}">Choose a new password.</h1>
@@ -225,7 +263,7 @@ function passwordResetHtml(resetUrl: string) {
   `);
 }
 
-function contactConfirmHtml(name: string, subject: string) {
+export function contactConfirmHtml(name: string, subject: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Message Received</p>
@@ -239,7 +277,7 @@ function contactConfirmHtml(name: string, subject: string) {
   `);
 }
 
-function supportHtml(opts: {
+export function supportHtml(opts: {
   email:    string;
   name:     string;
   subject:  string;
@@ -435,7 +473,7 @@ export async function sendSupportEmail(opts: {
 // completes even if the email dispatch fails.
 // ═══════════════════════════════════════════════════════════════════════════
 
-function pwResetConfirmHtml(name: string) {
+export function pwResetConfirmHtml(name: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Password Updated</p>
@@ -453,7 +491,7 @@ function pwResetConfirmHtml(name: string) {
   `);
 }
 
-function accountDeletedHtml(name: string) {
+export function accountDeletedHtml(name: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Account Deleted</p>
@@ -473,7 +511,7 @@ function accountDeletedHtml(name: string) {
   `);
 }
 
-function subscriptionActivatedHtml(name: string, planName: string, cycle: string, amountLabel: string) {
+export function subscriptionActivatedHtml(name: string, planName: string, cycle: string, amountLabel: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   const periodLabel = cycle === "yearly" ? "annual" : "monthly";
   return baseHtml(`
@@ -497,7 +535,7 @@ function subscriptionActivatedHtml(name: string, planName: string, cycle: string
   `);
 }
 
-function subscriptionCancellationScheduledHtml(name: string, planName: string, endsOn: string) {
+export function subscriptionCancellationScheduledHtml(name: string, planName: string, endsOn: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Cancellation Scheduled</p>
@@ -525,7 +563,7 @@ function subscriptionCancellationScheduledHtml(name: string, planName: string, e
   `);
 }
 
-function subscriptionEndedHtml(name: string, planName: string) {
+export function subscriptionEndedHtml(name: string, planName: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Plan Reset to Free</p>
@@ -546,7 +584,7 @@ function subscriptionEndedHtml(name: string, planName: string) {
   `);
 }
 
-function paymentFailedHtml(name: string, planName: string) {
+export function paymentFailedHtml(name: string, planName: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_RED}">Action Needed · Payment Failed</p>
@@ -566,7 +604,7 @@ function paymentFailedHtml(name: string, planName: string) {
   `);
 }
 
-function paymentMethodUpdatedHtml(name: string, brand: string, last4: string) {
+export function paymentMethodUpdatedHtml(name: string, brand: string, last4: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Payment Method Updated</p>
@@ -588,7 +626,7 @@ function paymentMethodUpdatedHtml(name: string, brand: string, last4: string) {
 
 // ── Renewal templates (NEW — tied to invoice.paid / invoice.upcoming) ──────
 
-function renewalSucceededHtml(name: string, planName: string, amountLabel: string, periodEnd: string, invoiceUrl: string | null) {
+export function renewalSucceededHtml(name: string, planName: string, amountLabel: string, periodEnd: string, invoiceUrl: string | null) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Renewal Successful</p>
@@ -611,7 +649,7 @@ function renewalSucceededHtml(name: string, planName: string, amountLabel: strin
   `);
 }
 
-function renewalUpcomingHtml(name: string, planName: string, amountLabel: string, chargeDate: string) {
+export function renewalUpcomingHtml(name: string, planName: string, amountLabel: string, chargeDate: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Renewal in 7 Days</p>
