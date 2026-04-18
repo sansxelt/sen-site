@@ -2028,6 +2028,19 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           </div>
         </div>
 
+        {/* In-development signal — sits under the changing preview so it
+            reads as a status note on the thing being shown, not a warning
+            on the whole page. */}
+        <div className="flex justify-start">
+          <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-xs font-medium text-amber-100/90">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300/60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
+            </span>
+            In development — being built in the open
+          </div>
+        </div>
+
       </div>
     </>
   );

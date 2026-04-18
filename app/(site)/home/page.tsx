@@ -55,24 +55,12 @@ export default async function HomePage() {
     <>
       <AuroraBackground />
 
-      {/* In-development signal — lives only on the homepage so it's
-          visible to first-time visitors without shouting on every page. */}
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
-        <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-xs font-medium text-amber-100/90">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300/60" />
-            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
-          </span>
-          In development — being built in the open
-        </div>
-      </div>
-
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section
         id="top"
         data-stagger
         style={{ "--stagger-i": 0 } as React.CSSProperties}
-        className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-4 sm:px-6 sm:pb-16 sm:pt-6 lg:grid-cols-[1.1fr_.9fr] lg:items-start lg:gap-16 lg:px-8 lg:pb-16 lg:pt-8"
+        className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.1fr_.9fr] lg:items-start lg:gap-16 lg:px-8 lg:pb-16 lg:pt-16"
       >
         <HeroActivity isSignedIn={Boolean(initialAccountContext)} />
       </section>
