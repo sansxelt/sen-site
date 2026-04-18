@@ -36,7 +36,7 @@ export default function PricingPage() {
       <PricingPacks />
 
       <div className="mt-20 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:mt-24 sm:p-8">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 sm:gap-6">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6">
           {[
             [
               "Personal plans",

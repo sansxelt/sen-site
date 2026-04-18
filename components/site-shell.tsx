@@ -85,14 +85,14 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="whitespace-nowrap transition hover:text-white"
+                  className="rounded-md whitespace-nowrap px-1 py-0.5 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
                 >
                   {link.label}
                 </Link>
               ))}
               <Link
                 href="/contact"
-                className="whitespace-nowrap transition hover:text-white"
+                className="rounded-md whitespace-nowrap px-1 py-0.5 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
               >
                 Contact
               </Link>

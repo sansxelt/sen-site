@@ -151,7 +151,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mx-auto mt-10 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {pricingPreview.map((plan) => (
             <SpotlightCard
               key={plan.name}

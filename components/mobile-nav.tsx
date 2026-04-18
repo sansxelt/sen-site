@@ -54,9 +54,9 @@ export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
-        className="lg:hidden inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-neutral-200 transition hover:bg-white/10 hover:text-white"
+        className="lg:hidden inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-neutral-200 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </button>
@@ -93,9 +93,9 @@ export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
                   type="button"
                   onClick={() => setOpen(false)}
                   aria-label="Close menu"
-                  className="rounded-full border border-white/10 bg-white/5 p-1.5 text-neutral-300 transition hover:bg-white/10 hover:text-white"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-neutral-300 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
                 >
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
                     <path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                   </svg>
                 </button>
