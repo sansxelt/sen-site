@@ -1,29 +1,6 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  background: #000;
-  color: #f5f5f5;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue",
-    Arial, sans-serif;
-  font-feature-settings: "ss01", "cv11";
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  user-select: none;
-  overflow: hidden;
-}
+/* Boot overlay styles live inline in index.html so they paint instantly,
+   before this CSS file is even fetched. Anything below here applies to
+   the React-rendered main shell only. */
 
 .stage {
   position: relative;
@@ -31,6 +8,7 @@ body {
   width: 100vw;
   overflow: hidden;
   background: #050505;
+  animation: stage-fade-in 520ms ease-out;
 }
 
 .stage::before {
@@ -38,203 +16,17 @@ body {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 50% 42%, rgba(140, 92, 246, 0.34), transparent 55%),
-    radial-gradient(circle at 50% 50%, rgba(60, 40, 120, 0.18), transparent 70%);
+    radial-gradient(circle at 50% 42%, rgba(140, 92, 246, 0.18), transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(60, 40, 120, 0.1), transparent 70%);
   pointer-events: none;
 }
 
-.stage::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(
-    rgba(255, 255, 255, 0.025) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
-  background-position: 0 0;
-  pointer-events: none;
-  mask-image: radial-gradient(circle at 50% 50%, black 35%, transparent 70%);
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 35%, transparent 70%);
-}
-
-/* ── Boot sequence ─────────────────────────────────────────── */
-.boot {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 22px;
-  animation: boot-fade-in 600ms ease-out;
-}
-
-.boot.fading-out {
-  animation: boot-fade-out 460ms ease-in forwards;
-}
-
-.boot-icon {
-  width: 84px;
-  height: 84px;
-  border-radius: 20px;
-  background: #0a0a0a;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 0 0 1px rgba(140, 92, 246, 0.08),
-    0 20px 60px rgba(140, 92, 246, 0.22),
-    0 0 80px rgba(140, 92, 246, 0.14);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  animation: icon-breathe 3.8s ease-in-out infinite;
-}
-
-.boot-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.18));
-}
-
-.boot-wordmark {
-  font-size: 56px;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: #fafafa;
-  margin: 0 0 6px 0;
-  text-shadow: 0 4px 32px rgba(140, 92, 246, 0.25);
-}
-
-.boot-status {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  letter-spacing: 0.02em;
-  color: rgba(200, 200, 220, 0.85);
-  font-variant-numeric: tabular-nums;
-  min-height: 18px;
-}
-
-.boot-status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #a78bfa;
-  box-shadow: 0 0 12px rgba(167, 139, 250, 0.7);
-  animation: dot-pulse 1.4s ease-in-out infinite;
-}
-
-.boot-status-label {
-  display: inline-block;
-  animation: label-swap 360ms ease-out;
-}
-
-.boot-progress {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.boot-progress-pip {
-  width: 26px;
-  height: 2px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.08);
-  transition:
-    background 360ms ease,
-    box-shadow 360ms ease;
-}
-
-.boot-progress-pip.on {
-  background: rgba(167, 139, 250, 0.85);
-  box-shadow: 0 0 10px rgba(167, 139, 250, 0.55);
-}
-
-.boot-version {
-  position: absolute;
-  bottom: 20px;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(180, 180, 200, 0.32);
-  font-family:
-    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
-    monospace;
-}
-
-@keyframes boot-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes boot-fade-out {
-  to {
-    opacity: 0;
-    transform: scale(1.03);
-  }
-}
-
-@keyframes icon-breathe {
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow:
-      0 0 0 1px rgba(140, 92, 246, 0.08),
-      0 20px 60px rgba(140, 92, 246, 0.22),
-      0 0 80px rgba(140, 92, 246, 0.14);
-  }
-  50% {
-    transform: scale(1.018);
-    box-shadow:
-      0 0 0 1px rgba(140, 92, 246, 0.12),
-      0 24px 70px rgba(140, 92, 246, 0.3),
-      0 0 100px rgba(140, 92, 246, 0.2);
-  }
-}
-
-@keyframes dot-pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: scale(0.85);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes label-swap {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-    filter: blur(2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
-/* ── Main shell ─────────────────────────────────────────────── */
 .main {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  animation: main-fade-in 480ms ease-out;
+  z-index: 1;
 }
 
 .main-header {
@@ -314,7 +106,7 @@ body {
   margin: 0;
 }
 
-@keyframes main-fade-in {
+@keyframes stage-fade-in {
   from {
     opacity: 0;
   }

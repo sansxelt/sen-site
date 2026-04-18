@@ -5,10 +5,281 @@
     <link rel="icon" type="image/png" href="/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sansxel</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: #050505;
+        overflow: hidden;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue",
+          Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        color: #fafafa;
+        user-select: none;
+      }
+
+      /* ── Boot overlay — lives outside React so it paints instantly ── */
+      #sansxel-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: #050505;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        opacity: 1;
+        transition: opacity 460ms ease-in;
+      }
+
+      #sansxel-boot::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 50% 42%, rgba(140, 92, 246, 0.34), transparent 55%),
+          radial-gradient(circle at 50% 50%, rgba(60, 40, 120, 0.18), transparent 70%);
+        pointer-events: none;
+      }
+
+      #sansxel-boot::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(
+          rgba(255, 255, 255, 0.025) 1px,
+          transparent 1px
+        );
+        background-size: 22px 22px;
+        pointer-events: none;
+        mask-image: radial-gradient(circle at 50% 50%, black 35%, transparent 70%);
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, black 35%, transparent 70%);
+      }
+
+      #sansxel-boot.fading {
+        opacity: 0;
+      }
+
+      #sansxel-boot > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .boot-icon {
+        width: 84px;
+        height: 84px;
+        border-radius: 20px;
+        background: #0a0a0a;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow:
+          0 0 0 1px rgba(140, 92, 246, 0.08),
+          0 20px 60px rgba(140, 92, 246, 0.22),
+          0 0 80px rgba(140, 92, 246, 0.14);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        animation: icon-breathe 3.8s ease-in-out infinite;
+      }
+
+      .boot-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.18));
+      }
+
+      .boot-wordmark {
+        font-size: 56px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin: 0 0 6px 0;
+        text-shadow: 0 4px 32px rgba(140, 92, 246, 0.25);
+      }
+
+      .boot-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        letter-spacing: 0.02em;
+        color: rgba(200, 200, 220, 0.85);
+        font-variant-numeric: tabular-nums;
+        min-height: 18px;
+      }
+
+      .boot-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #a78bfa;
+        box-shadow: 0 0 12px rgba(167, 139, 250, 0.7);
+        animation: dot-pulse 1.4s ease-in-out infinite;
+      }
+
+      .boot-status-label {
+        display: inline-block;
+        animation: label-swap 360ms ease-out;
+      }
+
+      .boot-progress {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .boot-progress-pip {
+        width: 26px;
+        height: 2px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.08);
+        transition:
+          background 360ms ease,
+          box-shadow 360ms ease;
+      }
+
+      .boot-progress-pip.on {
+        background: rgba(167, 139, 250, 0.85);
+        box-shadow: 0 0 10px rgba(167, 139, 250, 0.55);
+      }
+
+      .boot-version {
+        position: absolute;
+        bottom: 20px;
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(180, 180, 200, 0.32);
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      @keyframes icon-breathe {
+        0%, 100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.018);
+        }
+      }
+
+      @keyframes dot-pulse {
+        0%, 100% {
+          opacity: 0.45;
+          transform: scale(0.85);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes label-swap {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+          filter: blur(2px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+    </style>
   </head>
 
   <body>
+    <!-- Boot overlay — rendered immediately by the browser, before React loads -->
+    <div id="sansxel-boot">
+      <div class="boot-icon">
+        <img src="/icon.png" alt="sansxel" />
+      </div>
+      <h1 class="boot-wordmark">sansxel</h1>
+      <div class="boot-status">
+        <span class="boot-status-dot"></span>
+        <span class="boot-status-label" id="sansxel-boot-label">Initializing sansxel core</span>
+      </div>
+      <div class="boot-progress" id="sansxel-boot-progress">
+        <span class="boot-progress-pip"></span>
+        <span class="boot-progress-pip"></span>
+        <span class="boot-progress-pip"></span>
+        <span class="boot-progress-pip"></span>
+        <span class="boot-progress-pip"></span>
+      </div>
+      <div class="boot-version">v0.1.0 · build sansxel-1 · windows</div>
+    </div>
+
     <div id="root"></div>
+
+    <script>
+      // Boot sequence runs inline so it starts the moment the window opens —
+      // no waiting on the React bundle. The React app mounts behind this
+      // overlay and is revealed when the boot fades out.
+      (function () {
+        var steps = [
+          { label: "Initializing sansxel core", ms: 720 },
+          { label: "Loading workspace memory", ms: 880 },
+          { label: "Syncing context", ms: 740 },
+          { label: "Connecting sansxel-1", ms: 1020 },
+          { label: "Preparing your space", ms: 820 },
+        ];
+
+        var labelEl = document.getElementById("sansxel-boot-label");
+        var pipEls = document.querySelectorAll(
+          "#sansxel-boot-progress .boot-progress-pip"
+        );
+        var i = 0;
+
+        // Light the first pip immediately so step 1 already shows progress
+        if (pipEls[0]) pipEls[0].classList.add("on");
+
+        function advance() {
+          i++;
+          if (i >= steps.length) {
+            // Hold on the final step, then fade out and remove
+            setTimeout(function () {
+              var boot = document.getElementById("sansxel-boot");
+              if (!boot) return;
+              boot.classList.add("fading");
+              setTimeout(function () {
+                boot.remove();
+              }, 480);
+            }, 420);
+            return;
+          }
+
+          var step = steps[i];
+          labelEl.textContent = step.label;
+          // Re-trigger the CSS swap animation by toggling the animation off + on
+          labelEl.style.animation = "none";
+          void labelEl.offsetHeight;
+          labelEl.style.animation = "";
+
+          if (pipEls[i]) pipEls[i].classList.add("on");
+
+          setTimeout(advance, step.ms);
+        }
+
+        // Step 0 is already rendered in the HTML — wait its duration, then advance
+        setTimeout(advance, steps[0].ms);
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
