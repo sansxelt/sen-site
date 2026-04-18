@@ -112,7 +112,29 @@ fn schedule_splash_watchdog(app_handle: tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+
+    // Single-instance MUST be the first plugin registered — it
+    // intercepts the second launch before any other Tauri code runs.
+    // The deep-link feature on this plugin auto-forwards the
+    // sansxel://... URL to the original instance's deep-link handler.
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(
+            |app, _args, _cwd| {
+                // Bring the running app forward when someone tries to
+                // launch a second copy. The URL itself is delivered to
+                // onOpenUrl by the deep-link plugin separately.
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.unminimize();
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            },
+        ));
+    }
+
+    builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_store::Builder::new().build())

@@ -33,3 +33,9 @@ windows-sys = { version = "0.59", features = [
     "Win32_UI_Input_KeyboardAndMouse",
 ] }
 
+# Single-instance + deep-link forwarding: when the OS opens
+# sansxel://... and a sansxel.exe is already running, route the URL
+# to the existing instance instead of launching a new one.
+[target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+
