@@ -107,7 +107,7 @@ const navItems: NavItem[] = [
   { href: "/account/memory",       label: "Library",      icon: <MemoryIcon /> },
   { href: "/account/keys",         label: "API Keys",     icon: <KeyIcon /> },
   { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
-  { href: "/account/updates",      label: "Updates",      icon: <UpdatesIcon /> },
+  { href: "/account/updates",      label: "Download",     icon: <UpdatesIcon /> },
   { href: "/account/usage",        label: "Usage",        icon: <UsageIcon /> },
   { href: "/account/settings",     label: "Settings",     icon: <SettingsIcon /> },
 ];

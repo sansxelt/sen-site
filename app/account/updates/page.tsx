@@ -2,19 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Updates",
-  description: "Sansxel release notes and version history.",
+  title: "Download",
+  description: "Download the Sansxel desktop app and follow release notes.",
 };
 
 /**
- * Release log lives empty on purpose. Sansxel started April 12, 2026;
- * nothing has shipped yet. Earlier iterations of this page carried
- * fabricated version history (v0.4.0 / v0.4.1 / v0.4.2) as placeholder
- * content and it read as a lie — so the page now shows an honest empty
- * state + "in development" status card until a real build ships.
+ * Real release log. Sansxel started April 12, 2026; these entries
+ * reflect actual work shipped since then. Each version is an alpha
+ * channel entry — nothing is stable until a signed installer lands.
  *
- * When the first installer lands, prepend entries to this array with
- * the real version, date, channel, and change list.
+ * When new work ships, add a new entry to the TOP of this array.
  */
 type Release = {
   version: string;
@@ -24,7 +21,99 @@ type Release = {
   changes: Array<{ type: "new" | "fix" | "improve"; text: string }>;
 };
 
-const releases: Release[] = [];
+const releases: Release[] = [
+  {
+    version: "0.7.0",
+    date: "Apr 18, 2026",
+    channel: "alpha",
+    summary: "Honest download surfaces + real release notes.",
+    changes: [
+      { type: "fix",     text: "/account/updates no longer implies a shipped installer — status card reads 'In development'." },
+      { type: "fix",     text: "Fake version history (v0.4.x stable) removed; entries below are actual work since project start." },
+      { type: "improve", text: "Sidebar tab renamed 'Updates' → 'Download' so install + release log sit under one entry point." },
+      { type: "improve", text: "Top-nav 'Download' routes signed-in users directly to their account download page." },
+    ],
+  },
+  {
+    version: "0.6.0",
+    date: "Apr 17, 2026",
+    channel: "alpha",
+    summary: "Verification, security hardening, responsive polish.",
+    changes: [
+      { type: "new",     text: "Email verification before account creation — 24h link, rate-limited resend, pending row promoted on click." },
+      { type: "new",     text: "Auto-signin on whichever device clicked the verify link + cross-device polling on the originating tab." },
+      { type: "new",     text: "OAuth signup confirmation page — Google requires explicit consent on first sign-in or post-deletion return." },
+      { type: "new",     text: "Transactional email lifecycle: subscription activated / cancellation scheduled / ended / payment failed / renewal / payment method updated." },
+      { type: "fix",     text: "XSS in contact + support emails — every user-supplied field is HTML-escaped." },
+      { type: "fix",     text: "Account deletion now cancels live Stripe subs, wipes pending_signups / password_reset_tokens / api_keys / subscriptions / credentials / profile, and signs the session out." },
+      { type: "improve", text: "Heist-style design pass — aurora background, spotlight cards, gradient headlines across marketing pages." },
+      { type: "improve", text: "Email templates responsive — @media block stacks buttons full-width, reflows the details table, tightens padding below 480px." },
+      { type: "improve", text: "Emails stop looping replies through help@ — hello@ and noreply@ reply to themselves so support traffic stays on-channel." },
+    ],
+  },
+  {
+    version: "0.5.0",
+    date: "Apr 16, 2026",
+    channel: "alpha",
+    summary: "Native checkout, PayPal, Compare tool.",
+    changes: [
+      { type: "new",     text: "Native Stripe Payment Element on /checkout — no Stripe-hosted redirect." },
+      { type: "new",     text: "Native PayPal checkout alongside Stripe on paid plans." },
+      { type: "new",     text: "Compare: guided plan recommender on /pricing with templated char-by-char reveal." },
+      { type: "new",     text: "Contact form routes to help@ / sales@ / privacy@ based on the selected channel." },
+      { type: "improve", text: "Tagline locked in: Sansxel — Build something REAL." },
+      { type: "improve", text: "Checkout + billing UI tightened for small screens; more payment methods enabled." },
+    ],
+  },
+  {
+    version: "0.4.0",
+    date: "Apr 15, 2026",
+    channel: "alpha",
+    summary: "Narrative pivot + cycling-word hero.",
+    changes: [
+      { type: "new",     text: "HeroActivity — cycling-word headline with crossfading scenario panels on the right." },
+      { type: "improve", text: "Site reframed as a response engine with smart escalation." },
+      { type: "improve", text: "Account center re-skinned to match the response-engine vision." },
+      { type: "improve", text: "Header: right CTA is Access; Download sits in the primary nav for signed-in users." },
+    ],
+  },
+  {
+    version: "0.3.0",
+    date: "Apr 14, 2026",
+    channel: "alpha",
+    summary: "Transition polish + finder redesign.",
+    changes: [
+      { type: "new",     text: "Finder layouts redesigned: spotlight, file tree, sysfinder." },
+      { type: "improve", text: "Page transitions tuned — 260ms enter / 180ms exit, header pinned through the swap." },
+      { type: "improve", text: "Account pages skip the transition to feel app-native." },
+      { type: "fix",     text: "Modal centering — portal EmailComposer to document.body so transformed ancestors don't offset it." },
+      { type: "fix",     text: "Scroll position no longer sticks across route changes." },
+    ],
+  },
+  {
+    version: "0.2.0",
+    date: "Apr 13, 2026",
+    channel: "alpha",
+    summary: "Navigation + Framer Motion transitions.",
+    changes: [
+      { type: "new",     text: "Framer Motion page transitions — crossfade via View Transitions API." },
+      { type: "improve", text: "Nav + hero controls refined; NavArrows removed." },
+      { type: "fix",     text: "Send button label visible in the contact composer." },
+    ],
+  },
+  {
+    version: "0.1.0",
+    date: "Apr 12, 2026",
+    channel: "alpha",
+    summary: "Project start — scaffolding and core routes.",
+    changes: [
+      { type: "new", text: "Next.js 16 + Tailwind + NextAuth + Supabase baseline." },
+      { type: "new", text: "Marketing routes: /home, /features, /function, /pricing, /contact, /download." },
+      { type: "new", text: "Account area: overview, library, API keys, integrations, usage, settings." },
+      { type: "new", text: "Credentials + Google + GitHub sign-in." },
+    ],
+  },
+];
 
 const platformRequestHref =
   "/contact?subject=Platform%20availability&message=Please%20notify%20me%20when%20macOS%20or%20Linux%20builds%20are%20available.%20I%20plan%20to%20use%20sansxel%20for%3A%20#contact-form";
@@ -51,10 +140,11 @@ const changeBadge = (type: "new" | "fix" | "improve") => {
 export default function UpdatesPage() {
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-semibold text-white">Updates</h1>
+      <h1 className="text-2xl font-semibold text-white">Download</h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Sansxel is in active development. Once the first build ships, release
-        notes and the installer will both land here.
+        Install the Sansxel desktop app and follow what&apos;s shipped. Nothing
+        is installable yet — the log below is the work so far since the
+        project started Apr 12, 2026.
       </p>
 
       {/* ── Status card — not a real release ────────────────────────── */}

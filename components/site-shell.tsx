@@ -45,7 +45,10 @@ const primaryLinks: SiteNavLink[] = [
   { href: "/features", label: "Features" },
   { href: "/function", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Download", authOnly: true },
+  // Signed-in only — points at the account download page so the
+  // install button, status, and release notes are all one destination
+  // (not scattered between /download and /account/updates).
+  { href: "/account/updates", label: "Download", authOnly: true },
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
