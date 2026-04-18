@@ -12,18 +12,18 @@ function getResend() {
 
 /**
  * Account-flavored sender — welcome, password reset, account-lifecycle
- * confirmations.  Warm, first-person tone.  The mailbox doesn't need to
- * exist to SEND from (Resend only verifies the domain); we set reply-to
- * to help@ so if the user hits Reply, it actually lands somewhere real.
+ * confirmations.  Matches the "Sansxel AI" identity the user set up in
+ * Gmail's Send-mail-as aliases so replies look visually consistent with
+ * what they'd see going the other way.
  */
-const fromAccount = "sansxel <hello@sansxel.ai>";
+const fromAccount = "Sansxel AI <hello@sansxel.ai>";
 
 /**
  * Transactional / billing sender — subscription activation, payment
- * events, cancellations, etc.  Intentionally cold (noreply@) so it
- * reads as an automated system notification, not a conversation.
+ * events, cancellations, etc.  "Sansxel AI Billing" tells the user this
+ * is an automated system notification, not a conversation.
  */
-const fromBilling = "sansxel billing <noreply@sansxel.ai>";
+const fromBilling = "Sansxel AI Billing <noreply@sansxel.ai>";
 
 /**
  * Every automated send uses help@ as reply-to so Reply goes to a real
