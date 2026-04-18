@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const email   = payload.email?.trim() ?? "";
+  const email   = payload.email?.trim().toLowerCase() ?? "";
   const name    = payload.name?.trim() ?? "";
   const subject = payload.subject?.trim() ?? "";
   const message = payload.message?.trim() ?? "";

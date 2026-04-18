@@ -69,8 +69,10 @@ const authResult = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
+      // No email from the provider → reject. We can't create an account
+      // we can't address, and downstream code assumes email is present.
       if (!user.email) {
-        return true;
+        return false;
       }
 
       // Credentials sign-in already requires verified email before the

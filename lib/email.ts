@@ -140,6 +140,25 @@ const HR_STYLE     = "height:1px;line-height:1px;background:#e5e5e5;margin:24px 
 const NOTE_STYLE   = "margin:20px 0 0;padding:14px 16px;background:#fafafa;border:1px solid #e5e5e5;border-radius:12px;font-size:12px;color:#525252;line-height:1.65;";
 const NOTE_WARN    = "margin:20px 0 0;padding:14px 16px;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;font-size:12px;color:#9f1239;line-height:1.65;";
 
+/**
+ * HTML-escape a string for safe interpolation into our inline email
+ * templates.  The templates intentionally do not use a rendering
+ * library — so anywhere user-supplied text (subjects, names, messages,
+ * channel labels) lands in an `${...}` hole, run it through this first.
+ *
+ * Escapes the five HTML-sensitive characters.  `&` must be first so we
+ * don't double-escape entities produced by the later replacements.
+ */
+function escapeHtml(value: unknown): string {
+  const str = typeof value === "string" ? value : String(value ?? "");
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function detailsTable(rows: Array<[string, string]>): string {
   return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 22px;border-collapse:separate;">
     ${rows.map(([label, value]) => `
@@ -154,7 +173,7 @@ function detailsTable(rows: Array<[string, string]>): string {
 // ── Account templates (from hello@) ────────────────────────────────────────
 
 export function welcomeHtml(name?: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Welcome to sansxel</p>
     <h1 style="${H1_STYLE}">Your account is live.</h1>
@@ -175,7 +194,7 @@ export function welcomeHtml(name?: string) {
 }
 
 export function earlyAccessHtml(name: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Early Access Requested</p>
     <h1 style="${H1_STYLE}">Your place in the rollout is saved.</h1>
@@ -194,7 +213,7 @@ export function earlyAccessHtml(name: string) {
 }
 
 export function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Confirm your email</p>
     <h1 style="${H1_STYLE}">One click and your account is live.</h1>
@@ -226,11 +245,13 @@ export function passwordResetHtml(resetUrl: string) {
 }
 
 export function contactConfirmHtml(name: string, subject: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const safeName    = escapeHtml(name);
+  const safeSubject = escapeHtml(subject);
+  const greeting    = safeName ? `Hi ${safeName},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Message Received</p>
     <h1 style="${H1_STYLE}">We got your note.</h1>
-    <p style="${BODY_STYLE}">${greeting} thanks for reaching out. We received your message about <strong style="color:#0a0a0a;">${subject}</strong> and someone on the team will follow up to your email address directly — usually within one business day.</p>
+    <p style="${BODY_STYLE}">${greeting} thanks for reaching out. We received your message about <strong style="color:#0a0a0a;">${safeSubject}</strong> and someone on the team will follow up to your email address directly — usually within one business day.</p>
     <p style="${BODY_STYLE}">If you have more to add, just reply to this email. Your reply lands in the right queue automatically.</p>
     <a href="https://sansxel.ai/contact" style="${BTN_LIGHT}">Back to contact</a>
     <div style="${NOTE_STYLE}">
@@ -246,19 +267,27 @@ export function supportHtml(opts: {
   message:  string;
   channel?: string | null;
 }) {
-  const channelRow = opts.channel
-    ? `<tr><td style="padding:4px 0;font-size:13px;color:#737373;">Channel</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${opts.channel}</td></tr>`
+  // Every field here comes from an unauthenticated contact form, so
+  // every field is escaped before interpolation. Without this, HTML in
+  // subject/message would render as markup inside ops' mail client.
+  const safeSubject = escapeHtml(opts.subject);
+  const safeName    = escapeHtml(opts.name || "—");
+  const safeEmail   = escapeHtml(opts.email);
+  const safeMessage = escapeHtml(opts.message);
+  const safeChannel = opts.channel ? escapeHtml(opts.channel) : "";
+  const channelRow = safeChannel
+    ? `<tr><td style="padding:4px 0;font-size:13px;color:#737373;">Channel</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${safeChannel}</td></tr>`
     : "";
   return baseHtml(`
     <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Support Request</p>
-    <h1 style="margin:0 0 24px;font-size:20px;font-weight:600;color:#0a0a0a;line-height:1.3;">${opts.subject}</h1>
+    <h1 style="margin:0 0 24px;font-size:20px;font-weight:600;color:#0a0a0a;line-height:1.3;">${safeSubject}</h1>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
       ${channelRow}
-      <tr><td style="padding:4px 0;font-size:13px;color:#737373;width:80px;">From</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${opts.name || "—"}</td></tr>
-      <tr><td style="padding:4px 0;font-size:13px;color:#737373;">Email</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${opts.email}</td></tr>
+      <tr><td style="padding:4px 0;font-size:13px;color:#737373;width:80px;">From</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${safeName}</td></tr>
+      <tr><td style="padding:4px 0;font-size:13px;color:#737373;">Email</td><td style="padding:4px 0;font-size:13px;color:#0a0a0a;">${safeEmail}</td></tr>
     </table>
     <div style="background:#f5f5f5;border:1px solid #e5e5e5;border-radius:14px;padding:16px;">
-      <p style="margin:0;font-size:14px;line-height:1.7;color:#404040;white-space:pre-wrap;">${opts.message}</p>
+      <p style="margin:0;font-size:14px;line-height:1.7;color:#404040;white-space:pre-wrap;word-break:break-word;">${safeMessage}</p>
     </div>
   `);
 }
@@ -436,7 +465,7 @@ export async function sendSupportEmail(opts: {
 // ═══════════════════════════════════════════════════════════════════════════
 
 export function pwResetConfirmHtml(name: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Password Updated</p>
     <h1 style="${H1_STYLE}">Your password was reset.</h1>
@@ -454,7 +483,7 @@ export function pwResetConfirmHtml(name: string) {
 }
 
 export function accountDeletedHtml(name: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Account Deleted</p>
     <h1 style="${H1_STYLE}">Your account has been removed.</h1>
@@ -474,7 +503,7 @@ export function accountDeletedHtml(name: string) {
 }
 
 export function subscriptionActivatedHtml(name: string, planName: string, cycle: string, amountLabel: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   const periodLabel = cycle === "yearly" ? "annual" : "monthly";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Subscription Active</p>
@@ -498,7 +527,7 @@ export function subscriptionActivatedHtml(name: string, planName: string, cycle:
 }
 
 export function subscriptionCancellationScheduledHtml(name: string, planName: string, endsOn: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Cancellation Scheduled</p>
     <h1 style="${H1_STYLE}">Your ${planName} plan ends on ${endsOn}.</h1>
@@ -526,7 +555,7 @@ export function subscriptionCancellationScheduledHtml(name: string, planName: st
 }
 
 export function subscriptionEndedHtml(name: string, planName: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Plan Reset to Free</p>
     <h1 style="${H1_STYLE}">Your ${planName} plan has ended.</h1>
@@ -547,7 +576,7 @@ export function subscriptionEndedHtml(name: string, planName: string) {
 }
 
 export function paymentFailedHtml(name: string, planName: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_RED}">Action Needed · Payment Failed</p>
     <h1 style="${H1_STYLE}">We couldn&apos;t charge your card.</h1>
@@ -567,7 +596,7 @@ export function paymentFailedHtml(name: string, planName: string) {
 }
 
 export function paymentMethodUpdatedHtml(name: string, brand: string, last4: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Payment Method Updated</p>
     <h1 style="${H1_STYLE}">New card on file.</h1>
@@ -589,7 +618,7 @@ export function paymentMethodUpdatedHtml(name: string, brand: string, last4: str
 // ── Renewal templates (NEW — tied to invoice.paid / invoice.upcoming) ──────
 
 export function renewalSucceededHtml(name: string, planName: string, amountLabel: string, periodEnd: string, invoiceUrl: string | null) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Renewal Successful</p>
     <h1 style="${H1_STYLE}">Your ${planName} subscription just renewed.</h1>
@@ -612,7 +641,7 @@ export function renewalSucceededHtml(name: string, planName: string, amountLabel
 }
 
 export function renewalUpcomingHtml(name: string, planName: string, amountLabel: string, chargeDate: string) {
-  const greeting = name ? `Hi ${name},` : "Hi,";
+  const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Renewal in 7 Days</p>
     <h1 style="${H1_STYLE}">Heads up — your ${planName} plan renews next week.</h1>
