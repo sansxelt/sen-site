@@ -42,6 +42,27 @@ const escalation = [
   },
 ];
 
+const liveWritingHighlights = [
+  {
+    eyebrow: "Browser-native",
+    title: "Write live in your browser",
+    detail:
+      "Open Sansxel in Chrome, Edge, or Safari and keep the draft active in real time instead of bouncing between tabs and prompts.",
+  },
+  {
+    eyebrow: "Source-aware",
+    title: "Keep the draft and the source trail together",
+    detail:
+      "Pull references, shape lines, and keep supporting context attached to the exact paragraph you are building.",
+  },
+  {
+    eyebrow: "Continuous flow",
+    title: "Return to the sentence, not just the document",
+    detail:
+      "Come back to the latest revision notes, cursor position, and next sentence that was forming before you paused.",
+  },
+];
+
 export default async function HomePage() {
   const session                = await auth();
   const signedIn               = Boolean(session?.user?.email);
@@ -65,11 +86,68 @@ export default async function HomePage() {
         <HeroActivity isSignedIn={Boolean(initialAccountContext)} />
       </section>
 
+      <section
+        id="live-writing"
+        data-stagger
+        style={{ "--stagger-i": 1 } as React.CSSProperties}
+        className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
+      >
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-200/80">
+              For writing
+            </div>
+            <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
+              Built to keep live writing moving.
+            </h2>
+            <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
+              Sansxel is strongest when the draft is happening in real time. It keeps the browser
+              session, source trail, revision steps, and next sentence aligned so the writing flow
+              stays intact.
+            </p>
+          </div>
+          <div className="rounded-3xl border border-emerald-400/15 bg-emerald-400/[0.05] px-5 py-4 text-sm leading-6 text-neutral-200 lg:max-w-sm">
+            Open Sansxel in your browser, write live, and return to the exact line you were shaping
+            instead of rebuilding the scene from memory.
+          </div>
+        </div>
+
+        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          {liveWritingHighlights.map((item) => (
+            <SpotlightCard
+              key={item.title}
+              className="h-full rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7"
+            >
+              <div className="inline-flex rounded-full border border-emerald-400/15 bg-emerald-400/[0.08] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-emerald-200">
+                {item.eyebrow}
+              </div>
+              <h3 className="mt-4 text-lg font-medium text-white">{item.title}</h3>
+              <p className="mt-3 text-sm leading-7 text-neutral-300">{item.detail}</p>
+            </SpotlightCard>
+          ))}
+        </div>
+
+        <div className="mt-8 flex flex-wrap gap-3 text-sm">
+          <Link
+            href="/features"
+            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-neutral-200 transition hover:bg-white/10"
+          >
+            Explore writing features →
+          </Link>
+          <Link
+            href={signedIn ? "/account" : "/signin"}
+            className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.08] px-4 py-2 text-emerald-100 transition hover:bg-emerald-400/[0.14]"
+          >
+            {signedIn ? "Open workspace →" : "Start writing live →"}
+          </Link>
+        </div>
+      </section>
+
       {/* ── Value teaser: smart escalation (single concept) ──────── */}
       <section
         id="how"
         data-stagger
-        style={{ "--stagger-i": 1 } as React.CSSProperties}
+        style={{ "--stagger-i": 2 } as React.CSSProperties}
         className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
       >
         <div className="max-w-2xl">
@@ -131,7 +209,7 @@ export default async function HomePage() {
       <section
         id="pricing"
         data-stagger
-        style={{ "--stagger-i": 2 } as React.CSSProperties}
+        style={{ "--stagger-i": 3 } as React.CSSProperties}
         className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
       >
         <div className="flex flex-col items-start gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
@@ -213,7 +291,7 @@ export default async function HomePage() {
       <section
         id="get-started"
         data-stagger
-        style={{ "--stagger-i": 3 } as React.CSSProperties}
+        style={{ "--stagger-i": 4 } as React.CSSProperties}
         className="mx-auto max-w-7xl px-4 pb-20 pt-2 sm:px-6 sm:pb-24 sm:pt-8 lg:px-8"
       >
         {signedIn ? (

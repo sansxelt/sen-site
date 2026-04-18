@@ -134,17 +134,21 @@ const scenarios = [
   {
     word: "writing",
     accent: "emerald" as AccentKey,
-    body: "Writing sessions keep their shape. sansxel brings you back to the paragraph, the source, and the next sentence that was forming when you paused.",
+    body: "Write live in your browser without losing the thread. sansxel keeps the paragraph, source trail, revision steps, and next sentence moving together in real time.",
     layout: "editor" as const,
     accentLabel: "Draft trail",
     header: "Draft",
-    prompt: "Where was I in the draft when I stopped writing?",
+    prompt: "Open the live writing session from my browser and bring back the exact paragraph I was shaping.",
     promptLabel: "Resume writing",
-    draft: "The first thing users notice is the silence — no onboarding checklist, no feature tour. Just a workspace that already knows where they left off. That friction removed in the first thirty seconds is what changes the retention curve.",
+    promoEyebrow: "Chrome live session",
+    promoTitle: "Write live in your browser",
+    promoText: "Open Sansxel in your browser to keep the draft, sources, and revision trail active while the writing is still happening.",
+    chips: ["Real-time drafting", "Source-aware flow", "Live revision trail"],
+    draft: "Open Sansxel in your browser and the writing keeps moving live. The draft, the source trail, and the next sentence stay in view without forcing you to rebuild momentum. That is what makes the work feel natural instead of reconstructed after the fact.",
     revisions: [
-      { time: "11:08 AM", note: "Locked opening paragraph. Shortened support copy." },
-      { time: "11:21 AM", note: "Pulled two examples to strengthen the CTA." },
-      { time: "11:34 AM", note: "Left off near the close — final handoff ready." },
+      { time: "11:08 AM", note: "Locked the opener and kept the live browser draft pinned." },
+      { time: "11:21 AM", note: "Pulled two source-backed lines into the CTA while writing stayed live." },
+      { time: "11:34 AM", note: "Paused near the close with the cursor, sources, and last sentence still tracked." },
     ],
     wordCount: "642 words · 3 min read",
   },
@@ -832,10 +836,40 @@ function EditorLayout({ s }: { s: Extract<Scenario, { layout: "editor" }> }) {
             <div className="rounded-t-md border-t border-l border-r border-emerald-400/20 bg-emerald-400/[0.07] px-3 py-1 text-[10px] text-emerald-300">
               draft.md
             </div>
-            <div className="px-3 py-1 text-[10px] text-neutral-700">outline.md</div>
+            <div className="px-3 py-1 text-[10px] text-neutral-700">sources.md</div>
           </div>
           <div className="ml-auto rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-0.5 text-[10px] text-emerald-300">
             {s.accentLabel}
+          </div>
+        </div>
+        <div className="border-b border-white/[0.06] px-4 py-3">
+          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.08] px-3.5 py-3 shadow-[0_0_0_1px_rgba(16,185,129,0.06)]">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-emerald-200/80">
+                  {s.promoEyebrow}
+                </div>
+                <div className="mt-1 text-sm font-semibold text-white">
+                  {s.promoTitle}
+                </div>
+                <div className="mt-1 text-[11px] leading-5 text-neutral-300">
+                  {s.promoText}
+                </div>
+              </div>
+              <div className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1 text-[10px] font-medium text-emerald-200">
+                Live
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {s.chips.map((chip) => (
+                <span
+                  key={chip}
+                  className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-neutral-200"
+                >
+                  {chip}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
         {/* Line-numbered editor area */}
@@ -863,7 +897,7 @@ function EditorLayout({ s }: { s: Extract<Scenario, { layout: "editor" }> }) {
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400/60" />
-            <span className="text-[10px] text-neutral-600">Cursor saved</span>
+            <span className="text-[10px] text-neutral-600">Browser draft live</span>
           </div>
         </div>
         {/* Revision log */}
@@ -2011,14 +2045,14 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
         {/* Callout — context setter above the panel */}
         <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
           <div className="min-w-0">
-            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Important</span>
-            <span className="text-sm text-neutral-400">— This is a mere quick review, the in-app experience is significantly deeper.</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Live preview</span>
+            <span className="text-sm text-neutral-400">— A fast sweep through writing, research, coding, and resume states. The full in-app flow goes deeper once you are inside.</span>
           </div>
           <Link
             href="/account"
             className="shrink-0 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white whitespace-nowrap"
           >
-            See full app →
+            Open full workspace →
           </Link>
         </div>
 

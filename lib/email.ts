@@ -27,10 +27,20 @@ const fromAccount = "Sansxel AI <hello@sansxel.ai>";
 const fromBilling = "Sansxel AI <noreply@sansxel.ai>";
 
 /**
- * Every automated send uses help@ as reply-to so Reply goes to a real
- * inbox even when the sender is noreply@ / hello@ / etc.
+ * Sender/reply-to policy:
+ *   - hello@ and noreply@ are auto-only senders. Neither routes replies
+ *     to a human — hello@ is for account mail, noreply@ is for billing
+ *     and (future) product updates. Replies are expected to die there.
+ *   - help@, sales@, privacy@ are *real inboxes* for inbound support.
+ *     They're used as the `from` only on contact-form threads that
+ *     started on the user's side, so the conversation stays on-channel.
+ *
+ * Automated sends therefore don't set `replyTo` at all — Resend
+ * defaults it to the `from` address, which is the correct "no reply
+ * expected" behavior for hello@ and noreply@. Setting replyTo to help@
+ * on billing mail (the old behavior) bled customer billing questions
+ * into the general support inbox and muddied the channel model.
  */
-const REPLY_TO = "help@sansxel.ai";
 
 
 /**
@@ -325,7 +335,6 @@ export async function sendWelcomeEmail(email: string, name?: string) {
   try {
     await resend.emails.send({
       from:    fromAccount,
-      replyTo: REPLY_TO,
       to:      email,
       subject: "Welcome to sansxel",
       html:    welcomeHtml(name),
@@ -342,7 +351,6 @@ export async function sendEarlyAccessEmail(email: string, name: string) {
   try {
     await resend.emails.send({
       from:    fromAccount,
-      replyTo: REPLY_TO,
       to:      email,
       subject: "Your sansxel invite request is on file",
       html:    earlyAccessHtml(name),
@@ -359,7 +367,6 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
   try {
     await resend.emails.send({
       from:    fromAccount,
-      replyTo: REPLY_TO,
       to:      email,
       subject: "Reset your sansxel password",
       html:    passwordResetHtml(resetUrl),
@@ -381,7 +388,6 @@ export async function sendVerifyAccountEmail(opts: {
   try {
     await resend.emails.send({
       from:    fromAccount,
-      replyTo: REPLY_TO,
       to:      opts.email,
       subject: "Confirm your sansxel account",
       html:    verifyAccountHtml(opts.name ?? "", opts.verifyUrl, opts.expiryLabel),
@@ -697,7 +703,7 @@ export async function sendPasswordResetConfirmEmail(email: string, name: string)
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromAccount, replyTo: REPLY_TO, to: email,
+      from: fromAccount, to:email,
       subject: "Your sansxel password was reset",
       html: pwResetConfirmHtml(name),
     });
@@ -709,7 +715,7 @@ export async function sendAccountDeletedEmail(email: string, name: string) {
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromAccount, replyTo: REPLY_TO, to: email,
+      from: fromAccount, to:email,
       subject: "Your sansxel account has been deleted",
       html: accountDeletedHtml(name),
     });
@@ -723,7 +729,7 @@ export async function sendSubscriptionActivatedEmail(opts: {
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      from: fromBilling, to:opts.email,
       subject: `Welcome to sansxel ${opts.planName}`,
       html: subscriptionActivatedHtml(opts.name, opts.planName, opts.cycle, opts.amountLabel),
     });
@@ -737,7 +743,7 @@ export async function sendSubscriptionCancellationScheduledEmail(opts: {
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      from: fromBilling, to:opts.email,
       subject: `Your ${opts.planName} plan ends on ${opts.endsOn}`,
       html: subscriptionCancellationScheduledHtml(opts.name, opts.planName, opts.endsOn),
     });
@@ -751,7 +757,7 @@ export async function sendSubscriptionEndedEmail(opts: {
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      from: fromBilling, to:opts.email,
       subject: `Your ${opts.planName} plan has ended`,
       html: subscriptionEndedHtml(opts.name, opts.planName),
     });
@@ -765,7 +771,7 @@ export async function sendPaymentFailedEmail(opts: {
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      from: fromBilling, to:opts.email,
       subject: `Payment failed for your sansxel ${opts.planName} plan`,
       html: paymentFailedHtml(opts.name, opts.planName),
     });
@@ -779,7 +785,7 @@ export async function sendPaymentMethodUpdatedEmail(opts: {
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      from: fromBilling, to:opts.email,
       subject: "Your payment method was updated",
       html: paymentMethodUpdatedHtml(opts.name, opts.brand, opts.last4),
     });
@@ -794,7 +800,7 @@ export async function sendRenewalSucceededEmail(opts: {
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      from: fromBilling, to:opts.email,
       subject: `Renewal successful — ${opts.planName} (${opts.amountLabel})`,
       html: renewalSucceededHtml(opts.name, opts.planName, opts.amountLabel, opts.periodEnd, opts.invoiceUrl ?? null),
     });
@@ -808,7 +814,7 @@ export async function sendRenewalUpcomingEmail(opts: {
   if (!resend) return;
   try {
     await resend.emails.send({
-      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      from: fromBilling, to:opts.email,
       subject: `Heads up — your ${opts.planName} plan renews on ${opts.chargeDate}`,
       html: renewalUpcomingHtml(opts.name, opts.planName, opts.amountLabel, opts.chargeDate),
     });
