@@ -60,7 +60,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(96,165,250,0.12),transparent_22%)]" />
 
       <header className="fixed inset-x-0 top-0 z-50 bg-neutral-950">
-        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+        <div className="px-4 py-3 sm:px-6 lg:px-10 xl:px-14 2xl:px-20">
           <div className="relative flex items-center justify-between gap-4">
             <Link href="/home" className="flex shrink-0 items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-2">
