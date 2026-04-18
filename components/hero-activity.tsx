@@ -1949,12 +1949,17 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           </span>
         </h1>
 
-        {/* Crossfading body — outgoing is absolute so layout never shifts */}
-        <div className="relative mt-5 sm:mt-6" style={{ minHeight: "6rem" }}>
+        {/*
+          Crossfading body — both paragraphs share a single grid cell so
+          the container auto-sizes to whichever is taller (outgoing OR
+          incoming).  No hardcoded min-height, so empty air never sits
+          between the body text and the CTA.
+        */}
+        <div className="mt-5 grid sm:mt-6">
           {prev && (
             <p
               key={`body-out-${prevIdx}`}
-              className="absolute top-0 left-0 max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
+              className="col-start-1 row-start-1 max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
               style={fadeOut}
             >
               {prev.body}
@@ -1962,14 +1967,14 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           )}
           <p
             key={`body-in-${currIdx}`}
-            className="max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
+            className="col-start-1 row-start-1 max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
             style={prev ? fadeIn : undefined}
           >
             {curr.body}
           </p>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link
             href="/account"
             className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
