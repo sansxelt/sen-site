@@ -52,10 +52,10 @@ export function ContactChannels() {
                 tabIndex={0}
                 onClick={(e) => copy(e, email)}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") copy(e as unknown as React.MouseEvent, email); }}
-                className={`rounded-md border px-1.5 py-0.5 text-[10px] transition ${
+                className={`inline-flex min-h-[24px] items-center rounded-md border px-2 py-1 text-[11px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40 ${
                   copied === email
                     ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
-                    : "border-white/10 bg-white/5 text-neutral-500 group-hover:border-white/20 group-hover:text-neutral-300"
+                    : "border-white/10 bg-white/5 text-neutral-400 group-hover:border-white/20 group-hover:text-neutral-200"
                 }`}
               >
                 {copied === email ? "Copied ✓" : "Copy"}

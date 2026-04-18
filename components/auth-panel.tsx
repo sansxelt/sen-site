@@ -189,7 +189,7 @@ export function ModeSwitcher({
       <button
         type="button"
         onClick={() => onModeChange("signup")}
-        className={`flex-1 whitespace-nowrap rounded-[16px] px-5 py-2.5 leading-none transition focus-visible:outline-none ${
+        className={`flex-1 whitespace-nowrap rounded-[16px] px-3 py-2.5 leading-none transition focus-visible:outline-none sm:px-5 ${
           mode === "signup"
             ? "sansxel-white-button bg-white text-black"
             : "text-neutral-200 hover:text-white"
@@ -200,7 +200,7 @@ export function ModeSwitcher({
       <button
         type="button"
         onClick={() => onModeChange("signin")}
-        className={`flex-1 whitespace-nowrap rounded-[16px] px-5 py-2.5 leading-none transition focus-visible:outline-none ${
+        className={`flex-1 whitespace-nowrap rounded-[16px] px-3 py-2.5 leading-none transition focus-visible:outline-none sm:px-5 ${
           mode === "signin"
             ? "sansxel-white-button bg-white text-black"
             : "text-neutral-200 hover:text-white"
