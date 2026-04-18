@@ -1,7 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { auth } from "@/auth";
-import { assertDevAccess } from "@/lib/dev-gate";
+import { checkDevAccess } from "@/lib/dev-gate";
+import { getSignInPath } from "@/lib/auth-ui";
 import { EMAIL_SAMPLES } from "@/lib/email-samples";
 import { isEmailConfigured } from "@/lib/email";
 import { SendButton } from "./send-button";
@@ -18,7 +19,9 @@ const channelTone: Record<"account" | "billing" | "support", string> = {
 };
 
 export default async function DevEmailsPage() {
-  if ((await assertDevAccess()) !== null) notFound();
+  const access = await checkDevAccess();
+  if (access.kind === "unauthenticated") redirect(getSignInPath("/dev/emails"));
+  if (access.kind === "forbidden") notFound();
 
   const session = await auth();
   const defaultTarget = session?.user?.email ?? "";

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { assertDevAccess } from "@/lib/dev-gate";
+import { checkDevAccess } from "@/lib/dev-gate";
 import { findSample } from "@/lib/email-samples";
 
 export async function POST(req: Request) {
-  if ((await assertDevAccess()) !== null) {
+  const access = await checkDevAccess();
+  if (access.kind !== "ok") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
