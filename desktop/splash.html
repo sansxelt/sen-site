@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sansxel — launcher</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        background: #050505;
+        color: #fafafa;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue",
+          Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        user-select: none;
+        cursor: default;
+      }
+
+      .launcher {
+        position: relative;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        opacity: 1;
+        transition: opacity 460ms ease-in;
+      }
+
+      .launcher.fading {
+        opacity: 0;
+      }
+
+      /* Soft purple radial glow, biased upward so the brand block sits in it */
+      .launcher::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 50% 38%, rgba(140, 92, 246, 0.42), transparent 55%),
+          radial-gradient(circle at 50% 50%, rgba(60, 40, 120, 0.22), transparent 75%);
+        pointer-events: none;
+      }
+
+      /* Hex-style background pattern, subtle */
+      .launcher::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(60deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+          linear-gradient(120deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+        background-size: 28px 48px;
+        pointer-events: none;
+        mask-image: radial-gradient(circle at 50% 50%, black 25%, transparent 75%);
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, black 25%, transparent 75%);
+      }
+
+      /* Subtle inner border so the borderless window has a defined edge */
+      .launcher-frame {
+        position: absolute;
+        inset: 0;
+        border: 1px solid rgba(140, 92, 246, 0.18);
+        pointer-events: none;
+        z-index: 5;
+      }
+
+      /* ── Main brand block, centered ─────────────────────────────── */
+      .brand {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand-icon {
+        width: 76px;
+        height: 76px;
+        border-radius: 18px;
+        background: #0a0a0a;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow:
+          0 0 0 1px rgba(140, 92, 246, 0.1),
+          0 18px 50px rgba(140, 92, 246, 0.28),
+          0 0 70px rgba(140, 92, 246, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+        animation: icon-breathe 3.6s ease-in-out infinite;
+      }
+
+      .brand-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.18));
+      }
+
+      .brand-wordmark {
+        font-size: 52px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1;
+        margin: 0;
+        text-shadow: 0 4px 32px rgba(140, 92, 246, 0.3);
+      }
+
+      .brand-tagline {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: rgba(180, 180, 220, 0.5);
+        margin: 0;
+      }
+
+      /* ── Bottom row: status left, build info right ──────────────── */
+      .footer {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 22px 16px;
+        gap: 16px;
+      }
+
+      .footer-status {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 12px;
+        letter-spacing: 0.02em;
+        color: rgba(220, 220, 235, 0.85);
+        font-variant-numeric: tabular-nums;
+        min-height: 16px;
+      }
+
+      .footer-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #a78bfa;
+        box-shadow: 0 0 10px rgba(167, 139, 250, 0.7);
+        animation: dot-pulse 1.4s ease-in-out infinite;
+      }
+
+      .footer-status-label {
+        display: inline-block;
+        animation: label-swap 360ms ease-out;
+      }
+
+      .footer-build {
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(180, 180, 200, 0.42);
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      /* ── Progress bar pinned to the very bottom edge ─────────────── */
+      .progress {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+        z-index: 3;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(
+          90deg,
+          rgba(167, 139, 250, 0.35),
+          #a78bfa 65%,
+          #c4b5fd
+        );
+        box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
+        transition: width 720ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+
+      /* Scanning shimmer over the progress bar */
+      .progress::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.18),
+          transparent
+        );
+        transform: translateX(-100%);
+        animation: scan 2.4s linear infinite;
+      }
+
+      @keyframes icon-breathe {
+        0%, 100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.022);
+        }
+      }
+
+      @keyframes dot-pulse {
+        0%, 100% {
+          opacity: 0.45;
+          transform: scale(0.85);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes label-swap {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+          filter: blur(2px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+
+      @keyframes scan {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="launcher" id="launcher">
+      <div class="launcher-frame"></div>
+
+      <div class="brand">
+        <div class="brand-icon">
+          <img src="/icon.png" alt="sansxel" />
+        </div>
+        <h1 class="brand-wordmark">sansxel</h1>
+        <p class="brand-tagline">Build something REAL.</p>
+      </div>
+
+      <div class="footer">
+        <div class="footer-status">
+          <span class="footer-status-dot"></span>
+          <span class="footer-status-label" id="status-label">
+            Initializing sansxel core
+          </span>
+        </div>
+        <div class="footer-build">v0.1.0 · sansxel-1 · windows</div>
+      </div>
+
+      <div class="progress">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var steps = [
+          { label: "Initializing sansxel core", ms: 720 },
+          { label: "Loading workspace memory", ms: 880 },
+          { label: "Syncing context", ms: 740 },
+          { label: "Connecting sansxel-1", ms: 1020 },
+          { label: "Preparing your space", ms: 820 },
+        ];
+
+        var labelEl = document.getElementById("status-label");
+        var fillEl = document.getElementById("progress-fill");
+        var i = 0;
+
+        // Step 0 is already painted in the HTML — set its progress and start the timer
+        fillEl.style.width = (((i + 1) / steps.length) * 100).toFixed(2) + "%";
+
+        function advance() {
+          i++;
+
+          if (i >= steps.length) {
+            // Final hold, then hand over to the main window via Tauri
+            setTimeout(handover, 420);
+            return;
+          }
+
+          var step = steps[i];
+          labelEl.textContent = step.label;
+          // Re-trigger the fade animation
+          labelEl.style.animation = "none";
+          void labelEl.offsetHeight;
+          labelEl.style.animation = "";
+          fillEl.style.width = (((i + 1) / steps.length) * 100).toFixed(2) + "%";
+
+          setTimeout(advance, step.ms);
+        }
+
+        function handover() {
+          var launcher = document.getElementById("launcher");
+          if (launcher) launcher.classList.add("fading");
+
+          // Tell Rust to show the main window and close us. Wait for the
+          // fade transition (~460ms) so the handover is smooth.
+          setTimeout(function () {
+            try {
+              var invoke =
+                window.__TAURI__ &&
+                window.__TAURI__.core &&
+                window.__TAURI__.core.invoke;
+              if (invoke) {
+                invoke("boot_complete");
+              } else {
+                console.warn("Tauri invoke unavailable; closing splash anyway");
+              }
+            } catch (err) {
+              console.error("boot_complete failed:", err);
+            }
+          }, 460);
+        }
+
+        setTimeout(advance, steps[0].ms);
+      })();
+    </script>
+  </body>
+</html>

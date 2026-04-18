@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { resolve } from "path";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
@@ -7,6 +8,18 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vite.dev/config/
 export default defineConfig(async () => ({
   plugins: [react()],
+
+  // Multi-page: index.html is the main app, splash.html is the launcher
+  build: {
+    rollupOptions: {
+      input: {
+        // @ts-expect-error __dirname is a nodejs global
+        main: resolve(__dirname, "index.html"),
+        // @ts-expect-error __dirname is a nodejs global
+        splash: resolve(__dirname, "splash.html"),
+      },
+    },
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

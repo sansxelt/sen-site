@@ -12,16 +12,31 @@
   "app": {
     "windows": [
       {
+        "label": "splash",
+        "url": "splash.html",
+        "title": "sansxel",
+        "width": 720,
+        "height": 420,
+        "decorations": false,
+        "resizable": false,
+        "center": true,
+        "skipTaskbar": false,
+        "visible": true,
+        "alwaysOnTop": false
+      },
+      {
         "label": "main",
+        "url": "index.html",
         "title": "sansxel",
         "width": 1200,
         "height": 800,
         "minWidth": 900,
         "minHeight": 600,
         "center": true,
+        "decorations": true,
         "resizable": true,
         "fullscreen": false,
-        "decorations": true
+        "visible": false
       }
     ],
     "security": {
