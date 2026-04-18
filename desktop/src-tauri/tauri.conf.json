@@ -20,9 +20,10 @@
         "decorations": false,
         "resizable": false,
         "center": true,
-        "skipTaskbar": false,
+        "skipTaskbar": true,
         "visible": true,
-        "alwaysOnTop": false
+        "alwaysOnTop": true,
+        "focus": true
       },
       {
         "label": "main",

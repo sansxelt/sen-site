@@ -1,90 +1,81 @@
 use std::time::Duration;
 use tauri::Manager;
 
-// ── Win32: minimize every other top-level window so only the splash is
-// visible during boot. The user can restore them via taskbar/Alt-Tab
-// after the app comes up. We never minimize anything we ourselves own.
+// ── Win32: minimize EVERY top-level window so only sansxel is visible
+// during boot. We do this by sending the Win+M hotkey via SendInput,
+// which is what Windows itself uses for "Minimize all windows" — far
+// more reliable than EnumWindows + ShowWindow because the shell
+// handles edge cases (UWP, modern apps, secured windows) for us.
+//
+// Win+M minimizes everything *including* our splash, so we re-show
+// the splash a moment later.
 #[cfg(target_os = "windows")]
 mod win {
-    use std::sync::atomic::{AtomicUsize, Ordering};
-    use windows_sys::Win32::Foundation::{BOOL, HWND, LPARAM};
-    use windows_sys::Win32::UI::WindowsAndMessaging::{
-        EnumWindows, GetWindowLongPtrW, GetWindowTextLengthW, GetWindowThreadProcessId,
-        IsIconic, IsWindowVisible, ShowWindowAsync, GWL_EXSTYLE, SW_MINIMIZE, WS_EX_TOOLWINDOW,
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
+        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
+        VIRTUAL_KEY, VK_LWIN, VK_M,
     };
 
-    unsafe extern "system" fn enum_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
-        let counter = &*(lparam as *const Counters);
-
-        let mut window_pid: u32 = 0;
-        GetWindowThreadProcessId(hwnd, &mut window_pid);
-
-        // Skip our own windows
-        if window_pid == counter.our_pid {
-            return 1;
+    unsafe fn key_input(vk: VIRTUAL_KEY, key_up: bool) -> INPUT {
+        INPUT {
+            r#type: INPUT_KEYBOARD,
+            Anonymous: INPUT_0 {
+                ki: KEYBDINPUT {
+                    wVk: vk,
+                    wScan: 0,
+                    dwFlags: if key_up { KEYEVENTF_KEYUP } else { 0 },
+                    time: 0,
+                    dwExtraInfo: 0,
+                },
+            },
         }
-        // Skip invisible
-        if IsWindowVisible(hwnd) == 0 {
-            return 1;
-        }
-        // Skip already-minimized
-        if IsIconic(hwnd) != 0 {
-            return 1;
-        }
-        // Skip tool windows (popups, tooltips, etc.)
-        let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
-        if ex_style & WS_EX_TOOLWINDOW != 0 {
-            return 1;
-        }
-        // Skip windows without a title (background/desktop hosts)
-        if GetWindowTextLengthW(hwnd) == 0 {
-            return 1;
-        }
-
-        // Async so we don't block on any single window's WndProc
-        ShowWindowAsync(hwnd, SW_MINIMIZE);
-        counter.minimized.fetch_add(1, Ordering::Relaxed);
-        1 // continue enumeration
     }
 
-    struct Counters {
-        our_pid: u32,
-        minimized: AtomicUsize,
-    }
-
-    pub fn minimize_others() -> usize {
-        let counters = Counters {
-            our_pid: std::process::id(),
-            minimized: AtomicUsize::new(0),
-        };
+    pub fn minimize_all() {
         unsafe {
-            EnumWindows(
-                Some(enum_proc),
-                &counters as *const Counters as LPARAM,
+            let mut inputs = [
+                key_input(VK_LWIN, false),
+                key_input(VK_M, false),
+                key_input(VK_M, true),
+                key_input(VK_LWIN, true),
+            ];
+            SendInput(
+                inputs.len() as u32,
+                inputs.as_mut_ptr(),
+                std::mem::size_of::<INPUT>() as i32,
             );
         }
-        counters.minimized.load(Ordering::Relaxed)
     }
 }
 
 #[cfg(not(target_os = "windows"))]
 mod win {
-    pub fn minimize_others() -> usize {
-        0
-    }
+    pub fn minimize_all() {}
 }
 
 #[tauri::command]
-fn minimize_other_windows() -> usize {
-    let count = win::minimize_others();
-    eprintln!("[sansxel] minimize_other_windows minimized {} window(s)", count);
-    count
+fn minimize_other_windows(app: tauri::AppHandle) {
+    // Step 1: minimize everything (Win+M hits us too)
+    win::minimize_all();
+    eprintln!("[sansxel] sent minimize-all (Win+M)");
+
+    // Step 2: bring our splash back so the launcher stays visible.
+    // 80ms is enough for the shell to finish processing the hotkey.
+    let app_handle = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(80));
+        if let Some(splash) = app_handle.get_webview_window("splash") {
+            let _ = splash.unminimize();
+            let _ = splash.show();
+            let _ = splash.set_focus();
+        }
+    });
 }
 
 // Splash window calls this when its boot sequence finishes.
 //
 // Sequence: close the splash immediately (it has already faded its
-// content to black on the JS side), hold a brief 500ms blackout, then
+// content to black on the JS side), hold a brief 150ms blackout, then
 // reveal the main window.
 #[tauri::command]
 fn boot_complete(app: tauri::AppHandle) -> Result<(), String> {
@@ -94,7 +85,7 @@ fn boot_complete(app: tauri::AppHandle) -> Result<(), String> {
 
     let app_handle = app.clone();
     std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(500));
+        std::thread::sleep(Duration::from_millis(150));
         if let Some(main) = app_handle.get_webview_window("main") {
             let _ = main.show();
             let _ = main.set_focus();
