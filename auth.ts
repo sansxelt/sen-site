@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { getSafeRedirectPath } from "./lib/auth-ui";
-import { sendWelcomeEmail } from "./lib/email";
+import { signOAuthSignupToken } from "./lib/oauth-signup-token";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
@@ -73,26 +73,39 @@ const authResult = NextAuth({
         return true;
       }
 
-      // Only run profile sync + welcome email for OAuth providers.
-      // Credentials sign-in already creates the profile at registration.
+      // Credentials sign-in already requires verified email before the
+      // profile exists — nothing extra to do here.
       if (account?.provider === "credentials") {
         return true;
       }
 
-      try {
-        const isNewUser = !(await getUserProfileByEmail(user.email));
+      const provider = account?.provider ?? "";
 
+      try {
+        const existingProfile = await getUserProfileByEmail(user.email);
+
+        // First-time OAuth (or post-deletion return) — don't silently
+        // create a profile. Bounce to /auth/confirm-signup so the user
+        // explicitly consents. The signed token binds email+provider, so
+        // a valid token can't be reused to create a profile for a
+        // different identity.
+        if (!existingProfile) {
+          const token = signOAuthSignupToken({ email: user.email, provider });
+          const params = new URLSearchParams({
+            email:    user.email,
+            provider,
+            name:     typeof user.name === "string" ? user.name : "",
+            token,
+          });
+          return `/auth/confirm-signup?${params.toString()}`;
+        }
+
+        // Existing profile — keep identity fields fresh from the OAuth
+        // provider (display name, etc.) and let them through.
         await syncUserProfileIdentity({
           email: user.email,
-          name: typeof user.name === "string" ? user.name : null,
+          name:  typeof user.name === "string" ? user.name : null,
         });
-
-        if (isNewUser) {
-          void sendWelcomeEmail(
-            user.email,
-            typeof user.name === "string" ? user.name : "",
-          );
-        }
       } catch (error) {
         console.error("User profile sync failed during sign-in:", error);
       }
