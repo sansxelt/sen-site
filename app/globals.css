@@ -133,13 +133,18 @@ body {
    Two soft blurred circles of color.  Opt-in per page by rendering the
    <AuroraBackground /> component, which mounts these classes.  All
    movement is transform-only so it composites on the GPU. */
+/* Drift amplitude stays modest on purpose — big Y translations were
+   causing a visible pulse at the header edge (blob peak sweeping in
+   and out of view below the nav). Keeping the vertical range tight
+   and scale changes small so the aurora feels like ambient light, not
+   a lamp someone's waving around. */
 @keyframes hx-aurora-1 {
-  0%, 100% { transform: translate3d(-10%, -5%, 0) scale(1); }
-  50%      { transform: translate3d(20%, 15%, 0) scale(1.05); }
+  0%, 100% { transform: translate3d(-6%, 2%, 0) scale(1); }
+  50%      { transform: translate3d(10%, 6%, 0) scale(1.03); }
 }
 @keyframes hx-aurora-2 {
-  0%, 100% { transform: translate3d(5%, 15%, 0) scale(1); }
-  50%      { transform: translate3d(-15%, -10%, 0) scale(1.08); }
+  0%, 100% { transform: translate3d(4%, 6%, 0) scale(1); }
+  50%      { transform: translate3d(-8%, 2%, 0) scale(1.04); }
 }
 /* Indigo + violet aurora pair — sits in the same cool-blue family as
    the body's existing radial gradient so the layers don't fight.  Both
