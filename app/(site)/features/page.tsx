@@ -188,10 +188,10 @@ export default async function FeaturesPage() {
           See pricing
         </Link>
         <Link
-          href={signedIn ? "/account" : getSignInPath("/account")}
+          href={signedIn ? "/account" : getSignInPath("/account/updates")}
           className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
         >
-          {signedIn ? "Open Sansxel" : "Try Sansxel"}
+          {signedIn ? "Open workspace" : "Check your access"}
         </Link>
       </div>
     </section>
