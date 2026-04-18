@@ -61,29 +61,31 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
       <header className="fixed inset-x-0 top-0 z-50 bg-neutral-950">
         <div className="px-4 py-3 sm:px-6 lg:px-10 xl:px-14 2xl:px-20">
-          <div className="relative flex items-center justify-between gap-4">
-            <Link href="/home" className="flex shrink-0 items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-2">
-                <Image
-                  src="/icon.png"
-                  alt="sansxel"
-                  width={22}
-                  height={22}
-                  className="h-full w-full object-contain"
-                  priority
-                />
-              </div>
-              <div>
-                <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
-                  sansxel
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex lg:flex-1 lg:justify-start">
+              <Link href="/home" className="inline-flex shrink-0 items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-2">
+                  <Image
+                    src="/icon.png"
+                    alt="sansxel"
+                    width={22}
+                    height={22}
+                    className="h-full w-full object-contain"
+                    priority
+                  />
                 </div>
-                <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
-                  Build something REAL.
+                <div>
+                  <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
+                    sansxel
+                  </div>
+                  <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
+                    Build something REAL.
+                  </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
 
-            <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 text-sm text-neutral-400 lg:flex">
+            <nav className="hidden items-center gap-5 text-sm text-neutral-400 lg:flex">
               {primaryLinks.filter((link) => !link.authOnly || signedIn).map((link) => (
                 <Link
                   key={link.href}
@@ -101,7 +103,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               </Link>
             </nav>
 
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2 lg:flex-1 lg:justify-end">
               {/* Mobile drawer trigger — only renders on <lg screens */}
               <MobileNav
                 links={[
@@ -128,7 +130,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       </main>
 
       <footer className="mt-auto border-t border-white/[0.08]">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8">
           <div className="grid gap-10 sm:grid-cols-[1fr_auto] lg:grid-cols-[1.4fr_repeat(3,auto)] lg:gap-16">
             <div className="flex flex-col gap-4">
               <Link href="/home" className="flex items-center gap-2.5">
