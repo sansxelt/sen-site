@@ -18,7 +18,7 @@ export default async function VerifiedPage({
   const signInHref = getSignInPath(email ? `/account?email=${encodeURIComponent(email)}` : "/account");
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <div className="mx-auto max-w-lg px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
       <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />

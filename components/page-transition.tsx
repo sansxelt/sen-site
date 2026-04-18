@@ -6,10 +6,16 @@ import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 
 const HEADER_OFFSET = "var(--site-header-height, 66px)";
-const BLACKOUT_IN_MS = 220;
-const BLACKOUT_SETTLE_MS = 20;
-const BLACKOUT_HOLD_MS = 40;
-const BLACKOUT_OUT_MS = 260;
+// Blackout composes with the CSS route-enter/route-exit keyframes in
+// globals.css — the keyframes (680ms / 220ms) handle the smooth slide,
+// the blackout just masks the DOM swap between pages. Keeping the
+// blackout tight makes route changes feel snappier without touching
+// the actual animation feel. In ≈ cover mount, out ≈ reveal, total
+// visible blackout time ≈ 260ms.
+const BLACKOUT_IN_MS = 130;
+const BLACKOUT_SETTLE_MS = 15;
+const BLACKOUT_HOLD_MS = 20;
+const BLACKOUT_OUT_MS = 160;
 
 function getTransitionNode(): HTMLElement | null {
   return document.querySelector("[data-route-transition]") as HTMLElement | null;

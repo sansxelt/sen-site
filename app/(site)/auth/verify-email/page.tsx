@@ -27,7 +27,7 @@ export default async function VerifyEmailPage({
   const status = params.status ?? "pending";
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <div className="mx-auto max-w-lg px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
       <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
         {status === "pending" && <PendingState email={email} />}
         {status === "expired" && <ExpiredState email={email} />}
