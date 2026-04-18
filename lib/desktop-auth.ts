@@ -158,3 +158,31 @@ export async function touchSession(sessionId: string): Promise<void> {
     .update({ last_used_at: new Date().toISOString() } as never)
     .eq("id", sessionId);
 }
+
+// ── Bearer-token auth for desktop API calls ─────────────────────────
+
+// Pulls the desktop session token off an Authorization: Bearer header,
+// validates it against desktop_sessions, and returns the user's email
+// (or null if missing / revoked / not found). Touches last_used_at as
+// a side effect so we have basic activity tracking.
+export async function getDesktopUserEmailFromRequest(
+  request: Request,
+): Promise<string | null> {
+  const auth = request.headers.get("authorization") ?? "";
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+  const token = match[1].trim();
+  if (!token) return null;
+
+  try {
+    const session = await findActiveSessionByToken(token);
+    if (!session) return null;
+    touchSession(session.id).catch((err) =>
+      console.warn("touchSession failed:", err),
+    );
+    return session.email;
+  } catch (err) {
+    console.warn("getDesktopUserEmailFromRequest:", err);
+    return null;
+  }
+}
