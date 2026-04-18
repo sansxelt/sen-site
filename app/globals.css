@@ -141,29 +141,33 @@ body {
   0%, 100% { transform: translate3d(5%, 15%, 0) scale(1); }
   50%      { transform: translate3d(-15%, -10%, 0) scale(1.08); }
 }
+/* Indigo + violet aurora pair — sits in the same cool-blue family as
+   the body's existing radial gradient so the layers don't fight.  Both
+   blobs are in the same hue lane (just different saturation / position)
+   to feel like one ambient light source rather than two color splashes. */
 .hx-aurora-blob-1 {
   position: absolute;
   top: -25%;
   left: -15%;
-  width: min(60vw, 640px);
-  height: min(60vw, 640px);
+  width: min(65vw, 700px);
+  height: min(65vw, 700px);
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(96, 165, 250, 0.18), transparent 65%);
-  filter: blur(60px);
-  animation: hx-aurora-1 24s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.22), transparent 65%);
+  filter: blur(80px);
+  animation: hx-aurora-1 32s ease-in-out infinite;
   will-change: transform;
   pointer-events: none;
 }
 .hx-aurora-blob-2 {
   position: absolute;
-  bottom: -20%;
-  right: -10%;
-  width: min(55vw, 560px);
-  height: min(55vw, 560px);
+  bottom: -25%;
+  right: -15%;
+  width: min(60vw, 620px);
+  height: min(60vw, 620px);
   border-radius: 9999px;
-  background: radial-gradient(circle, rgba(52, 211, 153, 0.10), transparent 65%);
-  filter: blur(80px);
-  animation: hx-aurora-2 30s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.14), transparent 65%);
+  filter: blur(100px);
+  animation: hx-aurora-2 38s ease-in-out infinite;
   will-change: transform;
   pointer-events: none;
 }

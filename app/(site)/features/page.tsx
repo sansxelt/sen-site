@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { AuroraBackground } from "@/components/aurora-background";
-import { ScrollReveal } from "@/components/scroll-reveal";
 import { SpotlightCard } from "@/components/spotlight-card";
 import { getSignInPath } from "@/lib/auth-ui";
 
@@ -124,17 +123,15 @@ export default async function FeaturesPage() {
           Core modes
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {modes.map((mode, i) => (
-            <ScrollReveal key={mode.title} delay={i * 70}>
-              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-6 h-full">
-                <div className="text-lg font-semibold text-white">
-                  {mode.title}
-                </div>
-                <p className="mt-3 text-sm leading-6 text-neutral-200">
-                  {mode.description}
-                </p>
-              </SpotlightCard>
-            </ScrollReveal>
+          {modes.map((mode) => (
+            <SpotlightCard key={mode.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 h-full">
+              <div className="text-lg font-semibold text-white">
+                {mode.title}
+              </div>
+              <p className="mt-3 text-sm leading-6 text-neutral-200">
+                {mode.description}
+              </p>
+            </SpotlightCard>
           ))}
         </div>
       </div>
@@ -151,17 +148,15 @@ export default async function FeaturesPage() {
           small prompts and expands automatically for larger requests.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {responseLayers.map((layer, i) => (
-            <ScrollReveal key={layer.title} delay={i * 60}>
-              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-6 h-full">
-                <div className="text-lg font-semibold text-white">
-                  {layer.title}
-                </div>
-                <p className="mt-3 text-sm leading-6 text-neutral-200">
-                  {layer.description}
-                </p>
-              </SpotlightCard>
-            </ScrollReveal>
+          {responseLayers.map((layer) => (
+            <SpotlightCard key={layer.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 h-full">
+              <div className="text-lg font-semibold text-white">
+                {layer.title}
+              </div>
+              <p className="mt-3 text-sm leading-6 text-neutral-200">
+                {layer.description}
+              </p>
+            </SpotlightCard>
           ))}
         </div>
       </div>
@@ -198,17 +193,15 @@ export default async function FeaturesPage() {
           Product principles
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {principles.map((item, i) => (
-            <ScrollReveal key={item.title} delay={i * 70}>
-              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full">
-                <div className="text-xl font-semibold text-white">
-                  {item.title}
-                </div>
-                <p className="mt-4 text-base leading-7 text-neutral-100/85">
-                  {item.description}
-                </p>
-              </SpotlightCard>
-            </ScrollReveal>
+          {principles.map((item) => (
+            <SpotlightCard key={item.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full">
+              <div className="text-xl font-semibold text-white">
+                {item.title}
+              </div>
+              <p className="mt-4 text-base leading-7 text-neutral-100/85">
+                {item.description}
+              </p>
+            </SpotlightCard>
           ))}
         </div>
       </div>

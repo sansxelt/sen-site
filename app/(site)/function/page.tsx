@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { AuroraBackground } from "@/components/aurora-background";
-import { ScrollReveal } from "@/components/scroll-reveal";
 import { SpotlightCard } from "@/components/spotlight-card";
 import { getSignInPath } from "@/lib/auth-ui";
 
@@ -89,15 +88,13 @@ export default async function FunctionPage() {
       </div>
 
       <div className="mt-12 grid gap-4 lg:grid-cols-3">
-        {structure.map((item, i) => (
-          <ScrollReveal key={item.title} delay={i * 70}>
-            <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full">
-              <div className="text-lg font-semibold text-white">{item.title}</div>
-              <p className="mt-3 text-sm leading-6 text-neutral-200">
-                {item.description}
-              </p>
-            </SpotlightCard>
-          </ScrollReveal>
+        {structure.map((item) => (
+          <SpotlightCard key={item.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full">
+            <div className="text-lg font-semibold text-white">{item.title}</div>
+            <p className="mt-3 text-sm leading-6 text-neutral-200">
+              {item.description}
+            </p>
+          </SpotlightCard>
         ))}
       </div>
 
@@ -106,20 +103,18 @@ export default async function FunctionPage() {
           Response flow
         </div>
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
-          {lifecycle.map((item, i) => (
-            <ScrollReveal key={item.step} delay={i * 70}>
-              <SpotlightCard className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 sm:flex-row sm:p-7 h-full">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-sm font-semibold text-white">
-                  {item.step}
-                </div>
-                <div>
-                  <div className="text-lg font-medium text-white">{item.title}</div>
-                  <p className="mt-2 text-sm leading-6 text-neutral-200">
-                    {item.description}
-                  </p>
-                </div>
-              </SpotlightCard>
-            </ScrollReveal>
+          {lifecycle.map((item) => (
+            <SpotlightCard key={item.step} className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 sm:flex-row sm:p-7 h-full">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-sm font-semibold text-white">
+                {item.step}
+              </div>
+              <div>
+                <div className="text-lg font-medium text-white">{item.title}</div>
+                <p className="mt-2 text-sm leading-6 text-neutral-200">
+                  {item.description}
+                </p>
+              </div>
+            </SpotlightCard>
           ))}
         </div>
       </div>
