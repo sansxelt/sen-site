@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { AuroraBackground } from "@/components/aurora-background";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { SpotlightCard } from "@/components/spotlight-card";
 import { getSignInPath } from "@/lib/auth-ui";
 
 export const metadata: Metadata = {
@@ -99,12 +102,14 @@ export default async function FeaturesPage() {
   const signedIn = Boolean(session?.user?.email);
 
   return (
+    <>
+      <AuroraBackground />
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
       <div className="max-w-3xl">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
           Features
         </div>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+        <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
           A normal AI on the surface. A response engine underneath.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-200">
@@ -119,18 +124,17 @@ export default async function FeaturesPage() {
           Core modes
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {modes.map((mode) => (
-            <div
-              key={mode.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6"
-            >
-              <div className="text-lg font-semibold text-white">
-                {mode.title}
-              </div>
-              <p className="mt-3 text-sm leading-6 text-neutral-200">
-                {mode.description}
-              </p>
-            </div>
+          {modes.map((mode, i) => (
+            <ScrollReveal key={mode.title} delay={i * 70}>
+              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-6 h-full">
+                <div className="text-lg font-semibold text-white">
+                  {mode.title}
+                </div>
+                <p className="mt-3 text-sm leading-6 text-neutral-200">
+                  {mode.description}
+                </p>
+              </SpotlightCard>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -139,7 +143,7 @@ export default async function FeaturesPage() {
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
           Response layers
         </div>
-        <h2 className="mt-3 max-w-2xl text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h2 className="hx-gradient-text mt-3 max-w-2xl text-2xl font-semibold tracking-tight sm:text-4xl">
           Every answer can grow into something more useful.
         </h2>
         <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
@@ -147,18 +151,17 @@ export default async function FeaturesPage() {
           small prompts and expands automatically for larger requests.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {responseLayers.map((layer) => (
-            <div
-              key={layer.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6"
-            >
-              <div className="text-lg font-semibold text-white">
-                {layer.title}
-              </div>
-              <p className="mt-3 text-sm leading-6 text-neutral-200">
-                {layer.description}
-              </p>
-            </div>
+          {responseLayers.map((layer, i) => (
+            <ScrollReveal key={layer.title} delay={i * 60}>
+              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-6 h-full">
+                <div className="text-lg font-semibold text-white">
+                  {layer.title}
+                </div>
+                <p className="mt-3 text-sm leading-6 text-neutral-200">
+                  {layer.description}
+                </p>
+              </SpotlightCard>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -168,7 +171,7 @@ export default async function FeaturesPage() {
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
             What you can bring
           </div>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
             Anything in. Not just prompts.
           </h2>
           <p className="mt-4 text-base leading-7 text-neutral-200">
@@ -195,18 +198,17 @@ export default async function FeaturesPage() {
           Product principles
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {principles.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7"
-            >
-              <div className="text-xl font-semibold text-white">
-                {item.title}
-              </div>
-              <p className="mt-4 text-base leading-7 text-neutral-100/85">
-                {item.description}
-              </p>
-            </div>
+          {principles.map((item, i) => (
+            <ScrollReveal key={item.title} delay={i * 70}>
+              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full">
+                <div className="text-xl font-semibold text-white">
+                  {item.title}
+                </div>
+                <p className="mt-4 text-base leading-7 text-neutral-100/85">
+                  {item.description}
+                </p>
+              </SpotlightCard>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -226,5 +228,6 @@ export default async function FeaturesPage() {
         </Link>
       </div>
     </section>
+    </>
   );
 }

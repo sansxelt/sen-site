@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
+import { AuroraBackground } from "@/components/aurora-background";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { SpotlightCard } from "@/components/spotlight-card";
 import { getSignInPath } from "@/lib/auth-ui";
 
 export const metadata: Metadata = {
@@ -68,12 +71,14 @@ export default async function FunctionPage() {
   const signedIn = Boolean(session?.user?.email);
 
   return (
+    <>
+      <AuroraBackground />
     <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
       <div className="max-w-3xl">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
           How it works
         </div>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+        <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
           It starts like chat. The response does the heavy lifting.
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
@@ -84,16 +89,15 @@ export default async function FunctionPage() {
       </div>
 
       <div className="mt-12 grid gap-4 lg:grid-cols-3">
-        {structure.map((item) => (
-          <div
-            key={item.title}
-            className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7"
-          >
-            <div className="text-lg font-semibold text-white">{item.title}</div>
-            <p className="mt-3 text-sm leading-6 text-neutral-200">
-              {item.description}
-            </p>
-          </div>
+        {structure.map((item, i) => (
+          <ScrollReveal key={item.title} delay={i * 70}>
+            <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full">
+              <div className="text-lg font-semibold text-white">{item.title}</div>
+              <p className="mt-3 text-sm leading-6 text-neutral-200">
+                {item.description}
+              </p>
+            </SpotlightCard>
+          </ScrollReveal>
         ))}
       </div>
 
@@ -102,21 +106,20 @@ export default async function FunctionPage() {
           Response flow
         </div>
         <div className="mt-6 grid gap-5 lg:grid-cols-2">
-          {lifecycle.map((item) => (
-            <div
-              key={item.step}
-              className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 sm:flex-row sm:p-7"
-            >
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-sm font-semibold text-white">
-                {item.step}
-              </div>
-              <div>
-                <div className="text-lg font-medium text-white">{item.title}</div>
-                <p className="mt-2 text-sm leading-6 text-neutral-200">
-                  {item.description}
-                </p>
-              </div>
-            </div>
+          {lifecycle.map((item, i) => (
+            <ScrollReveal key={item.step} delay={i * 70}>
+              <SpotlightCard className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 sm:flex-row sm:p-7 h-full">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-sm font-semibold text-white">
+                  {item.step}
+                </div>
+                <div>
+                  <div className="text-lg font-medium text-white">{item.title}</div>
+                  <p className="mt-2 text-sm leading-6 text-neutral-200">
+                    {item.description}
+                  </p>
+                </div>
+              </SpotlightCard>
+            </ScrollReveal>
           ))}
         </div>
       </div>
@@ -154,5 +157,6 @@ export default async function FunctionPage() {
         </Link>
       </div>
     </section>
+    </>
   );
 }

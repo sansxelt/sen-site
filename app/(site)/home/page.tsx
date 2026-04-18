@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { auth } from "@/auth";
+import { AuroraBackground } from "@/components/aurora-background";
 import { AuthFlow } from "@/components/auth-flow";
 import { EarlyAccessForm } from "@/components/early-access-form";
 import { HeroActivity } from "@/components/hero-activity";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { SpotlightCard } from "@/components/spotlight-card";
 import { readAccountContext } from "@/lib/account-session";
 import { getSignInPath } from "@/lib/auth-ui";
 import { pricingPlans } from "@/lib/pricing";
@@ -117,6 +120,8 @@ export default async function HomePage() {
 
   return (
     <>
+      <AuroraBackground />
+
       <section
         id="top"
         className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.1fr_.9fr] lg:items-start lg:gap-16 lg:px-8 lg:pb-16 lg:pt-16"
@@ -132,7 +137,7 @@ export default async function HomePage() {
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Smart escalation
           </div>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
             The response changes shape based on the request.
           </h2>
           <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
@@ -143,29 +148,28 @@ export default async function HomePage() {
         </div>
 
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
-          {escalation.map((level) => (
-            <div
-              key={level.size}
-              className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6"
-            >
-              <div className="inline-flex rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-neutral-400">
-                {level.size}
-              </div>
-              <p className="mt-4 text-sm font-medium leading-snug text-white/90">
-                {level.input}
-              </p>
-              <div className="mt-4 space-y-2">
-                {level.layers.map((layer) => (
-                  <div
-                    key={layer}
-                    className="flex items-start gap-2.5 text-sm text-neutral-300"
-                  >
-                    <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400/70" />
-                    <span>{layer}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          {escalation.map((level, i) => (
+            <ScrollReveal key={level.size} delay={i * 80}>
+              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6 h-full">
+                <div className="inline-flex rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-neutral-400">
+                  {level.size}
+                </div>
+                <p className="mt-4 text-sm font-medium leading-snug text-white/90">
+                  {level.input}
+                </p>
+                <div className="mt-4 space-y-2">
+                  {level.layers.map((layer) => (
+                    <div
+                      key={layer}
+                      className="flex items-start gap-2.5 text-sm text-neutral-300"
+                    >
+                      <span className="mt-[3px] h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400/70" />
+                      <span>{layer}</span>
+                    </div>
+                  ))}
+                </div>
+              </SpotlightCard>
+            </ScrollReveal>
           ))}
         </div>
       </section>
@@ -175,30 +179,29 @@ export default async function HomePage() {
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             What goes in, what comes out
           </div>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
             The point is not more text. It is better output.
           </h2>
         </div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {transforms.map((transform) => (
-            <div
-              key={transform.input}
-              className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6"
-            >
-              <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-neutral-500">
-                Bring
-              </div>
-              <p className="mt-2 text-sm font-medium text-white/90">
-                {transform.input}
-              </p>
-              <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.15em] text-neutral-500">
-                Get back
-              </div>
-              <p className="mt-2 text-sm leading-6 text-neutral-200">
-                {transform.output}
-              </p>
-            </div>
+          {transforms.map((transform, i) => (
+            <ScrollReveal key={transform.input} delay={i * 60}>
+              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6 h-full">
+                <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-neutral-500">
+                  Bring
+                </div>
+                <p className="mt-2 text-sm font-medium text-white/90">
+                  {transform.input}
+                </p>
+                <div className="mt-4 text-[11px] font-medium uppercase tracking-[0.15em] text-neutral-500">
+                  Get back
+                </div>
+                <p className="mt-2 text-sm leading-6 text-neutral-200">
+                  {transform.output}
+                </p>
+              </SpotlightCard>
+            </ScrollReveal>
           ))}
         </div>
       </section>
@@ -208,22 +211,21 @@ export default async function HomePage() {
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             Why this is different
           </div>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
             Chat on the surface. A response engine underneath.
           </h2>
         </div>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {whySansxel.map((item) => (
-            <div
-              key={item.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6"
-            >
-              <div className="text-lg font-medium text-white">{item.title}</div>
-              <p className="mt-3 text-sm leading-6 text-neutral-200">
-                {item.description}
-              </p>
-            </div>
+          {whySansxel.map((item, i) => (
+            <ScrollReveal key={item.title} delay={i * 70}>
+              <SpotlightCard className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6 h-full">
+                <div className="text-lg font-medium text-white">{item.title}</div>
+                <p className="mt-3 text-sm leading-6 text-neutral-200">
+                  {item.description}
+                </p>
+              </SpotlightCard>
+            </ScrollReveal>
           ))}
         </div>
       </section>
@@ -234,7 +236,7 @@ export default async function HomePage() {
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
               Product shape
             </div>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
               One chat box in front. Real output behind it.
             </h2>
             <p className="mt-4 text-base leading-7 text-neutral-200">
@@ -245,18 +247,17 @@ export default async function HomePage() {
           </div>
 
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
-            {productShape.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6"
-              >
-                <div className="text-lg font-medium text-white">
-                  {item.title}
-                </div>
-                <p className="mt-3 text-sm leading-6 text-neutral-200">
-                  {item.description}
-                </p>
-              </div>
+            {productShape.map((item, i) => (
+              <ScrollReveal key={item.title} delay={i * 70}>
+                <SpotlightCard className="rounded-3xl border border-white/10 bg-black/20 p-5 sm:p-6 h-full">
+                  <div className="text-lg font-medium text-white">
+                    {item.title}
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-neutral-200">
+                    {item.description}
+                  </p>
+                </SpotlightCard>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -271,7 +272,7 @@ export default async function HomePage() {
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
               Pricing
             </div>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
               Start free. Upgrade when Sansxel becomes part of how you think and build.
             </h2>
           </div>
