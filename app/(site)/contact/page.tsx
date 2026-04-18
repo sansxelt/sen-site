@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AuroraBackground } from "@/components/aurora-background";
 import { ContactForm } from "./contact-form";
 import { ContactChannels } from "./contact-channels";
 
@@ -27,12 +28,14 @@ export default async function ContactPage({
   const initialMessage = readParam(params, "message");
 
   return (
-    <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
+    <>
+      <AuroraBackground />
+      <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-24">
       <div className="max-w-3xl">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
           Contact / Support
         </div>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+        <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
           Support should be easy to reach before and after access opens.
         </h1>
         <p className="mt-5 text-base leading-7 text-neutral-200">
@@ -106,6 +109,7 @@ export default async function ContactPage({
           </div>
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
