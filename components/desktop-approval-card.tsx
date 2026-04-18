@@ -43,6 +43,17 @@ export function DesktopApprovalCard({
       if (data.callback) {
         window.location.href = data.callback;
       }
+
+      // Browsers won't close tabs they didn't open. We try anyway —
+      // works in some configs (popups, embedded webviews) — and if
+      // it fails the user just sees the polished "all done" state.
+      setTimeout(() => {
+        try {
+          window.close();
+        } catch {
+          // Ignore — fallback UI already explains what to do
+        }
+      }, 800);
     } catch (err) {
       setPhase("error");
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
@@ -70,8 +81,13 @@ export function DesktopApprovalCard({
       </div>
 
       {phase === "approved" ? (
-        <div className="mt-6 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.06] p-4 text-sm text-emerald-100">
-          Approved. Returning you to the desktop app — you can close this tab.
+        <div className="mt-6 space-y-3">
+          <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.06] p-4 text-sm text-emerald-100">
+            All done — sansxel desktop is signed in. Switch back to the app to keep going.
+          </div>
+          <p className="text-center text-xs text-neutral-500">
+            You can close this tab.
+          </p>
         </div>
       ) : (
         <div className="mt-6 flex flex-wrap gap-3">
