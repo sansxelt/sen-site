@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { APP_URL } from "../../../../lib/stripe";
 import { sendVerifyAccountEmail } from "../../../../lib/email";
 import { upsertPendingSignup } from "../../../../lib/pending-signup";
+import {
+  SIGNUP_CLAIM_COOKIE,
+  signSignupClaim,
+} from "../../../../lib/signup-claim-cookie";
 import { isDatabaseConfigured } from "../../../../lib/supabase-admin";
 import { getUserCredentialByEmail } from "../../../../lib/user-credentials";
 
@@ -84,7 +88,22 @@ export async function POST(request: Request) {
       expiryLabel,
     }).catch((err) => console.warn("[register] verify email failed:", err));
 
-    return NextResponse.json({ ok: true, verify: "pending", email });
+    // Set the signed claim cookie so *this* browser can poll
+    // /api/auth/check-signup-status and get auto-signed-in when the
+    // verify email is clicked on another device.  HTTP-only so JS can't
+    // read it; the server decides who gets an auto-signin token.
+    const claim    = signSignupClaim(email);
+    const response = NextResponse.json({ ok: true, verify: "pending", email });
+    response.cookies.set({
+      name:     SIGNUP_CLAIM_COOKIE,
+      value:    claim.value,
+      httpOnly: true,
+      secure:   process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path:     "/",
+      maxAge:   claim.maxAge,
+    });
+    return response;
   } catch (error) {
     console.error("Registration failed:", error);
     return NextResponse.json(

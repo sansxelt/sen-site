@@ -60,7 +60,7 @@ export default async function HomePage() {
         id="top"
         data-stagger
         style={{ "--stagger-i": 0 } as React.CSSProperties}
-        className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-8 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.1fr_.9fr] lg:items-start lg:gap-16 lg:px-8 lg:pb-16 lg:pt-16"
+        className="mx-auto grid max-w-7xl gap-6 px-4 pb-12 pt-8 sm:gap-10 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.1fr_.9fr] lg:items-start lg:gap-16 lg:px-8 lg:pb-16 lg:pt-16"
       >
         <HeroActivity isSignedIn={Boolean(initialAccountContext)} />
       </section>
@@ -134,7 +134,7 @@ export default async function HomePage() {
         style={{ "--stagger-i": 2 } as React.CSSProperties}
         className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
       >
-        <div className="flex flex-wrap items-end justify-between gap-6">
+        <div className="flex flex-col items-start gap-5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
           <div className="max-w-2xl">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
               Pricing

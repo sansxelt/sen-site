@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ResendVerification } from "../../../../components/resend-verification";
+import { SignupWaitingPoller } from "../../../../components/signup-waiting-poller";
 
 export const metadata = {
   title: "Check your email",
@@ -62,6 +63,8 @@ function PendingState({ email }: { email: string }) {
           : <span className="text-neutral-400">your email address</span>}
         . Click the link in that email and your account goes live — takes five seconds.
       </p>
+
+      <SignupWaitingPoller />
 
       <ul className="mt-5 space-y-2 text-xs text-neutral-400">
         <li className="flex items-start gap-2">
