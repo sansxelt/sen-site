@@ -12,6 +12,21 @@ import {
   sendSubscriptionEndedEmail,
 } from "../../../../lib/email";
 import { getPricingPlan, type PricingPlanKey, pricingPlanMap } from "../../../../lib/pricing";
+import { getUserProfileByEmail } from "../../../../lib/user-profile";
+
+/**
+ * Look up the customer's display name so every billing email greets
+ * them by name.  Missing profiles (deleted / guest customers) fall
+ * back to "" which renders as a plain "Hi," in the templates.
+ */
+async function displayNameFor(email: string): Promise<string> {
+  try {
+    const profile = await getUserProfileByEmail(email);
+    return profile?.display_name ?? "";
+  } catch {
+    return "";
+  }
+}
 
 // Reverse-lookup a Stripe price ID to its plan key / cycle.
 function resolvePlanFromPriceId(priceId: string | null): { planKey: string; cycle: "monthly" | "yearly" } | null {
@@ -103,6 +118,8 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
     ? getPricingPlan(ctx.planKey as PricingPlanKey)
     : null;
 
+  const name = await displayNameFor(ctx.email);
+
   switch (event.type) {
     case "customer.subscription.created": {
       if (subscription.status === "active" || subscription.status === "trialing") {
@@ -111,7 +128,7 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
           : "";
         await sendSubscriptionActivatedEmail({
           email:       ctx.email,
-          name:        "",
+          name,
           planName:    ctx.planName,
           cycle:       ctx.cycle,
           amountLabel,
@@ -128,7 +145,7 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
       if (currCancel && !prevCancel) {
         await sendSubscriptionCancellationScheduledEmail({
           email:    ctx.email,
-          name:     "",
+          name,
           planName: ctx.planName,
           endsOn:   formatDate(ctx.periodEndUnix),
         });
@@ -143,7 +160,7 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
       ) {
         await sendSubscriptionEndedEmail({
           email:    ctx.email,
-          name:     "",
+          name,
           planName: ctx.planName,
         });
       }
@@ -154,7 +171,7 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
       // Period ended on a scheduled cancel, or admin hard-canceled.
       await sendSubscriptionEndedEmail({
         email:    ctx.email,
-        name:     "",
+        name,
         planName: ctx.planName,
       });
       break;
@@ -203,7 +220,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   if (!email) return;
   await sendPaymentFailedEmail({
     email,
-    name:     "",
+    name:     await displayNameFor(email),
     planName: planNameFromInvoice(invoice),
   });
 }
@@ -230,7 +247,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 
   await sendRenewalSucceededEmail({
     email,
-    name:        "",
+    name:        await displayNameFor(email),
     planName:    planNameFromInvoice(invoice),
     amountLabel: formatInvoiceAmount(invoice),
     periodEnd:   nextPeriod,
@@ -262,7 +279,7 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
 
   await sendRenewalUpcomingEmail({
     email,
-    name:        "",
+    name:        await displayNameFor(email),
     planName:    planNameFromInvoice(invoice),
     amountLabel: formatInvoiceAmount(invoice),
     chargeDate,

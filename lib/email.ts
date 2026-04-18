@@ -820,3 +820,34 @@ export async function sendRenewalUpcomingEmail(opts: {
     });
   } catch (err) { console.error("sendRenewalUpcomingEmail failed:", err); }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NEWSLETTER / PRODUCT UPDATES
+//
+// Newsletter sends share the billing sender (noreply@sansxel.ai) — both
+// are automated broadcasts from the company, neither expects replies.
+// `subject` and `bodyHtml` come pre-rendered from the caller (the
+// newsletter composer will live in its own module once it exists).
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function sendNewsletterEmail(opts: {
+  to:       string;
+  subject:  string;
+  /** Full rendered inner content — will be wrapped in the standard
+      baseHtml chrome (header, contact block, legal footer) so every
+      newsletter matches the transactional look. */
+  bodyHtml: string;
+}): Promise<void> {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from:    fromBilling,
+      to:      opts.to,
+      subject: opts.subject,
+      html:    baseHtml(opts.bodyHtml),
+    });
+  } catch (err) {
+    console.error("sendNewsletterEmail failed:", err);
+  }
+}

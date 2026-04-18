@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { sendPasswordResetConfirmEmail } from "../../../../../lib/email";
 import { consumeResetToken, verifyResetToken } from "../../../../../lib/password-reset";
 import { getSupabaseAdminClient } from "../../../../../lib/supabase-admin";
+import { getUserProfileByEmail } from "../../../../../lib/user-profile";
 
 type ConfirmPayload = {
   token?: string;
@@ -62,7 +63,11 @@ export async function POST(request: Request) {
     await consumeResetToken(token);
 
     // "Your password was reset" confirmation — fire-and-forget.
-    sendPasswordResetConfirmEmail(email, "").catch(() => {});
+    // Look up the display name so the greeting reads "Hi <name>,"
+    // instead of the anonymous "Hi,".
+    const profile    = await getUserProfileByEmail(email);
+    const displayName = profile?.display_name ?? "";
+    sendPasswordResetConfirmEmail(email, displayName).catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (error) {
