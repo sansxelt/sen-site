@@ -142,7 +142,7 @@ function CardPack({
   }
 
   return (
-    <div className="flex flex-col gap-5" style={{ width: "100%", maxWidth: 336 }}>
+    <div className="flex flex-col gap-5" style={{ width: 336 }}>
       <div className={`flex flex-col gap-1.5 ${labelAlign === "right" ? "items-end text-right" : "items-start text-left"}`}>
         <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
           {label}
@@ -155,8 +155,8 @@ function CardPack({
       </div>
 
       <div
-        className="relative mx-auto"
-        style={{ width: "100%", maxWidth: 336, height: 468 }}
+        className="relative"
+        style={{ width: 336, height: 468 }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
