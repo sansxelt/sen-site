@@ -19,7 +19,10 @@ function MainShell() {
           <span className="main-brand-name">sansxel</span>
           <span className="main-brand-sub">desktop</span>
         </div>
-        <div className="main-status">not signed in</div>
+        <button type="button" className="main-signin-btn">
+          <span className="main-signin-dot" />
+          Sign in
+        </button>
       </header>
 
       <div className="main-body">
