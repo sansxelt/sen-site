@@ -53,44 +53,6 @@ export function isEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
-/**
- * Dev-only raw sender.  Used by /dev/emails to deliver templates whose
- * normal `send*` helpers route to internal inboxes (e.g. support mail
- * goes to help@) — the dev tool overrides the destination so the
- * tester can see what would land in ops' queue.
- *
- * Do NOT use this for real product flows; it bypasses routing allowlists.
- */
-export async function sendRawForDev(opts: {
-  to:      string;
-  subject: string;
-  html:    string;
-  from?:   "account" | "billing" | "support";
-}): Promise<void> {
-  const resend = getResend();
-  if (!resend) throw new Error("RESEND_API_KEY missing");
-
-  const from =
-    opts.from === "billing" ? fromBilling
-  : opts.from === "support" ? fromForInbox("help@sansxel.ai")
-                            : fromAccount;
-
-  const result = await resend.emails.send({
-    from,
-    replyTo: REPLY_TO,
-    to:      opts.to,
-    subject: opts.subject,
-    html:    opts.html,
-  });
-  if (result.error) {
-    const detail =
-      typeof result.error === "object" && "message" in result.error
-        ? String((result.error as { message: unknown }).message)
-        : String(result.error);
-    throw new Error(`Resend: ${detail}`);
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Templates
 // ---------------------------------------------------------------------------
