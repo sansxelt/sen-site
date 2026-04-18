@@ -57,23 +57,69 @@ export function isEmailConfigured() {
 // Templates
 // ---------------------------------------------------------------------------
 
+/**
+ * baseHtml — standard email chrome for every transactional message.
+ * Header: small sansxel wordmark + tagline.
+ * Body: the template's own content, rendered inside a white card.
+ * Footer: dense contact block (all 3 departmental inboxes), legal
+ *         links, copyright.  Sits below the signature so it never
+ *         crowds the message itself.
+ */
 function baseHtml(content: string) {
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 16px;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f4f4f5;padding:32px 16px;">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
-        <tr><td style="padding-bottom:20px;">
-          <span style="font-size:17px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">sansxel</span>
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:600px;">
+
+        <!-- ── Brand header ──────────────────────────────────── -->
+        <tr><td style="padding:0 4px 20px;">
+          <span style="font-size:18px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">sansxel</span>
+          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">Build something REAL.</span>
         </td></tr>
-        <tr><td style="background:#ffffff;border:1px solid #e5e5e5;border-radius:20px;padding:36px;">
+
+        <!-- ── Message card ──────────────────────────────────── -->
+        <tr><td style="background:#ffffff;border:1px solid #e5e5e5;border-radius:20px;padding:36px 36px 32px;">
           ${content}
         </td></tr>
-        <tr><td style="padding-top:20px;font-size:12px;color:#a3a3a3;line-height:1.6;">
-          sansxel · <a href="https://sansxel.ai/privacy" style="color:#a3a3a3;text-decoration:none;">Privacy</a> · <a href="https://sansxel.ai/contact" style="color:#a3a3a3;text-decoration:none;">Support</a>
+
+        <!-- ── Contact block ─────────────────────────────────── -->
+        <tr><td style="padding:22px 4px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+            <tr><td style="padding-bottom:10px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:#525252;">
+              Reach out
+            </td></tr>
+            <tr><td style="font-size:13px;color:#525252;line-height:1.7;">
+              General support · <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">help@sansxel.ai</a><br>
+              Privacy &amp; data · <a href="mailto:privacy@sansxel.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">privacy@sansxel.ai</a><br>
+              Teams &amp; sales · <a href="mailto:sales@sansxel.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">sales@sansxel.ai</a>
+            </td></tr>
+          </table>
         </td></tr>
+
+        <!-- ── Legal footer ──────────────────────────────────── -->
+        <tr><td style="padding:22px 4px 0;border-top:1px solid #e5e5e5;margin-top:22px;">
+          <p style="margin:16px 0 0;font-size:11px;line-height:1.7;color:#a3a3a3;">
+            <a href="https://sansxel.ai" style="color:#737373;text-decoration:none;">sansxel.ai</a>
+             · <a href="https://sansxel.ai/features" style="color:#737373;text-decoration:none;">Features</a>
+             · <a href="https://sansxel.ai/pricing" style="color:#737373;text-decoration:none;">Pricing</a>
+             · <a href="https://sansxel.ai/privacy" style="color:#737373;text-decoration:none;">Privacy</a>
+             · <a href="https://sansxel.ai/terms" style="color:#737373;text-decoration:none;">Terms</a>
+             · <a href="https://sansxel.ai/contact" style="color:#737373;text-decoration:none;">Contact</a>
+          </p>
+          <p style="margin:10px 0 0;font-size:11px;color:#a3a3a3;line-height:1.7;">
+            © ${new Date().getFullYear()} sansxel. All rights reserved.<br>
+            You&apos;re receiving this because an account or subscription event happened on sansxel.ai.
+          </p>
+        </td></tr>
+
       </table>
     </td></tr>
   </table>
@@ -81,47 +127,98 @@ function baseHtml(content: string) {
 </html>`;
 }
 
+// ── Shared template atoms ─────────────────────────────────────────────────
+
+const KICKER_STYLE = "margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#737373;";
+const KICKER_RED   = "margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#b91c1c;";
+const H1_STYLE     = "margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.25;letter-spacing:-0.01em;";
+const BODY_STYLE   = "margin:0 0 18px;font-size:14px;line-height:1.7;color:#404040;";
+const META_STYLE   = "margin:0 0 4px;font-size:13px;line-height:1.7;color:#737373;";
+const BTN_STYLE    = "display:inline-block;background:#0a0a0a;color:#ffffff !important;font-size:14px;font-weight:500;padding:12px 22px;border-radius:14px;text-decoration:none;";
+const BTN_LIGHT    = "display:inline-block;background:#f4f4f5;color:#0a0a0a !important;font-size:14px;font-weight:500;padding:12px 22px;border-radius:14px;text-decoration:none;border:1px solid #e5e5e5;";
+const HR_STYLE     = "height:1px;line-height:1px;background:#e5e5e5;margin:24px 0;";
+const NOTE_STYLE   = "margin:20px 0 0;padding:14px 16px;background:#fafafa;border:1px solid #e5e5e5;border-radius:12px;font-size:12px;color:#525252;line-height:1.65;";
+const NOTE_WARN    = "margin:20px 0 0;padding:14px 16px;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;font-size:12px;color:#9f1239;line-height:1.65;";
+
+function detailsTable(rows: Array<[string, string]>): string {
+  return `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 22px;border-collapse:separate;">
+    ${rows.map(([label, value]) => `
+      <tr>
+        <td style="padding:8px 0;font-size:13px;color:#737373;width:140px;border-bottom:1px solid #f4f4f5;vertical-align:top;">${label}</td>
+        <td style="padding:8px 0;font-size:13px;color:#0a0a0a;font-weight:500;border-bottom:1px solid #f4f4f5;vertical-align:top;">${value}</td>
+      </tr>
+    `).join("")}
+  </table>`;
+}
+
+// ── Account templates (from hello@) ────────────────────────────────────────
+
 function welcomeHtml(name?: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Welcome</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your sansxel account is ready.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your account is set up. Sign in any time to manage your workspace, track your invite status, and keep your setup preferences saved.</p>
-    <a href="https://sansxel.ai/account" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Open workspace</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If you didn't create this account, you can safely ignore this email.</p>
+    <p style="${KICKER_STYLE}">Welcome to sansxel</p>
+    <h1 style="${H1_STYLE}">Your account is live.</h1>
+    <p style="${BODY_STYLE}">${greeting} your sansxel account is set up and ready. Sansxel is a layered response engine — start with a simple prompt and let the output grow into something you can actually use: a plan, a deliverable, a product shape.</p>
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">What to try first:</strong></p>
+    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
+      <li>Ask something complex — a question that would normally need research + structure.</li>
+      <li>Drop in messy input — a screenshot, rough notes, or a link.</li>
+      <li>Push the same thread forward instead of starting over. Keep refining what already works.</li>
+    </ul>
+    <a href="https://sansxel.ai/account" style="${BTN_STYLE}">Open workspace</a>
+    &nbsp;
+    <a href="https://sansxel.ai/features" style="${BTN_LIGHT}">Tour the features</a>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email — the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+    </div>
   `);
 }
 
 function earlyAccessHtml(name: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Early Access</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your invite request is on file.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} we've saved your place in the rollout. We review access carefully and will reach out directly as access opens for your account.</p>
-    <a href="https://sansxel.ai/account" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">View your account</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Questions? Email <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a> or visit <a href="https://sansxel.ai/contact" style="color:#525252;">sansxel.ai/contact</a>.</p>
+    <p style="${KICKER_STYLE}">Early Access Requested</p>
+    <h1 style="${H1_STYLE}">Your place in the rollout is saved.</h1>
+    <p style="${BODY_STYLE}">${greeting} thanks for requesting early access. We review access requests carefully and roll out in waves so we can actually support everyone who comes in. You&apos;ll get a personal email from the team once your seat is ready.</p>
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">While you wait, a few things worth knowing:</strong></p>
+    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
+      <li>Your sansxel account exists now — you can sign in any time to manage preferences.</li>
+      <li>Rollout order prioritizes focus-area match, not signup date, so feel free to update your profile.</li>
+      <li>If access is urgent (team rollout, deadline, specific integration), reach out — we occasionally expedite.</li>
+    </ul>
+    <a href="https://sansxel.ai/account" style="${BTN_STYLE}">View your account</a>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Need a different path?</strong> Teams/sales conversations get fast-tracked — email <a href="mailto:sales@sansxel.ai" style="color:#0a0a0a;">sales@sansxel.ai</a>. General questions go to <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+    </div>
   `);
 }
 
 function passwordResetHtml(resetUrl: string) {
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Password Reset</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Reset your password.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">We received a request to reset the password on your sansxel account. Click the button below to choose a new one. This link expires in one hour.</p>
-    <a href="${resetUrl}" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Reset password</a>
-    <p style="margin:24px 0 8px;font-size:13px;line-height:1.6;color:#737373;">If you didn't request this, you can safely ignore this email — your password will not change.</p>
-    <p style="margin:0;font-size:12px;line-height:1.6;color:#737373;word-break:break-all;">Or copy this link: ${resetUrl}</p>
+    <p style="${KICKER_STYLE}">Password Reset</p>
+    <h1 style="${H1_STYLE}">Choose a new password.</h1>
+    <p style="${BODY_STYLE}">Someone — hopefully you — asked to reset the password on your sansxel account. Click the button below to pick a new one. The link is <strong style="color:#0a0a0a;">single-use</strong> and expires in <strong style="color:#0a0a0a;">one hour</strong>.</p>
+    <a href="${resetUrl}" style="${BTN_STYLE}">Reset password</a>
+    <div style="${HR_STYLE}"></div>
+    <p style="${META_STYLE}">Link not working? Copy and paste this URL into your browser:</p>
+    <p style="margin:4px 0 0;font-size:12px;color:#0a0a0a;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${resetUrl}</p>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Didn&apos;t ask for this?</strong> You can safely ignore this email — your password won&apos;t change without someone clicking the link. If you&apos;re seeing repeated reset requests, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a> and we&apos;ll lock the account while we investigate.
+    </div>
   `);
 }
 
 function contactConfirmHtml(name: string, subject: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Message Received</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">We got your message.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} we received your message about <strong style="color:#0a0a0a;">${subject}</strong> and will follow up to your email address directly. For urgent issues, reply to this email.</p>
-    <a href="https://sansxel.ai/contact" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Back to contact</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If you didn't submit this form, you can safely ignore this email.</p>
+    <p style="${KICKER_STYLE}">Message Received</p>
+    <h1 style="${H1_STYLE}">We got your note.</h1>
+    <p style="${BODY_STYLE}">${greeting} thanks for reaching out. We received your message about <strong style="color:#0a0a0a;">${subject}</strong> and someone on the team will follow up to your email address directly — usually within one business day.</p>
+    <p style="${BODY_STYLE}">If you have more to add, just reply to this email. Your reply lands in the right queue automatically.</p>
+    <a href="https://sansxel.ai/contact" style="${BTN_LIGHT}">Back to contact</a>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Didn&apos;t submit this form?</strong> You can safely ignore this email — we&apos;ll process it as a mistake if we don&apos;t hear back. No further messages will be sent unless you reach out again.
+    </div>
   `);
 }
 
@@ -302,76 +399,204 @@ export async function sendSupportEmail(opts: {
 function pwResetConfirmHtml(name: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Password Updated</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your password was reset.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your sansxel password was just changed. If that was you, you're all set.</p>
-    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#737373;"><strong style="color:#b91c1c;">If that wasn&apos;t you</strong>, contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a> immediately — we can lock the account while we investigate.</p>
+    <p style="${KICKER_STYLE}">Password Updated</p>
+    <h1 style="${H1_STYLE}">Your password was reset.</h1>
+    <p style="${BODY_STYLE}">${greeting} your sansxel password was just changed. If that was you, you&apos;re all set — this email is just confirmation. Your active sessions on other devices will need to sign in again the next time you use them.</p>
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">While you&apos;re thinking about security:</strong></p>
+    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
+      <li>Use a password manager if you don&apos;t already — we strongly recommend it.</li>
+      <li>If you reused this password elsewhere, change it there too.</li>
+      <li>Turn on two-factor auth on the email tied to your sansxel account; that email is the key to everything.</li>
+    </ul>
+    <div style="${NOTE_WARN}">
+      <strong style="color:#9f1239;">If that wasn&apos;t you</strong>, email <a href="mailto:help@sansxel.ai" style="color:#9f1239;font-weight:600;">help@sansxel.ai</a> immediately. We can lock the account, reverse the change, and walk through how to secure it while we investigate.
+    </div>
   `);
 }
 
 function accountDeletedHtml(name: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Account Deleted</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your account has been removed.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your sansxel account and associated data have been deleted. You won&apos;t receive further account or billing emails.</p>
-    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#737373;">Active subscriptions are cancelled on deletion — no further charges will be made. Changed your mind? You&apos;re welcome back any time at <a href="https://sansxel.ai" style="color:#525252;">sansxel.ai</a>.</p>
-    <p style="margin:12px 0 0;font-size:13px;line-height:1.6;color:#737373;">Questions about data or privacy? Email <a href="mailto:privacy@sansxel.ai" style="color:#525252;">privacy@sansxel.ai</a>.</p>
+    <p style="${KICKER_STYLE}">Account Deleted</p>
+    <h1 style="${H1_STYLE}">Your account has been removed.</h1>
+    <p style="${BODY_STYLE}">${greeting} your sansxel account and associated data have been deleted. Confirming exactly what was removed, so there&apos;s no ambiguity:</p>
+    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
+      <li><strong style="color:#0a0a0a;">Profile and credentials</strong> — your email, password hash, and preferences.</li>
+      <li><strong style="color:#0a0a0a;">API keys</strong> — all keys revoked. Any integrations using them will immediately stop working.</li>
+      <li><strong style="color:#0a0a0a;">Saved outputs and history</strong> — gone from our systems (may persist in backups for up to 30 days, purged per our data policy).</li>
+      <li><strong style="color:#0a0a0a;">Active subscriptions</strong> — cancelled. No further charges will hit your card.</li>
+    </ul>
+    <p style="${BODY_STYLE}">You won&apos;t receive further account or billing emails. Changed your mind? You&apos;re welcome back any time — nothing&apos;s permanent on our side.</p>
+    <a href="https://sansxel.ai" style="${BTN_LIGHT}">Visit sansxel.ai</a>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Questions about data or privacy?</strong> For anything involving your data — what was stored, what&apos;s in backups, export requests — email <a href="mailto:privacy@sansxel.ai" style="color:#0a0a0a;">privacy@sansxel.ai</a>. We respond to privacy requests within 72 hours.
+    </div>
   `);
 }
 
 function subscriptionActivatedHtml(name: string, planName: string, cycle: string, amountLabel: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
+  const periodLabel = cycle === "yearly" ? "annual" : "monthly";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Subscription Active</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Welcome to sansxel ${planName}.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your ${cycle} subscription is live — <strong style="color:#0a0a0a;">${amountLabel}</strong>. You have the full plan available starting now.</p>
-    <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Manage billing</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Need help? Email <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a>.</p>
+    <p style="${KICKER_STYLE}">Subscription Active</p>
+    <h1 style="${H1_STYLE}">Welcome to sansxel ${planName}.</h1>
+    <p style="${BODY_STYLE}">${greeting} your ${periodLabel} subscription is live. Paid features are available immediately — no waiting, no activation step.</p>
+
+    ${detailsTable([
+      ["Plan",          planName],
+      ["Billing cycle", cycle === "yearly" ? "Yearly" : "Monthly"],
+      ["Amount",        amountLabel],
+      ["Next charge",   cycle === "yearly" ? "In 12 months" : "In 1 month"],
+    ])}
+
+    <a href="https://sansxel.ai/account" style="${BTN_STYLE}">Open workspace</a>
+    &nbsp;
+    <a href="https://sansxel.ai/account/billing" style="${BTN_LIGHT}">Manage billing</a>
+    <div style="${NOTE_STYLE}">
+      A Stripe receipt with the full invoice is on its way separately. For plan changes, cancellations, or downgrades, head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> — all changes are self-serve and take effect immediately. For help, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+    </div>
   `);
 }
 
 function subscriptionCancellationScheduledHtml(name: string, planName: string, endsOn: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Cancellation Scheduled</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your ${planName} plan ends on ${endsOn}.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} we&apos;ve scheduled your cancellation. You keep full access until <strong style="color:#0a0a0a;">${endsOn}</strong>. After that you&apos;ll drop to the Free plan — no data loss.</p>
-    <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Change your mind? Resume</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If this wasn&apos;t you, head to billing and tap Resume subscription immediately — it&apos;s one click.</p>
+    <p style="${KICKER_STYLE}">Cancellation Scheduled</p>
+    <h1 style="${H1_STYLE}">Your ${planName} plan ends on ${endsOn}.</h1>
+    <p style="${BODY_STYLE}">${greeting} we&apos;ve scheduled your cancellation. This is just a confirmation — no action needed from you.</p>
+
+    ${detailsTable([
+      ["Plan",        planName],
+      ["Access until", endsOn],
+      ["Next step",   "Drops to Free on that date"],
+      ["Charges",     "No further charges will be made"],
+    ])}
+
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">What happens next:</strong></p>
+    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
+      <li>You keep every paid feature until <strong style="color:#0a0a0a;">${endsOn}</strong>.</li>
+      <li>On that date, your account drops to the Free plan automatically. Nothing is deleted — just the paid features pause.</li>
+      <li>All your saved outputs, history, and API keys stay exactly where they are.</li>
+    </ul>
+
+    <a href="https://sansxel.ai/account/billing" style="${BTN_STYLE}">Resume subscription</a>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Didn&apos;t schedule this cancellation?</strong> Head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> and tap Resume subscription — it&apos;s one click and fully reverses this email. If you suspect your account is compromised, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a> immediately.
+    </div>
   `);
 }
 
 function subscriptionEndedHtml(name: string, planName: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Plan Reset</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your ${planName} plan has ended.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your paid period is over and your account is now on the Free plan. Your data and history are still there — just the paid features are no longer active.</p>
-    <a href="https://sansxel.ai/pricing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Pick a plan again</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">No charge goes out until you pick a plan again. Questions? Email <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a>.</p>
+    <p style="${KICKER_STYLE}">Plan Reset to Free</p>
+    <h1 style="${H1_STYLE}">Your ${planName} plan has ended.</h1>
+    <p style="${BODY_STYLE}">${greeting} your paid period is over and your account is now on the Free plan. This could be because you scheduled a cancellation that just hit, or because payment retries ran out after a failed charge.</p>
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Here&apos;s what changes:</strong></p>
+    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
+      <li><strong style="color:#0a0a0a;">Kept:</strong> your account, saved outputs, history, and profile settings — all intact.</li>
+      <li><strong style="color:#0a0a0a;">Paused:</strong> paid features (higher API limits, deeper memory, priority generation).</li>
+      <li><strong style="color:#0a0a0a;">Charges:</strong> nothing further will be charged unless you pick a plan again.</li>
+    </ul>
+    <a href="https://sansxel.ai/pricing" style="${BTN_STYLE}">Pick a plan again</a>
+    &nbsp;
+    <a href="https://sansxel.ai/account" style="${BTN_LIGHT}">Keep using Free</a>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Was this unexpected?</strong> If your plan ended because a charge failed, it&apos;s usually a card issue (expired, frozen, different bank). Update the card at <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> and resubscribe. For billing concerns, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+    </div>
   `);
 }
 
 function paymentFailedHtml(name: string, planName: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#b91c1c;">Payment Failed</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">We couldn&apos;t charge your card.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your latest charge for the <strong style="color:#0a0a0a;">${planName}</strong> plan didn&apos;t go through. We&apos;ll retry automatically, but if the card on file is expired or blocked, update it to avoid losing access.</p>
-    <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Update payment method</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If retries fail, your plan drops to Free — no data loss, just the paid features pause until billing is back on.</p>
+    <p style="${KICKER_RED}">Action Needed · Payment Failed</p>
+    <h1 style="${H1_STYLE}">We couldn&apos;t charge your card.</h1>
+    <p style="${BODY_STYLE}">${greeting} a charge for your <strong style="color:#0a0a0a;">${planName}</strong> subscription just failed. Stripe will retry the card automatically a few more times over the next week, but if the card&apos;s expired, blocked, or doesn&apos;t have funds, the retries won&apos;t succeed either.</p>
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Fastest fix:</strong> add or switch the payment method now.</p>
+    <a href="https://sansxel.ai/account/billing" style="${BTN_STYLE}">Update payment method</a>
+    <p style="${BODY_STYLE}" style="margin-top:22px;"><strong style="color:#0a0a0a;">What happens if retries keep failing:</strong></p>
+    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
+      <li>After all retries exhaust, your plan drops to Free — paid features pause but nothing is deleted.</li>
+      <li>You can re-subscribe at any time; your data and history stay.</li>
+      <li>No credit goes unused — Stripe prorates any partial period cleanly.</li>
+    </ul>
+    <div style="${NOTE_WARN}">
+      <strong style="color:#9f1239;">Common causes to check:</strong> expired card, recent fraud block from your bank, international transaction limit, or an insufficient-funds alert from your bank app. If you need help reading the decline reason, email <a href="mailto:help@sansxel.ai" style="color:#9f1239;font-weight:600;">help@sansxel.ai</a>.
+    </div>
   `);
 }
 
 function paymentMethodUpdatedHtml(name: string, brand: string, last4: string) {
   const greeting = name ? `Hi ${name},` : "Hi,";
   return baseHtml(`
-    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Payment Method Updated</p>
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">New card on file.</h1>
-    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your next invoice will charge <strong style="color:#0a0a0a;">${brand.toUpperCase()} ending in ${last4}</strong>. No other plan changes were made.</p>
-    <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Review billing</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;"><strong style="color:#b91c1c;">If you didn&apos;t make this change</strong>, contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a> immediately.</p>
+    <p style="${KICKER_STYLE}">Payment Method Updated</p>
+    <h1 style="${H1_STYLE}">New card on file.</h1>
+    <p style="${BODY_STYLE}">${greeting} you just updated your default payment method. Future renewals will charge the new card automatically.</p>
+
+    ${detailsTable([
+      ["Card",        `${brand.toUpperCase()} ending in ${last4}`],
+      ["Used for",    "All future subscription charges"],
+      ["Takes effect", "Immediately"],
+    ])}
+
+    <a href="https://sansxel.ai/account/billing" style="${BTN_LIGHT}">Review billing</a>
+    <div style="${NOTE_WARN}">
+      <strong style="color:#9f1239;">If you didn&apos;t make this change</strong>, email <a href="mailto:help@sansxel.ai" style="color:#9f1239;font-weight:600;">help@sansxel.ai</a> immediately. Someone else may have access to your account — we can lock it and revert the card while we investigate.
+    </div>
+  `);
+}
+
+// ── Renewal templates (NEW — tied to invoice.paid / invoice.upcoming) ──────
+
+function renewalSucceededHtml(name: string, planName: string, amountLabel: string, periodEnd: string, invoiceUrl: string | null) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="${KICKER_STYLE}">Renewal Successful</p>
+    <h1 style="${H1_STYLE}">Your ${planName} subscription just renewed.</h1>
+    <p style="${BODY_STYLE}">${greeting} this email is your receipt. The charge went through cleanly and your plan continues without interruption.</p>
+
+    ${detailsTable([
+      ["Plan",         planName],
+      ["Amount",       amountLabel],
+      ["Next renewal", periodEnd],
+    ])}
+
+    ${invoiceUrl
+      ? `<a href="${invoiceUrl}" style="${BTN_STYLE}">View full invoice</a>&nbsp;<a href="https://sansxel.ai/account/billing" style="${BTN_LIGHT}">Manage billing</a>`
+      : `<a href="https://sansxel.ai/account/billing" style="${BTN_STYLE}">Manage billing</a>`
+    }
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Want to cancel or downgrade?</strong> No hassle — head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a>. Cancellation stops future charges immediately; downgrades take effect at the next renewal so you keep paid features until then. Questions: <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+    </div>
+  `);
+}
+
+function renewalUpcomingHtml(name: string, planName: string, amountLabel: string, chargeDate: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="${KICKER_STYLE}">Renewal in 7 Days</p>
+    <h1 style="${H1_STYLE}">Heads up — your ${planName} plan renews next week.</h1>
+    <p style="${BODY_STYLE}">${greeting} this is an automated heads-up so there are no surprises. In a week we&apos;ll charge the card on file to renew your subscription.</p>
+
+    ${detailsTable([
+      ["Plan",         planName],
+      ["Renewal date", chargeDate],
+      ["Amount",       amountLabel],
+    ])}
+
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Want to make a change before the charge?</strong> You have a few options:</p>
+    <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
+      <li><strong style="color:#0a0a0a;">Nothing to do</strong> if the plan&apos;s still working for you — just ignore this email.</li>
+      <li><strong style="color:#0a0a0a;">Downgrade or switch plans</strong> — takes effect at renewal, no proration surprise.</li>
+      <li><strong style="color:#0a0a0a;">Cancel</strong> — you keep full access until the renewal date, then drop to Free.</li>
+      <li><strong style="color:#0a0a0a;">Update the card</strong> if the one on file is about to expire.</li>
+    </ul>
+
+    <a href="https://sansxel.ai/account/billing" style="${BTN_STYLE}">Manage billing</a>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Billing questions?</strong> Email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>. For plan / team / enterprise questions, <a href="mailto:sales@sansxel.ai" style="color:#0a0a0a;">sales@sansxel.ai</a> handles those directly.
+    </div>
   `);
 }
 
@@ -469,4 +694,33 @@ export async function sendPaymentMethodUpdatedEmail(opts: {
       html: paymentMethodUpdatedHtml(opts.name, opts.brand, opts.last4),
     });
   } catch (err) { console.error("sendPaymentMethodUpdatedEmail failed:", err); }
+}
+
+export async function sendRenewalSucceededEmail(opts: {
+  email: string; name: string; planName: string; amountLabel: string;
+  periodEnd: string; invoiceUrl?: string | null;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      subject: `Renewal successful — ${opts.planName} (${opts.amountLabel})`,
+      html: renewalSucceededHtml(opts.name, opts.planName, opts.amountLabel, opts.periodEnd, opts.invoiceUrl ?? null),
+    });
+  } catch (err) { console.error("sendRenewalSucceededEmail failed:", err); }
+}
+
+export async function sendRenewalUpcomingEmail(opts: {
+  email: string; name: string; planName: string; amountLabel: string; chargeDate: string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      subject: `Heads up — your ${opts.planName} plan renews on ${opts.chargeDate}`,
+      html: renewalUpcomingHtml(opts.name, opts.planName, opts.amountLabel, opts.chargeDate),
+    });
+  } catch (err) { console.error("sendRenewalUpcomingEmail failed:", err); }
 }

@@ -5,6 +5,8 @@ import { getStripe, STRIPE_PRICES } from "../../../../lib/stripe";
 import { upsertActiveSubscription } from "../../../../lib/subscriptions";
 import {
   sendPaymentFailedEmail,
+  sendRenewalSucceededEmail,
+  sendRenewalUpcomingEmail,
   sendSubscriptionActivatedEmail,
   sendSubscriptionCancellationScheduledEmail,
   sendSubscriptionEndedEmail,
@@ -160,25 +162,111 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
   }
 }
 
+/**
+ * Dig the price id out of an invoice line item.  Stripe deprecated
+ * `line.price` at the type level in the API version we pin (moved under
+ * `pricing`) but still returns it in the wire response — narrow cast
+ * keeps runtime correct while satisfying TS.
+ */
+function priceIdFromInvoice(invoice: Stripe.Invoice): string | null {
+  const lineItem = invoice.lines?.data?.[0];
+  return (lineItem as unknown as { price?: { id?: string } | null } | undefined)
+    ?.price?.id ?? null;
+}
+
+/**
+ * Best-effort plan name lookup for invoice-triggered emails.  Falls back
+ * to a generic label so the subject line never reads "$12 — undefined".
+ */
+function planNameFromInvoice(invoice: Stripe.Invoice): string {
+  const resolved = resolvePlanFromPriceId(priceIdFromInvoice(invoice));
+  if (resolved && resolved.planKey in pricingPlanMap) {
+    return getPricingPlan(resolved.planKey as PricingPlanKey).name;
+  }
+  return "your";
+}
+
+function formatInvoiceAmount(invoice: Stripe.Invoice): string {
+  const amount = invoice.amount_paid || invoice.amount_due || invoice.total;
+  const currency = (invoice.currency || "usd").toUpperCase();
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency", currency,
+    }).format(amount / 100);
+  } catch {
+    return `${(amount / 100).toFixed(2)} ${currency}`;
+  }
+}
+
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   const email = invoice.customer_email ?? null;
   if (!email) return;
+  await sendPaymentFailedEmail({
+    email,
+    name:     "",
+    planName: planNameFromInvoice(invoice),
+  });
+}
 
-  // Try to get the plan name from the first subscription line item.
-  // The API version we pin deprecates InvoiceLineItem.price at the type
-  // level (moved under `pricing`), but Stripe still returns the legacy
-  // `price` field at runtime.  Narrow cast keeps us off the hot path.
-  let planName = "your";
-  const lineItem = invoice.lines?.data?.[0];
-  const priceId =
-    (lineItem as unknown as { price?: { id?: string } | null } | undefined)
-      ?.price?.id ?? null;
-  const resolved = resolvePlanFromPriceId(priceId);
-  if (resolved && resolved.planKey in pricingPlanMap) {
-    planName = getPricingPlan(resolved.planKey as PricingPlanKey).name;
-  }
+/**
+ * invoice.paid — fires on successful renewal charges AND on the initial
+ * subscription charge.  We dedupe against the initial case by only
+ * emailing when billing_reason === "subscription_cycle" (scheduled
+ * renewal).  Initial checkouts are already covered by the welcome email
+ * from customer.subscription.created.
+ */
+async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  const email = invoice.customer_email ?? null;
+  if (!email) return;
+  const reason = (invoice as unknown as { billing_reason?: string }).billing_reason;
+  if (reason !== "subscription_cycle") return;
 
-  await sendPaymentFailedEmail({ email, name: "", planName });
+  const periodEndUnix = (invoice as unknown as { period_end?: number }).period_end;
+  const nextPeriod = typeof periodEndUnix === "number"
+    ? new Date(periodEndUnix * 1000).toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric",
+      })
+    : "your next billing date";
+
+  await sendRenewalSucceededEmail({
+    email,
+    name:        "",
+    planName:    planNameFromInvoice(invoice),
+    amountLabel: formatInvoiceAmount(invoice),
+    periodEnd:   nextPeriod,
+    invoiceUrl:  invoice.hosted_invoice_url ?? null,
+  });
+}
+
+/**
+ * invoice.upcoming — Stripe sends this roughly 7 days before a renewal.
+ * Pure heads-up: gives the user a window to cancel / downgrade / swap
+ * cards before money moves.
+ */
+async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
+  const email = invoice.customer_email ?? null;
+  if (!email) return;
+
+  // Stripe sends this with `next_payment_attempt` or `period_end` as
+  // the target date depending on configuration.
+  const anyInvoice = invoice as unknown as {
+    next_payment_attempt?: number | null;
+    period_end?: number;
+  };
+  const chargeAt = anyInvoice.next_payment_attempt ?? anyInvoice.period_end ?? null;
+  const chargeDate = chargeAt
+    ? new Date(chargeAt * 1000).toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric",
+      })
+    : "your next billing date";
+
+  await sendRenewalUpcomingEmail({
+    email,
+    name:        "",
+    planName:    planNameFromInvoice(invoice),
+    amountLabel: formatInvoiceAmount(invoice),
+    chargeDate,
+  });
 }
 
 // ── Route handler ──────────────────────────────────────────────────────────
@@ -213,9 +301,11 @@ export async function POST(request: Request) {
         break;
 
       case "invoice.paid":
-        // No-op — activation + renewal state already flows through
-        // customer.subscription.updated.  Kept here just so Stripe
-        // doesn't complain about "unhandled event type".
+        await handleInvoicePaid(event.data.object as Stripe.Invoice);
+        break;
+
+      case "invoice.upcoming":
+        await handleInvoiceUpcoming(event.data.object as Stripe.Invoice);
         break;
 
       default:
