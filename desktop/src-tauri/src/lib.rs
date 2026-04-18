@@ -114,8 +114,21 @@ fn schedule_splash_watchdog(app_handle: tauri::AppHandle) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_deep_link::init())
         .invoke_handler(tauri::generate_handler![boot_complete, minimize_other_windows])
         .setup(|app| {
+            // Dev/Linux: register the sansxel:// scheme at runtime so the
+            // OS routes sansxel:// URLs back to us. On Windows installers
+            // the scheme is registered at install time via the bundle
+            // config, so this is a no-op there in production.
+            #[cfg(any(windows, target_os = "linux"))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = app.deep_link().register("sansxel");
+            }
+
             schedule_splash_watchdog(app.handle().clone());
             Ok(())
         })

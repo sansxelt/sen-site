@@ -5,6 +5,16 @@
   "windows": ["main", "splash"],
   "permissions": [
     "core:default",
-    "opener:default"
+    "opener:default",
+    "deep-link:default",
+    "store:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://sansxel.ai/*" },
+        { "url": "http://localhost:3000/*" },
+        { "url": "http://127.0.0.1:3000/*" }
+      ]
+    }
   ]
 }
