@@ -274,22 +274,32 @@ export function AuthPanel({
           }),
         });
 
-        const payload = (await response.json()) as { error?: string };
+        const payload = (await response.json()) as {
+          error?: string;
+          verify?: "pending";
+          email?: string;
+        };
 
         if (!response.ok) {
           throw new Error(
             payload.error ?? "We couldn't create your account right now.",
           );
         }
+
+        // Verification flow: don't auto-sign-in.  User has to click the
+        // link in their email first.  Route them to the "check your
+        // inbox" landing page with their email prefilled.
+        if (payload.verify === "pending") {
+          setPassword("");
+          router.push(`/auth/verify-email?email=${encodeURIComponent(payload.email ?? email)}`);
+          return;
+        }
       }
 
       await finishCredentialsSignIn();
       setStatus({
         tone: "success",
-        message:
-          mode === "signup"
-            ? "Your sansxel account is ready. Opening your workspace."
-            : "Welcome back. Opening your workspace.",
+        message: "Welcome back. Opening your workspace.",
       });
     } catch (error) {
       console.error("Email auth failed:", error);

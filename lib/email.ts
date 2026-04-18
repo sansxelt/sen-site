@@ -193,6 +193,23 @@ function earlyAccessHtml(name: string) {
   `);
 }
 
+function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="${KICKER_STYLE}">Confirm your email</p>
+    <h1 style="${H1_STYLE}">One click and your account is live.</h1>
+    <p style="${BODY_STYLE}">${greeting} to finish creating your sansxel account, confirm your email address by tapping the button below. This makes sure nobody else signed you up by mistake, and it&apos;s the only thing between you and the full product.</p>
+    <a href="${verifyUrl}" style="${BTN_STYLE}">Confirm email</a>
+    <div style="${HR_STYLE}"></div>
+    <p style="${META_STYLE}">The link <strong style="color:#0a0a0a;">expires in ${expiryLabel}</strong>. If it does, head back to the signup page and we&apos;ll send a fresh one.</p>
+    <p style="${META_STYLE}" style="margin-top:14px;">Link not working? Copy and paste this URL into your browser:</p>
+    <p style="margin:4px 0 0;font-size:12px;color:#0a0a0a;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${verifyUrl}</p>
+    <div style="${NOTE_STYLE}">
+      <strong style="color:#0a0a0a;">Didn&apos;t sign up for sansxel?</strong> Ignore this email — without clicking the link, your account never gets created and we won&apos;t message you again. If you&apos;re seeing signup confirmations you didn&apos;t request, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+    </div>
+  `);
+}
+
 function passwordResetHtml(resetUrl: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Password Reset</p>
@@ -298,6 +315,28 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
     });
   } catch (error) {
     console.error("sendPasswordResetEmail failed:", error);
+  }
+}
+
+export async function sendVerifyAccountEmail(opts: {
+  email:        string;
+  name?:        string;
+  verifyUrl:    string;
+  expiryLabel:  string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+
+  try {
+    await resend.emails.send({
+      from:    fromAccount,
+      replyTo: REPLY_TO,
+      to:      opts.email,
+      subject: "Confirm your sansxel account",
+      html:    verifyAccountHtml(opts.name ?? "", opts.verifyUrl, opts.expiryLabel),
+    });
+  } catch (error) {
+    console.error("sendVerifyAccountEmail failed:", error);
   }
 }
 
