@@ -8,57 +8,39 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Ask, Explore, Create, and Build with a layered AI response engine that turns one prompt into something you can actually use.",
+    "Sansxel is an adaptive AI platform. The interface reshapes itself around who you are and what you're working on — not a generic chat box for everyone.",
 };
 
-const modes = [
-  {
-    title: "Ask",
-    description:
-      "Handle everyday questions, explanations, and quick help. Small asks stay quick and clear.",
-  },
-  {
-    title: "Explore",
-    description:
-      "Get discovery, recommendations, news context, and ranked options that feel more like a brief than a conversation.",
-  },
-  {
-    title: "Create",
-    description:
-      "Turn rough notes, screenshots, drafts, and ideas into structured outputs like plans, summaries, concepts, and systems.",
-  },
-  {
-    title: "Build",
-    description:
-      "Generate fuller outputs like landing pages, pricing, product structure, and startup-ready direction from a single prompt.",
-  },
-];
+type Pillar = {
+  title: string;
+  status: "live" | "future";
+  description: string;
+};
 
-const responseLayers = [
+const pillars: Pillar[] = [
   {
-    title: "Direct answer",
+    title: "Contextual UI",
+    status: "live",
     description:
-      "Every response starts with clarity. A short useful answer comes first so simple questions stay simple.",
+      "The interface adapts to you. Students, developers, writers, researchers, and creators each get an experience shaped around their workflow — not a generic chat window with their name on top. As you work, Sansxel learns the shape of what you're doing and reshapes itself in real time.",
   },
   {
-    title: "Structured breakdown",
+    title: "Real-time tool execution",
+    status: "future",
     description:
-      "For larger asks, the response expands into sections, steps, comparisons, and frameworks when that structure helps.",
+      "In the future, Sansxel won't just talk about your tools — it will use them. Through an MCP-style tool layer, the platform takes action across your workflow as it reasons. No waiting for batched responses. No copy-pasting between windows.",
   },
   {
-    title: "Visual output",
+    title: "Open extension ecosystem",
+    status: "future",
     description:
-      "Layouts, previews, concept views, and spatial organization appear when the problem benefits from seeing it, not just reading it.",
+      "In the future, anyone will be able to build extensions that plug into Sansxel — new tools, new integrations, new contextual modes. The ecosystem is designed to evolve with the people who use it, not gate-kept around a single team's roadmap.",
   },
   {
-    title: "System expansion",
+    title: "Our own infrastructure",
+    status: "future",
     description:
-      "Complex prompts can widen into architecture, pricing models, onboarding, feature sets, and product logic.",
-  },
-  {
-    title: "Action layer",
-    description:
-      "When there is a clear next move, Sansxel can let you refine, export, expand, or build forward without restarting.",
+      "In the future, Sansxel will run on our own backend — efficient inference, model flexibility, and the freedom to evolve on our own terms. That means broad access, sustainable costs, and features that aren't possible when you're renting someone else's stack.",
   },
 ];
 
@@ -75,24 +57,24 @@ const inputs = [
 
 const principles = [
   {
-    title: "Universal, not boxed in",
+    title: "Access matters",
     description:
-      "Sansxel should feel useful to anyone without feeling built only for one role, industry, or workflow.",
+      "AI shouldn't be a luxury good. Sansxel is designed so that powerful AI is available broadly — not gated behind enterprise pricing or hidden behind feature walls.",
   },
   {
-    title: "Response design over feature sprawl",
+    title: "The interface is the product",
     description:
-      "The real upgrade is how the answer is shaped: layered, visual when useful, and scaled to intent.",
+      "A great model wrapped in a bad interface is a bad product. We obsess over the interface because that's where the value actually lands.",
   },
   {
-    title: "Chat is the surface",
+    title: "Safety isn't an afterthought",
     description:
-      "The interface is familiar on purpose. The product value is what the response can become from the same prompt.",
+      "Broad access only works with thoughtful safeguards. Protection is designed into the backend, not bolted on after the fact.",
   },
   {
-    title: "Refine forward",
+    title: "Independence matters",
     description:
-      "Outputs improve in place and chain into the next result instead of forcing you to restart every time.",
+      "Building on our own infrastructure means controlling the roadmap — not at the mercy of upstream pricing changes, deprecations, or policy shifts.",
   },
 ];
 
@@ -109,52 +91,41 @@ export default async function FeaturesPage() {
           Features
         </div>
         <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-          A normal AI on the surface. A response engine underneath.
+          One AI. Infinite shapes.
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-200">
-          Sansxel can answer everyday questions like any assistant. The
-          difference is that responses can expand into structure, visuals,
-          systems, and actions when the ask is bigger.
+          Most AI tools give everyone the same blank chat box. Sansxel doesn&apos;t.
+          The interface is contextual — it reshapes based on who you are, what
+          you&apos;re working on, and what the moment calls for.
         </p>
       </div>
 
       <div className="mt-16">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-          Core modes
+          Four pillars
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {modes.map((mode) => (
-            <SpotlightCard key={mode.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 h-full">
-              <div className="text-lg font-semibold text-white">
-                {mode.title}
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          {pillars.map((pillar) => (
+            <SpotlightCard
+              key={pillar.title}
+              className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-xl font-semibold text-white">
+                  {pillar.title}
+                </div>
+                <span
+                  className={
+                    pillar.status === "live"
+                      ? "shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/[0.08] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-300"
+                      : "shrink-0 rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-amber-200/90"
+                  }
+                >
+                  {pillar.status === "live" ? "Live" : "In the future"}
+                </span>
               </div>
-              <p className="mt-3 text-sm leading-6 text-neutral-200">
-                {mode.description}
-              </p>
-            </SpotlightCard>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-20">
-        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-          Response layers
-        </div>
-        <h2 className="hx-gradient-text mt-3 max-w-2xl text-2xl font-semibold tracking-tight sm:text-4xl">
-          Every answer can grow into something more useful.
-        </h2>
-        <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
-          Sansxel does not force the same output every time. It stays fast for
-          small prompts and expands automatically for larger requests.
-        </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {responseLayers.map((layer) => (
-            <SpotlightCard key={layer.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 h-full">
-              <div className="text-lg font-semibold text-white">
-                {layer.title}
-              </div>
-              <p className="mt-3 text-sm leading-6 text-neutral-200">
-                {layer.description}
+              <p className="mt-4 text-sm leading-6 text-neutral-200">
+                {pillar.description}
               </p>
             </SpotlightCard>
           ))}
@@ -170,7 +141,7 @@ export default async function FeaturesPage() {
             Anything in. Not just prompts.
           </h2>
           <p className="mt-4 text-base leading-7 text-neutral-200">
-            You should not have to translate your work into the perfect AI
+            You shouldn&apos;t have to translate your work into the perfect AI
             command. Questions, screenshots, links, notes, files, and datasets
             all belong here.
           </p>
@@ -190,11 +161,14 @@ export default async function FeaturesPage() {
 
       <div className="mt-20">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-          Product principles
+          Built for the people who actually use it
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           {principles.map((item) => (
-            <SpotlightCard key={item.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full">
+            <SpotlightCard
+              key={item.title}
+              className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full"
+            >
               <div className="text-xl font-semibold text-white">
                 {item.title}
               </div>

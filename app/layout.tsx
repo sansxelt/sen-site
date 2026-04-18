@@ -21,17 +21,18 @@ export const metadata: Metadata = {
     template: "%s | sansxel",
   },
   description:
-    "sansxel is a layered AI response engine. Bring questions, notes, links, screenshots, files, and ideas. Get back clarity first, then structure, visuals, systems, and next actions when useful.",
+    "sansxel is an adaptive AI platform with a contextual interface that reshapes itself around how you actually work. Build something REAL.",
   keywords: [
     "sansxel",
     "sansxel ai",
-    "response engine",
-    "layered ai",
-    "visual ai",
-    "ai outputs",
-    "chat to output",
+    "adaptive ai",
+    "contextual ui",
+    "ai platform",
+    "ai interface",
+    "ai for developers",
+    "ai for writers",
+    "ai for students",
     "AI productivity",
-    "idea to output",
   ],
   authors: [{ name: "sansxel", url: BASE }],
   creator: "sansxel",
@@ -44,14 +45,14 @@ export const metadata: Metadata = {
     siteName: "sansxel",
     title: "sansxel - Build something REAL.",
     description:
-      "A layered AI response engine that turns prompts into clarity, structure, visuals, systems, and usable next steps.",
+      "The adaptive AI platform. One AI, infinite shapes — a contextual interface that reshapes itself around how you actually work.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "sansxel - Build something REAL.",
     description:
-      "A layered AI response engine that turns prompts into clarity, structure, visuals, systems, and usable next steps.",
+      "The adaptive AI platform. One AI, infinite shapes — a contextual interface that reshapes itself around how you actually work.",
     images: ["/og-image.png"],
     creator: "@sansxel",
   },
@@ -89,7 +90,7 @@ export default function RootLayout({
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "sansxel is a layered AI response engine that turns rough input into clear answers, structure, visuals, and buildable next steps.",
+                "sansxel is an adaptive AI platform with a contextual interface that reshapes itself around how you actually work.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",

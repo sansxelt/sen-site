@@ -141,8 +141,8 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 <span className="text-sm font-semibold text-white">sansxel</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
-                A layered AI response engine for turning rough input into clear
-                answers, structure, visuals, and next steps.
+                The adaptive AI platform. One AI, infinite shapes — a contextual
+                interface that reshapes itself around how you actually work.
               </p>
             </div>
 
