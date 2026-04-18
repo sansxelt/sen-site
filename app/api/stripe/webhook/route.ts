@@ -165,9 +165,14 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   if (!email) return;
 
   // Try to get the plan name from the first subscription line item.
+  // The API version we pin deprecates InvoiceLineItem.price at the type
+  // level (moved under `pricing`), but Stripe still returns the legacy
+  // `price` field at runtime.  Narrow cast keeps us off the hot path.
   let planName = "your";
   const lineItem = invoice.lines?.data?.[0];
-  const priceId = lineItem?.price?.id ?? null;
+  const priceId =
+    (lineItem as unknown as { price?: { id?: string } | null } | undefined)
+      ?.price?.id ?? null;
   const resolved = resolvePlanFromPriceId(priceId);
   if (resolved && resolved.planKey in pricingPlanMap) {
     planName = getPricingPlan(resolved.planKey as PricingPlanKey).name;
