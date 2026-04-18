@@ -34,7 +34,7 @@ export async function DELETE() {
 
     // Confirmation email — fire-and-forget so a mail hiccup can't undo
     // the deletion that already succeeded above.
-    sendAccountDeletedEmail(email, session.user?.name ?? "").catch(() => {});
+    sendAccountDeletedEmail(email, session?.user?.name ?? "").catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (error) {
