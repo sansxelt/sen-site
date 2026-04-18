@@ -76,7 +76,9 @@ export default function UpdatesPage() {
     <div className="max-w-3xl">
       <h1 className="text-2xl font-semibold text-white">Updates</h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Download the desktop app and track what changed across every release.
+        Track what we&apos;re building toward. The desktop app isn&apos;t live
+        yet — release history below reflects the roadmap Sansxel is shipping
+        into.
       </p>
 
       {/* ── Current release download card ─────────────────────────── */}
@@ -91,23 +93,27 @@ export default function UpdatesPage() {
               Windows desktop app — layered responses, output library, and universal input.
             </p>
             <div className="mt-3 flex flex-wrap gap-4 text-xs text-neutral-500">
-              <span>Released {latest.date}</span>
+              <span>Target release · {latest.date}</span>
               <span>Windows 10 / 11 · x64</span>
-              <span>Invite-only — early access</span>
+              <span>Invite-only at rollout</span>
             </div>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-            <Link
-              href="/download"
-              className="sansxel-white-button inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:opacity-90"
+            {/* Intentionally NOT a <Link> — the installer doesn't exist yet.
+                Styled as an inverted/muted pill so it reads "unavailable"
+                at a glance. Click does nothing by design. */}
+            <span
+              aria-disabled="true"
+              className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-2.5 text-sm font-medium text-neutral-500"
             >
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M8 2v8M5 7l3 3 3-3M2 13h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Download installer
-            </Link>
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300/60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
+              </span>
+              In development
+            </span>
             <span className="text-[11px] text-neutral-600 sm:text-right">
-              Signed · ~42 MB · .exe
+              Not yet available for download
             </span>
           </div>
         </div>
