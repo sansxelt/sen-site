@@ -3,11 +3,9 @@ import { LazyStore } from "@tauri-apps/plugin-store";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-// Dev → website runs at localhost:3000. Prod → sansxel.ai. Adjust if
-// the website ever moves.
-export const API_BASE = import.meta.env.DEV
-  ? "http://localhost:3000"
-  : "https://sansxel.ai";
+// Always hits the live website. We don't run the website locally
+// just to develop the desktop, so there's no localhost fallback.
+export const API_BASE = "https://sansxel.ai";
 
 const STORE_FILE = "auth.json";
 const TOKEN_KEY = "session_token";

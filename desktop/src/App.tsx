@@ -61,7 +61,7 @@ function App() {
             kind: "signed-out",
             signingIn: false,
             error:
-              err instanceof Error ? err.message : "Sign-in failed.",
+              err instanceof Error ? err.message : String(err) || "Sign-in failed.",
           });
         }
       });
@@ -83,7 +83,7 @@ function App() {
         kind: "signed-out",
         signingIn: false,
         error:
-          err instanceof Error ? err.message : "Could not start sign-in.",
+          err instanceof Error ? err.message : String(err) || "Could not start sign-in.",
       });
     }
   }, []);
