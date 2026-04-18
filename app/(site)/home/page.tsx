@@ -106,7 +106,7 @@ export default async function HomePage() {
               stays intact.
             </p>
           </div>
-          <div className="rounded-3xl border border-emerald-400/15 bg-emerald-400/[0.05] px-5 py-4 text-sm leading-6 text-neutral-200 lg:max-w-sm">
+          <div className="rounded-3xl border border-emerald-400/10 bg-emerald-400/[0.03] px-5 py-4 text-sm leading-6 text-neutral-200 lg:max-w-sm lg:border-emerald-400/15 lg:bg-emerald-400/[0.05]">
             Open Sansxel in your browser, write live, and return to the exact line you were shaping
             instead of rebuilding the scene from memory.
           </div>

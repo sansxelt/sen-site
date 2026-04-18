@@ -1960,7 +1960,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
         </div>
 
         {/* Heading: static lines + cycling word */}
-        <h1 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
+        <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl sm:leading-[1.05] lg:text-7xl">
           <span className="block">The AI that</span>
           <span className="block">remembers</span>
           <span className="relative block" style={{ minHeight: "1.1em" }}>
@@ -2028,12 +2028,12 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
         {/* In-development signal — sits under the CTAs on the left column
             so it rides with the hero text/buttons, not the preview panel. */}
         <div className="mt-5 flex">
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-xs font-medium text-amber-100/90">
-            <span className="relative flex h-1.5 w-1.5">
+          <div className="inline-flex max-w-full items-center gap-2 whitespace-nowrap rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-[11px] font-medium text-amber-100/90 sm:text-xs">
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300/60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
             </span>
-            In development — being built in the open
+            <span className="truncate">In development — being built in the open</span>
           </div>
         </div>
 
