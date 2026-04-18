@@ -19,11 +19,12 @@ function getResend() {
 const fromAccount = "Sansxel AI <hello@sansxel.ai>";
 
 /**
- * Transactional / billing sender — subscription activation, payment
- * events, cancellations, etc.  "Sansxel AI Billing" tells the user this
- * is an automated system notification, not a conversation.
+ * Automated system sender — billing events today, newsletters in Phase 2.
+ * Kept as plain "Sansxel AI" since noreply@ handles multiple kinds of
+ * automated mail and a narrower "Billing" label would be wrong for
+ * newsletters / product updates.
  */
-const fromBilling = "Sansxel AI Billing <noreply@sansxel.ai>";
+const fromBilling = "Sansxel AI <noreply@sansxel.ai>";
 
 /**
  * Every automated send uses help@ as reply-to so Reply goes to a real
