@@ -5,7 +5,11 @@
       "Skill(claude-api)",
       "Skill(claude-api:*)",
       "Bash(rm lib/ai-compare.ts app/api/compare/recommend/route.ts)",
-      "Bash(rmdir app/api/compare/recommend app/api/compare)"
+      "Bash(rmdir app/api/compare/recommend app/api/compare)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git restore *)"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { signAutoSigninToken } from "../../../../lib/auto-signin-token";
 import { sendWelcomeEmail } from "../../../../lib/email";
 import {
   deletePendingSignup,
@@ -9,6 +10,17 @@ import { APP_URL } from "../../../../lib/stripe";
 import { getSupabaseAdminClient } from "../../../../lib/supabase-admin";
 import { syncUserProfileIdentity } from "../../../../lib/user-profile";
 import { getUserCredentialByEmail } from "../../../../lib/user-credentials";
+
+/**
+ * Build the redirect target that kicks off auto-signin on whatever
+ * device clicked the email link.  The auto-signin page immediately
+ * POSTs the token to NextAuth's credentials provider on mount.
+ */
+function autoSigninRedirect(email: string): string {
+  const token = signAutoSigninToken(email);
+  const params = new URLSearchParams({ email, token });
+  return `${APP_URL}/auth/auto-signin?${params.toString()}`;
+}
 
 /**
  * GET /api/auth/verify?token=xxx
@@ -42,13 +54,11 @@ export async function GET(request: Request) {
 
   // Race guard — if somehow user_credentials already exists (user double-
   // clicked the link, or verified in a second tab), just treat it as
-  // success and clean up the stale pending row.
+  // success and clean up the stale pending row, then auto-sign them in.
   const alreadyVerified = await getUserCredentialByEmail(pending.email);
   if (alreadyVerified) {
     await deletePendingSignup(pending.email);
-    return NextResponse.redirect(
-      `${APP_URL}/auth/verified?email=${encodeURIComponent(pending.email)}`,
-    );
+    return NextResponse.redirect(autoSigninRedirect(pending.email));
   }
 
   // Happy path — promote pending → real user.  Insert the credential row
@@ -80,9 +90,11 @@ export async function GET(request: Request) {
       console.warn("[verify] welcome email failed:", err),
     );
 
-    return NextResponse.redirect(
-      `${APP_URL}/auth/verified?email=${encodeURIComponent(pending.email)}`,
-    );
+    // Auto-signin: the user just proved email ownership by clicking
+    // the link, so we trust them enough to skip the "sign in" screen
+    // and drop them straight into the app on whatever device they
+    // clicked the link on.
+    return NextResponse.redirect(autoSigninRedirect(pending.email));
   } catch (error) {
     console.error("[verify] account creation failed:", error);
     return NextResponse.redirect(`${APP_URL}/auth/verify-email?status=error`);

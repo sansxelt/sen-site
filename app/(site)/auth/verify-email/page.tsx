@@ -66,15 +66,22 @@ function PendingState({ email }: { email: string }) {
       <ul className="mt-5 space-y-2 text-xs text-neutral-400">
         <li className="flex items-start gap-2">
           <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-neutral-500" />
-          The link expires in 24 hours. If that happens, come back here to resend.
+          <span className="min-w-0 leading-5">
+            The link expires in 24 hours. If that happens, come back here to resend.
+          </span>
         </li>
         <li className="flex items-start gap-2">
           <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-neutral-500" />
-          Not in your inbox? Check your spam folder — the sender is <span className="text-neutral-300">hello@sansxel.ai</span>.
+          <span className="min-w-0 leading-5">
+            Not in your inbox? Check your spam folder — the sender is{" "}
+            <span className="text-neutral-300">hello@sansxel.ai</span>.
+          </span>
         </li>
         <li className="flex items-start gap-2">
           <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-neutral-500" />
-          Nothing gets charged and no account is created until you click the link.
+          <span className="min-w-0 leading-5">
+            Nothing gets charged and no account is created until you click the link.
+          </span>
         </li>
       </ul>
 
