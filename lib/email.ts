@@ -98,7 +98,7 @@ function earlyAccessHtml(name: string) {
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your invite request is on file.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} we've saved your place in the rollout. We review access carefully and will reach out directly as access opens for your account.</p>
     <a href="https://sansxel.ai/account" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">View your account</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Questions? Reply to this email or visit <a href="https://sansxel.ai/contact" style="color:#525252;">sansxel.ai/contact</a>.</p>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Questions? Email <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a> or visit <a href="https://sansxel.ai/contact" style="color:#525252;">sansxel.ai/contact</a>.</p>
   `);
 }
 
@@ -304,7 +304,7 @@ function pwResetConfirmHtml(name: string) {
     <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Password Updated</p>
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your password was reset.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your sansxel password was just changed. If that was you, you're all set.</p>
-    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#737373;"><strong style="color:#b91c1c;">If that wasn&apos;t you</strong>, reply to this email or contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a> immediately — we can lock the account while we investigate.</p>
+    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#737373;"><strong style="color:#b91c1c;">If that wasn&apos;t you</strong>, contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a> immediately — we can lock the account while we investigate.</p>
   `);
 }
 
@@ -315,6 +315,7 @@ function accountDeletedHtml(name: string) {
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your account has been removed.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your sansxel account and associated data have been deleted. You won&apos;t receive further account or billing emails.</p>
     <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#737373;">Active subscriptions are cancelled on deletion — no further charges will be made. Changed your mind? You&apos;re welcome back any time at <a href="https://sansxel.ai" style="color:#525252;">sansxel.ai</a>.</p>
+    <p style="margin:12px 0 0;font-size:13px;line-height:1.6;color:#737373;">Questions about data or privacy? Email <a href="mailto:privacy@sansxel.ai" style="color:#525252;">privacy@sansxel.ai</a>.</p>
   `);
 }
 
@@ -325,7 +326,7 @@ function subscriptionActivatedHtml(name: string, planName: string, cycle: string
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Welcome to sansxel ${planName}.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your ${cycle} subscription is live — <strong style="color:#0a0a0a;">${amountLabel}</strong>. You have the full plan available starting now.</p>
     <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Manage billing</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Need help? Reply to this email or contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a>.</p>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Need help? Email <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a>.</p>
   `);
 }
 
@@ -347,7 +348,7 @@ function subscriptionEndedHtml(name: string, planName: string) {
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your ${planName} plan has ended.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your paid period is over and your account is now on the Free plan. Your data and history are still there — just the paid features are no longer active.</p>
     <a href="https://sansxel.ai/pricing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Pick a plan again</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">No charge goes out until you pick a plan again. Reply here if something seems off.</p>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">No charge goes out until you pick a plan again. Questions? Email <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a>.</p>
   `);
 }
 
@@ -369,7 +370,7 @@ function paymentMethodUpdatedHtml(name: string, brand: string, last4: string) {
     <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">New card on file.</h1>
     <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your next invoice will charge <strong style="color:#0a0a0a;">${brand.toUpperCase()} ending in ${last4}</strong>. No other plan changes were made.</p>
     <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Review billing</a>
-    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;"><strong style="color:#b91c1c;">If you didn&apos;t make this change</strong>, reply immediately or contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a>.</p>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;"><strong style="color:#b91c1c;">If you didn&apos;t make this change</strong>, contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a> immediately.</p>
   `);
 }
 
