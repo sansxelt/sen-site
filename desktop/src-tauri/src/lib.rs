@@ -74,24 +74,19 @@ fn minimize_other_windows(app: tauri::AppHandle) {
 
 // Splash window calls this when its boot sequence finishes.
 //
-// Sequence: close the splash immediately (it has already faded its
-// content to black on the JS side), hold a brief 150ms blackout, then
-// reveal the main window.
+// Order matters: show the main window FIRST (it appears under the
+// always-on-top splash, so the user doesn't see it yet), THEN close
+// the splash. The result is a zero-frame handover — the splash
+// vanishes and the main is already there underneath.
 #[tauri::command]
 fn boot_complete(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(main) = app.get_webview_window("main") {
+        let _ = main.show();
+        let _ = main.set_focus();
+    }
     if let Some(splash) = app.get_webview_window("splash") {
         let _ = splash.close();
     }
-
-    let app_handle = app.clone();
-    std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(150));
-        if let Some(main) = app_handle.get_webview_window("main") {
-            let _ = main.show();
-            let _ = main.set_focus();
-        }
-    });
-
     Ok(())
 }
 

@@ -200,7 +200,16 @@
           #c4b5fd
         );
         box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
-        transition: width 720ms cubic-bezier(0.22, 0.61, 0.36, 1);
+        animation: fill-bar 10000ms linear forwards;
+      }
+
+      @keyframes fill-bar {
+        from {
+          width: 0%;
+        }
+        to {
+          width: 100%;
+        }
       }
 
       /* Scanning shimmer over the progress bar */
@@ -317,20 +326,20 @@
           }
         });
 
+        // Steps sum to ~10s. The progress bar fills smoothly via CSS
+        // animation over those 10s — JS only swaps the label text at
+        // the right times so the user sees a continuous fill, not
+        // discrete jumps.
         var steps = [
-          { label: "Initializing sansxel core", ms: 720 },
-          { label: "Loading workspace memory", ms: 880 },
-          { label: "Syncing context", ms: 740 },
-          { label: "Connecting sansxel-1", ms: 1020 },
-          { label: "Preparing your space", ms: 820 },
+          { label: "Initializing sansxel core", ms: 1500 },
+          { label: "Loading workspace memory", ms: 2200 },
+          { label: "Syncing context", ms: 1700 },
+          { label: "Connecting sansxel-1", ms: 2800 },
+          { label: "Preparing your space", ms: 1800 },
         ];
 
         var labelEl = document.getElementById("status-label");
-        var fillEl = document.getElementById("progress-fill");
         var i = 0;
-
-        // Step 0 is already painted in the HTML — set its progress and start the timer
-        fillEl.style.width = (((i + 1) / steps.length) * 100).toFixed(2) + "%";
 
         function advance() {
           i++;
@@ -347,7 +356,6 @@
           labelEl.style.animation = "none";
           void labelEl.offsetHeight;
           labelEl.style.animation = "";
-          fillEl.style.width = (((i + 1) / steps.length) * 100).toFixed(2) + "%";
 
           setTimeout(advance, step.ms);
         }
