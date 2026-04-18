@@ -291,6 +291,32 @@
 
     <script>
       (function () {
+        // Helper: safely call a Tauri command. Returns silently if the
+        // Tauri runtime isn't available (e.g. plain-browser preview).
+        function tauriInvoke(cmd) {
+          try {
+            var invoke =
+              window.__TAURI__ &&
+              window.__TAURI__.core &&
+              window.__TAURI__.core.invoke;
+            if (invoke) return invoke(cmd);
+          } catch (err) {
+            console.error("invoke(" + cmd + ") failed:", err);
+          }
+        }
+
+        // Minimize every other top-level window so only the splash is
+        // visible during boot. User can restore via taskbar after.
+        tauriInvoke("minimize_other_windows");
+
+        // Escape hatch — ESC at any time skips straight to handover.
+        // This guarantees the user can always get out of the launcher.
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") {
+            tauriInvoke("boot_complete");
+          }
+        });
+
         var steps = [
           { label: "Initializing sansxel core", ms: 720 },
           { label: "Loading workspace memory", ms: 880 },
@@ -330,22 +356,11 @@
           var launcher = document.getElementById("launcher");
           if (launcher) launcher.classList.add("fading");
 
-          // Tell Rust to show the main window and close us. Wait for the
-          // fade transition (~460ms) so the handover is smooth.
+          // Tell Rust to close the splash and (after its 2.4s blackout
+          // gap) reveal the main window. Wait for the fade transition
+          // (~460ms) so the handover is smooth.
           setTimeout(function () {
-            try {
-              var invoke =
-                window.__TAURI__ &&
-                window.__TAURI__.core &&
-                window.__TAURI__.core.invoke;
-              if (invoke) {
-                invoke("boot_complete");
-              } else {
-                console.warn("Tauri invoke unavailable; closing splash anyway");
-              }
-            } catch (err) {
-              console.error("boot_complete failed:", err);
-            }
+            tauriInvoke("boot_complete");
           }, 460);
         }
 
