@@ -1,5 +1,6 @@
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
+import { sendPasswordResetConfirmEmail } from "../../../../../lib/email";
 import { consumeResetToken, verifyResetToken } from "../../../../../lib/password-reset";
 import { getSupabaseAdminClient } from "../../../../../lib/supabase-admin";
 
@@ -59,6 +60,9 @@ export async function POST(request: Request) {
     }
 
     await consumeResetToken(token);
+
+    // "Your password was reset" confirmation — fire-and-forget.
+    sendPasswordResetConfirmEmail(email, "").catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (error) {

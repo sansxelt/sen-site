@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
+import { sendPaymentMethodUpdatedEmail } from "../../../../../lib/email";
 import {
   findUsableSubscription,
   getOrCreateCustomer,
@@ -50,6 +51,22 @@ export async function POST(request: Request) {
       await stripe.subscriptions.update(subscription.id, {
         default_payment_method: paymentMethodId,
       });
+    }
+
+    // Confirmation email — read back the card brand + last4 from the
+    // payment method we just attached so the copy is accurate.
+    try {
+      const pm = await stripe.paymentMethods.retrieve(paymentMethodId);
+      if (pm.card) {
+        sendPaymentMethodUpdatedEmail({
+          email: session.user.email,
+          name:  session.user.name ?? "",
+          brand: pm.card.brand,
+          last4: pm.card.last4,
+        }).catch(() => {});
+      }
+    } catch (err) {
+      console.warn("[update-payment-method] could not fetch card for email:", err);
     }
 
     return NextResponse.json({ ok: true });

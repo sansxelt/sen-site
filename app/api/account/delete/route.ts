@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
+import { sendAccountDeletedEmail } from "../../../../lib/email";
 import { getSupabaseAdminClient } from "../../../../lib/supabase-admin";
 
 export async function DELETE() {
@@ -30,6 +31,10 @@ export async function DELETE() {
     if (profileError) {
       throw profileError;
     }
+
+    // Confirmation email — fire-and-forget so a mail hiccup can't undo
+    // the deletion that already succeeded above.
+    sendAccountDeletedEmail(email, session.user?.name ?? "").catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (error) {

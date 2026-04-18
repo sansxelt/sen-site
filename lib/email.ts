@@ -11,11 +11,26 @@ function getResend() {
 }
 
 /**
- * Default sender — used by automated flows (welcome, password reset, etc.)
- * that aren't tied to a specific support channel.
+ * Account-flavored sender — welcome, password reset, account-lifecycle
+ * confirmations.  Warm, first-person tone.  The mailbox doesn't need to
+ * exist to SEND from (Resend only verifies the domain); we set reply-to
+ * to help@ so if the user hits Reply, it actually lands somewhere real.
  */
-const from =
-  process.env.RESEND_FROM_EMAIL ?? "sansxel <help@sansxel.ai>";
+const fromAccount = "sansxel <hello@sansxel.ai>";
+
+/**
+ * Transactional / billing sender — subscription activation, payment
+ * events, cancellations, etc.  Intentionally cold (noreply@) so it
+ * reads as an automated system notification, not a conversation.
+ */
+const fromBilling = "sansxel billing <noreply@sansxel.ai>";
+
+/**
+ * Every automated send uses help@ as reply-to so Reply goes to a real
+ * inbox even when the sender is noreply@ / hello@ / etc.
+ */
+const REPLY_TO = "help@sansxel.ai";
+
 
 /**
  * Departmental sender.  For contact-form traffic the `from` address should
@@ -143,10 +158,11 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 
   try {
     await resend.emails.send({
-      from,
-      to: email,
+      from:    fromAccount,
+      replyTo: REPLY_TO,
+      to:      email,
       subject: "Welcome to sansxel",
-      html: welcomeHtml(name),
+      html:    welcomeHtml(name),
     });
   } catch (error) {
     console.error("sendWelcomeEmail failed:", error);
@@ -159,10 +175,11 @@ export async function sendEarlyAccessEmail(email: string, name: string) {
 
   try {
     await resend.emails.send({
-      from,
-      to: email,
+      from:    fromAccount,
+      replyTo: REPLY_TO,
+      to:      email,
       subject: "Your sansxel invite request is on file",
-      html: earlyAccessHtml(name),
+      html:    earlyAccessHtml(name),
     });
   } catch (error) {
     console.error("sendEarlyAccessEmail failed:", error);
@@ -175,10 +192,11 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
 
   try {
     await resend.emails.send({
-      from,
-      to: email,
+      from:    fromAccount,
+      replyTo: REPLY_TO,
+      to:      email,
       subject: "Reset your sansxel password",
-      html: passwordResetHtml(resetUrl),
+      html:    passwordResetHtml(resetUrl),
     });
   } catch (error) {
     console.error("sendPasswordResetEmail failed:", error);
@@ -270,4 +288,183 @@ export async function sendSupportEmail(opts: {
       : String(result.error);
     throw new Error(`Resend rejected support email to ${toAddress}: ${detail}`);
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ACCOUNT + BILLING LIFECYCLE EMAILS
+//
+// All fire-and-forget (errors logged, never thrown) so they can't break
+// whatever webhook / API route triggered them.  The user flow always
+// completes even if the email dispatch fails.
+// ═══════════════════════════════════════════════════════════════════════════
+
+function pwResetConfirmHtml(name: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Password Updated</p>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your password was reset.</h1>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your sansxel password was just changed. If that was you, you're all set.</p>
+    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#737373;"><strong style="color:#b91c1c;">If that wasn&apos;t you</strong>, reply to this email or contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a> immediately — we can lock the account while we investigate.</p>
+  `);
+}
+
+function accountDeletedHtml(name: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Account Deleted</p>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your account has been removed.</h1>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your sansxel account and associated data have been deleted. You won&apos;t receive further account or billing emails.</p>
+    <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:#737373;">Active subscriptions are cancelled on deletion — no further charges will be made. Changed your mind? You&apos;re welcome back any time at <a href="https://sansxel.ai" style="color:#525252;">sansxel.ai</a>.</p>
+  `);
+}
+
+function subscriptionActivatedHtml(name: string, planName: string, cycle: string, amountLabel: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Subscription Active</p>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Welcome to sansxel ${planName}.</h1>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your ${cycle} subscription is live — <strong style="color:#0a0a0a;">${amountLabel}</strong>. You have the full plan available starting now.</p>
+    <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Manage billing</a>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">Need help? Reply to this email or contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a>.</p>
+  `);
+}
+
+function subscriptionCancellationScheduledHtml(name: string, planName: string, endsOn: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Cancellation Scheduled</p>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your ${planName} plan ends on ${endsOn}.</h1>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} we&apos;ve scheduled your cancellation. You keep full access until <strong style="color:#0a0a0a;">${endsOn}</strong>. After that you&apos;ll drop to the Free plan — no data loss.</p>
+    <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Change your mind? Resume</a>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If this wasn&apos;t you, head to billing and tap Resume subscription immediately — it&apos;s one click.</p>
+  `);
+}
+
+function subscriptionEndedHtml(name: string, planName: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Plan Reset</p>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">Your ${planName} plan has ended.</h1>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your paid period is over and your account is now on the Free plan. Your data and history are still there — just the paid features are no longer active.</p>
+    <a href="https://sansxel.ai/pricing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Pick a plan again</a>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">No charge goes out until you pick a plan again. Reply here if something seems off.</p>
+  `);
+}
+
+function paymentFailedHtml(name: string, planName: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#b91c1c;">Payment Failed</p>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">We couldn&apos;t charge your card.</h1>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your latest charge for the <strong style="color:#0a0a0a;">${planName}</strong> plan didn&apos;t go through. We&apos;ll retry automatically, but if the card on file is expired or blocked, update it to avoid losing access.</p>
+    <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Update payment method</a>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;">If retries fail, your plan drops to Free — no data loss, just the paid features pause until billing is back on.</p>
+  `);
+}
+
+function paymentMethodUpdatedHtml(name: string, brand: string, last4: string) {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return baseHtml(`
+    <p style="margin:0 0 8px;font-size:13px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:#737373;">Payment Method Updated</p>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:600;color:#0a0a0a;line-height:1.3;">New card on file.</h1>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#404040;">${greeting} your next invoice will charge <strong style="color:#0a0a0a;">${brand.toUpperCase()} ending in ${last4}</strong>. No other plan changes were made.</p>
+    <a href="https://sansxel.ai/account/billing" style="display:inline-block;background:#0a0a0a;color:#fff;font-size:14px;font-weight:500;padding:12px 24px;border-radius:14px;text-decoration:none;">Review billing</a>
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#737373;"><strong style="color:#b91c1c;">If you didn&apos;t make this change</strong>, reply immediately or contact <a href="mailto:help@sansxel.ai" style="color:#525252;">help@sansxel.ai</a>.</p>
+  `);
+}
+
+// ── Send helpers ───────────────────────────────────────────────────────────
+
+export async function sendPasswordResetConfirmEmail(email: string, name: string) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromAccount, replyTo: REPLY_TO, to: email,
+      subject: "Your sansxel password was reset",
+      html: pwResetConfirmHtml(name),
+    });
+  } catch (err) { console.error("sendPasswordResetConfirmEmail failed:", err); }
+}
+
+export async function sendAccountDeletedEmail(email: string, name: string) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromAccount, replyTo: REPLY_TO, to: email,
+      subject: "Your sansxel account has been deleted",
+      html: accountDeletedHtml(name),
+    });
+  } catch (err) { console.error("sendAccountDeletedEmail failed:", err); }
+}
+
+export async function sendSubscriptionActivatedEmail(opts: {
+  email: string; name: string; planName: string; cycle: "monthly" | "yearly"; amountLabel: string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      subject: `Welcome to sansxel ${opts.planName}`,
+      html: subscriptionActivatedHtml(opts.name, opts.planName, opts.cycle, opts.amountLabel),
+    });
+  } catch (err) { console.error("sendSubscriptionActivatedEmail failed:", err); }
+}
+
+export async function sendSubscriptionCancellationScheduledEmail(opts: {
+  email: string; name: string; planName: string; endsOn: string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      subject: `Your ${opts.planName} plan ends on ${opts.endsOn}`,
+      html: subscriptionCancellationScheduledHtml(opts.name, opts.planName, opts.endsOn),
+    });
+  } catch (err) { console.error("sendSubscriptionCancellationScheduledEmail failed:", err); }
+}
+
+export async function sendSubscriptionEndedEmail(opts: {
+  email: string; name: string; planName: string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      subject: `Your ${opts.planName} plan has ended`,
+      html: subscriptionEndedHtml(opts.name, opts.planName),
+    });
+  } catch (err) { console.error("sendSubscriptionEndedEmail failed:", err); }
+}
+
+export async function sendPaymentFailedEmail(opts: {
+  email: string; name: string; planName: string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      subject: `Payment failed for your sansxel ${opts.planName} plan`,
+      html: paymentFailedHtml(opts.name, opts.planName),
+    });
+  } catch (err) { console.error("sendPaymentFailedEmail failed:", err); }
+}
+
+export async function sendPaymentMethodUpdatedEmail(opts: {
+  email: string; name: string; brand: string; last4: string;
+}) {
+  const resend = getResend();
+  if (!resend) return;
+  try {
+    await resend.emails.send({
+      from: fromBilling, replyTo: REPLY_TO, to: opts.email,
+      subject: "Your payment method was updated",
+      html: paymentMethodUpdatedHtml(opts.name, opts.brand, opts.last4),
+    });
+  } catch (err) { console.error("sendPaymentMethodUpdatedEmail failed:", err); }
 }
