@@ -773,6 +773,82 @@ div[id] {
   color: #1a0a0a;
 }
 
+/* "Use the desktop" CTA banner above the chat */
+.webchat-desktop-cta {
+  margin-top: 12px;
+  padding: 10px 16px;
+  text-align: center;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 999px;
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.webchat-desktop-cta-link {
+  color: #c4b5fd;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.webchat-desktop-cta-link:hover {
+  color: #fff;
+}
+
+/* The single combined Voice button (replaces Mic + Speak) */
+.webchat-voice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(230, 230, 240, 0.92);
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 160ms ease;
+}
+
+.webchat-voice-btn:hover:not(:disabled) {
+  background: rgba(167, 139, 250, 0.14);
+  border-color: rgba(167, 139, 250, 0.4);
+  color: #fff;
+}
+
+.webchat-voice-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.webchat-voice-btn--locked {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: rgba(254, 215, 170, 0.85);
+}
+
+.webchat-voice-btn--recording {
+  background: #a78bfa;
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #0a0a0a;
+  animation: webchat-mic-pulse 1.2s ease-in-out infinite;
+}
+
+.webchat-voice-btn--speaking {
+  background: rgba(167, 139, 250, 0.18);
+  border-color: rgba(167, 139, 250, 0.45);
+  color: #fff;
+  animation: webchat-mic-pulse 1.4s ease-in-out infinite;
+}
+
 .webchat-icon-btn {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);

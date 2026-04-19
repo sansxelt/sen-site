@@ -52,11 +52,15 @@ export function WebChat({
   const [voiceState, setVoiceState] = useState<
     "idle" | "recording" | "transcribing" | "speaking"
   >("idle");
+  // True when this turn was started by voice — used to auto-speak the response
+  const lastTurnWasVoice = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
+
+  const isFreePlan = plan === "free";
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -64,9 +68,10 @@ export function WebChat({
     }
   }, [messages]);
 
-  const send = useCallback(async () => {
-    const text = input.trim();
+  const send = useCallback(async (overrideText?: string, fromVoice = false) => {
+    const text = (overrideText ?? input).trim();
     if (!text) return;
+    lastTurnWasVoice.current = fromVoice;
 
     if (abortRef.current) {
       abortRef.current.abort();
@@ -137,6 +142,43 @@ export function WebChat({
           return copy;
         });
       }
+
+      // If this turn started with the mic, speak the response back
+      // automatically. Inline so we don't depend on the speak()
+      // useCallback being declared above this function.
+      if (lastTurnWasVoice.current && assistant.trim()) {
+        lastTurnWasVoice.current = false;
+        try {
+          setVoiceState("speaking");
+          const tts = await fetch("/api/ai/voice/speak", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: assistant }),
+          });
+          if (tts.ok) {
+            const blob = await tts.blob();
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            audioElRef.current = audio;
+            audio.onended = () => {
+              URL.revokeObjectURL(url);
+              if (audioElRef.current === audio) {
+                audioElRef.current = null;
+                setVoiceState("idle");
+              }
+            };
+            audio.onerror = () => {
+              URL.revokeObjectURL(url);
+              setVoiceState("idle");
+            };
+            await audio.play();
+          } else {
+            setVoiceState("idle");
+          }
+        } catch {
+          setVoiceState("idle");
+        }
+      }
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
       setChatError(err instanceof Error ? err.message : "Chat failed.");
@@ -163,7 +205,12 @@ export function WebChat({
     }
   }, []);
 
+  // Voice flow — single button cycle:
+  //   idle → click → ask mic perm → record (button = Stop)
+  //   stop → transcribe → auto-send → AI replies → TTS plays back
+  //   playback ends → idle
   const startRecording = useCallback(async () => {
+    if (isFreePlan) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -186,12 +233,16 @@ export function WebChat({
           });
           if (!res.ok) throw new Error(`transcribe ${res.status}`);
           const data = (await res.json()) as { text: string };
-          if (data.text.trim()) {
-            setInput((prev) => (prev ? `${prev} ${data.text}` : data.text));
+          const transcribed = data.text.trim();
+          if (transcribed) {
+            // Auto-send so the conversation stays voice-driven
+            setVoiceState("idle");
+            await send(transcribed, true);
+          } else {
+            setVoiceState("idle");
           }
         } catch (err) {
           setChatError(err instanceof Error ? err.message : "Transcribe failed.");
-        } finally {
           setVoiceState("idle");
         }
       };
@@ -202,51 +253,21 @@ export function WebChat({
       setChatError(err instanceof Error ? err.message : "Mic access denied.");
       setVoiceState("idle");
     }
-  }, []);
+  }, [isFreePlan, send]);
 
-  const stopRecording = useCallback(() => {
-    const r = recorderRef.current;
-    if (r && r.state !== "inactive") r.stop();
-  }, []);
-
-  const speak = useCallback(async (text: string) => {
-    try {
-      setVoiceState("speaking");
-      const res = await fetch("/api/ai/voice/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) throw new Error(`speak ${res.status}`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioElRef.current = audio;
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        if (audioElRef.current === audio) {
-          audioElRef.current = null;
-          setVoiceState("idle");
-        }
-      };
-      audio.onerror = () => {
-        URL.revokeObjectURL(url);
-        setVoiceState("idle");
-      };
-      await audio.play();
-    } catch (err) {
-      setChatError(err instanceof Error ? err.message : "TTS failed.");
+  const stopVoice = useCallback(() => {
+    // Three cases — all routed through the same button:
+    if (voiceState === "recording") {
+      const r = recorderRef.current;
+      if (r && r.state !== "inactive") r.stop();
+    } else if (voiceState === "speaking") {
+      if (audioElRef.current) {
+        audioElRef.current.pause();
+        audioElRef.current = null;
+      }
       setVoiceState("idle");
     }
-  }, []);
-
-  const stopSpeaking = useCallback(() => {
-    if (audioElRef.current) {
-      audioElRef.current.pause();
-      audioElRef.current = null;
-    }
-    setVoiceState("idle");
-  }, []);
+  }, [voiceState]);
 
   const showEmpty = messages.length === 0;
   const allowedTiers = new Set(tiers.map((t) => t.tier));
@@ -316,6 +337,14 @@ export function WebChat({
         </div>
       )}
 
+      {/* Subtle reminder that the desktop is the bigger surface */}
+      <div className="webchat-desktop-cta">
+        Need MCP, file edits, or full voice?
+        <a href="/download" className="webchat-desktop-cta-link">
+          Get sansxel desktop →
+        </a>
+      </div>
+
       <div className="webchat-scroll" ref={scrollRef}>
         {showEmpty ? (
           <div className="webchat-empty">
@@ -378,55 +407,12 @@ export function WebChat({
           disabled={voiceState === "recording" || voiceState === "transcribing"}
         />
         <div className="webchat-input-actions">
-          {(() => {
-            const last = messages[messages.length - 1];
-            const canSpeak =
-              !!last && last.role === "assistant" && !!last.content && !streaming;
-            if (voiceState === "speaking") {
-              return (
-                <button
-                  type="button"
-                  onClick={stopSpeaking}
-                  className="webchat-icon-btn webchat-icon-btn--active"
-                  title="Stop"
-                >
-                  Stop voice
-                </button>
-              );
-            }
-            return (
-              <button
-                type="button"
-                onClick={() => canSpeak && speak(last.content)}
-                disabled={!canSpeak}
-                className="webchat-icon-btn"
-                title="Read aloud"
-              >
-                Speak
-              </button>
-            );
-          })()}
-
-          {voiceState === "recording" ? (
-            <button
-              type="button"
-              onClick={stopRecording}
-              className="webchat-icon-btn webchat-icon-btn--recording"
-              title="Stop recording"
-            >
-              Stop mic
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={startRecording}
-              disabled={voiceState !== "idle"}
-              className="webchat-icon-btn"
-              title="Record voice message"
-            >
-              Mic
-            </button>
-          )}
+          <VoiceButton
+            voiceState={voiceState}
+            isFreePlan={isFreePlan}
+            onStart={startRecording}
+            onStop={stopVoice}
+          />
 
           {streaming ? (
             <button
@@ -448,6 +434,76 @@ export function WebChat({
         </div>
       </form>
     </section>
+  );
+}
+
+function VoiceButton({
+  voiceState,
+  isFreePlan,
+  onStart,
+  onStop,
+}: {
+  voiceState: "idle" | "recording" | "transcribing" | "speaking";
+  isFreePlan: boolean;
+  onStart: () => void;
+  onStop: () => void;
+}) {
+  if (isFreePlan) {
+    return (
+      <button
+        type="button"
+        disabled
+        className="webchat-voice-btn webchat-voice-btn--locked"
+        title="Voice is on paid plans — try the desktop app"
+      >
+        🔒 Voice
+      </button>
+    );
+  }
+
+  if (voiceState === "recording") {
+    return (
+      <button
+        type="button"
+        onClick={onStop}
+        className="webchat-voice-btn webchat-voice-btn--recording"
+        title="Stop recording and send"
+      >
+        ● Stop
+      </button>
+    );
+  }
+
+  if (voiceState === "transcribing") {
+    return (
+      <button type="button" disabled className="webchat-voice-btn">
+        Transcribing…
+      </button>
+    );
+  }
+
+  if (voiceState === "speaking") {
+    return (
+      <button
+        type="button"
+        onClick={onStop}
+        className="webchat-voice-btn webchat-voice-btn--speaking"
+        title="Stop playback"
+      >
+        ◼ Stop voice
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onStart}
+      className="webchat-voice-btn"
+      title="Talk to sansxel-1"
+    >
+      🎙 Voice
+    </button>
   );
 }
 
