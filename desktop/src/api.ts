@@ -133,6 +133,44 @@ export async function patchAccount(
   return data.profile;
 }
 
+// ── Preferences ──────────────────────────────────────────────────────
+
+export type DesktopPreferences = {
+  default_tier: ModelTier;
+  density: "compact" | "comfortable" | "spacious";
+  accent: "purple" | "blue" | "green" | "amber" | "rose";
+};
+
+export const DEFAULT_PREFERENCES: DesktopPreferences = {
+  default_tier: "balanced",
+  density: "comfortable",
+  accent: "purple",
+};
+
+export async function getPreferences(token: string): Promise<DesktopPreferences> {
+  const res = await fetch(`${API_BASE}/api/desktop/preferences`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error(`getPreferences ${res.status}`);
+  const data = (await res.json()) as { prefs: DesktopPreferences };
+  return data.prefs;
+}
+
+export async function patchPreferences(
+  token: string,
+  patch: Partial<DesktopPreferences>,
+): Promise<DesktopPreferences> {
+  const res = await fetch(`${API_BASE}/api/desktop/preferences`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error(`patchPreferences ${res.status}`);
+  const data = (await res.json()) as { prefs: DesktopPreferences };
+  return data.prefs;
+}
+
 // ── Subscription ────────────────────────────────────────────────────
 
 export type Subscription = {

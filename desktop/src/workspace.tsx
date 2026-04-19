@@ -8,6 +8,7 @@ import {
   type AccountProfile,
   ALL_MODEL_OPTIONS,
   type ChatMessage,
+  type DesktopPreferences,
   getAccount,
   getSubscription,
   type ModelTier,
@@ -15,6 +16,7 @@ import {
   streamChat,
   type Subscription,
 } from "./api";
+import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
 
 type View = "chat" | "account" | "plan" | "preferences";
@@ -137,14 +139,21 @@ function NavButton({
 // ── Chat view (the main interaction) ─────────────────────────────────
 
 function ChatView({ session }: { session: DesktopSession }) {
+  const { prefs } = usePreferences();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
-  const [tier, setTier] = useState<ModelTier>("balanced");
+  const [tier, setTier] = useState<ModelTier>(prefs.default_tier);
   const [planNotice, setPlanNotice] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Re-sync the chat tier when the preference changes (e.g. user
+  // changes default in PreferencesView).
+  useEffect(() => {
+    setTier(prefs.default_tier);
+  }, [prefs.default_tier]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -617,18 +626,121 @@ function EditableField({
 }
 
 function PreferencesView() {
+  const { prefs, update, loading } = usePreferences();
+
+  if (loading) {
+    return (
+      <div className="view">
+        <div className="view-head">
+          <h1>Preferences</h1>
+          <p>How sansxel adapts to you.</p>
+        </div>
+        <div className="view-body">
+          <div className="view-loading">Loading…</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="view">
       <div className="view-head">
         <h1>Preferences</h1>
-        <p>How sansxel adapts to you.</p>
+        <p>How sansxel adapts to you. Changes save instantly and apply across the app.</p>
       </div>
       <div className="view-body">
-        <ComingSoon>
-          Focus area, work style, summary style, density, theme — these will
-          actually change the desktop UI/UX once wired up.
-        </ComingSoon>
+        <PrefSection
+          label="Default model tier"
+          help="Which sansxel-1 you want to talk to by default. The chat picker still lets you pick a different one per message."
+        >
+          <SegmentedControl<DesktopPreferences["default_tier"]>
+            value={prefs.default_tier}
+            onChange={(v) => update({ default_tier: v })}
+            options={ALL_MODEL_OPTIONS.map((m) => ({
+              value: m.tier,
+              label: m.display_name.replace("sansxel-1 ", ""),
+            }))}
+          />
+        </PrefSection>
+
+        <PrefSection
+          label="Density"
+          help="How much breathing room around messages and panels."
+        >
+          <SegmentedControl<DesktopPreferences["density"]>
+            value={prefs.density}
+            onChange={(v) => update({ density: v })}
+            options={[
+              { value: "compact", label: "Compact" },
+              { value: "comfortable", label: "Comfortable" },
+              { value: "spacious", label: "Spacious" },
+            ]}
+          />
+        </PrefSection>
+
+        <PrefSection
+          label="Accent color"
+          help="The highlight color used across buttons, glows, and active states."
+        >
+          <div className="accent-row">
+            {(["purple", "blue", "green", "amber", "rose"] as const).map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => update({ accent: a })}
+                className={`accent-swatch accent-swatch--${a}${prefs.accent === a ? " active" : ""}`}
+                title={a}
+                aria-label={`Accent ${a}`}
+              />
+            ))}
+          </div>
+        </PrefSection>
       </div>
+    </div>
+  );
+}
+
+function PrefSection({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="pref-section">
+      <div className="pref-section-head">
+        <div className="pref-section-label">{label}</div>
+        <div className="pref-section-help">{help}</div>
+      </div>
+      <div className="pref-section-control">{children}</div>
+    </div>
+  );
+}
+
+function SegmentedControl<T extends string>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  options: Array<{ value: T; label: string }>;
+}) {
+  return (
+    <div className="seg-ctrl">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={`seg-ctrl-btn${opt.value === value ? " active" : ""}`}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }
@@ -638,15 +750,6 @@ function FieldRow({ label, value }: { label: string; value: string }) {
     <div className="field-row">
       <div className="field-label">{label}</div>
       <div className="field-value">{value}</div>
-    </div>
-  );
-}
-
-function ComingSoon({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="coming-soon">
-      <div className="coming-soon-tag">Up next</div>
-      <p>{children}</p>
     </div>
   );
 }

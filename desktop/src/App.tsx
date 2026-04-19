@@ -11,6 +11,7 @@ import {
   validateToken,
 } from "./auth";
 import { Workspace } from "./workspace";
+import { PreferencesProvider } from "./preferences";
 
 type AuthStatus =
   | { kind: "loading" }
@@ -96,9 +97,11 @@ function App() {
 
   if (auth.kind === "signed-in") {
     return (
-      <div className="stage stage--workspace">
-        <Workspace session={auth.session} onSignOut={handleSignOut} />
-      </div>
+      <PreferencesProvider token={auth.session.token}>
+        <div className="stage stage--workspace">
+          <Workspace session={auth.session} onSignOut={handleSignOut} />
+        </div>
+      </PreferencesProvider>
     );
   }
 
