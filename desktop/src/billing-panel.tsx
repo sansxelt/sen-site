@@ -302,8 +302,8 @@ export function DesktopBillingPanel({
           <div className="billing-hero-side">
             <div className="billing-actions billing-actions--column">
               {isComped ? (
-                <span className="billing-comped-pill" title="Comped tier \u2014 no payment method on file">
-                  Comped \u00b7 no card needed
+                <span className="billing-comped-pill" title="Comped tier — no payment method on file">
+                  Comped · no card needed
                 </span>
               ) : (
                 <>
@@ -431,7 +431,7 @@ export function DesktopBillingPanel({
         </section>
 
         {/* NEW monetization section: one-time top-ups + recurring boosts.
-            These are placeholders \u2014 wire to Stripe in v0.1.5. */}
+            These are placeholders — wire to Stripe in v0.1.5. */}
         <section className="billing-panel billing-panel--dense">
           <div className="billing-section-head">
             <div className="billing-kicker">Boost your account</div>
@@ -534,7 +534,7 @@ export function DesktopBillingPanel({
           </div>
         </section>
 
-        {/* Bottom: invoices, compact \u2014 last 3 then expand */}
+        {/* Bottom: invoices, compact — last 3 then expand */}
         <section className="billing-panel billing-panel--dense">
           <div className="billing-section-head">
             <div className="billing-kicker">Recent invoices</div>

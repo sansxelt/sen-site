@@ -66,7 +66,7 @@ export const EN = {
   retry: "Retry",
   close: "Close",
   open: "Open",
-  loading: "Loading\u2026",
+  loading: "Loading…",
 
   // Chat surface
   newChat: "New chat",

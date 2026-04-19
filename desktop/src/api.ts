@@ -362,7 +362,7 @@ export async function getWeeklyUsage(token: string): Promise<WeeklyUsageSummary>
   return parseJsonOrThrow<WeeklyUsageSummary>(res, "weekly usage");
 }
 
-// Defensive JSON parse \u2014 the previous version used res.json()
+// Defensive JSON parse — the previous version used res.json()
 // directly which surfaces ugly stream-controller errors when the
 // server (rarely) returns an HTML error page with a 200 status.
 // This wraps it and emits a clean "<surface> returned an unexpected

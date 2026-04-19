@@ -17,7 +17,7 @@ body,
 }
 
 .fc--invisible {
-  /* visual hint that stream-proof is on \u2014 a subtle dashed border
+  /* visual hint that stream-proof is on — a subtle dashed border
      so the user can still see the window on their own screen even
      though the OS hides it from screen captures */
   outline: 1px dashed rgba(255, 200, 100, 0.25);
@@ -30,7 +30,7 @@ body,
 .fc--edge-top   { align-items: flex-start; justify-content: stretch; flex-direction: column; }
 
 /* ── Collapsed state: splash-themed thin bar ─────────────────────
-   Mirrors the launcher splash visual identity \u2014 subtle purple
+   Mirrors the launcher splash visual identity — subtle purple
    halo + tiny vertical sansxel mark + soft pulse. Reads as "this
    is sansxel, click for the assistant" without taking up real
    space until invoked. */

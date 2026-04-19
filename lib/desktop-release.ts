@@ -14,7 +14,7 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.6";
+export const desktopCurrentCodeVersion = "0.1.7";
 export const desktopLatestShippedVersion = "0.1.6";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
 export const desktopLatestShippedDateIso = "2026-04-19T15:04:00Z";
@@ -24,10 +24,10 @@ export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
 export const desktopNextVersion = "0.1.7";
 export const desktopNextVersionHighlights = [
-  "Real Stripe products + webhooks for the v0.1.4 monetization stack (top-up packs, Power Pack bundle, annual discount).",
-  "Silent NSIS installer (no wizard ever \u2014 the splash takes over for installs too) + non-EN translation tables filled out.",
-  "GitHub OAuth callback persistence + sources view PDF text extraction + final scrollbar audit + layout densification.",
-  "Smart Action Launcher panel \u2014 Codex's elaborate quick-actions UI lands fully wired with previews + tier locks.",
+  "Removed the redundant QuickActionRow that was wrapping into a vertical stack and squashing the chat content area on v0.1.6.",
+  "All Unicode escape sequences (\u2026 \u2014 \u00d7 \u25c0 \u25b2 \u25b6) replaced with their actual characters \u2014 \"Search threads\u2026\" no longer renders as raw \\u2026 text.",
+  "Splash mini-hop game iteration coming next (jump physics + obstacle spawn rate tuning).",
+  "Then v0.1.8: real Stripe products + silent NSIS + non-EN translations + GitHub OAuth callback + Smart Action Launcher full wiring.",
 ];
 
 export const desktopLatestUpdaterNotes =

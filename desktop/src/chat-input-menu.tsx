@@ -76,7 +76,7 @@ const MENU_ITEMS: Array<{
   },
   {
     id: "image",
-    icon: "\u{1F5BC}\uFE0F",
+    icon: "\u{1F5BC}️",
     label: "Create image",
     blurb: "Generate an image from your prompt.",
   },
@@ -94,7 +94,7 @@ const MENU_ITEMS: Array<{
   },
   {
     id: "agent-mode",
-    icon: "\u2699\uFE0F",
+    icon: "⚙️",
     label: "Agent mode",
     blurb: "Reply as a step-by-step plan you can continue or branch.",
   },
@@ -208,7 +208,7 @@ export function ChatInputMenu({
               <span className="chat-plus-item-label">Recent files</span>
               <span className="chat-plus-item-blurb">{recentLabel}</span>
             </span>
-            <span className="chat-plus-caret">{showRecent ? "\u02C5" : "\u02C3"}</span>
+            <span className="chat-plus-caret">{showRecent ? "˅" : "˃"}</span>
           </button>
 
           {showRecent && (
@@ -231,7 +231,7 @@ export function ChatInputMenu({
                   >
                     <span className="chat-plus-recent-name">{file.name}</span>
                     <span className="chat-plus-recent-meta">
-                      {`${formatBytes(file.size)} \u00B7 ${formatRelative(file.savedAt)}`}
+                      {`${formatBytes(file.size)} · ${formatRelative(file.savedAt)}`}
                     </span>
                   </button>
                 ))

@@ -117,11 +117,11 @@ function UpdateConsentBanner({
       <div className="upd-banner-body">
         <strong>Update available</strong>
         <span className="upd-banner-version">
-          v{version} \u2014 install now to take effect
+          v{version} — install now to take effect
         </span>
         {notes && (
           <span className="upd-banner-notes" title={notes}>
-            {notes.length > 80 ? notes.slice(0, 80) + "\u2026" : notes}
+            {notes.length > 80 ? notes.slice(0, 80) + "…" : notes}
           </span>
         )}
       </div>
@@ -140,7 +140,7 @@ function UpdateConsentBanner({
           aria-label="Dismiss"
           title="Later (we'll ask again next launch)"
         >
-          \u00d7
+          ×
         </button>
       </div>
     </div>

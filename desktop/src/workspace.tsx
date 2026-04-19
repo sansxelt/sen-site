@@ -33,7 +33,7 @@ import {
 
 // Single source of truth for the version string shown in the
 // account card. Bumped each release alongside tauri.conf.json.
-const APP_VERSION = "0.1.6";
+const APP_VERSION = "0.1.7";
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
 import { parseSections } from "./sections";
@@ -94,7 +94,7 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [view]);
 
-  // Window mode shortcuts \u2014 Ctrl+Shift+N normal, Ctrl+Shift+T top,
+  // Window mode shortcuts — Ctrl+Shift+N normal, Ctrl+Shift+T top,
   // Ctrl+Shift+L left, Ctrl+Shift+R right. Lets power users snap
   // sansxel into a toolbar position alongside other apps without
   // opening Preferences.
@@ -164,7 +164,7 @@ function NavRail({
   const email = session.email;
   const displayName = session.displayName ?? email.split("@")[0];
   const initial = (displayName ?? email).slice(0, 1).toUpperCase();
-  const [planLabel, setPlanLabel] = useState<string>("\u2014");
+  const [planLabel, setPlanLabel] = useState<string>("—");
 
   // Pull plan tier so the account card can show "Pro · v0.1.4"
   // instead of just an avatar circle.
@@ -177,7 +177,7 @@ function NavRail({
           setPlanLabel(capitalize(sub.plan ?? "free"));
         }
       } catch {
-        // Silent \u2014 keep \u2014 placeholder
+        // Silent — keep — placeholder
       }
     })();
     return () => {
@@ -274,7 +274,7 @@ function NavRail({
       </div>
 
       <div className="ws-nav-foot">
-        {/* Account card \u2014 collapsed shows just the avatar, expanded
+        {/* Account card — collapsed shows just the avatar, expanded
             (on hover of nav rail) reveals name, email, plan, version. */}
         <button
           type="button"

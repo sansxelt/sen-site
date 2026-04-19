@@ -419,7 +419,7 @@
           <div class="mini-game-floor"></div>
         </div>
         <div class="mini-game-meta">
-          <span class="mini-game-label">Mini\u2011hop</span>
+          <span class="mini-game-label">Mini‑hop</span>
           <span class="mini-game-score">
             <span id="mg-score">0</span>
             <span class="mini-game-best">best <span id="mg-best">0</span></span>
@@ -477,7 +477,7 @@
           { label: "Preparing your space", weight: 0.8 },
         ];
         // v0.1.4 fix: splash should hold long enough that the main
-        // window has fully booted before handover \u2014 no black gap.
+        // window has fully booted before handover — no black gap.
         // The main app fires window.dispatchEvent("sansxel:main-ready")
         // when React + session restore are both done. We hold here
         // either until that event OR until TOTAL_MS, whichever's later.
@@ -577,7 +577,7 @@
         //     LOOKS like progress is happening.
         //   - In parallel we poll Rust for is_main_ready every 80ms.
         //   - The MOMENT main signals ready, we slam the bar to 100%
-        //     and hand over IMMEDIATELY \u2014 no waiting for the bar.
+        //     and hand over IMMEDIATELY — no waiting for the bar.
         //   - If the bar fills first, we hold and keep polling until
         //     main is ready (capped at ~10s so a bug can't strand us).
         // This guarantees: when the splash fades, the app is already
@@ -617,7 +617,7 @@
               handover();
             }
           }).catch(function () {
-            // No Tauri / dev preview \u2014 fire immediately
+            // No Tauri / dev preview — fire immediately
             handedOver = true;
             clearInterval(readyPoll);
             clearInterval(ticker);

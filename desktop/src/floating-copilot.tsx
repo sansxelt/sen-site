@@ -8,11 +8,11 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 // Three states (from the spec):
 //   1. Collapsed: 8-12px glowing edge bar, always visible
 //   2. Hover: bar expands slightly outward, shows helper text + a
-//      mini position switcher (\u25c0 \u25b2 \u25b6 for left/top/right docks)
+//      mini position switcher (◀ ▲ ▶ for left/top/right docks)
 //   3. Click: full panel opens floating over content
 //
 // Underlying data goes through /api/ai/copilot the same way the
-// website copilot does \u2014 this is the desktop-native shell on top.
+// website copilot does — this is the desktop-native shell on top.
 
 type DockEdge = "left" | "right" | "top";
 type CopilotMode = "collapsed" | "hover" | "open";
@@ -54,7 +54,7 @@ export function FloatingCopilot() {
 
   // Stream-proof toggle (WDA_EXCLUDEFROMCAPTURE on Windows). When
   // enabled, the copilot window won't appear in screen-shares,
-  // recordings, or OBS captures \u2014 useful for interview-mode use.
+  // recordings, or OBS captures — useful for interview-mode use.
   useEffect(() => {
     void invoke("set_copilot_stream_proof", { enabled: streamProof }).catch(
       () => {},
@@ -155,7 +155,7 @@ export function FloatingCopilot() {
           className="fc-hover"
           onClick={() => setMode("open")}
         >
-          <div className="fc-hover-text">Ask anything\u2026</div>
+          <div className="fc-hover-text">Ask anything…</div>
           <div className="fc-position-switch" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
@@ -164,7 +164,7 @@ export function FloatingCopilot() {
               title="Dock left"
               aria-label="Dock left"
             >
-              \u25c0
+              ◀
             </button>
             <button
               type="button"
@@ -173,7 +173,7 @@ export function FloatingCopilot() {
               title="Dock top"
               aria-label="Dock top"
             >
-              \u25b2
+              ▲
             </button>
             <button
               type="button"
@@ -182,7 +182,7 @@ export function FloatingCopilot() {
               title="Dock right"
               aria-label="Dock right"
             >
-              \u25b6
+              ▶
             </button>
           </div>
         </div>
@@ -202,7 +202,7 @@ export function FloatingCopilot() {
                 onClick={() => setStreamProof((s) => !s)}
                 title={streamProof ? "Stream-proof on (invisible to screen recorders)" : "Stream-proof off (visible to screen recorders)"}
               >
-                {streamProof ? "\ud83d\udd07 Stealth" : "\ud83d\udc41 Visible"}
+                {streamProof ? "🔇 Stealth" : "👁 Visible"}
               </button>
               <button
                 type="button"
@@ -211,7 +211,7 @@ export function FloatingCopilot() {
                 aria-label="Close"
                 title="Close (Esc)"
               >
-                \u00d7
+                ×
               </button>
             </div>
           </div>
@@ -228,7 +228,7 @@ export function FloatingCopilot() {
             ) : (
               messages.map((message, i) => (
                 <div key={i} className={`fc-msg fc-msg--${message.role}`}>
-                  {message.content || (streaming && i === messages.length - 1 ? "\u2026" : "")}
+                  {message.content || (streaming && i === messages.length - 1 ? "…" : "")}
                 </div>
               ))
             )}
@@ -245,7 +245,7 @@ export function FloatingCopilot() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything\u2026"
+              placeholder="Ask anything…"
               autoFocus
             />
             <button
@@ -253,7 +253,7 @@ export function FloatingCopilot() {
               disabled={!input.trim() || streaming}
               className="fc-send"
             >
-              {streaming ? "\u2026" : "Send"}
+              {streaming ? "…" : "Send"}
             </button>
           </form>
         </div>

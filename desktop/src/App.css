@@ -152,7 +152,7 @@
 }
 
 /* "Comped" pill shown on the plan card when a paid tier was granted
-   without a Stripe subscription \u2014 replaces the dangling Add card +
+   without a Stripe subscription — replaces the dangling Add card +
    Cancel at period end CTAs. */
 .billing-comped-pill {
   display: inline-flex;
@@ -493,7 +493,7 @@
   50%      { opacity: 1; }
 }
 
-/* ── Nav rail (collapsed 64px \u2192 hover expand 220px) ──────────────
+/* ── Nav rail (collapsed 64px → hover expand 220px) ──────────────
    Discord/Linear style: floats over the workspace when hovered so
    the underlying chat doesn't reflow. Position: absolute means the
    grid keeps its 64px column, but the rail visually overlays. */
@@ -629,7 +629,7 @@
   padding: 8px 12px 0 12px;
 }
 
-/* Account card \u2014 collapsed shows just the avatar circle, expanded
+/* Account card — collapsed shows just the avatar circle, expanded
    shows name + email + plan + version. Whole thing is a button. */
 .ws-nav-account {
   display: flex;

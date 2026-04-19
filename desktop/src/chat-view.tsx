@@ -1182,7 +1182,7 @@ export function DesktopChatView({
     [threads],
   );
 
-  // \u2318F / Ctrl+F focuses the sidebar search input.
+  // ⌘F / Ctrl+F focuses the sidebar search input.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       const mod = event.metaKey || event.ctrlKey;
@@ -1514,7 +1514,7 @@ export function DesktopChatView({
     setAttachments((current) => current.filter((entry) => entry.id !== id));
   }, []);
 
-  // v0.1.4 \u2014 ChatGPT-style "+" menu dispatcher. Each action either
+  // v0.1.4 — ChatGPT-style "+" menu dispatcher. Each action either
   // fires a side-effect (file picker, browser, toggle) or prefills the
   // input with a directive so the user can refine before sending.
 
@@ -1604,7 +1604,7 @@ export function DesktopChatView({
           }));
           flashTitle(threadId);
         } catch {
-          // Silent \u2014 next turn will retry naturally
+          // Silent — next turn will retry naturally
         }
       })();
     }, 1200);
@@ -2414,7 +2414,7 @@ export function DesktopChatView({
     ],
   );
 
-  // Reset copilot mode on every launch \u2014 sansxel always opens in
+  // Reset copilot mode on every launch — sansxel always opens in
   // normal chat mode, never sticky-stuck in toolbar mode from a
   // prior session. Runs once after preferences load.
   const copilotResetRef = useRef(false);
@@ -2547,7 +2547,7 @@ export function DesktopChatView({
           ))}
           {filteredThreads.length === 0 && searchQuery && (
             <div className="chat-history-empty">
-              No threads match \u201c{searchQuery}\u201d.
+              No threads match “{searchQuery}”.
             </div>
           )}
         </div>
@@ -2741,17 +2741,6 @@ export function DesktopChatView({
                 void handleFiles(files);
               }
               event.target.value = "";
-            }}
-          />
-
-          <QuickActionRow
-            actions={quickActions}
-            suggestedAction={composerContext.suggestedAction}
-            activeActionId={hoveredActionId}
-            plan={planForGating}
-            onHover={setHoveredActionId}
-            onAction={(actionId) => {
-              void runLauncherAction(actionId);
             }}
           />
 
@@ -3439,8 +3428,8 @@ function AssistantBubble({
   );
 }
 
-// Sidebar search input \u2014 thin row above the thread list. Wrapped in
-// forwardRef so the parent can focus it from a \u2318F shortcut.
+// Sidebar search input — thin row above the thread list. Wrapped in
+// forwardRef so the parent can focus it from a ⌘F shortcut.
 const ThreadSearch = forwardRef<
   HTMLInputElement,
   { value: string; onChange: (next: string) => void }
@@ -3464,7 +3453,7 @@ const ThreadSearch = forwardRef<
         type="text"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Search threads\u2026"
+        placeholder="Search threads…"
         className="chat-history-search-input"
         spellCheck={false}
         autoComplete="off"
@@ -3476,7 +3465,7 @@ const ThreadSearch = forwardRef<
           onClick={() => onChange("")}
           aria-label="Clear search"
         >
-          \u00d7
+          ×
         </button>
       )}
     </div>
@@ -3486,7 +3475,7 @@ const ThreadSearch = forwardRef<
 // ChatGPT-style word fade-in for streaming text. Splits the text into
 // word + whitespace tokens and renders each word as its own span.
 // Index keys mean React reuses existing spans as text grows, so the
-// CSS animation only fires the first time a word appears \u2014 chars
+// CSS animation only fires the first time a word appears — chars
 // added inside an already-mounted word grow without re-animating.
 function StreamingFadeText({ text }: { text: string }) {
   const tokens = useMemo(() => text.split(/(\s+)/), [text]);

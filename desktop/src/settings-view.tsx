@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { DesktopPreferences } from "./api";
 import { usePreferences } from "./preferences";
 
-// Settings view \u2014 app behavior, window, keyboard. This is split from
+// Settings view — app behavior, window, keyboard. This is split from
 // PreferencesView, which owns how sansxel-1 *talks* (persona, voice,
 // auto-speak). Anything that's about the app itself lives here.
 export function DesktopSettingsView() {
@@ -16,7 +16,7 @@ export function DesktopSettingsView() {
           <p>App behavior, window, and keyboard shortcuts.</p>
         </div>
         <div className="view-body">
-          <div className="view-loading">Loading\u2026</div>
+          <div className="view-loading">Loading…</div>
         </div>
       </div>
     );
@@ -27,7 +27,7 @@ export function DesktopSettingsView() {
     try {
       await invoke("set_window_mode", { mode });
     } catch {
-      // No-op \u2014 native call may fail in dev hot reload, the pref is saved.
+      // No-op — native call may fail in dev hot reload, the pref is saved.
     }
   }
 

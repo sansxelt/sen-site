@@ -18,19 +18,19 @@ const RELEASES: ReleaseNote[] = [
       "Borderless title bar with logo on top-left",
       "Nav rail expand-on-hover with labels and account card (name/email/plan/version)",
       "Chat history sidebar collapses to 14px strip, slides out on hover",
-      "Sidebar search bar with \u2318F shortcut",
+      "Sidebar search bar with ⌘F shortcut",
       "Esc returns to Chat from any non-chat view",
       "PC copilot toggle resets to normal mode each launch",
-      "\u201CListening\u201D instead of \u201CTap to talk\u201D (orb is purely visual)",
+      "“Listening” instead of “Tap to talk” (orb is purely visual)",
       "Streamed text fades in word-by-word (ChatGPT-style)",
       "Voice rebrand: Sage / Vesper / Quill / Glow / Halo / Drift / Ember / Lyric / Cove / Wise / Lilt",
       "Splash hardened: aggressive minimize-all (EnumWindows), force-focus, Space works without click",
       "Splash boot 1.2s instead of 10s",
-      "\u201CComped\u201D pill on plan card when Pro tier has no Stripe sub",
+      "“Comped” pill on plan card when Pro tier has no Stripe sub",
       "Custom thin purple scrollbars across desktop + website",
       "Memory + Integrations + Updates views added",
       "Window mode shortcuts: Ctrl+Shift+N/T/L/R",
-      "Surface tagging fix (desktop usage logs as \u201Cdesktop\u201D not \u201Cweb\u201D)",
+      "Surface tagging fix (desktop usage logs as “desktop” not “web”)",
     ],
   },
   {
@@ -66,21 +66,21 @@ const RELEASES: ReleaseNote[] = [
     version: "0.1.0",
     date: "Feb 2026",
     changes: [
-      "First sansxel desktop release \u2014 Tauri 2 + React",
+      "First sansxel desktop release — Tauri 2 + React",
       "Sign-in flow against sansxel.ai",
       "Chat against sansxel-1 (fast / balanced / smart tiers)",
     ],
   },
 ];
 
-// Updates view \u2014 the in-app changelog. Static for now; eventually this
+// Updates view — the in-app changelog. Static for now; eventually this
 // pulls from a hosted feed so we can ship release notes without a build.
 export function DesktopUpdatesView({ session: _session }: { session: DesktopSession }) {
   return (
     <div className="view">
       <div className="view-head">
         <h1>Updates</h1>
-        <p>What\u2019s new in sansxel.</p>
+        <p>What’s new in sansxel.</p>
       </div>
 
       <div className="view-body">
