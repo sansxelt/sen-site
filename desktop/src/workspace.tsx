@@ -1155,7 +1155,12 @@ function PlanView({ session }: { session: DesktopSession }) {
 
 function capitalize(s: string): string {
   if (!s) return s;
-  return s.charAt(0).toUpperCase() + s.slice(1);
+  // snake_case → Title Case With Spaces
+  return s
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
 }
 
 function EditableField({

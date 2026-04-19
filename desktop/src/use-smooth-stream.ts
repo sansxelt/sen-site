@@ -37,7 +37,10 @@ export function useSmoothStream(opts: {
   // Use this to update React state with the visible substring.
   onTick: (visible: string) => void;
 }): SmoothStream {
-  const charsPerFrame = opts.charsPerFrame ?? 5;
+  // Base render rate. Adaptive catchup multiplier kicks in when the
+  // buffer pulls ahead — so the reveal never *visibly* lags the
+  // network. ~720 chars/sec base + up to 4x catchup when behind.
+  const baseRate = opts.charsPerFrame ?? 12;
   const onTickRef = useRef(opts.onTick);
   useEffect(() => {
     onTickRef.current = opts.onTick;
@@ -61,7 +64,20 @@ export function useSmoothStream(opts: {
       const targetLen = targetRef.current.length;
       const renderedLen = renderedLenRef.current;
       if (renderedLen < targetLen) {
-        const nextLen = Math.min(targetLen, renderedLen + charsPerFrame);
+        // Adaptive: how much buffered text is sitting unrendered?
+        // If we're way behind, draw faster (up to 4x base) so the
+        // user never feels the visual lagging the model.
+        const behind = targetLen - renderedLen;
+        const catchup =
+          behind > 400
+            ? 4
+            : behind > 200
+              ? 3
+              : behind > 80
+                ? 2
+                : 1;
+        const step = Math.max(1, Math.round(baseRate * catchup));
+        const nextLen = Math.min(targetLen, renderedLen + step);
         renderedLenRef.current = nextLen;
         const visible = targetRef.current.slice(0, nextLen);
         onTickRef.current(visible);

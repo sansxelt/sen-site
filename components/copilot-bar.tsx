@@ -7,7 +7,18 @@ import {
   useRef,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+
+// Matches a [go:/some/path] marker the model emits to ask for
+// navigation. We strip it from displayed text and route after the
+// stream finishes.
+const GO_MARKER_RE = /\[go:(\/[^\]\s]*)\]/i;
+function stripGoMarker(text: string): { display: string; target: string | null } {
+  const match = text.match(GO_MARKER_RE);
+  if (!match) return { display: text, target: null };
+  const display = text.replace(GO_MARKER_RE, "").trim();
+  return { display, target: match[1] };
+}
 
 type Msg = { role: "user" | "assistant"; content: string };
 type Dock = "right" | "left" | "top";
@@ -16,6 +27,7 @@ const DOCK_KEY = "sansxel.copilot.dock";
 
 export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname() ?? "/";
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [dock, setDock] = useState<Dock>("right");
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -144,12 +156,26 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
           if (done) break;
           if (value) {
             assistant += decoder.decode(value, { stream: true });
+            const { display } = stripGoMarker(assistant);
             setMessages((m) => {
               const copy = [...m];
-              copy[copy.length - 1] = { role: "assistant", content: assistant };
+              copy[copy.length - 1] = { role: "assistant", content: display };
               return copy;
             });
           }
+        }
+        // Stream done — if the model emitted [go:/path], navigate.
+        const { target } = stripGoMarker(assistant);
+        if (target) {
+          // Small beat so the user sees the "Heading to…" text first.
+          setTimeout(() => {
+            try {
+              router.push(target);
+              setOpen(false);
+            } catch {
+              // Bad path — silently ignore; the answer is still shown.
+            }
+          }, 350);
         }
       } catch (err) {
         if ((err as { name?: string })?.name !== "AbortError") {
@@ -177,7 +203,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
         }
       }
     },
-    [input, pathname, selection, grabPageContext],
+    [input, pathname, selection, grabPageContext, router],
   );
 
   const stop = useCallback(() => {
@@ -191,8 +217,8 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   const quickActions = useMemo(
     () => [
       { label: "Summarize this page", prompt: "Give me a 2-sentence summary of what this page is about." },
-      { label: "Key points",            prompt: "List the 3 most important things on this page." },
-      { label: "What can I do here?",   prompt: "What actions can I take on this page right now?" },
+      { label: "Take me to pricing",  prompt: "Take me to the pricing page." },
+      { label: "Show my usage",       prompt: "Open my usage page." },
     ],
     [],
   );
@@ -264,8 +290,8 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
         {messages.length === 0 ? (
           <div className="copilot-empty">
             <p>
-              Ask anything about this page. Highlight text to ask about a
-              specific quote.
+              Ask anything — about sansxel, this page, or wherever your
+              head's at. I can also take you anywhere on the site.
             </p>
             <div className="copilot-mcp-card">
               <div className="copilot-mcp-tag">Desktop only</div>
@@ -330,7 +356,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about this page…"
+          placeholder="Ask anything, or say where to go…"
           autoFocus
         />
         {streaming ? (
