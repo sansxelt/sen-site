@@ -230,9 +230,20 @@ fn lock_splash_focus(app: tauri::AppHandle) {
 // ── Floating Copilot window control ────────────────────────────────
 // The copilot window is a separate top-level Tauri window that floats
 // above everything. It has two visual sizes:
-//   - collapsed/hover: a thin glowing strip on the chosen edge
-//   - open: a 360x(screen-12px) panel
-// We resize + reposition based on `edge` (left/right/top) and `open`.
+//   - collapsed: a capsule on the chosen edge
+//   - open: a panel (vertical for left/right, horizontal command bar
+//     for top/bottom)
+// We resize + reposition based on `edge` (left/right/top/bottom) and
+// `open`.
+//
+// v0.1.8 Capsule Rail spec:
+//   - Vertical edges (left/right): tall narrow capsule, opens
+//     horizontally inward to a 388px panel
+//   - Top/Bottom: full-width horizontal bar, opens DOWNWARD (or
+//     UPWARD for bottom) into a command-bar style panel
+//
+// Multi-monitor stub: we log the secondary monitor count so future
+// versions can let the user pick which display the rail lives on.
 #[tauri::command]
 fn position_copilot_window(
     app: tauri::AppHandle,
@@ -252,15 +263,33 @@ fn position_copilot_window(
     let mw = monitor.size().width as f64 / scale;
     let mh = monitor.size().height as f64 / scale;
 
-    // Sizing: when open, render a real panel; collapsed/hover shows
-    // just the glowing edge bar.
+    // Multi-monitor stub: count how many displays are attached so we
+    // can later add per-display preferences. Only logged for now.
+    if let Ok(monitors) = app.available_monitors() {
+        let secondary_count = monitors.len().saturating_sub(1);
+        if secondary_count > 0 {
+            eprintln!(
+                "[sansxel] copilot: detected {secondary_count} secondary monitor(s)"
+            );
+        }
+    }
+
+    // Sizing per edge + state:
+    //   left/right collapsed: 180px wide capsule rail full-height
+    //   left/right open:      388px wide panel full-height
+    //   top collapsed:        full-width 56px tall bar at top
+    //   top open:             full-width 388px tall command panel
+    //   bottom collapsed:     full-width 56px tall bar at bottom
+    //   bottom open:          full-width 388px tall command panel
     let (w, h, x, y) = match (edge.as_str(), open) {
         ("right", true) => (388.0_f64, mh - 24.0, mw - 388.0, 12.0),
         ("right", false) => (180.0, mh - 24.0, mw - 180.0, 12.0),
         ("left", true) => (388.0, mh - 24.0, 0.0, 12.0),
         ("left", false) => (180.0, mh - 24.0, 0.0, 12.0),
-        ("top", true) => (mw - 24.0, 388.0, 12.0, 0.0),
-        ("top", false) => (mw - 24.0, 180.0, 12.0, 0.0),
+        ("top", true) => (mw, 388.0, 0.0, 0.0),
+        ("top", false) => (mw, 56.0, 0.0, 0.0),
+        ("bottom", true) => (mw, 388.0, 0.0, mh - 388.0),
+        ("bottom", false) => (mw, 56.0, 0.0, mh - 56.0),
         _ => (180.0, mh - 24.0, mw - 180.0, 12.0),
     };
 

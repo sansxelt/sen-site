@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { DesktopPreferences } from "./api";
+import type { CopilotEdge, DesktopPreferences } from "./api";
 import { usePreferences } from "./preferences";
 
 // Settings view — app behavior, window, keyboard. This is split from
@@ -7,6 +8,10 @@ import { usePreferences } from "./preferences";
 // auto-speak). Anything that's about the app itself lives here.
 export function DesktopSettingsView() {
   const { prefs, update, loading } = usePreferences();
+  // v0.1.8 Capsule Rail — local UI state for the "Advanced" expander
+  // under the Copilot position control. Closed by default since the
+  // bottom-placement opt-in is intentionally discouraged.
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   if (loading) {
     return (
@@ -89,6 +94,73 @@ export function DesktopSettingsView() {
               { value: "toolbar-right", label: "Right" },
             ]}
           />
+        </PrefSection>
+
+        {/* v0.1.8 Capsule Rail — where the floating copilot lives.
+            Right/Left/Top are the recommended positions; Bottom is
+            opt-in via the Advanced expander because it conflicts with
+            the OS taskbar/dock and is harder to reach. */}
+        <PrefSection
+          label="Copilot position"
+          help="Where the floating sansxel copilot capsule lives. Vertical edges (Right/Left) overlay your apps; Top docks like a menu bar."
+        >
+          <div className="copilot-pos-wrap">
+            <SegmentedControl<CopilotEdge>
+              value={prefs.copilot_edge}
+              onChange={(v) => update({ copilot_edge: v })}
+              options={
+                prefs.copilot_allow_bottom
+                  ? [
+                      { value: "right", label: "Right" },
+                      { value: "left", label: "Left" },
+                      { value: "top", label: "Top" },
+                      { value: "bottom", label: "Bottom" },
+                    ]
+                  : [
+                      { value: "right", label: "Right" },
+                      { value: "left", label: "Left" },
+                      { value: "top", label: "Top" },
+                    ]
+              }
+            />
+            <button
+              type="button"
+              className="copilot-advanced-toggle"
+              onClick={() => setAdvancedOpen((s) => !s)}
+            >
+              Advanced {advancedOpen ? "▴" : "▾"}
+            </button>
+            {advancedOpen && (
+              <div className="copilot-advanced">
+                <label className="copilot-advanced-row">
+                  <input
+                    type="checkbox"
+                    checked={prefs.copilot_allow_bottom}
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      // When turning off bottom, also snap the edge
+                      // back to "right" if it was currently bottom so
+                      // the user isn't left on a now-invalid edge.
+                      const patch: Partial<DesktopPreferences> = {
+                        copilot_allow_bottom: next,
+                      };
+                      if (!next && prefs.copilot_edge === "bottom") {
+                        patch.copilot_edge = "right";
+                      }
+                      void update(patch);
+                    }}
+                  />
+                  <span>Enable bottom placement (not recommended)</span>
+                </label>
+                {prefs.copilot_allow_bottom && (
+                  <p className="copilot-advanced-warn">
+                    Bottom placement may reduce usability — conflicts with
+                    your taskbar/dock and is harder to reach UX.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </PrefSection>
 
         <PrefSection

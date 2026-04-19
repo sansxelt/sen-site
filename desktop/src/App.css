@@ -3052,6 +3052,61 @@
   color: #fff;
 }
 
+/* v0.1.8 Capsule Rail — Copilot position picker in Settings.
+   Wraps the segmented control + the "Advanced" expander that lets
+   the user opt into the (discouraged) bottom edge. */
+.copilot-pos-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.copilot-advanced-toggle {
+  background: transparent;
+  border: 0;
+  color: rgba(220, 220, 235, 0.65);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+.copilot-advanced-toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.copilot-advanced {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.copilot-advanced-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.9);
+  cursor: pointer;
+}
+
+.copilot-advanced-warn {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 200, 100, 0.85);
+  line-height: 1.4;
+}
+
 .accent-row {
   display: inline-flex;
   gap: 8px;

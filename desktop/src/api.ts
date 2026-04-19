@@ -271,6 +271,12 @@ export const PERSONA_OPTIONS: ReadonlyArray<{
 export type BgPattern = "none" | "dots" | "grid" | "gradient";
 export type BubbleShape = "rounded" | "square" | "pill";
 
+// v0.1.8 Capsule Rail — where the floating copilot lives. Vertical
+// (left/right) is OVERLAY mode; top/bottom is DOCKED LAYER mode.
+// Bottom is hidden behind a "not recommended" advanced flag because
+// it conflicts with taskbars and is harder to reach.
+export type CopilotEdge = "left" | "right" | "top" | "bottom";
+
 export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
@@ -291,6 +297,14 @@ export type DesktopPreferences = {
   // (navigate, create_api_key, search_threads, etc.). Off = the AI
   // can only reply with text.
   tools_enabled: boolean;
+  // v0.1.8 Capsule Rail — chosen edge for the floating copilot
+  // window. Persisted server-side so the rail snaps back to the
+  // user's spot across launches and across machines.
+  copilot_edge: CopilotEdge;
+  // v0.1.8 Capsule Rail — opt-in for bottom placement. Bottom is
+  // discouraged because it fights with the OS taskbar/dock; surface
+  // the option only when the user explicitly enables it.
+  copilot_allow_bottom: boolean;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -307,7 +321,29 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   bubble_shape: "rounded",
   system_language: "en",
   tools_enabled: true,
+  copilot_edge: "right",
+  copilot_allow_bottom: false,
 };
+
+// v0.1.8 — Normalize prefs from the server. Older servers / older
+// stored payloads won't have copilot_edge or copilot_allow_bottom yet,
+// so fill them from defaults so the floating copilot doesn't crash on
+// undefined. Also coerces an out-of-range copilot_edge back to the
+// default in case the user toggled bottom on, picked it, then
+// disabled the bottom option.
+function normalizeDesktopPreferences(
+  raw: Partial<DesktopPreferences> | null | undefined,
+): DesktopPreferences {
+  const merged: DesktopPreferences = { ...DEFAULT_PREFERENCES, ...(raw ?? {}) };
+  const allow = merged.copilot_allow_bottom === true;
+  const validEdges: CopilotEdge[] = allow
+    ? ["left", "right", "top", "bottom"]
+    : ["left", "right", "top"];
+  if (!validEdges.includes(merged.copilot_edge)) {
+    merged.copilot_edge = DEFAULT_PREFERENCES.copilot_edge;
+  }
+  return merged;
+}
 
 export async function getPreferences(token: string): Promise<DesktopPreferences> {
   const res = await fetch(`${API_BASE}/api/desktop/preferences`, {
@@ -315,8 +351,8 @@ export async function getPreferences(token: string): Promise<DesktopPreferences>
     headers: authHeaders(token),
   });
   if (!res.ok) throw new Error(`getPreferences ${res.status}`);
-  const data = (await res.json()) as { prefs: DesktopPreferences };
-  return data.prefs;
+  const data = (await res.json()) as { prefs: Partial<DesktopPreferences> };
+  return normalizeDesktopPreferences(data.prefs);
 }
 
 export async function patchPreferences(
@@ -329,8 +365,8 @@ export async function patchPreferences(
     body: JSON.stringify(patch),
   });
   if (!res.ok) throw new Error(`patchPreferences ${res.status}`);
-  const data = (await res.json()) as { prefs: DesktopPreferences };
-  return data.prefs;
+  const data = (await res.json()) as { prefs: Partial<DesktopPreferences> };
+  return normalizeDesktopPreferences(data.prefs);
 }
 
 // ── Subscription ────────────────────────────────────────────────────

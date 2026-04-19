@@ -27,7 +27,18 @@ body,
 /* ── Edge alignment ──────────────────────────────────────────────── */
 .fc--edge-right { justify-content: flex-end; align-items: stretch; }
 .fc--edge-left  { justify-content: flex-start; align-items: stretch; }
-.fc--edge-top   { align-items: flex-start; justify-content: stretch; flex-direction: column; }
+.fc--edge-top    { align-items: flex-start; justify-content: stretch; flex-direction: column; }
+/* v0.1.8 — bottom anchor mirrors top but flex-end so the capsule
+   hugs the bottom edge instead of the top */
+.fc--edge-bottom { align-items: flex-end;   justify-content: stretch; flex-direction: column; }
+
+/* v0.1.8 — drag-to-snap visual: dim slightly + grabbing cursor while
+   the user is mid-drag so they know the snap is armed */
+.fc--dragging .fc-bar {
+  cursor: grabbing;
+  opacity: 0.85;
+  transform: scale(0.97);
+}
 
 /* ── Collapsed state: always-visible floating bar ──────────────────
    v0.1.8 redesign. The thin glow strip from v0.1.7 was too easy to
@@ -48,9 +59,13 @@ body,
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.55),
     0 0 32px rgba(167, 139, 250, 0.18);
-  cursor: pointer;
+  cursor: grab;
+  /* v0.1.8 — transition margin/padding/border-radius too so the
+     vertical-pill ↔ horizontal-bar morph during drag-snap reads as
+     a smooth shape change rather than a hard cut. */
   transition: border-color 160ms ease, box-shadow 160ms ease,
-              transform 140ms ease;
+              transform 140ms ease, margin 220ms ease,
+              padding 220ms ease, border-radius 220ms ease;
   pointer-events: auto;
   user-select: none;
   white-space: nowrap;
@@ -203,6 +218,154 @@ body,
 .fc--edge-top .fc-panel {
   width: calc(100vw - 24px);
   height: 360px;
+}
+
+/* ── v0.1.8 Capsule Rail: horizontal capsule (top + bottom) ─────────
+   When the rail lives on the top or bottom edge the capsule renders
+   as a full-width bar instead of a vertical pill. The orientation
+   morph between vertical and horizontal is done via CSS transitions
+   on margin/padding/border-radius so dragging across the screen
+   smoothly reshapes the capsule. */
+.fc--edge-top .fc-bar,
+.fc--edge-bottom .fc-bar {
+  margin: 8px 12px;
+  border-radius: 14px;
+  padding: 10px 18px;
+  /* Stretch to use the full width of the always-on-top window so the
+     capsule reads as a real menu-bar / Spotlight strip, not a tiny
+     pill drifting in the middle of the screen. */
+  flex: 1 1 auto;
+  justify-content: flex-start;
+}
+
+.fc--edge-bottom .fc-bar {
+  /* Bottom-anchor: same shape as top, just flipped so it sits flush
+     against the bottom edge. */
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+
+/* ── v0.1.8: command-bar panel for top/bottom open state ─────────────
+   Spotlight / Raycast / menu-bar style. The bar drops DOWNWARD from
+   the top edge (or upward from the bottom) into a single horizontal
+   row: title → input → action chips → send → window controls. The
+   output area lives below in a thin scroll strip so vertical scroll
+   stays minimal. */
+.fc-cmdbar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: rgba(8, 8, 12, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  animation: fc-cmdbar-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fc--edge-top .fc-cmdbar {
+  border-top: 0;
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+.fc--edge-bottom .fc-cmdbar {
+  border-bottom: 0;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  margin-top: auto;
+  /* When opening upward from the bottom, flip the column so the
+     output appears ABOVE the input row. */
+  flex-direction: column-reverse;
+}
+
+@keyframes fc-cmdbar-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fc--edge-bottom .fc-cmdbar {
+  animation-name: fc-cmdbar-in-bottom;
+}
+
+@keyframes fc-cmdbar-in-bottom {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fc-cmdbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fc--edge-bottom .fc-cmdbar-row {
+  border-bottom: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fc-cmdbar-title {
+  flex-shrink: 0;
+}
+
+.fc-cmdbar-form {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fc-cmdbar-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fafafa;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  min-width: 200px;
+}
+
+.fc-cmdbar-input:focus {
+  border-color: rgba(167, 139, 250, 0.45);
+}
+
+.fc-cmdbar-chips {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.fc-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(220, 220, 235, 0.85);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.fc-chip:hover {
+  background: rgba(167, 139, 250, 0.18);
+  color: #fff;
+}
+
+.fc-cmdbar-output {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
 }
 
 .fc-panel-head {
