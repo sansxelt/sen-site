@@ -25,6 +25,7 @@ import {
 } from "./api";
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
+import { parseSections } from "./sections";
 
 type View = "chat" | "account" | "plan" | "preferences";
 
@@ -647,22 +648,10 @@ function ChatView({ session }: { session: DesktopSession }) {
                   {isInflight ? (
                     <BounceDots />
                   ) : m.role === "assistant" ? (
-                    isStillStreaming ? (
-                      // Mid-stream: render plain text. ReactMarkdown
-                      // re-parses the entire AST every chunk, which
-                      // causes layout jumps + flicker. Markdown
-                      // formatting kicks in once streaming finishes.
-                      <>
-                        <span className="chat-stream-text">{m.content}</span>
-                        <span className="chat-cursor" />
-                      </>
-                    ) : (
-                      <div className="md">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {m.content}
-                        </ReactMarkdown>
-                      </div>
-                    )
+                    <AssistantBubble
+                      content={m.content}
+                      streaming={isStillStreaming}
+                    />
                   ) : (
                     m.content
                   )}
@@ -898,6 +887,47 @@ function ModelPicker({
         </div>
       )}
     </div>
+  );
+}
+
+function AssistantBubble({
+  content,
+  streaming,
+}: {
+  content: string;
+  streaming: boolean;
+}) {
+  const sections = parseSections(content);
+  return (
+    <>
+      {sections.map((s, i) => {
+        const isLastSection = i === sections.length - 1;
+        if (s.type === "thinking") {
+          return (
+            <div key={i} className="chat-thinking">
+              <span className="chat-thinking-tag">thinking</span>
+              <span className="chat-thinking-text">{s.text.trim()}</span>
+            </div>
+          );
+        }
+        // Mid-stream: render plain text to avoid markdown re-parse
+        // flicker. Once the stream is done, full markdown formatting
+        // kicks in.
+        if (streaming && isLastSection) {
+          return (
+            <span key={i}>
+              <span className="chat-stream-text">{s.text}</span>
+              <span className="chat-cursor" />
+            </span>
+          );
+        }
+        return (
+          <div key={i} className="md">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{s.text}</ReactMarkdown>
+          </div>
+        );
+      })}
+    </>
   );
 }
 

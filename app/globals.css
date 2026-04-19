@@ -1204,6 +1204,34 @@ div[id] {
   word-wrap: break-word;
 }
 
+.webchat-thinking {
+  display: block;
+  margin: 4px 0 10px 0;
+  padding: 8px 12px;
+  border-left: 2px solid rgba(167, 139, 250, 0.35);
+  background: rgba(167, 139, 250, 0.04);
+  border-radius: 0 8px 8px 0;
+  font-size: 12px;
+  font-style: italic;
+  color: rgba(180, 180, 200, 0.7);
+  line-height: 1.55;
+}
+.webchat-thinking-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.9);
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.webchat-thinking-text {
+  vertical-align: middle;
+  white-space: pre-wrap;
+}
+
 .webchat-cursor {
   display: inline-block;
   width: 2px;

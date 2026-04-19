@@ -657,18 +657,10 @@ export function WebChat({
                   {isInflight ? (
                     <WebBounceDots />
                   ) : m.role === "assistant" ? (
-                    isStillStreaming ? (
-                      <>
-                        <span className="webchat-stream-text">{m.content}</span>
-                        <span className="webchat-cursor" />
-                      </>
-                    ) : (
-                      <div className="md">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {m.content}
-                        </ReactMarkdown>
-                      </div>
-                    )
+                    <WebAssistantBubble
+                      content={m.content}
+                      streaming={isStillStreaming}
+                    />
                   ) : (
                     m.content
                   )}
@@ -888,6 +880,75 @@ function WebVoiceOverlay({
         </div>
       </div>
     </div>
+  );
+}
+
+type Section =
+  | { type: "thinking"; text: string }
+  | { type: "answer"; text: string };
+
+function parseSections(content: string): Section[] {
+  const out: Section[] = [];
+  const OPEN = "<think>";
+  const CLOSE = "</think>";
+  let cursor = 0;
+  while (cursor < content.length) {
+    const openIdx = content.indexOf(OPEN, cursor);
+    if (openIdx === -1) {
+      const tail = content.slice(cursor);
+      if (tail) out.push({ type: "answer", text: tail });
+      break;
+    }
+    if (openIdx > cursor) {
+      out.push({ type: "answer", text: content.slice(cursor, openIdx) });
+    }
+    const innerStart = openIdx + OPEN.length;
+    const closeIdx = content.indexOf(CLOSE, innerStart);
+    if (closeIdx === -1) {
+      out.push({ type: "thinking", text: content.slice(innerStart) });
+      break;
+    }
+    out.push({ type: "thinking", text: content.slice(innerStart, closeIdx) });
+    cursor = closeIdx + CLOSE.length;
+  }
+  return out;
+}
+
+function WebAssistantBubble({
+  content,
+  streaming,
+}: {
+  content: string;
+  streaming: boolean;
+}) {
+  const sections = parseSections(content);
+  return (
+    <>
+      {sections.map((s, i) => {
+        const isLast = i === sections.length - 1;
+        if (s.type === "thinking") {
+          return (
+            <div key={i} className="webchat-thinking">
+              <span className="webchat-thinking-tag">thinking</span>
+              <span className="webchat-thinking-text">{s.text.trim()}</span>
+            </div>
+          );
+        }
+        if (streaming && isLast) {
+          return (
+            <span key={i}>
+              <span className="webchat-stream-text">{s.text}</span>
+              <span className="webchat-cursor" />
+            </span>
+          );
+        }
+        return (
+          <div key={i} className="md">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{s.text}</ReactMarkdown>
+          </div>
+        );
+      })}
+    </>
   );
 }
 
