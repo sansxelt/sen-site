@@ -14,26 +14,56 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.4";
-export const desktopLatestShippedVersion = "0.1.4";
+export const desktopCurrentCodeVersion = "0.1.5";
+export const desktopLatestShippedVersion = "0.1.5";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T02:17:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.4_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.4_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-19T14:17:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.5_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.5_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.5";
+export const desktopNextVersion = "0.1.6";
 export const desktopNextVersionHighlights = [
-  "Smart Action Launcher panel \u2014 the elaborate quick-actions UI Codex scaffolded for v0.1.4 lands fully wired with previews + tier locks.",
   "Real Stripe products + webhooks for the v0.1.4 monetization stack (top-up packs, Power Pack bundle, annual discount).",
   "Silent NSIS installer (no wizard ever \u2014 the splash takes over for installs too) + non-EN translation tables filled out.",
   "GitHub OAuth callback persistence + sources view PDF text extraction + scrollbar audit + final layout densification pass.",
+  "Vision input UI polish + code artifact preview improvements + cleanup of Codex's unwired Smart Action Launcher scaffolds in chat-view.",
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.4 \u2014 massive UI revamp. Floating Copilot in its own window with stream-proof Stealth mode. Nav rail expands on hover with full account card. Chat history sidebar slides out + searchable. Memory / Integrations / Updates / Settings views. Native API key CRUD. Image generation in chat. Two-axis i18n (UI + auto-detected response language). Word-by-word streaming fade-in. Voice rebrand. Splash boot 10s\u21921.2s. Custom scrollbars + heist-style website redesign. Window mode shortcuts (Ctrl+Shift+N/T/L/R). Esc-to-Chat. Plan view densified + monetization cards. Account-personalized UI tokens.";
+  "v0.1.5 \u2014 emergency fixes for v0.1.4: chat empty-state grid layout no longer collapses (cards render at full width), splash now waits for main React + session restore via main-ready handshake (no black gap on launch), Codex's launcher scaffolds typecheck cleanly. Pricing page reverted to the full PricingPacks fan stack. Public downloads paused (existing installs keep auto-updating).";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.5",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-19T14:17:00Z",
+    channel: "alpha",
+    summary:
+      "Emergency fixes for v0.1.4 \u2014 chat layout, splash handshake, downloads paused.",
+    changes: [
+      {
+        type: "fix",
+        text: "Chat empty-state grid no longer collapses to content width. Starter cards now render at full width instead of overlapping. Root cause: missing min-width: 0 on the .chat grid child.",
+      },
+      {
+        type: "fix",
+        text: "Splash now waits for the main window to signal ready (notify_main_ready Tauri command) before handing over. Bar fills as a visual but the handover fires the moment React + session restore complete \u2014 no black gap.",
+      },
+      {
+        type: "improve",
+        text: "Codex's Smart Action Launcher scaffolds in chat-view typecheck cleanly. The simpler ChatInputMenu provides the actual launcher functionality for now; the elaborate quick-actions panel lands fully wired in v0.1.6.",
+      },
+      {
+        type: "improve",
+        text: "Pricing page reverted to the full PricingPacks fan stack (all 6 plans). The 3-card hero row was duplication.",
+      },
+      {
+        type: "improve",
+        text: "Public downloads paused on /download, /account/download, /account/updates. Existing installs keep auto-updating. New installs reopen later.",
+      },
+    ],
+  },
   {
     version: "0.1.4",
     dateLabel: "Apr 19, 2026",
