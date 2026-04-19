@@ -5,12 +5,20 @@ export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
   accent: "purple" | "blue" | "green" | "amber" | "rose";
+  send_on_enter: boolean;
+  auto_speak_replies: boolean;
+  conversational: boolean;
+  window_mode: "normal" | "toolbar-top" | "toolbar-left" | "toolbar-right";
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
   default_tier: "balanced",
   density: "comfortable",
   accent: "purple",
+  send_on_enter: true,
+  auto_speak_replies: false,
+  conversational: false,
+  window_mode: "normal",
 };
 
 function normalize(raw: unknown): DesktopPreferences {
@@ -36,6 +44,25 @@ function normalize(raw: unknown): DesktopPreferences {
       r.accent === "rose"
         ? r.accent
         : DEFAULT_PREFERENCES.accent,
+    send_on_enter:
+      typeof r.send_on_enter === "boolean"
+        ? r.send_on_enter
+        : DEFAULT_PREFERENCES.send_on_enter,
+    auto_speak_replies:
+      typeof r.auto_speak_replies === "boolean"
+        ? r.auto_speak_replies
+        : DEFAULT_PREFERENCES.auto_speak_replies,
+    conversational:
+      typeof r.conversational === "boolean"
+        ? r.conversational
+        : DEFAULT_PREFERENCES.conversational,
+    window_mode:
+      r.window_mode === "normal" ||
+      r.window_mode === "toolbar-top" ||
+      r.window_mode === "toolbar-left" ||
+      r.window_mode === "toolbar-right"
+        ? r.window_mode
+        : DEFAULT_PREFERENCES.window_mode,
   };
 }
 

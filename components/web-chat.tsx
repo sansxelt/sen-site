@@ -361,12 +361,21 @@ export function WebChat({
               const isLast = i === messages.length - 1;
               const isInflight =
                 isLast && m.role === "assistant" && streaming && m.content === "";
+              const isStillStreaming =
+                isLast && m.role === "assistant" && streaming && m.content !== "";
               return (
                 <div
                   key={i}
                   className={`webchat-msg webchat-msg--${m.role}`}
                 >
-                  {isInflight ? <WebBounceDots /> : m.content}
+                  {isInflight ? (
+                    <WebBounceDots />
+                  ) : (
+                    <>
+                      {m.content}
+                      {isStillStreaming && <span className="webchat-cursor" />}
+                    </>
+                  )}
                 </div>
               );
             })}

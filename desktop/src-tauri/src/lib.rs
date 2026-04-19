@@ -72,6 +72,61 @@ fn minimize_other_windows(app: tauri::AppHandle) {
     });
 }
 
+// ── Window mode: pin the main window to a screen edge as a toolbar
+//
+// Modes:
+//   normal       — 1200x800 centered, not always-on-top
+//   toolbar-top  — full-width strip at the top of the primary display
+//   toolbar-left — narrow column anchored to the left edge
+//   toolbar-right — narrow column anchored to the right edge
+//
+// Used during interviews / studying / recording when sansxel needs to
+// stay visible alongside another fullscreen app.
+#[tauri::command]
+fn set_window_mode(app: tauri::AppHandle, mode: String) -> Result<(), String> {
+    use tauri::{LogicalPosition, LogicalSize};
+
+    let win = match app.get_webview_window("main") {
+        Some(w) => w,
+        None => return Ok(()),
+    };
+
+    let monitor = win.current_monitor().map_err(|e| e.to_string())?;
+    let (mw, mh) = if let Some(m) = monitor {
+        let s = m.size();
+        let scale = m.scale_factor();
+        (s.width as f64 / scale, s.height as f64 / scale)
+    } else {
+        (1920.0, 1080.0)
+    };
+
+    match mode.as_str() {
+        "toolbar-top" => {
+            let _ = win.set_always_on_top(true);
+            let _ = win.set_size(LogicalSize::new(mw, 96.0));
+            let _ = win.set_position(LogicalPosition::new(0.0, 0.0));
+        }
+        "toolbar-left" => {
+            let _ = win.set_always_on_top(true);
+            let _ = win.set_size(LogicalSize::new(440.0, mh));
+            let _ = win.set_position(LogicalPosition::new(0.0, 0.0));
+        }
+        "toolbar-right" => {
+            let _ = win.set_always_on_top(true);
+            let _ = win.set_size(LogicalSize::new(440.0, mh));
+            let _ = win.set_position(LogicalPosition::new(mw - 440.0, 0.0));
+        }
+        _ => {
+            // normal — back to a standard centered window
+            let _ = win.set_always_on_top(false);
+            let _ = win.set_size(LogicalSize::new(1200.0, 800.0));
+            let _ = win.center();
+        }
+    }
+
+    Ok(())
+}
+
 // Splash window calls this when its boot sequence finishes.
 //
 // Order matters: show the main window FIRST (it appears under the
@@ -139,7 +194,11 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
-        .invoke_handler(tauri::generate_handler![boot_complete, minimize_other_windows])
+        .invoke_handler(tauri::generate_handler![
+            boot_complete,
+            minimize_other_windows,
+            set_window_mode
+        ])
         .setup(|app| {
             // Dev/Linux: register the sansxel:// scheme at runtime so the
             // OS routes sansxel:// URLs back to us. On Windows installers

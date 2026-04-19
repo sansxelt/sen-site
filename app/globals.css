@@ -652,6 +652,23 @@ div[id] {
   min-height: 18px;
 }
 
+.webchat-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: #a78bfa;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  animation: webchat-cursor-blink 1s steps(2, end) infinite;
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
+}
+
+@keyframes webchat-cursor-blink {
+  0%, 50%       { opacity: 1; }
+  50.01%, 100%  { opacity: 0; }
+}
+
 .webchat-error {
   font-size: 12px;
   color: rgba(254, 202, 202, 0.9);

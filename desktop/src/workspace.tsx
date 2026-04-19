@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import {
   type AccountProfile,
   ALL_MODEL_OPTIONS,
@@ -65,8 +66,10 @@ function NavRail({
   const initial = email.slice(0, 1).toUpperCase();
   return (
     <aside className="ws-nav">
-      <div className="ws-nav-brand" title="sansxel">
-        <img src="/icon.png" alt="" />
+      {/* No brand icon — Windows already shows it on the title bar.
+          Just a subtle "online" status dot to anchor the top. */}
+      <div className="ws-nav-status" title="Connected to sansxel-1">
+        <span className="ws-nav-status-dot" />
       </div>
 
       <div className="ws-nav-items">
@@ -149,11 +152,33 @@ function ChatView({ session }: { session: DesktopSession }) {
   const [tier, setTier] = useState<ModelTier>(prefs.default_tier);
   const [planNotice, setPlanNotice] = useState<string | null>(null);
   const [voiceState, setVoiceState] = useState<"idle" | "recording" | "transcribing" | "speaking">("idle");
+  const [allowedTiers, setAllowedTiers] = useState<Set<ModelTier>>(
+    new Set(["fast", "balanced", "smart"]),
+  );
+  const lastTurnVoiceRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
+
+  // Pull the user's plan once so the picker can lock paid tiers
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const sub = await getSubscription(session.token);
+        if (cancelled) return;
+        setAllowedTiers(new Set(sub.tiers.map((t) => t.tier)));
+      } catch {
+        // Defaults already let everything through; downgrade happens
+        // server-side anyway.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session.token]);
 
   // Re-sync the chat tier when the preference changes (e.g. user
   // changes default in PreferencesView).
@@ -167,9 +192,10 @@ function ChatView({ session }: { session: DesktopSession }) {
     }
   }, [messages]);
 
-  const send = useCallback(async () => {
-    const text = input.trim();
+  const send = useCallback(async (overrideText?: string, fromVoice = false) => {
+    const text = (overrideText ?? input).trim();
     if (!text) return;
+    lastTurnVoiceRef.current = fromVoice;
 
     // If a previous stream is still running, abort it. The new
     // message takes priority (same UX as ChatGPT).
@@ -214,6 +240,41 @@ function ChatView({ session }: { session: DesktopSession }) {
           return copy;
         });
       }
+
+      // Auto-speak if this turn was voice OR the user prefers
+      // every reply spoken.
+      const shouldSpeak =
+        !!assistant.trim() &&
+        (lastTurnVoiceRef.current || prefs.auto_speak_replies);
+      if (shouldSpeak) {
+        lastTurnVoiceRef.current = false;
+        try {
+          setVoiceState("speaking");
+          const blob = await fetchSpeech(session.token, assistant);
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audioElRef.current = audio;
+          audio.onended = () => {
+            URL.revokeObjectURL(url);
+            if (audioElRef.current === audio) {
+              audioElRef.current = null;
+              setVoiceState("idle");
+              // Conversational mode: kick the mic back on after AI
+              // finishes speaking, so it's a back-and-forth.
+              if (prefs.conversational) {
+                void startRecording();
+              }
+            }
+          };
+          audio.onerror = () => {
+            URL.revokeObjectURL(url);
+            setVoiceState("idle");
+          };
+          await audio.play();
+        } catch {
+          setVoiceState("idle");
+        }
+      }
     } catch (err) {
       // Aborts are intentional, not errors
       if ((err as { name?: string })?.name === "AbortError") {
@@ -235,7 +296,14 @@ function ChatView({ session }: { session: DesktopSession }) {
         setStreaming(false);
       }
     }
-  }, [input, messages, session.token, tier]);
+  }, [
+    input,
+    messages,
+    session.token,
+    tier,
+    prefs.auto_speak_replies,
+    prefs.conversational,
+  ]);
 
   const stop = useCallback(() => {
     if (abortRef.current) {
@@ -264,13 +332,14 @@ function ChatView({ session }: { session: DesktopSession }) {
         try {
           const text = await transcribeAudio(session.token, blob);
           if (text.trim()) {
-            // Append to whatever's already in the input so users can
-            // dictate additions
-            setInput((prev) => (prev ? `${prev} ${text}` : text));
+            // Auto-send so the conversation stays voice-driven
+            setVoiceState("idle");
+            await send(text, true);
+          } else {
+            setVoiceState("idle");
           }
         } catch (err) {
           setChatError(err instanceof Error ? err.message : "Transcribe failed.");
-        } finally {
           setVoiceState("idle");
         }
       };
@@ -281,7 +350,7 @@ function ChatView({ session }: { session: DesktopSession }) {
       setChatError(err instanceof Error ? err.message : "Mic access denied.");
       setVoiceState("idle");
     }
-  }, [session.token]);
+  }, [session.token, send]);
 
   const stopRecording = useCallback(() => {
     const recorder = mediaRecorderRef.current;
@@ -331,7 +400,7 @@ function ChatView({ session }: { session: DesktopSession }) {
   return (
     <div className="chat">
       <div className="chat-topbar">
-        <ModelPicker tier={tier} onChange={setTier} />
+        <ModelPicker tier={tier} onChange={setTier} allowedTiers={allowedTiers} />
       </div>
 
       {planNotice && (
@@ -361,12 +430,21 @@ function ChatView({ session }: { session: DesktopSession }) {
               const isLast = i === messages.length - 1;
               const isInflight =
                 isLast && m.role === "assistant" && streaming && m.content === "";
+              const isStillStreaming =
+                isLast && m.role === "assistant" && streaming && m.content !== "";
               return (
                 <div
                   key={i}
                   className={`chat-msg chat-msg--${m.role}`}
                 >
-                  {isInflight ? <BounceDots /> : m.content}
+                  {isInflight ? (
+                    <BounceDots />
+                  ) : (
+                    <>
+                      {m.content}
+                      {isStillStreaming && <span className="chat-cursor" />}
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -389,7 +467,11 @@ function ChatView({ session }: { session: DesktopSession }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            const enterSends = prefs.send_on_enter;
+            const isEnter = e.key === "Enter" && !e.shiftKey;
+            const isCmdEnter =
+              e.key === "Enter" && (e.ctrlKey || e.metaKey);
+            if ((enterSends && isEnter) || (!enterSends && isCmdEnter)) {
               e.preventDefault();
               void send();
             }
@@ -401,7 +483,9 @@ function ChatView({ session }: { session: DesktopSession }) {
                 ? "Transcribing…"
                 : voiceState === "speaking"
                   ? "Speaking…"
-                  : "Message sansxel-1…"
+                  : prefs.send_on_enter
+                    ? "Message sansxel-1…"
+                    : "Message sansxel-1… (Ctrl+Enter to send)"
           }
           rows={1}
           disabled={voiceState === "recording" || voiceState === "transcribing"}
@@ -499,9 +583,11 @@ function VoiceWaveform({ mode }: { mode: "listening" | "speaking" }) {
 function ModelPicker({
   tier,
   onChange,
+  allowedTiers,
 }: {
   tier: ModelTier;
   onChange: (t: ModelTier) => void;
+  allowedTiers: Set<ModelTier>;
 }) {
   const [open, setOpen] = useState(false);
   const current = ALL_MODEL_OPTIONS.find((m) => m.tier === tier) ?? ALL_MODEL_OPTIONS[0];
@@ -518,20 +604,28 @@ function ModelPicker({
       </button>
       {open && (
         <div className="model-picker-menu">
-          {ALL_MODEL_OPTIONS.map((opt) => (
-            <button
-              type="button"
-              key={opt.tier}
-              onClick={() => {
-                onChange(opt.tier);
-                setOpen(false);
-              }}
-              className={`model-picker-item${opt.tier === tier ? " active" : ""}`}
-            >
-              <div className="model-picker-item-name">{opt.display_name}</div>
-              <div className="model-picker-item-blurb">{opt.blurb}</div>
-            </button>
-          ))}
+          {ALL_MODEL_OPTIONS.map((opt) => {
+            const locked = !allowedTiers.has(opt.tier);
+            return (
+              <button
+                type="button"
+                key={opt.tier}
+                onClick={() => {
+                  if (locked) return;
+                  onChange(opt.tier);
+                  setOpen(false);
+                }}
+                disabled={locked}
+                className={`model-picker-item${opt.tier === tier ? " active" : ""}${locked ? " locked" : ""}`}
+              >
+                <div className="model-picker-item-name">
+                  {opt.display_name}
+                  {locked && <span className="model-picker-lock">Upgrade</span>}
+                </div>
+                <div className="model-picker-item-blurb">{opt.blurb}</div>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
@@ -796,61 +890,160 @@ function PreferencesView() {
     );
   }
 
+  async function applyWindowMode(mode: DesktopPreferences["window_mode"]) {
+    await update({ window_mode: mode });
+    try {
+      await invoke("set_window_mode", { mode });
+    } catch {
+      // No-op — the pref still saved; native call may fail in dev hot-reload
+    }
+  }
+
   return (
     <div className="view">
       <div className="view-head">
         <h1>Preferences</h1>
-        <p>How sansxel adapts to you. Changes save instantly and apply across the app.</p>
+        <p>How sansxel adapts to you. Everything autosaves.</p>
       </div>
+
       <div className="view-body">
-        <PrefSection
-          label="Default model tier"
-          help="Which sansxel-1 you want to talk to by default. The chat picker still lets you pick a different one per message."
-        >
-          <SegmentedControl<DesktopPreferences["default_tier"]>
-            value={prefs.default_tier}
-            onChange={(v) => update({ default_tier: v })}
-            options={ALL_MODEL_OPTIONS.map((m) => ({
-              value: m.tier,
-              label: m.display_name.replace("sansxel-1 ", ""),
-            }))}
-          />
-        </PrefSection>
+        <PrefSectionGroup title="AI">
+          <PrefSection
+            label="Default model"
+            help="Which sansxel-1 you start every chat with. The chat picker still lets you swap per message."
+          >
+            <SegmentedControl<DesktopPreferences["default_tier"]>
+              value={prefs.default_tier}
+              onChange={(v) => update({ default_tier: v })}
+              options={ALL_MODEL_OPTIONS.map((m) => ({
+                value: m.tier,
+                label: m.display_name.replace("sansxel-1 ", "") || "default",
+              }))}
+            />
+          </PrefSection>
 
-        <PrefSection
-          label="Density"
-          help="How much breathing room around messages and panels."
-        >
-          <SegmentedControl<DesktopPreferences["density"]>
-            value={prefs.density}
-            onChange={(v) => update({ density: v })}
-            options={[
-              { value: "compact", label: "Compact" },
-              { value: "comfortable", label: "Comfortable" },
-              { value: "spacious", label: "Spacious" },
-            ]}
-          />
-        </PrefSection>
+          <PrefSection
+            label="Auto-speak replies"
+            help="Read every assistant reply aloud, not just voice-driven turns."
+          >
+            <Toggle
+              value={prefs.auto_speak_replies}
+              onChange={(v) => update({ auto_speak_replies: v })}
+            />
+          </PrefSection>
 
-        <PrefSection
-          label="Accent color"
-          help="The highlight color used across buttons, glows, and active states."
-        >
-          <div className="accent-row">
-            {(["purple", "blue", "green", "amber", "rose"] as const).map((a) => (
-              <button
-                key={a}
-                type="button"
-                onClick={() => update({ accent: a })}
-                className={`accent-swatch accent-swatch--${a}${prefs.accent === a ? " active" : ""}`}
-                title={a}
-                aria-label={`Accent ${a}`}
-              />
-            ))}
-          </div>
-        </PrefSection>
+          <PrefSection
+            label="Conversational mode"
+            help="When you finish a voice turn, the mic restarts automatically once sansxel-1 stops talking. Hands-free back-and-forth."
+          >
+            <Toggle
+              value={prefs.conversational}
+              onChange={(v) => update({ conversational: v })}
+            />
+          </PrefSection>
+        </PrefSectionGroup>
+
+        <PrefSectionGroup title="Chat">
+          <PrefSection
+            label="Send on Enter"
+            help="On = Enter sends, Shift+Enter is a newline. Off = the other way around (Ctrl/Cmd+Enter sends)."
+          >
+            <Toggle
+              value={prefs.send_on_enter}
+              onChange={(v) => update({ send_on_enter: v })}
+            />
+          </PrefSection>
+        </PrefSectionGroup>
+
+        <PrefSectionGroup title="Window">
+          <PrefSection
+            label="Window mode"
+            help="Pin sansxel to a screen edge for interviews, recordings, study sessions. Toolbar modes float above other apps."
+          >
+            <SegmentedControl<DesktopPreferences["window_mode"]>
+              value={prefs.window_mode}
+              onChange={(v) => void applyWindowMode(v)}
+              options={[
+                { value: "normal", label: "Window" },
+                { value: "toolbar-top", label: "Top" },
+                { value: "toolbar-left", label: "Left" },
+                { value: "toolbar-right", label: "Right" },
+              ]}
+            />
+          </PrefSection>
+        </PrefSectionGroup>
+
+        <PrefSectionGroup title="Appearance">
+          <PrefSection
+            label="Density"
+            help="How much breathing room around messages and panels."
+          >
+            <SegmentedControl<DesktopPreferences["density"]>
+              value={prefs.density}
+              onChange={(v) => update({ density: v })}
+              options={[
+                { value: "compact", label: "Compact" },
+                { value: "comfortable", label: "Comfortable" },
+                { value: "spacious", label: "Spacious" },
+              ]}
+            />
+          </PrefSection>
+
+          <PrefSection
+            label="Accent color"
+            help="Highlight color across buttons, glows, and active states."
+          >
+            <div className="accent-row">
+              {(["purple", "blue", "green", "amber", "rose"] as const).map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => update({ accent: a })}
+                  className={`accent-swatch accent-swatch--${a}${prefs.accent === a ? " active" : ""}`}
+                  title={a}
+                  aria-label={`Accent ${a}`}
+                />
+              ))}
+            </div>
+          </PrefSection>
+        </PrefSectionGroup>
       </div>
     </div>
+  );
+}
+
+function PrefSectionGroup({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="pref-group">
+      <div className="pref-group-title">{title}</div>
+      <div className="pref-group-body">{children}</div>
+    </div>
+  );
+}
+
+function Toggle({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!value)}
+      className={`toggle${value ? " on" : ""}`}
+      role="switch"
+      aria-checked={value}
+    >
+      <span className="toggle-thumb" />
+    </button>
   );
 }
 

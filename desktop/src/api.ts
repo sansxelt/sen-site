@@ -135,16 +135,30 @@ export async function patchAccount(
 
 // ── Preferences ──────────────────────────────────────────────────────
 
+export type WindowMode =
+  | "normal"
+  | "toolbar-top"
+  | "toolbar-left"
+  | "toolbar-right";
+
 export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
   accent: "purple" | "blue" | "green" | "amber" | "rose";
+  send_on_enter: boolean;
+  auto_speak_replies: boolean;
+  conversational: boolean;
+  window_mode: WindowMode;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
   default_tier: "balanced",
   density: "comfortable",
   accent: "purple",
+  send_on_enter: true,
+  auto_speak_replies: false,
+  conversational: false,
+  window_mode: "normal",
 };
 
 export async function getPreferences(token: string): Promise<DesktopPreferences> {
