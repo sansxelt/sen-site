@@ -45,9 +45,9 @@ const primaryLinks: SiteNavLink[] = [
   { href: "/features", label: "Features" },
   { href: "/function", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
-  // Signed-in only — points at the account download page so the
-  // install button, status, and release notes are all one destination
-  // (not scattered between /download and /account/updates).
+  // Signed-in only — sansxel-1 chat in the browser
+  { href: "/app", label: "Chat", authOnly: true },
+  // Signed-in only — install button, status, and release notes
   { href: "/account/updates", label: "Download", authOnly: true },
 ];
 

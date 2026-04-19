@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
+import { auth } from "../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
 import { getPlanForEmail } from "../../../../lib/account-billing";
 import {
@@ -31,7 +32,14 @@ type ChatBody = {
 };
 
 export async function POST(request: Request) {
-  const email = await getDesktopUserEmailFromRequest(request);
+  // Two ways to authenticate this endpoint: a Bearer token (desktop)
+  // or a NextAuth session cookie (browser at sansxel.ai/app). Either
+  // one identifies a user; the rest of the route is identical.
+  let email = await getDesktopUserEmailFromRequest(request);
+  if (!email) {
+    const session = await auth();
+    email = session?.user?.email ?? null;
+  }
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
