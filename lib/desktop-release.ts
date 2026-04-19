@@ -14,26 +14,56 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.5";
-export const desktopLatestShippedVersion = "0.1.5";
+export const desktopCurrentCodeVersion = "0.1.6";
+export const desktopLatestShippedVersion = "0.1.6";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T14:17:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.5_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.5_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-19T15:04:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.6_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.6_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.6";
+export const desktopNextVersion = "0.1.7";
 export const desktopNextVersionHighlights = [
   "Real Stripe products + webhooks for the v0.1.4 monetization stack (top-up packs, Power Pack bundle, annual discount).",
   "Silent NSIS installer (no wizard ever \u2014 the splash takes over for installs too) + non-EN translation tables filled out.",
-  "GitHub OAuth callback persistence + sources view PDF text extraction + scrollbar audit + final layout densification pass.",
-  "Vision input UI polish + code artifact preview improvements + cleanup of Codex's unwired Smart Action Launcher scaffolds in chat-view.",
+  "GitHub OAuth callback persistence + sources view PDF text extraction + final scrollbar audit + layout densification.",
+  "Smart Action Launcher panel \u2014 Codex's elaborate quick-actions UI lands fully wired with previews + tier locks.",
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.5 \u2014 emergency fixes for v0.1.4: chat empty-state grid layout no longer collapses (cards render at full width), splash now waits for main React + session restore via main-ready handshake (no black gap on launch), Codex's launcher scaffolds typecheck cleanly. Pricing page reverted to the full PricingPacks fan stack. Public downloads paused (existing installs keep auto-updating).";
+  "v0.1.6 \u2014 chat history sidebar always visible at 280px (no squishing). Splash mini-hop game: tap Space to hop the sansxel orb over obstacles while the loader fills. Consent-first updates: bottom-right banner asks Install / Later before any takeover. Floating Copilot edge bar now splash-themed with vertical SANSXEL mark + purple halo. Public downloads still paused; existing installs keep auto-updating.";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.6",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-19T15:04:00Z",
+    channel: "alpha",
+    summary:
+      "Sidebar always visible, splash mini-game, consent-first updates, splash-themed Copilot bar.",
+    changes: [
+      {
+        type: "fix",
+        text: "Chat history sidebar is always visible at 280px. The hover-to-reveal slide-out from v0.1.4 was squishing the empty-state cards into a narrow column. No more squashing \u2014 sidebar reads at a glance.",
+      },
+      {
+        type: "new",
+        text: "Splash mini-hop game: a small sansxel orb sits in a play strip above the loader bar. Tap Space to hop it over scrolling obstacles. Best score persists across launches. Same Space press still boosts the loader.",
+      },
+      {
+        type: "improve",
+        text: "Updates are now consent-first: a bottom-right banner asks Install / Later before any takeover happens. Click Install \u2192 splash takeover + auto-restart. Click Later \u2192 dismissed for this launch, ask again next time.",
+      },
+      {
+        type: "improve",
+        text: "Floating Copilot edge bar redesigned splash-style: vertical SANSXEL mark + stronger purple halo so the collapsed strip reads as a sansxel surface, not a generic glow line.",
+      },
+      {
+        type: "improve",
+        text: "Canvas + code-preview side panes adjusted to use the new 280px sidebar in their grid templates.",
+      },
+    ],
+  },
   {
     version: "0.1.5",
     dateLabel: "Apr 19, 2026",

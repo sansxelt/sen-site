@@ -3201,57 +3201,20 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  /* v0.1.4: chat history collapses to a thin 14px hover strip and
-     expands to 280px on mouse-near. The strip stays in the layout
-     so the chat content doesn't reflow when expanding. */
-  grid-template-columns: 14px minmax(0, 1fr);
-  position: relative;
+  /* v0.1.5+ chat history is ALWAYS visible. The hover-to-reveal
+     slide-out from v0.1.4 squished the chat content because the
+     1fr column collided with the absolute strip + the page felt
+     like nothing was readable. Going back to a fixed 280px sidebar. */
+  grid-template-columns: 280px minmax(0, 1fr);
 }
 
 .chat-history {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 14px;
-  z-index: 9;
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  transition:
-    width 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 240ms ease;
-  /* Thin glow strip on the collapsed edge so users see something
-     hoverable, not just empty space. */
-  background: linear-gradient(
-    90deg,
-    rgba(167, 139, 250, 0.18) 0%,
-    rgba(167, 139, 250, 0.04) 6px,
-    rgba(16, 16, 21, 0.98) 14px,
-    rgba(8, 8, 11, 0.94) 100%
-  );
-}
-
-.chat-history:hover,
-.chat-history:focus-within {
-  width: 280px;
-  box-shadow: 12px 0 36px rgba(0, 0, 0, 0.4);
-}
-
-/* Hide all the inner content until expanded (avoids weird wrapping
-   while collapsed). */
-.chat-history > * {
-  opacity: 0;
-  transition: opacity 140ms ease;
-  pointer-events: none;
-}
-
-.chat-history:hover > *,
-.chat-history:focus-within > * {
-  opacity: 1;
-  pointer-events: auto;
-  transition-delay: 90ms;
+  background: linear-gradient(180deg, rgba(16, 16, 21, 0.98), rgba(8, 8, 11, 0.94));
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .chat-shell--copilot {
@@ -3263,13 +3226,6 @@
 :root[data-window-mode="toolbar-left"] .chat-history,
 :root[data-window-mode="toolbar-right"] .chat-history {
   display: none;
-}
-
-/* Right border only appears when expanded so the collapsed strip
-   stays clean. */
-.chat-history:hover,
-.chat-history:focus-within {
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .chat-history-head,
@@ -5086,7 +5042,7 @@
    ───────────────────────────────────────────────────────────────────── */
 
 .chat-shell:has(.canvas-pane) {
-  grid-template-columns: 14px minmax(0, 1.5fr) minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1.5fr) minmax(0, 1fr);
 }
 
 .canvas-pane {
@@ -5198,7 +5154,7 @@
    the layout rule that widens the right column for canvas applies
    here too. */
 .chat-shell:has(.code-preview-pane) {
-  grid-template-columns: 14px minmax(0, 1.5fr) minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1.5fr) minmax(0, 1fr);
 }
 
 .code-preview-pane {

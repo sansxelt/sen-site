@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const CYCLE_MS   = 2500;
-const ANIM_MS    = 180;
-const CLEANUP_MS = 260;
+const CYCLE_MS = 2900;
+const ANIM_MS = 360;
+const CLEANUP_MS = 430;
 
 // ─── Shuffle helper ───────────────────────────────────────────────────────
 
@@ -558,6 +558,95 @@ const scenarios = [
 
 type Scenario = (typeof scenarios)[number];
 
+const accentRgb: Record<AccentKey, string> = {
+  sky: "56 189 248",
+  rose: "251 113 133",
+  amber: "251 191 36",
+  cyan: "34 211 238",
+  emerald: "52 211 153",
+  blue: "96 165 250",
+  violet: "196 181 253",
+  indigo: "129 140 248",
+  orange: "251 146 60",
+};
+
+function previewAccentStyle(accentKey: AccentKey): React.CSSProperties {
+  return { ["--sx-accent" as string]: accentRgb[accentKey] };
+}
+
+function PreviewFrame({
+  children,
+  accentKey,
+  innerClassName = "",
+}: {
+  children: React.ReactNode;
+  accentKey: AccentKey;
+  innerClassName?: string;
+}) {
+  return (
+    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="sansxel-preview-shell rounded-[30px]" style={previewAccentStyle(accentKey)}>
+        <div className={`sansxel-preview-inner overflow-hidden rounded-[29px] ${innerClassName}`}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewHeader({
+  header,
+  accent,
+  accentKey,
+}: {
+  header: string;
+  accent: string;
+  accentKey: AccentKey;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] px-5 pb-4 pt-5">
+      <div>
+        <div className="text-sm font-medium text-white">{header}</div>
+        <div className="text-xs text-neutral-400">Thursday · 4h 18m tracked</div>
+      </div>
+      <div
+        className={`sansxel-preview-pill rounded-full border px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] ${badgeCls(accentKey)}`}
+      >
+        {accent}
+      </div>
+    </div>
+  );
+}
+
+function PreviewPromptCard({
+  label,
+  question,
+  mono = false,
+  className = "",
+}: {
+  label: string;
+  question: string;
+  mono?: boolean;
+  className?: string;
+}) {
+  return (
+    <Link
+      href="/account"
+      className={`sansxel-preview-pressable block rounded-[20px] border border-white/10 bg-black/25 px-4 py-3.5 text-left transition hover:bg-white/[0.06] ${className}`}
+    >
+      <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">{label}</div>
+      <div className={`mt-2 flex items-center gap-2.5 ${mono ? "font-mono" : ""}`}>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/35 text-[11px] text-neutral-200">
+          &gt;
+        </span>
+        <span className={`min-w-0 flex-1 ${mono ? "text-xs text-neutral-300" : "text-sm text-neutral-100"}`}>
+          {question}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 // ─── Shared frame wrapper ─────────────────────────────────────────────────
 
 function HeroFrame({
@@ -571,17 +660,6 @@ function HeroFrame({
   accent: string;
   accentKey: AccentKey;
 }) {
-  const outerBorder: Record<AccentKey, string> = {
-    sky:     "border-sky-400/30",
-    rose:    "border-rose-400/30",
-    amber:   "border-amber-400/30",
-    cyan:    "border-cyan-400/30",
-    emerald: "border-emerald-400/30",
-    blue:    "border-blue-400/30",
-    violet:  "border-violet-400/30",
-    indigo:  "border-indigo-400/30",
-    orange:  "border-orange-400/30",
-  };
   const innerBg: Record<AccentKey, string> = {
     sky:     "bg-sky-950/40",
     rose:    "bg-rose-950/40",
@@ -594,36 +672,18 @@ function HeroFrame({
     orange:  "bg-orange-950/40",
   };
   return (
-    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className={`rounded-[28px] border p-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-4 bg-white/[0.03] ${outerBorder[accentKey]}`}>
-        <div className={`rounded-[24px] border border-white/10 p-4 sm:p-5 ${innerBg[accentKey]}`}>
-          <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-4">
-            <div>
-              <div className="text-sm font-medium text-white">{header}</div>
-              <div className="text-xs text-neutral-400">Thursday · 4h 18m tracked</div>
-            </div>
-            <div className={`rounded-full border px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] ${badgeCls(accentKey)}`}>
-              {accent}
-            </div>
-          </div>
-          {children}
-        </div>
-      </div>
-    </div>
+    <PreviewFrame accentKey={accentKey} innerClassName={innerBg[accentKey]}>
+      <PreviewHeader header={header} accent={accent} accentKey={accentKey} />
+      <div className="px-4 pb-4 sm:px-5 sm:pb-5">{children}</div>
+    </PreviewFrame>
   );
 }
 
 function Prompt({ label, question }: { label: string; question: string }) {
   return (
-    <Link
-      href="/account"
-      className="mt-4 block rounded-2xl border border-white/10 bg-black/30 p-4 transition hover:bg-white/5"
-    >
-      <div className="text-xs text-neutral-400">{label}</div>
-      <div className="mt-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-neutral-200">
-        {question}
-      </div>
-    </Link>
+    <div className="mt-4">
+      <PreviewPromptCard label={label} question={question} />
+    </div>
   );
 }
 
@@ -673,8 +733,7 @@ function TraceLayout({ s }: { s: Extract<Scenario, { layout: "trace" }> }) {
     status === "pass" ? "text-emerald-400" : status === "fail" ? "text-rose-400" : "text-amber-400";
 
   return (
-    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="overflow-hidden rounded-[22px] border border-rose-400/30 bg-[#110608] shadow-2xl shadow-rose-900/10">
+    <PreviewFrame accentKey={s.accent} innerClassName="bg-[#110608]">
         {/* macOS title bar */}
         <div className="flex items-center gap-2 border-b border-white/[0.07] bg-white/[0.02] px-4 py-3">
           <div className="flex gap-1.5">
@@ -683,7 +742,7 @@ function TraceLayout({ s }: { s: Extract<Scenario, { layout: "trace" }> }) {
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/30" />
           </div>
           <span className="ml-2 font-mono text-[10px] text-neutral-600">sansxel — debug trace</span>
-          <div className="ml-auto rounded-full border border-rose-400/25 bg-rose-400/10 px-2.5 py-0.5 text-[10px] text-rose-300">
+          <div className="sansxel-preview-pill ml-auto rounded-full border border-rose-400/25 bg-rose-400/10 px-2.5 py-0.5 text-[10px] text-rose-300">
             {s.accentLabel}
           </div>
         </div>
@@ -709,14 +768,16 @@ function TraceLayout({ s }: { s: Extract<Scenario, { layout: "trace" }> }) {
         </div>
         {/* Bottom prompt bar */}
         <div className="border-t border-white/[0.06] bg-black/20 px-4 py-3 font-mono">
+          <PreviewPromptCard label={s.promptLabel} question={s.prompt} mono />
+          {/*
           <div className="text-[10px] text-neutral-700 mb-1.5">{s.promptLabel}</div>
           <div className="flex items-center gap-2 text-xs">
             <span className="text-rose-400/60">❯</span>
             <span className="text-neutral-400">{s.prompt}</span>
           </div>
+          */}
         </div>
-      </div>
-    </div>
+    </PreviewFrame>
   );
 }
 
@@ -725,18 +786,25 @@ function TraceLayout({ s }: { s: Extract<Scenario, { layout: "trace" }> }) {
 function RoadmapLayout({ s }: { s: Extract<Scenario, { layout: "roadmap" }> }) {
   const statusBadge = (status: "done" | "active" | "next") => {
     if (status === "done")
-      return <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] text-emerald-300">Done</span>;
+      return <span className="sansxel-preview-pill rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] text-emerald-300">Done</span>;
     if (status === "active")
-      return <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-2 py-0.5 text-[10px] text-amber-300">Active</span>;
-    return <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-neutral-500">Next</span>;
+      return <span className="sansxel-preview-pill rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[10px] text-amber-300">Active</span>;
+    return <span className="sansxel-preview-pill rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] text-neutral-500">Next</span>;
   };
+
+  const rowTone = (status: "done" | "active" | "next") =>
+    status === "done"
+      ? "border-emerald-400/18 bg-emerald-400/[0.05]"
+      : status === "active"
+        ? "border-amber-400/18 bg-amber-400/[0.06]"
+        : "border-white/10 bg-white/[0.03]";
 
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
       <div className="mt-4 space-y-2">
         {s.milestones.map((m) => (
-          <div key={m.num} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/30 text-xs font-semibold text-white">
+          <div key={m.num} className={`sansxel-preview-pressable flex items-center gap-3 rounded-2xl border p-3.5 ${rowTone(m.status)}`}>
+            <div className="sansxel-preview-pill flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] border border-white/10 bg-black/35 text-xs font-semibold text-white">
               {m.num}
             </div>
             <div className="min-w-0 flex-1 text-sm text-neutral-200">{m.title}</div>
@@ -744,7 +812,7 @@ function RoadmapLayout({ s }: { s: Extract<Scenario, { layout: "roadmap" }> }) {
           </div>
         ))}
       </div>
-      <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
+      <div className="sansxel-preview-pressable mt-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
         <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
           Priority queue
         </div>
@@ -769,10 +837,9 @@ function MetricsLayout({ s }: { s: Extract<Scenario, { layout: "metrics" }> }) {
   const rest = s.metrics.slice(1);
   const maxBar = Math.max(...s.bars);
   return (
-    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="overflow-hidden rounded-[28px] border border-cyan-400/30 bg-cyan-950/40 shadow-2xl shadow-cyan-900/10">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] px-5 pb-4 pt-5">
+    <PreviewFrame accentKey={s.accent} innerClassName="bg-cyan-950/40">
+        <PreviewHeader header={s.header} accent={s.accentLabel} accentKey={s.accent} />
+        {/*
           <div>
             <div className="text-sm font-medium text-white">{s.header}</div>
             <div className="text-xs text-neutral-500">Thursday · 4h 18m tracked</div>
@@ -780,7 +847,8 @@ function MetricsLayout({ s }: { s: Extract<Scenario, { layout: "metrics" }> }) {
           <div className="rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-cyan-300">
             {s.accentLabel}
           </div>
-        </div>
+          </div>
+        */}
         {/* Hero metric */}
         <div className="px-5 pt-5 text-center">
           <div className="text-[52px] font-bold leading-none tracking-tight text-white">{primary.value}</div>
@@ -810,11 +878,9 @@ function MetricsLayout({ s }: { s: Extract<Scenario, { layout: "metrics" }> }) {
           <p className="text-xs leading-relaxed text-neutral-500">{s.summary}</p>
         </div>
         <div className="border-t border-white/[0.07] px-5 pb-5 pt-3">
-          <div className="text-[10px] text-neutral-600 mb-1.5">{s.promptLabel}</div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-neutral-200">{s.prompt}</div>
+          <PreviewPromptCard label={s.promptLabel} question={s.prompt} />
         </div>
-      </div>
-    </div>
+    </PreviewFrame>
   );
 }
 
@@ -823,8 +889,7 @@ function MetricsLayout({ s }: { s: Extract<Scenario, { layout: "metrics" }> }) {
 function EditorLayout({ s }: { s: Extract<Scenario, { layout: "editor" }> }) {
   const lines = s.draft.split(". ").filter(Boolean).slice(0, 5);
   return (
-    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="overflow-hidden rounded-[22px] border border-emerald-400/30 bg-[#080f0b] shadow-2xl shadow-emerald-900/10">
+    <PreviewFrame accentKey={s.accent} innerClassName="bg-[#080f0b]">
         {/* Editor title bar */}
         <div className="flex items-center gap-2 border-b border-white/[0.07] bg-white/[0.015] px-4 py-2.5">
           <div className="flex gap-1.5">
@@ -838,7 +903,7 @@ function EditorLayout({ s }: { s: Extract<Scenario, { layout: "editor" }> }) {
             </div>
             <div className="px-3 py-1 text-[10px] text-neutral-700">sources.md</div>
           </div>
-          <div className="ml-auto rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-0.5 text-[10px] text-emerald-300">
+          <div className="sansxel-preview-pill ml-auto rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-0.5 text-[10px] text-emerald-300">
             {s.accentLabel}
           </div>
         </div>
@@ -914,11 +979,9 @@ function EditorLayout({ s }: { s: Extract<Scenario, { layout: "editor" }> }) {
         </div>
         {/* Prompt */}
         <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
-          <div className="text-[10px] text-neutral-700 mb-1.5">{s.promptLabel}</div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-neutral-200">{s.prompt}</div>
+          <PreviewPromptCard label={s.promptLabel} question={s.prompt} />
         </div>
-      </div>
-    </div>
+    </PreviewFrame>
   );
 }
 
@@ -1032,10 +1095,9 @@ function PipelineLayout({ s }: { s: Extract<Scenario, { layout: "pipeline" }> })
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="overflow-hidden rounded-[28px] border border-emerald-400/30 bg-emerald-950/35 shadow-2xl shadow-emerald-900/10">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] px-5 pb-4 pt-5">
+    <PreviewFrame accentKey={s.accent} innerClassName="bg-emerald-950/35">
+        <PreviewHeader header={s.header} accent={s.accentLabel} accentKey={s.accent} />
+        {/*
           <div>
             <div className="text-sm font-medium text-white">{s.header}</div>
             <div className="text-xs text-neutral-500">Thursday · 4h 18m tracked</div>
@@ -1043,7 +1105,8 @@ function PipelineLayout({ s }: { s: Extract<Scenario, { layout: "pipeline" }> })
           <div className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-300">
             {s.accentLabel}
           </div>
-        </div>
+          </div>
+        */}
         {/* Pipeline flow */}
         <div className="px-5 py-5">
           <div className="flex items-center">
@@ -1084,11 +1147,9 @@ function PipelineLayout({ s }: { s: Extract<Scenario, { layout: "pipeline" }> })
         </div>
         {/* Prompt */}
         <div className="border-t border-white/[0.07] px-5 pb-5 pt-3">
-          <div className="text-[10px] text-neutral-700 mb-1.5">{s.promptLabel}</div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-neutral-200">{s.prompt}</div>
+          <PreviewPromptCard label={s.promptLabel} question={s.prompt} />
         </div>
-      </div>
-    </div>
+    </PreviewFrame>
   );
 }
 
@@ -1127,8 +1188,7 @@ function KanbanLayout({ s }: { s: Extract<Scenario, { layout: "kanban" }> }) {
 
 function ReviewLayout({ s }: { s: Extract<Scenario, { layout: "review" }> }) {
   return (
-    <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="overflow-hidden rounded-[22px] border border-violet-400/30 bg-[#0c0a14] shadow-2xl shadow-violet-900/10">
+    <PreviewFrame accentKey={s.accent} innerClassName="bg-[#0c0a14]">
         {/* PR header */}
         <div className="border-b border-white/[0.07] px-4 py-4">
           <div className="flex items-start justify-between gap-3">
@@ -1146,7 +1206,7 @@ function ReviewLayout({ s }: { s: Extract<Scenario, { layout: "review" }> }) {
                 <div className="mt-0.5 text-[10px] text-neutral-500">{s.approvalStatus}</div>
               </div>
             </div>
-            <div className="shrink-0 rounded-full border border-violet-400/25 bg-violet-400/10 px-2.5 py-0.5 font-mono text-[10px] text-violet-300">
+            <div className="sansxel-preview-pill shrink-0 rounded-full border border-violet-400/25 bg-violet-400/10 px-2.5 py-0.5 font-mono text-[10px] text-violet-300">
               {s.changes}
             </div>
           </div>
@@ -1179,11 +1239,9 @@ function ReviewLayout({ s }: { s: Extract<Scenario, { layout: "review" }> }) {
         </div>
         {/* Prompt */}
         <div className="border-t border-white/[0.06] px-4 pb-4 pt-3">
-          <div className="text-[10px] text-neutral-700 mb-1.5">{s.promptLabel}</div>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-neutral-200">{s.prompt}</div>
+          <PreviewPromptCard label={s.promptLabel} question={s.prompt} />
         </div>
-      </div>
-    </div>
+    </PreviewFrame>
   );
 }
 
@@ -1941,15 +1999,41 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   // Incoming fades in immediately (0→1 over 180ms).
   // Outgoing waits 50ms then fades out — old content stays fully visible
   // while new content builds up, so there's no dark gap at the midpoint.
-  const fadeIn:  React.CSSProperties = { animation: `sxFadeIn  ${ANIM_MS}ms ease both` };
-  const fadeOut: React.CSSProperties = { animation: `sxFadeOut ${ANIM_MS}ms ease 50ms both`, pointerEvents: "none" };
+  const textIn: React.CSSProperties = {
+    animation: `sxTextIn ${ANIM_MS}ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+  };
+  const textOut: React.CSSProperties = {
+    animation: `sxTextOut ${ANIM_MS - 40}ms cubic-bezier(0.4, 0, 1, 1) both`,
+    pointerEvents: "none",
+  };
+  const panelIn: React.CSSProperties = {
+    animation: `sxPanelIn ${ANIM_MS + 40}ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+  };
+  const panelOut: React.CSSProperties = {
+    animation: `sxPanelOut ${ANIM_MS}ms cubic-bezier(0.4, 0, 1, 1) both`,
+    pointerEvents: "none",
+  };
 
   return (
     <>
       {/* Keyframes injected once — no external CSS file needed */}
       <style>{`
-        @keyframes sxFadeIn  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes sxFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes sxTextIn {
+          from { opacity: 0; transform: translate3d(0, 18px, 0); filter: blur(6px); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+        }
+        @keyframes sxTextOut {
+          from { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+          to { opacity: 0; transform: translate3d(0, -14px, 0); filter: blur(4px); }
+        }
+        @keyframes sxPanelIn {
+          from { opacity: 0; transform: translate3d(0, 24px, 0) scale(0.985); }
+          to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+        }
+        @keyframes sxPanelOut {
+          from { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+          to { opacity: 0; transform: translate3d(0, -18px, 0) scale(1.01); }
+        }
       `}</style>
 
       {/* ── Left side ──────────────────────────────────────────── */}
@@ -1968,7 +2052,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
               <span
                 key={`word-out-${prevIdx}`}
                 className={`absolute inset-0 ${wordCls(prev.accent)}`}
-                style={fadeOut}
+                style={textOut}
               >
                 {prev.word}.
               </span>
@@ -1976,7 +2060,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
             <span
               key={`word-in-${currIdx}`}
               className={`block ${wordCls(curr.accent)}`}
-              style={prev ? fadeIn : undefined}
+              style={prev ? textIn : undefined}
             >
               {curr.word}.
             </span>
@@ -1994,7 +2078,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
             <p
               key={`body-out-${prevIdx}`}
               className="col-start-1 row-start-1 max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
-              style={fadeOut}
+              style={textOut}
             >
               {prev.body}
             </p>
@@ -2002,7 +2086,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           <p
             key={`body-in-${currIdx}`}
             className="col-start-1 row-start-1 max-w-xl text-sm leading-7 text-neutral-300 sm:text-base"
-            style={prev ? fadeIn : undefined}
+            style={prev ? textIn : undefined}
           >
             {curr.body}
           </p>
@@ -2018,7 +2102,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           {!isSignedIn && (
             <Link
               href="/signin"
-              className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
+              className="sansxel-preview-pressable rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
             >
               Create account
             </Link>
@@ -2043,32 +2127,32 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
       <div className="hidden lg:flex lg:flex-col lg:gap-4">
 
         {/* Callout — context setter above the panel */}
-        <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
+        <div className="sansxel-preview-pressable flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
           <div className="min-w-0">
             <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Live preview</span>
             <span className="text-sm text-neutral-400">— A fast sweep through writing, research, coding, and resume states. The full in-app flow goes deeper once you are inside.</span>
           </div>
           <Link
             href="/account"
-            className="shrink-0 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white whitespace-nowrap"
+            className="sansxel-preview-pill shrink-0 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white whitespace-nowrap"
           >
             Open full workspace →
           </Link>
         </div>
 
         {/* Crossfading panel — fixed height so no scenario can shift the page */}
-        <div className="relative" style={{ height: "540px" }}>
+        <div className="relative" style={{ height: "556px" }}>
           {prev && (
             <div
               key={prevIdx}
-              style={{ position: "absolute", inset: 0, ...fadeOut }}
+              style={{ position: "absolute", inset: 0, ...panelOut }}
             >
               <ScenarioPanel s={prev} />
             </div>
           )}
           <div
             key={currIdx}
-            style={{ position: "absolute", inset: 0, ...(prev ? fadeIn : undefined) }}
+            style={{ position: "absolute", inset: 0, ...(prev ? panelIn : undefined) }}
           >
             <ScenarioPanel s={curr} />
           </div>

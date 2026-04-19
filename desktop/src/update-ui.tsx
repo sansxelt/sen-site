@@ -8,21 +8,22 @@ import {
   type UpdateProgress,
 } from "./updater";
 
-// Owns the entire user-visible update flow. The OLD design was a
-// dismissible bottom-right banner + a "Restart now" button. The new
-// design is a full-screen splash-style takeover that:
-//   - shows the moment an update is found
-//   - displays branded download progress
-//   - on "ready" auto-installs + auto-relaunches (no button click)
-//   - minimizes every other window so the user can't half-engage
-// The user explicitly does NOT want any installer wizard or click
-// path. Updates land like an OS-level event.
+// v0.1.6+ update flow (consent-first, policy-safe):
+//   1. Quietly check for updates 4s after launch.
+//   2. If one is found, show a small bottom-right banner asking the
+//      user "Update v0.1.x available — Install now / Later".
+//   3. Only AFTER the user clicks Install do we sweep other windows
+//      out of the way and run the splash-style download takeover.
+//   4. Once the new build is ready, restart automatically (the user
+//      already consented, so no second confirmation).
+// "Later" dismisses for this session; we'll ask again next launch.
 export function UpdateLayer() {
   const [progress, setProgress] = useState<UpdateProgress>({ kind: "idle" });
   const [whatsNew, setWhatsNew] = useState<PendingUpdate | null>(null);
+  const [consented, setConsented] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  // Kick the once-per-launch update check ~4s after launch. Surface
-  // every state change to the overlay below.
+  // Kick the once-per-launch update check ~4s after launch.
   useEffect(() => {
     const t = setTimeout(() => {
       void checkForUpdatesOnLaunch(setProgress);
@@ -36,38 +37,113 @@ export function UpdateLayer() {
     if (pending) setWhatsNew(pending);
   }, []);
 
-  // The instant we have a real update, sweep other windows out of
-  // the way so the splash takeover gets undivided attention. Don't
-  // restore them after — the user picks them back up from the
-  // taskbar when they're ready.
+  // Show the splash takeover only AFTER the user consents. Before
+  // consent we just show a small ask-permission banner.
   const showOverlay =
-    progress.kind === "found" ||
-    progress.kind === "downloading" ||
-    progress.kind === "ready";
+    consented &&
+    (progress.kind === "downloading" || progress.kind === "ready");
+
+  // Sweep other windows out of the way the moment the splash
+  // takeover starts (post-consent only).
   useEffect(() => {
     if (showOverlay) {
       void invoke("minimize_other_windows").catch(() => {});
     }
   }, [showOverlay]);
 
-  // Auto-restart the second the new version is ready. No button.
+  // Once consented + the build is ready, auto-restart. The user
+  // already approved this; no second prompt.
   useEffect(() => {
-    if (progress.kind === "ready") {
+    if (consented && progress.kind === "ready") {
       const t = setTimeout(() => {
         void applyUpdateAndRestart();
       }, 600);
       return () => clearTimeout(t);
     }
-  }, [progress.kind]);
+  }, [consented, progress.kind]);
+
+  const consentVisible =
+    !consented &&
+    !dismissed &&
+    (progress.kind === "found" ||
+      progress.kind === "downloading" ||
+      progress.kind === "ready");
 
   return (
     <>
+      {consentVisible && (
+        <UpdateConsentBanner
+          progress={progress}
+          onAccept={() => setConsented(true)}
+          onDismiss={() => setDismissed(true)}
+        />
+      )}
       {showOverlay && <UpdateSplash progress={progress} />}
       {progress.kind === "error" && <UpdateError progress={progress} />}
       {whatsNew && !showOverlay && (
         <WhatsNewCard pending={whatsNew} onClose={() => setWhatsNew(null)} />
       )}
     </>
+  );
+}
+
+// Bottom-right consent banner. Shown when an update is available
+// before any takeover happens. User clicks Install to accept;
+// Later dismisses for this launch.
+function UpdateConsentBanner({
+  progress,
+  onAccept,
+  onDismiss,
+}: {
+  progress: UpdateProgress;
+  onAccept: () => void;
+  onDismiss: () => void;
+}) {
+  const version =
+    progress.kind === "found" ||
+    progress.kind === "downloading" ||
+    progress.kind === "ready"
+      ? progress.version
+      : "";
+  const notes =
+    progress.kind === "found" ||
+    progress.kind === "downloading" ||
+    progress.kind === "ready"
+      ? progress.notes
+      : "";
+
+  return (
+    <div className="upd-banner upd-banner--found" role="status">
+      <div className="upd-banner-body">
+        <strong>Update available</strong>
+        <span className="upd-banner-version">
+          v{version} \u2014 install now to take effect
+        </span>
+        {notes && (
+          <span className="upd-banner-notes" title={notes}>
+            {notes.length > 80 ? notes.slice(0, 80) + "\u2026" : notes}
+          </span>
+        )}
+      </div>
+      <div className="upd-banner-actions">
+        <button
+          type="button"
+          className="upd-banner-btn"
+          onClick={onAccept}
+        >
+          Install
+        </button>
+        <button
+          type="button"
+          className="upd-banner-x"
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          title="Later (we'll ask again next launch)"
+        >
+          \u00d7
+        </button>
+      </div>
+    </div>
   );
 }
 

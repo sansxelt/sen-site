@@ -33,7 +33,7 @@ import {
 
 // Single source of truth for the version string shown in the
 // account card. Bumped each release alongside tauri.conf.json.
-const APP_VERSION = "0.1.5";
+const APP_VERSION = "0.1.6";
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
 import { parseSections } from "./sections";

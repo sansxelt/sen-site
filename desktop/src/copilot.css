@@ -29,20 +29,58 @@ body,
 .fc--edge-left  { justify-content: flex-start; align-items: stretch; }
 .fc--edge-top   { align-items: flex-start; justify-content: stretch; flex-direction: column; }
 
-/* ── Collapsed state: thin glowing bar ──────────────────────────── */
+/* ── Collapsed state: splash-themed thin bar ─────────────────────
+   Mirrors the launcher splash visual identity \u2014 subtle purple
+   halo + tiny vertical sansxel mark + soft pulse. Reads as "this
+   is sansxel, click for the assistant" without taking up real
+   space until invoked. */
 .fc-edge-glow {
+  position: relative;
   width: 100%;
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: linear-gradient(
     90deg,
-    rgba(167, 139, 250, 0.45),
-    rgba(167, 139, 250, 0.15) 40%,
-    rgba(167, 139, 250, 0.05) 100%
+    rgba(167, 139, 250, 0.55),
+    rgba(167, 139, 250, 0.18) 50%,
+    rgba(167, 139, 250, 0.04) 100%
   );
   box-shadow:
-    0 0 24px rgba(167, 139, 250, 0.4),
-    inset 0 0 6px rgba(196, 168, 252, 0.5);
+    0 0 28px rgba(167, 139, 250, 0.5),
+    inset 0 0 8px rgba(196, 168, 252, 0.55);
   animation: fc-glow-pulse 2.4s ease-in-out infinite;
+  overflow: hidden;
+}
+
+.fc-edge-halo {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 200% 60% at 50% 50%,
+    rgba(196, 168, 252, 0.35),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.fc-edge-mark {
+  position: relative;
+  z-index: 2;
+  font-size: 9px;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: rgba(252, 252, 255, 0.78);
+  text-shadow: 0 0 12px rgba(196, 168, 252, 0.65);
+  /* Vertical for left/right docks; horizontal for top dock. */
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+}
+
+.fc--edge-top .fc-edge-mark {
+  writing-mode: horizontal-tb;
 }
 
 .fc--edge-left .fc-edge-glow {

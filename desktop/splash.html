@@ -236,6 +236,104 @@
         }
       }
 
+      /* ── Mini-game: one-key Space hopper ─────────────────────────── */
+      .mini-game {
+        position: absolute;
+        left: 50%;
+        bottom: 60px;
+        transform: translateX(-50%);
+        width: 380px;
+        z-index: 4;
+        opacity: 0;
+        animation: hint-fade-in 480ms ease-out 1100ms forwards;
+        user-select: none;
+      }
+
+      .mini-game-stage {
+        position: relative;
+        width: 100%;
+        height: 60px;
+        background: rgba(167, 139, 250, 0.04);
+        border: 1px solid rgba(167, 139, 250, 0.14);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .mini-game-floor {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 8px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(167, 139, 250, 0.32),
+          transparent
+        );
+      }
+
+      .mini-game-orb {
+        position: absolute;
+        left: 28px;
+        bottom: 9px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 35% 35%,
+          #e9defe 0%,
+          #a78bfa 60%,
+          #7c5cf0 100%
+        );
+        box-shadow: 0 0 12px rgba(167, 139, 250, 0.7);
+        transition: transform 18ms linear;
+        z-index: 2;
+      }
+
+      .mini-game-obstacles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .mg-obstacle {
+        position: absolute;
+        bottom: 9px;
+        width: 8px;
+        background: rgba(196, 168, 252, 0.65);
+        border-radius: 2px;
+        box-shadow: 0 0 6px rgba(196, 168, 252, 0.4);
+      }
+
+      .mini-game-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(180, 180, 200, 0.45);
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      .mini-game-score {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .mini-game-score #mg-score {
+        color: rgba(220, 210, 255, 0.95);
+        font-weight: 600;
+      }
+
+      .mini-game-best {
+        margin-left: 10px;
+        opacity: 0.65;
+      }
+
       /* Scanning shimmer over the progress bar */
       .progress::after {
         content: "";
@@ -308,6 +406,25 @@
 
       <div class="skip-hint" id="skip-hint">
         Press <span class="skip-key">space</span> to skip
+      </div>
+
+      <!-- v0.1.6 — tiny one-key mini-game while the splash holds.
+           Tap Space to hop the sansxel orb over scrolling obstacles.
+           Doubles as the boost key for the progress bar; doubles as
+           jump for the game. Score persists across launches. -->
+      <div class="mini-game" id="mini-game">
+        <div class="mini-game-stage" id="mg-stage">
+          <div class="mini-game-orb" id="mg-orb"></div>
+          <div class="mini-game-obstacles" id="mg-obstacles"></div>
+          <div class="mini-game-floor"></div>
+        </div>
+        <div class="mini-game-meta">
+          <span class="mini-game-label">Mini\u2011hop</span>
+          <span class="mini-game-score">
+            <span id="mg-score">0</span>
+            <span class="mini-game-best">best <span id="mg-best">0</span></span>
+          </span>
+        </div>
       </div>
 
       <div class="progress">
@@ -508,7 +625,100 @@
           });
         }, 80);
 
-        // Keys: Esc bails out immediately, Space boosts.
+        // ── Mini-game: one-key Space hopper ──────────────────────────
+        // Single Space press = boost the loader AND make the orb hop.
+        // No arrow keys. Score persists in localStorage as best.
+        var MG = {
+          stage: document.getElementById("mg-stage"),
+          orb: document.getElementById("mg-orb"),
+          obs: document.getElementById("mg-obstacles"),
+          scoreEl: document.getElementById("mg-score"),
+          bestEl: document.getElementById("mg-best"),
+          y: 0, vy: 0, jumping: false,
+          GRAVITY: 0.7, JUMP_VY: 9.5, FLOOR: 0,
+          obstacles: [],
+          spawnEvery: 70, sinceSpawn: 0,
+          score: 0,
+          best: parseInt(window.localStorage.getItem("sansxel.mg.best") || "0", 10) || 0,
+        };
+        MG.bestEl.textContent = MG.best;
+
+        function mgJump() {
+          if (handedOver) return;
+          // Allow double jump: full jump from floor, half jump from peak.
+          if (!MG.jumping) {
+            MG.vy = MG.JUMP_VY;
+            MG.jumping = true;
+          } else if (MG.vy < 2) {
+            // Mid-air boost (one-time, only once per air phase)
+            if (!MG.usedDouble) {
+              MG.vy = MG.JUMP_VY * 0.7;
+              MG.usedDouble = true;
+            }
+          }
+        }
+
+        function mgSpawn() {
+          var el = document.createElement("div");
+          el.className = "mg-obstacle";
+          // Random height 10-22px
+          var h = 10 + Math.floor(Math.random() * 13);
+          el.style.height = h + "px";
+          el.style.left = "100%";
+          MG.obs.appendChild(el);
+          MG.obstacles.push({ el: el, x: MG.stage.offsetWidth, h: h, scored: false });
+        }
+
+        function mgTick() {
+          if (handedOver) return;
+
+          // Physics
+          MG.vy -= MG.GRAVITY;
+          MG.y += MG.vy;
+          if (MG.y <= 0) {
+            MG.y = 0; MG.vy = 0; MG.jumping = false; MG.usedDouble = false;
+          }
+          MG.orb.style.transform = "translateY(" + (-MG.y) + "px)";
+
+          // Spawn obstacles
+          MG.sinceSpawn++;
+          if (MG.sinceSpawn >= MG.spawnEvery) {
+            MG.sinceSpawn = 0;
+            MG.spawnEvery = 50 + Math.floor(Math.random() * 50);
+            mgSpawn();
+          }
+
+          // Move obstacles + score them as they pass orb x ≈ 28
+          var keep = [];
+          for (var i = 0; i < MG.obstacles.length; i++) {
+            var o = MG.obstacles[i];
+            o.x -= 2.4;
+            o.el.style.left = o.x + "px";
+            // Score when obstacle passes the orb (only once)
+            if (!o.scored && o.x < 24) {
+              o.scored = true;
+              MG.score++;
+              MG.scoreEl.textContent = MG.score;
+              if (MG.score > MG.best) {
+                MG.best = MG.score;
+                MG.bestEl.textContent = MG.best;
+                try { window.localStorage.setItem("sansxel.mg.best", String(MG.best)); } catch (_) {}
+              }
+            }
+            // Cull off-screen
+            if (o.x > -20) {
+              keep.push(o);
+            } else {
+              o.el.remove();
+            }
+          }
+          MG.obstacles = keep;
+
+          requestAnimationFrame(mgTick);
+        }
+        requestAnimationFrame(mgTick);
+
+        // Keys: Esc bails out immediately, Space boosts AND hops the orb.
         document.addEventListener("keydown", function (e) {
           if (e.key === "Escape") {
             handedOver = true;
@@ -517,7 +727,10 @@
           }
           if (e.code === "Space" || e.key === " " || e.key === "Spacebar") {
             e.preventDefault();
-            if (!handedOver) boost();
+            if (!handedOver) {
+              boost();
+              mgJump();
+            }
           }
         });
 

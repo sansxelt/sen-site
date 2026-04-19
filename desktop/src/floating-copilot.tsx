@@ -143,7 +143,12 @@ export function FloatingCopilot() {
         if (mode === "hover") setMode("collapsed");
       }}
     >
-      {mode === "collapsed" && <div className="fc-edge-glow" />}
+      {mode === "collapsed" && (
+        <div className="fc-edge-glow">
+          <div className="fc-edge-halo" />
+          <span className="fc-edge-mark">sansxel</span>
+        </div>
+      )}
 
       {mode === "hover" && (
         <div
