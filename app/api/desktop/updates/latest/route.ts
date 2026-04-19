@@ -16,19 +16,19 @@ import { NextResponse } from "next/server";
 // Until you ship a release: the endpoint returns 204 (no update). The
 // installed app will check, see no update, and move on. No error.
 
-const LATEST_VERSION: string | null = null;
-const RELEASE_NOTES = "";
-const RELEASE_DATE = ""; // ISO 8601, e.g. "2026-04-19T20:00:00Z"
+const LATEST_VERSION: string | null = "0.1.1";
+const RELEASE_NOTES =
+  "Hands-free voice (adaptive VAD), hidden thinking blocks, splash [Space] to skip, smoother streaming, smarter copilot with site-wide answers + navigation.";
+const RELEASE_DATE = "2026-04-18T21:30:00Z";
 
-// Per-platform artifact map. Fill these in when you ship a release.
-//   key   = "<target>-<arch>" (e.g. "windows-x86_64", "darwin-aarch64")
-//   url   = full URL to the .zip / .tar.gz containing the installer
-//   sig   = the .sig file contents Tauri generated next to the artifact
+// Per-platform artifact map. Tauri 2 NSIS updater downloads the .exe
+// directly — the matching .exe.sig is the signature.
 const PLATFORMS: Record<string, { url: string; signature: string }> = {
-  // "windows-x86_64": {
-  //   url: "https://github.com/sansxelt/sen-site/releases/download/v0.2.0/sansxel_0.2.0_x64-setup.nsis.zip",
-  //   signature: "PUT_THE_CONTENTS_OF_THE_.sig_FILE_HERE",
-  // },
+  "windows-x86_64": {
+    url: "https://github.com/sansxelt/sen-site/releases/download/v0.1.1/sansxel_0.1.1_x64-setup.exe",
+    signature:
+      "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaTF3Z0Z6OHUrWUpVRlMrd0NZWWR6Uk02cm9NaUIzQTVmakE1S1g5Y3pTRjJrdFI5anZwYnBPb3IvbkpFaFhXaS9TWWJmQ0pwZUJhRTBDRURmL0ZveWR5VFRDbFE2THc4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc2NTcyODc3CWZpbGU6c2Fuc3hlbF8wLjEuMV94NjQtc2V0dXAuZXhlCnBPTmd2ZEJsbVJZYVRDMnVFektGVmU1VmJxYW9XcFNxbW4xM2tTQWNBMVhWZHNqcnkyS1pKUWlyeG5HOGI2SEk2YmlKYnRFRVI0WW1UOEJWejd6M0JBPT0K",
+  },
 };
 
 export async function GET(request: Request) {
