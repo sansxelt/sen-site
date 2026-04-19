@@ -64,7 +64,7 @@ Output:
 - Return the rewritten text directly unless the user asks for commentary.
 - Simulate how humans think while writing, not just how they type.`;
 
-const VOICE_HUMANIZATION_PATTERNS = [
+const HUMANIZATION_INTENT_PATTERNS = [
   /\bhumani[sz]e\b/i,
   /\b(?:sound|sounds|sounding)\s+(?:more\s+)?human\b/i,
   /\bless\s+ai\b/i,
@@ -72,8 +72,24 @@ const VOICE_HUMANIZATION_PATTERNS = [
   /\bmore\s+conversational\b/i,
   /\bmore\s+natural\b/i,
   /\bde-?ai\b/i,
-  /\brewrite\b[\s\S]{0,80}\b(?:human|natural|conversational)\b/i,
-  /\bmake\b[\s\S]{0,80}\b(?:human|natural|conversational|less ai|less robotic)\b/i,
+  /\bin\s+my\s+voice\b/i,
+  /\bsound\s+like\s+me\b/i,
+  /\bmake\b[\s\S]{0,100}\b(?:sound|feel)\b[\s\S]{0,60}\b(?:natural|human|like me|more like me)\b/i,
+  /\brewrite\b[\s\S]{0,100}\b(?:human|natural|conversational|casual|clearer|warmer|less stiff)\b/i,
+  /\brephrase\b[\s\S]{0,100}\b(?:human|natural|conversational|casual|clearer|warmer|less stiff)\b/i,
+  /\bpolish\b[\s\S]{0,100}\b(?:voice|tone|flow|wording)\b/i,
+  /\bmake\b[\s\S]{0,100}\b(?:human|natural|conversational|less ai|less robotic|less stiff)\b/i,
+  /\bhelp me rewrite\b/i,
+];
+
+const DETECTOR_EVASION_PATTERNS = [
+  /\bpass(?:ing)?\b[\s\S]{0,40}\bdetectors?\b/i,
+  /\bbypass\b[\s\S]{0,40}\bdetectors?\b/i,
+  /\bevade\b[\s\S]{0,40}\bdetectors?\b/i,
+  /\bavoid\b[\s\S]{0,40}\bdetection\b/i,
+  /\bundetectable\b/i,
+  /\bai\s+detectors?\b/i,
+  /\b(?:gptzero|turnitin|originality(?:\.ai)?|copyleaks|writer(?:\s+detector)?)\b/i,
 ];
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -95,18 +111,36 @@ function latestUserMessage(messages: ChatMessage[]): string {
   return "";
 }
 
+function recentUserContext(
+  messages: ChatMessage[],
+  maxMessages = 3,
+): string {
+  const recent = messages
+    .filter((message) => message.role === "user")
+    .slice(-maxMessages)
+    .map((message) => message.content.trim())
+    .filter(Boolean);
+
+  return recent.join("\n\n");
+}
+
 function shouldUseVoiceHumanization(payload: ChatBody): boolean {
   if (payload.input_mode !== "voice") {
     return false;
   }
 
   const latestMessage = latestUserMessage(payload.messages);
-  if (!latestMessage) {
+  const context = recentUserContext(payload.messages);
+  if (!latestMessage || !context) {
     return false;
   }
 
-  return VOICE_HUMANIZATION_PATTERNS.some((pattern) =>
-    pattern.test(latestMessage),
+  if (DETECTOR_EVASION_PATTERNS.some((pattern) => pattern.test(context))) {
+    return false;
+  }
+
+  return HUMANIZATION_INTENT_PATTERNS.some((pattern) =>
+    pattern.test(context),
   );
 }
 

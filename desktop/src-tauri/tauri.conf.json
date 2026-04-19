@@ -23,7 +23,8 @@
         "skipTaskbar": true,
         "visible": true,
         "alwaysOnTop": true,
-        "focus": true
+        "focus": true,
+        "backgroundColor": "#050505"
       },
       {
         "label": "main",
@@ -37,7 +38,8 @@
         "decorations": true,
         "resizable": true,
         "fullscreen": false,
-        "visible": false
+        "visible": false,
+        "backgroundColor": "#050505"
       }
     ],
     "security": {
