@@ -50,6 +50,11 @@
     "active": true,
     "targets": "all",
     "createUpdaterArtifacts": true,
+    "publisher": "sansxel",
+    "copyright": "© sansxel",
+    "category": "Productivity",
+    "shortDescription": "sansxel",
+    "longDescription": "sansxel — your personal AI workspace.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -78,7 +83,7 @@
         "https://sansxel.ai/api/desktop/updates/latest?platform={{target}}-{{arch}}&version={{current_version}}"
       ],
       "dialog": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYzMjZGODQ0NUUzRDM2NzAKUldSd05qMWVSUGdtODJ3ektxeHlRSzNpSEZDbktJWUI0WUdjWlR1QTdLeVIxc1B0a09ETktmenMK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDYwQkVDQkNGMDUwOEQ3RTIKUldUaTF3Z0Z6OHUrWUVWQ29XSlVxZzZZTUNuWWlVTGs1TnQvUEl6M1BleTMwTXlIVGFEREFRV2wK"
     }
   }
 }

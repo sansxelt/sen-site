@@ -16,19 +16,19 @@ import { NextResponse } from "next/server";
 // Until you ship a release: the endpoint returns 204 (no update). The
 // installed app will check, see no update, and move on. No error.
 
-const LATEST_VERSION: string | null = "0.1.1";
+const LATEST_VERSION: string | null = "0.1.2";
 const RELEASE_NOTES =
-  "Hands-free voice (adaptive VAD), hidden thinking blocks, splash [Space] to skip, smoother streaming, smarter copilot with site-wide answers + navigation.";
-const RELEASE_DATE = "2026-04-18T21:30:00Z";
+  "Borderless main window with custom title bar, app shows as 'sansxel' instead of 'sansxel.exe' in Start menu, minimal NSIS installer (currentUser, no UAC), corrected updater pubkey so future versions auto-update without reinstalling.";
+const RELEASE_DATE = "2026-04-18T23:15:00Z";
 
 // Per-platform artifact map. We host binaries from /public/desktop/
 // on this same Vercel app — keeps the GitHub repo private. Tauri 2
 // NSIS updater downloads the .exe directly + verifies the .sig.
 const PLATFORMS: Record<string, { url: string; signature: string }> = {
   "windows-x86_64": {
-    url: "https://sansxel.ai/desktop/sansxel_0.1.1_x64-setup.exe",
+    url: "https://sansxel.ai/desktop/sansxel_0.1.2_x64-setup.exe",
     signature:
-      "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaTF3Z0Z6OHUrWUpVRlMrd0NZWWR6Uk02cm9NaUIzQTVmakE1S1g5Y3pTRjJrdFI5anZwYnBPb3IvbkpFaFhXaS9TWWJmQ0pwZUJhRTBDRURmL0ZveWR5VFRDbFE2THc4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc2NTcyODc3CWZpbGU6c2Fuc3hlbF8wLjEuMV94NjQtc2V0dXAuZXhlCnBPTmd2ZEJsbVJZYVRDMnVFektGVmU1VmJxYW9XcFNxbW4xM2tTQWNBMVhWZHNqcnkyS1pKUWlyeG5HOGI2SEk2YmlKYnRFRVI0WW1UOEJWejd6M0JBPT0K",
+      "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaTF3Z0Z6OHUrWUgvSkZQZnpGNnVvTUEwdUxIVkVzSGVud0l4VTJVVU9lWWNudGZXak1sQ1JJYWVQN25tdlc2OUExb1VxOE1XMUNzRUdLSTVoNWFKcU9Bb3RsaFVLZmdjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc2NTc5MzM4CWZpbGU6c2Fuc3hlbF8wLjEuMl94NjQtc2V0dXAuZXhlCkMzNWE1dlF4cXgxeWhidWthdlF6ek04ZXdqVEdJZGIzY2d1VzN5STVyWXVFMnlVbjh6Rnp6UWRvMjdmV0NIOERXVzVNY3kvaVM0blJyMVU2L2ZFcURBPT0K",
   },
 };
 
