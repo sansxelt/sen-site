@@ -12,8 +12,10 @@ import {
   changeDesktopPlan,
   createDesktopBillingIntent,
   createDesktopSetupIntent,
+  isOneTimeBoost,
   removeDesktopAddon,
   updateDesktopPaymentMethod,
+  type BillingAddonKey,
   type BillingAddonSummary,
   type BillingCycle,
   type BillingPlanSummary,
@@ -21,9 +23,13 @@ import {
   type PricingPlanKey,
 } from "./billing-api";
 
-// v0.1.4 monetization: visual-only catalog. Wire to Stripe in v0.1.5.
+// v0.1.4 monetization: each boost is now a real addon key that maps
+// to a Stripe price (see lib/stripe.ts STRIPE_PRICES). The Buy / Add
+// buttons call createDesktopBillingIntent with the addonKey — the
+// server picks PaymentIntent for one-time keys and SubscriptionItem
+// for recurring keys.
 type BoostCard = {
-  key: string;
+  key: BillingAddonKey;
   name: string;
   price: string;
   detail: string;
@@ -31,19 +37,19 @@ type BoostCard = {
 };
 
 const ONE_TIME_BOOSTS: BoostCard[] = [
-  { key: "session", name: "Session Boost", price: "$2", detail: "+50 chats" },
-  { key: "weekly", name: "Weekly Boost", price: "$5", detail: "+500 weekly requests" },
-  { key: "voice-min", name: "Voice Minute Pack", price: "$3", detail: "+60 voice minutes" },
-  { key: "image-credit", name: "Image Credit Pack", price: "$4", detail: "+25 image generations" },
-  { key: "copilot-time", name: "Copilot Time Pack", price: "$5", detail: "+5 hours of copilot" },
+  { key: "session_boost", name: "Session Boost", price: "$2", detail: "+50 chats" },
+  { key: "weekly_boost", name: "Weekly Boost", price: "$5", detail: "+500 weekly requests" },
+  { key: "voice_minute_pack", name: "Voice Minute Pack", price: "$3", detail: "+60 voice minutes" },
+  { key: "image_credit_pack", name: "Image Credit Pack", price: "$4", detail: "+25 image generations" },
+  { key: "copilot_time_pack", name: "Copilot Time Pack", price: "$5", detail: "+5 hours of copilot" },
 ];
 
 const RECURRING_BOOSTS: BoostCard[] = [
-  { key: "voice-pack", name: "Voice Pack", price: "$8/mo", detail: "Unlimited voice" },
-  { key: "image-pack", name: "Image Pack", price: "$10/mo", detail: "Unlimited images" },
-  { key: "copilot-pro", name: "Copilot Pro Pack", price: "$12/mo", detail: "Unlimited copilot for any plan" },
+  { key: "voice_pack", name: "Voice Pack", price: "$8/mo", detail: "Unlimited voice" },
+  { key: "image_pack", name: "Image Pack", price: "$10/mo", detail: "Unlimited images" },
+  { key: "copilot_pro_pack", name: "Copilot Pro Pack", price: "$12/mo", detail: "Unlimited copilot for any plan" },
   {
-    key: "power-pack",
+    key: "power_pack",
     name: "Power Pack BUNDLE",
     price: "$25/mo",
     detail: "All boosts active (~$45 of value)",
@@ -80,6 +86,15 @@ export function DesktopBillingPanel({
   );
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [showAllInvoices, setShowAllInvoices] = useState(false);
+  // v0.1.4 — one-time boost checkout. Holds the clientSecret returned
+  // by the payment-intent route plus the boost label so the modal can
+  // render an accurate "Pay $X" button.
+  const [oneTimeBoost, setOneTimeBoost] = useState<{
+    key: BillingAddonKey;
+    name: string;
+    price: string;
+    clientSecret: string;
+  } | null>(null);
 
   const currentPlanKey = billing.state.planKey ?? billing.currentPlanKey;
   const hasPaidPlan = currentPlanKey !== "free";
@@ -152,6 +167,39 @@ export function DesktopBillingPanel({
       await refreshWithReset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add addon.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  // v0.1.4 — Boost button click handler. Routes one-time boosts through
+  // a PaymentIntent + Elements modal; recurring boosts attach as a new
+  // subscription item the same way memory_boost / api_boost / key_pack
+  // already do (no modal — added in place, refresh shows them as active).
+  async function handleBoostClick(boost: BoostCard) {
+    setBusy(`add-${boost.key}`);
+    setError(null);
+    try {
+      const result = await createDesktopBillingIntent(token, {
+        addonKey: boost.key,
+      });
+      if (isOneTimeBoost(boost.key)) {
+        if (!result.clientSecret) {
+          throw new Error("Stripe did not return a client secret.");
+        }
+        setOneTimeBoost({
+          key: boost.key,
+          name: boost.name,
+          price: boost.price,
+          clientSecret: result.clientSecret,
+        });
+      } else {
+        // Recurring addon attached to existing subscription — nothing
+        // else to do, just refresh so it shows up in the active list.
+        await refreshWithReset();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not buy boost.");
     } finally {
       setBusy(null);
     }
@@ -402,9 +450,15 @@ export function DesktopBillingPanel({
                 <button
                   type="button"
                   className="upgrade-cta-btn boost-card-btn"
-                  onClick={() => alert("Coming soon — wire to Stripe in v0.1.5")}
+                  onClick={() => void handleBoostClick(boost)}
+                  disabled={busy === `add-${boost.key}`}
+                  title={
+                    !billing.stripeConfigured
+                      ? "Billing isn't configured on this server yet."
+                      : undefined
+                  }
                 >
-                  Buy
+                  {busy === `add-${boost.key}` ? "..." : "Buy"}
                 </button>
               </div>
             ))}
@@ -417,30 +471,49 @@ export function DesktopBillingPanel({
             </span>
           </div>
           <div className="boost-row boost-row--four">
-            {RECURRING_BOOSTS.map((boost) => (
-              <div
-                key={boost.key}
-                className={`boost-card boost-card--recurring${boost.featured ? " boost-card--featured" : ""}`}
-              >
-                <div className="boost-card-head">
-                  <div className="boost-card-name">
-                    {boost.name}
-                    {boost.featured && (
-                      <span className="billing-badge boost-card-badge">Best value</span>
-                    )}
-                  </div>
-                  <div className="boost-card-price">{boost.price}</div>
-                </div>
-                <div className="boost-card-meta">{boost.detail}</div>
-                <button
-                  type="button"
-                  className="upgrade-cta-btn boost-card-btn"
-                  onClick={() => alert("Coming soon — wire to Stripe in v0.1.5")}
+            {RECURRING_BOOSTS.map((boost) => {
+              const alreadyActive = activeAddonKeys.has(boost.key);
+              return (
+                <div
+                  key={boost.key}
+                  className={`boost-card boost-card--recurring${boost.featured ? " boost-card--featured" : ""}`}
                 >
-                  Add
-                </button>
-              </div>
-            ))}
+                  <div className="boost-card-head">
+                    <div className="boost-card-name">
+                      {boost.name}
+                      {boost.featured && (
+                        <span className="billing-badge boost-card-badge">Best value</span>
+                      )}
+                    </div>
+                    <div className="boost-card-price">{boost.price}</div>
+                  </div>
+                  <div className="boost-card-meta">{boost.detail}</div>
+                  <button
+                    type="button"
+                    className="upgrade-cta-btn boost-card-btn"
+                    onClick={() => void handleBoostClick(boost)}
+                    disabled={
+                      !hasPaidPlan ||
+                      alreadyActive ||
+                      busy === `add-${boost.key}`
+                    }
+                    title={
+                      !hasPaidPlan
+                        ? "Choose a paid plan before adding recurring boosts"
+                        : alreadyActive
+                          ? "Already active on your subscription"
+                          : undefined
+                    }
+                  >
+                    {alreadyActive
+                      ? "Active"
+                      : busy === `add-${boost.key}`
+                        ? "..."
+                        : "Add"}
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
           <div className="boost-annual-notice">
@@ -533,7 +606,62 @@ export function DesktopBillingPanel({
           }}
         />
       )}
+
+      {oneTimeBoost && billing.publishableKey && (
+        <OneTimeBoostModal
+          publishableKey={billing.publishableKey}
+          boost={oneTimeBoost}
+          onClose={() => setOneTimeBoost(null)}
+          onSuccess={async () => {
+            setOneTimeBoost(null);
+            await refreshWithReset();
+          }}
+        />
+      )}
     </>
+  );
+}
+
+// v0.1.4 — One-time boost checkout. Wraps Stripe Elements around a
+// PaymentIntent client_secret returned by the payment-intent route.
+// Mirrors CheckoutModal but uses confirmPayment for a single charge
+// rather than a recurring subscription confirmation.
+function OneTimeBoostModal({
+  publishableKey,
+  boost,
+  onClose,
+  onSuccess,
+}: {
+  publishableKey: string;
+  boost: { key: BillingAddonKey; name: string; price: string; clientSecret: string };
+  onClose: () => void;
+  onSuccess: () => Promise<void> | void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+  const stripeP = useMemo(() => stripePromise(publishableKey), [publishableKey]);
+
+  return (
+    <BillingModalFrame
+      kicker="One-time top-up"
+      title={`Buy ${boost.name}`}
+      subtitle="Charged once. No subscription, no auto-renew."
+      error={error}
+      onClose={onClose}
+    >
+      <Elements
+        stripe={stripeP}
+        options={{
+          clientSecret: boost.clientSecret,
+          appearance: billingAppearance,
+        }}
+      >
+        <CheckoutForm
+          amountLabel={`Pay ${boost.price}`}
+          onSuccess={onSuccess}
+          onError={setError}
+        />
+      </Elements>
+    </BillingModalFrame>
   );
 }
 

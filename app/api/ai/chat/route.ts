@@ -11,6 +11,10 @@ import {
 import { humanizeText, type HumanizationTone } from "../../../../lib/humanize-engine";
 import { SANSXEL_PRODUCT_BRIEF } from "../../../../lib/sansxel-context";
 import {
+  buildReferenceBlock,
+  fetchSourcesByIds,
+} from "../../../../lib/chat-sources";
+import {
   describePersona,
   isPersona,
   type Persona,
@@ -106,7 +110,21 @@ const DETECTOR_EVASION_PATTERNS = [
   /\b(?:gptzero|turnitin|originality(?:\.ai)?|copyleaks|writer(?:\s+detector)?)\b/i,
 ];
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+// v0.1.4 — Optional vision attachments on a user turn. media_type
+// must be one of Anthropic's accepted image MIME types; data is the
+// raw base64 (NO "data:image/png;base64," prefix). Each image is kept
+// per-message so the model can localize references like "the second
+// screenshot" correctly.
+type ChatImageAttachment = {
+  media_type: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+  data: string;
+};
+
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  images?: ChatImageAttachment[];
+};
 type ChatInputMode = "text" | "voice";
 
 type ChatBody = {
@@ -115,7 +133,82 @@ type ChatBody = {
   tier?: ModelTier;
   input_mode?: ChatInputMode;
   persona?: Persona;
+  // v0.1.4 — RAG-style attached sources. Server fetches each id from
+  // chat_sources (owned by the requesting user) and injects the
+  // bodies into the system prompt as reference material.
+  source_ids?: string[];
+  // v0.1.4 — when true, the system prompt asks the model to respond
+  // as a numbered multi-step plan with a closing Done/Next line.
+  // No real tool-calling yet; that's v0.1.5+.
+  agent_mode?: boolean;
 };
+
+// Hard server-side cap on individual image payloads. The desktop
+// client also enforces this client-side, but a hand-rolled API caller
+// could ignore that — keep this as belt + suspenders against blowing
+// up the upstream model with a 50MB PNG.
+const MAX_IMAGE_BYTES = 1_000_000;
+const ALLOWED_IMAGE_TYPES = new Set<ChatImageAttachment["media_type"]>([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+]);
+
+function approxBase64ByteLength(b64: string): number {
+  // Each base64 char encodes 6 bits; 4 chars = 3 bytes (minus padding).
+  // Cheap upper-bound estimate without decoding.
+  const padding = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
+  return Math.floor((b64.length * 3) / 4) - padding;
+}
+
+// Convert our internal ChatMessage shape into Anthropic's MessageParam
+// content blocks. Text-only turns stay as plain strings (matches the
+// SDK's most common path); image-bearing user turns become a content
+// array with image blocks first, then a text block. Assistant turns
+// always stay text-only since we don't generate images via this route.
+function toAnthropicMessage(message: ChatMessage): {
+  role: "user" | "assistant";
+  content: string | Array<
+    | { type: "image"; source: { type: "base64"; media_type: ChatImageAttachment["media_type"]; data: string } }
+    | { type: "text"; text: string }
+  >;
+} {
+  const validImages =
+    message.role === "user" && Array.isArray(message.images)
+      ? message.images.filter(
+          (img) =>
+            ALLOWED_IMAGE_TYPES.has(img.media_type) &&
+            typeof img.data === "string" &&
+            img.data.length > 0 &&
+            approxBase64ByteLength(img.data) <= MAX_IMAGE_BYTES,
+        )
+      : [];
+
+  if (validImages.length === 0) {
+    return { role: message.role, content: message.content };
+  }
+
+  return {
+    role: "user",
+    content: [
+      ...validImages.map(
+        (img) =>
+          ({
+            type: "image" as const,
+            source: {
+              type: "base64" as const,
+              media_type: img.media_type,
+              data: img.data,
+            },
+          }),
+      ),
+      { type: "text" as const, text: message.content || "" },
+    ],
+  };
+}
+
+const AGENT_MODE_PROMPT = `Agent mode: ON. Approach this like an autonomous agent. Break the task into 3-7 numbered steps. Execute or describe each step in order. After steps, give a single-line "Done" or "Next:" summary so the user can continue or branch.`;
 
 function latestUserMessage(messages: ChatMessage[]): string {
   for (let i = messages.length - 1; i >= 0; i -= 1) {
@@ -222,8 +315,18 @@ function resolveVoiceHumanizationSource(payload: ChatBody): string | null {
   return null;
 }
 
-function systemPromptForPayload(payload: ChatBody): string {
+function systemPromptForPayload(
+  payload: ChatBody,
+  referenceBlock = "",
+): string {
   let prompt = SYSTEM_PROMPT;
+
+  // v0.1.4 — Source-attached reference block (RAG). Lives BEFORE the
+  // persona overlay so persona instructions still take priority on
+  // tone, but the model has the materials in scope when it answers.
+  if (referenceBlock) {
+    prompt = `${prompt}\n\n${referenceBlock}`;
+  }
 
   // Persona overlay (direct/warm/technical/playful) — short style
   // directive appended to the base prompt. Keep this AFTER the base
@@ -235,6 +338,13 @@ function systemPromptForPayload(payload: ChatBody): string {
 
   if (matchesVoiceHumanizationIntent(payload)) {
     prompt = `${prompt}\n\n${VOICE_HUMANIZATION_PROMPT}`;
+  }
+
+  // v0.1.4 — Agent mode directive. Toggled from the "+" menu in the
+  // desktop chat input. Just a prompt directive for now; real tool-
+  // calling lands in v0.1.5+.
+  if (payload.agent_mode) {
+    prompt = `${prompt}\n\n${AGENT_MODE_PROMPT}`;
   }
 
   // v0.1.4 i18n response-language hook. Cheap detection on the latest
@@ -348,12 +458,28 @@ export async function POST(request: Request) {
   }
   messages.push(...payload.messages);
 
+  // v0.1.4 — fetch any attached source bodies and assemble a single
+  // reference block. Failures here are non-fatal (we just skip the
+  // injection) so a flaky source lookup never breaks the chat itself.
+  let referenceBlock = "";
+  if (Array.isArray(payload.source_ids) && payload.source_ids.length > 0) {
+    try {
+      const sources = await fetchSourcesByIds(email, payload.source_ids);
+      referenceBlock = buildReferenceBlock(sources);
+    } catch (err) {
+      console.warn("ai/chat sources fetch failed:", err);
+    }
+  }
+
   try {
     const stream = await client.messages.stream({
       model: descriptor.model,
       max_tokens: 2048,
-      system: systemPromptForPayload(payload),
-      messages,
+      system: systemPromptForPayload(payload, referenceBlock),
+      // v0.1.4 — translate to Anthropic content-block form so user
+      // turns with attached images become multimodal content arrays.
+      // Text-only turns pass through as plain strings.
+      messages: messages.map(toAnthropicMessage),
     });
 
     const startedAt = Date.now();

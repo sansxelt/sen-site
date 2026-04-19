@@ -19,7 +19,30 @@ export type PricingPlanKey =
 export type BillingAddonKey =
   | "memory_boost"
   | "api_boost"
-  | "key_pack";
+  | "key_pack"
+  // v0.1.4 monetization — recurring add-on packs.
+  | "voice_pack"
+  | "image_pack"
+  | "copilot_pro_pack"
+  | "power_pack"
+  // v0.1.4 monetization — one-time top-ups.
+  | "session_boost"
+  | "weekly_boost"
+  | "voice_minute_pack"
+  | "image_credit_pack"
+  | "copilot_time_pack";
+
+export const ONE_TIME_BOOST_KEYS: ReadonlySet<BillingAddonKey> = new Set([
+  "session_boost",
+  "weekly_boost",
+  "voice_minute_pack",
+  "image_credit_pack",
+  "copilot_time_pack",
+]);
+
+export function isOneTimeBoost(key: BillingAddonKey): boolean {
+  return ONE_TIME_BOOST_KEYS.has(key);
+}
 
 export type BillingCycle = "monthly" | "yearly";
 

@@ -10,7 +10,7 @@ import {
 } from "../../../../../lib/stripe";
 import { extractBillingErrorMessage, extractClientSecret, buildBillingPaymentSettings } from "../../../../../lib/desktop-billing";
 import { upsertSubscriptionSelection } from "../../../../../lib/subscriptions";
-import type { PricingPlanKey } from "../../../../../lib/pricing";
+import { isOneTimeBoost, type PricingPlanKey } from "../../../../../lib/pricing";
 
 export async function POST(request: Request) {
   if (!isStripeConfigured()) {
@@ -54,6 +54,56 @@ export async function POST(request: Request) {
     const customer = await getOrCreateCustomer(normalizedEmail);
 
     if (addonKey) {
+      // v0.1.4 — one-time boost top-ups go through a single PaymentIntent
+      // rather than a recurring subscription item. We look up the price's
+      // unit_amount + currency from Stripe so we don't have to maintain a
+      // duplicate price table on our side; checkout.sessions.create with
+      // mode: "payment" is also supported but PaymentIntent keeps the
+      // user inside the desktop app's existing Stripe Elements flow.
+      //
+      // TODO(stripe-dashboard): Each *_BOOST / *_PACK env var must point
+      // at a one-time price (not a recurring price) for this branch to
+      // work. The dashboard step is: Products → New → "One time" → set
+      // price → copy price id into the matching env var.
+      if (isOneTimeBoost(addonKey)) {
+        const price = await stripe.prices.retrieve(priceId);
+        const amount = price.unit_amount;
+        if (!amount || !price.currency) {
+          return NextResponse.json(
+            { error: `Stripe price "${priceId}" is missing a unit amount.` },
+            { status: 500 },
+          );
+        }
+
+        const intent = await stripe.paymentIntents.create({
+          amount,
+          currency: price.currency,
+          customer: customer.id,
+          automatic_payment_methods: { enabled: true },
+          metadata: {
+            addonKey,
+            purchaseKind: "one_time_boost",
+            userEmail: normalizedEmail,
+            surface: "desktop",
+            priceId,
+          },
+          description: `sansxel ${addonKey} top-up`,
+        });
+
+        if (!intent.client_secret) {
+          return NextResponse.json(
+            { error: "Stripe did not return a client secret for the boost." },
+            { status: 500 },
+          );
+        }
+
+        return NextResponse.json({
+          status: "one_time_ready",
+          clientSecret: intent.client_secret,
+          customerId: customer.id,
+        });
+      }
+
       const existing = await findUsableSubscription(customer.id);
       if (existing) {
         const alreadyHas = existing.items.data.some((item) => item.price.id === priceId);

@@ -231,6 +231,27 @@ export function decideImageRequest(args: {
   return { kind: "ok" };
 }
 
+// Deep research is only on Plus / Pro / Teams / Enterprise. The free
+// tiers (free / apprentice / studio) get a friendly upgrade nudge.
+// Internally we treat "plus" as an alias of pro for the purposes of
+// this gate — the existing PlanKey set already covers the higher
+// tiers, and "plus" is currently surfaced as `pro` in plan-limits.
+export function decideDeepResearchRequest(args: {
+  plan: PlanKey;
+}): LimitDecision {
+  const allowed: PlanKey[] = ["pro", "teams", "enterprise"];
+  if (allowed.includes(args.plan)) {
+    return { kind: "ok" };
+  }
+  return {
+    kind: "blocked",
+    reason: `Deep research is on Plus and up. Upgrade to unlock multi-source synthesis.`,
+    reset: nextWeekResetUtc().toISOString(),
+    limit: 0,
+    used: 0,
+  };
+}
+
 // Voice limit check — separate so the speak/transcribe routes can
 // gate without going through the chat decision tree.
 export function decideVoiceRequest(args: {

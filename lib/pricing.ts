@@ -7,9 +7,39 @@ export type PricingPlanKey =
   | "enterprise";
 
 export type BillingAddonKey =
+  // Existing recurring addons (v0.1.3).
   | "memory_boost"
   | "api_boost"
-  | "key_pack";
+  | "key_pack"
+  // v0.1.4 monetization — recurring add-on packs (monthly/yearly).
+  | "voice_pack"
+  | "image_pack"
+  | "copilot_pro_pack"
+  | "power_pack"
+  // v0.1.4 monetization — one-time top-ups. These are NOT subscription
+  // items — payment-intent route handles them via Stripe checkout in
+  // mode: "payment" (or a one-shot PaymentIntent). They still get
+  // priced through STRIPE_PRICES so the same price-id lookup works.
+  | "session_boost"
+  | "weekly_boost"
+  | "voice_minute_pack"
+  | "image_credit_pack"
+  | "copilot_time_pack";
+
+// One-time top-up keys that are charged with a single PaymentIntent
+// instead of being attached as a recurring subscription item. Centralized
+// here so both the client and the server agree on what's "buy once."
+export const ONE_TIME_BOOST_KEYS: ReadonlySet<BillingAddonKey> = new Set([
+  "session_boost",
+  "weekly_boost",
+  "voice_minute_pack",
+  "image_credit_pack",
+  "copilot_time_pack",
+]);
+
+export function isOneTimeBoost(key: string): key is BillingAddonKey {
+  return ONE_TIME_BOOST_KEYS.has(key as BillingAddonKey);
+}
 
 export type BillingCycle = "monthly" | "yearly" | "custom";
 export type SubscriptionStatus =
@@ -257,6 +287,114 @@ export const billingAddons: BillingAddon[] = [
       "More room for service accounts and experiments",
     ],
     yearlyLabel: "$60 / year",
+  },
+  // ──────────────────────────────────────────────────────────────────
+  // v0.1.4 monetization — recurring add-on packs.
+  // Stripe products/prices need to be created in the dashboard and
+  // wired through STRIPE_PRICE_<KEY>_MONTHLY / _YEARLY env vars.
+  // ──────────────────────────────────────────────────────────────────
+  {
+    ctaLabel: "Add Voice Pack",
+    description: "Unlimited voice minutes for any plan.",
+    key: "voice_pack",
+    monthlyLabel: "$8 / month",
+    monthlyValue: 8,
+    name: "Voice Pack",
+    note: "Unlimited voice",
+    points: ["Unlimited TTS minutes", "Unlimited voice transcription"],
+    yearlyLabel: "$80 / year",
+  },
+  {
+    ctaLabel: "Add Image Pack",
+    description: "Unlimited image generations for any plan.",
+    key: "image_pack",
+    monthlyLabel: "$10 / month",
+    monthlyValue: 10,
+    name: "Image Pack",
+    note: "Unlimited images",
+    points: ["Unlimited image generations", "Higher-resolution output"],
+    yearlyLabel: "$100 / year",
+  },
+  {
+    ctaLabel: "Add Copilot Pro Pack",
+    description: "Unlimited copilot for any plan.",
+    key: "copilot_pro_pack",
+    monthlyLabel: "$12 / month",
+    monthlyValue: 12,
+    name: "Copilot Pro Pack",
+    note: "Unlimited copilot",
+    points: ["Unlimited copilot hours", "Always-on background assist"],
+    yearlyLabel: "$120 / year",
+  },
+  {
+    ctaLabel: "Add Power Pack",
+    description: "All recurring boosts active — saves ~$15/mo vs. buying separately.",
+    key: "power_pack",
+    monthlyLabel: "$25 / month",
+    monthlyValue: 25,
+    name: "Power Pack",
+    note: "Bundle of all boosts",
+    points: [
+      "Voice Pack + Image Pack + Copilot Pro Pack",
+      "Best ongoing value (~$45 of value for $25)",
+    ],
+    yearlyLabel: "$240 / year",
+  },
+  // ──────────────────────────────────────────────────────────────────
+  // v0.1.4 monetization — one-time boost top-ups.
+  // Charged via a single Stripe PaymentIntent (mode: "payment" via
+  // checkout.sessions.create in the future, but the desktop app uses
+  // an inline PaymentIntent here so the user stays inside the app).
+  // ──────────────────────────────────────────────────────────────────
+  {
+    ctaLabel: "Buy Session Boost",
+    description: "+50 chats this session.",
+    key: "session_boost",
+    monthlyLabel: "$2",
+    monthlyValue: 2,
+    name: "Session Boost",
+    note: "One-time",
+    points: ["+50 chat requests", "Applied immediately"],
+  },
+  {
+    ctaLabel: "Buy Weekly Boost",
+    description: "+500 weekly requests.",
+    key: "weekly_boost",
+    monthlyLabel: "$5",
+    monthlyValue: 5,
+    name: "Weekly Boost",
+    note: "One-time",
+    points: ["+500 weekly requests", "Resets at end of week"],
+  },
+  {
+    ctaLabel: "Buy Voice Minute Pack",
+    description: "+60 voice minutes.",
+    key: "voice_minute_pack",
+    monthlyLabel: "$3",
+    monthlyValue: 3,
+    name: "Voice Minute Pack",
+    note: "One-time",
+    points: ["+60 voice minutes", "Stacks with plan minutes"],
+  },
+  {
+    ctaLabel: "Buy Image Credit Pack",
+    description: "+25 image generations.",
+    key: "image_credit_pack",
+    monthlyLabel: "$4",
+    monthlyValue: 4,
+    name: "Image Credit Pack",
+    note: "One-time",
+    points: ["+25 image generations", "Never expires"],
+  },
+  {
+    ctaLabel: "Buy Copilot Time Pack",
+    description: "+5 hours of copilot time.",
+    key: "copilot_time_pack",
+    monthlyLabel: "$5",
+    monthlyValue: 5,
+    name: "Copilot Time Pack",
+    note: "One-time",
+    points: ["+5 copilot hours", "Stacks with plan time"],
   },
 ];
 

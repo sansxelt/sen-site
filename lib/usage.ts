@@ -6,7 +6,10 @@ export type UsageKind =
   | "voice_transcribe"
   | "voice_speak"
   | "image"
-  | "summary";
+  | "summary"
+  | "web_search"
+  | "deep_research"
+  | "quiz";
 
 export type UsageSurface = "web" | "desktop";
 

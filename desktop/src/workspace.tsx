@@ -42,6 +42,7 @@ import { DesktopChatView } from "./chat-view";
 import { DesktopPlanView } from "./plan-view";
 import { DesktopUsageView } from "./usage-view";
 import { DesktopMemoryView } from "./memory-view";
+import { DesktopSourcesView } from "./sources-view";
 import { DesktopIntegrationsView } from "./integrations-view";
 import { DesktopUpdatesView } from "./updates-view";
 import { DesktopSettingsView } from "./settings-view";
@@ -55,6 +56,7 @@ type View =
   | "keys"
   | "preferences"
   | "memory"
+  | "sources"
   | "integrations"
   | "updates"
   | "settings";
@@ -123,7 +125,11 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
       />
       <div className="ws-main">
         {view === "chat" && (
-          <DesktopChatView session={session} onOpenPlan={() => setView("plan")} />
+          <DesktopChatView
+            session={session}
+            onOpenPlan={() => setView("plan")}
+            onOpenSources={() => setView("sources")}
+          />
         )}
         {view === "account" && (
           <AccountView session={session} onSignOut={onSignOut} onView={setView} />
@@ -135,6 +141,7 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
         {view === "keys" && <KeysView session={session} />}
         {view === "preferences" && <PreferencesView />}
         {view === "memory" && <DesktopMemoryView session={session} />}
+        {view === "sources" && <DesktopSourcesView session={session} />}
         {view === "integrations" && <DesktopIntegrationsView session={session} />}
         {view === "updates" && <DesktopUpdatesView session={session} />}
         {view === "settings" && <DesktopSettingsView />}
@@ -221,6 +228,13 @@ function NavRail({
           label="Memory"
         >
           <MemoryIcon />
+        </NavButton>
+        <NavButton
+          active={active === "sources"}
+          onClick={() => onChange("sources")}
+          label="Sources"
+        >
+          <SourcesIcon />
         </NavButton>
         <NavButton
           active={active === "integrations"}
@@ -2254,6 +2268,18 @@ function IntegrationsIcon() {
       <path d="M15 2v6" />
       <path d="M6 8h12v3a6 6 0 0 1-12 0z" />
       <path d="M12 17v5" />
+    </svg>
+  );
+}
+
+function SourcesIcon() {
+  // Stack of documents — uploaded reference materials
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h6" />
+      <path d="M9 17h4" />
     </svg>
   );
 }

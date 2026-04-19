@@ -63,6 +63,46 @@ export const STRIPE_PRICES: Record<StripePricedItemKey, Partial<Record<BillingCy
     monthly: process.env.STRIPE_PRICE_KEY_PACK_MONTHLY,
     yearly: process.env.STRIPE_PRICE_KEY_PACK_YEARLY,
   },
+  // v0.1.4 monetization — recurring add-on packs (subscription items).
+  // TODO(v0.1.5): Create products + prices in the Stripe dashboard for
+  // each of these. Recurring monthly + yearly. Update env vars below.
+  voice_pack: {
+    monthly: process.env.STRIPE_PRICE_VOICE_PACK_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_VOICE_PACK_YEARLY,
+  },
+  image_pack: {
+    monthly: process.env.STRIPE_PRICE_IMAGE_PACK_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_IMAGE_PACK_YEARLY,
+  },
+  copilot_pro_pack: {
+    monthly: process.env.STRIPE_PRICE_COPILOT_PRO_PACK_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_COPILOT_PRO_PACK_YEARLY,
+  },
+  power_pack: {
+    monthly: process.env.STRIPE_PRICE_POWER_PACK_MONTHLY,
+    yearly: process.env.STRIPE_PRICE_POWER_PACK_YEARLY,
+  },
+  // v0.1.4 monetization — one-time boost top-ups (charged once).
+  // TODO(v0.1.5): Create a one-time Stripe price for each of these
+  // (mode: "payment", not "subscription"). The "monthly" slot here
+  // holds the one-time price id by convention; the payment-intent
+  // route checks isOneTimeBoost() and charges with PaymentIntent
+  // instead of attaching as a subscription item.
+  session_boost: {
+    monthly: process.env.STRIPE_PRICE_SESSION_BOOST,
+  },
+  weekly_boost: {
+    monthly: process.env.STRIPE_PRICE_WEEKLY_BOOST,
+  },
+  voice_minute_pack: {
+    monthly: process.env.STRIPE_PRICE_VOICE_MINUTE_PACK,
+  },
+  image_credit_pack: {
+    monthly: process.env.STRIPE_PRICE_IMAGE_CREDIT_PACK,
+  },
+  copilot_time_pack: {
+    monthly: process.env.STRIPE_PRICE_COPILOT_TIME_PACK,
+  },
 };
 
 export function getPriceId(itemKey: string, cycle: BillingCycle): string | null {

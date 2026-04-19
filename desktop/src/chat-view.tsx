@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   ALL_MODEL_OPTIONS,
+  type ChatImageAttachment,
   type ChatMessage,
   fetchSpeech,
   generateImage,
@@ -27,24 +28,131 @@ import {
   sortThreads,
   type DesktopThread,
 } from "./chat-history";
+import {
+  loadRecentFiles,
+  pushRecentFile,
+  type RecentFile,
+} from "./chat-input-menu";
+import {
+  type CanvasBlock,
+  DesktopCanvas,
+  extractLatestCanvas,
+  stripCanvasBlocks,
+} from "./canvas";
+import {
+  type CodeArtifact,
+  CodePreview,
+  findCodeArtifacts,
+} from "./code-preview";
 
 type DesktopChatViewProps = {
   session: DesktopSession;
   onOpenPlan: () => void;
+  onOpenSources?: () => void;
 };
 
 type VoiceState = "idle" | "recording" | "transcribing" | "warming" | "speaking";
 
 // v0.1.4 — drag-and-drop attachment. Text files inline their body
-// into the next user message; image/binary files surface as a chip
-// in the input row (full vision input lands in v0.1.5).
+// into the next user message; image files become real vision inputs
+// passed to the chat route as base64 (Anthropic image content blocks);
+// other binaries surface as a name+size chip only.
 type ChatAttachment = {
   id: string;
   name: string;
   size: number;
   kind: "text" | "image" | "binary";
   body?: string;
+  // Set on image attachments only. dataUrl is the full
+  // "data:image/png;base64,..." form for thumbnail display; image
+  // holds the parsed pieces we need to send to the chat route.
+  dataUrl?: string;
+  image?: ChatImageAttachment;
 };
+
+// Anthropic vision caps each image at 1MB, and so do we — anything
+// larger is downscaled with a canvas resize before send. Keep this
+// in sync with MAX_IMAGE_BYTES in app/api/ai/chat/route.ts.
+const MAX_IMAGE_BYTES = 1_000_000;
+const VISION_MIME_TYPES: ChatImageAttachment["media_type"][] = [
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+];
+
+function isVisionMime(type: string): type is ChatImageAttachment["media_type"] {
+  return (VISION_MIME_TYPES as readonly string[]).includes(type);
+}
+
+// Cheap upper bound on the byte length of a base64 string.
+function base64ByteLength(b64: string): number {
+  const padding = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
+  return Math.floor((b64.length * 3) / 4) - padding;
+}
+
+// Read a file as a data URL (no extra wrapping). Used by image
+// attachments so we can both render the thumbnail and feed the
+// base64 payload to the chat route in one shot.
+function readAsDataUrl(file: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(reader.error ?? new Error("FileReader failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
+// If the original image is larger than 1MB or has an unsupported
+// MIME type, resample it through a canvas at progressively smaller
+// scales until it fits under MAX_IMAGE_BYTES as a JPEG. Returns
+// null if the browser can't decode the image at all.
+async function resizeImageToBudget(
+  file: File,
+): Promise<{ media_type: ChatImageAttachment["media_type"]; data: string; dataUrl: string } | null> {
+  const blobUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement | null>((resolve) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => resolve(null);
+      el.src = blobUrl;
+    });
+    if (!img) return null;
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    const tryEncode = (scale: number, quality: number): string => {
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL("image/jpeg", quality);
+    };
+
+    // Try decreasingly aggressive resamples until we fit under 1MB.
+    const attempts: Array<{ scale: number; quality: number }> = [
+      { scale: 1.0, quality: 0.85 },
+      { scale: 0.8, quality: 0.8 },
+      { scale: 0.6, quality: 0.75 },
+      { scale: 0.45, quality: 0.7 },
+      { scale: 0.3, quality: 0.65 },
+      { scale: 0.2, quality: 0.6 },
+    ];
+    for (const { scale, quality } of attempts) {
+      const dataUrl = tryEncode(scale, quality);
+      const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+      if (base64ByteLength(base64) <= MAX_IMAGE_BYTES) {
+        return { media_type: "image/jpeg", data: base64, dataUrl };
+      }
+    }
+    return null;
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
+}
 
 const TEXT_FILE_REGEX = /\.(txt|md|markdown|json|jsonc|yaml|yml|toml|csv|tsv|xml|html|htm|css|scss|less|js|jsx|ts|tsx|mjs|cjs|py|rb|go|rs|java|kt|swift|c|h|cpp|hpp|cs|php|sh|bash|zsh|sql|env|gitignore|log|ini|conf)$/i;
 
@@ -65,6 +173,19 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatRelative(iso: string): string {
+  const date = new Date(iso);
+  const deltaMs = Date.now() - date.getTime();
+  const deltaMin = Math.floor(deltaMs / (1000 * 60));
+  if (deltaMin < 1) return "just now";
+  if (deltaMin < 60) return `${deltaMin}m ago`;
+  const deltaH = Math.floor(deltaMin / 60);
+  if (deltaH < 24) return `${deltaH}h ago`;
+  const deltaD = Math.floor(deltaH / 24);
+  if (deltaD < 7) return `${deltaD}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function slugifyTitle(title: string): string {
@@ -94,6 +215,750 @@ function buildMarkdownExport(thread: DesktopThread): string {
 
 function draftKey(threadId: string): string {
   return `sansxel.draft.${threadId}`;
+}
+
+type DesktopPlanKey =
+  | "free"
+  | "apprentice"
+  | "studio"
+  | "pro"
+  | "teams"
+  | "enterprise";
+
+type LauncherRootId =
+  | "files"
+  | "recent"
+  | "image"
+  | "research"
+  | "search"
+  | "actions";
+
+type LauncherActionId =
+  | "fix"
+  | "rewrite"
+  | "explain"
+  | "analyze"
+  | "agent-mode"
+  | "deep-think"
+  | "auto-mode"
+  | "add-sources"
+  | "scan-files"
+  | "use-memory"
+  | "canvas"
+  | "generate-ui"
+  | "create-doc"
+  | "github"
+  | "files"
+  | "apis";
+
+type ComposerContext = {
+  hasInput: boolean;
+  hasAttachments: boolean;
+  hasImageAttachments: boolean;
+  hasTextAttachments: boolean;
+  hasBinaryAttachments: boolean;
+  hasCode: boolean;
+  hasUrls: boolean;
+  inputPreview: string;
+  suggestedRoot: LauncherRootId;
+  suggestedAction: LauncherActionId;
+  summaryLabel: string;
+};
+
+type LauncherActionMeta = {
+  id: LauncherActionId;
+  label: string;
+  shortLabel: string;
+  section: "Intelligence" | "Context" | "Creation" | "Integrations";
+  eyebrow: string;
+  description: string;
+  preview: string;
+  cues: string[];
+  requiredPlan?: DesktopPlanKey;
+  comingSoon?: boolean;
+};
+
+type QuickActionMeta = {
+  id: LauncherActionId;
+  label: string;
+  hint: string;
+};
+
+type LauncherRootMeta = {
+  id: LauncherRootId;
+  label: string;
+  eyebrow: string;
+  description: string;
+  preview: string;
+  requiredPlan?: DesktopPlanKey;
+};
+
+type LauncherPreviewCard = {
+  eyebrow: string;
+  title: string;
+  description: string;
+  cues: string[];
+  badge?: string;
+  status?: string;
+};
+
+const PLAN_RANK: Record<DesktopPlanKey, number> = {
+  free: 0,
+  apprentice: 1,
+  studio: 1,
+  pro: 2,
+  teams: 3,
+  enterprise: 3,
+};
+
+const PLAN_LABEL: Record<DesktopPlanKey, string> = {
+  free: "Free",
+  apprentice: "Apprentice",
+  studio: "Studio",
+  pro: "Pro",
+  teams: "Teams",
+  enterprise: "Enterprise",
+};
+
+const ACTION_META: Record<LauncherActionId, LauncherActionMeta> = {
+  fix: {
+    id: "fix",
+    label: "Fix",
+    shortLabel: "FX",
+    section: "Intelligence",
+    eyebrow: "Fast rescue",
+    description: "Patch something broken, tighten logic, or clean up a rough draft without overcomplicating it.",
+    preview: "Best when you've already pasted the thing that needs help and want the strongest corrective pass next.",
+    cues: ["Uses current input", "Great for code and text", "Quick-turn action"],
+  },
+  rewrite: {
+    id: "rewrite",
+    label: "Rewrite",
+    shortLabel: "RW",
+    section: "Creation",
+    eyebrow: "Sharper wording",
+    description: "Make rough writing cleaner, more confident, and easier to ship while keeping the original meaning.",
+    preview: "Ideal for emails, docs, UI copy, bios, and anything that needs polish before you send it.",
+    cues: ["Preserves intent", "Quick output", "Works with drafts or notes"],
+  },
+  explain: {
+    id: "explain",
+    label: "Explain",
+    shortLabel: "EX",
+    section: "Intelligence",
+    eyebrow: "Clarity mode",
+    description: "Break down code, screenshots, files, or strategy in plain language and call out the important part first.",
+    preview: "Useful when the content is dense and you want the shortest path from confusion to understanding.",
+    cues: ["Plain language", "Highlights what matters", "Good with code or files"],
+  },
+  analyze: {
+    id: "analyze",
+    label: "Analyze",
+    shortLabel: "AN",
+    section: "Intelligence",
+    eyebrow: "Pattern read",
+    description: "Read what you dropped in, spot the signals, and tell you what stands out plus what to do next.",
+    preview: "Best for mixed input like notes, data, screenshots, or a fuzzy problem where you want a direction.",
+    cues: ["Finds patterns", "Suggests next steps", "Works across formats"],
+  },
+  "agent-mode": {
+    id: "agent-mode",
+    label: "Agent Mode",
+    shortLabel: "AG",
+    section: "Intelligence",
+    eyebrow: "Autonomous",
+    description: "Switch into a more proactive step-by-step working mode that treats the task like something to execute, not just discuss.",
+    preview: "Pairs well with PC copilot and longer tasks where you want planning, sequencing, and momentum.",
+    cues: ["Turns on copilot flow", "Best for multi-step work", "Pro feature"],
+    requiredPlan: "pro",
+  },
+  "deep-think": {
+    id: "deep-think",
+    label: "Deep Think",
+    shortLabel: "DT",
+    section: "Intelligence",
+    eyebrow: "Heavy reasoning",
+    description: "Push the launcher toward deep problem solving, stronger tradeoff analysis, and harder code or product questions.",
+    preview: "This shifts you onto the deep model lane and frames the ask for deliberate reasoning.",
+    cues: ["Switches to sansxel-1 deep", "Longer reasoning", "Pro feature"],
+    requiredPlan: "pro",
+  },
+  "auto-mode": {
+    id: "auto-mode",
+    label: "Auto Mode",
+    shortLabel: "AU",
+    section: "Intelligence",
+    eyebrow: "Adaptive",
+    description: "Let Sansxel choose the most useful framing and start from the strongest first move instead of waiting for perfect instructions.",
+    preview: "Good when the ask is messy and you want the assistant to decide whether to plan, write, analyze, or diagnose first.",
+    cues: ["Balanced mode", "Good for fuzzy asks", "Apprentice and up"],
+    requiredPlan: "apprentice",
+  },
+  "add-sources": {
+    id: "add-sources",
+    label: "Add sources",
+    shortLabel: "SR",
+    section: "Context",
+    eyebrow: "Ground it",
+    description: "Pull URLs, notes, and attached files into the next answer so the response is anchored in actual material.",
+    preview: "Works especially well when you already have links or dropped docs and want synthesis instead of a generic answer.",
+    cues: ["Uses links and files", "Better grounding", "Free"],
+  },
+  "scan-files": {
+    id: "scan-files",
+    label: "Scan files",
+    shortLabel: "SC",
+    section: "Context",
+    eyebrow: "Read what's here",
+    description: "Open the dropped files as working context and tell Sansxel to summarize, compare, or inspect them immediately.",
+    preview: "This is the best first click after dropping docs, code, screenshots, or mixed research into the composer.",
+    cues: ["Attachment-aware", "Opens on drop", "Free"],
+  },
+  "use-memory": {
+    id: "use-memory",
+    label: "Use memory",
+    shortLabel: "MM",
+    section: "Context",
+    eyebrow: "Continue naturally",
+    description: "Lean on the thread's existing context so the next answer continues from prior decisions instead of resetting.",
+    preview: "Best for long-running work where the latest input only makes sense in the context of what you've already built here.",
+    cues: ["Thread-aware", "Feels continuous", "Free"],
+  },
+  canvas: {
+    id: "canvas",
+    label: "Canvas",
+    shortLabel: "CV",
+    section: "Creation",
+    eyebrow: "Visual structure",
+    description: "Turn a rough ask into a structured workspace with sections, open questions, and the next blocks to fill in.",
+    preview: "Useful for plans, product breakdowns, research walls, and anything that benefits from visible structure.",
+    cues: ["Organized layout", "Good for planning", "Free"],
+  },
+  "generate-ui": {
+    id: "generate-ui",
+    label: "Generate UI",
+    shortLabel: "UI",
+    section: "Creation",
+    eyebrow: "Interface builder",
+    description: "Frame the task like a real product UI problem with screens, states, hierarchy, and the visual direction spelled out.",
+    preview: "Great when the input is a feature idea, screenshot, or messy product note and you want a usable UI concept.",
+    cues: ["UI-focused", "Structured output", "Apprentice and up"],
+    requiredPlan: "apprentice",
+  },
+  "create-doc": {
+    id: "create-doc",
+    label: "Create doc",
+    shortLabel: "DOC",
+    section: "Creation",
+    eyebrow: "Ship-ready writing",
+    description: "Convert rough material into a proper document with title, sections, supporting details, and final wording.",
+    preview: "Best for specs, one-pagers, memos, outlines, notes, and internal docs that need to be usable right away.",
+    cues: ["Structured document", "Ready to share", "Free"],
+  },
+  github: {
+    id: "github",
+    label: "GitHub",
+    shortLabel: "GH",
+    section: "Integrations",
+    eyebrow: "Repo context",
+    description: "Pull repo, issue, and PR context into the action system once GitHub is fully wired into this launcher.",
+    preview: "Visible now so users know the capability exists, with Studio and up positioned as the unlock tier.",
+    cues: ["Integration surface", "Launcher-native later", "Studio feature"],
+    requiredPlan: "studio",
+    comingSoon: true,
+  },
+  files: {
+    id: "files",
+    label: "Files",
+    shortLabel: "FL",
+    section: "Integrations",
+    eyebrow: "Desktop context",
+    description: "Use dropped docs, code, and screenshots as structured context instead of burying them in a prompt paragraph.",
+    preview: "This is the launcher's most immediate superpower on desktop: drag something in and the action system adapts around it.",
+    cues: ["Local-first", "Pairs with drag and drop", "Free"],
+  },
+  apis: {
+    id: "apis",
+    label: "APIs",
+    shortLabel: "API",
+    section: "Integrations",
+    eyebrow: "Future surface",
+    description: "Reserve space for API-connected tools so the launcher can grow into a real capability hub instead of staying a tiny menu.",
+    preview: "Kept visible on purpose so the system feels expandable, but not noisy, as more integrations land.",
+    cues: ["Reserved slot", "Premium surface", "Coming soon"],
+    requiredPlan: "pro",
+    comingSoon: true,
+  },
+};
+
+const ACTION_SECTION_ORDER: Array<LauncherActionMeta["section"]> = [
+  "Intelligence",
+  "Context",
+  "Creation",
+  "Integrations",
+];
+
+const ROOT_MENU_ORDER: LauncherRootId[] = [
+  "files",
+  "recent",
+  "image",
+  "research",
+  "search",
+  "actions",
+];
+
+const ROOT_META: Record<LauncherRootId, LauncherRootMeta> = {
+  files: {
+    id: "files",
+    label: "Add photos & files",
+    eyebrow: "Desktop context",
+    description: "Drop screenshots, docs, code, and loose files straight into the composer.",
+    preview: "Drag-and-drop auto-opens the launcher and points you at the best next action.",
+  },
+  recent: {
+    id: "recent",
+    label: "Recent files",
+    eyebrow: "Fast re-attach",
+    description: "Bring back the files you were just working with without digging around your desktop again.",
+    preview: "Useful for repeated source packs, recurring docs, and picking up where you left off.",
+  },
+  image: {
+    id: "image",
+    label: "Create image",
+    eyebrow: "Visual generation",
+    description: "Turn the current prompt into an image request or use it to generate UI and concept directions.",
+    preview: "Best when you already know the look you want and need a fast visual pass next.",
+  },
+  research: {
+    id: "research",
+    label: "Deep research",
+    eyebrow: "Long-form exploration",
+    description: "Frame the next turn like a deeper investigative pass instead of a quick response.",
+    preview: "Great for product decisions, comparisons, strategy, and multi-angle questions.",
+    requiredPlan: "apprentice",
+  },
+  search: {
+    id: "search",
+    label: "Web search",
+    eyebrow: "Live grounding",
+    description: "Use search-shaped prompts and source-aware framing when the answer should be grounded in current material.",
+    preview: "Best when you have links, names, or a narrow question and want a grounded answer instead of a generic take.",
+  },
+  actions: {
+    id: "actions",
+    label: "Actions",
+    eyebrow: "Smart launcher",
+    description: "Open the full adaptive capability system with quick actions, grouped tools, and tier-aware upgrades.",
+    preview: "This is where the composer becomes a workspace instead of a plain text box.",
+  },
+};
+
+const CODE_SIGNAL_PATTERNS = [
+  /```/,
+  /\bfunction\s+[A-Za-z0-9_]+\s*\(/,
+  /\bconst\s+[A-Za-z0-9_]+\s*=/,
+  /\bimport\s+.+from\s+['"]/,
+  /\bclass\s+[A-Za-z0-9_]+\b/,
+  /<\/?[A-Za-z][^>]*>/,
+  /\bSELECT\b.+\bFROM\b/i,
+  /\bdef\s+[A-Za-z0-9_]+\s*\(/,
+];
+
+function normalizePlanKey(plan: string): DesktopPlanKey {
+  switch (plan) {
+    case "apprentice":
+    case "studio":
+    case "pro":
+    case "teams":
+    case "enterprise":
+      return plan;
+    default:
+      return "free";
+  }
+}
+
+function planAllows(plan: string, requiredPlan?: DesktopPlanKey): boolean {
+  if (!requiredPlan) return true;
+  const normalized = normalizePlanKey(plan);
+  return PLAN_RANK[normalized] >= PLAN_RANK[requiredPlan];
+}
+
+function planBadge(requiredPlan?: DesktopPlanKey): string | null {
+  return requiredPlan ? PLAN_LABEL[requiredPlan] : null;
+}
+
+function looksLikeCode(input: string, attachments: ChatAttachment[]): boolean {
+  const text = input.trim();
+  if (text && CODE_SIGNAL_PATTERNS.some((pattern) => pattern.test(text))) {
+    return true;
+  }
+  return attachments.some((attachment) => {
+    if (attachment.kind !== "text") return false;
+    if (TEXT_FILE_REGEX.test(attachment.name)) return true;
+    return attachment.body ? CODE_SIGNAL_PATTERNS.some((pattern) => pattern.test(attachment.body ?? "")) : false;
+  });
+}
+
+function inferComposerContext(
+  input: string,
+  attachments: ChatAttachment[],
+): ComposerContext {
+  const trimmed = input.trim();
+  const hasInput = Boolean(trimmed);
+  const hasAttachments = attachments.length > 0;
+  const hasImageAttachments = attachments.some((attachment) => attachment.kind === "image");
+  const hasTextAttachments = attachments.some((attachment) => attachment.kind === "text");
+  const hasBinaryAttachments = attachments.some((attachment) => attachment.kind === "binary");
+  const hasUrls = /https?:\/\//i.test(trimmed);
+  const hasCode = looksLikeCode(trimmed, attachments);
+
+  if (hasImageAttachments) {
+    return {
+      hasInput,
+      hasAttachments,
+      hasImageAttachments,
+      hasTextAttachments,
+      hasBinaryAttachments,
+      hasCode,
+      hasUrls,
+      inputPreview: trimmed.slice(0, 160),
+      suggestedRoot: "actions",
+      suggestedAction: "scan-files",
+      summaryLabel:
+        attachments.length > 1 ? `${attachments.length} images ready` : "Image context ready",
+    };
+  }
+
+  if (hasCode) {
+    return {
+      hasInput,
+      hasAttachments,
+      hasImageAttachments,
+      hasTextAttachments,
+      hasBinaryAttachments,
+      hasCode,
+      hasUrls,
+      inputPreview: trimmed.slice(0, 160),
+      suggestedRoot: "actions",
+      suggestedAction: "fix",
+      summaryLabel: hasAttachments ? "Code + files detected" : "Code detected",
+    };
+  }
+
+  if (hasAttachments) {
+    return {
+      hasInput,
+      hasAttachments,
+      hasImageAttachments,
+      hasTextAttachments,
+      hasBinaryAttachments,
+      hasCode,
+      hasUrls,
+      inputPreview: trimmed.slice(0, 160),
+      suggestedRoot: "actions",
+      suggestedAction: "scan-files",
+      summaryLabel:
+        attachments.length === 1 ? `${attachments[0].name} attached` : `${attachments.length} files attached`,
+    };
+  }
+
+  if (hasUrls) {
+    return {
+      hasInput,
+      hasAttachments,
+      hasImageAttachments,
+      hasTextAttachments,
+      hasBinaryAttachments,
+      hasCode,
+      hasUrls,
+      inputPreview: trimmed.slice(0, 160),
+      suggestedRoot: "search",
+      suggestedAction: "add-sources",
+      summaryLabel: "Links detected",
+    };
+  }
+
+  if (hasInput) {
+    return {
+      hasInput,
+      hasAttachments,
+      hasImageAttachments,
+      hasTextAttachments,
+      hasBinaryAttachments,
+      hasCode,
+      hasUrls,
+      inputPreview: trimmed.slice(0, 160),
+      suggestedRoot: "actions",
+      suggestedAction: "analyze",
+      summaryLabel: "Draft ready",
+    };
+  }
+
+  return {
+    hasInput: false,
+    hasAttachments: false,
+    hasImageAttachments: false,
+    hasTextAttachments: false,
+    hasBinaryAttachments: false,
+    hasCode: false,
+    hasUrls: false,
+    inputPreview: "",
+    suggestedRoot: "actions",
+    suggestedAction: "rewrite",
+    summaryLabel: "Smart launcher ready",
+  };
+}
+
+function buildQuickActions(context: ComposerContext): QuickActionMeta[] {
+  if (context.hasImageAttachments) {
+    return [
+      { id: "scan-files", label: "Analyze image", hint: "Read what is visible and call out the important bits." },
+      { id: "explain", label: "Extract text", hint: "Pull text and summarize it cleanly." },
+      { id: "analyze", label: "Compare", hint: "Compare what changed or what stands out." },
+      { id: "rewrite", label: "Edit plan", hint: "Turn this into a concrete edit brief." },
+    ];
+  }
+
+  if (context.hasCode) {
+    return [
+      { id: "fix", label: "Fix", hint: "Patch the issue and explain the root cause." },
+      { id: "analyze", label: "Optimize", hint: "Improve the code path and call out tradeoffs." },
+      { id: "explain", label: "Explain", hint: "Break the code down in plain language." },
+      { id: "deep-think", label: "Deep Think", hint: "Use the heavy reasoning lane on harder code." },
+    ];
+  }
+
+  if (context.hasAttachments) {
+    return [
+      { id: "scan-files", label: "Scan files", hint: "Read the attachments and tell me what matters." },
+      { id: "analyze", label: "Analyze", hint: "Spot patterns, risks, and next actions." },
+      { id: "create-doc", label: "Create doc", hint: "Turn the files into a usable document." },
+      { id: "rewrite", label: "Rewrite", hint: "Condense or polish what is here." },
+    ];
+  }
+
+  return [
+    { id: "fix", label: "Fix", hint: "Repair or tighten something fast." },
+    { id: "rewrite", label: "Rewrite", hint: "Sharpen wording without losing the point." },
+    { id: "explain", label: "Explain", hint: "Make something clearer in plain language." },
+    { id: "analyze", label: "Analyze", hint: "Read the situation and tell me what matters." },
+  ];
+}
+
+function attachmentPromptHint(attachments: ChatAttachment[]): string {
+  if (attachments.some((attachment) => attachment.kind === "image")) {
+    return "Review the attached image context and tell me what stands out.";
+  }
+  if (attachments.some((attachment) => attachment.kind === "text")) {
+    return "Read the attached files and pull out the key takeaways.";
+  }
+  return "Review the attached files and tell me what I should do next.";
+}
+
+function buildActionPrompt(
+  id: LauncherActionId,
+  context: ComposerContext,
+  userInput: string,
+  attachments: ChatAttachment[],
+): string {
+  const trimmed = userInput.trim();
+  const source =
+    trimmed ||
+    (attachments.length > 0
+      ? attachmentPromptHint(attachments)
+      : "Help me turn this into the right next move.");
+
+  switch (id) {
+    case "fix":
+      return `Fix this and explain the root cause briefly:\n\n${source}`;
+    case "rewrite":
+      return `Rewrite this so it feels clearer, sharper, and more natural without losing the meaning:\n\n${source}`;
+    case "explain":
+      return `Explain this clearly, call out what matters most, and keep it easy to follow:\n\n${source}`;
+    case "analyze":
+      return `Analyze this, surface the important patterns, and tell me the strongest next step:\n\n${source}`;
+    case "agent-mode":
+      return `Treat this like a real task to execute. Plan it step by step, make the decisions explicit, and move it forward:\n\n${source}`;
+    case "deep-think":
+      return `Think through this carefully. Surface hidden assumptions, evaluate tradeoffs, and recommend the strongest path:\n\n${source}`;
+    case "auto-mode":
+      return `Decide the best way to tackle this and start with the strongest first move:\n\n${source}`;
+    case "add-sources":
+      return `Use the links, files, and source material here as grounding. Cross-check what matters and synthesize the answer:\n\n${source}`;
+    case "scan-files":
+      return `Scan the attached files, summarize what matters, and call out anything risky, missing, or especially important:\n\n${source}`;
+    case "use-memory":
+      return `Use what this thread already knows plus this new input, and continue from the most relevant context:\n\n${source}`;
+    case "canvas":
+      return `Turn this into a structured canvas with sections, priorities, open questions, and the next actions:\n\n${source}`;
+    case "generate-ui":
+      return `Design the UI for this. Give me the structure, components, states, and visual direction:\n\n${source}`;
+    case "create-doc":
+      return `Turn this into a clean document I can use right away with a strong title, sections, and final wording:\n\n${source}`;
+    case "github":
+      return trimmed || "I want to work with GitHub context. Ask me for the repo, branch, PR, or issue and then help me from there.";
+    case "files":
+      return `Use the attached files as first-class context and help me work through them, not just summarize them:\n\n${source}`;
+    case "apis":
+      return trimmed || "Sketch how this should connect to external APIs, including the integration shape, auth, and risks.";
+    default:
+      return source;
+  }
+}
+
+function actionRuntimeStatus(
+  id: LauncherActionId,
+  opts: {
+    agentMode: boolean;
+    canvasOpen: boolean;
+    tier: ModelTier;
+    context: ComposerContext;
+  },
+): string | null {
+  switch (id) {
+    case "agent-mode":
+      return opts.agentMode ? "Agent mode is currently on." : null;
+    case "deep-think":
+      return opts.tier === "smart" ? "sansxel-1 deep is selected." : null;
+    case "auto-mode":
+      return opts.tier === "balanced" ? "Adaptive default lane is active." : null;
+    case "scan-files":
+      return opts.context.hasAttachments ? opts.context.summaryLabel : null;
+    case "canvas":
+      return opts.canvasOpen ? "Canvas pane is already open." : null;
+    case "use-memory":
+      return opts.context.hasInput || opts.context.hasAttachments
+        ? "This action will blend the current turn with thread context."
+        : "Best when the thread already has useful context to build on.";
+    default:
+      return null;
+  }
+}
+
+function buildActionPreview(
+  id: LauncherActionId,
+  opts: {
+    agentMode: boolean;
+    canvasOpen: boolean;
+    tier: ModelTier;
+    context: ComposerContext;
+  },
+): LauncherPreviewCard {
+  const meta = ACTION_META[id];
+  return {
+    eyebrow: meta.eyebrow,
+    title: meta.label,
+    description: meta.preview,
+    cues: meta.cues,
+    badge: meta.comingSoon ? "Coming soon" : planBadge(meta.requiredPlan) ?? undefined,
+    status: actionRuntimeStatus(id, opts) ?? undefined,
+  };
+}
+
+function buildRootPreview(
+  root: LauncherRootId,
+  context: ComposerContext,
+  recentFiles: RecentFile[],
+): LauncherPreviewCard {
+  const meta = ROOT_META[root];
+  switch (root) {
+    case "recent":
+      return {
+        eyebrow: meta.eyebrow,
+        title: meta.label,
+        description: meta.preview,
+        badge: recentFiles.length > 0 ? `${recentFiles.length} saved` : "Empty",
+        cues: [
+          "Re-attach in one click",
+          "Keeps repeated workflows fast",
+          recentFiles.length > 0 ? `${recentFiles[0].name} was the most recent.` : "Attach something to start the list.",
+        ],
+      };
+    case "actions":
+      return {
+        eyebrow: meta.eyebrow,
+        title: meta.label,
+        description: meta.preview,
+        badge: context.summaryLabel,
+        cues: [
+          "Quick actions update with your context",
+          "Tier locks stay visible instead of disappearing",
+          "Hover any action to preview what it does before you run it",
+        ],
+      };
+    case "files":
+      return {
+        eyebrow: meta.eyebrow,
+        title: meta.label,
+        description: meta.preview,
+        badge: context.hasAttachments ? context.summaryLabel : undefined,
+        cues: [
+          "Drop files anywhere in the chat shell",
+          "Attachments become first-class context",
+          "The launcher auto-points you to scan or analyze next",
+        ],
+      };
+    case "image":
+      return {
+        eyebrow: meta.eyebrow,
+        title: meta.label,
+        description: meta.preview,
+        cues: [
+          context.hasInput ? "The current draft can become an image prompt immediately." : "Type a visual brief first for the best result.",
+          "Works well for mockups, scenes, and UI concepts",
+          "Pairs with Generate UI when the ask is product-shaped",
+        ],
+      };
+    case "research":
+      return {
+        eyebrow: meta.eyebrow,
+        title: meta.label,
+        description: meta.preview,
+        badge: planBadge(meta.requiredPlan) ?? undefined,
+        cues: [
+          "Useful for complex tradeoffs and multi-angle questions",
+          "Better when you give it a clear topic or some source material",
+          context.hasInput ? "Your current draft is ready for a deeper pass." : "Seed it with a topic to start.",
+        ],
+      };
+    case "search":
+      return {
+        eyebrow: meta.eyebrow,
+        title: meta.label,
+        description: meta.preview,
+        badge: context.hasUrls ? "Links detected" : undefined,
+        cues: [
+          "Best when the answer should be grounded",
+          "Pairs well with links, names, or a current-event query",
+          context.hasUrls ? "The composer already contains source-like input." : "Paste a link or a narrow query to sharpen it.",
+        ],
+      };
+    default:
+      return {
+        eyebrow: meta.eyebrow,
+        title: meta.label,
+        description: meta.preview,
+        cues: [meta.description],
+      };
+  }
+}
+
+function buildRecentPreview(file: RecentFile): LauncherPreviewCard {
+  return {
+    eyebrow: file.kind === "text" ? "Text file" : file.kind === "image" ? "Image file" : "Attached file",
+    title: file.name,
+    description:
+      file.kind === "text" && file.body
+        ? file.body.slice(0, 220)
+        : "Re-attach this file and the launcher will adapt around it again.",
+    badge: formatBytes(file.size),
+    status: `Saved ${formatRelative(file.savedAt)}`,
+    cues: [
+      file.kind === "text" ? "Body is cached for fast re-attach." : "Will reappear as an attachment chip.",
+      "Good for repeated workflows",
+      "Selecting it keeps the composer in context",
+    ],
+  };
 }
 
 const EMPTY_STATE_BY_TIER: Record<
@@ -198,6 +1063,7 @@ const EMPTY_STATE_BY_TIER: Record<
 export function DesktopChatView({
   session,
   onOpenPlan,
+  onOpenSources,
 }: DesktopChatViewProps) {
   const { prefs, update } = usePreferences();
   const [threads, setThreads] = useState<DesktopThread[]>([]);
@@ -224,6 +1090,33 @@ export function DesktopChatView({
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [showFolded, setShowFolded] = useState(false);
+  const [launcherOpen, setLauncherOpen] = useState(false);
+  const [launcherRoot, setLauncherRoot] = useState<LauncherRootId>("actions");
+  const [hoveredActionId, setHoveredActionId] = useState<LauncherActionId | null>(null);
+  const [hoveredRecentFile, setHoveredRecentFile] = useState<RecentFile | null>(null);
+  // v0.1.4 — "+" menu features. None of these persist across sessions:
+  // agent mode + canvas reset on every launch, recent files live in
+  // localStorage so they survive reloads without leaking into other
+  // accounts (the key is shared because attachments aren't sensitive
+  // and the UI always shows the file name before re-attaching).
+  const [agentMode, setAgentMode] = useState(false);
+  // v0.1.4 — canvas pane. Opens the moment the assistant emits a
+  // [canvas:Title]…[/canvas] block; closing is sticky (won't auto-
+  // re-open until the next emitted block). The block itself is
+  // computed from the latest assistant message.
+  const [canvasBlock, setCanvasBlock] = useState<CanvasBlock | null>(null);
+  const [canvasOpen, setCanvasOpen] = useState(false);
+  const lastCanvasKeyRef = useRef<string | null>(null);
+  // v0.1.4 — live HTML/JS artifact preview. The chat scans assistant
+  // bubbles for runnable code blocks; clicking "Run preview" hoists
+  // the chosen artifact here and the side panel renders it inside a
+  // sandboxed iframe. Opening a canvas closes any open preview and
+  // vice versa — only one side panel at a time.
+  const [activeArtifact, setActiveArtifact] = useState<CodeArtifact | null>(null);
+  const [recentFiles, setRecentFiles] = useState<RecentFile[]>(() => loadRecentFiles());
+  const filePickerRef = useRef<HTMLInputElement | null>(null);
+  const composerInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const launcherRef = useRef<HTMLDivElement | null>(null);
   const draftHydratedRef = useRef<string | null>(null);
   const draftTimerRef = useRef<number | null>(null);
   const sendStartRef = useRef<number>(0);
@@ -266,18 +1159,28 @@ export function DesktopChatView({
   );
 
   // Filter sidebar threads by search query (matches title + preview).
-  // Empty query returns all threads unchanged.
+  // Empty query returns all threads unchanged. Folded threads are
+  // hidden by default but surface when "Show folded" is toggled or
+  // the user is searching.
   const filteredThreads = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return threads;
-    return threads.filter((thread) => {
+    const visible = q || showFolded
+      ? threads
+      : threads.filter((thread) => !thread.folded);
+    if (!q) return visible;
+    return visible.filter((thread) => {
       return (
         thread.title.toLowerCase().includes(q) ||
         thread.preview.toLowerCase().includes(q) ||
         thread.messages.some((m) => m.content.toLowerCase().includes(q))
       );
     });
-  }, [threads, searchQuery]);
+  }, [threads, searchQuery, showFolded]);
+
+  const foldedCount = useMemo(
+    () => threads.filter((thread) => thread.folded).length,
+    [threads],
+  );
 
   // \u2318F / Ctrl+F focuses the sidebar search input.
   useEffect(() => {
@@ -300,6 +1203,37 @@ export function DesktopChatView({
     [tier],
   );
   const emptyState = EMPTY_STATE_BY_TIER[tier];
+  const composerContext = useMemo(
+    () => inferComposerContext(input, attachments),
+    [input, attachments],
+  );
+  const quickActions = useMemo(
+    () => buildQuickActions(composerContext),
+    [composerContext],
+  );
+  const launcherPreview = useMemo(() => {
+    if (hoveredRecentFile) {
+      return buildRecentPreview(hoveredRecentFile);
+    }
+    if (hoveredActionId) {
+      return buildActionPreview(hoveredActionId, {
+        agentMode,
+        canvasOpen,
+        tier,
+        context: composerContext,
+      });
+    }
+    return buildRootPreview(launcherRoot, composerContext, recentFiles);
+  }, [
+    hoveredRecentFile,
+    hoveredActionId,
+    agentMode,
+    canvasOpen,
+    tier,
+    composerContext,
+    launcherRoot,
+    recentFiles,
+  ]);
 
   useEffect(() => {
     threadsRef.current = threads;
@@ -369,6 +1303,50 @@ export function DesktopChatView({
     }
   }, [activeThreadId, messages]);
 
+  // v0.1.4 — auto-restore the draft when the active thread changes.
+  // Reads from localStorage synchronously on switch. We track the last
+  // hydrated thread id so we don't clobber the live input field with
+  // a stale draft on every rerender.
+  useEffect(() => {
+    if (!activeThreadId) return;
+    if (draftHydratedRef.current === activeThreadId) return;
+    draftHydratedRef.current = activeThreadId;
+    try {
+      const stored = window.localStorage.getItem(draftKey(activeThreadId));
+      setInput(stored ?? "");
+    } catch {
+      // localStorage unavailable (private mode, etc.) — silently skip.
+    }
+  }, [activeThreadId]);
+
+  // v0.1.4 — toast auto-dismiss.
+  useEffect(() => {
+    if (!toast) return;
+    const handle = window.setTimeout(() => setToast(null), 2200);
+    return () => window.clearTimeout(handle);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!launcherOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!launcherRef.current) return;
+      if (!launcherRef.current.contains(event.target as Node)) {
+        setLauncherOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setLauncherOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [launcherOpen]);
+
   useEffect(() => {
     return () => {
       if (titleFlashTimerRef.current !== null) {
@@ -397,6 +1375,204 @@ export function DesktopChatView({
     },
     [],
   );
+
+  // v0.1.4 — debounce-persist the chat draft to localStorage so we can
+  // restore it on app reload / thread switch. 400ms keeps us off the
+  // hot path during fast typing while still feeling instant.
+  const handleInputChange = useCallback(
+    (next: string) => {
+      setInput(next);
+      const threadId = activeThreadIdRef.current;
+      if (!threadId) return;
+      if (draftTimerRef.current !== null) {
+        window.clearTimeout(draftTimerRef.current);
+      }
+      draftTimerRef.current = window.setTimeout(() => {
+        try {
+          if (next) {
+            window.localStorage.setItem(draftKey(threadId), next);
+          } else {
+            window.localStorage.removeItem(draftKey(threadId));
+          }
+        } catch {
+          // ignore quota / unavailable
+        }
+      }, 400);
+    },
+    [],
+  );
+
+  // v0.1.4 — file drag and drop. Read text files directly so we can
+  // append the body inline; everything else (images, binaries) is
+  // surfaced as an attachment chip in the input row.
+  const handleFiles = useCallback(async (files: FileList | File[]) => {
+    const list = Array.from(files);
+    if (list.length === 0) return;
+    const next: ChatAttachment[] = [];
+    for (const file of list) {
+      const kind = attachmentKind(file);
+      const id = `att_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+      if (kind === "text") {
+        try {
+          const body = await file.text();
+          next.push({ id, name: file.name, size: file.size, kind, body });
+        } catch {
+          next.push({ id, name: file.name, size: file.size, kind: "binary" });
+        }
+      } else if (kind === "image") {
+        // v0.1.4 vision input: read image as base64, downscale on the
+        // client if it's over 1MB or in a non-vision MIME type, then
+        // attach both the dataUrl (for thumbnail rendering) and the
+        // parsed image payload (for the chat route).
+        try {
+          let media_type: ChatImageAttachment["media_type"] = "image/png";
+          let dataUrl = "";
+          let base64 = "";
+
+          if (isVisionMime(file.type) && file.size <= MAX_IMAGE_BYTES) {
+            // Small enough + already a vision type — pass through.
+            dataUrl = await readAsDataUrl(file);
+            base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+            media_type = file.type;
+          } else {
+            const resized = await resizeImageToBudget(file);
+            if (!resized) {
+              setToast(`Couldn't read ${file.name} as an image.`);
+              continue;
+            }
+            media_type = resized.media_type;
+            dataUrl = resized.dataUrl;
+            base64 = resized.data;
+          }
+
+          next.push({
+            id,
+            name: file.name,
+            size: file.size,
+            kind: "image",
+            dataUrl,
+            image: { media_type, data: base64 },
+          });
+        } catch {
+          next.push({ id, name: file.name, size: file.size, kind: "binary" });
+        }
+      } else {
+        next.push({ id, name: file.name, size: file.size, kind });
+      }
+    }
+    setAttachments((current) => [...current, ...next]);
+    // v0.1.4 — track every successful attachment in localStorage so the
+    // "+" menu's Recent files submenu can re-attach them later.
+    let recents = recentFiles;
+    for (const att of next) {
+      const entry: RecentFile = {
+        name: att.name,
+        size: att.size,
+        kind: att.kind,
+        body: att.kind === "text" ? att.body : undefined,
+        savedAt: new Date().toISOString(),
+      };
+      recents = pushRecentFile(entry);
+    }
+    setRecentFiles(recents);
+    const nextContext = inferComposerContext(input, [...attachments, ...next]);
+    setLauncherRoot(nextContext.suggestedRoot);
+    setHoveredActionId(nextContext.suggestedAction);
+    setHoveredRecentFile(null);
+    setLauncherOpen(true);
+    setToast(
+      next.length === 1
+        ? `${next[0].name} ready.`
+        : `${next.length} files ready for ${nextContext.summaryLabel.toLowerCase()}.`,
+    );
+  }, [attachments, input, recentFiles]);
+
+  // Re-attach a file the user picked from the Recent files submenu.
+  // The text body (if any) was cached in localStorage so re-attaching
+  // works offline / without any extra disk IO. Binaries / images get
+  // a placeholder chip — same as the original drag-drop path.
+  const reattachRecent = useCallback((file: RecentFile) => {
+    const id = `att_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    const entry: ChatAttachment = {
+      id,
+      name: file.name,
+      size: file.size,
+      kind: file.kind,
+      body: file.kind === "text" ? file.body : undefined,
+    };
+    setAttachments((current) => [...current, entry]);
+    setRecentFiles(pushRecentFile({ ...file, savedAt: new Date().toISOString() }));
+    const nextContext = inferComposerContext(input, [...attachments, entry]);
+    setLauncherRoot(nextContext.suggestedRoot);
+    setHoveredActionId(nextContext.suggestedAction);
+    setHoveredRecentFile(file);
+    setLauncherOpen(true);
+    setToast(`${file.name} added back to the composer.`);
+  }, [attachments, input]);
+
+  const removeAttachment = useCallback((id: string) => {
+    setAttachments((current) => current.filter((entry) => entry.id !== id));
+  }, []);
+
+  // v0.1.4 \u2014 ChatGPT-style "+" menu dispatcher. Each action either
+  // fires a side-effect (file picker, browser, toggle) or prefills the
+  // input with a directive so the user can refine before sending.
+
+  // v0.1.4 — Pin / fold mutators. Pinning re-sorts via sortThreads;
+  // folding hides the thread from the default sidebar view but
+  // preserves it in storage.
+  const togglePinned = useCallback(
+    (threadId: string) => {
+      updateThread(threadId, (thread) => ({ ...thread, pinned: !thread.pinned }));
+    },
+    [updateThread],
+  );
+
+  const toggleFolded = useCallback(
+    (threadId: string) => {
+      updateThread(threadId, (thread) => ({ ...thread, folded: !thread.folded }));
+    },
+    [updateThread],
+  );
+
+  // v0.1.4 — Share thread. POSTs the snapshot to the server and copies
+  // the returned URL to the clipboard. Toast confirms the link copied.
+  const handleShareThread = useCallback(
+    async (thread: DesktopThread) => {
+      try {
+        const result = await shareThread(session.token, {
+          thread_id: thread.id,
+          title: thread.title,
+          messages: thread.messages,
+        });
+        try {
+          await navigator.clipboard.writeText(result.share_url);
+          setToast("Link copied");
+        } catch {
+          setToast(result.share_url);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Could not share thread.";
+        setChatError(message);
+      }
+    },
+    [session.token],
+  );
+
+  // v0.1.4 — Markdown export. Builds a clean transcript and triggers
+  // a browser download via an invisible anchor.
+  const handleExportThread = useCallback((thread: DesktopThread) => {
+    const markdown = buildMarkdownExport(thread);
+    const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `sansxel-${slugifyTitle(thread.title)}.md`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, []);
 
   // AI thread summary: after each completed turn, debounce 1.2s then
   // fire summarizeThread() so the sidebar title + description reflect
@@ -509,6 +1685,25 @@ export function DesktopChatView({
     };
     tick();
   }, []);
+
+  // v0.1.4 — canvas auto-detect. Scan the latest assistant message for
+  // a [canvas:Title]…[/canvas] block and pop the side pane open with
+  // it. Keyed by (title + content + length) so we only re-open the pane
+  // when a NEW block lands; the user can close it without it springing
+  // back on every re-render.
+  useEffect(() => {
+    const lastAssistant = [...messages]
+      .reverse()
+      .find((message) => message.role === "assistant");
+    if (!lastAssistant) return;
+    const block = extractLatestCanvas(lastAssistant.content);
+    if (!block) return;
+    const key = `${block.title}::${block.content.length}::${block.content.slice(0, 64)}`;
+    if (lastCanvasKeyRef.current === key) return;
+    lastCanvasKeyRef.current = key;
+    setCanvasBlock(block);
+    setCanvasOpen(true);
+  }, [messages]);
 
   const smoothStream = useSmoothStream({
     charsPerFrame: 8,
@@ -704,8 +1899,30 @@ export function DesktopChatView({
   );
 
   const send = useCallback(async (overrideText?: string, fromVoice = false) => {
-    const text = (overrideText ?? input).trim();
-    if (!text) return;
+    const baseText = (overrideText ?? input).trim();
+    // v0.1.4 — fold any text-file attachments into the outgoing
+    // user message so the model sees them as inline context. Image
+    // attachments now go through Anthropic vision (passed as base64
+    // alongside the text); the chat route promotes them into image
+    // content blocks. Other binaries are still noted by name + size.
+    const attachmentNotes: string[] = [];
+    const visionImages: ChatImageAttachment[] = [];
+    for (const att of attachments) {
+      if (att.kind === "text" && typeof att.body === "string") {
+        attachmentNotes.push(`Attached: ${att.name}\n\n${att.body}`);
+      } else if (att.kind === "image" && att.image) {
+        visionImages.push(att.image);
+      } else {
+        attachmentNotes.push(`Attached: ${att.name} (${formatBytes(att.size)})`);
+      }
+    }
+    const text = attachmentNotes.length > 0
+      ? [baseText, ...attachmentNotes].filter(Boolean).join("\n\n")
+      : baseText;
+    // Allow sending an image with no text — gives the user a clean
+    // "what is this?" workflow. Bail only if BOTH text and images
+    // are empty.
+    if (!text && visionImages.length === 0) return;
     lastTurnVoiceRef.current = fromVoice;
 
     if (abortRef.current) {
@@ -716,7 +1933,10 @@ export function DesktopChatView({
     const threadId = activeThreadIdRef.current ?? createFreshThread();
     const thread =
       threadsRef.current.find((entry) => entry.id === threadId) ?? createThread({ id: threadId });
-    const userMessage: ChatMessage = { role: "user", content: text };
+    const userMessage: ChatMessage =
+      visionImages.length > 0
+        ? { role: "user", content: text, images: visionImages }
+        : { role: "user", content: text };
     const nextMessages = [...thread.messages, userMessage];
     const nextTitle = deriveThreadTitle(nextMessages, thread.title);
     const titleChanged = nextTitle !== thread.title;
@@ -731,9 +1951,26 @@ export function DesktopChatView({
     if (titleChanged) flashTitle(threadId);
 
     setInput("");
+    setAttachments([]);
+    setLauncherOpen(false);
+    setHoveredActionId(null);
+    setHoveredRecentFile(null);
+    // v0.1.4 — clear the persisted draft for this thread now that the
+    // message went out; restoring it after a successful send would
+    // resurrect text the user already sent.
+    try {
+      window.localStorage.removeItem(draftKey(threadId));
+    } catch {
+      // ignore
+    }
+    if (draftTimerRef.current !== null) {
+      window.clearTimeout(draftTimerRef.current);
+      draftTimerRef.current = null;
+    }
     setStreaming(true);
     setChatError(null);
     streamingThreadIdRef.current = threadId;
+    sendStartRef.current = Date.now();
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -744,6 +1981,7 @@ export function DesktopChatView({
         tier,
         inputMode: fromVoice ? "voice" : "text",
         persona: prefs.persona,
+        agentMode,
         signal: controller.signal,
         onMeta: (meta) => {
           if (
@@ -770,6 +2008,39 @@ export function DesktopChatView({
         preview: buildThreadPreview(current.messages),
         updatedAt: new Date().toISOString(),
       }));
+
+      // v0.1.4 — system notification when a long completion finishes
+      // and the user has tabbed away. Wrapped in try/catch since the
+      // Notification API can be missing or permission-blocked.
+      try {
+        const elapsed = Date.now() - sendStartRef.current;
+        if (
+          elapsed > 4000 &&
+          assistant.trim() &&
+          typeof document !== "undefined" &&
+          !document.hasFocus() &&
+          typeof Notification !== "undefined"
+        ) {
+          const fire = () => {
+            try {
+              new Notification("sansxel-1 finished", {
+                body: "Your reply is ready",
+                icon: "/icon.png",
+              });
+            } catch {
+              // ignore
+            }
+          };
+          if (Notification.permission === "granted") {
+            fire();
+          } else if (Notification.permission !== "denied") {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") fire();
+          }
+        }
+      } catch {
+        // ignore — notifications are a nicety, never block the chat flow
+      }
 
       const shouldSpeak =
         Boolean(assistant.trim()) &&
@@ -853,6 +2124,8 @@ export function DesktopChatView({
       }
     }
   }, [
+    agentMode,
+    attachments,
     createFreshThread,
     flashTitle,
     input,
@@ -918,6 +2191,9 @@ export function DesktopChatView({
     if (titleChanged) flashTitle(threadId);
 
     setInput("");
+    setLauncherOpen(false);
+    setHoveredActionId(null);
+    setHoveredRecentFile(null);
     setGeneratingImage(true);
     setChatError(null);
 
@@ -980,6 +2256,164 @@ export function DesktopChatView({
     }
   }, [prefs.window_mode, update]);
 
+  const focusComposer = useCallback(() => {
+    window.setTimeout(() => {
+      composerInputRef.current?.focus();
+      const length = composerInputRef.current?.value.length ?? 0;
+      composerInputRef.current?.setSelectionRange(length, length);
+    }, 0);
+  }, []);
+
+  const openLauncher = useCallback(
+    (
+      root: LauncherRootId = composerContext.suggestedRoot,
+      actionId: LauncherActionId | null = composerContext.suggestedAction,
+    ) => {
+      setLauncherRoot(root);
+      setHoveredActionId(actionId);
+      setHoveredRecentFile(null);
+      setLauncherOpen(true);
+    },
+    [composerContext],
+  );
+
+  const seedComposerPrompt = useCallback(
+    (nextPrompt: string) => {
+      handleInputChange(nextPrompt);
+      setLauncherOpen(false);
+      setHoveredActionId(null);
+      setHoveredRecentFile(null);
+      focusComposer();
+    },
+    [focusComposer, handleInputChange],
+  );
+
+  const handlePrimaryRootAction = useCallback(
+    async (root: "image" | "research" | "search") => {
+      if (root === "image") {
+        if (!input.trim()) {
+          seedComposerPrompt("Create an image of: ");
+          return;
+        }
+        await generateImageFromInput();
+        setLauncherOpen(false);
+        return;
+      }
+
+      const rootMeta = ROOT_META[root];
+      if (!planAllows(planForGating, rootMeta.requiredPlan)) {
+        const unlock = planBadge(rootMeta.requiredPlan) ?? "a paid plan";
+        setPlanNotice(`${rootMeta.label} unlocks on ${unlock}. Upgrade inside the desktop app to use it.`);
+        onOpenPlan();
+        return;
+      }
+
+      const hasContext = composerContext.hasInput || composerContext.hasAttachments;
+      if (!hasContext) {
+        seedComposerPrompt(root === "research" ? "Research this deeply: " : "Search the web for: ");
+        return;
+      }
+
+      const prompt =
+        root === "research"
+          ? `Research this deeply. Compare angles, surface what matters most, and end with the strongest recommendation:\n\n${input.trim() || attachmentPromptHint(attachments)}`
+          : `Ground this with web search and current sources before answering. Keep it concise but source-aware:\n\n${input.trim() || attachmentPromptHint(attachments)}`;
+      await send(prompt);
+    },
+    [
+      attachments,
+      composerContext.hasAttachments,
+      composerContext.hasInput,
+      generateImageFromInput,
+      input,
+      onOpenPlan,
+      planForGating,
+      seedComposerPrompt,
+      send,
+    ],
+  );
+
+  const runLauncherAction = useCallback(
+    async (
+      actionId: LauncherActionId,
+      immediate = composerContext.hasInput || composerContext.hasAttachments,
+    ) => {
+      const meta = ACTION_META[actionId];
+      if (!planAllows(planForGating, meta.requiredPlan)) {
+        const unlock = planBadge(meta.requiredPlan) ?? "a higher plan";
+        setPlanNotice(`${meta.label} unlocks on ${unlock}. Upgrade inside the desktop app to use it.`);
+        onOpenPlan();
+        return;
+      }
+
+      if (meta.comingSoon) {
+        setPlanNotice(`${meta.label} is visible now so users can discover it early, but it's not live in this launcher yet.`);
+        return;
+      }
+
+      if (actionId === "files") {
+        setLauncherRoot("files");
+        setHoveredActionId(null);
+        return;
+      }
+
+      if (actionId === "agent-mode") {
+        if (!agentMode) {
+          setAgentMode(true);
+          setToast("Agent mode is on.");
+        } else if (!immediate) {
+          setAgentMode(false);
+          setToast("Agent mode is off.");
+          setLauncherOpen(false);
+          return;
+        }
+      }
+
+      if (actionId === "deep-think" && tier !== "smart") {
+        setTier("smart");
+      }
+
+      if (actionId === "auto-mode" && tier !== "balanced") {
+        setTier("balanced");
+      }
+
+      if (actionId === "canvas") {
+        setCanvasOpen(true);
+      }
+
+      if (
+        actionId === "add-sources" &&
+        !composerContext.hasAttachments &&
+        !composerContext.hasUrls &&
+        !composerContext.hasInput &&
+        onOpenSources
+      ) {
+        setLauncherOpen(false);
+        onOpenSources();
+        return;
+      }
+
+      if (!immediate) {
+        seedComposerPrompt(buildActionPrompt(actionId, composerContext, input, attachments));
+        return;
+      }
+
+      await send(buildActionPrompt(actionId, composerContext, input, attachments));
+    },
+    [
+      agentMode,
+      attachments,
+      composerContext,
+      input,
+      onOpenPlan,
+      onOpenSources,
+      planForGating,
+      seedComposerPrompt,
+      send,
+      tier,
+    ],
+  );
+
   // Reset copilot mode on every launch \u2014 sansxel always opens in
   // normal chat mode, never sticky-stuck in toolbar mode from a
   // prior session. Runs once after preferences load.
@@ -999,7 +2433,31 @@ export function DesktopChatView({
 
   return (
     <div
-      className={`chat-shell chat-shell--model-${tier}${isCopilot ? " chat-shell--copilot" : ""}`}
+      className={`chat-shell chat-shell--model-${tier}${isCopilot ? " chat-shell--copilot" : ""}${dragOver ? " chat-shell--drag" : ""}`}
+      onDragOver={(event) => {
+        if (event.dataTransfer.types.includes("Files")) {
+          event.preventDefault();
+          setDragOver(true);
+          setLauncherOpen(true);
+          setLauncherRoot("files");
+          setHoveredActionId(null);
+          setHoveredRecentFile(null);
+        }
+      }}
+      onDragLeave={(event) => {
+        // Only clear when the drag actually leaves the shell, not when
+        // it crosses internal child boundaries.
+        if (event.currentTarget === event.target) {
+          setDragOver(false);
+        }
+      }}
+      onDrop={(event) => {
+        if (event.dataTransfer.files.length > 0) {
+          event.preventDefault();
+          void handleFiles(event.dataTransfer.files);
+        }
+        setDragOver(false);
+      }}
     >
       {voiceMode && (
         <VoiceOverlay
@@ -1008,6 +2466,7 @@ export function DesktopChatView({
           onExit={exitVoiceMode}
         />
       )}
+      {toast && <div className="chat-toast" role="status">{toast}</div>}
 
       <aside className="chat-history">
         <div className="chat-history-head">
@@ -1034,18 +2493,57 @@ export function DesktopChatView({
 
         <div className="chat-history-list">
           {filteredThreads.map((thread) => (
-            <button
+            <div
               key={thread.id}
-              type="button"
-              className={`chat-history-item${thread.id === activeThreadId ? " active" : ""}${titleFlashId === thread.id ? " is-updating" : ""}`}
+              role="button"
+              tabIndex={0}
+              className={`chat-history-item${thread.id === activeThreadId ? " active" : ""}${titleFlashId === thread.id ? " is-updating" : ""}${thread.pinned ? " pinned" : ""}${thread.folded ? " folded" : ""}`}
               onClick={() => setActiveThreadId(thread.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setActiveThreadId(thread.id);
+                }
+              }}
             >
-              <div className="chat-history-item-title">{thread.title}</div>
+              <div className="chat-history-item-title">
+                {thread.pinned && <span className="chat-history-pin-tag" aria-hidden>📌</span>}
+                {thread.title}
+              </div>
               <div className="chat-history-item-preview">{thread.preview}</div>
               <div className="chat-history-item-time">
                 {formatThreadTime(thread.updatedAt)}
               </div>
-            </button>
+              <div className="chat-history-item-actions" onClick={(event) => event.stopPropagation()}>
+                <button
+                  type="button"
+                  className="chat-history-action"
+                  title={thread.pinned ? "Unpin" : "Pin"}
+                  aria-label={thread.pinned ? "Unpin thread" : "Pin thread"}
+                  onClick={() => togglePinned(thread.id)}
+                >
+                  📌
+                </button>
+                <button
+                  type="button"
+                  className="chat-history-action"
+                  title="Share"
+                  aria-label="Share thread"
+                  onClick={() => void handleShareThread(thread)}
+                >
+                  Share
+                </button>
+                <button
+                  type="button"
+                  className="chat-history-action"
+                  title={thread.folded ? "Unfold" : "Fold"}
+                  aria-label={thread.folded ? "Unfold thread" : "Fold thread"}
+                  onClick={() => toggleFolded(thread.id)}
+                >
+                  {thread.folded ? "Unfold" : "Fold"}
+                </button>
+              </div>
+            </div>
           ))}
           {filteredThreads.length === 0 && searchQuery && (
             <div className="chat-history-empty">
@@ -1055,6 +2553,15 @@ export function DesktopChatView({
         </div>
 
         <div className="chat-history-foot">
+          {foldedCount > 0 && (
+            <button
+              type="button"
+              className="chat-history-foot-toggle"
+              onClick={() => setShowFolded((value) => !value)}
+            >
+              {showFolded ? `Hide folded (${foldedCount})` : `Show folded (${foldedCount})`}
+            </button>
+          )}
           <div className="chat-history-foot-copy">
             Topics rename themselves when the conversation genuinely shifts.
           </div>
@@ -1078,6 +2585,22 @@ export function DesktopChatView({
           </div>
 
           <div className="chat-topbar-actions">
+            {agentMode && (
+              <span className="chat-agent-pill" title="Agent mode is on">
+                <span className="chat-agent-pill-dot" />
+                Agent ON
+              </span>
+            )}
+            {activeThread && activeThread.messages.length > 0 && (
+              <button
+                type="button"
+                className="chat-export-btn"
+                onClick={() => handleExportThread(activeThread)}
+                title="Export this thread as Markdown"
+              >
+                Export
+              </button>
+            )}
             <button
               type="button"
               className={`chat-copilot-btn${isCopilot ? " active" : ""}`}
@@ -1160,9 +2683,37 @@ export function DesktopChatView({
                       <AssistantBubble
                         content={message.content}
                         streaming={isStillStreaming}
+                        activeArtifactId={activeArtifact?.id ?? null}
+                        onRunArtifact={(artifact) => {
+                          // Only one side panel at a time — close the
+                          // canvas if it was open so the right column
+                          // doesn't stack two panels on top of each
+                          // other.
+                          setCanvasOpen(false);
+                          setActiveArtifact(artifact);
+                        }}
                       />
                     ) : (
-                      message.content
+                      <>
+                        {/* v0.1.4 vision: thumbnails for any images
+                            attached to this user turn. Render BEFORE
+                            the text so the image acts as visual
+                            context for the question. */}
+                        {Array.isArray(message.images) && message.images.length > 0 && (
+                          <div className="chat-msg-images">
+                            {message.images.map((img, imgIdx) => (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                key={imgIdx}
+                                className="chat-msg-image"
+                                alt="attachment"
+                                src={`data:${img.media_type};base64,${img.data}`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        {message.content}
+                      </>
                     )}
                   </div>
                 );
@@ -1179,93 +2730,203 @@ export function DesktopChatView({
             void send();
           }}
         >
-          <textarea
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={(event) => {
-              const enterSends = prefs.send_on_enter;
-              const isEnter = event.key === "Enter" && !event.shiftKey;
-              const isCmdEnter = event.key === "Enter" && (event.ctrlKey || event.metaKey);
-              if ((enterSends && isEnter) || (!enterSends && isCmdEnter)) {
-                event.preventDefault();
-                void send();
+          <input
+            ref={filePickerRef}
+            type="file"
+            multiple
+            style={{ display: "none" }}
+            onChange={(event) => {
+              const files = event.target.files;
+              if (files && files.length > 0) {
+                void handleFiles(files);
               }
+              event.target.value = "";
             }}
-            placeholder={
-              voiceState === "recording"
-                ? "Listening..."
-                : voiceState === "transcribing"
-                  ? "Transcribing..."
-                  : voiceState === "warming"
-                    ? "Preparing voice..."
-                    : voiceState === "speaking"
-                      ? "Speaking..."
-                      : prefs.send_on_enter
-                        ? emptyState.inputPlaceholder
-                        : `${emptyState.inputPlaceholder} (Ctrl+Enter to send)`
-            }
-            rows={1}
-            disabled={voiceState === "recording" || voiceState === "transcribing"}
           />
 
-          <div className="chat-input-actions">
-            <button
-              type="button"
-              onClick={() => void generateImageFromInput()}
-              disabled={generatingImage || !input.trim()}
-              className="chat-icon-btn"
-              title="Generate image from prompt"
-              aria-label="Generate image"
-            >
-              <ImageIcon />
-            </button>
+          <QuickActionRow
+            actions={quickActions}
+            suggestedAction={composerContext.suggestedAction}
+            activeActionId={hoveredActionId}
+            plan={planForGating}
+            onHover={setHoveredActionId}
+            onAction={(actionId) => {
+              void runLauncherAction(actionId);
+            }}
+          />
 
-            {planForGating === "free" ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setPlanNotice("Voice unlocks on paid plans. Open Plan to upgrade inside the desktop app.");
-                  onOpenPlan();
-                }}
-                className="chat-icon-btn chat-icon-btn--locked"
-                title="Voice unlocks on paid plans"
-              >
-                <MicIcon />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void enterVoiceMode()}
-                disabled={voiceState !== "idle"}
-                className="chat-icon-btn"
-                title="Talk to sansxel-1"
-              >
-                <MicIcon />
-              </button>
-            )}
+          {attachments.length > 0 && (
+            <div className="chat-attachments">
+              {attachments.map((att) => (
+                <div key={att.id} className={`chat-attachment chat-attachment--${att.kind}`}>
+                  <span className="chat-attachment-name">{att.name}</span>
+                  <span className="chat-attachment-meta">
+                    {att.kind === "text" ? "text" : att.kind === "image" ? "image" : "file"} · {formatBytes(att.size)}
+                  </span>
+                  <button
+                    type="button"
+                    className="chat-attachment-remove"
+                    onClick={() => removeAttachment(att.id)}
+                    aria-label={`Remove ${att.name}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="chat-input-frame">
+            <textarea
+              ref={composerInputRef}
+              value={input}
+              onChange={(event) => handleInputChange(event.target.value)}
+              onKeyDown={(event) => {
+                const enterSends = prefs.send_on_enter;
+                const isEnter = event.key === "Enter" && !event.shiftKey;
+                const isCmdEnter = event.key === "Enter" && (event.ctrlKey || event.metaKey);
+                if ((enterSends && isEnter) || (!enterSends && isCmdEnter)) {
+                  event.preventDefault();
+                  void send();
+                }
+              }}
+              placeholder={
+                voiceState === "recording"
+                  ? "Listening..."
+                  : voiceState === "transcribing"
+                    ? "Transcribing..."
+                    : voiceState === "warming"
+                      ? "Preparing voice..."
+                      : voiceState === "speaking"
+                        ? "Speaking..."
+                        : prefs.send_on_enter
+                          ? emptyState.inputPlaceholder
+                          : `${emptyState.inputPlaceholder} (Ctrl+Enter to send)`
+              }
+              rows={1}
+              disabled={voiceState === "recording" || voiceState === "transcribing"}
+            />
 
-            {streaming ? (
-              <button
-                type="button"
-                onClick={stop}
-                className="chat-send chat-send--stop"
-                title="Stop"
-              >
-                <StopIcon />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={!input.trim()}
-                className="chat-send"
-                title="Send"
-              >
-                <SendIcon />
-              </button>
-            )}
+            <div className="chat-input-footer">
+              <div className="chat-launcher" ref={launcherRef}>
+                <button
+                  type="button"
+                  className={`chat-launcher-trigger${launcherOpen ? " is-open" : ""}`}
+                  onClick={() => {
+                    if (launcherOpen) {
+                      setLauncherOpen(false);
+                      return;
+                    }
+                    openLauncher();
+                  }}
+                  aria-haspopup="dialog"
+                  aria-expanded={launcherOpen}
+                >
+                  <span className="chat-launcher-trigger-label">Actions</span>
+                  <span className="chat-launcher-trigger-copy">{composerContext.summaryLabel}</span>
+                </button>
+
+                {launcherOpen && (
+                  <SmartActionLauncher
+                    root={launcherRoot}
+                    context={composerContext}
+                    plan={planForGating}
+                    recentFiles={recentFiles}
+                    agentMode={agentMode}
+                    canvasOpen={canvasOpen}
+                    tier={tier}
+                    hoveredActionId={hoveredActionId}
+                    hoveredRecentFile={hoveredRecentFile}
+                    preview={launcherPreview}
+                    onRootChange={(root) => {
+                      setLauncherRoot(root);
+                      setHoveredRecentFile(null);
+                      setHoveredActionId(root === "actions" ? composerContext.suggestedAction : null);
+                    }}
+                    onHoverAction={setHoveredActionId}
+                    onHoverRecent={setHoveredRecentFile}
+                    onBrowseFiles={() => {
+                      filePickerRef.current?.click();
+                    }}
+                    onPrimaryRootAction={(root) => {
+                      void handlePrimaryRootAction(root);
+                    }}
+                    onRunAction={(actionId) => {
+                      void runLauncherAction(actionId);
+                    }}
+                    onPickRecent={reattachRecent}
+                  />
+                )}
+              </div>
+
+              <div className="chat-input-actions">
+                {planForGating === "free" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPlanNotice("Voice unlocks on paid plans. Open Plan to upgrade inside the desktop app.");
+                      onOpenPlan();
+                    }}
+                    className="chat-icon-btn chat-icon-btn--locked"
+                    title="Voice unlocks on paid plans"
+                  >
+                    <MicIcon />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void enterVoiceMode()}
+                    disabled={voiceState !== "idle"}
+                    className="chat-icon-btn"
+                    title="Talk to sansxel-1"
+                  >
+                    <MicIcon />
+                  </button>
+                )}
+
+                {streaming ? (
+                  <button
+                    type="button"
+                    onClick={stop}
+                    className="chat-send chat-send--stop"
+                    title="Stop"
+                  >
+                    <StopIcon />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!input.trim() && attachments.length === 0}
+                    className="chat-send"
+                    title="Send"
+                  >
+                    <SendIcon />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </form>
       </div>
+
+      {canvasOpen && canvasBlock && (
+        <DesktopCanvas
+          block={canvasBlock}
+          onClose={() => setCanvasOpen(false)}
+          onSaveBack={(updated) => {
+            // Append a new user turn echoing the latest canvas. The
+            // canvas STAYS open per the spec — re-emitted blocks just
+            // swap the contents in-place via the auto-detect effect.
+            void send(`Updated canvas:\n\n${updated}`);
+          }}
+        />
+      )}
+
+      {activeArtifact && !canvasOpen && (
+        <CodePreview
+          artifact={activeArtifact}
+          onClose={() => setActiveArtifact(null)}
+        />
+      )}
     </div>
   );
 }
@@ -1364,6 +3025,306 @@ function VoiceOverlay({
   );
 }
 
+function QuickActionRow({
+  actions,
+  suggestedAction,
+  activeActionId,
+  plan,
+  onHover,
+  onAction,
+}: {
+  actions: QuickActionMeta[];
+  suggestedAction: LauncherActionId;
+  activeActionId: LauncherActionId | null;
+  plan: string;
+  onHover: (actionId: LauncherActionId | null) => void;
+  onAction: (actionId: LauncherActionId) => void;
+}) {
+  return (
+    <div className="chat-quick-actions">
+      {actions.map((action) => {
+        const meta = ACTION_META[action.id];
+        const locked = !planAllows(plan, meta.requiredPlan);
+        return (
+          <button
+            key={action.id}
+            type="button"
+            className={`chat-quick-action${suggestedAction === action.id ? " is-suggested" : ""}${activeActionId === action.id ? " is-active" : ""}${locked ? " is-locked" : ""}`}
+            onMouseEnter={() => onHover(action.id)}
+            onFocus={() => onHover(action.id)}
+            onMouseLeave={() => onHover(null)}
+            onClick={() => onAction(action.id)}
+            title={locked ? `${action.hint} Unlocks on ${planBadge(meta.requiredPlan)}.` : action.hint}
+          >
+            <span className="chat-quick-action-label">{action.label}</span>
+            <span className="chat-quick-action-hint">{action.hint}</span>
+            {locked && (
+              <span className="chat-quick-action-badge">{planBadge(meta.requiredPlan)}</span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SmartActionLauncher({
+  root,
+  context,
+  plan,
+  recentFiles,
+  agentMode,
+  canvasOpen,
+  tier,
+  hoveredActionId,
+  hoveredRecentFile,
+  preview,
+  onRootChange,
+  onHoverAction,
+  onHoverRecent,
+  onBrowseFiles,
+  onPrimaryRootAction,
+  onRunAction,
+  onPickRecent,
+}: {
+  root: LauncherRootId;
+  context: ComposerContext;
+  plan: string;
+  recentFiles: RecentFile[];
+  agentMode: boolean;
+  canvasOpen: boolean;
+  tier: ModelTier;
+  hoveredActionId: LauncherActionId | null;
+  hoveredRecentFile: RecentFile | null;
+  preview: LauncherPreviewCard;
+  onRootChange: (root: LauncherRootId) => void;
+  onHoverAction: (actionId: LauncherActionId | null) => void;
+  onHoverRecent: (file: RecentFile | null) => void;
+  onBrowseFiles: () => void;
+  onPrimaryRootAction: (root: "image" | "research" | "search") => void;
+  onRunAction: (actionId: LauncherActionId) => void;
+  onPickRecent: (file: RecentFile) => void;
+}) {
+  const renderActionCard = (actionId: LauncherActionId) => {
+    const meta = ACTION_META[actionId];
+    const locked = !planAllows(plan, meta.requiredPlan);
+    const active =
+      (actionId === "agent-mode" && agentMode) ||
+      (actionId === "canvas" && canvasOpen) ||
+      (actionId === "deep-think" && tier === "smart") ||
+      (actionId === "auto-mode" && tier === "balanced");
+    const suggested = context.suggestedAction === actionId;
+    const badge = meta.comingSoon
+      ? "Soon"
+      : locked
+        ? planBadge(meta.requiredPlan)
+        : active
+          ? "On"
+          : suggested
+            ? "Suggested"
+            : null;
+    return (
+      <button
+        key={actionId}
+        type="button"
+        className={`chat-launcher-action${locked ? " is-locked" : ""}${active ? " is-active" : ""}${suggested ? " is-suggested" : ""}${hoveredActionId === actionId ? " is-hovered" : ""}`}
+        onMouseEnter={() => {
+          onHoverRecent(null);
+          onHoverAction(actionId);
+        }}
+        onFocus={() => {
+          onHoverRecent(null);
+          onHoverAction(actionId);
+        }}
+        onMouseLeave={() => onHoverAction(null)}
+        onClick={() => onRunAction(actionId)}
+      >
+        <div className="chat-launcher-action-head">
+          <span className="chat-launcher-action-name">{meta.label}</span>
+          {badge && <span className="chat-launcher-action-badge">{badge}</span>}
+        </div>
+        <div className="chat-launcher-action-copy">{meta.description}</div>
+      </button>
+    );
+  };
+
+  return (
+    <div className="chat-launcher-panel" role="dialog" aria-label="Smart actions">
+      <div className="chat-launcher-roots">
+        {ROOT_MENU_ORDER.map((rootId) => {
+          const meta = ROOT_META[rootId];
+          const selected = rootId === root;
+          const locked = !planAllows(plan, meta.requiredPlan);
+          return (
+            <button
+              key={rootId}
+              type="button"
+              className={`chat-launcher-root${selected ? " is-selected" : ""}${context.suggestedRoot === rootId ? " is-suggested" : ""}${locked ? " is-locked" : ""}`}
+              onMouseEnter={() => {
+                onHoverRecent(null);
+                onHoverAction(rootId === "actions" ? context.suggestedAction : null);
+                onRootChange(rootId);
+              }}
+              onFocus={() => {
+                onHoverRecent(null);
+                onHoverAction(rootId === "actions" ? context.suggestedAction : null);
+                onRootChange(rootId);
+              }}
+              onClick={() => {
+                onHoverRecent(null);
+                onHoverAction(rootId === "actions" ? context.suggestedAction : null);
+                onRootChange(rootId);
+              }}
+            >
+              <span className="chat-launcher-root-label">{meta.label}</span>
+              <span className="chat-launcher-root-copy">{meta.eyebrow}</span>
+              {locked && <span className="chat-launcher-root-badge">{planBadge(meta.requiredPlan)}</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="chat-launcher-pane">
+        {root === "files" && (
+          <div className="chat-launcher-pane-stack">
+            <button
+              type="button"
+              className="chat-launcher-primary"
+              onClick={onBrowseFiles}
+            >
+              <span className="chat-launcher-primary-title">Browse files</span>
+              <span className="chat-launcher-primary-copy">
+                Pick screenshots, docs, code, or notes and drop them straight into the composer.
+              </span>
+            </button>
+            {context.hasAttachments && renderActionCard("scan-files")}
+            {context.hasAttachments && renderActionCard("analyze")}
+          </div>
+        )}
+
+        {root === "recent" && (
+          <div className="chat-launcher-pane-stack">
+            {recentFiles.length === 0 ? (
+              <div className="chat-launcher-empty">
+                Files you attach here will show up as one-click recents.
+              </div>
+            ) : (
+              recentFiles.map((file) => (
+                <button
+                  key={`${file.name}-${file.savedAt}`}
+                  type="button"
+                  className={`chat-launcher-recent${hoveredRecentFile?.savedAt === file.savedAt ? " is-hovered" : ""}`}
+                  onMouseEnter={() => {
+                    onHoverAction(null);
+                    onHoverRecent(file);
+                  }}
+                  onFocus={() => {
+                    onHoverAction(null);
+                    onHoverRecent(file);
+                  }}
+                  onMouseLeave={() => onHoverRecent(null)}
+                  onClick={() => onPickRecent(file)}
+                >
+                  <span className="chat-launcher-recent-name">{file.name}</span>
+                  <span className="chat-launcher-recent-meta">
+                    {formatBytes(file.size)} | {formatRelative(file.savedAt)}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+
+        {root === "image" && (
+          <div className="chat-launcher-pane-stack">
+            <button
+              type="button"
+              className="chat-launcher-primary"
+              onClick={() => onPrimaryRootAction("image")}
+            >
+              <span className="chat-launcher-primary-title">Create image</span>
+              <span className="chat-launcher-primary-copy">
+                Turn the current draft into an image prompt or seed the composer with a visual brief.
+              </span>
+            </button>
+            {renderActionCard("generate-ui")}
+            {renderActionCard("canvas")}
+          </div>
+        )}
+
+        {root === "research" && (
+          <div className="chat-launcher-pane-stack">
+            <button
+              type="button"
+              className={`chat-launcher-primary${!planAllows(plan, ROOT_META.research.requiredPlan) ? " is-locked" : ""}`}
+              onClick={() => onPrimaryRootAction("research")}
+            >
+              <span className="chat-launcher-primary-title">Run deep research</span>
+              <span className="chat-launcher-primary-copy">
+                Push the next turn into a stronger research frame instead of a quick answer.
+              </span>
+              {!planAllows(plan, ROOT_META.research.requiredPlan) && (
+                <span className="chat-launcher-primary-badge">
+                  {planBadge(ROOT_META.research.requiredPlan)}
+                </span>
+              )}
+            </button>
+            {renderActionCard("add-sources")}
+            {renderActionCard("deep-think")}
+          </div>
+        )}
+
+        {root === "search" && (
+          <div className="chat-launcher-pane-stack">
+            <button
+              type="button"
+              className="chat-launcher-primary"
+              onClick={() => onPrimaryRootAction("search")}
+            >
+              <span className="chat-launcher-primary-title">Search the web</span>
+              <span className="chat-launcher-primary-copy">
+                Shape the next answer like a live, grounded lookup instead of a generic response.
+              </span>
+            </button>
+            {renderActionCard("add-sources")}
+            {renderActionCard("use-memory")}
+          </div>
+        )}
+
+        {root === "actions" && (
+          <div className="chat-launcher-pane-sections">
+            {ACTION_SECTION_ORDER.map((section) => (
+              <div key={section} className="chat-launcher-section">
+                <div className="chat-launcher-section-title">{section}</div>
+                <div className="chat-launcher-section-grid">
+                  {Object.values(ACTION_META)
+                    .filter((meta) => meta.section === section)
+                    .map((meta) => renderActionCard(meta.id))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="chat-launcher-preview">
+        <div className="chat-launcher-preview-eyebrow">{preview.eyebrow}</div>
+        <div className="chat-launcher-preview-title">{preview.title}</div>
+        <div className="chat-launcher-preview-copy">{preview.description}</div>
+        {preview.badge && <div className="chat-launcher-preview-badge">{preview.badge}</div>}
+        {preview.status && <div className="chat-launcher-preview-status">{preview.status}</div>}
+        <div className="chat-launcher-preview-list">
+          {preview.cues.map((cue) => (
+            <div key={cue} className="chat-launcher-preview-item">
+              {cue}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ModelPicker({
   tier,
   onChange,
@@ -1419,11 +3380,23 @@ function ModelPicker({
 function AssistantBubble({
   content,
   streaming,
+  onRunArtifact,
+  activeArtifactId,
 }: {
   content: string;
   streaming: boolean;
+  onRunArtifact?: (artifact: CodeArtifact) => void;
+  activeArtifactId?: string | null;
 }) {
-  const sections = parseSections(content).filter((section) => section.type !== "thinking");
+  // v0.1.4 — strip [canvas:Title]…[/canvas] blocks from the bubble so
+  // the chat shows the assistant's prose without the raw markup. The
+  // canvas pane renders the actual block contents alongside.
+  const cleaned = stripCanvasBlocks(content);
+  const sections = parseSections(cleaned).filter((section) => section.type !== "thinking");
+  // v0.1.4 — runnable code artifacts (HTML/JS/JSX/TSX, ≥30 lines).
+  // Wait until streaming completes before exposing the "Run preview"
+  // button so a half-streamed block doesn't render a broken preview.
+  const artifacts = streaming ? [] : findCodeArtifacts(cleaned);
   return (
     <>
       {sections.map((section, index) => {
@@ -1442,6 +3415,26 @@ function AssistantBubble({
           </div>
         );
       })}
+      {artifacts.length > 0 && onRunArtifact && (
+        <div className="chat-artifact-row">
+          {artifacts.map((artifact) => {
+            const isOpen = artifact.id === activeArtifactId;
+            return (
+              <button
+                key={artifact.id}
+                type="button"
+                className={`chat-artifact-btn${isOpen ? " active" : ""}`}
+                onClick={() => onRunArtifact(artifact)}
+                title={`Open ${artifact.lang.toUpperCase()} preview in side panel`}
+              >
+                <span className="chat-artifact-dot" aria-hidden />
+                {isOpen ? "Showing preview" : "Run preview"}
+                <span className="chat-artifact-tag">{artifact.lang}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }
@@ -1555,16 +3548,6 @@ function MicIcon() {
       <path d="M12 15C10.343 15 9 13.657 9 12V7C9 5.343 10.343 4 12 4C13.657 4 15 5.343 15 7V12C15 13.657 13.657 15 12 15Z" stroke="currentColor" strokeWidth="1.5" />
       <path d="M6.5 11.5C6.5 14.538 8.962 17 12 17C15.038 17 17.5 14.538 17.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       <path d="M12 17V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ImageIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <rect x="3.5" y="4.5" width="17" height="15" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="9" cy="10" r="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M4 17l4.5-4.5 3 3 3.5-3.5L20 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

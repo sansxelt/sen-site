@@ -11,7 +11,21 @@ export type Note = {
   deleted_at: string | null;
 };
 
-export type ChatMessage = { role: "user" | "assistant"; content: string };
+// v0.1.4 — Optional image attachments on a user turn. Each image is
+// passed to the server as base64 (no data: prefix) plus its MIME type
+// so the chat route can hand it straight to Anthropic vision. Images
+// are only valid on user-role turns; the server ignores them on
+// assistant turns. Capped at 1MB per image client-side before send.
+export type ChatImageAttachment = {
+  media_type: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+  data: string;
+};
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  images?: ChatImageAttachment[];
+};
 
 export type ModelTier = "fast" | "balanced" | "smart";
 export type ChatInputMode = "text" | "voice";
@@ -100,6 +114,58 @@ export async function deleteNote(token: string, id: string): Promise<void> {
   });
   if (!res.ok && res.status !== 404) {
     throw new Error(`deleteNote ${res.status}`);
+  }
+}
+
+// ── Sources (v0.1.4 — RAG scaffold) ─────────────────────────────────
+
+export type ChatSource = {
+  id: string;
+  owner_email: string;
+  title: string;
+  body: string;
+  byte_size: number;
+  created_at: string;
+};
+
+export async function listSources(token: string): Promise<ChatSource[]> {
+  const res = await fetch(`${API_BASE}/api/sources`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error(`listSources ${res.status}`);
+  const data = (await res.json()) as { sources: ChatSource[] };
+  return data.sources ?? [];
+}
+
+export async function uploadSource(
+  token: string,
+  file: File,
+): Promise<ChatSource> {
+  const form = new FormData();
+  form.append("file", file, file.name);
+  const res = await fetch(`${API_BASE}/api/sources`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "x-sansxel-surface": "desktop",
+    },
+    body: form,
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorDetail(res, `uploadSource ${res.status}`));
+  }
+  const data = (await res.json()) as { source: ChatSource };
+  return data.source;
+}
+
+export async function deleteSource(token: string, id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/sources/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`deleteSource ${res.status}`);
   }
 }
 
@@ -491,6 +557,10 @@ export async function* streamChat(
     tier?: ModelTier;
     inputMode?: ChatInputMode;
     persona?: Persona;
+    agentMode?: boolean;
+    // v0.1.4 — RAG: ids from the user's chat_sources table to inject
+    // as reference material into the system prompt.
+    sourceIds?: string[];
     signal?: AbortSignal;
     onMeta?: (meta: StreamMeta) => void;
   } = {},
@@ -504,6 +574,8 @@ export async function* streamChat(
       tier: options.tier,
       input_mode: options.inputMode,
       persona: options.persona,
+      agent_mode: options.agentMode ?? false,
+      source_ids: options.sourceIds ?? [],
     }),
     signal: options.signal,
   });
@@ -548,4 +620,99 @@ export async function* streamChat(
   // Flush final bytes
   const tail = decoder.decode();
   if (tail) yield tail;
+}
+
+// ── AI web search ───────────────────────────────────────────────────
+
+export type WebSearchResult = {
+  title: string;
+  url: string;
+  snippet: string;
+};
+
+export async function webSearch(
+  token: string,
+  query: string,
+): Promise<WebSearchResult[]> {
+  const res = await fetch(`${API_BASE}/api/ai/web-search`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ query }),
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorDetail(res, `web-search ${res.status}`));
+  }
+  const data = await parseJsonOrThrow<{ results: WebSearchResult[] }>(
+    res,
+    "web search",
+  );
+  return data.results ?? [];
+}
+
+// ── AI deep research (streaming) ───────────────────────────────────
+
+export async function* streamDeepResearch(
+  token: string,
+  topic: string,
+  signal?: AbortSignal,
+): AsyncGenerator<string, void, unknown> {
+  const res = await fetch(`${API_BASE}/api/ai/deep-research`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ topic }),
+    signal,
+  });
+
+  if (!res.ok || !res.body) {
+    let detail = `deep-research ${res.status}`;
+    try {
+      const err = (await res.json()) as { error?: string };
+      if (err?.error) detail = err.error;
+    } catch {
+      // ignore
+    }
+    throw new Error(detail);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      yield decoder.decode(value, { stream: true });
+    }
+  }
+  const tail = decoder.decode();
+  if (tail) yield tail;
+}
+
+// ── AI quiz (one-shot) ─────────────────────────────────────────────
+
+export type QuizQuestion = {
+  question: string;
+  options: string[];
+  correct_index: number;
+  explanation: string;
+};
+
+export type QuizResult = {
+  questions: QuizQuestion[];
+};
+
+export async function generateQuiz(
+  token: string,
+  topic: string,
+  count?: number,
+): Promise<QuizResult> {
+  const res = await fetch(`${API_BASE}/api/ai/quiz`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ topic, count }),
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorDetail(res, `quiz ${res.status}`));
+  }
+  return parseJsonOrThrow<QuizResult>(res, "quiz");
 }
