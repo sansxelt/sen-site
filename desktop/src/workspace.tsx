@@ -263,12 +263,24 @@ function ChatView({ session }: { session: DesktopSession }) {
   const speechStartRef = useRef<number | null>(null);
   const recordingStartedAtRef = useRef<number>(0);
   const interruptHandlerRef = useRef<(() => void) | null>(null);
+  // Adaptive noise floor (EMA of room-ambient level). Speech and
+  // silence are defined RELATIVE to this floor — fixed thresholds
+  // fail in noisy rooms / quiet mics. Starts pessimistic so we don't
+  // immediately treat the first frame as silence.
+  const noiseFloorRef = useRef(0.04);
+  // Did the user actually speak this turn? Prevents auto-submitting
+  // an empty recording when they're just sitting in voice mode.
+  const heardSpeechRef = useRef(false);
 
-  const VAD_SILENCE_THRESHOLD = 0.05;
-  const VAD_SILENCE_HOLD_MS = 850; // snappier turn-handoff
-  const VAD_MIN_RECORD_MS = 500;
-  const INTERRUPT_THRESHOLD = 0.09;
-  const INTERRUPT_HOLD_MS = 160;
+  const VAD_MIN_RECORD_MS = 400;
+  const VAD_SILENCE_HOLD_MS = 800;
+  // Deltas above the floor — kept small because the floor adapts.
+  const SPEECH_DELTA = 0.06;
+  const SILENCE_DELTA = 0.025;
+  // Interrupt while AI is speaking — slightly louder than just speech
+  // so room echo of the playback doesn't trigger a self-interrupt.
+  const INTERRUPT_DELTA = 0.09;
+  const INTERRUPT_HOLD_MS = 140;
 
   const beginVolumeLoop = useCallback(() => {
     const a = analyserRef.current;
@@ -283,21 +295,42 @@ function ChatView({ session }: { session: DesktopSession }) {
 
       const state = voiceStateRef.current;
       const now = Date.now();
+      const floor = noiseFloorRef.current;
+      const speechCutoff = floor + SPEECH_DELTA;
+      const silenceCutoff = floor + SILENCE_DELTA;
 
-      // Auto-stop on sustained silence while recording
+      // Update noise floor when we're NOT actively in speech. Slow
+      // EMA toward current quiet samples; fast track-down when level
+      // drops well below floor (mic just got quieter).
+      if (level < speechCutoff) {
+        const alpha = level < floor ? 0.15 : 0.02;
+        noiseFloorRef.current = Math.max(
+          0.005,
+          floor * (1 - alpha) + level * alpha,
+        );
+      }
+
+      // Auto-stop on sustained silence while recording — but only
+      // AFTER we've heard the user actually speak this turn.
       if (state === "recording" && voiceModeRef.current) {
-        if (now - recordingStartedAtRef.current > VAD_MIN_RECORD_MS) {
-          if (level < VAD_SILENCE_THRESHOLD) {
-            if (silenceStartRef.current == null) {
-              silenceStartRef.current = now;
-            } else if (now - silenceStartRef.current > VAD_SILENCE_HOLD_MS) {
-              const r = mediaRecorderRef.current;
-              if (r && r.state !== "inactive") r.stop();
-              silenceStartRef.current = null;
-            }
-          } else {
+        const elapsed = now - recordingStartedAtRef.current;
+        if (level > speechCutoff) {
+          heardSpeechRef.current = true;
+          silenceStartRef.current = null;
+        } else if (
+          elapsed > VAD_MIN_RECORD_MS &&
+          heardSpeechRef.current &&
+          level < silenceCutoff
+        ) {
+          if (silenceStartRef.current == null) {
+            silenceStartRef.current = now;
+          } else if (now - silenceStartRef.current > VAD_SILENCE_HOLD_MS) {
+            const r = mediaRecorderRef.current;
+            if (r && r.state !== "inactive") r.stop();
             silenceStartRef.current = null;
           }
+        } else {
+          silenceStartRef.current = null;
         }
       } else {
         silenceStartRef.current = null;
@@ -305,7 +338,7 @@ function ChatView({ session }: { session: DesktopSession }) {
 
       // Interrupt: user speaks while AI is talking → cut AI off
       if (state === "speaking" && voiceModeRef.current) {
-        if (level > INTERRUPT_THRESHOLD) {
+        if (level > floor + INTERRUPT_DELTA) {
           if (speechStartRef.current == null) {
             speechStartRef.current = now;
           } else if (now - speechStartRef.current > INTERRUPT_HOLD_MS) {
@@ -549,6 +582,7 @@ function ChatView({ session }: { session: DesktopSession }) {
       mediaRecorderRef.current = recorder;
       recordingStartedAtRef.current = Date.now();
       silenceStartRef.current = null;
+      heardSpeechRef.current = false;
       recorder.start();
       setVoiceState("recording");
     } catch (err) {
@@ -878,19 +912,14 @@ function AssistantBubble({
   content: string;
   streaming: boolean;
 }) {
-  const sections = parseSections(content);
+  // Drop any thinking blocks — internal reasoning isn't shown to the
+  // user. The tag stays in the raw content (and in the scrollback for
+  // future "show reasoning" toggles), it just doesn't render.
+  const sections = parseSections(content).filter((s) => s.type !== "thinking");
   return (
     <>
       {sections.map((s, i) => {
         const isLastSection = i === sections.length - 1;
-        if (s.type === "thinking") {
-          return (
-            <div key={i} className="chat-thinking">
-              <span className="chat-thinking-tag">thinking</span>
-              <span className="chat-thinking-text">{s.text.trim()}</span>
-            </div>
-          );
-        }
         // Mid-stream: render plain text to avoid markdown re-parse
         // flicker. Once the stream is done, full markdown formatting
         // kicks in.

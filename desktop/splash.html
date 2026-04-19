@@ -183,15 +183,56 @@
           #c4b5fd
         );
         box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
-        animation: fill-bar 10000ms linear forwards;
+        /* Width is JS-driven so [Space] can boost it. transition keeps
+           the boost smooth instead of jumpy. */
+        transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
-      @keyframes fill-bar {
-        from {
-          width: 0%;
-        }
+      /* "[ space to skip ]" hint above the progress bar */
+      .skip-hint {
+        position: absolute;
+        left: 50%;
+        bottom: 16px;
+        transform: translateX(-50%);
+        z-index: 4;
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+        color: rgba(200, 200, 220, 0.45);
+        opacity: 0;
+        animation: hint-fade-in 480ms ease-out 800ms forwards;
+        pointer-events: none;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .skip-hint .skip-key {
+        display: inline-block;
+        padding: 2px 8px;
+        margin: 0 4px;
+        border-radius: 4px;
+        background: rgba(167, 139, 250, 0.12);
+        border: 1px solid rgba(167, 139, 250, 0.28);
+        color: rgba(220, 210, 255, 0.85);
+        letter-spacing: 0.12em;
+      }
+
+      .skip-hint.flash .skip-key {
+        background: rgba(167, 139, 250, 0.32);
+        border-color: rgba(196, 168, 252, 0.6);
+        color: #fff;
+        transition:
+          background 80ms ease-out,
+          border-color 80ms ease-out,
+          color 80ms ease-out;
+      }
+
+      @keyframes hint-fade-in {
         to {
-          width: 100%;
+          opacity: 1;
         }
       }
 
@@ -265,6 +306,10 @@
         <div class="footer-build">v0.1.0 · sansxel-1 · windows</div>
       </div>
 
+      <div class="skip-hint" id="skip-hint">
+        Press <span class="skip-key">space</span> to skip
+      </div>
+
       <div class="progress">
         <div class="progress-fill" id="progress-fill"></div>
       </div>
@@ -290,47 +335,136 @@
         // visible during boot. User can restore via taskbar after.
         tauriInvoke("minimize_other_windows");
 
-        // Escape hatch — ESC at any time skips straight to handover.
-        // This guarantees the user can always get out of the launcher.
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape") {
-            tauriInvoke("boot_complete");
-          }
-        });
-
-        // Steps sum to ~10s. The progress bar fills smoothly via CSS
-        // animation over those 10s — JS only swaps the label text at
-        // the right times so the user sees a continuous fill, not
-        // discrete jumps.
+        // ── Progress + label scheduling ─────────────────────────────
+        // Steps sum to TOTAL_MS. Progress (0..1) is JS-driven via
+        // setInterval so [Space] can boost it. Labels swap when
+        // progress crosses each step's cumulative threshold.
         var steps = [
-          { label: "Initializing sansxel core", ms: 1500 },
-          { label: "Loading workspace memory", ms: 2200 },
-          { label: "Syncing context", ms: 1700 },
-          { label: "Connecting sansxel-1", ms: 2800 },
-          { label: "Preparing your space", ms: 1800 },
+          { label: "Initializing sansxel core", weight: 1.5 },
+          { label: "Loading workspace memory",  weight: 2.2 },
+          { label: "Syncing context",           weight: 1.7 },
+          { label: "Connecting sansxel-1",      weight: 2.8 },
+          { label: "Preparing your space",      weight: 1.8 },
         ];
+        var TOTAL_MS = 10000;
+        var TICK_MS = 50;
+        var BASE_PER_TICK = TICK_MS / TOTAL_MS;
 
+        // Cumulative progress thresholds where the label swaps
+        var totalWeight = 0;
+        for (var s = 0; s < steps.length; s++) totalWeight += steps[s].weight;
+        var thresholds = [];
+        var acc = 0;
+        for (var k = 0; k < steps.length; k++) {
+          acc += steps[k].weight / totalWeight;
+          thresholds.push(acc);
+        }
+
+        var fillEl = document.getElementById("progress-fill");
         var labelEl = document.getElementById("status-label");
-        var i = 0;
+        var hintEl = document.getElementById("skip-hint");
 
-        function advance() {
-          i++;
+        var progress = 0; // 0..1
+        var currentStep = 0;
+        var handedOver = false;
 
-          if (i >= steps.length) {
-            // Final hold, then hand over to the main window via Tauri
-            setTimeout(handover, 420);
-            return;
-          }
+        // Anti-spam decay for [Space] boosts:
+        //   - Each press normally adds BOOST_MAX progress (~7%).
+        //   - If the user spams, the multiplier decays toward
+        //     BOOST_MIN (~1%). Every "calm" press refills it.
+        // The decay represents recent boost-energy used; it bleeds
+        // off at REFILL_PER_MS so steady-but-not-spammed presses
+        // stay near full strength.
+        var BOOST_MAX = 0.07;
+        var BOOST_MIN = 0.01;
+        var SPAM_DECAY_PER_PRESS = 0.45; // how much energy each press consumes
+        var REFILL_PER_MS = 0.0018;       // energy refill rate
+        var spamLoad = 0;                 // 0..1 — higher = more recent spam
+        var lastBoostAt = 0;
 
-          var step = steps[i];
-          labelEl.textContent = step.label;
-          // Re-trigger the fade animation
+        function setLabelFor(stepIdx) {
+          if (stepIdx >= steps.length) return;
+          if (stepIdx === currentStep) return;
+          currentStep = stepIdx;
+          labelEl.textContent = steps[stepIdx].label;
           labelEl.style.animation = "none";
           void labelEl.offsetHeight;
           labelEl.style.animation = "";
-
-          setTimeout(advance, step.ms);
         }
+
+        function paint() {
+          var pct = Math.max(0, Math.min(1, progress)) * 100;
+          fillEl.style.width = pct.toFixed(2) + "%";
+          // Move the label to whichever step our progress falls into
+          for (var idx = 0; idx < thresholds.length; idx++) {
+            if (progress < thresholds[idx]) {
+              setLabelFor(idx);
+              break;
+            }
+            if (idx === thresholds.length - 1) setLabelFor(idx);
+          }
+        }
+
+        function flashHint() {
+          if (!hintEl) return;
+          hintEl.classList.add("flash");
+          setTimeout(function () {
+            hintEl.classList.remove("flash");
+          }, 110);
+        }
+
+        function boost() {
+          var now = Date.now();
+          // Refill spam energy based on time since last press
+          if (lastBoostAt) {
+            spamLoad = Math.max(0, spamLoad - (now - lastBoostAt) * REFILL_PER_MS);
+          }
+          lastBoostAt = now;
+
+          // Boost amount scales with available headroom (1 - spamLoad)
+          var headroom = 1 - spamLoad;
+          var amount = BOOST_MIN + (BOOST_MAX - BOOST_MIN) * headroom;
+          progress = Math.min(1, progress + amount);
+
+          // Consume some energy for this press
+          spamLoad = Math.min(1, spamLoad + SPAM_DECAY_PER_PRESS);
+
+          paint();
+          flashHint();
+
+          if (progress >= 1 && !handedOver) {
+            handedOver = true;
+            handover();
+          }
+        }
+
+        // Steady tick — fills naturally over ~TOTAL_MS
+        var ticker = setInterval(function () {
+          if (handedOver) {
+            clearInterval(ticker);
+            return;
+          }
+          progress = Math.min(1, progress + BASE_PER_TICK);
+          paint();
+          if (progress >= 1) {
+            handedOver = true;
+            clearInterval(ticker);
+            handover();
+          }
+        }, TICK_MS);
+
+        // Keys: Esc bails out immediately, Space boosts.
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") {
+            handedOver = true;
+            tauriInvoke("boot_complete");
+            return;
+          }
+          if (e.code === "Space" || e.key === " " || e.key === "Spacebar") {
+            e.preventDefault();
+            if (!handedOver) boost();
+          }
+        });
 
         function handover() {
           var launcher = document.getElementById("launcher");
@@ -343,8 +477,6 @@
             tauriInvoke("boot_complete");
           }, 460);
         }
-
-        setTimeout(advance, steps[0].ms);
       })();
     </script>
   </body>

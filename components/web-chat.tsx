@@ -81,12 +81,18 @@ export function WebChat({
   const speechStartRef = useRef<number | null>(null);
   const recordingStartedAtRef = useRef<number>(0);
   const interruptHandlerRef = useRef<(() => void) | null>(null);
+  // Adaptive noise floor + "did the user actually speak" flag —
+  // see workspace.tsx for the full rationale. Fixed thresholds
+  // miss talking in noisy rooms / on quiet mics.
+  const noiseFloorRef = useRef(0.04);
+  const heardSpeechRef = useRef(false);
 
-  const VAD_SILENCE_THRESHOLD = 0.05;
-  const VAD_SILENCE_HOLD_MS = 850; // snappier turn-handoff
-  const VAD_MIN_RECORD_MS = 500;
-  const INTERRUPT_THRESHOLD = 0.09;
-  const INTERRUPT_HOLD_MS = 160;
+  const VAD_MIN_RECORD_MS = 400;
+  const VAD_SILENCE_HOLD_MS = 800;
+  const SPEECH_DELTA = 0.06;
+  const SILENCE_DELTA = 0.025;
+  const INTERRUPT_DELTA = 0.09;
+  const INTERRUPT_HOLD_MS = 140;
 
   const stopAnalyser = useCallback(() => {
     if (rafRef.current != null) {
@@ -114,21 +120,39 @@ export function WebChat({
 
       const state = voiceStateRef.current;
       const now = Date.now();
+      const floor = noiseFloorRef.current;
+      const speechCutoff = floor + SPEECH_DELTA;
+      const silenceCutoff = floor + SILENCE_DELTA;
 
-      // VAD auto-stop while recording
+      // Track room baseline when not actively in speech
+      if (level < speechCutoff) {
+        const alpha = level < floor ? 0.15 : 0.02;
+        noiseFloorRef.current = Math.max(
+          0.005,
+          floor * (1 - alpha) + level * alpha,
+        );
+      }
+
+      // Auto-stop on sustained silence — only after we've heard speech
       if (state === "recording" && voiceModeRef.current) {
-        if (now - recordingStartedAtRef.current > VAD_MIN_RECORD_MS) {
-          if (level < VAD_SILENCE_THRESHOLD) {
-            if (silenceStartRef.current == null) {
-              silenceStartRef.current = now;
-            } else if (now - silenceStartRef.current > VAD_SILENCE_HOLD_MS) {
-              const r = recorderRef.current;
-              if (r && r.state !== "inactive") r.stop();
-              silenceStartRef.current = null;
-            }
-          } else {
+        const elapsed = now - recordingStartedAtRef.current;
+        if (level > speechCutoff) {
+          heardSpeechRef.current = true;
+          silenceStartRef.current = null;
+        } else if (
+          elapsed > VAD_MIN_RECORD_MS &&
+          heardSpeechRef.current &&
+          level < silenceCutoff
+        ) {
+          if (silenceStartRef.current == null) {
+            silenceStartRef.current = now;
+          } else if (now - silenceStartRef.current > VAD_SILENCE_HOLD_MS) {
+            const r = recorderRef.current;
+            if (r && r.state !== "inactive") r.stop();
             silenceStartRef.current = null;
           }
+        } else {
+          silenceStartRef.current = null;
         }
       } else {
         silenceStartRef.current = null;
@@ -136,7 +160,7 @@ export function WebChat({
 
       // Interrupt: user speaks while AI is talking
       if (state === "speaking" && voiceModeRef.current) {
-        if (level > INTERRUPT_THRESHOLD) {
+        if (level > floor + INTERRUPT_DELTA) {
           if (speechStartRef.current == null) {
             speechStartRef.current = now;
           } else if (now - speechStartRef.current > INTERRUPT_HOLD_MS) {
@@ -519,6 +543,7 @@ export function WebChat({
       recorderRef.current = recorder;
       recordingStartedAtRef.current = Date.now();
       silenceStartRef.current = null;
+      heardSpeechRef.current = false;
       recorder.start();
       setVoiceState("recording");
     } catch (err) {
@@ -974,19 +999,12 @@ function WebAssistantBubble({
   content: string;
   streaming: boolean;
 }) {
-  const sections = parseSections(content);
+  // Strip thinking blocks — internal reasoning isn't shown to the user.
+  const sections = parseSections(content).filter((s) => s.type !== "thinking");
   return (
     <>
       {sections.map((s, i) => {
         const isLast = i === sections.length - 1;
-        if (s.type === "thinking") {
-          return (
-            <div key={i} className="webchat-thinking">
-              <span className="webchat-thinking-tag">thinking</span>
-              <span className="webchat-thinking-text">{s.text.trim()}</span>
-            </div>
-          );
-        }
         if (streaming && isLast) {
           return (
             <span key={i}>

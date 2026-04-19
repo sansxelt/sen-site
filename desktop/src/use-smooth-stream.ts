@@ -90,7 +90,7 @@ export function useSmoothStream(opts: {
       }
     };
     rafRef.current = requestAnimationFrame(tick);
-  }, [charsPerFrame]);
+  }, [baseRate]);
 
   const push = useCallback(
     (chunk: string) => {
