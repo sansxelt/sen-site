@@ -405,7 +405,9 @@
       </div>
 
       <div class="skip-hint" id="skip-hint">
-        Press <span class="skip-key">space</span> to skip
+        <span class="skip-key">space</span> play \u00b7
+        <span class="skip-key">enter</span> continue \u00b7
+        <span class="skip-key">esc</span><span class="skip-key">esc</span><span class="skip-key">esc</span> from app to revisit
       </div>
 
       <!-- v0.1.6 — tiny one-key mini-game while the splash holds.
@@ -625,43 +627,72 @@
           });
         }, 80);
 
-        // ── Mini-game: one-key Space hopper ──────────────────────────
-        // Single Space press = boost the loader AND make the orb hop.
-        // No arrow keys. Score persists in localStorage as best.
+        // ── Mini-game: one-key Space hopper (v0.1.7 rewrite) ───────────
+        // Game stays interactive even AFTER the loader bar is full \u2014
+        // it keeps running while we wait on main_ready. Game does NOT
+        // start until the user actually presses Space (no zero-input
+        // auto-progress). ENTER triggers handover when the user is done.
+        // The loader bar fills on its own time \u2014 it's the boot timer,
+        // not the game score.
         var MG = {
           stage: document.getElementById("mg-stage"),
           orb: document.getElementById("mg-orb"),
           obs: document.getElementById("mg-obstacles"),
           scoreEl: document.getElementById("mg-score"),
           bestEl: document.getElementById("mg-best"),
+          metaLabel: document.querySelector(".mini-game-label"),
           y: 0, vy: 0, jumping: false,
-          GRAVITY: 0.7, JUMP_VY: 9.5, FLOOR: 0,
+          GRAVITY: 0.7, JUMP_VY: 9.5,
           obstacles: [],
-          spawnEvery: 70, sinceSpawn: 0,
+          spawnEvery: 80, sinceSpawn: 0,
           score: 0,
           best: parseInt(window.localStorage.getItem("sansxel.mg.best") || "0", 10) || 0,
+          // Game starts in "idle" state \u2014 first Space starts it.
+          started: false,
+          alive: true,
         };
         MG.bestEl.textContent = MG.best;
+        if (MG.metaLabel) MG.metaLabel.textContent = "Press Space to play";
 
         function mgJump() {
-          if (handedOver) return;
-          // Allow double jump: full jump from floor, half jump from peak.
+          if (!MG.alive) {
+            // Crash recovery \u2014 first space after a crash restarts the
+            // game from scratch instead of doing nothing.
+            mgRestart();
+            return;
+          }
+          if (!MG.started) {
+            MG.started = true;
+            if (MG.metaLabel) MG.metaLabel.textContent = "Mini\u2011hop";
+          }
           if (!MG.jumping) {
             MG.vy = MG.JUMP_VY;
             MG.jumping = true;
-          } else if (MG.vy < 2) {
-            // Mid-air boost (one-time, only once per air phase)
-            if (!MG.usedDouble) {
-              MG.vy = MG.JUMP_VY * 0.7;
-              MG.usedDouble = true;
-            }
+          } else if (!MG.usedDouble && MG.vy < 2) {
+            MG.vy = MG.JUMP_VY * 0.7;
+            MG.usedDouble = true;
           }
+        }
+
+        function mgRestart() {
+          MG.score = 0; MG.scoreEl.textContent = "0";
+          MG.y = 0; MG.vy = 0; MG.jumping = false; MG.usedDouble = false;
+          for (var i = 0; i < MG.obstacles.length; i++) MG.obstacles[i].el.remove();
+          MG.obstacles = [];
+          MG.sinceSpawn = 0; MG.spawnEvery = 80;
+          MG.alive = true;
+          MG.started = false;
+          if (MG.metaLabel) MG.metaLabel.textContent = "Press Space to play";
+        }
+
+        function mgCrash() {
+          MG.alive = false;
+          if (MG.metaLabel) MG.metaLabel.textContent = "Crashed \u2014 Space to retry";
         }
 
         function mgSpawn() {
           var el = document.createElement("div");
           el.className = "mg-obstacle";
-          // Random height 10-22px
           var h = 10 + Math.floor(Math.random() * 13);
           el.style.height = h + "px";
           el.style.left = "100%";
@@ -670,59 +701,81 @@
         }
 
         function mgTick() {
-          if (handedOver) return;
+          // Game keeps running until the splash window actually closes,
+          // even after the loader bar is full. Don't gate on handedOver.
+          if (MG.started && MG.alive) {
+            MG.vy -= MG.GRAVITY;
+            MG.y += MG.vy;
+            if (MG.y <= 0) {
+              MG.y = 0; MG.vy = 0; MG.jumping = false; MG.usedDouble = false;
+            }
 
-          // Physics
-          MG.vy -= MG.GRAVITY;
-          MG.y += MG.vy;
-          if (MG.y <= 0) {
-            MG.y = 0; MG.vy = 0; MG.jumping = false; MG.usedDouble = false;
+            MG.sinceSpawn++;
+            if (MG.sinceSpawn >= MG.spawnEvery) {
+              MG.sinceSpawn = 0;
+              MG.spawnEvery = 60 + Math.floor(Math.random() * 60);
+              mgSpawn();
+            }
+
+            var keep = [];
+            for (var i = 0; i < MG.obstacles.length; i++) {
+              var o = MG.obstacles[i];
+              o.x -= 2.4;
+              o.el.style.left = o.x + "px";
+
+              // Collision: orb sits at x=28, width=14, height=14. Obstacle
+              // is at o.x with width 8 + height o.h. Orb bottom is at
+              // 9 + MG.y. Orb top is 9 + MG.y + 14.
+              var orbX1 = 28, orbX2 = 28 + 14;
+              var obX1 = o.x, obX2 = o.x + 8;
+              var orbBottom = 9 + MG.y;
+              var orbTop = orbBottom + 14;
+              var obTop = 9 + o.h;
+              if (obX1 < orbX2 && obX2 > orbX1 && orbBottom < obTop) {
+                mgCrash();
+              }
+
+              if (!o.scored && o.x < 24) {
+                o.scored = true;
+                MG.score++;
+                MG.scoreEl.textContent = MG.score;
+                if (MG.score > MG.best) {
+                  MG.best = MG.score;
+                  MG.bestEl.textContent = MG.best;
+                  try { window.localStorage.setItem("sansxel.mg.best", String(MG.best)); } catch (_) {}
+                }
+              }
+
+              if (o.x > -20) keep.push(o);
+              else o.el.remove();
+            }
+            MG.obstacles = keep;
           }
           MG.orb.style.transform = "translateY(" + (-MG.y) + "px)";
-
-          // Spawn obstacles
-          MG.sinceSpawn++;
-          if (MG.sinceSpawn >= MG.spawnEvery) {
-            MG.sinceSpawn = 0;
-            MG.spawnEvery = 50 + Math.floor(Math.random() * 50);
-            mgSpawn();
-          }
-
-          // Move obstacles + score them as they pass orb x ≈ 28
-          var keep = [];
-          for (var i = 0; i < MG.obstacles.length; i++) {
-            var o = MG.obstacles[i];
-            o.x -= 2.4;
-            o.el.style.left = o.x + "px";
-            // Score when obstacle passes the orb (only once)
-            if (!o.scored && o.x < 24) {
-              o.scored = true;
-              MG.score++;
-              MG.scoreEl.textContent = MG.score;
-              if (MG.score > MG.best) {
-                MG.best = MG.score;
-                MG.bestEl.textContent = MG.best;
-                try { window.localStorage.setItem("sansxel.mg.best", String(MG.best)); } catch (_) {}
-              }
-            }
-            // Cull off-screen
-            if (o.x > -20) {
-              keep.push(o);
-            } else {
-              o.el.remove();
-            }
-          }
-          MG.obstacles = keep;
-
           requestAnimationFrame(mgTick);
         }
         requestAnimationFrame(mgTick);
 
-        // Keys: Esc bails out immediately, Space boosts AND hops the orb.
+        // Keys:
+        //   Space \u2192 start game / hop / restart-after-crash + boost loader
+        //   Enter \u2192 handover to the main app (skip remaining boot wait)
+        //   Esc   \u2192 immediate bail to main
         document.addEventListener("keydown", function (e) {
           if (e.key === "Escape") {
             handedOver = true;
             tauriInvoke("boot_complete");
+            return;
+          }
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (!handedOver) {
+              handedOver = true;
+              clearInterval(ticker);
+              clearInterval(readyPoll);
+              progress = 1;
+              paint();
+              handover();
+            }
             return;
           }
           if (e.code === "Space" || e.key === " " || e.key === "Spacebar") {

@@ -18,6 +18,47 @@ fn is_main_ready() -> bool {
     MAIN_READY.load(Ordering::SeqCst)
 }
 
+// v0.1.7 — triple-Esc handler in the main app calls this to revisit
+// the splash mini-game. Hides main, re-creates the splash window if
+// it was closed, and resets MAIN_READY so the splash poll loop
+// re-engages.
+#[tauri::command]
+fn revisit_splash(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::WebviewUrl;
+    use tauri::webview::WebviewWindowBuilder;
+
+    MAIN_READY.store(false, Ordering::SeqCst);
+
+    if let Some(main) = app.get_webview_window("main") {
+        let _ = main.hide();
+    }
+
+    if let Some(splash) = app.get_webview_window("splash") {
+        let _ = splash.show();
+        let _ = splash.set_focus();
+        let _ = splash.set_always_on_top(true);
+        return Ok(());
+    }
+
+    // Splash was closed by boot_complete \u2014 recreate it.
+    let _ = WebviewWindowBuilder::new(
+        &app,
+        "splash",
+        WebviewUrl::App("splash.html".into()),
+    )
+    .title("sansxel")
+    .inner_size(720.0, 420.0)
+    .decorations(false)
+    .resizable(false)
+    .center()
+    .skip_taskbar(true)
+    .always_on_top(true)
+    .focused(true)
+    .build()
+    .map_err(|e| format!("revisit splash: {e}"))?;
+    Ok(())
+}
+
 // ── Win32: minimize EVERY top-level window so only sansxel is visible
 // during boot. v0.1.4 uses a two-pronged approach:
 //   1. EnumWindows + ShowWindow(SW_FORCEMINIMIZE) walks every visible
@@ -402,7 +443,8 @@ pub fn run() {
             hide_copilot,
             set_copilot_stream_proof,
             notify_main_ready,
-            is_main_ready
+            is_main_ready,
+            revisit_splash
         ])
         .setup(|app| {
             // Dev/Linux: register the sansxel:// scheme at runtime so the

@@ -476,7 +476,9 @@
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-columns: 64px 1fr;
+  /* v0.1.7: nav rail is now ALWAYS expanded at 220px. The hover-to-
+     expand was making people think the app was broken. */
+  grid-template-columns: 220px 1fr;
   z-index: 1;
 }
 
@@ -493,17 +495,11 @@
   50%      { opacity: 1; }
 }
 
-/* ── Nav rail (collapsed 64px → hover expand 220px) ──────────────
-   Discord/Linear style: floats over the workspace when hovered so
-   the underlying chat doesn't reflow. Position: absolute means the
-   grid keeps its 64px column, but the rail visually overlays. */
+/* ── Nav rail (always 220px wide) ────────────────────────────────
+   v0.1.7: dropped the hover-to-expand. Always expanded so users
+   can read labels without discovering the hover trick. */
 .ws-nav {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 64px;
-  z-index: 12;
+  width: 220px;
   display: flex;
   flex-direction: column;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
@@ -513,12 +509,6 @@
   padding: 14px 0 12px 0;
   gap: 10px;
   overflow: hidden;
-  transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.ws-nav:hover {
-  width: 220px;
-  box-shadow: 12px 0 36px rgba(0, 0, 0, 0.4);
 }
 
 .ws-nav-status {
@@ -564,21 +554,11 @@
   color: rgba(220, 220, 235, 0.7);
 }
 
-/* Labels start hidden in the collapsed state and fade in when the
-   rail expands. opacity transition + delay keeps the slide feeling
-   smooth instead of revealing text mid-animation. */
+/* v0.1.7: nav rail is always expanded so labels are always visible. */
 .ws-nav-label {
-  opacity: 0;
-  transition: opacity 140ms ease;
-  pointer-events: none;
   font-size: 13px;
   letter-spacing: 0.005em;
   color: inherit;
-}
-
-.ws-nav:hover .ws-nav-label {
-  opacity: 1;
-  transition-delay: 80ms;
 }
 
 .ws-nav-items {
@@ -678,13 +658,6 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  opacity: 0;
-  transition: opacity 140ms ease;
-}
-
-.ws-nav:hover .ws-nav-account-text {
-  opacity: 1;
-  transition-delay: 80ms;
 }
 
 .ws-nav-account-name {

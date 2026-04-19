@@ -15,25 +15,63 @@ export type DesktopRelease = {
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
 export const desktopCurrentCodeVersion = "0.1.7";
-export const desktopLatestShippedVersion = "0.1.6";
+export const desktopLatestShippedVersion = "0.1.7";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T15:04:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.6_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.6_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-19T15:42:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.7_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.7_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.7";
+export const desktopNextVersion = "0.1.8";
 export const desktopNextVersionHighlights = [
-  "Removed the redundant QuickActionRow that was wrapping into a vertical stack and squashing the chat content area on v0.1.6.",
-  "All Unicode escape sequences (\u2026 \u2014 \u00d7 \u25c0 \u25b2 \u25b6) replaced with their actual characters \u2014 \"Search threads\u2026\" no longer renders as raw \\u2026 text.",
-  "Splash mini-hop game iteration coming next (jump physics + obstacle spawn rate tuning).",
-  "Then v0.1.8: real Stripe products + silent NSIS + non-EN translations + GitHub OAuth callback + Smart Action Launcher full wiring.",
+  "Real Stripe products + webhooks for the v0.1.4 monetization stack (top-up packs, Power Pack bundle, annual discount).",
+  "Silent NSIS installer (no wizard ever \u2014 the splash takes over for installs too) + non-EN translation tables filled out.",
+  "GitHub OAuth callback persistence + sources view PDF text extraction + final scrollbar audit + layout densification.",
+  "Smart Action Launcher panel \u2014 Codex's elaborate quick-actions UI lands fully wired with previews + tier locks.",
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.6 \u2014 chat history sidebar always visible at 280px (no squishing). Splash mini-hop game: tap Space to hop the sansxel orb over obstacles while the loader fills. Consent-first updates: bottom-right banner asks Install / Later before any takeover. Floating Copilot edge bar now splash-themed with vertical SANSXEL mark + purple halo. Public downloads still paused; existing installs keep auto-updating.";
+  "v0.1.7 \u2014 nav rail + chat history both ALWAYS visible (no more hover-to-reveal squishing). Codex's QuickActionRow removed (was wrapping into a vertical stack and breaking the layout). Floating Copilot fixed: was dumping raw HTML because it fetched relative URL with no auth; now uses sansxel.ai + Bearer token + content-type guard. Mini-hop game rewritten: doesn't auto-progress (Press Space to play), runs past loader bar, has crash + retry, ENTER skips wait, ESC ESC ESC from main app revisits splash. All literal \\uXXXX escapes converted to actual unicode (search bar, em-dashes, arrows). Public downloads still paused.";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.7",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-19T15:42:00Z",
+    channel: "alpha",
+    summary:
+      "Layout finally readable, copilot fetch fixed, mini-hop game rewritten, escapes converted to real unicode.",
+    changes: [
+      {
+        type: "fix",
+        text: "Nav rail + chat history sidebar are now ALWAYS visible (220px + 280px). Dropped the hover-to-reveal that was squishing chat content into a narrow column. Layout reads at a glance with no discovery required.",
+      },
+      {
+        type: "fix",
+        text: "Removed Codex's QuickActionRow (Fix / Rewrite / Explain cards) that was wrapping into a vertical stack and eating chat width. The \"+\" menu (ChatInputMenu) already provides those actions natively.",
+      },
+      {
+        type: "fix",
+        text: "Floating Copilot was dumping the raw HTML of /api/ai/copilot's 401 page as a chat reply. Now uses absolute sansxel.ai URL + Bearer token from the restored desktop session + content-type guard. Surfaces 'Sign in to sansxel...' if no session, never raw HTML.",
+      },
+      {
+        type: "fix",
+        text: "All \\uXXXX literal escapes across 13 files converted to their actual Unicode characters (search bar placeholder, em-dashes, multiplication signs, position-switcher arrows). 'Search threads\u2026' renders correctly now.",
+      },
+      {
+        type: "improve",
+        text: "Splash mini-hop game rewritten: doesn't auto-progress (idle until first Space press), keeps running past loader bar full, crash + retry, ENTER advances to main app, hint footer explains 'space play \u00b7 enter continue \u00b7 esc esc esc from app to revisit'.",
+      },
+      {
+        type: "new",
+        text: "Triple-Esc within 600ms in the main app revisits the splash mini-game (recreates the splash window if it was already closed). Easter-egg shortcut.",
+      },
+      {
+        type: "improve",
+        text: "Splash always self-focuses on launch so Space works without clicking the window first.",
+      },
+    ],
+  },
   {
     version: "0.1.6",
     dateLabel: "Apr 19, 2026",

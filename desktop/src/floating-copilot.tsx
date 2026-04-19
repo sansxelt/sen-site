@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { API_BASE, restoreSession, type DesktopSession } from "./auth";
 
 // Floating edge copilot for sansxel v0.1.4. Lives in its own Tauri
 // window (label: "copilot"), borderless + transparent + alwaysOnTop.
@@ -28,7 +30,27 @@ export function FloatingCopilot() {
     Array<{ role: "user" | "assistant"; content: string }>
   >([]);
   const [streaming, setStreaming] = useState(false);
+  // v0.1.7 fix: floating Copilot lives in its own Tauri webview so it
+  // has no shared auth context with the main app. Restore the same
+  // saved session token here on mount; without this the API returns
+  // an HTML 401 page that then got stream-decoded as raw text.
+  const [session, setSession] = useState<DesktopSession | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const restored = await restoreSession();
+        if (!cancelled) setSession(restored);
+      } catch {
+        if (!cancelled) setSession(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Restore last-chosen edge from localStorage so the bar reappears
   // where the user left it.
@@ -83,6 +105,18 @@ export function FloatingCopilot() {
   const send = useCallback(async () => {
     const text = input.trim();
     if (!text || streaming) return;
+    if (!session) {
+      setMessages((current) => [
+        ...current,
+        { role: "user", content: text },
+        {
+          role: "assistant",
+          content: "Sign in to sansxel in the main window to use the copilot.",
+        },
+      ]);
+      setInput("");
+      return;
+    }
     if (abortRef.current) abortRef.current.abort();
 
     setMessages((current) => [
@@ -96,13 +130,36 @@ export function FloatingCopilot() {
     const ac = new AbortController();
     abortRef.current = ac;
     try {
-      const res = await fetch("/api/ai/copilot", {
+      // v0.1.7: use absolute API_BASE (sansxel.ai) + tauriFetch so the
+      // request bypasses the local Tauri origin. Add Bearer auth from
+      // the restored session. Defensive content-type check so we never
+      // dump an HTML error page as a "message" again.
+      const res = await tauriFetch(`${API_BASE}/api/ai/copilot`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.token}`,
+          "x-sansxel-surface": "desktop",
+        },
         body: JSON.stringify({ question: text }),
         signal: ac.signal,
       });
-      if (!res.ok || !res.body) throw new Error(`copilot ${res.status}`);
+      if (!res.ok || !res.body) {
+        throw new Error(`copilot ${res.status}`);
+      }
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("text/plain") && !contentType.includes("text/event-stream")) {
+        // The API returned HTML / JSON error \u2014 surface a clean message
+        // instead of streaming the raw bytes into the chat bubble.
+        let body = "";
+        try {
+          const cloned = await res.text();
+          body = cloned.length > 200 ? cloned.slice(0, 200) + "\u2026" : cloned;
+        } catch {
+          body = "(no body)";
+        }
+        throw new Error(`Unexpected response (${contentType || "no type"}): ${body}`);
+      }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let assistant = "";
@@ -120,13 +177,21 @@ export function FloatingCopilot() {
       }
     } catch (err) {
       if ((err as { name?: string })?.name !== "AbortError") {
-        console.warn("copilot send failed:", err);
+        const detail = err instanceof Error ? err.message : "Copilot failed";
+        setMessages((current) => {
+          const copy = [...current];
+          copy[copy.length - 1] = {
+            role: "assistant",
+            content: `\u26a0 ${detail}`,
+          };
+          return copy;
+        });
       }
     } finally {
       setStreaming(false);
       abortRef.current = null;
     }
-  }, [input, streaming]);
+  }, [input, streaming, session]);
 
   const close = useCallback(() => {
     void getCurrentWindow().hide();

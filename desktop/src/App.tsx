@@ -30,6 +30,36 @@ function App() {
   // check, download progress, and the post-relaunch "what's new"
   // card on its own.
 
+  // v0.1.7 \u2014 triple-Esc within ~600ms revisits the splash mini-game.
+  // Hidden Easter-egg shortcut. We skip while typing in inputs so it
+  // doesn't fight Esc-as-clear-field UX.
+  useEffect(() => {
+    let presses: number[] = [];
+    const handler = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+      }
+      const now = Date.now();
+      presses = presses.filter((t) => now - t < 600);
+      presses.push(now);
+      if (presses.length >= 3) {
+        presses = [];
+        void invoke("revisit_splash").catch(() => {});
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   // On mount: try to restore an existing session, then subscribe to
   // deep-link callbacks for fresh sign-ins.
   useEffect(() => {
