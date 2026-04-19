@@ -24,7 +24,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   auto_speak_replies: false,
   conversational: false,
   window_mode: "normal",
-  voice: "shimmer",
+  voice: "fable",
 };
 
 function normalize(raw: unknown): DesktopPreferences {

@@ -716,6 +716,11 @@ div[id] {
 .webchat-msg .md strong { color: #fafafa; font-weight: 600; }
 .webchat-msg .md em     { font-style: italic; color: rgba(245, 245, 250, 0.95); }
 
+.webchat-stream-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 .webchat-cursor {
   display: inline-block;
   width: 2px;

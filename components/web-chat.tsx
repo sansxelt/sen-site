@@ -219,21 +219,132 @@ export function WebChat({
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let assistant = "";
+
+      // Sentence-streaming TTS: as text streams in, slice off
+      // complete sentences and fire TTS for each one in parallel.
+      // Audio plays back in order so the voice reply starts well
+      // before the full response has finished generating. Off when
+      // the turn isn't voice-driven (no point synthesizing audio
+      // nobody asked for).
+      const willSpeak = lastTurnWasVoice.current;
+      const ttsBuf = { text: "" };
+      const ttsQueue: Array<{ blob: Blob | null; done: boolean }> = [];
+      let ttsNextPlay = 0;
+      let ttsPlaying = false;
+      let ttsAborted = false;
+
+      const playNextChunk = () => {
+        if (ttsAborted || ttsPlaying) return;
+        if (ttsNextPlay >= ttsQueue.length) return;
+        const item = ttsQueue[ttsNextPlay];
+        if (!item.blob) return; // not loaded yet
+        ttsPlaying = true;
+        const url = URL.createObjectURL(item.blob);
+        const audio = new Audio(url);
+        audioElRef.current = audio;
+        if (voiceStateRef.current !== "speaking") {
+          setVoiceState("speaking");
+        }
+
+        // Interrupt handler hops between chunks
+        interruptHandlerRef.current = () => {
+          ttsAborted = true;
+          try { audio.pause(); } catch { /* ignore */ }
+          URL.revokeObjectURL(url);
+          ttsPlaying = false;
+          if (audioElRef.current === audio) audioElRef.current = null;
+          setVoiceState("idle");
+          interruptHandlerRef.current = null;
+          void startRecordingRef.current();
+        };
+
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          ttsPlaying = false;
+          ttsNextPlay += 1;
+          if (ttsNextPlay < ttsQueue.length) {
+            playNextChunk();
+          } else {
+            // Empty queue — wait for more chunks unless streaming is done
+            audioElRef.current = null;
+          }
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(url);
+          ttsPlaying = false;
+          ttsNextPlay += 1;
+          playNextChunk();
+        };
+        void audio.play();
+      };
+
+      const queueSentenceForTTS = (text: string) => {
+        if (!willSpeak || ttsAborted) return;
+        const trimmed = text.trim();
+        if (!trimmed) return;
+        const item: { blob: Blob | null; done: boolean } = { blob: null, done: false };
+        ttsQueue.push(item);
+        if (voiceStateRef.current !== "speaking") setVoiceState("speaking");
+        fetch("/api/ai/voice/speak", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: trimmed }),
+        })
+          .then((r) => (r.ok ? r.blob() : null))
+          .then((blob) => {
+            if (ttsAborted) return;
+            item.blob = blob;
+            item.done = true;
+            playNextChunk();
+          })
+          .catch(() => {
+            item.done = true;
+          });
+      };
+
+      const SENTENCE_RE = /([.!?]+["')\]]?)(\s+|$)/;
+      const flushSentencesFromBuffer = (final = false) => {
+        if (!willSpeak) return;
+        let m: RegExpExecArray | null;
+        while ((m = SENTENCE_RE.exec(ttsBuf.text)) !== null) {
+          const idx = (m.index ?? 0) + m[0].length;
+          const sentence = ttsBuf.text.slice(0, idx);
+          ttsBuf.text = ttsBuf.text.slice(idx);
+          // Skip ultra-short fragments — TTS overhead per call is
+          // ~400ms, so chunks need to be worth the round-trip
+          if (sentence.trim().length >= 12) {
+            queueSentenceForTTS(sentence);
+          } else if (sentence.trim()) {
+            // re-attach to next sentence
+            ttsBuf.text = sentence + ttsBuf.text;
+            break;
+          }
+        }
+        if (final && ttsBuf.text.trim()) {
+          queueSentenceForTTS(ttsBuf.text);
+          ttsBuf.text = "";
+        }
+      };
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         if (value) {
-          assistant += decoder.decode(value, { stream: true });
+          const chunk = decoder.decode(value, { stream: true });
+          assistant += chunk;
+          if (willSpeak) ttsBuf.text += chunk;
           setMessages((prev) => {
             const copy = [...prev];
             copy[copy.length - 1] = { role: "assistant", content: assistant };
             return copy;
           });
+          if (willSpeak) flushSentencesFromBuffer();
         }
       }
       const tail = decoder.decode();
       if (tail) {
         assistant += tail;
+        if (willSpeak) ttsBuf.text += tail;
         setMessages((prev) => {
           const copy = [...prev];
           copy[copy.length - 1] = { role: "assistant", content: assistant };
@@ -241,55 +352,28 @@ export function WebChat({
         });
       }
 
-      // If this turn started with the mic, speak the response back
-      // automatically. Inline so we don't depend on the speak()
-      // useCallback being declared above this function.
-      if (lastTurnWasVoice.current && assistant.trim()) {
+      if (willSpeak) {
+        // Final sentence flush
+        flushSentencesFromBuffer(true);
         lastTurnWasVoice.current = false;
-        try {
-          setVoiceState("speaking");
-          const tts = await fetch("/api/ai/voice/speak", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: assistant }),
-          });
-          if (tts.ok) {
-            const blob = await tts.blob();
-            const url = URL.createObjectURL(blob);
-            const audio = new Audio(url);
-            audioElRef.current = audio;
 
-            // Mic analyser keeps running so the volume loop can
-            // detect interrupt-while-speaking. Wire the handler.
-            interruptHandlerRef.current = () => {
-              try { audio.pause(); } catch { /* ignore */ }
-              URL.revokeObjectURL(url);
-              if (audioElRef.current === audio) audioElRef.current = null;
+        // After all queued chunks finish playing, kick the mic back
+        // on if we're still in voice mode. Need to wait for the
+        // last-chunk audio.onended.
+        const allFinishedPoll = setInterval(() => {
+          const pendingTTS = ttsQueue.some((i) => !i.done);
+          const allPlayed = ttsNextPlay >= ttsQueue.length && !ttsPlaying;
+          if (ttsAborted || (allPlayed && !pendingTTS)) {
+            clearInterval(allFinishedPoll);
+            if (!ttsAborted) {
+              interruptHandlerRef.current = null;
               setVoiceState("idle");
-              interruptHandlerRef.current = null;
-              void startRecordingRef.current();
-            };
-
-            const cleanup = () => {
-              URL.revokeObjectURL(url);
-              interruptHandlerRef.current = null;
-              if (audioElRef.current === audio) {
-                audioElRef.current = null;
-                setVoiceState("idle");
-                if (voiceModeRef.current) {
-                  void startRecordingRef.current();
-                }
+              if (voiceModeRef.current) {
+                void startRecordingRef.current();
               }
-            };
-            audio.onended = cleanup;
-            audio.onerror = cleanup;
-            await audio.play();
-          } else {
-            setVoiceState("idle");
+            }
           }
-        } catch {
-          setVoiceState("idle");
-        }
+        }, 200);
       }
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
@@ -555,14 +639,18 @@ export function WebChat({
                   {isInflight ? (
                     <WebBounceDots />
                   ) : m.role === "assistant" ? (
-                    <>
+                    isStillStreaming ? (
+                      <>
+                        <span className="webchat-stream-text">{m.content}</span>
+                        <span className="webchat-cursor" />
+                      </>
+                    ) : (
                       <div className="md">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {m.content}
                         </ReactMarkdown>
                       </div>
-                      {isStillStreaming && <span className="webchat-cursor" />}
-                    </>
+                    )
                   ) : (
                     m.content
                   )}

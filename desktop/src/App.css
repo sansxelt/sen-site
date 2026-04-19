@@ -709,6 +709,13 @@
 .md strong { color: #fafafa; font-weight: 600; }
 .md em     { font-style: italic; color: rgba(245, 245, 250, 0.95); }
 
+/* Plain-text mid-stream — keeps newlines + spacing without re-parsing
+   the markdown tree on every chunk */
+.chat-stream-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 /* Blinking cursor at the end of in-progress streaming text */
 .chat-cursor {
   display: inline-block;

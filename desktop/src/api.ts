@@ -147,15 +147,15 @@ export type TtsVoice =
   | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse";
 
 export const TTS_VOICES: ReadonlyArray<{ value: TtsVoice; label: string; vibe: string }> = [
-  { value: "shimmer", label: "Shimmer",  vibe: "Warm, friendly (default)" },
+  { value: "fable",   label: "Fable",    vibe: "British, expressive (default)" },
+  { value: "onyx",    label: "Onyx",     vibe: "Deep, masculine" },
+  { value: "echo",    label: "Echo",     vibe: "Steady, even" },
+  { value: "shimmer", label: "Shimmer",  vibe: "Warm, friendly" },
   { value: "nova",    label: "Nova",     vibe: "Bright, energetic" },
-  { value: "alloy",   label: "Alloy",    vibe: "Neutral, even" },
+  { value: "alloy",   label: "Alloy",    vibe: "Neutral" },
   { value: "ash",     label: "Ash",      vibe: "Calm, low" },
   { value: "ballad",  label: "Ballad",   vibe: "Smooth, mellow" },
   { value: "coral",   label: "Coral",    vibe: "Soft, conversational" },
-  { value: "echo",    label: "Echo",     vibe: "Steady, masculine" },
-  { value: "fable",   label: "Fable",    vibe: "Storyteller, expressive" },
-  { value: "onyx",    label: "Onyx",     vibe: "Deep, rich" },
   { value: "sage",    label: "Sage",     vibe: "Thoughtful, grounded" },
   { value: "verse",   label: "Verse",    vibe: "Lyrical, light" },
 ];
@@ -179,7 +179,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   auto_speak_replies: false,
   conversational: false,
   window_mode: "normal",
-  voice: "shimmer",
+  voice: "fable",
 };
 
 export async function getPreferences(token: string): Promise<DesktopPreferences> {

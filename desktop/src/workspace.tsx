@@ -645,14 +645,22 @@ function ChatView({ session }: { session: DesktopSession }) {
                   {isInflight ? (
                     <BounceDots />
                   ) : m.role === "assistant" ? (
-                    <>
+                    isStillStreaming ? (
+                      // Mid-stream: render plain text. ReactMarkdown
+                      // re-parses the entire AST every chunk, which
+                      // causes layout jumps + flicker. Markdown
+                      // formatting kicks in once streaming finishes.
+                      <>
+                        <span className="chat-stream-text">{m.content}</span>
+                        <span className="chat-cursor" />
+                      </>
+                    ) : (
                       <div className="md">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {m.content}
                         </ReactMarkdown>
                       </div>
-                      {isStillStreaming && <span className="chat-cursor" />}
-                    </>
+                    )
                   ) : (
                     m.content
                   )}

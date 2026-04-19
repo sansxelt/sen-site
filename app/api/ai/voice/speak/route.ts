@@ -43,13 +43,14 @@ export async function POST(request: Request) {
     .replace(/\bsansxel-?2\b/gi, "sans-zul two")
     .replace(/\bsansxel\b/gi, "sans-zul");
 
-  // Optional voice + speed knobs from the client (default = shimmer).
+  // Optional voice from client. Default is fable (British, expressive)
+  // because that's the brand voice we want when nothing's set.
   const voice =
     typeof (payload as { voice?: string }).voice === "string"
       ? ((payload as { voice?: string }).voice as
           | "alloy" | "ash" | "ballad" | "coral" | "echo"
           | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse")
-      : "shimmer";
+      : "fable";
 
   try {
     const speech = await client.audio.speech.create({
