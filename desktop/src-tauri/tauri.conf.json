@@ -70,7 +70,7 @@
         "https://sansxel.ai/api/desktop/updates/latest?platform={{target}}-{{arch}}&version={{current_version}}"
       ],
       "dialog": false,
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDVBQzQ3NkMzMTRDRjRDQzgKUldUSVRNOFV3M2JFV3VNdDhVdjRhKzdLM0pUcDJqSENkSHY4Ym9CbmFscTVxbk1BOE9aY1lwM0wK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYzMjZGODQ0NUUzRDM2NzAKUldSd05qMWVSUGdtODJ3ektxeHlRSzNpSEZDbktJWUI0WUdjWlR1QTdLeVIxc1B0a09ETktmenMK"
     }
   }
 }
