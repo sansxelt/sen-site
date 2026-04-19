@@ -5,6 +5,8 @@ import {
   useState,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   type AccountProfile,
   ALL_MODEL_OPTIONS,
@@ -439,11 +441,17 @@ function ChatView({ session }: { session: DesktopSession }) {
                 >
                   {isInflight ? (
                     <BounceDots />
-                  ) : (
+                  ) : m.role === "assistant" ? (
                     <>
-                      {m.content}
+                      <div className="md">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {m.content}
+                        </ReactMarkdown>
+                      </div>
                       {isStillStreaming && <span className="chat-cursor" />}
                     </>
+                  ) : (
+                    m.content
                   )}
                 </div>
               );

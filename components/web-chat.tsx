@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 type ModelTier = "fast" | "balanced" | "smart";
@@ -339,7 +341,7 @@ export function WebChat({
 
       {/* Subtle reminder that the desktop is the bigger surface */}
       <div className="webchat-desktop-cta">
-        Need MCP, file edits, or full voice?
+        The desktop unlocks MCP tools, file edits, toolbar modes, the full voice loop, and more.
         <a href="/download" className="webchat-desktop-cta-link">
           Get sansxel desktop →
         </a>
@@ -370,11 +372,17 @@ export function WebChat({
                 >
                   {isInflight ? (
                     <WebBounceDots />
-                  ) : (
+                  ) : m.role === "assistant" ? (
                     <>
-                      {m.content}
+                      <div className="md">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {m.content}
+                        </ReactMarkdown>
+                      </div>
                       {isStillStreaming && <span className="webchat-cursor" />}
                     </>
+                  ) : (
+                    m.content
                   )}
                 </div>
               );
