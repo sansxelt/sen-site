@@ -21,6 +21,36 @@ import {
   type PricingPlanKey,
 } from "./billing-api";
 
+// v0.1.4 monetization: visual-only catalog. Wire to Stripe in v0.1.5.
+type BoostCard = {
+  key: string;
+  name: string;
+  price: string;
+  detail: string;
+  featured?: boolean;
+};
+
+const ONE_TIME_BOOSTS: BoostCard[] = [
+  { key: "session", name: "Session Boost", price: "$2", detail: "+50 chats" },
+  { key: "weekly", name: "Weekly Boost", price: "$5", detail: "+500 weekly requests" },
+  { key: "voice-min", name: "Voice Minute Pack", price: "$3", detail: "+60 voice minutes" },
+  { key: "image-credit", name: "Image Credit Pack", price: "$4", detail: "+25 image generations" },
+  { key: "copilot-time", name: "Copilot Time Pack", price: "$5", detail: "+5 hours of copilot" },
+];
+
+const RECURRING_BOOSTS: BoostCard[] = [
+  { key: "voice-pack", name: "Voice Pack", price: "$8/mo", detail: "Unlimited voice" },
+  { key: "image-pack", name: "Image Pack", price: "$10/mo", detail: "Unlimited images" },
+  { key: "copilot-pro", name: "Copilot Pro Pack", price: "$12/mo", detail: "Unlimited copilot for any plan" },
+  {
+    key: "power-pack",
+    name: "Power Pack BUNDLE",
+    price: "$25/mo",
+    detail: "All boosts active (~$45 of value)",
+    featured: true,
+  },
+];
+
 const stripePromiseCache = new Map<string, Promise<StripeJs | null>>();
 function stripePromise(key: string): Promise<StripeJs | null> {
   let cached = stripePromiseCache.get(key);
@@ -49,9 +79,17 @@ export function DesktopBillingPanel({
     billing.state.cycle ?? "monthly",
   );
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [showAllInvoices, setShowAllInvoices] = useState(false);
 
   const currentPlanKey = billing.state.planKey ?? billing.currentPlanKey;
   const hasPaidPlan = currentPlanKey !== "free";
+  // "Comped" tier: paid plan key but no Stripe subscription on file.
+  // Avoids dangling "Add card" + "Cancel at period end" CTAs that
+  // imply a real subscription when there isn't one.
+  const isComped =
+    hasPaidPlan &&
+    !billing.state.paymentMethod &&
+    !billing.state.currentPeriodEnd;
   const personalPlans = billing.plans.filter(
     (plan) => plan.key === "free" || plan.key === "apprentice" || plan.key === "studio" || plan.key === "pro",
   );
@@ -123,94 +161,159 @@ export function DesktopBillingPanel({
     <>
       {error && <div className="view-error">{error}</div>}
 
-      <div className="billing-grid">
-        <section className="billing-panel billing-panel--hero">
-          <div className="billing-kicker">Current plan</div>
-          <div className="billing-hero-row">
-            <div>
-              <h2>{billing.currentPlanName}</h2>
-              <p>{billing.currentPlanDescription}</p>
+      <div className="billing-stack">
+        {/* Top row: hero (full width, dense) — plan info + chips on left,
+            addons micro-grid in middle, actions on right. */}
+        <section className="billing-panel billing-panel--hero billing-hero-dense">
+          <div className="billing-hero-main">
+            <div className="billing-hero-headline">
+              <div className="billing-kicker">Current plan</div>
+              <div className="billing-hero-row">
+                <div>
+                  <h2>{billing.currentPlanName}</h2>
+                  <p>{billing.currentPlanDescription}</p>
+                </div>
+                {billing.state.cancelAtPeriodEnd && (
+                  <span className="billing-badge billing-badge--warn">
+                    Ends {formatDate(billing.state.currentPeriodEnd)}
+                  </span>
+                )}
+              </div>
+
+              <div className="billing-chip-row billing-chip-row--dense">
+                <div className="billing-chip">
+                  <span className="billing-chip-label">Memory</span>
+                  <span>{billing.currentPlanMemoryWindow}</span>
+                </div>
+                <div className="billing-chip">
+                  <span className="billing-chip-label">Usage</span>
+                  <span>{billing.currentPlanMonthlyCredits}</span>
+                </div>
+                <div className="billing-chip">
+                  <span className="billing-chip-label">Renews</span>
+                  <span>{formatDate(billing.state.currentPeriodEnd)}</span>
+                </div>
+                <div className="billing-chip">
+                  <span className="billing-chip-label">Card</span>
+                  <span>
+                    {billing.state.paymentMethod
+                      ? `${(billing.state.paymentMethod.brand ?? "card").toUpperCase()} •••• ${billing.state.paymentMethod.last4 ?? ""}`
+                      : "Not added"}
+                  </span>
+                </div>
+              </div>
             </div>
-            {billing.state.cancelAtPeriodEnd && (
-              <span className="billing-badge billing-badge--warn">
-                Ends {formatDate(billing.state.currentPeriodEnd)}
-              </span>
-            )}
+
+            {/* Inline addons micro-grid: keeps existing Stripe wiring */}
+            <div className="billing-hero-addons">
+              <div className="billing-kicker">Addons</div>
+              <div className="billing-addon-microgrid">
+                {billing.state.activeAddons.map(({ addon }) => (
+                  <div key={addon.key} className="billing-addon-tile billing-addon-tile--active">
+                    <div>
+                      <div className="billing-addon-name">{addon.name}</div>
+                      <div className="billing-addon-meta">{addon.monthlyLabel} active</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="billing-secondary-btn billing-tile-btn"
+                      onClick={() => void handleRemoveAddon(addon.key)}
+                      disabled={busy === `remove-${addon.key}`}
+                    >
+                      {busy === `remove-${addon.key}` ? "..." : "Remove"}
+                    </button>
+                  </div>
+                ))}
+
+                {availableAddons.map((addon) => (
+                  <div key={addon.key} className="billing-addon-tile">
+                    <div>
+                      <div className="billing-addon-name">{addon.name}</div>
+                      <div className="billing-addon-meta">{addon.monthlyLabel}</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="upgrade-cta-btn billing-tile-btn"
+                      onClick={() => void handleAddAddon(addon.key)}
+                      disabled={!hasPaidPlan}
+                      title={hasPaidPlan ? undefined : "Choose a paid plan before adding addons"}
+                    >
+                      {busy === `add-${addon.key}` ? "..." : "Add"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {!hasPaidPlan && availableAddons.length > 0 && (
+                <div className="billing-note billing-note--inline">
+                  Addons unlock after you start a paid plan.
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="billing-chip-row">
-            <div className="billing-chip">
-              <span className="billing-chip-label">Memory</span>
-              <span>{billing.currentPlanMemoryWindow}</span>
-            </div>
-            <div className="billing-chip">
-              <span className="billing-chip-label">Usage</span>
-              <span>{billing.currentPlanMonthlyCredits}</span>
-            </div>
-            <div className="billing-chip">
-              <span className="billing-chip-label">Renews</span>
-              <span>{formatDate(billing.state.currentPeriodEnd)}</span>
-            </div>
-            <div className="billing-chip">
-              <span className="billing-chip-label">Card</span>
-              <span>
-                {billing.state.paymentMethod
-                  ? `${(billing.state.paymentMethod.brand ?? "card").toUpperCase()} •••• ${billing.state.paymentMethod.last4 ?? ""}`
-                  : "Not added"}
-              </span>
-            </div>
-          </div>
-
-          <div className="billing-actions">
-            {billing.publishableKey && (
-              <button
-                type="button"
-                className="upgrade-cta-btn"
-                onClick={() => setPaymentModalOpen(true)}
-              >
-                {billing.state.paymentMethod ? "Update card" : "Add card"}
-              </button>
-            )}
-            {hasPaidPlan ? (
-              billing.state.cancelAtPeriodEnd ? (
-                <button
-                  type="button"
-                  className="billing-secondary-btn"
-                  onClick={() => void handleCancel(true)}
-                  disabled={busy === "resume"}
-                >
-                  {busy === "resume" ? "Resuming..." : "Resume plan"}
-                </button>
+          <div className="billing-hero-side">
+            <div className="billing-actions billing-actions--column">
+              {isComped ? (
+                <span className="billing-comped-pill" title="Comped tier \u2014 no payment method on file">
+                  Comped \u00b7 no card needed
+                </span>
               ) : (
-                <button
-                  type="button"
-                  className="billing-secondary-btn"
-                  onClick={() => void handleCancel(false)}
-                  disabled={busy === "cancel"}
-                >
-                  {busy === "cancel" ? "Scheduling..." : "Cancel at period end"}
-                </button>
-              )
-            ) : null}
+                <>
+                  {billing.publishableKey && (
+                    <button
+                      type="button"
+                      className="upgrade-cta-btn"
+                      onClick={() => setPaymentModalOpen(true)}
+                    >
+                      {billing.state.paymentMethod ? "Update card" : "Add card"}
+                    </button>
+                  )}
+                  {hasPaidPlan ? (
+                    billing.state.cancelAtPeriodEnd ? (
+                      <button
+                        type="button"
+                        className="billing-secondary-btn"
+                        onClick={() => void handleCancel(true)}
+                        disabled={busy === "resume"}
+                      >
+                        {busy === "resume" ? "Resuming..." : "Resume plan"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="billing-secondary-btn"
+                        onClick={() => void handleCancel(false)}
+                        disabled={busy === "cancel"}
+                      >
+                        {busy === "cancel" ? "Scheduling..." : "Cancel at period end"}
+                      </button>
+                    )
+                  ) : null}
+                </>
+              )}
+            </div>
           </div>
         </section>
 
-        <section className="billing-panel">
-          <div className="billing-kicker">Plans in app</div>
-          <div className="billing-cycle-toggle">
-            {(["monthly", "yearly"] as BillingCycle[]).map((cycle) => (
-              <button
-                key={cycle}
-                type="button"
-                className={`billing-cycle-pill${checkoutCycle === cycle ? " active" : ""}`}
-                onClick={() => setCheckoutCycle(cycle)}
-              >
-                {cycle === "monthly" ? "Monthly" : "Yearly"}
-              </button>
-            ))}
+        {/* Middle row: plans-in-app — full width, horizontal scroll */}
+        <section className="billing-panel billing-panel--dense">
+          <div className="billing-section-head">
+            <div className="billing-kicker">Plans in app</div>
+            <div className="billing-cycle-toggle">
+              {(["monthly", "yearly"] as BillingCycle[]).map((cycle) => (
+                <button
+                  key={cycle}
+                  type="button"
+                  className={`billing-cycle-pill${checkoutCycle === cycle ? " active" : ""}`}
+                  onClick={() => setCheckoutCycle(cycle)}
+                >
+                  {cycle === "monthly" ? "Monthly" : "Yearly"}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="billing-plan-list">
+          <div className="billing-plan-list billing-plan-list--horizontal">
             {personalPlans.map((plan) => {
               const isCurrent = plan.key === currentPlanKey;
               const label =
@@ -279,58 +382,107 @@ export function DesktopBillingPanel({
           </div>
         </section>
 
-        <section className="billing-panel">
-          <div className="billing-kicker">Addons</div>
-          <div className="billing-addon-list">
-            {billing.state.activeAddons.map(({ addon }) => (
-              <div key={addon.key} className="billing-addon-row">
-                <div>
-                  <div className="billing-addon-name">{addon.name}</div>
-                  <div className="billing-addon-meta">{addon.monthlyLabel} active</div>
+        {/* NEW monetization section: one-time top-ups + recurring boosts.
+            These are placeholders \u2014 wire to Stripe in v0.1.5. */}
+        <section className="billing-panel billing-panel--dense">
+          <div className="billing-section-head">
+            <div className="billing-kicker">Boost your account</div>
+            <span className="billing-note billing-note--inline">
+              One-time top-ups for power users.
+            </span>
+          </div>
+          <div className="boost-row">
+            {ONE_TIME_BOOSTS.map((boost) => (
+              <div key={boost.key} className="boost-card">
+                <div className="boost-card-head">
+                  <div className="boost-card-name">{boost.name}</div>
+                  <div className="boost-card-price">{boost.price}</div>
                 </div>
+                <div className="boost-card-meta">{boost.detail}</div>
                 <button
                   type="button"
-                  className="billing-secondary-btn"
-                  onClick={() => void handleRemoveAddon(addon.key)}
-                  disabled={busy === `remove-${addon.key}`}
+                  className="upgrade-cta-btn boost-card-btn"
+                  onClick={() => alert("Coming soon — wire to Stripe in v0.1.5")}
                 >
-                  {busy === `remove-${addon.key}` ? "Removing..." : "Remove"}
+                  Buy
                 </button>
               </div>
             ))}
+          </div>
 
-            {availableAddons.map((addon) => (
-              <div key={addon.key} className="billing-addon-row">
-                <div>
-                  <div className="billing-addon-name">{addon.name}</div>
-                  <div className="billing-addon-meta">{addon.monthlyLabel}</div>
+          <div className="billing-section-head billing-section-head--spaced">
+            <div className="billing-kicker">Recurring add-on packs</div>
+            <span className="billing-note billing-note--inline">
+              Stack on any plan, monthly.
+            </span>
+          </div>
+          <div className="boost-row boost-row--four">
+            {RECURRING_BOOSTS.map((boost) => (
+              <div
+                key={boost.key}
+                className={`boost-card boost-card--recurring${boost.featured ? " boost-card--featured" : ""}`}
+              >
+                <div className="boost-card-head">
+                  <div className="boost-card-name">
+                    {boost.name}
+                    {boost.featured && (
+                      <span className="billing-badge boost-card-badge">Best value</span>
+                    )}
+                  </div>
+                  <div className="boost-card-price">{boost.price}</div>
                 </div>
+                <div className="boost-card-meta">{boost.detail}</div>
                 <button
                   type="button"
-                  className="upgrade-cta-btn"
-                  onClick={() => void handleAddAddon(addon.key)}
-                  disabled={!hasPaidPlan}
-                  title={hasPaidPlan ? undefined : "Choose a paid plan before adding addons"}
+                  className="upgrade-cta-btn boost-card-btn"
+                  onClick={() => alert("Coming soon — wire to Stripe in v0.1.5")}
                 >
-                  {busy === `add-${addon.key}` ? "Adding..." : "Add addon"}
+                  Add
                 </button>
               </div>
             ))}
-            {!hasPaidPlan && availableAddons.length > 0 && (
-              <div className="billing-note">
-                Addons unlock after you start a paid plan.
+          </div>
+
+          <div className="boost-annual-notice">
+            <div>
+              <div className="boost-annual-title">Save 20% with annual</div>
+              <div className="boost-annual-copy">
+                Switch any subscription to yearly billing and we knock 20% off the
+                monthly price — applies to plans and recurring add-on packs above.
               </div>
-            )}
+            </div>
+            <button
+              type="button"
+              className="billing-secondary-btn"
+              onClick={() => setCheckoutCycle("yearly")}
+            >
+              Show yearly pricing
+            </button>
           </div>
         </section>
 
-        <section className="billing-panel">
-          <div className="billing-kicker">Recent invoices</div>
+        {/* Bottom: invoices, compact \u2014 last 3 then expand */}
+        <section className="billing-panel billing-panel--dense">
+          <div className="billing-section-head">
+            <div className="billing-kicker">Recent invoices</div>
+            {billing.state.invoices.length > 3 && (
+              <button
+                type="button"
+                className="billing-secondary-btn"
+                onClick={() => setShowAllInvoices((v) => !v)}
+              >
+                {showAllInvoices ? "Show less" : `View all (${billing.state.invoices.length})`}
+              </button>
+            )}
+          </div>
           {billing.state.invoices.length === 0 ? (
             <div className="billing-note">No invoices yet.</div>
           ) : (
-            <div className="billing-invoice-list">
-              {billing.state.invoices.map((invoice) => (
+            <div className="billing-invoice-list billing-invoice-list--compact">
+              {(showAllInvoices
+                ? billing.state.invoices
+                : billing.state.invoices.slice(0, 3)
+              ).map((invoice) => (
                 <a
                   key={`${invoice.number ?? invoice.date}-${invoice.amountDue}`}
                   className="billing-invoice-row"

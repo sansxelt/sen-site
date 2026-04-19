@@ -2,10 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { getPlanForEmail } from "../../../../lib/account-billing";
-import {
-  descriptorForTier,
-  resolveTier,
-} from "../../../../lib/ai-models";
+import { descriptorForTier, resolveTier } from "../../../../lib/ai-models";
 import { SANSXEL_PRODUCT_BRIEF } from "../../../../lib/sansxel-context";
 import { recordUsage } from "../../../../lib/usage";
 
@@ -13,39 +10,39 @@ export const runtime = "nodejs";
 
 const client = new Anthropic();
 
-// Copilot system prompt: open-ended Q&A + can navigate the user
-// around the site by emitting a [go:/path] marker the frontend
-// intercepts. Short answers, no markdown.
+// Copilot system prompt: open-ended Q&A plus optional navigation via
+// a [go:/path] marker that the frontend intercepts.
 const SITE_ROUTES = `Routes on sansxel.ai:
-- /            — home
-- /home        — home (alias)
-- /features    — feature overview
-- /function    — how sansxel-1 works
-- /pricing     — plans + pricing
-- /download    — download the desktop app
-- /contact     — contact us
-- /privacy     — privacy policy
-- /terms       — terms of service
-- /signin      — sign in
-- /app         — full chat workspace (signed-in)
-- /account     — account overview
-- /account/billing      — billing + subscription
-- /account/usage        — weekly usage + limits
-- /account/keys         — API keys
-- /account/integrations — connected tools / MCP
-- /account/memory       — saved context
-- /account/settings     — preferences
-- /account/updates      — what's new`;
+- /            - home
+- /home        - home (alias)
+- /features    - feature overview
+- /function    - how sansxel-1 works
+- /pricing     - plans + pricing
+- /download    - download the desktop app
+- /contact     - contact us
+- /privacy     - privacy policy
+- /terms       - terms of service
+- /signin      - sign in
+- /app         - full chat workspace (signed-in)
+- /account     - account overview
+- /account/billing      - billing + subscription
+- /account/usage        - weekly usage + limits
+- /account/keys         - API keys
+- /account/integrations - connected tools / MCP
+- /account/memory       - saved context
+- /account/settings     - preferences
+- /account/download     - desktop installer + live build status
+- /account/updates      - desktop release notes`;
 
-const SYSTEM_PROMPT = `You are the sansxel copilot — a fast, helpful assistant living in a side panel on sansxel.ai. You answer ANY question the user has, not just questions about the current page.
+const SYSTEM_PROMPT = `You are the sansxel copilot - a fast, helpful assistant living in a side panel on sansxel.ai. You answer ANY question the user has, not just questions about the current page.
 
 Behavior:
 - Answer in 1-3 short sentences. The copilot is a side panel, not a doc.
 - The current page context is provided as background, but you are NOT limited to it. Answer general questions, sansxel questions, coding questions, anything.
-- If the user asks to go somewhere, take them there: end your reply with a single navigation marker on its own line — \`[go:/path]\` — using one of the routes below. Examples: "Opening pricing now.\\n[go:/pricing]" or "Heading to your usage page.\\n[go:/account/usage]". Only emit the marker when navigation is the right action; don't emit one for purely informational questions.
+- If the user asks to go somewhere, take them there: end your reply with a single navigation marker on its own line - \`[go:/path]\` - using one of the routes below. Examples: "Opening pricing now.\n[go:/pricing]" or "Heading to your usage page.\n[go:/account/usage]". Only emit the marker when navigation is the right action; don't emit one for purely informational questions.
 - Never invent routes. Only use paths from the list below.
-- No preamble. No "Sure!". No "Based on the page…". Just the answer.
-- Plain text only. No markdown — the panel renders raw.
+- No preamble. No "Sure!". No "Based on the page...". Just the answer.
+- Plain text only. No markdown - the panel renders raw.
 
 ${SITE_ROUTES}
 
@@ -78,11 +75,8 @@ export async function POST(request: Request) {
   }
 
   const plan = await getPlanForEmail(email);
-  // Copilot always runs on fast tier — it's small Q+A, doesn't need Opus
   const descriptor = descriptorForTier(resolveTier(plan, "fast"));
 
-  // Trim page text to a sane size so we don't blow context on
-  // header/footer noise the page passed in
   const pageText = (payload.page_text ?? "").slice(0, 12000);
 
   const contextBlock = [
@@ -102,7 +96,7 @@ export async function POST(request: Request) {
       max_tokens: 512,
       system: SYSTEM_PROMPT,
       messages: [
-        { role: "user", content: `Context (background only — answer anything they ask):\n\n${contextBlock}` },
+        { role: "user", content: `Context (background only - answer anything they ask):\n\n${contextBlock}` },
         { role: "assistant", content: "Got it." },
         { role: "user", content: payload.question },
       ],

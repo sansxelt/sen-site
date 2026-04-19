@@ -25,7 +25,7 @@ const integrations: Integration[] = [
   {
     name: "VS Code extension",
     description:
-      "Use Sansxel inside your editor — generate plans, explain code, and build structured outputs without switching context.",
+      "Use Sansxel inside your editor - generate plans, explain code, and build structured outputs without switching context.",
     status: "coming_soon",
     cta: "Coming soon",
   },
@@ -71,18 +71,20 @@ const integrationRequestHref =
   "/contact?subject=Integration%20request&message=Which%20integration%20do%20you%20want%3F%0AHow%20would%20you%20use%20it%20inside%20sansxel%3F%0A#contact-form";
 
 function statusBadge(status: Integration["status"]) {
-  if (status === "available")
+  if (status === "available") {
     return (
       <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-0.5 text-xs text-emerald-300">
         Available
       </span>
     );
-  if (status === "beta")
+  }
+  if (status === "beta") {
     return (
       <span className="rounded-full border border-blue-400/20 bg-blue-400/10 px-2.5 py-0.5 text-xs text-blue-300">
         Beta
       </span>
     );
+  }
   return (
     <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-xs text-neutral-500">
       Coming soon
@@ -98,11 +100,22 @@ export default function IntegrationsPage() {
         Connect Sansxel to your tools and workflows.
       </p>
 
-      <div className="mt-6 flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-sm">
-        <span className="text-neutral-400">Looking for the desktop app?</span>
-        <Link href="/account/updates" className="ml-auto shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white">
-          Downloads &amp; updates →
-        </Link>
+      <div className="mt-6 flex flex-col gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3 text-sm sm:flex-row sm:items-center">
+        <span className="text-neutral-400">Looking for the desktop app or release notes?</span>
+        <div className="flex flex-wrap gap-2 sm:ml-auto">
+          <Link
+            href="/account/download"
+            className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"
+          >
+            Download page -&gt;
+          </Link>
+          <Link
+            href="/account/updates"
+            className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"
+          >
+            Updates -&gt;
+          </Link>
+        </div>
       </div>
 
       <div className="mt-4 space-y-3">
@@ -140,11 +153,8 @@ export default function IntegrationsPage() {
 
       <p className="mt-6 text-xs text-neutral-600">
         Want an integration that isn&apos;t listed?{" "}
-        <Link
-          href={integrationRequestHref}
-          className="sansxel-subtle-link"
-        >
-          Let us know →
+        <Link href={integrationRequestHref} className="sansxel-subtle-link">
+          Let us know -&gt;
         </Link>
       </p>
     </div>

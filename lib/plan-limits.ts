@@ -18,6 +18,7 @@ import { getSupabaseAdminClient } from "./supabase-admin";
 export type PlanLimits = {
   weekly_chat_requests: number | null; // null = unlimited
   weekly_voice_seconds: number | null;
+  weekly_image_requests: number | null; // null = unlimited, 0 = blocked
   // Pro-only: monotonic thresholds the resolver uses to step down
   // from smart to balanced to fast as weekly chat usage piles up.
   pro_throttle?: {
@@ -31,21 +32,25 @@ export const PLAN_LIMITS: Record<PlanKey, PlanLimits> = {
   free: {
     weekly_chat_requests: 50,
     weekly_voice_seconds: 0,
+    weekly_image_requests: 3,
     session_warn_after: 30,
   },
   apprentice: {
     weekly_chat_requests: 500,
     weekly_voice_seconds: 30 * 60, // 30 min
+    weekly_image_requests: 25,
     session_warn_after: 60,
   },
   studio: {
     weekly_chat_requests: 1500,
     weekly_voice_seconds: 90 * 60, // 90 min
+    weekly_image_requests: 100,
     session_warn_after: 80,
   },
   pro: {
     weekly_chat_requests: null,
     weekly_voice_seconds: null,
+    weekly_image_requests: null,
     pro_throttle: {
       smart_to_balanced: 1500,
       balanced_to_fast: 3000,
@@ -55,11 +60,13 @@ export const PLAN_LIMITS: Record<PlanKey, PlanLimits> = {
   teams: {
     weekly_chat_requests: null,
     weekly_voice_seconds: null,
+    weekly_image_requests: null,
     session_warn_after: 100,
   },
   enterprise: {
     weekly_chat_requests: null,
     weekly_voice_seconds: null,
+    weekly_image_requests: null,
   },
 };
 
@@ -86,6 +93,7 @@ export function nextWeekResetUtc(now = new Date()): Date {
 export type WeeklyUsage = {
   chat_requests: number;
   voice_seconds: number;
+  image_requests: number;
   week_start: Date;
 };
 
@@ -97,13 +105,14 @@ export async function getWeeklyUsage(email: string): Promise<WeeklyUsage> {
   const result: WeeklyUsage = {
     chat_requests: 0,
     voice_seconds: 0,
+    image_requests: 0,
     week_start: weekStart,
   };
   try {
     const supabase = getSupabaseAdminClient();
     const sinceIso = weekStart.toISOString();
 
-    const [chatRes, voiceRes] = await Promise.all([
+    const [chatRes, voiceRes, imageRes] = await Promise.all([
       supabase
         .from("usage_events" as never)
         .select("id", { count: "exact", head: true })
@@ -116,6 +125,12 @@ export async function getWeeklyUsage(email: string): Promise<WeeklyUsage> {
         .eq("email", email)
         .eq("kind", "voice_speak")
         .gte("created_at", sinceIso),
+      supabase
+        .from("usage_events" as never)
+        .select("id", { count: "exact", head: true })
+        .eq("email", email)
+        .eq("kind", "image")
+        .gte("created_at", sinceIso),
     ]);
 
     result.chat_requests = chatRes.count ?? 0;
@@ -125,6 +140,7 @@ export async function getWeeklyUsage(email: string): Promise<WeeklyUsage> {
         result.voice_seconds += Number(row.audio_seconds ?? 0);
       }
     }
+    result.image_requests = imageRes.count ?? 0;
   } catch (err) {
     console.warn("getWeeklyUsage failed:", err);
   }
@@ -180,6 +196,38 @@ export function decideChatRequest(args: {
     }
   }
 
+  return { kind: "ok" };
+}
+
+// Image generation limit check. Free / apprentice / studio have a
+// hard weekly cap; pro / teams / enterprise have none. A limit of 0
+// means "image gen is not in this plan" → blocked with an upgrade
+// nudge instead of a "you've used your N" message.
+export function decideImageRequest(args: {
+  plan: PlanKey;
+  weekly: WeeklyUsage;
+}): LimitDecision {
+  const limits = PLAN_LIMITS[args.plan];
+  const cap = limits.weekly_image_requests;
+  if (cap === null) return { kind: "ok" };
+  if (cap === 0) {
+    return {
+      kind: "blocked",
+      reason: `Image generation is on paid plans. Upgrade to draw with sansxel-1.`,
+      reset: nextWeekResetUtc().toISOString(),
+      limit: 0,
+      used: args.weekly.image_requests,
+    };
+  }
+  if (args.weekly.image_requests >= cap) {
+    return {
+      kind: "blocked",
+      reason: `You've used your ${args.plan} weekly image limit (${cap}). Resets ${nextWeekResetUtc().toISOString()}.`,
+      reset: nextWeekResetUtc().toISOString(),
+      limit: cap,
+      used: args.weekly.image_requests,
+    };
+  }
   return { kind: "ok" };
 }
 

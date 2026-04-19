@@ -56,6 +56,8 @@ export type DesktopThread = {
   messages: ChatMessage[];
   createdAt: string;
   updatedAt: string;
+  pinned: boolean;
+  folded: boolean;
 };
 
 function threadsKey(email: string) {
@@ -77,6 +79,8 @@ export function createThread(seed?: Partial<DesktopThread>): DesktopThread {
     messages: seed?.messages ?? [],
     createdAt: seed?.createdAt ?? now,
     updatedAt: seed?.updatedAt ?? now,
+    pinned: seed?.pinned ?? false,
+    folded: seed?.folded ?? false,
   };
 }
 
@@ -123,6 +127,10 @@ export async function saveChatState(
 }
 
 export function sortThreads(a: DesktopThread, b: DesktopThread) {
+  // Pinned threads always rise to the top, then sort by recency.
+  const aPinned = a.pinned ? 1 : 0;
+  const bPinned = b.pinned ? 1 : 0;
+  if (aPinned !== bPinned) return bPinned - aPinned;
   return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 }
 
@@ -183,6 +191,8 @@ function sanitizeThread(thread: DesktopThread | null | undefined): DesktopThread
       typeof thread.updatedAt === "string" && thread.updatedAt
         ? thread.updatedAt
         : new Date().toISOString(),
+    pinned: typeof thread.pinned === "boolean" ? thread.pinned : false,
+    folded: typeof thread.folded === "boolean" ? thread.folded : false,
   };
 }
 

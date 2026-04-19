@@ -93,11 +93,20 @@ function IntegrationsIcon() {
   );
 }
 
-function UpdatesIcon() {
+function DownloadIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
       <path d="M8 2v7M5 6l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M2 11v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function UpdatesIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M4 3.5h5l3 3v6A1.5 1.5 0 0 1 10.5 14h-6A1.5 1.5 0 0 1 3 12.5v-7A2 2 0 0 1 5 3.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8 3.5v3h3M5.5 9h5M5.5 11.5h3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -107,7 +116,8 @@ const navItems: NavItem[] = [
   { href: "/account/memory",       label: "Library",      icon: <MemoryIcon /> },
   { href: "/account/keys",         label: "API Keys",     icon: <KeyIcon /> },
   { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
-  { href: "/account/updates",      label: "Download",     icon: <UpdatesIcon /> },
+  { href: "/account/download",     label: "Download",     icon: <DownloadIcon /> },
+  { href: "/account/updates",      label: "Updates",      icon: <UpdatesIcon /> },
   { href: "/account/usage",        label: "Usage",        icon: <UsageIcon /> },
   { href: "/account/settings",     label: "Settings",     icon: <SettingsIcon /> },
 ];
@@ -208,23 +218,25 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
 
       {/* ── Mobile: fixed bottom nav bar ─────────────────────────────── */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 flex items-stretch border-t border-white/[0.08] bg-neutral-950/95 backdrop-blur-xl lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-50 overflow-x-auto border-t border-white/[0.08] bg-neutral-950/95 backdrop-blur-xl lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-center transition-colors ${
-              isActive(item.href)
-                ? "text-white"
-                : "text-neutral-600 hover:text-neutral-300"
-            }`}
-          >
-            {item.icon}
-            <span className="text-[9px] leading-none">{item.label}</span>
-          </Link>
-        ))}
+        <div className="flex min-w-full items-stretch">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex min-w-[76px] flex-1 flex-col items-center justify-center gap-1 py-2.5 text-center transition-colors ${
+                isActive(item.href)
+                  ? "text-white"
+                  : "text-neutral-600 hover:text-neutral-300"
+              }`}
+            >
+              {item.icon}
+              <span className="text-[9px] leading-none">{item.label}</span>
+            </Link>
+          ))}
+        </div>
       </nav>
     </>
   );

@@ -38,14 +38,14 @@ export default async function DownloadPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             {signedIn ? (
               <Link
-                href="/account/updates"
+                href="/account/download"
                 className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
               >
-                Check your access
+                Open downloads
               </Link>
             ) : (
               <Link
-                href={getSignInPath("/account/updates")}
+                href={getSignInPath("/account/download")}
                 className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
               >
                 Create account

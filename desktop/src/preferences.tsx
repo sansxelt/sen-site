@@ -60,7 +60,15 @@ export function PreferencesProvider({
     root.setAttribute("data-density", prefs.density);
     root.setAttribute("data-accent", prefs.accent);
     root.setAttribute("data-window-mode", prefs.window_mode);
-  }, [prefs.density, prefs.accent, prefs.window_mode]);
+    root.setAttribute("data-bg-pattern", prefs.bg_pattern);
+    root.setAttribute("data-bubble-shape", prefs.bubble_shape);
+  }, [
+    prefs.density,
+    prefs.accent,
+    prefs.window_mode,
+    prefs.bg_pattern,
+    prefs.bubble_shape,
+  ]);
 
   const update = useCallback(
     async (patch: Partial<DesktopPreferences>) => {

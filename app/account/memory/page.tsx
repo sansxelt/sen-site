@@ -106,7 +106,7 @@ export default function LibraryPage() {
             No saved outputs yet. Start a session and save results to build your library.
           </p>
           <Link
-            href="/download"
+            href="/account/download"
             className="sansxel-white-button mt-4 inline-block rounded-lg border border-white/10 bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
           >
             Get desktop app

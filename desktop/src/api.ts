@@ -45,6 +45,10 @@ function authHeaders(token: string): Record<string, string> {
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
+    // Server reads this to log usage events with surface="desktop"
+    // instead of falling back to "web". Lets the dashboard split
+    // desktop vs web traffic correctly.
+    "x-sansxel-surface": "desktop",
   };
 }
 
@@ -146,18 +150,21 @@ export type TtsVoice =
   | "alloy" | "ash" | "ballad" | "coral" | "echo"
   | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse";
 
+// Voices are branded with sansxel-original names. The `value` field
+// (alloy/fable/etc.) is the OpenAI voice ID — kept stable so the
+// server doesn't need to remap. Users only see `label` + `vibe`.
 export const TTS_VOICES: ReadonlyArray<{ value: TtsVoice; label: string; vibe: string }> = [
-  { value: "fable",   label: "Fable",    vibe: "British, expressive (default)" },
-  { value: "onyx",    label: "Onyx",     vibe: "Deep, masculine" },
-  { value: "echo",    label: "Echo",     vibe: "Steady, even" },
-  { value: "shimmer", label: "Shimmer",  vibe: "Warm, friendly" },
-  { value: "nova",    label: "Nova",     vibe: "Bright, energetic" },
-  { value: "alloy",   label: "Alloy",    vibe: "Neutral" },
-  { value: "ash",     label: "Ash",      vibe: "Calm, low" },
-  { value: "ballad",  label: "Ballad",   vibe: "Smooth, mellow" },
-  { value: "coral",   label: "Coral",    vibe: "Soft, conversational" },
-  { value: "sage",    label: "Sage",     vibe: "Thoughtful, grounded" },
-  { value: "verse",   label: "Verse",    vibe: "Lyrical, light" },
+  { value: "fable",   label: "Sage",    vibe: "Warm, steady, slightly British. Default." },
+  { value: "onyx",    label: "Vesper",  vibe: "Deep and grounded. Late-night radio." },
+  { value: "echo",    label: "Quill",   vibe: "Precise narrator. Audiobook clarity." },
+  { value: "shimmer", label: "Glow",    vibe: "Friendly, sunlit. Easy to listen to." },
+  { value: "nova",    label: "Halo",    vibe: "Bright, energetic, encouraging." },
+  { value: "alloy",   label: "Drift",   vibe: "Neutral, fast, no character." },
+  { value: "ash",     label: "Ember",   vibe: "Low, calm, slightly smoky." },
+  { value: "ballad",  label: "Lyric",   vibe: "Smooth and melodic. Storyteller." },
+  { value: "coral",   label: "Cove",    vibe: "Soft and conversational." },
+  { value: "sage",    label: "Wise",    vibe: "Thoughtful, grounded, measured." },
+  { value: "verse",   label: "Lilt",    vibe: "Light and lyrical." },
 ];
 
 export type Persona = "direct" | "warm" | "technical" | "playful";
@@ -173,6 +180,9 @@ export const PERSONA_OPTIONS: ReadonlyArray<{
   { value: "playful",   label: "Playful",   blurb: "Witty, light, dry humor. Never mean." },
 ];
 
+export type BgPattern = "none" | "dots" | "grid" | "gradient";
+export type BubbleShape = "rounded" | "square" | "pill";
+
 export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
@@ -183,6 +193,12 @@ export type DesktopPreferences = {
   window_mode: WindowMode;
   voice: TtsVoice;
   persona: Persona;
+  // v0.1.4 — account-personalized UI knobs.
+  bg_pattern: BgPattern;
+  bubble_shape: BubbleShape;
+  // v0.1.4 — i18n two-axis: system_language drives UI text. The
+  // response language is detected per-message server-side, not stored.
+  system_language: string;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -195,6 +211,9 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   window_mode: "normal",
   voice: "fable",
   persona: "warm",
+  bg_pattern: "none",
+  bubble_shape: "rounded",
+  system_language: "en",
 };
 
 export async function getPreferences(token: string): Promise<DesktopPreferences> {
@@ -238,7 +257,7 @@ export async function getSubscription(token: string): Promise<Subscription> {
     headers: authHeaders(token),
   });
   if (!res.ok) throw new Error(`getSubscription ${res.status}`);
-  return (await res.json()) as Subscription;
+  return parseJsonOrThrow<Subscription>(res, "subscription");
 }
 
 // ── Usage ───────────────────────────────────────────────────────────
@@ -274,7 +293,62 @@ export async function getWeeklyUsage(token: string): Promise<WeeklyUsageSummary>
     headers: authHeaders(token),
   });
   if (!res.ok) throw new Error(`getWeeklyUsage ${res.status}`);
-  return (await res.json()) as WeeklyUsageSummary;
+  return parseJsonOrThrow<WeeklyUsageSummary>(res, "weekly usage");
+}
+
+// Defensive JSON parse \u2014 the previous version used res.json()
+// directly which surfaces ugly stream-controller errors when the
+// server (rarely) returns an HTML error page with a 200 status.
+// This wraps it and emits a clean "<surface> returned an unexpected
+// response" message instead.
+async function parseJsonOrThrow<T>(res: Response, label: string): Promise<T> {
+  try {
+    return (await res.json()) as T;
+  } catch {
+    throw new Error(`${label} returned an unexpected response`);
+  }
+}
+
+// ── Thread summary ─────────────────────────────────────────────────
+// Calls /api/ai/summarize-thread to generate a short title +
+// description for a chat thread. Cheap (Haiku) + idempotent. The
+// caller debounces calls so we don't fire one per keystroke.
+export async function summarizeThread(
+  token: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+): Promise<{ title: string; description: string }> {
+  const res = await fetch(`${API_BASE}/api/ai/summarize-thread`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ messages }),
+  });
+  if (!res.ok) throw new Error(`summarize ${res.status}`);
+  return parseJsonOrThrow<{ title: string; description: string }>(
+    res,
+    "summary",
+  );
+}
+
+// v0.1.4 — Share thread. Server stores a snapshot of the messages
+// keyed by a public id and returns a stable share URL the user can
+// hand off. The public viewing page lands in v0.1.5.
+export async function shareThread(
+  token: string,
+  payload: { thread_id: string; title: string; messages: ChatMessage[] },
+): Promise<{ share_url: string; public_id: string }> {
+  const res = await fetch(`${API_BASE}/api/threads/share`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const detail = await readErrorDetail(res, `share ${res.status}`);
+    throw new Error(detail);
+  }
+  return parseJsonOrThrow<{ share_url: string; public_id: string }>(
+    res,
+    "share",
+  );
 }
 
 // ── API keys ────────────────────────────────────────────────────────
@@ -295,6 +369,51 @@ export async function listDesktopApiKeys(token: string): Promise<ApiKeySummary[]
   if (!res.ok) throw new Error(`listDesktopApiKeys ${res.status}`);
   const data = (await res.json()) as { keys: ApiKeySummary[] };
   return data.keys ?? [];
+}
+
+// Returned only by the create call. `rawKey` is the full `sk_sen_…`
+// secret — server only ever sends it back ONCE, so the UI must show
+// it immediately and warn the user this is the only chance to copy it.
+export type CreatedApiKey = {
+  key: ApiKeySummary;
+  rawKey: string;
+};
+
+async function readErrorDetail(res: Response, fallback: string): Promise<string> {
+  try {
+    const err = (await res.json()) as { error?: string };
+    return err?.error ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export async function createDesktopApiKey(
+  token: string,
+  name: string,
+): Promise<CreatedApiKey> {
+  const res = await fetch(`${API_BASE}/api/desktop/keys`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorDetail(res, `createDesktopApiKey ${res.status}`));
+  }
+  return (await res.json()) as CreatedApiKey;
+}
+
+export async function revokeDesktopApiKey(
+  token: string,
+  id: string,
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/desktop/keys/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new Error(await readErrorDetail(res, `revokeDesktopApiKey ${res.status}`));
+  }
 }
 
 // ── Voice ────────────────────────────────────────────────────────────
@@ -327,6 +446,31 @@ export async function fetchSpeech(
   });
   if (!res.ok) throw new Error(`speak ${res.status}`);
   return await res.blob();
+}
+
+// ── AI image generation (one-shot) ───────────────────────────────────
+
+export type ImageSize = "1024x1024" | "1024x1792" | "1792x1024";
+
+export type GeneratedImage = {
+  url: string; // data URL or hosted URL
+  revised_prompt?: string;
+};
+
+export async function generateImage(
+  token: string,
+  prompt: string,
+  size?: ImageSize,
+): Promise<GeneratedImage> {
+  const res = await fetch(`${API_BASE}/api/ai/image`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ prompt, size }),
+  });
+  if (!res.ok) {
+    throw new Error(await readErrorDetail(res, `image ${res.status}`));
+  }
+  return (await res.json()) as GeneratedImage;
 }
 
 // ── AI chat (streaming) ─────────────────────────────────────────────

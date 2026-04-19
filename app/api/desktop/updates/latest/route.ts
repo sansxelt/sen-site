@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
+import {
+  desktopLatestShippedDateIso,
+  desktopLatestShippedVersion,
+  desktopLatestUpdaterNotes,
+  desktopWindowsInstallerPath,
+} from "@/lib/desktop-release";
 
-// Tauri updater manifest. Each installed sansxel desktop polls this
+// Tauri updater manifest. Each installed Sansxel desktop polls this
 // endpoint on startup; if the version here is newer than what's
-// installed, the updater downloads + replaces.
+// installed, the updater downloads and replaces it.
 //
 // The shape is fixed by Tauri:
 //   { version, notes, pub_date, platforms: { "<target>-<arch>": { signature, url } } }
@@ -12,28 +18,23 @@ import { NextResponse } from "next/server";
 // goes into tauri.conf.json; the signature for each .msi.zip / .nsis.zip
 // goes here. Wire this to point at GitHub Releases or Cloudflare R2 once
 // you've uploaded the artifacts there.
-//
-// Until you ship a release: the endpoint returns 204 (no update). The
-// installed app will check, see no update, and move on. No error.
 
-const LATEST_VERSION: string | null = "0.1.3";
-const RELEASE_NOTES =
-  "Splash-style update takeover (auto-restart, no buttons), other windows minimize during install. Voice mode no longer sends phantom 'you' messages from Whisper hallucinations. Pressing Esc while recording cancels cleanly. Pre-React boot fallback so the app never opens to a black screen.";
-const RELEASE_DATE = "2026-04-18T23:55:00Z";
+// Set this to null if you need to pause update delivery temporarily.
+const LATEST_VERSION: string | null = desktopLatestShippedVersion;
+const RELEASE_NOTES = desktopLatestUpdaterNotes;
+const RELEASE_DATE = desktopLatestShippedDateIso;
 
 // Per-platform artifact map. We host binaries from /public/desktop/
-// on this same Vercel app — keeps the GitHub repo private. Tauri 2
-// NSIS updater downloads the .exe directly + verifies the .sig.
+// on this same Vercel app, which keeps the GitHub repo private.
 const PLATFORMS: Record<string, { url: string; signature: string }> = {
   "windows-x86_64": {
-    url: "https://sansxel.ai/desktop/sansxel_0.1.3_x64-setup.exe",
+    url: `https://sansxel.ai${desktopWindowsInstallerPath}`,
     signature:
       "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaTF3Z0Z6OHUrWVBZdWZDU09Sd0tvWVZ5cTF5UWVFZE00bi9QL1lFM2RPZm1GUnFWaXU2OEd6S1JiZnVXQUhyQ245SHVKVUROL0E2MWkxbkZET2treWFDMmlXcEFwREFvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc2NTgxMzM0CWZpbGU6c2Fuc3hlbF8wLjEuM194NjQtc2V0dXAuZXhlCjF2YTNndnVhaU9yVW9JVWdrRzl2ZWhPUlhUUlU3RFJKRERjdWZDdGphWjMveEFlTGJNOWZFaDJrTWdmSW1mOTZCN0xqcWduN1dOaDZueTJEYnhpckRnPT0K",
   },
 };
 
 export async function GET(request: Request) {
-  // No release pinned yet → tell the updater we're up to date
   if (!LATEST_VERSION) {
     return new NextResponse(null, { status: 204 });
   }
@@ -42,14 +43,12 @@ export async function GET(request: Request) {
   const platform = url.searchParams.get("platform") ?? "";
   const installed = url.searchParams.get("version") ?? "";
 
-  // If the installed version already matches latest, no update
   if (installed === LATEST_VERSION) {
     return new NextResponse(null, { status: 204 });
   }
 
   const artifact = PLATFORMS[platform];
   if (!artifact) {
-    // We don't ship this target → no update available
     return new NextResponse(null, { status: 204 });
   }
 

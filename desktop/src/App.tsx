@@ -160,11 +160,11 @@ function TitleBar() {
 
   return (
     <div className="titlebar" data-tauri-drag-region>
-      <div className="titlebar-spacer" data-tauri-drag-region />
       <div className="titlebar-brand" data-tauri-drag-region>
         <img src="/icon.png" alt="" className="titlebar-brand-icon" />
         <span className="titlebar-brand-name">sansxel</span>
       </div>
+      <div className="titlebar-spacer" data-tauri-drag-region />
       <div className="titlebar-controls">
         <button
           type="button"

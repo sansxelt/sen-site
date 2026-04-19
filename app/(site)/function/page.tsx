@@ -161,7 +161,7 @@ export default async function FunctionPage() {
 
       <div className="mt-16 flex flex-col gap-3 sm:flex-row">
         <Link
-          href={signedIn ? "/account" : getSignInPath("/account/updates")}
+          href={signedIn ? "/account" : getSignInPath("/account/download")}
           className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
         >
           {signedIn ? "Open workspace" : "Check your access"}

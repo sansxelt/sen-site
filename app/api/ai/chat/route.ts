@@ -21,6 +21,7 @@ import {
   getWeeklyUsage,
   PLAN_LIMITS,
 } from "../../../../lib/plan-limits";
+import { detectLanguage, langLabel } from "../../../../lib/i18n";
 
 export const runtime = "nodejs";
 
@@ -234,6 +235,19 @@ function systemPromptForPayload(payload: ChatBody): string {
 
   if (matchesVoiceHumanizationIntent(payload)) {
     prompt = `${prompt}\n\n${VOICE_HUMANIZATION_PROMPT}`;
+  }
+
+  // v0.1.4 i18n response-language hook. Cheap detection on the latest
+  // user turn — if they're writing in something other than English,
+  // tell the model to respond in the same language. The detector is
+  // a heuristic; the model itself usually matches the user's language
+  // already, so this is a nudge, not a hard switch.
+  const lastUserMessage = latestUserMessage(payload.messages);
+  if (lastUserMessage) {
+    const detectedLang = detectLanguage(lastUserMessage);
+    if (detectedLang !== "en") {
+      prompt += `\n\nThe user is writing in ${langLabel(detectedLang)}. Respond in the same language.`;
+    }
   }
 
   return prompt;

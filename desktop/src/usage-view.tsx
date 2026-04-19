@@ -302,6 +302,8 @@ function formatKind(kind: string) {
       return "Copilot";
     case "chat":
       return "Chat";
+    case "image":
+      return "Image";
     default:
       return kind;
   }

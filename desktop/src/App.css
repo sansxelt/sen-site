@@ -39,6 +39,24 @@
   --accent-border: rgba(251, 113, 133, 0.35);
 }
 
+/* ── Bubble shape (driven by data-bubble-shape on <html>, v0.1.4) ──
+   Per-account chat bubble silhouette. The chat-msg radius below uses
+   var(--bubble-radius), which falls back to var(--density-msg-radius)
+   so existing density behavior still works when no bubble shape is
+   set. */
+:root {
+  --bubble-radius: var(--density-msg-radius);
+}
+:root[data-bubble-shape="rounded"] {
+  --bubble-radius: 20px;
+}
+:root[data-bubble-shape="square"] {
+  --bubble-radius: 6px;
+}
+:root[data-bubble-shape="pill"] {
+  --bubble-radius: 999px;
+}
+
 /* ── Density (driven by data-density on <html>) ──────────────────── */
 :root {
   --density-pad-x: 64px;
@@ -85,6 +103,103 @@
   /* Tone the radial glow way down for the workspace. */
   background:
     radial-gradient(circle at 50% 0%, rgba(140, 92, 246, 0.08), transparent 50%);
+}
+
+/* ── Background patterns (driven by data-bg-pattern on <html>, v0.1.4)
+   Painted onto .stage::after so they sit above the radial glow but
+   below all UI. Subtle by design — these are textures, not features.
+   Default (data-bg-pattern="none") leaves ::after empty. */
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: none;
+}
+
+:root[data-bg-pattern="dots"] .stage::after {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  background-position: 0 0;
+}
+
+:root[data-bg-pattern="grid"] .stage::after {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+:root[data-bg-pattern="gradient"] .stage::after {
+  background-image: linear-gradient(
+    135deg,
+    rgba(140, 92, 246, 0.05),
+    rgba(60, 40, 120, 0.04) 40%,
+    rgba(140, 92, 246, 0.05) 80%
+  );
+  background-size: 200% 200%;
+  animation: stage-bg-gradient 18s ease-in-out infinite;
+}
+
+@keyframes stage-bg-gradient {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* "Comped" pill shown on the plan card when a paid tier was granted
+   without a Stripe subscription \u2014 replaces the dangling Add card +
+   Cancel at period end CTAs. */
+.billing-comped-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  background: rgba(167, 139, 250, 0.1);
+  color: rgba(220, 210, 255, 0.92);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Custom scrollbars (Chromium WebView2) ──────────────────────────
+   Replace the OS default scrollbars with thin purple-tinted ones.
+   Applies app-wide by default; everything inherits this. */
+* {
+  scrollbar-color: rgba(167, 139, 250, 0.25) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.18);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background 160ms ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.42);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 /* ── Custom borderless title bar ────────────────────────────────────
@@ -373,86 +488,135 @@
   flex-direction: column;
 }
 
-/* Status dot at the top of the nav rail (no brand icon — title bar
-   already shows it) */
+@keyframes status-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+/* ── Nav rail (collapsed 64px \u2192 hover expand 220px) ──────────────
+   Discord/Linear style: floats over the workspace when hovered so
+   the underlying chat doesn't reflow. Position: absolute means the
+   grid keeps its 64px column, but the rail visually overlays. */
+.ws-nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 64px;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 8, 10, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 14px 0 12px 0;
+  gap: 10px;
+  overflow: hidden;
+  transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ws-nav:hover {
+  width: 220px;
+  box-shadow: 12px 0 36px rgba(0, 0, 0, 0.4);
+}
+
 .ws-nav-status {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  padding: 0 22px 0 26px;
   height: 28px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.ws-nav-status--button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  border-radius: 6px;
+  transition: background 140ms ease;
+}
+
+.ws-nav-status--button:hover {
+  background: rgba(167, 139, 250, 0.08);
 }
 
 .ws-nav-status-dot {
   width: 7px;
   height: 7px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 8px var(--accent-glow);
   animation: status-pulse 2.6s ease-in-out infinite;
 }
 
-@keyframes status-pulse {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
+.ws-nav-status-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(220, 220, 235, 0.7);
 }
 
-/* Nav rail */
-.ws-nav {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(8, 8, 10, 0.55);
-  padding: 12px 0;
-  gap: 10px;
+/* Labels start hidden in the collapsed state and fade in when the
+   rail expands. opacity transition + delay keeps the slide feeling
+   smooth instead of revealing text mid-animation. */
+.ws-nav-label {
+  opacity: 0;
+  transition: opacity 140ms ease;
+  pointer-events: none;
+  font-size: 13px;
+  letter-spacing: 0.005em;
+  color: inherit;
 }
 
-.ws-nav-brand {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: #0a0a0a;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 7px;
-}
-
-.ws-nav-brand img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.ws-nav:hover .ws-nav-label {
+  opacity: 1;
+  transition-delay: 80ms;
 }
 
 .ws-nav-items {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 8px;
+  gap: 2px;
+  padding: 4px 12px 0 12px;
   flex: 1;
 }
 
 .ws-nav-btn {
-  width: 40px;
+  width: 100%;
   height: 40px;
   border-radius: 10px;
   background: transparent;
   border: 0;
-  color: rgba(180, 180, 200, 0.55);
+  color: rgba(180, 180, 200, 0.65);
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 14px;
+  padding: 0 8px;
   cursor: pointer;
-  transition:
-    background 160ms ease,
-    color 160ms ease;
+  transition: background 160ms ease, color 160ms ease;
   font-family: inherit;
+  white-space: nowrap;
+}
+
+.ws-nav-btn-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .ws-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
   color: rgba(230, 230, 240, 0.95);
 }
 
@@ -462,14 +626,39 @@
 }
 
 .ws-nav-foot {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding-bottom: 4px;
+  padding: 8px 12px 0 12px;
 }
 
-.ws-nav-avatar {
+/* Account card \u2014 collapsed shows just the avatar circle, expanded
+   shows name + email + plan + version. Whole thing is a button. */
+.ws-nav-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.ws-nav-account:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.ws-nav-account.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.ws-nav-avatar-circle {
+  flex-shrink: 0;
   width: 32px;
   height: 32px;
   border-radius: 999px;
@@ -478,9 +667,69 @@
   color: #fafafa;
   font-size: 12px;
   font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: background 160ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-nav-account-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.ws-nav:hover .ws-nav-account-text {
+  opacity: 1;
+  transition-delay: 80ms;
+}
+
+.ws-nav-account-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ws-nav-account-email {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ws-nav-account-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.ws-nav-account-plan {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+.ws-nav-account-version {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  color: rgba(180, 180, 200, 0.45);
 }
 
 .ws-nav-avatar:hover {
@@ -1279,7 +1528,9 @@
   font-size: 14px;
   line-height: 1.65;
   padding: var(--density-msg-pad-y) 16px;
-  border-radius: var(--density-msg-radius);
+  /* v0.1.4: --bubble-radius is set per-account by data-bubble-shape;
+     it falls back to the density radius when no shape is selected. */
+  border-radius: var(--bubble-radius);
   white-space: pre-wrap;
   word-wrap: break-word;
   max-width: 88%;
@@ -1401,6 +1652,28 @@
 .chat-stream-text {
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+/* ChatGPT-style word fade-in for streaming text. Each new <span> only
+   plays this animation once on mount; chars added inside an existing
+   word grow without re-animating. */
+.chat-word-fade {
+  display: inline-block;
+  animation: chat-word-fade-in 240ms ease-out;
+  animation-fill-mode: backwards;
+}
+
+@keyframes chat-word-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 /* <think> sections — dim, italic, separate from the main answer */
@@ -2047,6 +2320,145 @@
   border-radius: 10px;
 }
 
+/* ─── API keys view (native CRUD) ─────────────────────────────────── */
+
+.keys-create-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.keys-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+}
+
+.keys-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.keys-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.keys-row:last-child {
+  border-bottom: 0;
+}
+
+.keys-revoke-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(254, 202, 202, 0.95);
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 140ms ease;
+}
+
+.keys-revoke-btn:hover {
+  background: rgba(220, 38, 38, 0.18);
+}
+
+.keys-revoke-confirm {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.keys-revoke-confirm-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0a0a0a;
+  background: #f87171;
+  border: 0;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.keys-revoke-confirm-btn:hover:not(:disabled) {
+  background: #fca5a5;
+}
+
+.keys-revoke-confirm-btn:disabled,
+.keys-revoke-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.keys-revoke-cancel-btn {
+  font-size: 11px;
+  color: rgba(220, 220, 235, 0.85);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.keys-reveal {
+  padding: 16px 18px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.keys-reveal-head {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.keys-reveal-note {
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.8);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.keys-reveal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.keys-reveal-key {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  color: #fafafa;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 12px;
+  border-radius: 8px;
+  user-select: all;
+  word-break: break-all;
+}
+
+.keys-reveal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .view-section-title {
   font-size: 11px;
   font-weight: 600;
@@ -2312,7 +2724,57 @@
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  /* v0.1.4: chat history collapses to a thin 14px hover strip and
+     expands to 280px on mouse-near. The strip stays in the layout
+     so the chat content doesn't reflow when expanding. */
+  grid-template-columns: 14px minmax(0, 1fr);
+  position: relative;
+}
+
+.chat-history {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  z-index: 9;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  transition:
+    width 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 240ms ease;
+  /* Thin glow strip on the collapsed edge so users see something
+     hoverable, not just empty space. */
+  background: linear-gradient(
+    90deg,
+    rgba(167, 139, 250, 0.18) 0%,
+    rgba(167, 139, 250, 0.04) 6px,
+    rgba(16, 16, 21, 0.98) 14px,
+    rgba(8, 8, 11, 0.94) 100%
+  );
+}
+
+.chat-history:hover,
+.chat-history:focus-within {
+  width: 280px;
+  box-shadow: 12px 0 36px rgba(0, 0, 0, 0.4);
+}
+
+/* Hide all the inner content until expanded (avoids weird wrapping
+   while collapsed). */
+.chat-history > * {
+  opacity: 0;
+  transition: opacity 140ms ease;
+  pointer-events: none;
+}
+
+.chat-history:hover > *,
+.chat-history:focus-within > * {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 90ms;
 }
 
 .chat-shell--copilot {
@@ -2326,18 +2788,16 @@
   display: none;
 }
 
-.chat-history {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  background:
-    linear-gradient(180deg, rgba(16, 16, 21, 0.98), rgba(8, 8, 11, 0.94));
+/* Right border only appears when expanded so the collapsed strip
+   stays clean. */
+.chat-history:hover,
+.chat-history:focus-within {
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .chat-history-head,
 .chat-history-foot {
-  padding: 18px 18px 16px 18px;
+  padding: 20px 20px 18px 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -2393,14 +2853,75 @@
   border-color: var(--accent-border);
 }
 
+.chat-history-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 8px 16px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.chat-history-search:focus-within {
+  border-color: rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.06);
+}
+
+.chat-history-search-icon {
+  flex-shrink: 0;
+  color: rgba(180, 180, 200, 0.45);
+}
+
+.chat-history-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: #fafafa;
+  font-size: 12px;
+  font-family: inherit;
+  padding: 0;
+}
+
+.chat-history-search-input::placeholder {
+  color: rgba(180, 180, 200, 0.42);
+}
+
+.chat-history-search-clear {
+  flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  color: rgba(180, 180, 200, 0.55);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.chat-history-search-clear:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.chat-history-empty {
+  padding: 14px 16px;
+  font-size: 12px;
+  color: rgba(180, 180, 200, 0.5);
+  font-style: italic;
+}
+
 .chat-history-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 12px;
+  padding: 14px 16px 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .chat-history-item {
@@ -2408,7 +2929,7 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(255, 255, 255, 0.025);
   border-radius: 14px;
-  padding: 12px 13px;
+  padding: 14px 16px;
   cursor: pointer;
   font-family: inherit;
   color: inherit;
@@ -2878,6 +3399,288 @@
   font-family: inherit;
 }
 
+/* ── v0.1.4 dense plan view ─────────────────────────────────────────
+   The hero card now spans the full width and packs plan info, chips,
+   addons micro-grid, and actions into a single row. Subsequent
+   sections stack full-width. */
+.billing-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.billing-panel--dense {
+  padding: 14px 16px;
+}
+
+.billing-hero-dense {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  padding: 16px 18px;
+  align-items: stretch;
+}
+
+.billing-hero-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.2fr);
+  gap: 18px;
+  min-width: 0;
+}
+
+.billing-hero-headline > h2 {
+  margin: 6px 0 4px 0;
+}
+
+.billing-hero-headline > .billing-hero-row p {
+  margin: 0;
+}
+
+.billing-chip-row--dense {
+  margin-top: 10px;
+}
+
+.billing-hero-addons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.billing-addon-microgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.billing-addon-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 0;
+}
+
+.billing-addon-tile--active {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.billing-tile-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.billing-hero-side {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.billing-actions--column {
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 0;
+  min-width: 150px;
+}
+
+.billing-actions--column > button,
+.billing-actions--column > .billing-comped-pill {
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+}
+
+.billing-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.billing-section-head--spaced {
+  margin-top: 16px;
+}
+
+.billing-note--inline {
+  margin: 0;
+}
+
+/* Plans-in-app: horizontal row of cards (4-up, scroll on narrow) */
+.billing-plan-list--horizontal {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+@media (max-width: 1180px) {
+  .billing-plan-list--horizontal {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(240px, 1fr);
+    grid-template-columns: none;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+}
+
+/* Compact invoices */
+.billing-invoice-list--compact {
+  margin-top: 10px;
+  gap: 6px;
+}
+
+.billing-invoice-list--compact .billing-invoice-row {
+  padding: 10px 14px;
+}
+
+/* ── Boost cards (monetization) ────────────────────────────────────
+   Two horizontal scrollable rows of compact pricing cards. The
+   featured Power Pack gets a stronger purple border + Best value pill. */
+.boost-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.boost-row--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1180px) {
+  .boost-row,
+  .boost-row--four {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 1fr);
+    grid-template-columns: none;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+}
+
+.boost-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 0;
+}
+
+.boost-card--recurring {
+  background:
+    linear-gradient(180deg, rgba(167, 139, 250, 0.06), rgba(255, 255, 255, 0.02));
+}
+
+.boost-card--featured {
+  border-color: rgba(167, 139, 250, 0.55);
+  background:
+    linear-gradient(180deg, rgba(167, 139, 250, 0.18), rgba(20, 16, 32, 0.9));
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.25) inset;
+}
+
+.boost-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.boost-card-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+  min-width: 0;
+}
+
+.boost-card-badge {
+  font-size: 9px;
+  padding: 3px 7px;
+}
+
+.boost-card-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fafafa;
+  white-space: nowrap;
+}
+
+.boost-card-meta {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(200, 200, 220, 0.72);
+  flex: 1;
+}
+
+.boost-card-btn {
+  padding: 7px 12px;
+  font-size: 12px;
+  border-radius: 9px;
+  align-self: stretch;
+  text-align: center;
+}
+
+.boost-annual-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(167, 139, 250, 0.12), rgba(167, 139, 250, 0.04));
+  border: 1px solid rgba(167, 139, 250, 0.22);
+}
+
+.boost-annual-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.boost-annual-copy {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(210, 210, 230, 0.72);
+}
+
+@media (max-width: 1100px) {
+  .billing-hero-dense {
+    grid-template-columns: 1fr;
+  }
+  .billing-hero-main {
+    grid-template-columns: 1fr;
+  }
+  .billing-hero-side {
+    justify-content: stretch;
+  }
+  .billing-actions--column {
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .boost-annual-notice {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 @keyframes title-shift {
   0% {
     opacity: 0.5;
@@ -3086,4 +3889,235 @@
   );
   box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
   transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Memory view — empty state + sample placeholder rows
+   ───────────────────────────────────────────────────────────────────── */
+
+.memory-empty {
+  padding: 28px 24px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.memory-empty-head {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+  margin-bottom: 6px;
+}
+
+.memory-empty p {
+  font-size: 13px;
+  color: rgba(180, 180, 200, 0.65);
+  line-height: 1.6;
+  margin: 0 auto 18px auto;
+  max-width: 440px;
+}
+
+.memory-sample-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 auto;
+  max-width: 480px;
+  text-align: left;
+}
+
+.memory-sample-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.55);
+}
+
+.memory-sample-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(167, 139, 250, 0.6);
+  flex-shrink: 0;
+}
+
+.memory-sample-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.memory-sample-when {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.55);
+}
+
+.memory-clear-btn {
+  background: transparent;
+  color: rgba(254, 202, 202, 0.85);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.memory-clear-btn:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #fee2e2;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Integrations view — connector cards
+   ───────────────────────────────────────────────────────────────────── */
+
+.integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.integration-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.integration-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.integration-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  color: #c4b5fd;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.integration-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.integration-card-blurb {
+  font-size: 12px;
+  color: rgba(180, 180, 200, 0.65);
+  line-height: 1.55;
+  margin: 0;
+  flex: 1;
+}
+
+.integration-card-btn {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(180, 180, 200, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Updates view — changelog cards
+   ───────────────────────────────────────────────────────────────────── */
+
+.updates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.update-card {
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.update-card--highlight {
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.1);
+}
+
+.update-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.update-card-version {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fafafa;
+  background: rgba(167, 139, 250, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.update-card-date {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.55);
+  letter-spacing: 0.04em;
+}
+
+.update-card-tag {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  background: #c4b5fd;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.update-card-changes {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.update-card-changes li {
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.78);
+  line-height: 1.55;
+}
+
+.update-card--highlight .update-card-changes li {
+  color: rgba(232, 232, 240, 0.92);
 }

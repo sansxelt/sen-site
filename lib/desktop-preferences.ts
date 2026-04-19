@@ -7,6 +7,9 @@ export type TtsVoice =
 
 export type Persona = "direct" | "warm" | "technical" | "playful";
 
+export type BgPattern = "none" | "dots" | "grid" | "gradient";
+export type BubbleShape = "rounded" | "square" | "pill";
+
 export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
@@ -17,6 +20,12 @@ export type DesktopPreferences = {
   window_mode: "normal" | "toolbar-top" | "toolbar-left" | "toolbar-right";
   voice: TtsVoice;
   persona: Persona;
+  // v0.1.4 — account-personalized UI knobs.
+  bg_pattern: BgPattern;
+  bubble_shape: BubbleShape;
+  // v0.1.4 — i18n: manual UI language. Response language is detected
+  // per-message and never persisted.
+  system_language: string;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -29,7 +38,18 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   window_mode: "normal",
   voice: "fable",
   persona: "warm",
+  bg_pattern: "none",
+  bubble_shape: "rounded",
+  system_language: "en",
 };
+
+const BG_PATTERN_VALUES = ["none", "dots", "grid", "gradient"] as const;
+const BUBBLE_SHAPE_VALUES = ["rounded", "square", "pill"] as const;
+// Keep this list in sync with lib/i18n/index.ts. Anything outside it
+// falls back to "en" rather than persisting unexpected language codes.
+const SYSTEM_LANGUAGE_VALUES = [
+  "en", "es", "fr", "de", "ja", "zh", "pt", "ko", "hi", "ar",
+] as const;
 
 function normalize(raw: unknown): DesktopPreferences {
   const r = (raw ?? {}) as Partial<DesktopPreferences>;
@@ -87,6 +107,19 @@ function normalize(raw: unknown): DesktopPreferences {
       r.persona === "playful"
         ? r.persona
         : DEFAULT_PREFERENCES.persona,
+    bg_pattern:
+      r.bg_pattern && (BG_PATTERN_VALUES as readonly string[]).includes(r.bg_pattern)
+        ? (r.bg_pattern as BgPattern)
+        : DEFAULT_PREFERENCES.bg_pattern,
+    bubble_shape:
+      r.bubble_shape && (BUBBLE_SHAPE_VALUES as readonly string[]).includes(r.bubble_shape)
+        ? (r.bubble_shape as BubbleShape)
+        : DEFAULT_PREFERENCES.bubble_shape,
+    system_language:
+      typeof r.system_language === "string" &&
+      (SYSTEM_LANGUAGE_VALUES as readonly string[]).includes(r.system_language)
+        ? r.system_language
+        : DEFAULT_PREFERENCES.system_language,
   };
 }
 

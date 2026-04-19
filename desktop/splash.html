@@ -331,23 +331,35 @@
           }
         }
 
+        // Force splash on top + grab keyboard focus so [Space]
+        // works without the user having to click the splash first.
+        tauriInvoke("lock_splash_focus");
+
         // Minimize every other top-level window so only the splash is
         // visible during boot. User can restore via taskbar after.
         tauriInvoke("minimize_other_windows");
+
+        // Re-grab focus once more after the minimize-others sweep,
+        // since some apps fight back briefly.
+        setTimeout(function () {
+          tauriInvoke("lock_splash_focus");
+        }, 250);
+
+        // Auto-focus body so keyboard events route here even if the
+        // window manager doesn't grab focus cleanly.
+        try { window.focus(); document.body.focus(); } catch (_) {}
 
         // ── Progress + label scheduling ─────────────────────────────
         // Steps sum to TOTAL_MS. Progress (0..1) is JS-driven via
         // setInterval so [Space] can boost it. Labels swap when
         // progress crosses each step's cumulative threshold.
         var steps = [
-          { label: "Initializing sansxel core", weight: 1.5 },
-          { label: "Loading workspace memory",  weight: 2.2 },
-          { label: "Syncing context",           weight: 1.7 },
-          { label: "Connecting sansxel-1",      weight: 2.8 },
-          { label: "Preparing your space",      weight: 1.8 },
+          { label: "Initializing", weight: 1 },
+          { label: "Loading workspace", weight: 1 },
+          { label: "Connecting sansxel-1", weight: 1 },
         ];
-        var TOTAL_MS = 10000;
-        var TICK_MS = 50;
+        var TOTAL_MS = 1200;
+        var TICK_MS = 30;
         var BASE_PER_TICK = TICK_MS / TOTAL_MS;
 
         // Cumulative progress thresholds where the label swaps

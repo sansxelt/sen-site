@@ -4,7 +4,9 @@ export type UsageKind =
   | "chat"
   | "copilot"
   | "voice_transcribe"
-  | "voice_speak";
+  | "voice_speak"
+  | "image"
+  | "summary";
 
 export type UsageSurface = "web" | "desktop";
 

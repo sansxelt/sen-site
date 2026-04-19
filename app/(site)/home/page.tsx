@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { AuroraBackground } from "@/components/aurora-background";
 import { AuthFlow } from "@/components/auth-flow";
+import { HeistCard } from "@/components/heist-card";
 import { HeroActivity } from "@/components/hero-activity";
 import { SpotlightCard } from "@/components/spotlight-card";
 import { readAccountContext } from "@/lib/account-session";
@@ -114,16 +115,17 @@ export default async function HomePage() {
 
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
           {liveWritingHighlights.map((item) => (
-            <SpotlightCard
+            <HeistCard
               key={item.title}
-              className="h-full rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7"
+              tilt
+              className="h-full p-6 sm:p-7"
             >
               <div className="inline-flex rounded-full border border-emerald-400/15 bg-emerald-400/[0.08] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-emerald-200">
                 {item.eyebrow}
               </div>
               <h3 className="mt-4 text-lg font-medium text-white">{item.title}</h3>
               <p className="mt-3 text-sm leading-7 text-neutral-300">{item.detail}</p>
-            </SpotlightCard>
+            </HeistCard>
           ))}
         </div>
 
@@ -167,9 +169,10 @@ export default async function HomePage() {
 
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
           {escalation.map((level) => (
-            <SpotlightCard
+            <HeistCard
               key={level.size}
-              className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6 h-full"
+              tilt
+              className="h-full p-5 sm:p-6"
             >
               <div className="inline-flex rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.15em] text-neutral-400">
                 {level.size}
@@ -185,7 +188,7 @@ export default async function HomePage() {
                   </div>
                 ))}
               </div>
-            </SpotlightCard>
+            </HeistCard>
           ))}
         </div>
 

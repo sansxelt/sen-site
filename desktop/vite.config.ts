@@ -9,7 +9,8 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(async () => ({
   plugins: [react()],
 
-  // Multi-page: index.html is the main app, splash.html is the launcher
+  // Multi-page: index.html is the main app, splash.html is the
+  // launcher, copilot.html is the floating edge copilot window.
   build: {
     rollupOptions: {
       input: {
@@ -17,6 +18,8 @@ export default defineConfig(async () => ({
         main: resolve(__dirname, "index.html"),
         // @ts-expect-error __dirname is a nodejs global
         splash: resolve(__dirname, "splash.html"),
+        // @ts-expect-error __dirname is a nodejs global
+        copilot: resolve(__dirname, "copilot.html"),
       },
     },
   },

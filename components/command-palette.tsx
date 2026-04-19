@@ -27,6 +27,7 @@ const STATIC_ITEMS: Item[] = [
   { id: "acc-settings",      label: "Settings",         section: "Account", href: "/account/settings" },
   { id: "acc-keys",          label: "API keys",         section: "Account", href: "/account/keys" },
   { id: "acc-usage",         label: "Usage",            section: "Account", href: "/account/usage" },
+  { id: "acc-download",      label: "Download",         section: "Account", href: "/account/download" },
   { id: "acc-updates",       label: "Updates",          section: "Account", href: "/account/updates" },
   { id: "acc-integrations",  label: "Integrations",     section: "Account", href: "/account/integrations" },
   { id: "acc-billing",       label: "Billing",          section: "Account", href: "/account/billing" },

@@ -3,6 +3,10 @@ import Link from "next/link";
 import { auth } from "../../auth";
 import { listApiKeys } from "../../lib/api-keys";
 import { readSessionState } from "../../lib/account-session";
+import {
+  desktopCurrentCodeVersion,
+  desktopLatestShippedVersion,
+} from "../../lib/desktop-release";
 import { getPlanActionHref, pricingPlans } from "../../lib/pricing";
 import { getSubscriptionByEmail, readPricingSnapshot } from "../../lib/subscriptions";
 import { getUserProfileByEmail } from "../../lib/user-profile";
@@ -111,7 +115,7 @@ export default async function AccountPage() {
               Open chat →
             </Link>
             <Link
-              href="/download"
+              href="/account/download"
               className="hx-press inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
             >
               Get desktop
@@ -358,6 +362,47 @@ export default async function AccountPage() {
                   </div>
                 </Link>
               ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-white">Desktop</span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-neutral-400">
+                Windows
+              </span>
+            </div>
+            <div className="mt-4 grid gap-2">
+              <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                <div className="text-[10px] uppercase tracking-[0.16em] text-neutral-500">
+                  Installer live
+                </div>
+                <div className="mt-1 text-sm font-medium text-white">
+                  v{desktopLatestShippedVersion}
+                </div>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5">
+                <div className="text-[10px] uppercase tracking-[0.16em] text-neutral-500">
+                  Repo next
+                </div>
+                <div className="mt-1 text-sm font-medium text-white">
+                  v{desktopCurrentCodeVersion}
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/account/download"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"
+              >
+                Download app -&gt;
+              </Link>
+              <Link
+                href="/account/updates"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"
+              >
+                See updates -&gt;
+              </Link>
             </div>
           </div>
 

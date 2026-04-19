@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -6,9 +6,12 @@ import {
   ALL_MODEL_OPTIONS,
   type ChatMessage,
   fetchSpeech,
+  generateImage,
   getSubscription,
   type ModelTier,
+  shareThread,
   streamChat,
+  summarizeThread,
   transcribeAudio,
 } from "./api";
 import { usePreferences } from "./preferences";
@@ -31,6 +34,67 @@ type DesktopChatViewProps = {
 };
 
 type VoiceState = "idle" | "recording" | "transcribing" | "warming" | "speaking";
+
+// v0.1.4 — drag-and-drop attachment. Text files inline their body
+// into the next user message; image/binary files surface as a chip
+// in the input row (full vision input lands in v0.1.5).
+type ChatAttachment = {
+  id: string;
+  name: string;
+  size: number;
+  kind: "text" | "image" | "binary";
+  body?: string;
+};
+
+const TEXT_FILE_REGEX = /\.(txt|md|markdown|json|jsonc|yaml|yml|toml|csv|tsv|xml|html|htm|css|scss|less|js|jsx|ts|tsx|mjs|cjs|py|rb|go|rs|java|kt|swift|c|h|cpp|hpp|cs|php|sh|bash|zsh|sql|env|gitignore|log|ini|conf)$/i;
+
+function isLikelyTextFile(file: File): boolean {
+  if (file.type.startsWith("text/")) return true;
+  if (file.type === "application/json") return true;
+  if (TEXT_FILE_REGEX.test(file.name)) return true;
+  return false;
+}
+
+function attachmentKind(file: File): ChatAttachment["kind"] {
+  if (file.type.startsWith("image/")) return "image";
+  if (isLikelyTextFile(file)) return "text";
+  return "binary";
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function slugifyTitle(title: string): string {
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return slug || "thread";
+}
+
+function buildMarkdownExport(thread: DesktopThread): string {
+  const lines: string[] = [];
+  lines.push(`# ${thread.title}`);
+  lines.push("");
+  lines.push(`_Exported ${new Date().toLocaleString()}_`);
+  lines.push("");
+  for (const message of thread.messages) {
+    const speaker = message.role === "user" ? "**You:**" : "**sansxel-1:**";
+    lines.push(speaker);
+    lines.push("");
+    lines.push(message.content);
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+function draftKey(threadId: string): string {
+  return `sansxel.draft.${threadId}`;
+}
 
 const EMPTY_STATE_BY_TIER: Record<
   ModelTier,
@@ -138,10 +202,13 @@ export function DesktopChatView({
   const { prefs, update } = usePreferences();
   const [threads, setThreads] = useState<DesktopThread[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [historyReady, setHistoryReady] = useState(false);
   const [titleFlashId, setTitleFlashId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [tier, setTier] = useState<ModelTier>(prefs.default_tier);
   const [planNotice, setPlanNotice] = useState<string | null>(null);
@@ -152,6 +219,14 @@ export function DesktopChatView({
     new Set(["fast", "balanced", "smart"]),
   );
   const [planForGating, setPlanForGating] = useState<string>("free");
+  // v0.1.4 power features.
+  const [dragOver, setDragOver] = useState(false);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
+  const [showFolded, setShowFolded] = useState(false);
+  const draftHydratedRef = useRef<string | null>(null);
+  const draftTimerRef = useRef<number | null>(null);
+  const sendStartRef = useRef<number>(0);
   const lastTurnVoiceRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -189,6 +264,35 @@ export function DesktopChatView({
     () => threads.find((thread) => thread.id === activeThreadId) ?? null,
     [threads, activeThreadId],
   );
+
+  // Filter sidebar threads by search query (matches title + preview).
+  // Empty query returns all threads unchanged.
+  const filteredThreads = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return threads;
+    return threads.filter((thread) => {
+      return (
+        thread.title.toLowerCase().includes(q) ||
+        thread.preview.toLowerCase().includes(q) ||
+        thread.messages.some((m) => m.content.toLowerCase().includes(q))
+      );
+    });
+  }, [threads, searchQuery]);
+
+  // \u2318F / Ctrl+F focuses the sidebar search input.
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const mod = event.metaKey || event.ctrlKey;
+      if (mod && (event.key === "f" || event.key === "F")) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
   const isCopilot = prefs.window_mode !== "normal";
   const activeModel = useMemo(
@@ -293,6 +397,43 @@ export function DesktopChatView({
     },
     [],
   );
+
+  // AI thread summary: after each completed turn, debounce 1.2s then
+  // fire summarizeThread() so the sidebar title + description reflect
+  // the WHOLE conversation, not just the user's first message. Skips
+  // threads with fewer than 2 messages or while streaming.
+  useEffect(() => {
+    if (streaming) return;
+    if (!activeThread) return;
+    if (activeThread.messages.length < 2) return;
+    const lastMsg = activeThread.messages[activeThread.messages.length - 1];
+    if (!lastMsg || !lastMsg.content.trim()) return;
+
+    const threadId = activeThread.id;
+    const handle = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const { title, description } = await summarizeThread(
+            session.token,
+            activeThread.messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          );
+          if (!title) return;
+          updateThread(threadId, (current) => ({
+            ...current,
+            title,
+            preview: description || current.preview,
+          }));
+          flashTitle(threadId);
+        } catch {
+          // Silent \u2014 next turn will retry naturally
+        }
+      })();
+    }, 1200);
+    return () => window.clearTimeout(handle);
+  }, [streaming, activeThread, session.token, updateThread, flashTitle]);
 
   const stopAnalyser = useCallback(() => {
     if (rafRef.current != null) {
@@ -495,11 +636,20 @@ export function DesktopChatView({
             setVoiceState("idle");
             await sendRef.current(cleaned, true);
           } else {
+            // Empty / hallucinated transcript — quietly re-arm the mic
+            // so the user stays in a hands-free listening loop instead
+            // of stranding at "idle" with nothing to do.
             setVoiceState("idle");
+            if (voiceModeRef.current) {
+              void startRecordingRef.current();
+            }
           }
         } catch (err) {
           setChatError(err instanceof Error ? err.message : "Transcribe failed.");
           setVoiceState("idle");
+          if (voiceModeRef.current) {
+            void startRecordingRef.current();
+          }
         }
       };
       mediaRecorderRef.current = recorder;
@@ -735,6 +885,91 @@ export function DesktopChatView({
     await startRecording();
   }, [startRecording]);
 
+  // One-shot image generation. Reads the current input as the prompt,
+  // appends both a user turn and an assistant turn (with the image as
+  // markdown so react-markdown renders it inline), and clears the input.
+  // Errors surface in the chat error banner; loading state disables
+  // the button so the user can't fire repeated requests.
+  const generateImageFromInput = useCallback(async () => {
+    const prompt = input.trim();
+    if (!prompt || generatingImage) return;
+
+    const threadId = activeThreadIdRef.current ?? createFreshThread();
+    const thread =
+      threadsRef.current.find((entry) => entry.id === threadId) ??
+      createThread({ id: threadId });
+
+    const userMessage: ChatMessage = { role: "user", content: prompt };
+    const placeholder: ChatMessage = {
+      role: "assistant",
+      content: "Generating image...",
+    };
+    const nextMessages = [...thread.messages, userMessage];
+    const nextTitle = deriveThreadTitle(nextMessages, thread.title);
+    const titleChanged = nextTitle !== thread.title;
+
+    updateThread(threadId, (current) => ({
+      ...current,
+      title: nextTitle,
+      messages: [...current.messages, userMessage, placeholder],
+      preview: buildThreadPreview([...current.messages, userMessage]),
+      updatedAt: new Date().toISOString(),
+    }));
+    if (titleChanged) flashTitle(threadId);
+
+    setInput("");
+    setGeneratingImage(true);
+    setChatError(null);
+
+    try {
+      const { url, revised_prompt } = await generateImage(session.token, prompt);
+      const caption = revised_prompt
+        ? `*${revised_prompt}*\n\n![generated image](${url})`
+        : `![generated image](${url})`;
+      updateThread(threadId, (current) => {
+        const messages = [...current.messages];
+        const last = messages[messages.length - 1];
+        if (last && last.role === "assistant") {
+          messages[messages.length - 1] = { ...last, content: caption };
+        }
+        return {
+          ...current,
+          messages,
+          preview: buildThreadPreview(messages),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Image generation failed.";
+      setChatError(message);
+      // Roll the placeholder back so we don't leave a "Generating..."
+      // bubble stuck in the thread.
+      updateThread(threadId, (current) => {
+        const messages = [...current.messages];
+        const last = messages[messages.length - 1];
+        if (last && last.role === "assistant" && last.content === "Generating image...") {
+          messages.pop();
+        }
+        return {
+          ...current,
+          messages,
+          preview: buildThreadPreview(messages),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+    } finally {
+      setGeneratingImage(false);
+    }
+  }, [
+    createFreshThread,
+    flashTitle,
+    generatingImage,
+    input,
+    session.token,
+    updateThread,
+  ]);
+
   const toggleCopilot = useCallback(async () => {
     const nextMode = prefs.window_mode === "normal" ? "toolbar-right" : "normal";
     await update({ window_mode: nextMode });
@@ -743,6 +978,21 @@ export function DesktopChatView({
     } catch {
       // saved even if the native call fails in development
     }
+  }, [prefs.window_mode, update]);
+
+  // Reset copilot mode on every launch \u2014 sansxel always opens in
+  // normal chat mode, never sticky-stuck in toolbar mode from a
+  // prior session. Runs once after preferences load.
+  const copilotResetRef = useRef(false);
+  useEffect(() => {
+    if (copilotResetRef.current) return;
+    if (prefs.window_mode === "normal") {
+      copilotResetRef.current = true;
+      return;
+    }
+    copilotResetRef.current = true;
+    void update({ window_mode: "normal" });
+    void invoke("set_window_mode", { mode: "normal" }).catch(() => {});
   }, [prefs.window_mode, update]);
 
   const showEmpty = messages.length === 0;
@@ -776,8 +1026,14 @@ export function DesktopChatView({
           </button>
         </div>
 
+        <ThreadSearch
+          ref={searchInputRef}
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
+
         <div className="chat-history-list">
-          {threads.map((thread) => (
+          {filteredThreads.map((thread) => (
             <button
               key={thread.id}
               type="button"
@@ -791,6 +1047,11 @@ export function DesktopChatView({
               </div>
             </button>
           ))}
+          {filteredThreads.length === 0 && searchQuery && (
+            <div className="chat-history-empty">
+              No threads match \u201c{searchQuery}\u201d.
+            </div>
+          )}
         </div>
 
         <div className="chat-history-foot">
@@ -948,6 +1209,17 @@ export function DesktopChatView({
           />
 
           <div className="chat-input-actions">
+            <button
+              type="button"
+              onClick={() => void generateImageFromInput()}
+              disabled={generatingImage || !input.trim()}
+              className="chat-icon-btn"
+              title="Generate image from prompt"
+              aria-label="Generate image"
+            >
+              <ImageIcon />
+            </button>
+
             {planForGating === "free" ? (
               <button
                 type="button"
@@ -1053,7 +1325,7 @@ function VoiceOverlay({
           ? "Preparing voice"
           : state === "speaking"
             ? "Speaking"
-            : "Tap to talk";
+            : "Listening";
 
   const scale = 1 + Math.min(level * 0.55, 0.55);
 
@@ -1159,7 +1431,7 @@ function AssistantBubble({
         if (streaming && isLastSection) {
           return (
             <span key={index}>
-              <span className="chat-stream-text">{section.text}</span>
+              <StreamingFadeText text={section.text} />
               <span className="chat-cursor" />
             </span>
           );
@@ -1171,6 +1443,72 @@ function AssistantBubble({
         );
       })}
     </>
+  );
+}
+
+// Sidebar search input \u2014 thin row above the thread list. Wrapped in
+// forwardRef so the parent can focus it from a \u2318F shortcut.
+const ThreadSearch = forwardRef<
+  HTMLInputElement,
+  { value: string; onChange: (next: string) => void }
+>(function ThreadSearch({ value, onChange }, ref) {
+  return (
+    <div className="chat-history-search">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="chat-history-search-icon"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.3-4.3" strokeLinecap="round" />
+      </svg>
+      <input
+        ref={ref}
+        type="text"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Search threads\u2026"
+        className="chat-history-search-input"
+        spellCheck={false}
+        autoComplete="off"
+      />
+      {value && (
+        <button
+          type="button"
+          className="chat-history-search-clear"
+          onClick={() => onChange("")}
+          aria-label="Clear search"
+        >
+          \u00d7
+        </button>
+      )}
+    </div>
+  );
+});
+
+// ChatGPT-style word fade-in for streaming text. Splits the text into
+// word + whitespace tokens and renders each word as its own span.
+// Index keys mean React reuses existing spans as text grows, so the
+// CSS animation only fires the first time a word appears \u2014 chars
+// added inside an already-mounted word grow without re-animating.
+function StreamingFadeText({ text }: { text: string }) {
+  const tokens = useMemo(() => text.split(/(\s+)/), [text]);
+  return (
+    <span className="chat-stream-text">
+      {tokens.map((token, i) =>
+        /^\s+$/.test(token) ? (
+          token
+        ) : (
+          <span key={i} className="chat-word-fade">
+            {token}
+          </span>
+        ),
+      )}
+    </span>
   );
 }
 
@@ -1217,6 +1555,16 @@ function MicIcon() {
       <path d="M12 15C10.343 15 9 13.657 9 12V7C9 5.343 10.343 4 12 4C13.657 4 15 5.343 15 7V12C15 13.657 13.657 15 12 15Z" stroke="currentColor" strokeWidth="1.5" />
       <path d="M6.5 11.5C6.5 14.538 8.962 17 12 17C15.038 17 17.5 14.538 17.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       <path d="M12 17V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ImageIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="9" cy="10" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M4 17l4.5-4.5 3 3 3.5-3.5L20 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

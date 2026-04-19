@@ -2,18 +2,23 @@ use std::time::Duration;
 use tauri::Manager;
 
 // ── Win32: minimize EVERY top-level window so only sansxel is visible
-// during boot. We do this by sending the Win+M hotkey via SendInput,
-// which is what Windows itself uses for "Minimize all windows" — far
-// more reliable than EnumWindows + ShowWindow because the shell
-// handles edge cases (UWP, modern apps, secured windows) for us.
-//
-// Win+M minimizes everything *including* our splash, so we re-show
-// the splash a moment later.
+// during boot. v0.1.4 uses a two-pronged approach:
+//   1. EnumWindows + ShowWindow(SW_FORCEMINIMIZE) walks every visible
+//      top-level window, skipping our own. This catches stubborn apps
+//      that ignore Win+M (Chromium, Electron, some games).
+//   2. Win+M as a fallback for shell-managed cases.
+// Plus splash auto-focus so [Space] works without needing the user
+// to click the splash first.
 #[cfg(target_os = "windows")]
 mod win {
+    use windows_sys::Win32::Foundation::{BOOL, HWND, LPARAM, TRUE};
     use windows_sys::Win32::UI::Input::KeyboardAndMouse::{
-        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYEVENTF_KEYUP,
-        VIRTUAL_KEY, VK_LWIN, VK_M,
+        SendInput, SetFocus, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT,
+        KEYEVENTF_KEYUP, VIRTUAL_KEY, VK_LWIN, VK_M,
+    };
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        EnumWindows, GetWindowThreadProcessId, IsIconic, IsWindowVisible,
+        SetForegroundWindow, ShowWindow, SW_FORCEMINIMIZE,
     };
 
     unsafe fn key_input(vk: VIRTUAL_KEY, key_up: bool) -> INPUT {
@@ -31,7 +36,7 @@ mod win {
         }
     }
 
-    pub fn minimize_all() {
+    pub fn send_win_m() {
         unsafe {
             let mut inputs = [
                 key_input(VK_LWIN, false),
@@ -46,21 +51,87 @@ mod win {
             );
         }
     }
+
+    // EnumWindows callback: minimize every visible top-level window
+    // that doesn't belong to our process.
+    unsafe extern "system" fn minimize_callback(hwnd: HWND, lparam: LPARAM) -> BOOL {
+        let our_pid = lparam as u32;
+        if IsWindowVisible(hwnd) == 0 {
+            return TRUE;
+        }
+        if IsIconic(hwnd) != 0 {
+            return TRUE; // already minimized
+        }
+        let mut window_pid: u32 = 0;
+        GetWindowThreadProcessId(hwnd, &mut window_pid);
+        if window_pid == our_pid {
+            return TRUE; // our own window, skip
+        }
+        ShowWindow(hwnd, SW_FORCEMINIMIZE);
+        TRUE
+    }
+
+    pub fn minimize_all_other_windows() {
+        unsafe {
+            let our_pid = std::process::id();
+            EnumWindows(Some(minimize_callback), our_pid as LPARAM);
+        }
+    }
+
+    pub fn force_focus(hwnd: HWND) {
+        unsafe {
+            SetForegroundWindow(hwnd);
+            SetFocus(hwnd);
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+mod copilot_win {
+    use windows_sys::Win32::Foundation::HWND;
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        SetWindowDisplayAffinity, WDA_EXCLUDEFROMCAPTURE, WDA_NONE,
+    };
+
+    // WDA_EXCLUDEFROMCAPTURE makes the window invisible to screen
+    // recorders / share tools (OBS, Zoom, screenshot, etc.). Used
+    // for the copilot's "Stealth" toggle so interview-mode use
+    // doesn't leak the assistant content into recorded streams.
+    pub fn set_capture_excluded(hwnd: HWND, excluded: bool) {
+        unsafe {
+            let affinity = if excluded {
+                WDA_EXCLUDEFROMCAPTURE
+            } else {
+                WDA_NONE
+            };
+            SetWindowDisplayAffinity(hwnd, affinity);
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+mod copilot_win {
+    pub fn set_capture_excluded(_hwnd: usize, _excluded: bool) {}
 }
 
 #[cfg(not(target_os = "windows"))]
 mod win {
-    pub fn minimize_all() {}
+    pub fn send_win_m() {}
+    pub fn minimize_all_other_windows() {}
+    pub fn force_focus(_hwnd: usize) {}
 }
 
 #[tauri::command]
 fn minimize_other_windows(app: tauri::AppHandle) {
-    // Step 1: minimize everything (Win+M hits us too)
-    win::minimize_all();
-    eprintln!("[sansxel] sent minimize-all (Win+M)");
+    // Aggressive: walk every top-level window and force-minimize the
+    // ones that don't belong to us. Catches Chromium / Electron apps
+    // that ignore Win+M.
+    win::minimize_all_other_windows();
+    // Fallback: also fire Win+M for shell-managed cases. This minimizes
+    // our splash too, so we re-show it below.
+    win::send_win_m();
+    eprintln!("[sansxel] minimize-all complete");
 
-    // Step 2: bring our splash back so the launcher stays visible.
-    // 80ms is enough for the shell to finish processing the hotkey.
     let app_handle = app.clone();
     std::thread::spawn(move || {
         std::thread::sleep(Duration::from_millis(80));
@@ -68,8 +139,116 @@ fn minimize_other_windows(app: tauri::AppHandle) {
             let _ = splash.unminimize();
             let _ = splash.show();
             let _ = splash.set_focus();
+            // Force foreground so [Space] keypresses route to splash
+            // immediately, no manual click required.
+            #[cfg(target_os = "windows")]
+            {
+                if let Ok(hwnd) = splash.hwnd() {
+                    win::force_focus(hwnd.0 as windows_sys::Win32::Foundation::HWND);
+                }
+            }
         }
     });
+}
+
+// Lock the splash on top of everything during boot. Called from
+// splash.html on load. Uses Win32 SetWindowPos to make it topmost
+// and SetForegroundWindow to grab focus so keystrokes land on it.
+#[tauri::command]
+fn lock_splash_focus(app: tauri::AppHandle) {
+    if let Some(splash) = app.get_webview_window("splash") {
+        let _ = splash.set_always_on_top(true);
+        let _ = splash.show();
+        let _ = splash.set_focus();
+        #[cfg(target_os = "windows")]
+        {
+            if let Ok(hwnd) = splash.hwnd() {
+                win::force_focus(hwnd.0 as windows_sys::Win32::Foundation::HWND);
+            }
+        }
+    }
+}
+
+// ── Floating Copilot window control ────────────────────────────────
+// The copilot window is a separate top-level Tauri window that floats
+// above everything. It has two visual sizes:
+//   - collapsed/hover: a thin glowing strip on the chosen edge
+//   - open: a 360x(screen-12px) panel
+// We resize + reposition based on `edge` (left/right/top) and `open`.
+#[tauri::command]
+fn position_copilot_window(
+    app: tauri::AppHandle,
+    edge: String,
+    open: bool,
+) -> Result<(), String> {
+    use tauri::{LogicalPosition, LogicalSize};
+    let win = app
+        .get_webview_window("copilot")
+        .ok_or_else(|| "copilot window not found".to_string())?;
+
+    let monitor = win
+        .current_monitor()
+        .map_err(|e| format!("monitor: {e}"))?
+        .ok_or_else(|| "no monitor".to_string())?;
+    let scale = monitor.scale_factor();
+    let mw = monitor.size().width as f64 / scale;
+    let mh = monitor.size().height as f64 / scale;
+
+    // Sizing: when open, render a real panel; collapsed/hover shows
+    // just the glowing edge bar.
+    let (w, h, x, y) = match (edge.as_str(), open) {
+        ("right", true) => (388.0_f64, mh - 24.0, mw - 388.0, 12.0),
+        ("right", false) => (180.0, mh - 24.0, mw - 180.0, 12.0),
+        ("left", true) => (388.0, mh - 24.0, 0.0, 12.0),
+        ("left", false) => (180.0, mh - 24.0, 0.0, 12.0),
+        ("top", true) => (mw - 24.0, 388.0, 12.0, 0.0),
+        ("top", false) => (mw - 24.0, 180.0, 12.0, 0.0),
+        _ => (180.0, mh - 24.0, mw - 180.0, 12.0),
+    };
+
+    let _ = win.set_size(LogicalSize::new(w, h));
+    let _ = win.set_position(LogicalPosition::new(x, y));
+    Ok(())
+}
+
+#[tauri::command]
+fn show_copilot(app: tauri::AppHandle) -> Result<(), String> {
+    let win = app
+        .get_webview_window("copilot")
+        .ok_or_else(|| "copilot window not found".to_string())?;
+    let _ = win.show();
+    let _ = win.set_focus();
+    Ok(())
+}
+
+#[tauri::command]
+fn hide_copilot(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(win) = app.get_webview_window("copilot") {
+        let _ = win.hide();
+    }
+    Ok(())
+}
+
+// Stream-proof toggle. When enabled, screen recorders see a black
+// rectangle where the copilot window is. When disabled, normal.
+#[tauri::command]
+fn set_copilot_stream_proof(
+    app: tauri::AppHandle,
+    enabled: bool,
+) -> Result<(), String> {
+    let win = app
+        .get_webview_window("copilot")
+        .ok_or_else(|| "copilot window not found".to_string())?;
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(hwnd) = win.hwnd() {
+            copilot_win::set_capture_excluded(
+                hwnd.0 as windows_sys::Win32::Foundation::HWND,
+                enabled,
+            );
+        }
+    }
+    Ok(())
 }
 
 // ── Window mode: pin the main window to a screen edge as a toolbar
@@ -199,7 +378,12 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             boot_complete,
             minimize_other_windows,
-            set_window_mode
+            lock_splash_focus,
+            set_window_mode,
+            position_copilot_window,
+            show_copilot,
+            hide_copilot,
+            set_copilot_stream_proof
         ])
         .setup(|app| {
             // Dev/Linux: register the sansxel:// scheme at runtime so the

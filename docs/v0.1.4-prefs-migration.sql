@@ -1,0 +1,22 @@
+-- v0.1.4 desktop_preferences migration notes.
+--
+-- The desktop_preferences table stores prefs as a single jsonb blob
+-- (see docs/desktop-preferences-schema.sql), so the new v0.1.4 fields
+-- — bg_pattern, bubble_shape, and system_language — do NOT require a
+-- DDL change. Existing rows simply lack those keys; the server's
+-- normalize() in lib/desktop-preferences.ts fills them with defaults
+-- on read.
+--
+-- This file exists so the migration is documented in one place and so
+-- a future "extract these into columns" change has a paper trail.
+--
+-- If we later decide to promote any of these to first-class columns
+-- (e.g. for indexed lookup), the alter would look like:
+--
+--   alter table public.desktop_preferences
+--     add column if not exists bg_pattern      text not null default 'none',
+--     add column if not exists bubble_shape    text not null default 'rounded',
+--     add column if not exists system_language text not null default 'en';
+--
+-- For now: NO MIGRATION REQUIRED. Do not run anything. The jsonb blob
+-- absorbs the new keys on the next write.

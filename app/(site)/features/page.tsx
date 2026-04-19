@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { AuroraBackground } from "@/components/aurora-background";
-import { SpotlightCard } from "@/components/spotlight-card";
+import { DotGrid } from "@/components/dot-grid";
+import { HeistCard } from "@/components/heist-card";
 import { getSignInPath } from "@/lib/auth-ui";
 
 export const metadata: Metadata = {
@@ -85,116 +86,122 @@ export default async function FeaturesPage() {
   return (
     <>
       <AuroraBackground />
-    <section className="mx-auto max-w-[1600px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
-      <div className="max-w-3xl">
-        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-          Features
-        </div>
-        <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-          One AI. Infinite shapes.
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-200">
-          Most AI tools give everyone the same blank chat box. Sansxel doesn&apos;t.
-          The interface is contextual — it reshapes based on who you are, what
-          you&apos;re working on, and what the moment calls for.
-        </p>
-      </div>
-
-      <div className="mt-16">
-        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-          Four pillars
-        </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {pillars.map((pillar) => (
-            <SpotlightCard
-              key={pillar.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-xl font-semibold text-white">
-                  {pillar.title}
-                </div>
-                <span
-                  className={
-                    pillar.status === "live"
-                      ? "shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/[0.08] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-300"
-                      : "shrink-0 rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-amber-200/90"
-                  }
-                >
-                  {pillar.status === "live" ? "Live" : "In the future"}
-                </span>
-              </div>
-              <p className="mt-4 text-sm leading-6 text-neutral-200">
-                {pillar.description}
-              </p>
-            </SpotlightCard>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-20 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-        <div>
-          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-            What you can bring
-          </div>
-          <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
-            Anything in. Not just prompts.
-          </h2>
-          <p className="mt-4 text-base leading-7 text-neutral-200">
-            You shouldn&apos;t have to translate your work into the perfect AI
-            command. Questions, screenshots, links, notes, files, and datasets
-            all belong here.
-          </p>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {inputs.map((input) => (
-            <div
-              key={input}
-              className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white"
-            >
-              {input}
+      <section className="mx-auto max-w-[1600px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
+        {/* ── Hero — DotGrid sits behind the headline copy ─────────── */}
+        <div className="relative isolate overflow-hidden rounded-[28px] px-6 py-10 sm:px-10 sm:py-14">
+          <DotGrid opacity={0.07} />
+          <div className="relative max-w-3xl">
+            <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
+              Features
             </div>
-          ))}
+            <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
+              One AI. Infinite shapes.
+            </h1>
+            <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-200">
+              Most AI tools give everyone the same blank chat box. Sansxel doesn&apos;t.
+              The interface is contextual — it reshapes based on who you are, what
+              you&apos;re working on, and what the moment calls for.
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="mt-20">
-        <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-          Built for the people who actually use it
+        <div className="mt-16">
+          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+            Four pillars
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {pillars.map((pillar) => (
+              <HeistCard
+                key={pillar.title}
+                tilt
+                className="h-full p-6 sm:p-7"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="text-xl font-semibold text-white">
+                    {pillar.title}
+                  </div>
+                  <span
+                    className={
+                      pillar.status === "live"
+                        ? "shrink-0 rounded-full border border-emerald-400/25 bg-emerald-400/[0.08] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-300"
+                        : "shrink-0 rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-amber-200/90"
+                    }
+                  >
+                    {pillar.status === "live" ? "Live" : "In the future"}
+                  </span>
+                </div>
+                <p className="mt-4 text-sm leading-6 text-neutral-200">
+                  {pillar.description}
+                </p>
+              </HeistCard>
+            ))}
+          </div>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          {principles.map((item) => (
-            <SpotlightCard
-              key={item.title}
-              className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-7 h-full"
-            >
-              <div className="text-xl font-semibold text-white">
-                {item.title}
-              </div>
-              <p className="mt-4 text-base leading-7 text-neutral-100/85">
-                {item.description}
-              </p>
-            </SpotlightCard>
-          ))}
-        </div>
-      </div>
 
-      <div className="mt-16 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-20 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+          <div>
+            <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+              What you can bring
+            </div>
+            <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
+              Anything in. Not just prompts.
+            </h2>
+            <p className="mt-4 text-base leading-7 text-neutral-200">
+              You shouldn&apos;t have to translate your work into the perfect AI
+              command. Questions, screenshots, links, notes, files, and datasets
+              all belong here.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {inputs.map((input) => (
+              <HeistCard
+                key={input}
+                className="px-4 py-4 text-sm text-white"
+              >
+                {input}
+              </HeistCard>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-20">
+          <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+            Built for the people who actually use it
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            {principles.map((item) => (
+              <HeistCard
+                key={item.title}
+                tilt
+                className="h-full p-6 sm:p-7"
+              >
+                <div className="text-xl font-semibold text-white">
+                  {item.title}
+                </div>
+                <p className="mt-4 text-base leading-7 text-neutral-100/85">
+                  {item.description}
+                </p>
+              </HeistCard>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-16 flex flex-col gap-3 sm:flex-row">
+          <Link
+            href="/pricing"
+            className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+          >
+            See pricing
+          </Link>
         <Link
-          href="/pricing"
-          className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-        >
-          See pricing
-        </Link>
-        <Link
-          href={signedIn ? "/account" : getSignInPath("/account/updates")}
+          href={signedIn ? "/account" : getSignInPath("/account/download")}
           className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
         >
           {signedIn ? "Open workspace" : "Check your access"}
-        </Link>
-      </div>
-    </section>
+          </Link>
+        </div>
+      </section>
     </>
   );
 }

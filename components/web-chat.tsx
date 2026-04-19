@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -43,6 +43,7 @@ export function WebChat({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [tier, setTier] = useState<ModelTier>(
     tiers.find((t) => t.tier === "balanced")?.tier ??
       tiers[0]?.tier ??
@@ -357,19 +358,22 @@ export function WebChat({
       // Aggressive first-chunk strategy: get audio playing FAST.
       // After the first chunk, fall back to clean sentence boundaries.
       const SENTENCE_RE = /([.!?]+["')\]]?)(\s+|$)/;
-      const FAST_FIRST_BREAK_RE = /([,;:—–]|[.!?])(\s+|$)/;
+      // v0.1.4: also break on "and"/"but"/etc. as cheap natural-pause
+      // proxies so the first audio fires sooner without sounding
+      // chopped. Lowered char threshold from 24\u219214 + min head 18\u219210.
+      const FAST_FIRST_BREAK_RE = /([,;:\u2014\u2013]|[.!?]|\s(?:and|but|so|then)\s)/;
       let firstChunkSent = false;
       const flushSentencesFromBuffer = (final = false) => {
         if (!willSpeak) return;
-        // Fast first chunk: as soon as we have ~24 chars + a comma /
-        // semicolon / sentence break, send it. Audio starts playing
-        // dramatically sooner.
-        if (!firstChunkSent && ttsBuf.text.length >= 24) {
+        // Fast first chunk: as soon as we have ~14 chars + any natural
+        // break (comma, semicolon, conjunction), send it. Audio starts
+        // playing dramatically sooner.
+        if (!firstChunkSent && ttsBuf.text.length >= 14) {
           const m = FAST_FIRST_BREAK_RE.exec(ttsBuf.text);
           if (m) {
             const idx = (m.index ?? 0) + m[0].length;
             const head = ttsBuf.text.slice(0, idx).trim();
-            if (head.length >= 18) {
+            if (head.length >= 10) {
               ttsBuf.text = ttsBuf.text.slice(idx);
               queueSentenceForTTS(head);
               firstChunkSent = true;
@@ -480,6 +484,73 @@ export function WebChat({
       setStreaming(false);
     }
   }, []);
+
+  // One-shot image generation. Reads the input as the prompt, appends
+  // a user turn + an assistant turn with the image embedded as
+  // markdown (`![](url)`), and clears the input. Streaming is for
+  // text — image gen is one POST + one render.
+  const generateImageFromInput = useCallback(async () => {
+    const prompt = input.trim();
+    if (!prompt || generatingImage) return;
+
+    const userMsg: ChatMessage = { role: "user", content: prompt };
+    setMessages((prev) => [
+      ...prev,
+      userMsg,
+      { role: "assistant", content: "Generating image…" },
+    ]);
+    setInput("");
+    setGeneratingImage(true);
+    setChatError(null);
+
+    try {
+      const res = await fetch("/api/ai/image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      if (!res.ok) {
+        let detail = `image ${res.status}`;
+        try {
+          const err = (await res.json()) as { error?: string };
+          if (err?.error) detail = err.error;
+        } catch {
+          // ignore
+        }
+        throw new Error(detail);
+      }
+      const data = (await res.json()) as { url: string; revised_prompt?: string };
+      const caption = data.revised_prompt
+        ? `*${data.revised_prompt}*\n\n![generated image](${data.url})`
+        : `![generated image](${data.url})`;
+      setMessages((prev) => {
+        const next = [...prev];
+        const last = next[next.length - 1];
+        if (last && last.role === "assistant") {
+          next[next.length - 1] = { ...last, content: caption };
+        }
+        return next;
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Image generation failed.";
+      setChatError(message);
+      // Drop the placeholder so the chat doesn't show "Generating…" forever.
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (
+          last &&
+          last.role === "assistant" &&
+          last.content === "Generating image…"
+        ) {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
+    } finally {
+      setGeneratingImage(false);
+    }
+  }, [generatingImage, input]);
 
   // Voice flow — single button cycle:
   //   idle → click → ask mic perm → record (button = Stop)
@@ -782,6 +853,16 @@ export function WebChat({
           disabled={voiceState === "recording" || voiceState === "transcribing"}
         />
         <div className="webchat-input-actions">
+          <button
+            type="button"
+            onClick={() => void generateImageFromInput()}
+            disabled={generatingImage || !input.trim() || streaming}
+            className="webchat-voice-btn"
+            title="Generate image from prompt"
+          >
+            {generatingImage ? "Drawing…" : "🖼 Image"}
+          </button>
+
           <VoiceButton
             voiceState={voiceState}
             isFreePlan={isFreePlan}
@@ -911,7 +992,7 @@ function WebVoiceOverlay({
         ? "Thinking"
         : state === "speaking"
           ? "Speaking"
-          : "Tap to talk";
+          : "Listening";
 
   const scale = 1 + Math.min(level * 0.55, 0.55);
 
@@ -1008,7 +1089,7 @@ function WebAssistantBubble({
         if (streaming && isLast) {
           return (
             <span key={i}>
-              <span className="webchat-stream-text">{s.text}</span>
+              <WebStreamingFadeText text={s.text} />
               <span className="webchat-cursor" />
             </span>
           );
@@ -1020,6 +1101,26 @@ function WebAssistantBubble({
         );
       })}
     </>
+  );
+}
+
+// ChatGPT-style word fade-in for streaming text on the web. Same
+// approach as the desktop StreamingFadeText \u2014 stable index keys
+// mean each word only animates once on first appearance.
+function WebStreamingFadeText({ text }: { text: string }) {
+  const tokens = useMemo(() => text.split(/(\s+)/), [text]);
+  return (
+    <span className="webchat-stream-text">
+      {tokens.map((token, i) =>
+        /^\s+$/.test(token) ? (
+          token
+        ) : (
+          <span key={i} className="webchat-word-fade">
+            {token}
+          </span>
+        ),
+      )}
+    </span>
   );
 }
 

@@ -25,9 +25,15 @@ import {
   PERSONA_OPTIONS,
   getWeeklyUsage,
   listDesktopApiKeys,
+  createDesktopApiKey,
+  revokeDesktopApiKey,
   type WeeklyUsageSummary,
   type ApiKeySummary,
 } from "./api";
+
+// Single source of truth for the version string shown in the
+// account card. Bumped each release alongside tauri.conf.json.
+const APP_VERSION = "0.1.4";
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
 import { parseSections } from "./sections";
@@ -35,8 +41,23 @@ import { useSmoothStream } from "./use-smooth-stream";
 import { DesktopChatView } from "./chat-view";
 import { DesktopPlanView } from "./plan-view";
 import { DesktopUsageView } from "./usage-view";
+import { DesktopMemoryView } from "./memory-view";
+import { DesktopIntegrationsView } from "./integrations-view";
+import { DesktopUpdatesView } from "./updates-view";
+import { DesktopSettingsView } from "./settings-view";
+import { LANGUAGES } from "./i18n/strings";
 
-type View = "chat" | "account" | "plan" | "usage" | "keys" | "preferences";
+type View =
+  | "chat"
+  | "account"
+  | "plan"
+  | "usage"
+  | "keys"
+  | "preferences"
+  | "memory"
+  | "integrations"
+  | "updates"
+  | "settings";
 
 type WorkspaceProps = {
   session: DesktopSession;
@@ -46,12 +67,59 @@ type WorkspaceProps = {
 export function Workspace({ session, onSignOut }: WorkspaceProps) {
   const [view, setView] = useState<View>("chat");
 
+  // Esc on any non-chat view returns to Chat. Acts as a universal
+  // "back to default" shortcut. Skipped while focus is in an input
+  // / textarea / contenteditable so it doesn't fight typing.
+  useEffect(() => {
+    if (view === "chat") return;
+    const handler = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (
+          tag === "INPUT" ||
+          tag === "TEXTAREA" ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+      }
+      event.preventDefault();
+      setView("chat");
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [view]);
+
+  // Window mode shortcuts \u2014 Ctrl+Shift+N normal, Ctrl+Shift+T top,
+  // Ctrl+Shift+L left, Ctrl+Shift+R right. Lets power users snap
+  // sansxel into a toolbar position alongside other apps without
+  // opening Preferences.
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (!event.ctrlKey || !event.shiftKey) return;
+      const map: Record<string, string> = {
+        N: "normal",
+        T: "toolbar-top",
+        L: "toolbar-left",
+        R: "toolbar-right",
+      };
+      const mode = map[event.key.toUpperCase()];
+      if (!mode) return;
+      event.preventDefault();
+      void invoke("set_window_mode", { mode }).catch(() => {});
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <div className="ws">
       <NavRail
         active={view}
         onChange={setView}
-        email={session.email}
+        session={session}
       />
       <div className="ws-main">
         {view === "chat" && (
@@ -66,6 +134,10 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
         )}
         {view === "keys" && <KeysView session={session} />}
         {view === "preferences" && <PreferencesView />}
+        {view === "memory" && <DesktopMemoryView session={session} />}
+        {view === "integrations" && <DesktopIntegrationsView session={session} />}
+        {view === "updates" && <DesktopUpdatesView session={session} />}
+        {view === "settings" && <DesktopSettingsView />}
       </div>
     </div>
   );
@@ -76,18 +148,50 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
 function NavRail({
   active,
   onChange,
-  email,
+  session,
 }: {
   active: View;
   onChange: (v: View) => void;
-  email: string;
+  session: DesktopSession;
 }) {
-  const initial = email.slice(0, 1).toUpperCase();
+  const email = session.email;
+  const displayName = session.displayName ?? email.split("@")[0];
+  const initial = (displayName ?? email).slice(0, 1).toUpperCase();
+  const [planLabel, setPlanLabel] = useState<string>("\u2014");
+
+  // Pull plan tier so the account card can show "Pro · v0.1.4"
+  // instead of just an avatar circle.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const sub = await getSubscription(session.token);
+        if (!cancelled) {
+          setPlanLabel(capitalize(sub.plan ?? "free"));
+        }
+      } catch {
+        // Silent \u2014 keep \u2014 placeholder
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session.token]);
+
   return (
     <aside className="ws-nav">
-      <div className="ws-nav-status" title="Connected to sansxel-1">
+      <button
+        type="button"
+        className="ws-nav-status ws-nav-status--button"
+        title="Open floating copilot"
+        onClick={() => {
+          void invoke("show_copilot").catch(() => {});
+          void invoke("position_copilot_window", { edge: "right", open: false }).catch(() => {});
+        }}
+      >
         <span className="ws-nav-status-dot" />
-      </div>
+        <span className="ws-nav-label ws-nav-status-label">Open copilot</span>
+      </button>
 
       <div className="ws-nav-items">
         <NavButton
@@ -112,6 +216,20 @@ function NavRail({
           <UsageIcon />
         </NavButton>
         <NavButton
+          active={active === "memory"}
+          onClick={() => onChange("memory")}
+          label="Memory"
+        >
+          <MemoryIcon />
+        </NavButton>
+        <NavButton
+          active={active === "integrations"}
+          onClick={() => onChange("integrations")}
+          label="Integrations"
+        >
+          <IntegrationsIcon />
+        </NavButton>
+        <NavButton
           active={active === "keys"}
           onClick={() => onChange("keys")}
           label="API keys"
@@ -125,18 +243,40 @@ function NavRail({
         >
           <PrefsIcon />
         </NavButton>
+        <NavButton
+          active={active === "settings"}
+          onClick={() => onChange("settings")}
+          label="Settings"
+        >
+          <SettingsIcon />
+        </NavButton>
+        <NavButton
+          active={active === "updates"}
+          onClick={() => onChange("updates")}
+          label="Updates"
+        >
+          <UpdatesIcon />
+        </NavButton>
       </div>
 
       <div className="ws-nav-foot">
-        {/* Avatar opens the account hub — never the surprise sign-out
-            it used to be. Sign-out lives inside Account now. */}
+        {/* Account card \u2014 collapsed shows just the avatar, expanded
+            (on hover of nav rail) reveals name, email, plan, version. */}
         <button
           type="button"
-          className={`ws-nav-avatar${active === "account" ? " active" : ""}`}
+          className={`ws-nav-account${active === "account" ? " active" : ""}`}
           onClick={() => onChange("account")}
           title={`Account (${email})`}
         >
-          {initial}
+          <span className="ws-nav-avatar-circle">{initial}</span>
+          <span className="ws-nav-account-text">
+            <span className="ws-nav-account-name">{displayName}</span>
+            <span className="ws-nav-account-email">{email}</span>
+            <span className="ws-nav-account-meta">
+              <span className="ws-nav-account-plan">{planLabel}</span>
+              <span className="ws-nav-account-version">v{APP_VERSION}</span>
+            </span>
+          </span>
         </button>
       </div>
     </aside>
@@ -162,7 +302,8 @@ function NavButton({
       className={`ws-nav-btn${active ? " active" : ""}`}
       aria-label={label}
     >
-      {children}
+      <span className="ws-nav-btn-icon">{children}</span>
+      <span className="ws-nav-label">{label}</span>
     </button>
   );
 }
@@ -808,7 +949,7 @@ function VoiceOverlay({
         ? "Thinking"
         : state === "speaking"
           ? "Speaking"
-          : "Tap to talk";
+          : "Listening";
 
   // Gentle baseline + level-driven pulse. Capped so loud audio doesn't
   // blow the orb out of view.
@@ -1083,7 +1224,7 @@ function AccountView({
               </button>
               <button type="button" className="account-jump" onClick={() => onView("keys")}>
                 <div className="account-jump-title">API keys</div>
-                <div className="account-jump-sub">Create + manage on the website</div>
+                <div className="account-jump-sub">Create, name, and revoke sk_sen_… keys</div>
               </button>
               <button type="button" className="account-jump" onClick={() => onView("preferences")}>
                 <div className="account-jump-title">Preferences</div>
@@ -1438,7 +1579,33 @@ function KeysView({ session }: { session: DesktopSession }) {
   const [keys, setKeys] = useState<ApiKeySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const keyManagerUrl = "https://sansxel.ai/account/keys";
+
+  // Inline create form state
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  // Plaintext key reveal — server only ever returns the secret ONCE.
+  // Held in memory until the user dismisses the panel so they can copy
+  // it before it's gone forever.
+  const [revealed, setRevealed] = useState<{
+    name: string;
+    rawKey: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Per-row revoke confirmation + spinner
+  const [pendingRevoke, setPendingRevoke] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const list = await listDesktopApiKeys(session.token);
+      setKeys(list);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load keys.");
+    }
+  }, [session.token]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1457,40 +1624,162 @@ function KeysView({ session }: { session: DesktopSession }) {
     };
   }, [session.token]);
 
+  async function submitCreate(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newName.trim();
+    if (!name || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const created = await createDesktopApiKey(session.token, name);
+      setRevealed({ name: created.key.name, rawKey: created.rawKey });
+      setCopied(false);
+      setNewName("");
+      setCreating(false);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create key.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function copyRevealed() {
+    if (!revealed) return;
+    try {
+      await navigator.clipboard.writeText(revealed.rawKey);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Clipboard can fail in some Tauri webview contexts. Leave the
+      // textbox visible so the user can manually select + copy.
+      setCopied(false);
+    }
+  }
+
+  async function confirmRevoke(id: string) {
+    setRevokingId(id);
+    setError(null);
+    try {
+      await revokeDesktopApiKey(session.token, id);
+      setPendingRevoke(null);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not revoke key.");
+    } finally {
+      setRevokingId(null);
+    }
+  }
+
   return (
     <div className="view">
       <div className="view-head">
         <h1>API keys</h1>
         <p>
-          View your active <code>sk_sen_…</code> keys here. Creating and
-          revoking opens the secure key manager on sansxel.ai in your browser.
+          Your active <code>sk_sen_…</code> keys. Create one to call the
+          sansxel API from scripts, agents, or other apps. The full secret
+          is shown once at creation — we only store a hash after that.
         </p>
       </div>
       <div className="view-body">
         {loading && <div className="view-loading">Loading…</div>}
         {error && <div className="view-error">{error}</div>}
-        {!loading && !error && (
+        {!loading && (
           <>
+            {/* Reveal panel — plaintext key + copy. Only chance to grab it. */}
+            {revealed && (
+              <div className="keys-reveal">
+                <div className="keys-reveal-head">New key created</div>
+                <p className="keys-reveal-note">
+                  This is the only time <strong>{revealed.name}</strong> will be
+                  shown in full. Copy it now and store it somewhere safe — we
+                  only keep a hash.
+                </p>
+                <div className="keys-reveal-row">
+                  <code className="keys-reveal-key">{revealed.rawKey}</code>
+                  <button
+                    type="button"
+                    onClick={() => void copyRevealed()}
+                    className="view-save-btn"
+                  >
+                    {copied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+                <div className="keys-reveal-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRevealed(null);
+                      setCopied(false);
+                    }}
+                    className="account-signout"
+                  >
+                    I’ve saved it
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Create row — collapsed button, expands into inline form */}
+            {!creating ? (
+              <div className="keys-create-row">
+                <button
+                  type="button"
+                  onClick={() => setCreating(true)}
+                  className="view-save-btn"
+                >
+                  Create new key
+                </button>
+              </div>
+            ) : (
+              <form className="keys-create-form" onSubmit={(e) => void submitCreate(e)}>
+                <input
+                  type="text"
+                  className="field-input"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="Key name (e.g. laptop-cli, automation)"
+                  maxLength={64}
+                  autoFocus
+                />
+                <div className="keys-create-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreating(false);
+                      setNewName("");
+                    }}
+                    className="account-signout"
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="view-save-btn"
+                    disabled={!newName.trim() || submitting}
+                  >
+                    {submitting ? "Creating…" : "Create"}
+                  </button>
+                </div>
+              </form>
+            )}
+
             {keys.length === 0 ? (
               <div className="usage-empty">
                 <div className="upgrade-cta-head">No API keys yet</div>
                 <div className="usage-empty-note">
-                  Keys are created on the website so the full secret never has
-                  to pass through the desktop app.
+                  Create one above to start calling the sansxel API. Keys
+                  inherit your plan’s rate limits.
                 </div>
-                <button
-                  type="button"
-                  onClick={() => void openUrl(keyManagerUrl)}
-                  className="upgrade-cta-btn"
-                >
-                  Open key manager →
-                </button>
               </div>
             ) : (
-              <>
-                <div className="usage-list">
-                  {keys.map((k) => (
-                    <div key={k.id} className="usage-row">
+              <div className="usage-list">
+                {keys.map((k) => {
+                  const isPending = pendingRevoke === k.id;
+                  const isRevoking = revokingId === k.id;
+                  return (
+                    <div key={k.id} className="keys-row">
                       <span className="usage-row-kind">{k.name}</span>
                       <span className="usage-row-meta usage-row-mono">
                         {k.key_prefix}
@@ -1500,25 +1789,39 @@ function KeysView({ session }: { session: DesktopSession }) {
                           ? `last used ${new Date(k.last_used_at).toLocaleDateString()}`
                           : `created ${new Date(k.created_at).toLocaleDateString()}`}
                       </span>
+                      {isPending ? (
+                        <span className="keys-revoke-confirm">
+                          <button
+                            type="button"
+                            className="keys-revoke-confirm-btn"
+                            onClick={() => void confirmRevoke(k.id)}
+                            disabled={isRevoking}
+                          >
+                            {isRevoking ? "Revoking…" : "Confirm"}
+                          </button>
+                          <button
+                            type="button"
+                            className="keys-revoke-cancel-btn"
+                            onClick={() => setPendingRevoke(null)}
+                            disabled={isRevoking}
+                          >
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="keys-revoke-btn"
+                          onClick={() => setPendingRevoke(k.id)}
+                          title="Revoke this key"
+                        >
+                          Revoke
+                        </button>
+                      )}
                     </div>
-                  ))}
-                </div>
-
-                <div className="upgrade-cta">
-                  <div className="upgrade-cta-head">Manage keys on the website</div>
-                  <p>
-                    Create new keys, name them, and revoke compromised ones from
-                    your account on sansxel.ai.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void openUrl(keyManagerUrl)}
-                    className="upgrade-cta-btn"
-                  >
-                    Open key manager →
-                  </button>
-                </div>
-              </>
+                  );
+                })}
+              </div>
             )}
           </>
         )}
@@ -1697,6 +2000,56 @@ function PreferencesView() {
                 />
               ))}
             </div>
+          </PrefSection>
+
+          <PrefSection
+            label="Background pattern"
+            help="Subtle texture behind everything. Off by default."
+          >
+            <SegmentedControl<DesktopPreferences["bg_pattern"]>
+              value={prefs.bg_pattern}
+              onChange={(v) => update({ bg_pattern: v })}
+              options={[
+                { value: "none",     label: "None"     },
+                { value: "dots",     label: "Dots"     },
+                { value: "grid",     label: "Grid"     },
+                { value: "gradient", label: "Gradient" },
+              ]}
+            />
+          </PrefSection>
+
+          <PrefSection
+            label="Bubble shape"
+            help="Corner style for chat bubbles."
+          >
+            <SegmentedControl<DesktopPreferences["bubble_shape"]>
+              value={prefs.bubble_shape}
+              onChange={(v) => update({ bubble_shape: v })}
+              options={[
+                { value: "rounded", label: "Rounded" },
+                { value: "square",  label: "Square"  },
+                { value: "pill",    label: "Pill"    },
+              ]}
+            />
+          </PrefSection>
+        </PrefSectionGroup>
+
+        <PrefSectionGroup title="Language">
+          <PrefSection
+            label="System language"
+            help="Manual UI language. Replies still match whatever language you write in (auto-detected per message). Only English is fully translated for v0.1.4 — other choices fall back to English."
+          >
+            <select
+              value={prefs.system_language}
+              onChange={(e) => update({ system_language: e.target.value })}
+              className="pref-select"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label} — {l.native}
+                </option>
+              ))}
+            </select>
           </PrefSection>
         </PrefSectionGroup>
 
@@ -1879,6 +2232,51 @@ function PrefsIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function MemoryIcon() {
+  // Bookmark + dot — "saved facts"
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+      <circle cx="12" cy="10" r="1.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IntegrationsIcon() {
+  // Plug
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 2v6" />
+      <path d="M15 2v6" />
+      <path d="M6 8h12v3a6 6 0 0 1-12 0z" />
+      <path d="M12 17v5" />
+    </svg>
+  );
+}
+
+function UpdatesIcon() {
+  // Sparkle / star
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l1.9 4.6L18.5 9l-3.6 3.1L16 17l-4-2.4L8 17l1.1-4.9L5.5 9l4.6-1.4z" />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  // Sliders (distinct from PrefsIcon's gear)
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="18" x2="20" y2="18" />
+      <circle cx="9" cy="6" r="2" fill="#0a0a0a" />
+      <circle cx="15" cy="12" r="2" fill="#0a0a0a" />
+      <circle cx="7" cy="18" r="2" fill="#0a0a0a" />
     </svg>
   );
 }

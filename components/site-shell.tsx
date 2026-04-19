@@ -19,6 +19,7 @@ const footerGroups = [
     label: "Account",
     links: [
       { href: "/account", label: "Dashboard" },
+      { href: "/account/download", label: "Download" },
       { href: "/account/updates", label: "Updates" },
       { href: "/account/integrations", label: "Integrations" },
       { href: "/account/usage", label: "Usage" },
@@ -48,7 +49,7 @@ const primaryLinks: SiteNavLink[] = [
   // Signed-in only — sansxel-1 chat in the browser
   { href: "/app", label: "Chat", authOnly: true },
   // Signed-in only — install button, status, and release notes
-  { href: "/account/updates", label: "Download", authOnly: true },
+  { href: "/account/download", label: "Download", authOnly: true },
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
