@@ -10,15 +10,10 @@ import {
 import { usePathname } from "next/navigation";
 
 type Msg = { role: "user" | "assistant"; content: string };
-type DockSide = "right" | "left" | "floating";
-
-const DOCK_KEY = "sansxel.copilot.dock";
-const SIGNED_IN_KEY = "sansxel.copilot.signedIn";
 
 export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
-  const [dock, setDock] = useState<DockSide>("right");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -34,16 +29,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
     pathname.startsWith("/desktop-auth") ||
     pathname === "/signin";
 
-  // Load dock preference from localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const saved = window.localStorage.getItem(DOCK_KEY);
-    if (saved === "right" || saved === "left" || saved === "floating") {
-      setDock(saved);
-    }
-  }, []);
-
-  // ⌘J / Ctrl+J toggles the bar (⌘K is the command palette)
+  // ⌘J / Ctrl+J toggles the takeover (⌘K is the command palette)
   useEffect(() => {
     if (hide) return;
     const handler = (e: KeyboardEvent) => {
@@ -77,13 +63,6 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
-
-  const setDockPref = useCallback((next: DockSide) => {
-    setDock(next);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(DOCK_KEY, next);
-    }
-  }, []);
 
   const grabPageContext = useCallback(() => {
     if (typeof document === "undefined") {
@@ -215,16 +194,17 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
     );
   }
 
-  // ── Open state ─────────────────────────────────────────────────
+  // ── Open state: full-screen takeover (boot-style) ──────────────
   return (
-    <div className={`copilot-bar copilot-bar--${dock}`} role="dialog" aria-label="Copilot">
+    <div className="copilot-takeover" role="dialog" aria-label="Copilot">
+      <div className="copilot-takeover-bg" aria-hidden />
+
       <div className="copilot-head">
         <div className="copilot-title">
           <SparkIcon />
           <span>Copilot</span>
         </div>
         <div className="copilot-head-actions">
-          <DockToggle dock={dock} onChange={setDockPref} />
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -340,30 +320,6 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
           </button>
         )}
       </form>
-    </div>
-  );
-}
-
-function DockToggle({
-  dock,
-  onChange,
-}: {
-  dock: DockSide;
-  onChange: (d: DockSide) => void;
-}) {
-  return (
-    <div className="copilot-dock-toggle" role="group" aria-label="Dock">
-      {(["left", "right", "floating"] as const).map((side) => (
-        <button
-          key={side}
-          type="button"
-          onClick={() => onChange(side)}
-          className={dock === side ? "is-active" : ""}
-          title={side === "floating" ? "Floating" : `Dock ${side}`}
-        >
-          {side === "left" ? "⫷" : side === "right" ? "⫸" : "○"}
-        </button>
-      ))}
     </div>
   );
 }
