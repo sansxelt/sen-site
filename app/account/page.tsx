@@ -82,6 +82,78 @@ export default async function AccountPage() {
 
   return (
     <div className="space-y-6">
+      {/* ── Continue panel — the central "pick up where you left off" moment ── */}
+      <div data-reveal className="hx-card-lift relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 via-white/[0.03] to-white/[0.02] p-6 sm:p-7">
+        <div className="absolute inset-0 -z-10 opacity-50" aria-hidden>
+          <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-purple-500/30 blur-3xl" />
+        </div>
+
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-purple-300/85">
+              Continue
+            </div>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              {displayName.split(" ")[0]
+                ? `Welcome back, ${displayName.split(" ")[0]}.`
+                : "Welcome back."}
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-neutral-300">
+              sansxel-1 is ready in your browser, and the desktop app adds toolbar
+              modes, MCP, and the full voice loop. Pick a surface to keep going.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Link
+              href="/app"
+              className="hx-press inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:opacity-95"
+            >
+              Open chat →
+            </Link>
+            <Link
+              href="/download"
+              className="hx-press inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              Get desktop
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Quick prefs row — three knobs people change most ── */}
+      <div data-reveal className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Link
+          href="/account/settings#voice"
+          className="hx-card-lift group rounded-xl border border-white/10 bg-white/[0.03] p-4"
+        >
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500 group-hover:text-neutral-300">
+            Voice
+          </div>
+          <div className="mt-1 text-sm text-white">Fable · British</div>
+          <div className="mt-1 text-xs text-neutral-500">Pick how sansxel-1 sounds →</div>
+        </Link>
+        <Link
+          href="/account/settings#persona"
+          className="hx-card-lift group rounded-xl border border-white/10 bg-white/[0.03] p-4"
+        >
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500 group-hover:text-neutral-300">
+            Persona
+          </div>
+          <div className="mt-1 text-sm text-white">Direct / Warm / Technical / Playful</div>
+          <div className="mt-1 text-xs text-neutral-500">How it talks back →</div>
+        </Link>
+        <Link
+          href="/account/memory"
+          className="hx-card-lift group rounded-xl border border-white/10 bg-white/[0.03] p-4"
+        >
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500 group-hover:text-neutral-300">
+            Memory
+          </div>
+          <div className="mt-1 text-sm text-white">Context retention</div>
+          <div className="mt-1 text-xs text-neutral-500">What sansxel-1 remembers →</div>
+        </Link>
+      </div>
+
       <div className="flex flex-col gap-4 rounded-xl border border-white/10 bg-white/[0.03] p-5 sm:flex-row sm:items-center sm:gap-5">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-neutral-600 to-neutral-800 text-lg font-semibold text-white ring-1 ring-white/10">
           {initials || "?"}
