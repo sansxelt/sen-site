@@ -192,21 +192,28 @@
       .skip-hint {
         position: absolute;
         left: 50%;
-        bottom: 16px;
+        bottom: 18px;
         transform: translateX(-50%);
         z-index: 4;
-        font-size: 10px;
-        letter-spacing: 0.18em;
+        font-size: 9px;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
         font-family:
           ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
           monospace;
-        color: rgba(200, 200, 220, 0.45);
+        color: rgba(200, 200, 220, 0.4);
         opacity: 0;
         animation: hint-fade-in 480ms ease-out 800ms forwards;
         pointer-events: none;
         user-select: none;
         white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .skip-divider {
+        color: rgba(200, 200, 220, 0.25);
       }
 
       .skip-hint .skip-key {
@@ -240,9 +247,9 @@
       .mini-game {
         position: absolute;
         left: 50%;
-        bottom: 60px;
+        bottom: 56px;
         transform: translateX(-50%);
-        width: 380px;
+        width: 420px;
         z-index: 4;
         opacity: 0;
         animation: hint-fade-in 480ms ease-out 1100ms forwards;
@@ -394,20 +401,10 @@
         <div class="brand-spotlight"></div>
       </div>
 
-      <div class="footer">
-        <div class="footer-status">
-          <span class="footer-status-dot"></span>
-          <span class="footer-status-label" id="status-label">
-            Initializing sansxel core
-          </span>
-        </div>
-        <div class="footer-build">v0.1.0 · sansxel-1 · windows</div>
-      </div>
-
       <div class="skip-hint" id="skip-hint">
-        <span class="skip-key">space</span> play \u00b7
-        <span class="skip-key">enter</span> continue \u00b7
-        <span class="skip-key">esc</span><span class="skip-key">esc</span><span class="skip-key">esc</span> from app to revisit
+        <span class="skip-key">space</span> play
+        <span class="skip-divider">·</span>
+        <span class="skip-key">enter</span> continue
       </div>
 
       <!-- v0.1.6 — tiny one-key mini-game while the splash holds.
@@ -602,10 +599,21 @@
           }
           tauriInvoke("is_main_ready").then(function (ready) {
             if (ready === true) {
+              // v0.1.7+: if the user is mid-play (started + still alive),
+              // DON'T auto-handover \u2014 wait for them to press Enter so
+              // they can play indefinitely. Update the hint to make
+              // that obvious. Otherwise, hand over now.
+              if (MG.started && MG.alive) {
+                if (MG.metaLabel && MG.metaLabel.textContent !== "Press Enter when done") {
+                  MG.metaLabel.textContent = "Press Enter when done";
+                }
+                progress = 1;
+                paint();
+                return;
+              }
               handedOver = true;
               clearInterval(readyPoll);
               clearInterval(ticker);
-              // Snap the bar to full so the visual finishes cleanly
               progress = 1;
               paint();
               handover();
@@ -656,9 +664,13 @@
 
         function mgJump() {
           if (!MG.alive) {
-            // Crash recovery \u2014 first space after a crash restarts the
-            // game from scratch instead of doing nothing.
+            // Crash recovery \u2014 restart AND immediately jump in one
+            // press (not two). Single Space brings the game back.
             mgRestart();
+            MG.started = true;
+            MG.vy = MG.JUMP_VY;
+            MG.jumping = true;
+            if (MG.metaLabel) MG.metaLabel.textContent = "Mini\u2011hop";
             return;
           }
           if (!MG.started) {

@@ -198,29 +198,26 @@ export function FloatingCopilot() {
   }, []);
 
   // ── Rendering ─────────────────────────────────────────────────────
+  // v0.1.8: collapsed state is now an ALWAYS-VISIBLE small bar (not
+  // a thin glow). Click it to open the full panel. No hover gating.
+  // Removed the "hover" intermediate state \u2014 it confused users by
+  // making the bar invisible until they happened to mouse over it.
   return (
     <div
       className={`fc fc--edge-${edge} fc--mode-${mode}${streamProof ? " fc--invisible" : ""}`}
-      onMouseEnter={() => {
-        if (mode === "collapsed") setMode("hover");
-      }}
-      onMouseLeave={() => {
-        if (mode === "hover") setMode("collapsed");
-      }}
     >
       {mode === "collapsed" && (
-        <div className="fc-edge-glow">
-          <div className="fc-edge-halo" />
-          <span className="fc-edge-mark">sansxel</span>
-        </div>
-      )}
-
-      {mode === "hover" && (
         <div
-          className="fc-hover"
+          className="fc-bar"
           onClick={() => setMode("open")}
+          role="button"
+          tabIndex={0}
         >
-          <div className="fc-hover-text">Ask anything…</div>
+          <div className="fc-bar-mark">
+            <span className="fc-bar-dot" />
+            <span className="fc-bar-label">sansxel</span>
+          </div>
+          <div className="fc-bar-cta">Ask anything\u2026</div>
           <div className="fc-position-switch" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
@@ -268,6 +265,15 @@ export function FloatingCopilot() {
                 title={streamProof ? "Stream-proof on (invisible to screen recorders)" : "Stream-proof off (visible to screen recorders)"}
               >
                 {streamProof ? "🔇 Stealth" : "👁 Visible"}
+              </button>
+              <button
+                type="button"
+                className="fc-collapse"
+                onClick={() => setMode("collapsed")}
+                title="Collapse to bar"
+                aria-label="Collapse to bar"
+              >
+                \u2013
               </button>
               <button
                 type="button"

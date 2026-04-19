@@ -1,13 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 // Watches every [data-reveal] in the DOM, adds .is-revealed when it
 // scrolls into view. One-shot — the class doesn't get removed when
 // the element scrolls back out, so the reveal only plays once.
 export function RevealOnScroll() {
+  const pathname = usePathname();
+
   useEffect(() => {
-    const targets = Array.from(document.querySelectorAll("[data-reveal]"));
+    const targets = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-reveal]:not(.is-revealed)"),
+    );
+
     if (targets.length === 0 || typeof IntersectionObserver === "undefined") {
       // No JS support → make everything visible immediately
       targets.forEach((el) => el.classList.add("is-revealed"));
@@ -29,7 +35,7 @@ export function RevealOnScroll() {
     targets.forEach((el) => io.observe(el));
 
     return () => io.disconnect();
-  }, []);
+  }, [pathname]);
 
   return null;
 }
