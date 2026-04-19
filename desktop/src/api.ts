@@ -241,6 +241,61 @@ export async function getSubscription(token: string): Promise<Subscription> {
   return (await res.json()) as Subscription;
 }
 
+// ── Usage ───────────────────────────────────────────────────────────
+
+export type WeeklyUsageSummary = {
+  chat_requests: number;
+  voice_seconds: number;
+  week_start: string;
+  week_reset: string;
+  weekly_chat_limit: number | null;
+  weekly_voice_seconds_limit: number | null;
+  pro_throttle: {
+    smart_to_balanced: number;
+    balanced_to_fast: number;
+    current_tier: ModelTier | null;
+    next_downshift_in: number | null;
+  } | null;
+  recent: Array<{
+    id: string;
+    kind: string;
+    model: string | null;
+    surface: string | null;
+    total_tokens: number;
+    audio_seconds: number | null;
+    created_at: string;
+  }>;
+};
+
+export async function getWeeklyUsage(token: string): Promise<WeeklyUsageSummary> {
+  const res = await fetch(`${API_BASE}/api/desktop/usage`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error(`getWeeklyUsage ${res.status}`);
+  return (await res.json()) as WeeklyUsageSummary;
+}
+
+// ── API keys ────────────────────────────────────────────────────────
+
+export type ApiKeySummary = {
+  id: string;
+  name: string;
+  key_prefix: string;
+  created_at: string;
+  last_used_at: string | null;
+};
+
+export async function listDesktopApiKeys(token: string): Promise<ApiKeySummary[]> {
+  const res = await fetch(`${API_BASE}/api/desktop/keys`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error(`listDesktopApiKeys ${res.status}`);
+  const data = (await res.json()) as { keys: ApiKeySummary[] };
+  return data.keys ?? [];
+}
+
 // ── Voice ────────────────────────────────────────────────────────────
 
 export async function transcribeAudio(

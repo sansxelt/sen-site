@@ -387,6 +387,188 @@
 .ws-nav-avatar:hover {
   background: rgba(167, 139, 250, 0.35);
 }
+.ws-nav-avatar.active {
+  border-color: var(--accent-strong);
+  background: var(--accent);
+  color: #0a0a0a;
+}
+
+/* Account view extras: jump grid + sign-out row */
+.account-jump-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+.account-jump {
+  text-align: left;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.account-jump:hover {
+  background: rgba(167, 139, 250, 0.08);
+  border-color: var(--accent-border);
+}
+.account-jump-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+  margin-bottom: 3px;
+}
+.account-jump-sub {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.6);
+  line-height: 1.4;
+}
+.account-signout-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.account-signout {
+  background: transparent;
+  border: 1px solid rgba(254, 202, 202, 0.25);
+  color: rgba(254, 202, 202, 0.85);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 160ms ease;
+}
+.account-signout:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(254, 202, 202, 0.45);
+  color: #fff;
+}
+
+/* Usage view */
+.usage-card {
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  border-radius: 14px;
+}
+.usage-card-head {
+  display: flex;
+  justify-content: space-between;
+}
+.usage-card-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+}
+.usage-card-num {
+  margin-top: 6px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #fafafa;
+  font-variant-numeric: tabular-nums;
+}
+.usage-card-of {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(180, 180, 200, 0.6);
+}
+.usage-bar {
+  margin-top: 14px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.usage-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 360ms ease;
+}
+.usage-throttle {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(254, 215, 170, 0.9);
+}
+.usage-throttle-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(254, 191, 36, 0.95);
+  margin-right: 8px;
+}
+.usage-throttle-tier {
+  color: #fff;
+  font-weight: 500;
+}
+.usage-list {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.usage-row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.usage-row:last-child {
+  border-bottom: 0;
+}
+.usage-row-kind {
+  font-weight: 500;
+  color: rgba(220, 220, 235, 0.95);
+}
+.usage-row-meta {
+  color: rgba(180, 180, 200, 0.6);
+  truncate: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.usage-row-mono {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+}
+.usage-row-tokens {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  color: rgba(220, 220, 235, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+.usage-row-time {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.45);
+}
+.usage-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(180, 180, 200, 0.55);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
 
 /* ── Chat view ───────────────────────────────────────────────────── */
 
@@ -898,6 +1080,18 @@
 .chat-icon-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.chat-icon-btn--locked {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: rgba(254, 215, 170, 0.85);
+  cursor: pointer;
+}
+.chat-icon-btn--locked:hover {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fff;
 }
 
 .chat-icon-btn--recording {

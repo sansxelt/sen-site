@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -22,12 +23,16 @@ import {
   transcribeAudio,
   TTS_VOICES,
   PERSONA_OPTIONS,
+  getWeeklyUsage,
+  listDesktopApiKeys,
+  type WeeklyUsageSummary,
+  type ApiKeySummary,
 } from "./api";
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
 import { parseSections } from "./sections";
 
-type View = "chat" | "account" | "plan" | "preferences";
+type View = "chat" | "account" | "plan" | "usage" | "keys" | "preferences";
 
 type WorkspaceProps = {
   session: DesktopSession;
@@ -42,13 +47,16 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
       <NavRail
         active={view}
         onChange={setView}
-        onSignOut={onSignOut}
         email={session.email}
       />
       <div className="ws-main">
         {view === "chat" && <ChatView session={session} />}
-        {view === "account" && <AccountView session={session} />}
+        {view === "account" && (
+          <AccountView session={session} onSignOut={onSignOut} onView={setView} />
+        )}
         {view === "plan" && <PlanView session={session} />}
+        {view === "usage" && <UsageView session={session} />}
+        {view === "keys" && <KeysView session={session} />}
         {view === "preferences" && <PreferencesView />}
       </div>
     </div>
@@ -60,19 +68,15 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
 function NavRail({
   active,
   onChange,
-  onSignOut,
   email,
 }: {
   active: View;
   onChange: (v: View) => void;
-  onSignOut: () => void;
   email: string;
 }) {
   const initial = email.slice(0, 1).toUpperCase();
   return (
     <aside className="ws-nav">
-      {/* No brand icon — Windows already shows it on the title bar.
-          Just a subtle "online" status dot to anchor the top. */}
       <div className="ws-nav-status" title="Connected to sansxel-1">
         <span className="ws-nav-status-dot" />
       </div>
@@ -86,18 +90,25 @@ function NavRail({
           <ChatIcon />
         </NavButton>
         <NavButton
-          active={active === "account"}
-          onClick={() => onChange("account")}
-          label="Account"
-        >
-          <AccountIcon />
-        </NavButton>
-        <NavButton
           active={active === "plan"}
           onClick={() => onChange("plan")}
           label="Plan"
         >
           <PlanIcon />
+        </NavButton>
+        <NavButton
+          active={active === "usage"}
+          onClick={() => onChange("usage")}
+          label="Usage"
+        >
+          <UsageIcon />
+        </NavButton>
+        <NavButton
+          active={active === "keys"}
+          onClick={() => onChange("keys")}
+          label="API keys"
+        >
+          <KeysIcon />
         </NavButton>
         <NavButton
           active={active === "preferences"}
@@ -109,11 +120,13 @@ function NavRail({
       </div>
 
       <div className="ws-nav-foot">
+        {/* Avatar opens the account hub — never the surprise sign-out
+            it used to be. Sign-out lives inside Account now. */}
         <button
           type="button"
-          className="ws-nav-avatar"
-          onClick={onSignOut}
-          title={`Sign out (${email})`}
+          className={`ws-nav-avatar${active === "account" ? " active" : ""}`}
+          onClick={() => onChange("account")}
+          title={`Account (${email})`}
         >
           {initial}
         </button>
@@ -165,6 +178,7 @@ function ChatView({ session }: { session: DesktopSession }) {
   const [allowedTiers, setAllowedTiers] = useState<Set<ModelTier>>(
     new Set(["fast", "balanced", "smart"]),
   );
+  const [planForGating, setPlanForGating] = useState<string>("free");
   const lastTurnVoiceRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -185,6 +199,7 @@ function ChatView({ session }: { session: DesktopSession }) {
         const sub = await getSubscription(session.token);
         if (cancelled) return;
         setAllowedTiers(new Set(sub.tiers.map((t) => t.tier)));
+        setPlanForGating(sub.plan);
       } catch {
         // Defaults already let everything through; downgrade happens
         // server-side anyway.
@@ -545,41 +560,9 @@ function ChatView({ session }: { session: DesktopSession }) {
     await startRecording();
   }, [startRecording]);
 
-  const speak = useCallback(
-    async (text: string) => {
-      try {
-        setVoiceState("speaking");
-        const blob = await fetchSpeech(session.token, text);
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audioElRef.current = audio;
-        audio.onended = () => {
-          URL.revokeObjectURL(url);
-          if (audioElRef.current === audio) {
-            audioElRef.current = null;
-            setVoiceState("idle");
-          }
-        };
-        audio.onerror = () => {
-          URL.revokeObjectURL(url);
-          setVoiceState("idle");
-        };
-        await audio.play();
-      } catch (err) {
-        setChatError(err instanceof Error ? err.message : "TTS failed.");
-        setVoiceState("idle");
-      }
-    },
-    [session.token],
-  );
-
-  const stopSpeaking = useCallback(() => {
-    if (audioElRef.current) {
-      audioElRef.current.pause();
-      audioElRef.current = null;
-    }
-    setVoiceState("idle");
-  }, []);
+  // (Manual speak / stopSpeaking helpers removed — voice mode handles
+  // both directions via the orb takeover, so the inline speaker
+  // button is gone.)
 
   const showEmpty = messages.length === 0;
 
@@ -698,46 +681,28 @@ function ChatView({ session }: { session: DesktopSession }) {
           disabled={voiceState === "recording" || voiceState === "transcribing"}
         />
         <div className="chat-input-actions">
-          {/* Speak last assistant turn */}
-          {(() => {
-            const last = messages[messages.length - 1];
-            const canSpeak =
-              !!last && last.role === "assistant" && !!last.content && !streaming;
-            if (voiceState === "speaking") {
-              return (
-                <button
-                  type="button"
-                  onClick={stopSpeaking}
-                  className="chat-icon-btn chat-icon-btn--active"
-                  title="Stop speaking"
-                >
-                  <SpeakerIcon />
-                </button>
-              );
-            }
-            return (
-              <button
-                type="button"
-                onClick={() => canSpeak && speak(last.content)}
-                disabled={!canSpeak}
-                className="chat-icon-btn"
-                title="Read aloud"
-              >
-                <SpeakerIcon />
-              </button>
-            );
-          })()}
-
-          {/* Voice mode toggle — kicks off the orb takeover */}
-          <button
-            type="button"
-            onClick={() => void enterVoiceMode()}
-            disabled={voiceState !== "idle"}
-            className="chat-icon-btn"
-            title="Talk to sansxel-1"
-          >
-            <MicIcon />
-          </button>
+          {/* Single voice button — handles both directions via the
+              orb takeover. Free plan = locked with upgrade hint. */}
+          {planForGating === "free" ? (
+            <button
+              type="button"
+              onClick={() => void openUrl("https://sansxel.ai/pricing")}
+              className="chat-icon-btn chat-icon-btn--locked"
+              title="Voice is on paid plans — upgrade to unlock"
+            >
+              <MicIcon />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void enterVoiceMode()}
+              disabled={voiceState !== "idle"}
+              className="chat-icon-btn"
+              title="Talk to sansxel-1"
+            >
+              <MicIcon />
+            </button>
+          )}
 
           {streaming ? (
             <button
@@ -943,7 +908,15 @@ function BounceDots() {
 
 // ── Other views (placeholders — real data lands next push) ──────────
 
-function AccountView({ session }: { session: DesktopSession }) {
+function AccountView({
+  session,
+  onSignOut,
+  onView,
+}: {
+  session: DesktopSession;
+  onSignOut: () => void;
+  onView: (v: View) => void;
+}) {
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1044,6 +1017,36 @@ function AccountView({ session }: { session: DesktopSession }) {
             </div>
 
             {error && <div className="view-error">{error}</div>}
+
+            <div className="account-jump-grid">
+              <button type="button" className="account-jump" onClick={() => onView("plan")}>
+                <div className="account-jump-title">Plan</div>
+                <div className="account-jump-sub">Subscription, tier limits, upgrade</div>
+              </button>
+              <button type="button" className="account-jump" onClick={() => onView("usage")}>
+                <div className="account-jump-title">Usage</div>
+                <div className="account-jump-sub">Weekly requests + tokens</div>
+              </button>
+              <button type="button" className="account-jump" onClick={() => onView("keys")}>
+                <div className="account-jump-title">API keys</div>
+                <div className="account-jump-sub">Create + manage on the website</div>
+              </button>
+              <button type="button" className="account-jump" onClick={() => onView("preferences")}>
+                <div className="account-jump-title">Preferences</div>
+                <div className="account-jump-sub">Persona, voice, density, accent, window mode</div>
+              </button>
+            </div>
+
+            <div className="account-signout-row">
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="account-signout"
+                title="Sign out of this desktop"
+              >
+                Sign out
+              </button>
+            </div>
           </>
         )}
       </div>
@@ -1105,21 +1108,25 @@ function PlanView({ session }: { session: DesktopSession }) {
               ))}
             </div>
 
-            {sub.plan === "free" && (
+            {sub.plan !== "enterprise" && sub.plan !== "teams" && (
               <div className="upgrade-cta">
-                <div className="upgrade-cta-head">Want sansxel-1 (balanced) or sansxel-1 deep?</div>
+                <div className="upgrade-cta-head">
+                  {sub.plan === "free"
+                    ? "Want sansxel-1 (balanced) or sansxel-1 deep?"
+                    : "Move up a tier"}
+                </div>
                 <p>
-                  Upgrade in your sansxel.ai account to unlock sharper replies,
-                  longer context, and the deep-reasoning tier.
+                  {sub.plan === "free"
+                    ? "Upgrade to unlock sharper replies, longer context, voice mode, and the deep-reasoning tier."
+                    : "Upgrade for higher weekly limits, voice + tooling, and access to the deep-reasoning tier."}
                 </p>
-                <a
-                  href={`https://sansxel.ai/pricing`}
+                <button
+                  type="button"
+                  onClick={() => void openUrl("https://sansxel.ai/pricing")}
                   className="upgrade-cta-btn"
-                  target="_blank"
-                  rel="noreferrer"
                 >
                   See plans →
-                </a>
+                </button>
               </div>
             )}
           </>
@@ -1168,6 +1175,257 @@ function EditableField({
           placeholder={placeholder}
         />
       )}
+    </div>
+  );
+}
+
+function UsageView({ session }: { session: DesktopSession }) {
+  const [data, setData] = useState<WeeklyUsageSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const u = await getWeeklyUsage(session.token);
+        if (!cancelled) setData(u);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load usage.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session.token]);
+
+  const reset = data ? new Date(data.week_reset) : null;
+  const now = new Date();
+  const resetIn = reset ? reset.getTime() - now.getTime() : 0;
+  const resetDays = Math.floor(resetIn / (1000 * 60 * 60 * 24));
+  const resetHours = Math.floor((resetIn / (1000 * 60 * 60)) % 24);
+
+  const chatPct =
+    data && data.weekly_chat_limit && data.weekly_chat_limit > 0
+      ? Math.min((data.chat_requests / data.weekly_chat_limit) * 100, 100)
+      : 0;
+
+  const voiceUsedSec = Math.round(data?.voice_seconds ?? 0);
+  const voiceLimitSec = data?.weekly_voice_seconds_limit ?? null;
+
+  return (
+    <div className="view">
+      <div className="view-head">
+        <h1>Usage</h1>
+        <p>
+          {reset
+            ? `Resets ${reset.toUTCString().slice(0, 22)} (${resetDays}d ${resetHours}h)`
+            : "Weekly usage and limits."}
+        </p>
+      </div>
+      <div className="view-body">
+        {loading && <div className="view-loading">Loading…</div>}
+        {error && <div className="view-error">{error}</div>}
+        {data && (
+          <>
+            <div className="usage-card">
+              <div className="usage-card-head">
+                <div>
+                  <div className="usage-card-tag">This week — chat</div>
+                  <div className="usage-card-num">
+                    {data.chat_requests.toLocaleString()}
+                    <span className="usage-card-of">
+                      {" / "}
+                      {data.weekly_chat_limit === null
+                        ? "unlimited"
+                        : data.weekly_chat_limit.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {data.weekly_chat_limit !== null && (
+                <div className="usage-bar">
+                  <div className="usage-bar-fill" style={{ width: `${chatPct}%` }} />
+                </div>
+              )}
+              {data.pro_throttle && data.pro_throttle.current_tier && (
+                <div className="usage-throttle">
+                  <span className="usage-throttle-tag">Pro throttle</span>
+                  Currently serving on{" "}
+                  <span className="usage-throttle-tier">
+                    sansxel-1{" "}
+                    {data.pro_throttle.current_tier === "smart"
+                      ? "deep"
+                      : data.pro_throttle.current_tier}
+                  </span>
+                  .{" "}
+                  {data.pro_throttle.next_downshift_in &&
+                  data.pro_throttle.next_downshift_in > 0
+                    ? `${data.pro_throttle.next_downshift_in.toLocaleString()} more requests until the next downshift.`
+                    : "On the lowest tier this week."}
+                </div>
+              )}
+            </div>
+
+            {voiceLimitSec !== null && voiceLimitSec > 0 && (
+              <div className="usage-card">
+                <div className="usage-card-head">
+                  <div>
+                    <div className="usage-card-tag">This week — voice</div>
+                    <div className="usage-card-num">
+                      {Math.floor(voiceUsedSec / 60)}m {voiceUsedSec % 60}s
+                      <span className="usage-card-of">
+                        {" / "}
+                        {Math.floor(voiceLimitSec / 60)}m
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="usage-bar">
+                  <div
+                    className="usage-bar-fill"
+                    style={{
+                      width: `${Math.min(
+                        (voiceUsedSec / voiceLimitSec) * 100,
+                        100,
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="view-section-title">Recent activity</div>
+            {data.recent.length === 0 ? (
+              <div className="usage-empty">No requests recorded yet.</div>
+            ) : (
+              <div className="usage-list">
+                {data.recent.map((r) => (
+                  <div key={r.id} className="usage-row">
+                    <span className="usage-row-kind">
+                      {r.kind === "chat"
+                        ? "Chat"
+                        : r.kind === "copilot"
+                          ? "Copilot"
+                          : r.kind === "voice_transcribe"
+                            ? "Voice in"
+                            : r.kind === "voice_speak"
+                              ? "Voice out"
+                              : r.kind}
+                    </span>
+                    <span className="usage-row-meta">
+                      {r.model ?? "—"}
+                      {r.surface ? ` · ${r.surface}` : ""}
+                    </span>
+                    <span className="usage-row-tokens">
+                      {r.total_tokens > 0
+                        ? `${r.total_tokens.toLocaleString()}t`
+                        : "—"}
+                    </span>
+                    <span className="usage-row-time">
+                      {new Date(r.created_at).toLocaleString("en-US", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KeysView({ session }: { session: DesktopSession }) {
+  const [keys, setKeys] = useState<ApiKeySummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = await listDesktopApiKeys(session.token);
+        if (!cancelled) setKeys(list);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load keys.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session.token]);
+
+  return (
+    <div className="view">
+      <div className="view-head">
+        <h1>API keys</h1>
+        <p>
+          Your active <code>sk_sen_…</code> keys. Create + revoke happens on
+          sansxel.ai (opens in your browser).
+        </p>
+      </div>
+      <div className="view-body">
+        {loading && <div className="view-loading">Loading…</div>}
+        {error && <div className="view-error">{error}</div>}
+        {!loading && !error && (
+          <>
+            {keys.length === 0 ? (
+              <div className="usage-empty">
+                No keys yet.{" "}
+                <button
+                  type="button"
+                  onClick={() => void openUrl("https://sansxel.ai/account/keys")}
+                  className="upgrade-cta-btn"
+                  style={{ marginTop: 12 }}
+                >
+                  Create one →
+                </button>
+              </div>
+            ) : (
+              <div className="usage-list">
+                {keys.map((k) => (
+                  <div key={k.id} className="usage-row">
+                    <span className="usage-row-kind">{k.name}</span>
+                    <span className="usage-row-meta usage-row-mono">
+                      {k.key_prefix}
+                    </span>
+                    <span className="usage-row-time">
+                      {k.last_used_at
+                        ? `last used ${new Date(k.last_used_at).toLocaleDateString()}`
+                        : `created ${new Date(k.created_at).toLocaleDateString()}`}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="upgrade-cta">
+              <div className="upgrade-cta-head">Manage keys on the website</div>
+              <p>
+                Create new keys, name them, and revoke compromised ones from
+                your account on sansxel.ai.
+              </p>
+              <button
+                type="button"
+                onClick={() => void openUrl("https://sansxel.ai/account/keys")}
+                className="upgrade-cta-btn"
+              >
+                Open key manager →
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -1448,15 +1706,6 @@ function ChatIcon() {
   );
 }
 
-function AccountIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  );
-}
-
 function PlanIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1467,21 +1716,29 @@ function PlanIcon() {
   );
 }
 
+function UsageIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6"  y1="20" x2="6"  y2="14" />
+    </svg>
+  );
+}
+
+function KeysIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+    </svg>
+  );
+}
+
 function PrefsIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
-}
-
-function SpeakerIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
     </svg>
   );
 }
