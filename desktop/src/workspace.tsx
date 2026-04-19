@@ -129,6 +129,10 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
             session={session}
             onOpenPlan={() => setView("plan")}
             onOpenSources={() => setView("sources")}
+            // v0.1.8 — generic view-switcher used by the navigate
+            // tool. The chat view dispatches tool_use blocks to a
+            // local registry; a navigate(view) call hits this.
+            onNavigate={(next) => setView(next as View)}
           />
         )}
         {view === "account" && (
@@ -846,11 +850,11 @@ export function ChatView({ session }: { session: DesktopSession }) {
                     <BounceDots />
                   ) : m.role === "assistant" ? (
                     <AssistantBubble
-                      content={m.content}
+                      content={typeof m.content === "string" ? m.content : ""}
                       streaming={isStillStreaming}
                     />
                   ) : (
-                    m.content
+                    typeof m.content === "string" ? m.content : ""
                   )}
                 </div>
               );

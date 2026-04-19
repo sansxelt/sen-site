@@ -5,8 +5,10 @@ import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
 import { recordUsage } from "../../../../lib/usage";
 import { getPlanForEmail } from "../../../../lib/account-billing";
 import {
+  consumeBoostForKind,
   decideImageRequest,
   getWeeklyUsage,
+  hasUnconsumedBoost,
 } from "../../../../lib/plan-limits";
 
 export const runtime = "nodejs";
@@ -63,16 +65,33 @@ export async function POST(request: Request) {
   const plan = await getPlanForEmail(email);
   const weekly = await getWeeklyUsage(email);
   const decision = decideImageRequest({ plan, weekly });
+  // v0.1.8 — image_credit_pack override. Burn one credit per image
+  // generation when the plan cap would have blocked the request.
   if (decision.kind === "blocked") {
-    return NextResponse.json(
-      {
-        error: decision.reason,
-        limit: decision.limit,
-        used: decision.used,
-        reset: decision.reset,
-      },
-      { status: 429 },
-    );
+    if (await hasUnconsumedBoost(email, "image")) {
+      const burnt = await consumeBoostForKind(email, "image");
+      if (!burnt) {
+        return NextResponse.json(
+          {
+            error: decision.reason,
+            limit: decision.limit,
+            used: decision.used,
+            reset: decision.reset,
+          },
+          { status: 429 },
+        );
+      }
+    } else {
+      return NextResponse.json(
+        {
+          error: decision.reason,
+          limit: decision.limit,
+          used: decision.used,
+          reset: decision.reset,
+        },
+        { status: 429 },
+      );
+    }
   }
 
   const startedAt = Date.now();

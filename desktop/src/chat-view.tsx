@@ -4,14 +4,23 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   ALL_MODEL_OPTIONS,
+  type ChatContentBlock,
   type ChatImageAttachment,
   type ChatMessage,
+  type ChatToolResultBlock,
+  type ChatToolUseBlock,
+  createDesktopApiKey,
   fetchSpeech,
   generateImage,
   getSubscription,
+  listDesktopApiKeys,
+  listSources,
   type ModelTier,
+  type Persona,
+  revokeDesktopApiKey,
   shareThread,
   streamChat,
+  streamChatWithTools,
   summarizeThread,
   transcribeAudio,
 } from "./api";
@@ -49,6 +58,20 @@ type DesktopChatViewProps = {
   session: DesktopSession;
   onOpenPlan: () => void;
   onOpenSources?: () => void;
+  // v0.1.8 — workspace-level view switcher used by the `navigate`
+  // tool. Values come from the Workspace `View` union.
+  onNavigate?: (view: string) => void;
+};
+
+// v0.1.8 — A record of one tool call inside an assistant turn.
+// Keyed by tool_use id (which Anthropic supplies); rendered as a
+// chip under the assistant bubble so the user can see what got run.
+export type ToolExecution = {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+  status: "running" | "ok" | "error";
+  summary: string;
 };
 
 type VoiceState = "idle" | "recording" | "transcribing" | "warming" | "speaking";
@@ -83,6 +106,17 @@ const VISION_MIME_TYPES: ChatImageAttachment["media_type"][] = [
 
 function isVisionMime(type: string): type is ChatImageAttachment["media_type"] {
   return (VISION_MIME_TYPES as readonly string[]).includes(type);
+}
+
+// v0.1.8 — Coerce a structured-content message back to a flat string
+// for places that just want the human-readable text (preview, search,
+// markdown export, summarize-thread input). Tool_use / tool_result
+// blocks render as chips, not text, so we drop them here.
+function messageContentText(message: ChatMessage): string {
+  if (typeof message.content === "string") return message.content;
+  return message.content
+    .map((block) => (block.type === "text" ? block.text : ""))
+    .join("");
 }
 
 // Cheap upper bound on the byte length of a base64 string.
@@ -207,7 +241,7 @@ function buildMarkdownExport(thread: DesktopThread): string {
     const speaker = message.role === "user" ? "**You:**" : "**sansxel-1:**";
     lines.push(speaker);
     lines.push("");
-    lines.push(message.content);
+    lines.push(messageContentText(message));
     lines.push("");
   }
   return lines.join("\n");
@@ -1064,6 +1098,7 @@ export function DesktopChatView({
   session,
   onOpenPlan,
   onOpenSources,
+  onNavigate,
 }: DesktopChatViewProps) {
   const { prefs, update } = usePreferences();
   const [threads, setThreads] = useState<DesktopThread[]>([]);
@@ -1114,6 +1149,12 @@ export function DesktopChatView({
   // vice versa — only one side panel at a time.
   const [activeArtifact, setActiveArtifact] = useState<CodeArtifact | null>(null);
   const [recentFiles, setRecentFiles] = useState<RecentFile[]>(() => loadRecentFiles());
+  // v0.1.8 — tool executions, keyed by `${threadId}:${assistantIdx}`.
+  // We never persist these — they're a transient UI affordance so the
+  // user can see what just got executed in the current session.
+  const [toolExecutions, setToolExecutions] = useState<
+    Record<string, ToolExecution[]>
+  >({});
   const filePickerRef = useRef<HTMLInputElement | null>(null);
   const composerInputRef = useRef<HTMLTextAreaElement | null>(null);
   const launcherRef = useRef<HTMLDivElement | null>(null);
@@ -1172,7 +1213,7 @@ export function DesktopChatView({
       return (
         thread.title.toLowerCase().includes(q) ||
         thread.preview.toLowerCase().includes(q) ||
-        thread.messages.some((m) => m.content.toLowerCase().includes(q))
+        thread.messages.some((m) => messageContentText(m).toLowerCase().includes(q))
       );
     });
   }, [threads, searchQuery, showFolded]);
@@ -1583,7 +1624,7 @@ export function DesktopChatView({
     if (!activeThread) return;
     if (activeThread.messages.length < 2) return;
     const lastMsg = activeThread.messages[activeThread.messages.length - 1];
-    if (!lastMsg || !lastMsg.content.trim()) return;
+    if (!lastMsg || !messageContentText(lastMsg).trim()) return;
 
     const threadId = activeThread.id;
     const handle = window.setTimeout(() => {
@@ -1593,7 +1634,7 @@ export function DesktopChatView({
             session.token,
             activeThread.messages.map((m) => ({
               role: m.role,
-              content: m.content,
+              content: messageContentText(m),
             })),
           );
           if (!title) return;
@@ -1696,7 +1737,7 @@ export function DesktopChatView({
       .reverse()
       .find((message) => message.role === "assistant");
     if (!lastAssistant) return;
-    const block = extractLatestCanvas(lastAssistant.content);
+    const block = extractLatestCanvas(messageContentText(lastAssistant));
     if (!block) return;
     const key = `${block.title}::${block.content.length}::${block.content.slice(0, 64)}`;
     if (lastCanvasKeyRef.current === key) return;
@@ -1898,6 +1939,194 @@ export function DesktopChatView({
     [],
   );
 
+  // v0.1.8 — Tool dispatcher. Each handler returns a string the
+  // model gets back as the tool_result content (so it can summarise
+  // / continue speaking). The second return value is a short
+  // user-facing label rendered on the chip ("opened Usage", etc.)
+  // and used as the spoken acknowledgment for voice turns.
+  const dispatchTool = useCallback(
+    async (
+      name: string,
+      input: Record<string, unknown>,
+    ): Promise<{ result: string; summary: string; speak: string }> => {
+      const text = (key: string): string =>
+        typeof input[key] === "string" ? (input[key] as string) : "";
+      try {
+        switch (name) {
+          case "navigate": {
+            const view = text("view");
+            if (!view) throw new Error("missing view");
+            onNavigate?.(view);
+            return {
+              result: `Switched the workspace to the ${view} view.`,
+              summary: `navigated to ${view}`,
+              speak: `opening ${view}`,
+            };
+          }
+          case "start_new_chat": {
+            const id = createFreshThread();
+            return {
+              result: `Started a new chat thread (id ${id}).`,
+              summary: "started new chat",
+              speak: "starting a new chat",
+            };
+          }
+          case "search_threads": {
+            const q = text("query").toLowerCase();
+            const matches = threadsRef.current
+              .filter((t) =>
+                !q ||
+                t.title.toLowerCase().includes(q) ||
+                t.preview.toLowerCase().includes(q),
+              )
+              .slice(0, 5)
+              .map((t) => ({ id: t.id, title: t.title, preview: t.preview }));
+            return {
+              result: JSON.stringify({ matches }),
+              summary: `searched threads (${matches.length})`,
+              speak: `found ${matches.length} thread${matches.length === 1 ? "" : "s"}`,
+            };
+          }
+          case "open_thread": {
+            const id = text("id");
+            if (!id) throw new Error("missing id");
+            const found = threadsRef.current.find((t) => t.id === id);
+            if (!found) throw new Error("thread not found");
+            setActiveThreadId(id);
+            return {
+              result: `Switched to thread "${found.title}".`,
+              summary: `opened "${found.title}"`,
+              speak: "opening thread",
+            };
+          }
+          case "create_api_key": {
+            const keyName = text("name") || "sansxel desktop";
+            const created = await createDesktopApiKey(session.token, keyName);
+            return {
+              result: JSON.stringify({
+                id: created.key.id,
+                prefix: created.key.key_prefix,
+                name: created.key.name,
+              }),
+              summary: `created key "${created.key.name}"`,
+              speak: "creating an API key",
+            };
+          }
+          case "revoke_api_key": {
+            const id = text("id");
+            if (!id) throw new Error("missing id");
+            await revokeDesktopApiKey(session.token, id);
+            return {
+              result: `Revoked key ${id}.`,
+              summary: `revoked key ${id.slice(0, 8)}…`,
+              speak: "revoking API key",
+            };
+          }
+          case "list_api_keys": {
+            const keys = await listDesktopApiKeys(session.token);
+            return {
+              result: JSON.stringify({
+                keys: keys.map((k) => ({
+                  id: k.id,
+                  name: k.name,
+                  prefix: k.key_prefix,
+                })),
+              }),
+              summary: `listed ${keys.length} key${keys.length === 1 ? "" : "s"}`,
+              speak: `you have ${keys.length} API key${keys.length === 1 ? "" : "s"}`,
+            };
+          }
+          case "query_memory": {
+            return {
+              result: "Memory tool coming v0.1.10.",
+              summary: "queried memory (stub)",
+              speak: "memory search isn't ready yet",
+            };
+          }
+          case "query_sources": {
+            const q = text("query").toLowerCase();
+            const sources = await listSources(session.token);
+            const scored = sources
+              .map((s) => {
+                const haystack = `${s.title}\n${s.body}`.toLowerCase();
+                const score = q && haystack.includes(q) ? 1 : 0;
+                return { score, source: s };
+              })
+              .filter((entry) => entry.score > 0 || !q)
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 3)
+              .map(({ source }) => ({
+                id: source.id,
+                title: source.title,
+                snippet: source.body.slice(0, 240),
+              }));
+            return {
+              result: JSON.stringify({ matches: scored }),
+              summary: `searched sources (${scored.length})`,
+              speak: `found ${scored.length} source match${scored.length === 1 ? "" : "es"}`,
+            };
+          }
+          case "summarize_thread": {
+            const id = text("id");
+            const target =
+              threadsRef.current.find((t) => t.id === id) ?? null;
+            if (!target) throw new Error("thread not found");
+            const summary = await summarizeThread(
+              session.token,
+              target.messages
+                .filter((m) => typeof m.content === "string")
+                .map((m) => ({
+                  role: m.role,
+                  content: m.content as string,
+                })),
+            );
+            return {
+              result: JSON.stringify(summary),
+              summary: `summarised "${target.title}"`,
+              speak: "summarising the thread",
+            };
+          }
+          case "change_model_tier": {
+            const next = text("tier") as ModelTier;
+            if (next !== "fast" && next !== "balanced" && next !== "smart") {
+              throw new Error("invalid tier");
+            }
+            setTier(next);
+            await update({ default_tier: next });
+            return {
+              result: `Model tier set to ${next}.`,
+              summary: `model tier → ${next}`,
+              speak: `switching to ${next}`,
+            };
+          }
+          case "set_persona": {
+            const persona = text("persona") as Persona;
+            if (
+              persona !== "direct" &&
+              persona !== "warm" &&
+              persona !== "technical" &&
+              persona !== "playful"
+            ) {
+              throw new Error("invalid persona");
+            }
+            await update({ persona });
+            return {
+              result: `Persona set to ${persona}.`,
+              summary: `persona → ${persona}`,
+              speak: `switching to ${persona} persona`,
+            };
+          }
+          default:
+            throw new Error(`unknown tool: ${name}`);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "tool error";
+        throw new Error(message);
+      }
+    },
+    [createFreshThread, onNavigate, session.token, update],
+  );
+
   const send = useCallback(async (overrideText?: string, fromVoice = false) => {
     const baseText = (overrideText ?? input).trim();
     // v0.1.4 — fold any text-file attachments into the outgoing
@@ -1969,6 +2198,9 @@ export function DesktopChatView({
     }
     setStreaming(true);
     setChatError(null);
+    // v0.1.8 — chips belong to the *current* assistant turn, so
+    // clear the per-thread bucket when a new turn begins.
+    setToolExecutions((current) => ({ ...current, [threadId]: [] }));
     streamingThreadIdRef.current = threadId;
     sendStartRef.current = Date.now();
 
@@ -1976,29 +2208,160 @@ export function DesktopChatView({
     abortRef.current = controller;
 
     try {
+      // v0.1.8 — tool-aware streaming loop. The model can emit a
+      // mix of text deltas and tool_use blocks; we collect them per
+      // turn, dispatch each tool to the local registry, then send a
+      // follow-up message containing tool_result blocks so the
+      // assistant can finish its turn. Loops until no more tool_use
+      // blocks come back (capped at 4 rounds to prevent runaways).
+      const toolsEnabled = prefs.tools_enabled !== false;
+      let conversation: ChatMessage[] = nextMessages;
+      const onMeta = (meta: {
+        tier_requested: ModelTier | null;
+        tier_resolved: ModelTier | null;
+      }) => {
+        if (
+          meta.tier_requested &&
+          meta.tier_resolved &&
+          meta.tier_requested !== meta.tier_resolved
+        ) {
+          setPlanNotice(
+            `Your plan doesn't include ${meta.tier_requested} yet, so sansxel replied with ${meta.tier_resolved}.`,
+          );
+        } else {
+          setPlanNotice(null);
+        }
+      };
+
+      const maxRounds = 4;
       smoothStream.reset();
-      for await (const chunk of streamChat(session.token, nextMessages, {
-        tier,
-        inputMode: fromVoice ? "voice" : "text",
-        persona: prefs.persona,
-        agentMode,
-        signal: controller.signal,
-        onMeta: (meta) => {
-          if (
-            meta.tier_requested &&
-            meta.tier_resolved &&
-            meta.tier_requested !== meta.tier_resolved
-          ) {
-            setPlanNotice(
-              `Your plan doesn't include ${meta.tier_requested} yet, so sansxel replied with ${meta.tier_resolved}.`,
-            );
-          } else {
-            setPlanNotice(null);
+
+      for (let round = 0; round < maxRounds; round += 1) {
+        void round;
+        if (!toolsEnabled) {
+          // Legacy plain-text path. Stays bit-for-bit identical to
+          // the v0.1.7 behavior.
+          for await (const chunk of streamChat(session.token, conversation, {
+            tier,
+            inputMode: fromVoice ? "voice" : "text",
+            persona: prefs.persona,
+            agentMode,
+            toolsEnabled: false,
+            signal: controller.signal,
+            onMeta,
+          })) {
+            smoothStream.push(chunk);
           }
-        },
-      })) {
-        smoothStream.push(chunk);
+          break;
+        }
+
+        // Tools-on path: parse typed chunks and dispatch tool_use.
+        const turnBlocks: ChatContentBlock[] = [];
+        const turnToolUses: ChatToolUseBlock[] = [];
+        let turnText = "";
+
+        for await (const chunk of streamChatWithTools(session.token, conversation, {
+          tier,
+          inputMode: fromVoice ? "voice" : "text",
+          persona: prefs.persona,
+          agentMode,
+          signal: controller.signal,
+          onMeta,
+        })) {
+          if (chunk.type === "text") {
+            smoothStream.push(chunk.text);
+            turnText += chunk.text;
+          } else if (chunk.type === "tool_use") {
+            const toolUse: ChatToolUseBlock = {
+              type: "tool_use",
+              id: chunk.id,
+              name: chunk.name,
+              input: chunk.input,
+            };
+            turnToolUses.push(toolUse);
+          }
+        }
+
+        if (turnText) turnBlocks.push({ type: "text", text: turnText });
+        for (const tu of turnToolUses) turnBlocks.push(tu);
+
+        if (turnToolUses.length === 0) {
+          break;
+        }
+
+        // Execute every tool_use in the turn and stash a chip for
+        // each so the user sees what ran. If voice-driven, speak a
+        // short ack before kicking off heavy tools.
+        const toolResults: ChatToolResultBlock[] = [];
+        for (const toolUse of turnToolUses) {
+          const exec: ToolExecution = {
+            id: toolUse.id,
+            name: toolUse.name,
+            input: toolUse.input,
+            status: "running",
+            summary: `running ${toolUse.name}…`,
+          };
+          setToolExecutions((current) => ({
+            ...current,
+            [threadId]: [...(current[threadId] ?? []), exec],
+          }));
+
+          // Voice ack — speak a short cue so the user knows we're
+          // about to run an action. Best-effort, never blocks the
+          // tool dispatch itself.
+          if (fromVoice) {
+            try {
+              const ackText = `${toolUse.name.replace(/_/g, " ")}…`;
+              const blob = await fetchSpeech(session.token, ackText, prefs.voice);
+              const ackUrl = URL.createObjectURL(blob);
+              const ackAudio = new Audio(ackUrl);
+              await ackAudio.play().catch(() => {});
+              ackAudio.onended = () => URL.revokeObjectURL(ackUrl);
+            } catch {
+              // ignore — voice ack is a nicety
+            }
+          }
+
+          try {
+            const dispatched = await dispatchTool(toolUse.name, toolUse.input);
+            exec.status = "ok";
+            exec.summary = dispatched.summary;
+            toolResults.push({
+              type: "tool_result",
+              tool_use_id: toolUse.id,
+              content: dispatched.result,
+            });
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : "tool failed";
+            exec.status = "error";
+            exec.summary = `failed: ${message}`;
+            toolResults.push({
+              type: "tool_result",
+              tool_use_id: toolUse.id,
+              content: message,
+              is_error: true,
+            });
+          }
+          // Re-render with the updated status.
+          setToolExecutions((current) => ({
+            ...current,
+            [threadId]: (current[threadId] ?? []).map((e) =>
+              e.id === exec.id ? { ...exec } : e,
+            ),
+          }));
+        }
+
+        // Append the assistant turn (with text + tool_use) and the
+        // user turn carrying tool_results, then loop for the model
+        // to continue.
+        conversation = [
+          ...conversation,
+          { role: "assistant", content: turnBlocks },
+          { role: "user", content: toolResults },
+        ];
       }
+
       smoothStream.end();
       const assistant = await smoothStream.drained();
       streamingThreadIdRef.current = null;
@@ -2127,12 +2490,14 @@ export function DesktopChatView({
     agentMode,
     attachments,
     createFreshThread,
+    dispatchTool,
     flashTitle,
     input,
     playVoiceCue,
     prefs.auto_speak_replies,
     prefs.conversational,
     prefs.persona,
+    prefs.tools_enabled,
     prefs.voice,
     session.token,
     smoothStream,
@@ -2681,9 +3046,20 @@ export function DesktopChatView({
                       <BounceDots />
                     ) : message.role === "assistant" ? (
                       <AssistantBubble
-                        content={message.content}
+                        content={
+                          typeof message.content === "string"
+                            ? message.content
+                            : ""
+                        }
                         streaming={isStillStreaming}
                         activeArtifactId={activeArtifact?.id ?? null}
+                        // v0.1.8 — show one chip per tool execution
+                        // attached to the active assistant turn.
+                        toolExecutions={
+                          isLast && activeThreadId
+                            ? toolExecutions[activeThreadId] ?? []
+                            : []
+                        }
                         onRunArtifact={(artifact) => {
                           // Only one side panel at a time — close the
                           // canvas if it was open so the right column
@@ -3371,11 +3747,13 @@ function AssistantBubble({
   streaming,
   onRunArtifact,
   activeArtifactId,
+  toolExecutions,
 }: {
   content: string;
   streaming: boolean;
   onRunArtifact?: (artifact: CodeArtifact) => void;
   activeArtifactId?: string | null;
+  toolExecutions?: ToolExecution[];
 }) {
   // v0.1.4 — strip [canvas:Title]…[/canvas] blocks from the bubble so
   // the chat shows the assistant's prose without the raw markup. The
@@ -3422,6 +3800,26 @@ function AssistantBubble({
               </button>
             );
           })}
+        </div>
+      )}
+      {toolExecutions && toolExecutions.length > 0 && (
+        <div className="chat-tool-row">
+          {toolExecutions.map((exec) => (
+            <span
+              key={exec.id}
+              className={`chat-tool-chip chat-tool-chip--${exec.status}`}
+              title={`${exec.name}(${JSON.stringify(exec.input)})`}
+            >
+              <span className="chat-tool-chip-mark" aria-hidden>
+                {exec.status === "running"
+                  ? "…"
+                  : exec.status === "ok"
+                    ? "✓"
+                    : "!"}
+              </span>
+              <span className="chat-tool-chip-label">{exec.summary}</span>
+            </span>
+          ))}
         </div>
       )}
     </>

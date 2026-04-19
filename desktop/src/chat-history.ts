@@ -134,10 +134,25 @@ export function sortThreads(a: DesktopThread, b: DesktopThread) {
   return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 }
 
+// v0.1.8 — assistant turns may carry structured content blocks
+// (text + tool_use) instead of a plain string. Coerce to a single
+// readable string for previews/titles.
+function messageToText(message: ChatMessage): string {
+  if (typeof message.content === "string") return message.content;
+  return message.content
+    .map((block) => {
+      if (block.type === "text") return block.text;
+      if (block.type === "tool_use") return "";
+      return "";
+    })
+    .join("")
+    .trim();
+}
+
 export function buildThreadPreview(messages: ChatMessage[]): string {
-  const last = [...messages].reverse().find((message) => message.content.trim());
+  const last = [...messages].reverse().find((message) => messageToText(message).trim());
   if (!last) return "Start a conversation";
-  return trimSentence(last.content, 78);
+  return trimSentence(messageToText(last), 78);
 }
 
 export function deriveThreadTitle(
@@ -146,7 +161,7 @@ export function deriveThreadTitle(
 ): string {
   const userMessages = messages
     .filter((message) => message.role === "user")
-    .map((message) => message.content.trim())
+    .map((message) => messageToText(message).trim())
     .filter(Boolean);
 
   if (userMessages.length === 0) return "New chat";

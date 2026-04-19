@@ -1927,8 +1927,8 @@
 
 .chat-launcher {
   position: relative;
-  flex: 1;
-  min-width: 260px;
+  flex: 1 1 320px;
+  min-width: 0;
 }
 
 .chat-launcher-trigger {
@@ -1975,8 +1975,8 @@
   position: absolute;
   left: 0;
   bottom: calc(100% + 12px);
-  width: min(980px, calc(100vw - 112px));
-  max-width: 980px;
+  width: min(100%, 980px);
+  max-width: min(980px, calc(100vw - 32px));
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr) 250px;
   border-radius: 22px;
@@ -2228,7 +2228,8 @@
 
 @media (max-width: 1120px) {
   .chat-launcher-panel {
-    width: min(900px, calc(100vw - 72px));
+    width: min(100%, 900px);
+    max-width: min(900px, calc(100vw - 32px));
     grid-template-columns: 184px minmax(0, 1fr);
   }
 
@@ -2261,7 +2262,8 @@
   }
 
   .chat-launcher-panel {
-    width: min(720px, calc(100vw - 40px));
+    width: min(100%, 720px);
+    max-width: min(720px, calc(100vw - 24px));
     grid-template-columns: 1fr;
   }
 
@@ -5281,4 +5283,55 @@
   font-size: 10px;
   letter-spacing: 0.12em;
   opacity: 0.7;
+}
+
+/* v0.1.8 — Tool execution chips. One row per assistant turn that
+   invoked the local tool registry. Status colours match the
+   running / ok / error states emitted by dispatchTool. */
+.chat-tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chat-tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 1px solid transparent;
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5f5;
+}
+
+.chat-tool-chip--ok {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.32);
+  color: #bbf7d0;
+}
+
+.chat-tool-chip--running {
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.32);
+  color: #ddd6fe;
+}
+
+.chat-tool-chip--error {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.32);
+  color: #fecaca;
+}
+
+.chat-tool-chip-mark {
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.chat-tool-chip-label {
+  letter-spacing: 0.01em;
 }

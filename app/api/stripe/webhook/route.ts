@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { getStripe, STRIPE_PRICES } from "../../../../lib/stripe";
+import { getStripe, isStripeConfigured, STRIPE_PRICES } from "../../../../lib/stripe";
 import { upsertActiveSubscription } from "../../../../lib/subscriptions";
 import {
   sendPaymentFailedEmail,
@@ -11,8 +11,15 @@ import {
   sendSubscriptionCancellationScheduledEmail,
   sendSubscriptionEndedEmail,
 } from "../../../../lib/email";
-import { getPricingPlan, type PricingPlanKey, pricingPlanMap } from "../../../../lib/pricing";
+import {
+  type BillingAddonKey,
+  getPricingPlan,
+  isOneTimeBoost,
+  type PricingPlanKey,
+  pricingPlanMap,
+} from "../../../../lib/pricing";
 import { getUserProfileByEmail } from "../../../../lib/user-profile";
+import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
 
 /**
  * Look up the customer's display name so every billing email greets
@@ -286,15 +293,87 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
   });
 }
 
+// ───────────────────────────────────────────────────────────────────
+// v0.1.8 — payment_intent.succeeded → boost_credits ledger
+// ───────────────────────────────────────────────────────────────────
+//
+// One-time boost top-ups (session_boost, weekly_boost, voice_minute_pack,
+// image_credit_pack, copilot_time_pack) are charged via PaymentIntent
+// in app/api/desktop/billing/payment-intent/route.ts. The intent's
+// metadata carries { addonKey, purchaseKind: "one_time_boost",
+// userEmail }. This handler turns a successful charge into a row in
+// boost_credits so the gating layer in lib/plan-limits.ts can let the
+// user past the plan cap.
+//
+// Idempotent: the table's stripe_payment_intent column is unique, so a
+// retried webhook is a no-op (we swallow the unique-violation error).
+async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
+  const meta = intent.metadata ?? {};
+  const purchaseKind = meta.purchaseKind ?? meta.purchase_kind;
+  if (purchaseKind !== "one_time_boost") return; // Not a boost charge.
+
+  const addonKey = (meta.addonKey ?? meta.addon_key) as string | undefined;
+  const userEmail = (meta.userEmail ?? meta.user_email) as string | undefined;
+  if (!addonKey || !userEmail) {
+    console.warn("[stripe webhook] one_time_boost intent missing metadata:", intent.id);
+    return;
+  }
+  if (!isOneTimeBoost(addonKey)) {
+    console.warn("[stripe webhook] one_time_boost intent has unknown addonKey:", addonKey);
+    return;
+  }
+  if (!isDatabaseConfigured()) {
+    console.warn("[stripe webhook] boost credit dropped — Supabase not configured.");
+    return;
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("boost_credits" as never)
+    .insert([
+      {
+        email: userEmail.toLowerCase(),
+        addon_key: addonKey as BillingAddonKey,
+        stripe_payment_intent: intent.id,
+        consumed: false,
+      },
+    ] as never);
+  if (error) {
+    // Postgres unique_violation = "23505". Treat as success: the
+    // credit was already inserted by an earlier delivery of the same
+    // event. Anything else, log and swallow — we still want to 200.
+    if ((error as { code?: string }).code === "23505") return;
+    console.error("[stripe webhook] boost_credits insert failed:", error.message);
+  }
+}
+
 // ── Route handler ──────────────────────────────────────────────────────────
+//
+// Behaviour:
+//   • Missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET → 503 with a
+//     clear error. Lets dev environments breathe — the dashboard test
+//     button surfaces the misconfiguration instead of crashing.
+//   • Bad signature → 400 (the only case where we want Stripe to give
+//     up retrying — the secret is wrong, retries won't fix it).
+//   • Anything else (handler errors, DB hiccups) → still 200 so we
+//     don't earn ourselves a Stripe retry storm against our own bugs.
 export async function POST(request: Request) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!isStripeConfigured() || !webhookSecret) {
+    return NextResponse.json(
+      {
+        error:
+          "Stripe webhook is not configured on this server. Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET.",
+      },
+      { status: 503 },
+    );
+  }
+
   const body = await request.text();
   const headersList = await headers();
   const sig = headersList.get("stripe-signature");
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  if (!webhookSecret || !sig) {
-    return NextResponse.json({ error: "Webhook not configured." }, { status: 400 });
+  if (!sig) {
+    return NextResponse.json({ error: "Missing stripe-signature header." }, { status: 400 });
   }
 
   let event: Stripe.Event;
@@ -313,11 +392,20 @@ export async function POST(request: Request) {
         await handleSubscriptionChange(event, event.data.object as Stripe.Subscription);
         break;
 
+      case "payment_intent.succeeded":
+        await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        break;
+
       case "invoice.payment_failed":
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
         break;
 
+      // Stripe sends both `invoice.paid` (newer) and
+      // `invoice.payment_succeeded` (legacy alias) for the same
+      // success — treat them identically so dashboard configs that
+      // selected either name still work.
       case "invoice.paid":
+      case "invoice.payment_succeeded":
         await handleInvoicePaid(event.data.object as Stripe.Invoice);
         break;
 

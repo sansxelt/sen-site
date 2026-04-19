@@ -26,6 +26,9 @@ export type DesktopPreferences = {
   // v0.1.4 — i18n: manual UI language. Response language is detected
   // per-message and never persisted.
   system_language: string;
+  // v0.1.8 — let sansxel-1 invoke client-side tools (navigate,
+  // create_api_key, search_threads, …). Off = text-only responses.
+  tools_enabled: boolean;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -41,6 +44,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   bg_pattern: "none",
   bubble_shape: "rounded",
   system_language: "en",
+  tools_enabled: true,
 };
 
 const BG_PATTERN_VALUES = ["none", "dots", "grid", "gradient"] as const;
@@ -120,6 +124,10 @@ function normalize(raw: unknown): DesktopPreferences {
       (SYSTEM_LANGUAGE_VALUES as readonly string[]).includes(r.system_language)
         ? r.system_language
         : DEFAULT_PREFERENCES.system_language,
+    tools_enabled:
+      typeof r.tools_enabled === "boolean"
+        ? r.tools_enabled
+        : DEFAULT_PREFERENCES.tools_enabled,
   };
 }
 

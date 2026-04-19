@@ -110,6 +110,19 @@ export function DesktopSettingsView() {
             onChange={(v) => update({ conversational: v })}
           />
         </PrefSection>
+
+        {/* v0.1.8 — controls whether the model can invoke client-side
+            tools (navigate, create_api_key, search_threads, …) or is
+            limited to text replies. */}
+        <PrefSection
+          label="Let sansxel-1 take actions"
+          help="Allow the assistant to navigate views, manage API keys, search your threads, and run other in-app actions. Turn off for a text-only assistant."
+        >
+          <Toggle
+            value={prefs.tools_enabled}
+            onChange={(v) => update({ tools_enabled: v })}
+          />
+        </PrefSection>
       </div>
     </div>
   );

@@ -5,6 +5,17 @@ import { createSource, listSourcesForEmail } from "../../../lib/chat-sources";
 export const runtime = "nodejs";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_EXTRACTED_CHARS = 100_000;
+
+// pdf-parse ships as CJS and uses `Buffer`, so we must run on the
+// Node runtime (declared above) and import lazily inside the handler.
+// Eager top-level imports trigger pdf-parse's debug branch on cold
+// start, which tries to read a sample PDF off disk and crashes.
+function truncate(text: string): string {
+  if (text.length <= MAX_EXTRACTED_CHARS) return text;
+  const original = text.length;
+  return `${text.slice(0, MAX_EXTRACTED_CHARS)}\u2026 [truncated, original was ${original} chars]`;
+}
 
 // GET /api/sources — list the user's uploaded reference materials.
 export async function GET(request: Request) {
@@ -26,8 +37,9 @@ export async function GET(request: Request) {
 }
 
 // POST /api/sources — multipart/form-data with a "file" field.
-// Accepts PDF / MD / TXT, ≤5MB. PDFs are stored with their filename
-// only — text extraction lands in v0.1.5.
+// Accepts PDF / MD / TXT, ≤5MB. PDFs are parsed with `pdf-parse`
+// and the extracted text is capped at MAX_EXTRACTED_CHARS so a
+// hundred-page report can't blow the row size.
 export async function POST(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -70,13 +82,36 @@ export async function POST(request: Request) {
 
   let body = "";
   if (isPdf) {
-    // TODO v0.1.5 — extract text from PDFs (pdfjs / pdf-parse). For
-    // the v0.1.4 scaffold we keep just the filename so users can see
-    // the source listed and delete it; nothing is injected at chat time.
-    body = `[PDF: ${name} — text extraction lands in v0.1.5]`;
+    try {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      // Lazy require so the CJS module's debug branch never runs at
+      // import time, and so Next's bundler doesn't try to follow the
+      // sample-PDF read in QUICKSTART.js.
+      const pdfParseMod = (await import("pdf-parse")) as
+        | { default: (b: Buffer) => Promise<{ text: string }> }
+        | ((b: Buffer) => Promise<{ text: string }>);
+      const pdfParse =
+        typeof pdfParseMod === "function" ? pdfParseMod : pdfParseMod.default;
+      const parsed = await pdfParse(buffer);
+      const text = (parsed?.text ?? "").trim();
+      if (!text) {
+        return NextResponse.json(
+          { error: "Could not extract any text from this PDF (it may be scanned or image-only)." },
+          { status: 422 },
+        );
+      }
+      body = truncate(text);
+    } catch (err) {
+      console.error("sources.pdf-extract failed:", err);
+      return NextResponse.json(
+        { error: "Could not read this PDF. Try re-exporting it as a text-based PDF." },
+        { status: 422 },
+      );
+    }
   } else {
     try {
-      body = await file.text();
+      const raw = await file.text();
+      body = truncate(raw);
     } catch {
       return NextResponse.json(
         { error: "Could not read file body." },

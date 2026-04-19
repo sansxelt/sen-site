@@ -70,6 +70,17 @@ export function PreferencesProvider({
     prefs.bubble_shape,
   ]);
 
+  // v0.1.8 — RTL hookup. Arabic is the only RTL locale we ship; flip
+  // the document direction + lang so the whole layout mirrors and
+  // assistive tech reads it correctly. Everything else is LTR.
+  useEffect(() => {
+    const root = document.documentElement;
+    const lang = prefs.system_language || "en";
+    const isRtl = lang === "ar";
+    root.setAttribute("dir", isRtl ? "rtl" : "ltr");
+    root.setAttribute("lang", lang);
+  }, [prefs.system_language]);
+
   const update = useCallback(
     async (patch: Partial<DesktopPreferences>) => {
       // Optimistic

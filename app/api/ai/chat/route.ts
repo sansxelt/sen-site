@@ -21,8 +21,10 @@ import {
 } from "../../../../lib/ai-voices";
 import { recordUsage } from "../../../../lib/usage";
 import {
+  consumeBoostForKind,
   decideChatRequest,
   getWeeklyUsage,
+  hasUnconsumedBoost,
   PLAN_LIMITS,
 } from "../../../../lib/plan-limits";
 import { detectLanguage, langLabel } from "../../../../lib/i18n";
@@ -120,9 +122,30 @@ type ChatImageAttachment = {
   data: string;
 };
 
+// v0.1.8 — When tools are enabled, user / assistant messages may
+// contain tool_use / tool_result content blocks alongside plain text.
+// We forward whatever the client sends straight to Anthropic so the
+// follow-up "here's the tool_result" turn round-trips correctly.
+type ChatToolUseBlock = {
+  type: "tool_use";
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+};
+type ChatToolResultBlock = {
+  type: "tool_result";
+  tool_use_id: string;
+  content: string;
+  is_error?: boolean;
+};
+type ChatTextBlock = { type: "text"; text: string };
+type ChatContentBlock = ChatTextBlock | ChatToolUseBlock | ChatToolResultBlock;
+
 type ChatMessage = {
   role: "user" | "assistant";
-  content: string;
+  // String for back-compat with text-only callers; arrays for
+  // tool_use / tool_result-bearing turns.
+  content: string | ChatContentBlock[];
   images?: ChatImageAttachment[];
 };
 type ChatInputMode = "text" | "voice";
@@ -141,7 +164,135 @@ type ChatBody = {
   // as a numbered multi-step plan with a closing Done/Next line.
   // No real tool-calling yet; that's v0.1.5+.
   agent_mode?: boolean;
+  // v0.1.8 — when true, the desktop tool registry is exposed to the
+  // model and the response is streamed as JSON-Lines so the client
+  // can dispatch tool_use blocks and feed tool_result back in.
+  tools_enabled?: boolean;
 };
+
+// v0.1.8 — Desktop tool registry. The model sees these as available
+// callable functions; the actual handlers live in the Tauri client
+// (see desktop/src/chat-view.tsx). Server only forwards the schema
+// and round-trips tool_use / tool_result blocks.
+const DESKTOP_TOOLS: Array<{
+  name: string;
+  description: string;
+  input_schema: { type: "object"; properties: Record<string, unknown>; required?: string[] };
+}> = [
+  {
+    name: "navigate",
+    description:
+      "Switch the workspace to a different view (chat, plan, usage, keys, memory, integrations, updates, settings, sources, preferences, account).",
+    input_schema: {
+      type: "object",
+      properties: {
+        view: {
+          type: "string",
+          enum: [
+            "chat", "plan", "usage", "keys", "memory", "integrations",
+            "updates", "settings", "sources", "preferences", "account",
+          ],
+        },
+      },
+      required: ["view"],
+    },
+  },
+  {
+    name: "start_new_chat",
+    description: "Create a fresh chat thread and switch to it.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "search_threads",
+    description: "Fuzzy-search the user's saved chat threads. Returns a list of {id, title, preview} matches.",
+    input_schema: {
+      type: "object",
+      properties: { query: { type: "string" } },
+      required: ["query"],
+    },
+  },
+  {
+    name: "open_thread",
+    description: "Switch to an existing chat thread by id.",
+    input_schema: {
+      type: "object",
+      properties: { id: { type: "string" } },
+      required: ["id"],
+    },
+  },
+  {
+    name: "create_api_key",
+    description: "Create a new desktop API key with the given display name. Returns the key id and prefix.",
+    input_schema: {
+      type: "object",
+      properties: { name: { type: "string" } },
+      required: ["name"],
+    },
+  },
+  {
+    name: "revoke_api_key",
+    description: "Revoke an existing desktop API key by id.",
+    input_schema: {
+      type: "object",
+      properties: { id: { type: "string" } },
+      required: ["id"],
+    },
+  },
+  {
+    name: "list_api_keys",
+    description: "List the user's current desktop API keys.",
+    input_schema: { type: "object", properties: {} },
+  },
+  {
+    name: "query_memory",
+    description: "Query the user's long-term memory store. (Stub until v0.1.10.)",
+    input_schema: {
+      type: "object",
+      properties: { query: { type: "string" } },
+      required: ["query"],
+    },
+  },
+  {
+    name: "query_sources",
+    description: "Search the user's uploaded sources. Returns the top 3 matches by title/body match.",
+    input_schema: {
+      type: "object",
+      properties: { query: { type: "string" } },
+      required: ["query"],
+    },
+  },
+  {
+    name: "summarize_thread",
+    description: "Generate a short title + description summary for a saved chat thread.",
+    input_schema: {
+      type: "object",
+      properties: { id: { type: "string" } },
+      required: ["id"],
+    },
+  },
+  {
+    name: "change_model_tier",
+    description: "Change the active model tier. fast = quick replies; balanced = default; smart = deepest reasoning.",
+    input_schema: {
+      type: "object",
+      properties: {
+        tier: { type: "string", enum: ["fast", "balanced", "smart"] },
+      },
+      required: ["tier"],
+    },
+  },
+  {
+    name: "set_persona",
+    description: "Change the assistant's persona: direct, warm, technical, or playful.",
+    input_schema: {
+      type: "object",
+      properties: {
+        persona: { type: "string", enum: ["direct", "warm", "technical", "playful"] },
+      },
+      required: ["persona"],
+    },
+  },
+];
 
 // Hard server-side cap on individual image payloads. The desktop
 // client also enforces this client-side, but a hand-rolled API caller
@@ -167,13 +318,15 @@ function approxBase64ByteLength(b64: string): number {
 // SDK's most common path); image-bearing user turns become a content
 // array with image blocks first, then a text block. Assistant turns
 // always stay text-only since we don't generate images via this route.
-function toAnthropicMessage(message: ChatMessage): {
-  role: "user" | "assistant";
-  content: string | Array<
-    | { type: "image"; source: { type: "base64"; media_type: ChatImageAttachment["media_type"]; data: string } }
-    | { type: "text"; text: string }
-  >;
-} {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toAnthropicMessage(message: ChatMessage): any {
+  // v0.1.8 — structured content (tool_use / tool_result blocks)
+  // passes straight through. The desktop client builds these arrays
+  // when continuing a tool-using assistant turn.
+  if (Array.isArray(message.content)) {
+    return { role: message.role, content: message.content };
+  }
+
   const validImages =
     message.role === "user" && Array.isArray(message.images)
       ? message.images.filter(
@@ -210,10 +363,21 @@ function toAnthropicMessage(message: ChatMessage): {
 
 const AGENT_MODE_PROMPT = `Agent mode: ON. Approach this like an autonomous agent. Break the task into 3-7 numbered steps. Execute or describe each step in order. After steps, give a single-line "Done" or "Next:" summary so the user can continue or branch.`;
 
+function chatContentToText(content: string | ChatContentBlock[]): string {
+  if (typeof content === "string") return content;
+  return content
+    .map((block) => {
+      if (block.type === "text") return block.text;
+      if (block.type === "tool_result") return block.content;
+      return "";
+    })
+    .join("");
+}
+
 function latestUserMessage(messages: ChatMessage[]): string {
   for (let i = messages.length - 1; i >= 0; i -= 1) {
     if (messages[i]?.role === "user") {
-      return messages[i].content.trim();
+      return chatContentToText(messages[i].content).trim();
     }
   }
   return "";
@@ -226,7 +390,7 @@ function recentUserContext(
   const recent = messages
     .filter((message) => message.role === "user")
     .slice(-maxMessages)
-    .map((message) => message.content.trim())
+    .map((message) => chatContentToText(message.content).trim())
     .filter(Boolean);
 
   return recent.join("\n\n");
@@ -418,22 +582,37 @@ export async function POST(request: Request) {
     requestedTier: resolvedTier,
     weekly,
   });
+  // v0.1.8 — boost ledger override. If the plan-cap blocked the
+  // request, check for an unconsumed session_boost / weekly_boost.
+  // We BURN the credit before letting the request through so a hung
+  // chat never spends a credit twice. Throttle info from `decision`
+  // only matters when kind === "ok"; capturing it before the
+  // override lets TS narrow cleanly downstream.
+  const throttledTierFromDecision =
+    decision.kind === "ok" ? decision.throttledTier : null;
   if (decision.kind === "blocked") {
-    return NextResponse.json(
-      {
-        error: decision.reason,
-        limit: decision.limit,
-        used: decision.used,
-        reset: decision.reset,
-      },
-      { status: 429 },
-    );
+    let boostConsumed = false;
+    if (await hasUnconsumedBoost(email, "chat")) {
+      const burnt = await consumeBoostForKind(email, "chat");
+      if (burnt) boostConsumed = true;
+    }
+    if (!boostConsumed) {
+      return NextResponse.json(
+        {
+          error: decision.reason,
+          limit: decision.limit,
+          used: decision.used,
+          reset: decision.reset,
+        },
+        { status: 429 },
+      );
+    }
   }
   // Pro plan throttle: server picked a cheaper tier than requested
   let throttleApplied: ModelTier | null = null;
-  if (decision.throttledTier && decision.throttledTier !== resolvedTier) {
-    throttleApplied = decision.throttledTier;
-    resolvedTier = decision.throttledTier;
+  if (throttledTierFromDecision && throttledTierFromDecision !== resolvedTier) {
+    throttleApplied = throttledTierFromDecision;
+    resolvedTier = throttledTierFromDecision;
   }
 
   const descriptor = descriptorForTier(resolvedTier);
@@ -472,6 +651,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    // v0.1.8 — when tools_enabled, expose the desktop tool registry
+    // and stream JSON-Lines events so the client can dispatch
+    // tool_use blocks. When false (or absent), behaves identically
+    // to the v0.1.7 plain-text stream so older callers keep working.
+    const toolsEnabled = payload.tools_enabled !== false;
+
     const stream = await client.messages.stream({
       model: descriptor.model,
       max_tokens: 2048,
@@ -480,6 +665,10 @@ export async function POST(request: Request) {
       // turns with attached images become multimodal content arrays.
       // Text-only turns pass through as plain strings.
       messages: messages.map(toAnthropicMessage),
+      ...(toolsEnabled
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ({ tools: DESKTOP_TOOLS as any } as Record<string, unknown>)
+        : {}),
     });
 
     const startedAt = Date.now();
@@ -494,6 +683,19 @@ export async function POST(request: Request) {
       async start(controller) {
         let inputTokens = 0;
         let outputTokens = 0;
+
+        // v0.1.8 — when streaming JSON-Lines, every event is a
+        // single-line JSON object terminated by \n. Buffers tool
+        // input JSON across multiple input_json_delta events and
+        // emits a single tool_use line at content_block_stop.
+        const toolBuffers = new Map<
+          number,
+          { id: string; name: string; partial: string }
+        >();
+        const writeLine = (obj: Record<string, unknown>) => {
+          controller.enqueue(encoder.encode(`${JSON.stringify(obj)}\n`));
+        };
+
         try {
           for await (const event of stream) {
             if (event.type === "message_start") {
@@ -502,10 +704,62 @@ export async function POST(request: Request) {
             if (event.type === "message_delta") {
               outputTokens = event.usage?.output_tokens ?? outputTokens;
             }
-            if (
+
+            if (toolsEnabled) {
+              if (event.type === "content_block_start") {
+                const block = event.content_block;
+                if (block && block.type === "tool_use") {
+                  toolBuffers.set(event.index, {
+                    id: block.id,
+                    name: block.name,
+                    partial: "",
+                  });
+                }
+              }
+              if (
+                event.type === "content_block_delta" &&
+                event.delta.type === "input_json_delta"
+              ) {
+                const buf = toolBuffers.get(event.index);
+                if (buf) {
+                  buf.partial += event.delta.partial_json ?? "";
+                }
+              }
+              if (event.type === "content_block_stop") {
+                const buf = toolBuffers.get(event.index);
+                if (buf) {
+                  let parsed: unknown = {};
+                  try {
+                    parsed = buf.partial ? JSON.parse(buf.partial) : {};
+                  } catch {
+                    parsed = {};
+                  }
+                  writeLine({
+                    type: "tool_use",
+                    id: buf.id,
+                    name: buf.name,
+                    input: parsed,
+                  });
+                  toolBuffers.delete(event.index);
+                }
+              }
+              if (
+                event.type === "content_block_delta" &&
+                event.delta.type === "text_delta"
+              ) {
+                writeLine({ type: "text", text: event.delta.text });
+              }
+              if (event.type === "message_delta") {
+                const stop = event.delta?.stop_reason;
+                if (stop) {
+                  writeLine({ type: "message_stop", stop_reason: stop });
+                }
+              }
+            } else if (
               event.type === "content_block_delta" &&
               event.delta.type === "text_delta"
             ) {
+              // Legacy plain-text path — unchanged.
               controller.enqueue(encoder.encode(event.delta.text));
             }
           }
@@ -535,7 +789,13 @@ export async function POST(request: Request) {
 
     return new Response(body, {
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
+        // v0.1.8 — JSON-Lines when tools are enabled, plain text
+        // otherwise. The client checks x-sansxel-stream-format to
+        // decide how to parse incoming chunks.
+        "Content-Type": toolsEnabled
+          ? "application/x-ndjson; charset=utf-8"
+          : "text/plain; charset=utf-8",
+        "x-sansxel-stream-format": toolsEnabled ? "jsonl" : "text",
         "Cache-Control": "no-store",
         "x-sansxel-tier": resolvedTier,
         "x-sansxel-tier-requested": requestedTier,

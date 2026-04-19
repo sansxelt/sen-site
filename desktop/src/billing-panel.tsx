@@ -163,8 +163,24 @@ export function DesktopBillingPanel({
     setBusy(`add-${addonKey}`);
     setError(null);
     try {
-      await createDesktopBillingIntent(token, { addonKey });
-      await refreshWithReset();
+      const result = await createDesktopBillingIntent(token, { addonKey });
+      // v0.1.8 — the hero addon micro-grid surfaces one-time boost
+      // keys too; route them through the same Elements modal as the
+      // dedicated Buy buttons so the clientSecret isn't dropped.
+      if (isOneTimeBoost(addonKey)) {
+        if (!result.clientSecret) {
+          throw new Error("Stripe did not return a client secret.");
+        }
+        const addon = billing.addons.find((a) => a.key === addonKey);
+        setOneTimeBoost({
+          key: addonKey,
+          name: addon?.name ?? addonKey,
+          price: addon?.monthlyLabel ?? "",
+          clientSecret: result.clientSecret,
+        });
+      } else {
+        await refreshWithReset();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add addon.");
     } finally {

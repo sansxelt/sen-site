@@ -1,5 +1,21 @@
 import type { ModelTier, PlanKey } from "./ai-models";
+import type { BillingAddonKey } from "./pricing";
 import { getSupabaseAdminClient } from "./supabase-admin";
+
+// v0.1.8 — kinds the gating layer asks about. Map to the boost addons
+// that satisfy them. A user with an unconsumed credit for any of these
+// keys is allowed past the cap (and the credit gets burnt by the call).
+export type BoostKind = "chat" | "image" | "voice" | "copilot";
+
+const BOOST_KIND_TO_ADDONS: Record<BoostKind, BillingAddonKey[]> = {
+  // session_boost = +50 chats this session, weekly_boost = +500 weekly.
+  // We treat both as chat-eligible — gating consumes whichever the user
+  // bought first (cheapest first so weekly_boost outlives the cheaper one).
+  chat: ["session_boost", "weekly_boost"],
+  image: ["image_credit_pack"],
+  voice: ["voice_minute_pack"],
+  copilot: ["copilot_time_pack"],
+};
 
 // Sansxel limit model — our take, not a copy of anyone else's.
 //
@@ -278,4 +294,112 @@ export function decideVoiceRequest(args: {
     };
   }
   return { kind: "ok" };
+}
+
+// ───────────────────────────────────────────────────────────────────
+// v0.1.8 — boost credit ledger
+// ───────────────────────────────────────────────────────────────────
+//
+// One-time boosts (session_boost, weekly_boost, voice_minute_pack,
+// image_credit_pack, copilot_time_pack) are written by the Stripe
+// webhook (payment_intent.succeeded → boost_credits row with
+// consumed=false). The gating layer asks hasUnconsumedBoost() to
+// override a "blocked" plan-limit decision, then calls consumeBoost()
+// to flip the row to consumed=true so it can't be reused.
+//
+// Both helpers fail open: any DB error returns false / no-op so a
+// flaky Supabase never blocks a paying user. Worst case we don't
+// honour a credit — that's a refund ticket, not a hung product.
+
+/**
+ * Returns true if the user has at least one unconsumed boost credit
+ * that satisfies the given kind. The webhook stores rows keyed by
+ * addon_key (e.g. "session_boost"); we OR over all addons that map
+ * to the kind.
+ */
+export async function hasUnconsumedBoost(
+  email: string,
+  kind: BoostKind,
+): Promise<boolean> {
+  const addons = BOOST_KIND_TO_ADDONS[kind];
+  if (!addons || addons.length === 0) return false;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { count, error } = await supabase
+      .from("boost_credits" as never)
+      .select("id", { count: "exact", head: true })
+      .eq("email", email.toLowerCase())
+      .eq("consumed", false)
+      .in("addon_key", addons);
+    if (error) {
+      console.warn("hasUnconsumedBoost lookup failed:", error.message);
+      return false;
+    }
+    return (count ?? 0) > 0;
+  } catch (err) {
+    console.warn("hasUnconsumedBoost threw:", err);
+    return false;
+  }
+}
+
+/**
+ * Marks one unconsumed boost credit as consumed for the given email +
+ * addon key. Picks the OLDEST credit so the cheapest top-up burns first
+ * (FIFO). Returns true if a credit was actually consumed.
+ *
+ * Callers should prefer the kind-aware variant (consumeBoostForKind)
+ * for chat / image / voice / copilot gating; this lower-level helper
+ * exists for surfaces that already know exactly which addon to spend.
+ */
+export async function consumeBoost(
+  email: string,
+  addonKey: BillingAddonKey,
+): Promise<boolean> {
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data: rows, error: pickErr } = await supabase
+      .from("boost_credits" as never)
+      .select("id")
+      .eq("email", email.toLowerCase())
+      .eq("addon_key", addonKey)
+      .eq("consumed", false)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    if (pickErr) {
+      console.warn("consumeBoost pick failed:", pickErr.message);
+      return false;
+    }
+    const picked = (rows ?? [])[0] as { id?: string } | undefined;
+    if (!picked?.id) return false;
+
+    const { error: updErr } = await supabase
+      .from("boost_credits" as never)
+      .update({ consumed: true, consumed_at: new Date().toISOString() } as never)
+      .eq("id", picked.id)
+      .eq("consumed", false); // re-check guards against double-spend races
+    if (updErr) {
+      console.warn("consumeBoost update failed:", updErr.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("consumeBoost threw:", err);
+    return false;
+  }
+}
+
+/**
+ * Burn one credit for the given kind. Tries each candidate addon in
+ * order (cheap → expensive) so a $2 session_boost is consumed before a
+ * $5 weekly_boost. Returns the addon key that was actually spent, or
+ * null if no credit was available.
+ */
+export async function consumeBoostForKind(
+  email: string,
+  kind: BoostKind,
+): Promise<BillingAddonKey | null> {
+  for (const addonKey of BOOST_KIND_TO_ADDONS[kind] ?? []) {
+    if (await consumeBoost(email, addonKey)) return addonKey;
+  }
+  return null;
 }

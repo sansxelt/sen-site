@@ -21,9 +21,31 @@ export type ChatImageAttachment = {
   data: string;
 };
 
+// v0.1.8 — Tool-use scaffolding. When tools_enabled is on, an
+// assistant turn may include tool_use blocks; the immediate next
+// user turn replays them as tool_result blocks so the assistant can
+// continue from where it stopped.
+export type ChatToolUseBlock = {
+  type: "tool_use";
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+};
+export type ChatToolResultBlock = {
+  type: "tool_result";
+  tool_use_id: string;
+  content: string;
+  is_error?: boolean;
+};
+export type ChatTextBlock = { type: "text"; text: string };
+export type ChatContentBlock =
+  | ChatTextBlock
+  | ChatToolUseBlock
+  | ChatToolResultBlock;
+
 export type ChatMessage = {
   role: "user" | "assistant";
-  content: string;
+  content: string | ChatContentBlock[];
   images?: ChatImageAttachment[];
 };
 
@@ -265,6 +287,10 @@ export type DesktopPreferences = {
   // v0.1.4 — i18n two-axis: system_language drives UI text. The
   // response language is detected per-message server-side, not stored.
   system_language: string;
+  // v0.1.8 — when true, sansxel-1 may invoke client-side tools
+  // (navigate, create_api_key, search_threads, etc.). Off = the AI
+  // can only reply with text.
+  tools_enabled: boolean;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -280,6 +306,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   bg_pattern: "none",
   bubble_shape: "rounded",
   system_language: "en",
+  tools_enabled: true,
 };
 
 export async function getPreferences(token: string): Promise<DesktopPreferences> {
@@ -549,6 +576,14 @@ export type StreamMeta = {
   persona_delay_multiplier: number;
 };
 
+// v0.1.8 — When tools are enabled the stream emits typed chunks the
+// caller can dispatch on. Plain-text callers (toolsEnabled=false or
+// omitted with the legacy generator below) keep getting strings.
+export type StreamChatChunk =
+  | { type: "text"; text: string }
+  | { type: "tool_use"; id: string; name: string; input: Record<string, unknown> }
+  | { type: "stop"; reason: string };
+
 export async function* streamChat(
   token: string,
   messages: ChatMessage[],
@@ -561,10 +596,15 @@ export async function* streamChat(
     // v0.1.4 — RAG: ids from the user's chat_sources table to inject
     // as reference material into the system prompt.
     sourceIds?: string[];
+    // v0.1.8 — opt out of tool dispatch (defaults to true for desktop
+    // chat; legacy callers like the floating copilot pass false to
+    // keep their straight-text streaming behavior unchanged).
+    toolsEnabled?: boolean;
     signal?: AbortSignal;
     onMeta?: (meta: StreamMeta) => void;
   } = {},
 ): AsyncGenerator<string, void, unknown> {
+  const toolsEnabled = options.toolsEnabled ?? false;
   const res = await fetch(`${API_BASE}/api/ai/chat`, {
     method: "POST",
     headers: authHeaders(token),
@@ -576,6 +616,7 @@ export async function* streamChat(
       persona: options.persona,
       agent_mode: options.agentMode ?? false,
       source_ids: options.sourceIds ?? [],
+      tools_enabled: toolsEnabled,
     }),
     signal: options.signal,
   });
@@ -620,6 +661,140 @@ export async function* streamChat(
   // Flush final bytes
   const tail = decoder.decode();
   if (tail) yield tail;
+}
+
+// v0.1.8 — Tool-aware streaming variant. The server emits JSON-Lines
+// when tools_enabled is true; this iterator parses each line into a
+// typed chunk so callers can dispatch tool_use blocks. The legacy
+// streamChat generator above is kept to preserve straight-text
+// callers (floating copilot, /humanize endpoint, etc.).
+export async function* streamChatWithTools(
+  token: string,
+  messages: ChatMessage[],
+  options: {
+    context?: { note_title?: string; note_body?: string };
+    tier?: ModelTier;
+    inputMode?: ChatInputMode;
+    persona?: Persona;
+    agentMode?: boolean;
+    sourceIds?: string[];
+    signal?: AbortSignal;
+    onMeta?: (meta: StreamMeta) => void;
+  } = {},
+): AsyncGenerator<StreamChatChunk, void, unknown> {
+  const res = await fetch(`${API_BASE}/api/ai/chat`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({
+      messages,
+      context: options.context,
+      tier: options.tier,
+      input_mode: options.inputMode,
+      persona: options.persona,
+      agent_mode: options.agentMode ?? false,
+      source_ids: options.sourceIds ?? [],
+      tools_enabled: true,
+    }),
+    signal: options.signal,
+  });
+
+  if (options.onMeta) {
+    const personaHeader = res.headers.get("x-sansxel-persona");
+    const delayHeader = res.headers.get("x-sansxel-persona-delay-multiplier");
+    options.onMeta({
+      tier_requested:
+        (res.headers.get("x-sansxel-tier-requested") as ModelTier | null) ?? null,
+      tier_resolved:
+        (res.headers.get("x-sansxel-tier") as ModelTier | null) ?? null,
+      persona: personaHeader ? (personaHeader as Persona | null) : null,
+      persona_delay_multiplier: delayHeader ? Number(delayHeader) : 1,
+      plan: res.headers.get("x-sansxel-plan"),
+    });
+  }
+
+  if (!res.ok || !res.body) {
+    let detail = `chat ${res.status}`;
+    try {
+      const err = (await res.json()) as { error?: string };
+      if (err?.error) detail = err.error;
+    } catch {
+      // ignore
+    }
+    throw new Error(detail);
+  }
+
+  const format = res.headers.get("x-sansxel-stream-format");
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  // If the server didn't switch to JSON-Lines (e.g. an older deploy),
+  // fall back to treating the body as plain text and yielding it as
+  // text chunks. Keeps the desktop client functional during rollouts.
+  const jsonl = format === "jsonl";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    const piece = decoder.decode(value, { stream: true });
+    if (!jsonl) {
+      yield { type: "text", text: piece };
+      continue;
+    }
+    buffer += piece;
+    let idx = buffer.indexOf("\n");
+    while (idx !== -1) {
+      const line = buffer.slice(0, idx).trim();
+      buffer = buffer.slice(idx + 1);
+      if (line) {
+        const parsed = parseStreamLine(line);
+        if (parsed) yield parsed;
+      }
+      idx = buffer.indexOf("\n");
+    }
+  }
+  const tail = decoder.decode();
+  if (tail) buffer += tail;
+  if (jsonl) {
+    const finalLine = buffer.trim();
+    if (finalLine) {
+      const parsed = parseStreamLine(finalLine);
+      if (parsed) yield parsed;
+    }
+  } else if (buffer) {
+    yield { type: "text", text: buffer };
+  }
+}
+
+function parseStreamLine(line: string): StreamChatChunk | null {
+  try {
+    const obj = JSON.parse(line) as {
+      type?: string;
+      text?: string;
+      id?: string;
+      name?: string;
+      input?: Record<string, unknown>;
+      stop_reason?: string;
+    };
+    if (obj.type === "text" && typeof obj.text === "string") {
+      return { type: "text", text: obj.text };
+    }
+    if (obj.type === "tool_use" && obj.id && obj.name) {
+      return {
+        type: "tool_use",
+        id: obj.id,
+        name: obj.name,
+        input: obj.input ?? {},
+      };
+    }
+    if (obj.type === "message_stop") {
+      return { type: "stop", reason: obj.stop_reason ?? "end_turn" };
+    }
+  } catch {
+    // ignore malformed line
+  }
+  return null;
 }
 
 // ── AI web search ───────────────────────────────────────────────────

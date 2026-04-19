@@ -5,8 +5,10 @@ import { getDesktopUserEmailFromRequest } from "../../../../../lib/desktop-auth"
 import { recordUsage } from "../../../../../lib/usage";
 import { getPlanForEmail } from "../../../../../lib/account-billing";
 import {
+  consumeBoostForKind,
   decideVoiceRequest,
   getWeeklyUsage,
+  hasUnconsumedBoost,
 } from "../../../../../lib/plan-limits";
 
 export const runtime = "nodejs";
@@ -74,15 +76,32 @@ export async function POST(request: Request) {
     added_seconds: projectedSeconds,
   });
   if (voiceDecision.kind === "blocked") {
-    return NextResponse.json(
-      {
-        error: voiceDecision.reason,
-        limit: voiceDecision.limit,
-        used: voiceDecision.used,
-        reset: voiceDecision.reset,
-      },
-      { status: 429 },
-    );
+    // v0.1.8 — voice_minute_pack override. One pack covers one
+    // request regardless of duration; we don't pro-rate per second.
+    if (await hasUnconsumedBoost(email, "voice")) {
+      const burnt = await consumeBoostForKind(email, "voice");
+      if (!burnt) {
+        return NextResponse.json(
+          {
+            error: voiceDecision.reason,
+            limit: voiceDecision.limit,
+            used: voiceDecision.used,
+            reset: voiceDecision.reset,
+          },
+          { status: 429 },
+        );
+      }
+    } else {
+      return NextResponse.json(
+        {
+          error: voiceDecision.reason,
+          limit: voiceDecision.limit,
+          used: voiceDecision.used,
+          reset: voiceDecision.reset,
+        },
+        { status: 429 },
+      );
+    }
   }
 
   try {
