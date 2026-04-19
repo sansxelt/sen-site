@@ -5,10 +5,15 @@ import {
   useState,
 } from "react";
 import {
+  type AccountProfile,
   ALL_MODEL_OPTIONS,
   type ChatMessage,
+  getAccount,
+  getSubscription,
   type ModelTier,
+  patchAccount,
   streamChat,
+  type Subscription,
 } from "./api";
 import type { DesktopSession } from "./auth";
 
@@ -383,38 +388,230 @@ function BounceDots() {
 // ── Other views (placeholders — real data lands next push) ──────────
 
 function AccountView({ session }: { session: DesktopSession }) {
-  const display = session.displayName ?? session.email;
+  const [profile, setProfile] = useState<AccountProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Local edit state (committed on Save)
+  const [displayName, setDisplayName] = useState("");
+  const [focusArea, setFocusArea] = useState("");
+  const [workStyle, setWorkStyle] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const p = await getAccount(session.token);
+        if (cancelled) return;
+        setProfile(p);
+        setDisplayName(p.display_name ?? "");
+        setFocusArea(p.focus_area ?? "");
+        setWorkStyle(p.work_style ?? "");
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session.token]);
+
+  const dirty =
+    profile != null &&
+    (displayName !== (profile.display_name ?? "") ||
+      focusArea !== (profile.focus_area ?? "") ||
+      workStyle !== (profile.work_style ?? ""));
+
+  async function save() {
+    setSaveStatus("saving");
+    try {
+      const next = await patchAccount(session.token, {
+        display_name: displayName || null,
+        focus_area: focusArea || null,
+        work_style: workStyle || null,
+      });
+      setProfile(next);
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 1600);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed.");
+      setSaveStatus("idle");
+    }
+  }
+
   return (
     <div className="view">
       <div className="view-head">
         <h1>Account</h1>
-        <p>Signed in to sansxel.ai as {display}.</p>
+        <p>How sansxel knows you. Used to personalize replies and the workspace.</p>
       </div>
       <div className="view-body">
-        <FieldRow label="Email" value={session.email} />
-        <FieldRow label="Display name" value={session.displayName ?? "—"} />
-        <ComingSoon>
-          Editable profile fields, password change, and a list of every signed-in
-          desktop with revoke buttons land in the next iteration.
-        </ComingSoon>
+        {loading && <div className="view-loading">Loading…</div>}
+        {!loading && (
+          <>
+            <FieldRow label="Email" value={session.email} />
+            <EditableField
+              label="Display name"
+              value={displayName}
+              onChange={setDisplayName}
+              placeholder="What should sansxel call you?"
+            />
+            <EditableField
+              label="Focus area"
+              value={focusArea}
+              onChange={setFocusArea}
+              placeholder="What are you mostly working on?"
+            />
+            <EditableField
+              label="Work style"
+              value={workStyle}
+              onChange={setWorkStyle}
+              placeholder="Solo deep work, lots of meetings, building products…"
+              multiline
+            />
+
+            <div className="view-actions">
+              {saveStatus === "saved" && (
+                <span className="view-saved-tag">Saved</span>
+              )}
+              <button
+                type="button"
+                onClick={save}
+                disabled={!dirty || saveStatus === "saving"}
+                className="view-save-btn"
+              >
+                {saveStatus === "saving" ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+
+            {error && <div className="view-error">{error}</div>}
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function PlanView({ session: _session }: { session: DesktopSession }) {
+function PlanView({ session }: { session: DesktopSession }) {
+  const [sub, setSub] = useState<Subscription | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await getSubscription(session.token);
+        if (!cancelled) setSub(s);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session.token]);
+
   return (
     <div className="view">
       <div className="view-head">
         <h1>Plan</h1>
-        <p>Your subscription, usage, and upgrades.</p>
+        <p>Your subscription, the AI tiers it unlocks, and where to upgrade.</p>
       </div>
       <div className="view-body">
-        <ComingSoon>
-          Live plan from your sansxel.ai subscription, per-feature usage meters,
-          and one-click upgrades to Apprentice / Studio / Pro plug in here next.
-        </ComingSoon>
+        {loading && <div className="view-loading">Loading…</div>}
+        {!loading && sub && (
+          <>
+            <FieldRow
+              label="Plan"
+              value={`${capitalize(sub.plan)}${sub.billing_cycle ? ` · ${sub.billing_cycle}` : ""}`}
+            />
+            <FieldRow label="Status" value={capitalize(sub.status)} />
+            {sub.current_period_end && (
+              <FieldRow
+                label="Renews"
+                value={new Date(sub.current_period_end).toLocaleDateString()}
+              />
+            )}
+
+            <div className="view-section-title">Models on this plan</div>
+            <div className="plan-tiers">
+              {sub.tiers.map((t) => (
+                <div key={t.tier} className="plan-tier-card">
+                  <div className="plan-tier-name">{t.display_name}</div>
+                  <div className="plan-tier-blurb">{t.blurb}</div>
+                </div>
+              ))}
+            </div>
+
+            {sub.plan === "free" && (
+              <div className="upgrade-cta">
+                <div className="upgrade-cta-head">Want sansxel-1 (balanced) or sansxel-1 deep?</div>
+                <p>
+                  Upgrade in your sansxel.ai account to unlock sharper replies,
+                  longer context, and the deep-reasoning tier.
+                </p>
+                <a
+                  href={`https://sansxel.ai/pricing`}
+                  className="upgrade-cta-btn"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  See plans →
+                </a>
+              </div>
+            )}
+          </>
+        )}
+        {error && <div className="view-error">{error}</div>}
       </div>
+    </div>
+  );
+}
+
+function capitalize(s: string): string {
+  if (!s) return s;
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function EditableField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  multiline,
+}: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  placeholder?: string;
+  multiline?: boolean;
+}) {
+  return (
+    <div className="field-row field-row--edit">
+      <div className="field-label">{label}</div>
+      {multiline ? (
+        <textarea
+          className="field-input"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={3}
+        />
+      ) : (
+        <input
+          type="text"
+          className="field-input"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+      )}
     </div>
   );
 }

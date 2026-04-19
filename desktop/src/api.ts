@@ -98,6 +98,61 @@ export async function deleteNote(token: string, id: string): Promise<void> {
   }
 }
 
+// ── Account ──────────────────────────────────────────────────────────
+
+export type AccountProfile = {
+  email: string;
+  display_name: string | null;
+  focus_area: string | null;
+  work_style: string | null;
+  summary_style: string;
+  release_channel: string;
+};
+
+export async function getAccount(token: string): Promise<AccountProfile> {
+  const res = await fetch(`${API_BASE}/api/desktop/account`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error(`getAccount ${res.status}`);
+  const data = (await res.json()) as { email: string; profile: AccountProfile };
+  return data.profile;
+}
+
+export async function patchAccount(
+  token: string,
+  patch: Partial<Pick<AccountProfile, "display_name" | "focus_area" | "work_style">>,
+): Promise<AccountProfile> {
+  const res = await fetch(`${API_BASE}/api/desktop/account`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw new Error(`patchAccount ${res.status}`);
+  const data = (await res.json()) as { profile: AccountProfile };
+  return data.profile;
+}
+
+// ── Subscription ────────────────────────────────────────────────────
+
+export type Subscription = {
+  plan: string;
+  status: string;
+  billing_cycle: string | null;
+  seat_count: number;
+  current_period_end: string | null;
+  tiers: Array<{ tier: ModelTier; display_name: string; blurb: string }>;
+};
+
+export async function getSubscription(token: string): Promise<Subscription> {
+  const res = await fetch(`${API_BASE}/api/desktop/subscription`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  if (!res.ok) throw new Error(`getSubscription ${res.status}`);
+  return (await res.json()) as Subscription;
+}
+
 // ── AI chat (streaming) ─────────────────────────────────────────────
 
 export type StreamMeta = {
