@@ -8,7 +8,6 @@ import {
   desktopNextVersion,
   desktopNextVersionHighlights,
   desktopShippedReleases,
-  desktopWindowsInstallerPath,
 } from "@/lib/desktop-release";
 
 export const metadata: Metadata = {
@@ -84,23 +83,10 @@ export default function AccountUpdatesPage() {
             {channelBadge(desktopCurrentReleaseChannel)}
           </div>
           <p className="mt-2 text-sm text-neutral-400">
-            Published {desktopLatestShippedDateLabel}. This is the build the Windows
-            download page and auto-update feed are currently serving.
+            Published {desktopLatestShippedDateLabel}. This is the build the
+            auto-update feed is currently serving to existing installs. Public
+            downloads are paused — no ETA on reopening.
           </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <a
-              href={desktopWindowsInstallerPath}
-              className="sansxel-white-button inline-flex items-center rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
-            >
-              Download current build
-            </a>
-            <Link
-              href="/account/download"
-              className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-neutral-300 transition hover:bg-white/[0.08] hover:text-white"
-            >
-              Open download page
-            </Link>
-          </div>
         </div>
 
         <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] p-5">

@@ -1,5 +1,22 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tauri::Manager;
+
+// Set true by main.tsx via notify_main_ready once React + session
+// restore have settled. Splash polls is_main_ready before closing
+// itself so the user never sees a black gap between splash and the
+// main UI. Static so commands can read/write without juggling state.
+static MAIN_READY: AtomicBool = AtomicBool::new(false);
+
+#[tauri::command]
+fn notify_main_ready() {
+    MAIN_READY.store(true, Ordering::SeqCst);
+}
+
+#[tauri::command]
+fn is_main_ready() -> bool {
+    MAIN_READY.load(Ordering::SeqCst)
+}
 
 // ── Win32: minimize EVERY top-level window so only sansxel is visible
 // during boot. v0.1.4 uses a two-pronged approach:
@@ -383,7 +400,9 @@ pub fn run() {
             position_copilot_window,
             show_copilot,
             hide_copilot,
-            set_copilot_stream_proof
+            set_copilot_stream_proof,
+            notify_main_ready,
+            is_main_ready
         ])
         .setup(|app| {
             // Dev/Linux: register the sansxel:// scheme at runtime so the

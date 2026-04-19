@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./App.css";
 import {
@@ -43,6 +44,11 @@ function App() {
           ? { kind: "signed-in", session: restored }
           : { kind: "signed-out", signingIn: false, error: null },
       );
+
+      // Tell the splash we're ready so it can hand over without
+      // leaving a black gap. Splash polls is_main_ready and waits
+      // for this before closing itself.
+      void invoke("notify_main_ready").catch(() => {});
 
       unlisten = await onSansxelDeepLink(async (requestId) => {
         if (

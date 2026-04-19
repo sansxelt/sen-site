@@ -1250,6 +1250,12 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* v0.1.4 fix: when .chat is a grid child of .chat-shell, the
+     default min-content size makes the column collapse if any child
+     (e.g. a long markdown line) wants more room. Force min-width: 0
+     so the 1fr column can actually be 1fr. */
+  min-width: 0;
+  width: 100%;
 }
 
 .chat-topbar {

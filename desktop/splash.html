@@ -354,12 +354,18 @@
         // setInterval so [Space] can boost it. Labels swap when
         // progress crosses each step's cumulative threshold.
         var steps = [
-          { label: "Initializing", weight: 1 },
-          { label: "Loading workspace", weight: 1 },
-          { label: "Connecting sansxel-1", weight: 1 },
+          { label: "Initializing sansxel core", weight: 1 },
+          { label: "Loading workspace memory", weight: 1.2 },
+          { label: "Connecting sansxel-1", weight: 1.4 },
+          { label: "Preparing your space", weight: 0.8 },
         ];
-        var TOTAL_MS = 1200;
-        var TICK_MS = 30;
+        // v0.1.4 fix: splash should hold long enough that the main
+        // window has fully booted before handover \u2014 no black gap.
+        // The main app fires window.dispatchEvent("sansxel:main-ready")
+        // when React + session restore are both done. We hold here
+        // either until that event OR until TOTAL_MS, whichever's later.
+        var TOTAL_MS = 3200;
+        var TICK_MS = 40;
         var BASE_PER_TICK = TICK_MS / TOTAL_MS;
 
         // Cumulative progress thresholds where the label swaps
@@ -445,12 +451,22 @@
           flashHint();
 
           if (progress >= 1 && !handedOver) {
-            handedOver = true;
-            handover();
+            requestHandover();
           }
         }
 
-        // Steady tick — fills naturally over ~TOTAL_MS
+        // Splash design (v0.1.5+):
+        //   - The bar fills smoothly over ~TOTAL_MS so the splash
+        //     LOOKS like progress is happening.
+        //   - In parallel we poll Rust for is_main_ready every 80ms.
+        //   - The MOMENT main signals ready, we slam the bar to 100%
+        //     and hand over IMMEDIATELY \u2014 no waiting for the bar.
+        //   - If the bar fills first, we hold and keep polling until
+        //     main is ready (capped at ~10s so a bug can't strand us).
+        // This guarantees: when the splash fades, the app is already
+        // up and visible. No black gap. No waiting on a fixed timer.
+        var FORCE_HANDOVER_AT = Date.now() + TOTAL_MS + 10000;
+
         var ticker = setInterval(function () {
           if (handedOver) {
             clearInterval(ticker);
@@ -458,12 +474,39 @@
           }
           progress = Math.min(1, progress + BASE_PER_TICK);
           paint();
-          if (progress >= 1) {
+        }, TICK_MS);
+
+        var readyPoll = setInterval(function () {
+          if (handedOver) {
+            clearInterval(readyPoll);
+            return;
+          }
+          tauriInvoke("is_main_ready").then(function (ready) {
+            if (ready === true) {
+              handedOver = true;
+              clearInterval(readyPoll);
+              clearInterval(ticker);
+              // Snap the bar to full so the visual finishes cleanly
+              progress = 1;
+              paint();
+              handover();
+              return;
+            }
+            // Hard cap: if main never reports ready, hand over anyway
+            if (Date.now() > FORCE_HANDOVER_AT) {
+              handedOver = true;
+              clearInterval(readyPoll);
+              clearInterval(ticker);
+              handover();
+            }
+          }).catch(function () {
+            // No Tauri / dev preview \u2014 fire immediately
             handedOver = true;
+            clearInterval(readyPoll);
             clearInterval(ticker);
             handover();
-          }
-        }, TICK_MS);
+          });
+        }, 80);
 
         // Keys: Esc bails out immediately, Space boosts.
         document.addEventListener("keydown", function (e) {

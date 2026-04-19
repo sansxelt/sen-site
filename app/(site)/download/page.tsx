@@ -36,26 +36,17 @@ export default async function DownloadPage() {
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            {signedIn ? (
-              <Link
-                href="/account/download"
-                className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-              >
-                Open downloads
-              </Link>
-            ) : (
-              <Link
-                href={getSignInPath("/account/download")}
-                className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
-              >
-                Create account
-              </Link>
-            )}
+            <span
+              className="rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-3 text-center text-sm font-medium text-neutral-400"
+              aria-disabled="true"
+            >
+              Downloads paused
+            </span>
             <Link
               href="#early-access"
               className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
             >
-              Request invite
+              Request invite when reopened
             </Link>
           </div>
 

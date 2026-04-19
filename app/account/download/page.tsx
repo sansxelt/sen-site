@@ -66,12 +66,11 @@ export default function AccountDownloadPage() {
                 className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-neutral-400"
                 aria-disabled="true"
               >
-                Download closed \u2014 invite-only
+                Downloads paused
               </span>
               <span className="text-[11px] text-neutral-600 sm:max-w-[220px] sm:text-right">
-                Public installer is paused while v{desktopLatestShippedVersion} stabilizes.
-                Existing installs keep auto-updating; new downloads are invite-only
-                until v{desktopNextVersion} ships.
+                Public installer is offline while we keep building. Existing installs
+                continue to auto-update. New installs reopen later — no ETA.
               </span>
             </div>
           </div>

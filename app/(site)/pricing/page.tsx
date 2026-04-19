@@ -4,7 +4,6 @@ import { AuroraBackground } from "@/components/aurora-background";
 import { ComparePlans } from "@/components/compare-plans";
 import { DotGrid } from "@/components/dot-grid";
 import { HeistCard } from "@/components/heist-card";
-import { PricingPacks } from "@/components/pricing-packs";
 import { pricingPlanMap } from "@/lib/pricing";
 
 export const metadata: Metadata = {
@@ -123,9 +122,6 @@ export default function PricingPage() {
             </HeistCard>
           ))}
         </div>
-
-        {/* ── Full pack of all six plans ────────────────────────────── */}
-        <PricingPacks />
 
         <div className="mt-20 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6 sm:mt-24">
           {[
