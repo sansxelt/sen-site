@@ -82,11 +82,11 @@ export function WebChat({
   const recordingStartedAtRef = useRef<number>(0);
   const interruptHandlerRef = useRef<(() => void) | null>(null);
 
-  const VAD_SILENCE_THRESHOLD = 0.045;
-  const VAD_SILENCE_HOLD_MS = 1300;
-  const VAD_MIN_RECORD_MS = 600;
+  const VAD_SILENCE_THRESHOLD = 0.05;
+  const VAD_SILENCE_HOLD_MS = 850; // snappier turn-handoff
+  const VAD_MIN_RECORD_MS = 500;
   const INTERRUPT_THRESHOLD = 0.09;
-  const INTERRUPT_HOLD_MS = 200;
+  const INTERRUPT_HOLD_MS = 160;
 
   const stopAnalyser = useCallback(() => {
     if (rafRef.current != null) {
@@ -929,7 +929,7 @@ function WebVoiceOverlay({
         </div>
 
         <div className="voice-overlay-hint">
-          Press the orb to switch turns. Esc to leave.
+          Hands-free — just talk. Esc to leave.
         </div>
       </div>
     </div>
