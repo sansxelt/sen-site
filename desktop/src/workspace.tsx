@@ -32,6 +32,9 @@ import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
 import { parseSections } from "./sections";
 import { useSmoothStream } from "./use-smooth-stream";
+import { DesktopChatView } from "./chat-view";
+import { DesktopPlanView } from "./plan-view";
+import { DesktopUsageView } from "./usage-view";
 
 type View = "chat" | "account" | "plan" | "usage" | "keys" | "preferences";
 
@@ -51,12 +54,16 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
         email={session.email}
       />
       <div className="ws-main">
-        {view === "chat" && <ChatView session={session} />}
+        {view === "chat" && (
+          <DesktopChatView session={session} onOpenPlan={() => setView("plan")} />
+        )}
         {view === "account" && (
           <AccountView session={session} onSignOut={onSignOut} onView={setView} />
         )}
-        {view === "plan" && <PlanView session={session} />}
-        {view === "usage" && <UsageView session={session} />}
+        {view === "plan" && <DesktopPlanView session={session} />}
+        {view === "usage" && (
+          <DesktopUsageView session={session} onOpenPlan={() => setView("plan")} />
+        )}
         {view === "keys" && <KeysView session={session} />}
         {view === "preferences" && <PreferencesView />}
       </div>
@@ -162,7 +169,7 @@ function NavButton({
 
 // ── Chat view (the main interaction) ─────────────────────────────────
 
-function ChatView({ session }: { session: DesktopSession }) {
+export function ChatView({ session }: { session: DesktopSession }) {
   const { prefs } = usePreferences();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -496,7 +503,9 @@ function ChatView({ session }: { session: DesktopSession }) {
     tier,
     prefs.auto_speak_replies,
     prefs.conversational,
+    prefs.persona,
     prefs.voice,
+    smoothStream,
   ]);
 
   const exitVoiceMode = useCallback(() => {
@@ -1099,7 +1108,7 @@ function AccountView({
   );
 }
 
-function PlanView({ session }: { session: DesktopSession }) {
+export function PlanView({ session }: { session: DesktopSession }) {
   const [sub, setSub] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1229,7 +1238,7 @@ function EditableField({
   );
 }
 
-function UsageView({ session }: { session: DesktopSession }) {
+export function UsageView({ session }: { session: DesktopSession }) {
   const [data, setData] = useState<WeeklyUsageSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

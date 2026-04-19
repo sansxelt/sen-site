@@ -21,11 +21,12 @@ const RELEASE_NOTES =
   "Hands-free voice (adaptive VAD), hidden thinking blocks, splash [Space] to skip, smoother streaming, smarter copilot with site-wide answers + navigation.";
 const RELEASE_DATE = "2026-04-18T21:30:00Z";
 
-// Per-platform artifact map. Tauri 2 NSIS updater downloads the .exe
-// directly — the matching .exe.sig is the signature.
+// Per-platform artifact map. We host binaries from /public/desktop/
+// on this same Vercel app — keeps the GitHub repo private. Tauri 2
+// NSIS updater downloads the .exe directly + verifies the .sig.
 const PLATFORMS: Record<string, { url: string; signature: string }> = {
   "windows-x86_64": {
-    url: "https://github.com/sansxelt/sen-site/releases/download/v0.1.1/sansxel_0.1.1_x64-setup.exe",
+    url: "https://sansxel.ai/desktop/sansxel_0.1.1_x64-setup.exe",
     signature:
       "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaTF3Z0Z6OHUrWUpVRlMrd0NZWWR6Uk02cm9NaUIzQTVmakE1S1g5Y3pTRjJrdFI5anZwYnBPb3IvbkpFaFhXaS9TWWJmQ0pwZUJhRTBDRURmL0ZveWR5VFRDbFE2THc4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc2NTcyODc3CWZpbGU6c2Fuc3hlbF8wLjEuMV94NjQtc2V0dXAuZXhlCnBPTmd2ZEJsbVJZYVRDMnVFektGVmU1VmJxYW9XcFNxbW4xM2tTQWNBMVhWZHNqcnkyS1pKUWlyeG5HOGI2SEk2YmlKYnRFRVI0WW1UOEJWejd6M0JBPT0K",
   },

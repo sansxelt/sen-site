@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./App.css";
 import {
   beginSignInFlow,
@@ -105,6 +106,7 @@ function App() {
     return (
       <PreferencesProvider token={auth.session.token}>
         <div className="stage stage--workspace">
+          <TitleBar />
           <Workspace session={auth.session} onSignOut={handleSignOut} />
         </div>
         <UpdateLayer />
@@ -114,8 +116,97 @@ function App() {
 
   return (
     <div className="stage">
+      <TitleBar />
       <SignedOutShell auth={auth} onSignIn={handleSignIn} />
       <UpdateLayer />
+    </div>
+  );
+}
+
+// Custom borderless title bar — drag region across the whole strip,
+// sansxel mark + window controls on the right. Native chrome is
+// disabled in tauri.conf.json (decorations: false).
+function TitleBar() {
+  const [maxed, setMaxed] = useState(false);
+
+  useEffect(() => {
+    const w = getCurrentWindow();
+    let unlisten: (() => void) | null = null;
+    (async () => {
+      try {
+        setMaxed(await w.isMaximized());
+        const u = await w.onResized(async () => {
+          setMaxed(await w.isMaximized());
+        });
+        unlisten = u;
+      } catch {
+        // No-op: dev preview / non-Tauri host
+      }
+    })();
+    return () => {
+      if (unlisten) unlisten();
+    };
+  }, []);
+
+  const min = useCallback(() => {
+    void getCurrentWindow().minimize();
+  }, []);
+  const toggle = useCallback(() => {
+    void getCurrentWindow().toggleMaximize();
+  }, []);
+  const close = useCallback(() => {
+    void getCurrentWindow().close();
+  }, []);
+
+  return (
+    <div className="titlebar" data-tauri-drag-region>
+      <div className="titlebar-spacer" data-tauri-drag-region />
+      <div className="titlebar-brand" data-tauri-drag-region>
+        <img src="/icon.png" alt="" className="titlebar-brand-icon" />
+        <span className="titlebar-brand-name">sansxel</span>
+      </div>
+      <div className="titlebar-controls">
+        <button
+          type="button"
+          className="titlebar-btn"
+          onClick={min}
+          aria-label="Minimize"
+          title="Minimize"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M0 5 H10" stroke="currentColor" strokeWidth="1" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          className="titlebar-btn"
+          onClick={toggle}
+          aria-label={maxed ? "Restore" : "Maximize"}
+          title={maxed ? "Restore" : "Maximize"}
+        >
+          {maxed ? (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <rect x="0.5" y="2.5" width="6" height="6" stroke="currentColor" strokeWidth="1" fill="none" />
+              <rect x="2.5" y="0.5" width="6" height="6" stroke="currentColor" strokeWidth="1" fill="none" />
+            </svg>
+          ) : (
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <rect x="0.5" y="0.5" width="9" height="9" stroke="currentColor" strokeWidth="1" fill="none" />
+            </svg>
+          )}
+        </button>
+        <button
+          type="button"
+          className="titlebar-btn titlebar-btn--close"
+          onClick={close}
+          aria-label="Close"
+          title="Close"
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M0 0 L10 10 M10 0 L0 10" stroke="currentColor" strokeWidth="1" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }

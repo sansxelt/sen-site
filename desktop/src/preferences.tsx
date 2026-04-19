@@ -59,7 +59,8 @@ export function PreferencesProvider({
     const root = document.documentElement;
     root.setAttribute("data-density", prefs.density);
     root.setAttribute("data-accent", prefs.accent);
-  }, [prefs.density, prefs.accent]);
+    root.setAttribute("data-window-mode", prefs.window_mode);
+  }, [prefs.density, prefs.accent, prefs.window_mode]);
 
   const update = useCallback(
     async (patch: Partial<DesktopPreferences>) => {
