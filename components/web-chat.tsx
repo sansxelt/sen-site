@@ -302,20 +302,38 @@ export function WebChat({
           });
       };
 
+      // Aggressive first-chunk strategy: get audio playing FAST.
+      // After the first chunk, fall back to clean sentence boundaries.
       const SENTENCE_RE = /([.!?]+["')\]]?)(\s+|$)/;
+      const FAST_FIRST_BREAK_RE = /([,;:—–]|[.!?])(\s+|$)/;
+      let firstChunkSent = false;
       const flushSentencesFromBuffer = (final = false) => {
         if (!willSpeak) return;
+        // Fast first chunk: as soon as we have ~24 chars + a comma /
+        // semicolon / sentence break, send it. Audio starts playing
+        // dramatically sooner.
+        if (!firstChunkSent && ttsBuf.text.length >= 24) {
+          const m = FAST_FIRST_BREAK_RE.exec(ttsBuf.text);
+          if (m) {
+            const idx = (m.index ?? 0) + m[0].length;
+            const head = ttsBuf.text.slice(0, idx).trim();
+            if (head.length >= 18) {
+              ttsBuf.text = ttsBuf.text.slice(idx);
+              queueSentenceForTTS(head);
+              firstChunkSent = true;
+            }
+          }
+        }
+
         let m: RegExpExecArray | null;
         while ((m = SENTENCE_RE.exec(ttsBuf.text)) !== null) {
           const idx = (m.index ?? 0) + m[0].length;
           const sentence = ttsBuf.text.slice(0, idx);
           ttsBuf.text = ttsBuf.text.slice(idx);
-          // Skip ultra-short fragments — TTS overhead per call is
-          // ~400ms, so chunks need to be worth the round-trip
           if (sentence.trim().length >= 12) {
             queueSentenceForTTS(sentence);
+            firstChunkSent = true;
           } else if (sentence.trim()) {
-            // re-attach to next sentence
             ttsBuf.text = sentence + ttsBuf.text;
             break;
           }
