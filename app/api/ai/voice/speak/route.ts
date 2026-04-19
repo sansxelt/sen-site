@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../../lib/desktop-auth";
 import { recordUsage } from "../../../../../lib/usage";
+import { getPlanForEmail } from "../../../../../lib/account-billing";
+import {
+  decideVoiceRequest,
+  getWeeklyUsage,
+} from "../../../../../lib/plan-limits";
 
 export const runtime = "nodejs";
 
@@ -56,6 +61,29 @@ export async function POST(request: Request) {
   const startedAt = Date.now();
   const surface =
     request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+
+  // Voice cap: free can't speak at all on web (handled client-side
+  // too), apprentice/studio have weekly minute caps. The estimated
+  // seconds for THIS request is ~text.length / 14.
+  const projectedSeconds = Math.max(1, Math.round(text.length / 14));
+  const plan = await getPlanForEmail(email);
+  const weekly = await getWeeklyUsage(email);
+  const voiceDecision = decideVoiceRequest({
+    plan,
+    weekly,
+    added_seconds: projectedSeconds,
+  });
+  if (voiceDecision.kind === "blocked") {
+    return NextResponse.json(
+      {
+        error: voiceDecision.reason,
+        limit: voiceDecision.limit,
+        used: voiceDecision.used,
+        reset: voiceDecision.reset,
+      },
+      { status: 429 },
+    );
+  }
 
   try {
     const speech = await client.audio.speech.create({

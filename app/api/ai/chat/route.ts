@@ -16,6 +16,11 @@ import {
   type Persona,
 } from "../../../../lib/ai-voices";
 import { recordUsage } from "../../../../lib/usage";
+import {
+  decideChatRequest,
+  getWeeklyUsage,
+  PLAN_LIMITS,
+} from "../../../../lib/plan-limits";
 
 export const runtime = "nodejs";
 
@@ -279,8 +284,36 @@ export async function POST(request: Request) {
   // resolved tier is sent back via headers so the UI can surface it.
   const requestedTier: ModelTier = payload.tier ?? "balanced";
   const plan = await getPlanForEmail(email);
-  const resolvedTier = resolveTier(plan, requestedTier);
+  let resolvedTier = resolveTier(plan, requestedTier);
+
+  // Plan limits: hard weekly cap on free/apprentice/studio,
+  // silent tier-throttle on pro, no cap on teams/enterprise.
+  const weekly = await getWeeklyUsage(email);
+  const decision = decideChatRequest({
+    plan,
+    requestedTier: resolvedTier,
+    weekly,
+  });
+  if (decision.kind === "blocked") {
+    return NextResponse.json(
+      {
+        error: decision.reason,
+        limit: decision.limit,
+        used: decision.used,
+        reset: decision.reset,
+      },
+      { status: 429 },
+    );
+  }
+  // Pro plan throttle: server picked a cheaper tier than requested
+  let throttleApplied: ModelTier | null = null;
+  if (decision.throttledTier && decision.throttledTier !== resolvedTier) {
+    throttleApplied = decision.throttledTier;
+    resolvedTier = decision.throttledTier;
+  }
+
   const descriptor = descriptorForTier(resolvedTier);
+  const planLimit = PLAN_LIMITS[plan];
 
   // Build the messages list with optional note context as a leading turn
   const messages: ChatMessage[] = [];
@@ -370,6 +403,11 @@ export async function POST(request: Request) {
         "x-sansxel-persona": personaDescriptor?.key ?? "",
         "x-sansxel-persona-delay-multiplier": String(
           personaDescriptor?.delay_multiplier ?? 1,
+        ),
+        "x-sansxel-throttled": throttleApplied ?? "",
+        "x-sansxel-weekly-used": String(weekly.chat_requests),
+        "x-sansxel-weekly-limit": String(
+          planLimit.weekly_chat_requests ?? "",
         ),
       },
     });
