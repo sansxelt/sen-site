@@ -10,7 +10,7 @@ import {
   saveSession,
   validateToken,
 } from "./auth";
-import { NotesWorkspace } from "./notes-workspace";
+import { Workspace } from "./workspace";
 
 type AuthStatus =
   | { kind: "loading" }
@@ -97,7 +97,7 @@ function App() {
   if (auth.kind === "signed-in") {
     return (
       <div className="stage stage--workspace">
-        <NotesWorkspace session={auth.session} onSignOut={handleSignOut} />
+        <Workspace session={auth.session} onSignOut={handleSignOut} />
       </div>
     );
   }
