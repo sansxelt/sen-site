@@ -9,8 +9,6 @@ import {
   desktopNextVersionHighlights,
   desktopPlatformLabel,
   desktopProjectStartedLabel,
-  desktopWindowsInstallerFilename,
-  desktopWindowsInstallerPath,
 } from "@/lib/desktop-release";
 
 export const metadata: Metadata = {
@@ -64,17 +62,16 @@ export default function AccountDownloadPage() {
             </div>
 
             <div className="flex shrink-0 flex-col gap-2 sm:items-end">
-              <a
-                href={desktopWindowsInstallerPath}
-                download={desktopWindowsInstallerFilename}
-                className="sansxel-white-button inline-flex items-center justify-center rounded-xl bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:opacity-90"
+              <span
+                className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-sm font-medium text-neutral-400"
+                aria-disabled="true"
               >
-                Download v{desktopLatestShippedVersion}
-              </a>
+                Download closed \u2014 invite-only
+              </span>
               <span className="text-[11px] text-neutral-600 sm:max-w-[220px] sm:text-right">
-                If Sansxel is already installed, in-app updates stay on the same
-                v{desktopLatestShippedVersion} release track until v{desktopNextVersion}
-                ships.
+                Public installer is paused while v{desktopLatestShippedVersion} stabilizes.
+                Existing installs keep auto-updating; new downloads are invite-only
+                until v{desktopNextVersion} ships.
               </span>
             </div>
           </div>
