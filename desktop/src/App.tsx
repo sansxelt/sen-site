@@ -12,7 +12,7 @@ import {
 } from "./auth";
 import { Workspace } from "./workspace";
 import { PreferencesProvider } from "./preferences";
-import { checkForUpdatesOnLaunch } from "./updater";
+import { UpdateLayer } from "./update-ui";
 
 type AuthStatus =
   | { kind: "loading" }
@@ -23,14 +23,10 @@ function App() {
   const [auth, setAuth] = useState<AuthStatus>({ kind: "loading" });
   const pendingRequestId = useRef<string | null>(null);
 
-  // Once-per-launch update check. Runs on a 4s delay so it doesn't
-  // race the boot sequence + auth restore. Silent on no-update.
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      void checkForUpdatesOnLaunch();
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, []);
+  // Update lifecycle (banner + what's new) is owned by <UpdateLayer />
+  // mounted once below the workspace. It handles the launch-time
+  // check, download progress, and the post-relaunch "what's new"
+  // card on its own.
 
   // On mount: try to restore an existing session, then subscribe to
   // deep-link callbacks for fresh sign-ins.
@@ -111,6 +107,7 @@ function App() {
         <div className="stage stage--workspace">
           <Workspace session={auth.session} onSignOut={handleSignOut} />
         </div>
+        <UpdateLayer />
       </PreferencesProvider>
     );
   }
@@ -118,6 +115,7 @@ function App() {
   return (
     <div className="stage">
       <SignedOutShell auth={auth} onSignIn={handleSignIn} />
+      <UpdateLayer />
     </div>
   );
 }
