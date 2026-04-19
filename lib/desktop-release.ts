@@ -14,26 +14,68 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.7";
-export const desktopLatestShippedVersion = "0.1.7";
+export const desktopCurrentCodeVersion = "0.1.8";
+export const desktopLatestShippedVersion = "0.1.8";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T15:42:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.7_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.7_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-19T16:55:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.8_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.8_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.8";
+export const desktopNextVersion = "0.1.9";
 export const desktopNextVersionHighlights = [
-  "Real Stripe products + webhooks for the v0.1.4 monetization stack (top-up packs, Power Pack bundle, annual discount).",
-  "Silent NSIS installer (no wizard ever \u2014 the splash takes over for installs too) + non-EN translation tables filled out.",
-  "GitHub OAuth callback persistence + sources view PDF text extraction + final scrollbar audit + layout densification.",
-  "Smart Action Launcher panel \u2014 Codex's elaborate quick-actions UI lands fully wired with previews + tier locks.",
+  "Silent NSIS installer (proper plugin wiring this time \u2014 no wizard ever for new installs).",
+  "Tighten the Capsule Rail drag-snap edge detection on multi-monitor setups + per-display position memory.",
+  "Voice + MCP tool registry expansion: more granular tools (search messages within a thread, edit message, branch a thread, attach a file via voice).",
+  "Memory view full implementation (currently stub) + Stripe boost-credit balance display in plan view.",
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.7 \u2014 nav rail + chat history both ALWAYS visible (no more hover-to-reveal squishing). Codex's QuickActionRow removed (was wrapping into a vertical stack and breaking the layout). Floating Copilot fixed: was dumping raw HTML because it fetched relative URL with no auth; now uses sansxel.ai + Bearer token + content-type guard. Mini-hop game rewritten: doesn't auto-progress (Press Space to play), runs past loader bar, has crash + retry, ENTER skips wait, ESC ESC ESC from main app revisits splash. All literal \\uXXXX escapes converted to actual unicode (search bar, em-dashes, arrows). Public downloads still paused.";
+  "v0.1.8 \u2014 the everything release. Voice + MCP tools (12 client-side actions like 'navigate to usage', 'create a new API key'). Capsule Rail Copilot: 4 positions (right/left/top/bottom opt-in), drag-snap to nearest edge with smooth orientation morph, top-mode command bar with Spotlight-style chips. Real Stripe products + webhook + boost-credit ledger. GitHub OAuth callback persistence. Sources PDF text extraction. 9 hand-translated locales (ES/FR/DE/JA/ZH/PT/KO/HI/AR) + Arabic RTL flip. Smart Action Launcher fully wired. (Silent NSIS template hit a plugin issue; reverted to standard NSIS for this release \u2014 lands properly in v0.1.9.)";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.8",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-19T16:55:00Z",
+    channel: "alpha",
+    summary:
+      "The everything release: Voice+MCP tools, Capsule Rail Copilot (4 positions + drag-snap + top command bar), real Stripe wired, GitHub OAuth, PDF sources, 9 translations, Smart Action Launcher.",
+    changes: [
+      {
+        type: "new",
+        text: "Voice + MCP tools \u2014 sansxel-1 can now call 12 client-side tools mid-conversation (navigate, search threads, create/revoke API keys, query sources, change tier/persona, more). Voice turns get a TTS ack before each tool runs. Settings toggle 'Let sansxel-1 take actions' (default on).",
+      },
+      {
+        type: "new",
+        text: "Copilot Capsule Rail: 4 positions (right default / left / top / bottom opt-in). Vertical = floating overlay. Top = full-width docked command bar that opens downward into a Spotlight-style chip layout. Bottom = same as top, anchored at bottom + flipped output (warning shown for taskbar conflicts). Drag the capsule across the screen to snap to the nearest edge with smooth orientation morph.",
+      },
+      {
+        type: "new",
+        text: "Stripe products + webhook fully wired. boost_credits ledger consumes credits when chat/image/voice/copilot is otherwise blocked. Buttons fire real PaymentIntent / SubscriptionItem flows. (Operator must create products in Stripe dashboard + set 11 env vars + run boost-credits.sql before live.)",
+      },
+      {
+        type: "new",
+        text: "GitHub OAuth callback persists tokens to a github_integrations table. (Operator must set GITHUB_CLIENT_ID/SECRET + run github-integrations.sql.)",
+      },
+      {
+        type: "new",
+        text: "Sources PDF text extraction via pdf-parse. 100k char cap, clean 422 errors. Text injected into the chat system prompt as Reference materials when source_ids are passed.",
+      },
+      {
+        type: "new",
+        text: "9 locales hand-translated (ES, FR, DE, JA, ZH, PT, KO, HI, AR) with full UI string coverage. Arabic flips document direction to RTL automatically when system_language is 'ar'.",
+      },
+      {
+        type: "improve",
+        text: "Smart Action Launcher (Codex's elaborate quick-actions panel) confirmed fully wired with previews + tier locks + plan gating + composer prompt seeding.",
+      },
+      {
+        type: "fix",
+        text: "Silent NSIS template hit a plugin-resolution issue (nsis_tauri_utils macros), reverted to default NSIS for v0.1.8 so the build could ship. Standard wizard returns for new installs; the silent template lands properly in v0.1.9.",
+      },
+    ],
+  },
   {
     version: "0.1.7",
     dateLabel: "Apr 19, 2026",
