@@ -14,6 +14,7 @@ export type Note = {
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export type ModelTier = "fast" | "balanced" | "smart";
+export type ChatInputMode = "text" | "voice";
 
 export type ModelOption = {
   tier: ModelTier;
@@ -271,6 +272,7 @@ export async function* streamChat(
   options: {
     context?: { note_title?: string; note_body?: string };
     tier?: ModelTier;
+    inputMode?: ChatInputMode;
     signal?: AbortSignal;
     onMeta?: (meta: StreamMeta) => void;
   } = {},
@@ -282,6 +284,7 @@ export async function* streamChat(
       messages,
       context: options.context,
       tier: options.tier,
+      input_mode: options.inputMode,
     }),
     signal: options.signal,
   });

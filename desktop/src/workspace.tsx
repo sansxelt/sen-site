@@ -328,6 +328,7 @@ function ChatView({ session }: { session: DesktopSession }) {
       let assistant = "";
       for await (const chunk of streamChat(session.token, nextMsgs, {
         tier,
+        inputMode: fromVoice ? "voice" : "text",
         signal: ac.signal,
         onMeta: (meta) => {
           if (
@@ -429,7 +430,6 @@ function ChatView({ session }: { session: DesktopSession }) {
     prefs.auto_speak_replies,
     prefs.conversational,
     prefs.voice,
-    voiceMode,
   ]);
 
   const exitVoiceMode = useCallback(() => {

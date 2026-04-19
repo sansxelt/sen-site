@@ -30,13 +30,93 @@ Identity:
 
 ${SANSXEL_PRODUCT_BRIEF}`;
 
+const VOICE_HUMANIZATION_PROMPT = `Voice-only humanization mode:
+- Only follow this mode when the latest request came through voice-to-text and the user is explicitly asking you to humanize, de-AI, or rewrite text so it sounds more natural.
+
+Project goal:
+- Transform AI-generated text into natural, human-like writing by modifying structure, tone, and reasoning, not just surface-level words.
+
+Core system design:
+1. Perspective injection
+- Add light opinion, bias, framing, or uncertainty when it helps the rewrite feel lived-in.
+- Neutral claims can become slightly subjective if the original meaning still holds.
+2. Structural variation
+- Vary sentence length on purpose.
+- Mix short sentences, longer flowing lines, and the occasional abrupt fragment.
+- Break predictable paragraph rhythm when it improves the feel.
+3. Semantic drift
+- Allow slight, controlled deviation such as clarifications, side notes, or mini tangents.
+- Never drift so far that the original point gets lost.
+4. Stylometric personalization
+- Let the rewrite lean formal, casual, or conversational based on what best fits the source.
+- Rhetorical questions, emphasis, and light filler phrasing are allowed when they feel natural.
+5. Coherence preservation
+- Keep the meaning intact.
+- Preserve logical flow.
+- Do not introduce contradictions unless the user explicitly wants a more opinionated rewrite.
+
+Do not:
+- spam synonym swaps
+- inject fake typos or forced grammar mistakes
+- manufacture "human errors" just to look less AI
+
+Output:
+- Return the rewritten text directly unless the user asks for commentary.
+- Simulate how humans think while writing, not just how they type.`;
+
+const VOICE_HUMANIZATION_PATTERNS = [
+  /\bhumani[sz]e\b/i,
+  /\b(?:sound|sounds|sounding)\s+(?:more\s+)?human\b/i,
+  /\bless\s+ai\b/i,
+  /\bless\s+robotic\b/i,
+  /\bmore\s+conversational\b/i,
+  /\bmore\s+natural\b/i,
+  /\bde-?ai\b/i,
+  /\brewrite\b[\s\S]{0,80}\b(?:human|natural|conversational)\b/i,
+  /\bmake\b[\s\S]{0,80}\b(?:human|natural|conversational|less ai|less robotic)\b/i,
+];
+
 type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatInputMode = "text" | "voice";
 
 type ChatBody = {
   messages: ChatMessage[];
   context?: { note_title?: string; note_body?: string };
   tier?: ModelTier;
+  input_mode?: ChatInputMode;
 };
+
+function latestUserMessage(messages: ChatMessage[]): string {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    if (messages[i]?.role === "user") {
+      return messages[i].content.trim();
+    }
+  }
+  return "";
+}
+
+function shouldUseVoiceHumanization(payload: ChatBody): boolean {
+  if (payload.input_mode !== "voice") {
+    return false;
+  }
+
+  const latestMessage = latestUserMessage(payload.messages);
+  if (!latestMessage) {
+    return false;
+  }
+
+  return VOICE_HUMANIZATION_PATTERNS.some((pattern) =>
+    pattern.test(latestMessage),
+  );
+}
+
+function systemPromptForPayload(payload: ChatBody): string {
+  if (!shouldUseVoiceHumanization(payload)) {
+    return SYSTEM_PROMPT;
+  }
+
+  return `${SYSTEM_PROMPT}\n\n${VOICE_HUMANIZATION_PROMPT}`;
+}
 
 export async function POST(request: Request) {
   // Two ways to authenticate this endpoint: a Bearer token (desktop)
@@ -94,7 +174,7 @@ export async function POST(request: Request) {
     const stream = await client.messages.stream({
       model: descriptor.model,
       max_tokens: 2048,
-      system: SYSTEM_PROMPT,
+      system: systemPromptForPayload(payload),
       messages,
     });
 

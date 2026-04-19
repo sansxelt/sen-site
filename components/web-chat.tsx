@@ -186,7 +186,11 @@ export function WebChat({
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, tier }),
+        body: JSON.stringify({
+          messages: next,
+          tier,
+          input_mode: fromVoice ? "voice" : "text",
+        }),
         signal: ac.signal,
       });
 
@@ -303,7 +307,7 @@ export function WebChat({
         setStreaming(false);
       }
     }
-  }, [input, messages, tier, voiceMode, stopAnalyser, beginVolumeLoop]);
+  }, [input, messages, tier]);
 
   const stop = useCallback(() => {
     if (abortRef.current) {
