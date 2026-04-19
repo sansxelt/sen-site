@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "desktop:dev": "npm --prefix desktop run tauri dev",
-    "desktop:build": "npm --prefix desktop run tauri build"
+    "desktop:build": "npm --prefix desktop run tauri build",
+    "desktop:keygen": "npm --prefix desktop run tauri signer generate -- -w sansxel-updater.key"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

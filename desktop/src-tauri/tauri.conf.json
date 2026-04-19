@@ -62,6 +62,14 @@
       "desktop": {
         "schemes": ["sansxel"]
       }
+    },
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://sansxel.ai/api/desktop/updates/latest?platform={{target}}-{{arch}}&version={{current_version}}"
+      ],
+      "dialog": false,
+      "pubkey": "REPLACE_WITH_YOUR_TAURI_PUBKEY"
     }
   }
 }

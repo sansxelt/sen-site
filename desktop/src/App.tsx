@@ -12,6 +12,7 @@ import {
 } from "./auth";
 import { Workspace } from "./workspace";
 import { PreferencesProvider } from "./preferences";
+import { checkForUpdatesOnLaunch } from "./updater";
 
 type AuthStatus =
   | { kind: "loading" }
@@ -21,6 +22,15 @@ type AuthStatus =
 function App() {
   const [auth, setAuth] = useState<AuthStatus>({ kind: "loading" });
   const pendingRequestId = useRef<string | null>(null);
+
+  // Once-per-launch update check. Runs on a 4s delay so it doesn't
+  // race the boot sequence + auth restore. Silent on no-update.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void checkForUpdatesOnLaunch();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // On mount: try to restore an existing session, then subscribe to
   // deep-link callbacks for fresh sign-ins.
