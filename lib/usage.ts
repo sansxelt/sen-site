@@ -88,17 +88,21 @@ export async function getUsageSummary(
       console.warn("usage_summary rpc failed:", error.message);
       return ZERO_SUMMARY;
     }
-    const row = Array.isArray(data) ? data[0] : data;
+    const rowsAny = data as unknown as Record<string, unknown>[] | Record<string, unknown> | null;
+    const row = (Array.isArray(rowsAny) ? rowsAny[0] : rowsAny) as
+      | Record<string, unknown>
+      | null;
     if (!row) return ZERO_SUMMARY;
+    const num = (k: string) => Number((row[k] as unknown) ?? 0);
     return {
-      total_requests: Number(row.total_requests ?? 0),
-      total_input_tokens: Number(row.total_input_tokens ?? 0),
-      total_output_tokens: Number(row.total_output_tokens ?? 0),
-      total_tokens: Number(row.total_tokens ?? 0),
-      chat_requests: Number(row.chat_requests ?? 0),
-      copilot_requests: Number(row.copilot_requests ?? 0),
-      voice_transcribe_requests: Number(row.voice_transcribe_requests ?? 0),
-      voice_speak_requests: Number(row.voice_speak_requests ?? 0),
+      total_requests: num("total_requests"),
+      total_input_tokens: num("total_input_tokens"),
+      total_output_tokens: num("total_output_tokens"),
+      total_tokens: num("total_tokens"),
+      chat_requests: num("chat_requests"),
+      copilot_requests: num("copilot_requests"),
+      voice_transcribe_requests: num("voice_transcribe_requests"),
+      voice_speak_requests: num("voice_speak_requests"),
     };
   } catch (err) {
     console.warn("getUsageSummary threw:", err);
