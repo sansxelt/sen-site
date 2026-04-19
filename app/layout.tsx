@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
+import { auth } from "../auth";
 import { CommandPalette } from "../components/command-palette";
+import { CopilotBar } from "../components/copilot-bar";
 import { RevealOnScroll } from "../components/reveal-on-scroll";
 
 const BASE = "https://www.sansxel.ai";
@@ -61,11 +63,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+  const signedIn = Boolean(session?.user?.email);
   return (
     <html
       lang="en"
@@ -101,6 +105,7 @@ export default function RootLayout({
         />
         {children}
         <CommandPalette />
+        <CopilotBar signedIn={signedIn} />
         <RevealOnScroll />
       </body>
     </html>
