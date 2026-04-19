@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import {
   applyUpdateAndRestart,
   checkForUpdatesOnLaunch,
@@ -7,15 +8,21 @@ import {
   type UpdateProgress,
 } from "./updater";
 
-// Owns the whole user-visible update flow: kicks the once-per-launch
-// check, renders the bottom-right banner, and surfaces the
-// "what's new" card on the first run after an update applies.
+// Owns the entire user-visible update flow. The OLD design was a
+// dismissible bottom-right banner + a "Restart now" button. The new
+// design is a full-screen splash-style takeover that:
+//   - shows the moment an update is found
+//   - displays branded download progress
+//   - on "ready" auto-installs + auto-relaunches (no button click)
+//   - minimizes every other window so the user can't half-engage
+// The user explicitly does NOT want any installer wizard or click
+// path. Updates land like an OS-level event.
 export function UpdateLayer() {
   const [progress, setProgress] = useState<UpdateProgress>({ kind: "idle" });
   const [whatsNew, setWhatsNew] = useState<PendingUpdate | null>(null);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  // Check for updates 4s after launch. Surface state via callback.
+  // Kick the once-per-launch update check ~4s after launch. Surface
+  // every state change to the overlay below.
   useEffect(() => {
     const t = setTimeout(() => {
       void checkForUpdatesOnLaunch(setProgress);
@@ -29,111 +36,125 @@ export function UpdateLayer() {
     if (pending) setWhatsNew(pending);
   }, []);
 
+  // The instant we have a real update, sweep other windows out of
+  // the way so the splash takeover gets undivided attention. Don't
+  // restore them after — the user picks them back up from the
+  // taskbar when they're ready.
+  const showOverlay =
+    progress.kind === "found" ||
+    progress.kind === "downloading" ||
+    progress.kind === "ready";
+  useEffect(() => {
+    if (showOverlay) {
+      void invoke("minimize_other_windows").catch(() => {});
+    }
+  }, [showOverlay]);
+
+  // Auto-restart the second the new version is ready. No button.
+  useEffect(() => {
+    if (progress.kind === "ready") {
+      const t = setTimeout(() => {
+        void applyUpdateAndRestart();
+      }, 600);
+      return () => clearTimeout(t);
+    }
+  }, [progress.kind]);
+
   return (
     <>
-      {!bannerDismissed && progress.kind !== "idle" && (
-        <UpdateBanner
-          progress={progress}
-          onDismiss={() => setBannerDismissed(true)}
-        />
-      )}
-      {whatsNew && (
-        <WhatsNewCard
-          pending={whatsNew}
-          onClose={() => setWhatsNew(null)}
-        />
+      {showOverlay && <UpdateSplash progress={progress} />}
+      {progress.kind === "error" && <UpdateError progress={progress} />}
+      {whatsNew && !showOverlay && (
+        <WhatsNewCard pending={whatsNew} onClose={() => setWhatsNew(null)} />
       )}
     </>
   );
 }
 
-// Bottom-right banner. Stays visible through the download + ready
-// states, then can be dismissed.
-function UpdateBanner({
-  progress,
-  onDismiss,
-}: {
-  progress: UpdateProgress;
-  onDismiss: () => void;
-}) {
-  if (progress.kind === "idle") return null;
+// Full-screen splash for the update flow. Same visual language as
+// the launcher splash so it feels like a native OS event, not an
+// in-app modal. No close button — focus is forced until the install
+// finishes and the app relaunches itself.
+function UpdateSplash({ progress }: { progress: UpdateProgress }) {
+  const version =
+    progress.kind === "found" ||
+    progress.kind === "downloading" ||
+    progress.kind === "ready"
+      ? progress.version
+      : "";
 
-  let body: React.ReactNode = null;
-  let action: React.ReactNode = null;
-  let kind = "found";
-
+  let label = "Preparing update";
+  let pct = 0;
   if (progress.kind === "found") {
-    kind = "found";
-    body = (
-      <>
-        <strong>Update available</strong>
-        <span className="upd-banner-version">v{progress.version}</span>
-      </>
-    );
+    label = `Update v${version} found`;
+    pct = 4;
   } else if (progress.kind === "downloading") {
-    kind = "downloading";
-    body = (
-      <>
-        <strong>Downloading update…</strong>
-        <span className="upd-banner-version">
-          v{progress.version} · {Math.round(progress.pct)}%
-        </span>
-      </>
-    );
+    label = `Downloading v${version} · ${Math.round(progress.pct)}%`;
+    pct = Math.max(4, progress.pct);
   } else if (progress.kind === "ready") {
-    kind = "ready";
-    body = (
-      <>
-        <strong>Update ready</strong>
-        <span className="upd-banner-version">v{progress.version}</span>
-      </>
-    );
-    action = (
-      <button
-        type="button"
-        className="upd-banner-btn"
-        onClick={() => void applyUpdateAndRestart()}
-      >
-        Restart now
-      </button>
-    );
-  } else if (progress.kind === "error") {
-    kind = "error";
-    body = (
-      <>
-        <strong>Update failed</strong>
-        <span className="upd-banner-version">{progress.message}</span>
-      </>
-    );
+    label = "Restarting into the new version";
+    pct = 100;
   }
 
   return (
-    <div className={`upd-banner upd-banner--${kind}`} role="status">
-      <div className="upd-banner-body">{body}</div>
+    <div className="upd-splash" role="dialog" aria-modal="true" aria-label="Updating sansxel">
+      <div className="upd-splash-frame" />
+
+      <div className="upd-splash-brand">
+        <h1 className="upd-splash-wordmark">sansxel</h1>
+        <p className="upd-splash-tagline">Updating in place. Don't close the app.</p>
+        <div className="upd-splash-spotlight" />
+      </div>
+
+      <div className="upd-splash-footer">
+        <div className="upd-splash-status">
+          <span className="upd-splash-dot" />
+          <span>{label}</span>
+        </div>
+        <div className="upd-splash-build">
+          v{version || "—"} · sansxel-1 · auto-update
+        </div>
+      </div>
+
+      <div className="upd-splash-progress">
+        <div
+          className="upd-splash-progress-fill"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Compact corner pill — only used when the update process actually
+// errored. Lets the user dismiss + try again next launch. The
+// happy-path flow never shows this.
+function UpdateError({ progress }: { progress: UpdateProgress }) {
+  if (progress.kind !== "error") return null;
+  const [hidden, setHidden] = useState(false);
+  if (hidden) return null;
+  return (
+    <div className="upd-banner upd-banner--error" role="status">
+      <div className="upd-banner-body">
+        <strong>Update failed</strong>
+        <span className="upd-banner-version">{progress.message}</span>
+      </div>
       <div className="upd-banner-actions">
-        {action}
         <button
           type="button"
           className="upd-banner-x"
-          onClick={onDismiss}
+          onClick={() => setHidden(true)}
           aria-label="Dismiss"
         >
           ✕
         </button>
       </div>
-      {progress.kind === "downloading" && (
-        <div className="upd-banner-bar">
-          <div
-            className="upd-banner-bar-fill"
-            style={{ width: `${progress.pct}%` }}
-          />
-        </div>
-      )}
     </div>
   );
 }
 
-// Centered overlay shown once after a successful update.
+// Centered overlay shown once after a successful update. Same as
+// before — only fires on the first launch into the new version.
 function WhatsNewCard({
   pending,
   onClose,

@@ -16,19 +16,19 @@ import { NextResponse } from "next/server";
 // Until you ship a release: the endpoint returns 204 (no update). The
 // installed app will check, see no update, and move on. No error.
 
-const LATEST_VERSION: string | null = "0.1.2";
+const LATEST_VERSION: string | null = "0.1.3";
 const RELEASE_NOTES =
-  "Borderless main window with custom title bar, app shows as 'sansxel' instead of 'sansxel.exe' in Start menu, minimal NSIS installer (currentUser, no UAC), corrected updater pubkey so future versions auto-update without reinstalling.";
-const RELEASE_DATE = "2026-04-18T23:15:00Z";
+  "Splash-style update takeover (auto-restart, no buttons), other windows minimize during install. Voice mode no longer sends phantom 'you' messages from Whisper hallucinations. Pressing Esc while recording cancels cleanly. Pre-React boot fallback so the app never opens to a black screen.";
+const RELEASE_DATE = "2026-04-18T23:55:00Z";
 
 // Per-platform artifact map. We host binaries from /public/desktop/
 // on this same Vercel app — keeps the GitHub repo private. Tauri 2
 // NSIS updater downloads the .exe directly + verifies the .sig.
 const PLATFORMS: Record<string, { url: string; signature: string }> = {
   "windows-x86_64": {
-    url: "https://sansxel.ai/desktop/sansxel_0.1.2_x64-setup.exe",
+    url: "https://sansxel.ai/desktop/sansxel_0.1.3_x64-setup.exe",
     signature:
-      "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaTF3Z0Z6OHUrWUgvSkZQZnpGNnVvTUEwdUxIVkVzSGVud0l4VTJVVU9lWWNudGZXak1sQ1JJYWVQN25tdlc2OUExb1VxOE1XMUNzRUdLSTVoNWFKcU9Bb3RsaFVLZmdjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc2NTc5MzM4CWZpbGU6c2Fuc3hlbF8wLjEuMl94NjQtc2V0dXAuZXhlCkMzNWE1dlF4cXgxeWhidWthdlF6ek04ZXdqVEdJZGIzY2d1VzN5STVyWXVFMnlVbjh6Rnp6UWRvMjdmV0NIOERXVzVNY3kvaVM0blJyMVU2L2ZFcURBPT0K",
+      "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaTF3Z0Z6OHUrWVBZdWZDU09Sd0tvWVZ5cTF5UWVFZE00bi9QL1lFM2RPZm1GUnFWaXU2OEd6S1JiZnVXQUhyQ245SHVKVUROL0E2MWkxbkZET2treWFDMmlXcEFwREFvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc2NTgxMzM0CWZpbGU6c2Fuc3hlbF8wLjEuM194NjQtc2V0dXAuZXhlCjF2YTNndnVhaU9yVW9JVWdrRzl2ZWhPUlhUUlU3RFJKRERjdWZDdGphWjMveEFlTGJNOWZFaDJrTWdmSW1mOTZCN0xqcWduN1dOaDZueTJEYnhpckRnPT0K",
   },
 };
 
