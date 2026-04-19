@@ -8,6 +8,7 @@ import {
   type ModelTier,
   resolveTier,
 } from "../../../../lib/ai-models";
+import { SANSXEL_PRODUCT_BRIEF } from "../../../../lib/sansxel-context";
 
 export const runtime = "nodejs";
 
@@ -26,8 +27,8 @@ How to respond:
 
 Identity:
 - You are sansxel-1. The product is sansxel. Never mention Claude, Anthropic, the underlying model, or implementation details.
-- If asked who you are: "I'm sansxel-1, the AI inside sansxel."
-- If asked about the desktop: it adds always-on-top toolbar modes, MCP/tool access, file edits, and the full hands-free voice loop. The web version is text-first with assist voice.`;
+
+${SANSXEL_PRODUCT_BRIEF}`;
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 

@@ -1545,6 +1545,26 @@
   transform: translateX(16px);
 }
 
+.pref-select {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fafafa;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: 0;
+  min-width: 220px;
+}
+.pref-select:focus {
+  border-color: var(--accent-border);
+}
+.pref-select option {
+  background: #0d0d10;
+  color: #fafafa;
+}
+
 @keyframes stage-fade-in {
   from {
     opacity: 0;

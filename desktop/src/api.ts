@@ -141,6 +141,24 @@ export type WindowMode =
   | "toolbar-left"
   | "toolbar-right";
 
+export type TtsVoice =
+  | "alloy" | "ash" | "ballad" | "coral" | "echo"
+  | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse";
+
+export const TTS_VOICES: ReadonlyArray<{ value: TtsVoice; label: string; vibe: string }> = [
+  { value: "shimmer", label: "Shimmer",  vibe: "Warm, friendly (default)" },
+  { value: "nova",    label: "Nova",     vibe: "Bright, energetic" },
+  { value: "alloy",   label: "Alloy",    vibe: "Neutral, even" },
+  { value: "ash",     label: "Ash",      vibe: "Calm, low" },
+  { value: "ballad",  label: "Ballad",   vibe: "Smooth, mellow" },
+  { value: "coral",   label: "Coral",    vibe: "Soft, conversational" },
+  { value: "echo",    label: "Echo",     vibe: "Steady, masculine" },
+  { value: "fable",   label: "Fable",    vibe: "Storyteller, expressive" },
+  { value: "onyx",    label: "Onyx",     vibe: "Deep, rich" },
+  { value: "sage",    label: "Sage",     vibe: "Thoughtful, grounded" },
+  { value: "verse",   label: "Verse",    vibe: "Lyrical, light" },
+];
+
 export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
@@ -149,6 +167,7 @@ export type DesktopPreferences = {
   auto_speak_replies: boolean;
   conversational: boolean;
   window_mode: WindowMode;
+  voice: TtsVoice;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -159,6 +178,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   auto_speak_replies: false,
   conversational: false,
   window_mode: "normal",
+  voice: "shimmer",
 };
 
 export async function getPreferences(token: string): Promise<DesktopPreferences> {
@@ -223,11 +243,15 @@ export async function transcribeAudio(
   return data.text;
 }
 
-export async function fetchSpeech(token: string, text: string): Promise<Blob> {
+export async function fetchSpeech(
+  token: string,
+  text: string,
+  voice?: TtsVoice,
+): Promise<Blob> {
   const res = await fetch(`${API_BASE}/api/ai/voice/speak`, {
     method: "POST",
     headers: authHeaders(token),
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({ text, voice }),
   });
   if (!res.ok) throw new Error(`speak ${res.status}`);
   return await res.blob();

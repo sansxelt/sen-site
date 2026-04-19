@@ -20,6 +20,7 @@ import {
   streamChat,
   type Subscription,
   transcribeAudio,
+  TTS_VOICES,
 } from "./api";
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
@@ -198,6 +199,17 @@ function ChatView({ session }: { session: DesktopSession }) {
     setTier(prefs.default_tier);
   }, [prefs.default_tier]);
 
+  // ── Voice-mode central state (refs so the rAF loop stays current)
+  const voiceStateRef = useRef(voiceState);
+  useEffect(() => {
+    voiceStateRef.current = voiceState;
+  }, [voiceState]);
+
+  const voiceModeRef = useRef(voiceMode);
+  useEffect(() => {
+    voiceModeRef.current = voiceMode;
+  }, [voiceMode]);
+
   // Hoisted so `send` can reference them — they don't depend on send.
   const stopAnalyser = useCallback(() => {
     if (rafRef.current != null) {
@@ -212,6 +224,18 @@ function ChatView({ session }: { session: DesktopSession }) {
     setAudioLevel(0);
   }, []);
 
+  // VAD timing — drives auto-stop and interruption.
+  const silenceStartRef = useRef<number | null>(null);
+  const speechStartRef = useRef<number | null>(null);
+  const recordingStartedAtRef = useRef<number>(0);
+  const interruptHandlerRef = useRef<(() => void) | null>(null);
+
+  const VAD_SILENCE_THRESHOLD = 0.045;
+  const VAD_SILENCE_HOLD_MS = 1300;
+  const VAD_MIN_RECORD_MS = 600;
+  const INTERRUPT_THRESHOLD = 0.09;
+  const INTERRUPT_HOLD_MS = 200;
+
   const beginVolumeLoop = useCallback(() => {
     const a = analyserRef.current;
     if (!a) return;
@@ -220,7 +244,48 @@ function ChatView({ session }: { session: DesktopSession }) {
       a.getByteFrequencyData(data);
       let sum = 0;
       for (let i = 0; i < data.length; i++) sum += data[i];
-      setAudioLevel(Math.min(1, (sum / data.length) / 110));
+      const level = Math.min(1, (sum / data.length) / 110);
+      setAudioLevel(level);
+
+      const state = voiceStateRef.current;
+      const now = Date.now();
+
+      // Auto-stop on sustained silence while recording
+      if (state === "recording" && voiceModeRef.current) {
+        if (now - recordingStartedAtRef.current > VAD_MIN_RECORD_MS) {
+          if (level < VAD_SILENCE_THRESHOLD) {
+            if (silenceStartRef.current == null) {
+              silenceStartRef.current = now;
+            } else if (now - silenceStartRef.current > VAD_SILENCE_HOLD_MS) {
+              const r = mediaRecorderRef.current;
+              if (r && r.state !== "inactive") r.stop();
+              silenceStartRef.current = null;
+            }
+          } else {
+            silenceStartRef.current = null;
+          }
+        }
+      } else {
+        silenceStartRef.current = null;
+      }
+
+      // Interrupt: user speaks while AI is talking → cut AI off
+      if (state === "speaking" && voiceModeRef.current) {
+        if (level > INTERRUPT_THRESHOLD) {
+          if (speechStartRef.current == null) {
+            speechStartRef.current = now;
+          } else if (now - speechStartRef.current > INTERRUPT_HOLD_MS) {
+            speechStartRef.current = null;
+            const handler = interruptHandlerRef.current;
+            if (handler) handler();
+          }
+        } else {
+          speechStartRef.current = null;
+        }
+      } else {
+        speechStartRef.current = null;
+      }
+
       rafRef.current = requestAnimationFrame(tick);
     };
     tick();
@@ -295,38 +360,35 @@ function ChatView({ session }: { session: DesktopSession }) {
         lastTurnVoiceRef.current = false;
         try {
           setVoiceState("speaking");
-          const blob = await fetchSpeech(session.token, assistant);
+          const blob = await fetchSpeech(session.token, assistant, prefs.voice);
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
-          audio.crossOrigin = "anonymous";
           audioElRef.current = audio;
 
-          // Hook the audio element through an analyser so the orb
-          // pulses with sansxel-1's voice the same way it pulses
-          // with the user's mic.
-          stopAnalyser();
-          try {
-            const ctx = new AudioContext();
-            const source = ctx.createMediaElementSource(audio);
-            const analyser = ctx.createAnalyser();
-            analyser.fftSize = 256;
-            source.connect(analyser);
-            analyser.connect(ctx.destination);
-            audioCtxRef.current = ctx;
-            analyserRef.current = analyser;
-            beginVolumeLoop();
-          } catch {
-            // If the AudioContext fails (some webview quirks), the
-            // playback still works — just no orb pulse.
-          }
+          // Wire up interrupt: if the mic-volume loop sees the user
+          // start talking while we're playing, this handler runs.
+          interruptHandlerRef.current = () => {
+            try {
+              audio.pause();
+            } catch {
+              // ignore
+            }
+            URL.revokeObjectURL(url);
+            if (audioElRef.current === audio) audioElRef.current = null;
+            setVoiceState("idle");
+            interruptHandlerRef.current = null;
+            // Switch straight back into recording so the user's
+            // interruption gets captured as the next turn.
+            void startRecordingRef.current();
+          };
 
           const cleanup = () => {
             URL.revokeObjectURL(url);
-            stopAnalyser();
+            interruptHandlerRef.current = null;
             if (audioElRef.current === audio) {
               audioElRef.current = null;
               setVoiceState("idle");
-              if (prefs.conversational || voiceMode) {
+              if (prefs.conversational || voiceModeRef.current) {
                 void startRecordingRef.current();
               }
             }
@@ -336,7 +398,6 @@ function ChatView({ session }: { session: DesktopSession }) {
           await audio.play();
         } catch {
           setVoiceState("idle");
-          stopAnalyser();
         }
       }
     } catch (err) {
@@ -367,9 +428,8 @@ function ChatView({ session }: { session: DesktopSession }) {
     tier,
     prefs.auto_speak_replies,
     prefs.conversational,
+    prefs.voice,
     voiceMode,
-    stopAnalyser,
-    beginVolumeLoop,
   ]);
 
   const exitVoiceMode = useCallback(() => {
@@ -402,19 +462,24 @@ function ChatView({ session }: { session: DesktopSession }) {
 
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micStreamRef.current = stream;
+      // In voice mode, the mic stream is shared across turns. Reuse
+      // the existing one so we don't ask for permission every turn
+      // and the analyser keeps running.
+      let stream = micStreamRef.current;
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStreamRef.current = stream;
 
-      // Hook AudioContext to drive the orb visualization
-      stopAnalyser();
-      const ctx = new AudioContext();
-      const source = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      audioCtxRef.current = ctx;
-      analyserRef.current = analyser;
-      beginVolumeLoop();
+        stopAnalyser();
+        const ctx = new AudioContext();
+        const source = ctx.createMediaStreamSource(stream);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        audioCtxRef.current = ctx;
+        analyserRef.current = analyser;
+        beginVolumeLoop();
+      }
 
       const recorder = new MediaRecorder(stream);
       recordedChunksRef.current = [];
@@ -422,10 +487,14 @@ function ChatView({ session }: { session: DesktopSession }) {
         if (ev.data.size > 0) recordedChunksRef.current.push(ev.data);
       };
       recorder.onstop = async () => {
-        // Stop the underlying tracks so the OS releases the mic
-        stream.getTracks().forEach((t) => t.stop());
-        micStreamRef.current = null;
-        stopAnalyser();
+        // Hold onto the stream if voice mode is still active; the
+        // next turn's recorder will reuse it. Only release on
+        // exitVoiceMode().
+        if (!voiceModeRef.current && micStreamRef.current) {
+          micStreamRef.current.getTracks().forEach((t) => t.stop());
+          micStreamRef.current = null;
+          stopAnalyser();
+        }
         const blob = new Blob(recordedChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
@@ -433,7 +502,6 @@ function ChatView({ session }: { session: DesktopSession }) {
         try {
           const text = await transcribeAudio(session.token, blob);
           if (text.trim()) {
-            // Auto-send so the conversation stays voice-driven
             setVoiceState("idle");
             await send(text, true);
           } else {
@@ -445,6 +513,8 @@ function ChatView({ session }: { session: DesktopSession }) {
         }
       };
       mediaRecorderRef.current = recorder;
+      recordingStartedAtRef.current = Date.now();
+      silenceStartRef.current = null;
       recorder.start();
       setVoiceState("recording");
     } catch (err) {
@@ -1129,6 +1199,25 @@ function PreferencesView() {
               value={prefs.conversational}
               onChange={(v) => update({ conversational: v })}
             />
+          </PrefSection>
+
+          <PrefSection
+            label="Voice"
+            help="Which TTS voice sansxel-1 speaks with. Audio-only — only matters when replies are read aloud."
+          >
+            <select
+              value={prefs.voice}
+              onChange={(e) =>
+                update({ voice: e.target.value as DesktopPreferences["voice"] })
+              }
+              className="pref-select"
+            >
+              {TTS_VOICES.map((v) => (
+                <option key={v.value} value={v.value}>
+                  {v.label} — {v.vibe}
+                </option>
+              ))}
+            </select>
           </PrefSection>
         </PrefSectionGroup>
 

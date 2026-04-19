@@ -71,6 +71,23 @@ export function WebChat({
 
   const isFreePlan = plan === "free";
 
+  // Refs so the rAF loop reads the latest values without re-binding
+  const voiceStateRef = useRef(voiceState);
+  useEffect(() => { voiceStateRef.current = voiceState; }, [voiceState]);
+  const voiceModeRef = useRef(voiceMode);
+  useEffect(() => { voiceModeRef.current = voiceMode; }, [voiceMode]);
+
+  const silenceStartRef = useRef<number | null>(null);
+  const speechStartRef = useRef<number | null>(null);
+  const recordingStartedAtRef = useRef<number>(0);
+  const interruptHandlerRef = useRef<(() => void) | null>(null);
+
+  const VAD_SILENCE_THRESHOLD = 0.045;
+  const VAD_SILENCE_HOLD_MS = 1300;
+  const VAD_MIN_RECORD_MS = 600;
+  const INTERRUPT_THRESHOLD = 0.09;
+  const INTERRUPT_HOLD_MS = 200;
+
   const stopAnalyser = useCallback(() => {
     if (rafRef.current != null) {
       cancelAnimationFrame(rafRef.current);
@@ -92,7 +109,48 @@ export function WebChat({
       a.getByteFrequencyData(data);
       let sum = 0;
       for (let i = 0; i < data.length; i++) sum += data[i];
-      setAudioLevel(Math.min(1, (sum / data.length) / 110));
+      const level = Math.min(1, (sum / data.length) / 110);
+      setAudioLevel(level);
+
+      const state = voiceStateRef.current;
+      const now = Date.now();
+
+      // VAD auto-stop while recording
+      if (state === "recording" && voiceModeRef.current) {
+        if (now - recordingStartedAtRef.current > VAD_MIN_RECORD_MS) {
+          if (level < VAD_SILENCE_THRESHOLD) {
+            if (silenceStartRef.current == null) {
+              silenceStartRef.current = now;
+            } else if (now - silenceStartRef.current > VAD_SILENCE_HOLD_MS) {
+              const r = recorderRef.current;
+              if (r && r.state !== "inactive") r.stop();
+              silenceStartRef.current = null;
+            }
+          } else {
+            silenceStartRef.current = null;
+          }
+        }
+      } else {
+        silenceStartRef.current = null;
+      }
+
+      // Interrupt: user speaks while AI is talking
+      if (state === "speaking" && voiceModeRef.current) {
+        if (level > INTERRUPT_THRESHOLD) {
+          if (speechStartRef.current == null) {
+            speechStartRef.current = now;
+          } else if (now - speechStartRef.current > INTERRUPT_HOLD_MS) {
+            speechStartRef.current = null;
+            const handler = interruptHandlerRef.current;
+            if (handler) handler();
+          }
+        } else {
+          speechStartRef.current = null;
+        }
+      } else {
+        speechStartRef.current = null;
+      }
+
       rafRef.current = requestAnimationFrame(tick);
     };
     tick();
@@ -195,32 +253,26 @@ export function WebChat({
             const blob = await tts.blob();
             const url = URL.createObjectURL(blob);
             const audio = new Audio(url);
-            audio.crossOrigin = "anonymous";
             audioElRef.current = audio;
 
-            // Hook the AI's voice into the orb visualization
-            stopAnalyser();
-            try {
-              const ctx = new AudioContext();
-              const source = ctx.createMediaElementSource(audio);
-              const analyser = ctx.createAnalyser();
-              analyser.fftSize = 256;
-              source.connect(analyser);
-              analyser.connect(ctx.destination);
-              audioCtxRef.current = ctx;
-              analyserRef.current = analyser;
-              beginVolumeLoop();
-            } catch {
-              // playback still works; just no orb pulse
-            }
+            // Mic analyser keeps running so the volume loop can
+            // detect interrupt-while-speaking. Wire the handler.
+            interruptHandlerRef.current = () => {
+              try { audio.pause(); } catch { /* ignore */ }
+              URL.revokeObjectURL(url);
+              if (audioElRef.current === audio) audioElRef.current = null;
+              setVoiceState("idle");
+              interruptHandlerRef.current = null;
+              void startRecordingRef.current();
+            };
 
             const cleanup = () => {
               URL.revokeObjectURL(url);
-              stopAnalyser();
+              interruptHandlerRef.current = null;
               if (audioElRef.current === audio) {
                 audioElRef.current = null;
                 setVoiceState("idle");
-                if (voiceMode) {
+                if (voiceModeRef.current) {
                   void startRecordingRef.current();
                 }
               }
@@ -230,11 +282,9 @@ export function WebChat({
             await audio.play();
           } else {
             setVoiceState("idle");
-            stopAnalyser();
           }
         } catch {
           setVoiceState("idle");
-          stopAnalyser();
         }
       }
     } catch (err) {
@@ -270,19 +320,21 @@ export function WebChat({
   const startRecording = useCallback(async () => {
     if (isFreePlan) return;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micStreamRef.current = stream;
+      let stream = micStreamRef.current;
+      if (!stream) {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStreamRef.current = stream;
 
-      // Hook the mic into an analyser so the orb pulses with volume
-      stopAnalyser();
-      const ctx = new AudioContext();
-      const source = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-      audioCtxRef.current = ctx;
-      analyserRef.current = analyser;
-      beginVolumeLoop();
+        stopAnalyser();
+        const ctx = new AudioContext();
+        const source = ctx.createMediaStreamSource(stream);
+        const analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        audioCtxRef.current = ctx;
+        analyserRef.current = analyser;
+        beginVolumeLoop();
+      }
 
       const recorder = new MediaRecorder(stream);
       recordedChunksRef.current = [];
@@ -290,9 +342,11 @@ export function WebChat({
         if (ev.data.size > 0) recordedChunksRef.current.push(ev.data);
       };
       recorder.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        micStreamRef.current = null;
-        stopAnalyser();
+        if (!voiceModeRef.current && micStreamRef.current) {
+          micStreamRef.current.getTracks().forEach((t) => t.stop());
+          micStreamRef.current = null;
+          stopAnalyser();
+        }
         const blob = new Blob(recordedChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
@@ -319,6 +373,8 @@ export function WebChat({
         }
       };
       recorderRef.current = recorder;
+      recordingStartedAtRef.current = Date.now();
+      silenceStartRef.current = null;
       recorder.start();
       setVoiceState("recording");
     } catch (err) {

@@ -1,6 +1,10 @@
 import { getSupabaseAdminClient } from "./supabase-admin";
 import type { ModelTier } from "./ai-models";
 
+export type TtsVoice =
+  | "alloy" | "ash" | "ballad" | "coral" | "echo"
+  | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse";
+
 export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
@@ -9,6 +13,7 @@ export type DesktopPreferences = {
   auto_speak_replies: boolean;
   conversational: boolean;
   window_mode: "normal" | "toolbar-top" | "toolbar-left" | "toolbar-right";
+  voice: TtsVoice;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -19,6 +24,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   auto_speak_replies: false,
   conversational: false,
   window_mode: "normal",
+  voice: "shimmer",
 };
 
 function normalize(raw: unknown): DesktopPreferences {
@@ -63,6 +69,13 @@ function normalize(raw: unknown): DesktopPreferences {
       r.window_mode === "toolbar-right"
         ? r.window_mode
         : DEFAULT_PREFERENCES.window_mode,
+    voice:
+      r.voice && (
+        ["alloy", "ash", "ballad", "coral", "echo",
+         "fable", "nova", "onyx", "sage", "shimmer", "verse"] as const
+      ).includes(r.voice as TtsVoice)
+        ? (r.voice as TtsVoice)
+        : DEFAULT_PREFERENCES.voice,
   };
 }
 

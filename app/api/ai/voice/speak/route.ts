@@ -33,12 +33,28 @@ export async function POST(request: Request) {
   }
 
   // Cap input so a runaway message can't drain credit.
-  const text = payload.text.slice(0, 4096);
+  const rawText = payload.text.slice(0, 4096);
+
+  // Force the TTS model to pronounce the brand correctly. Without
+  // this, "sansxel" comes out closer to "san-zell" or "sans-ex-el".
+  // The brand should sound like "sans-zul".
+  const text = rawText
+    .replace(/\bsansxel-1\b/gi, "sans-zul one")
+    .replace(/\bsansxel-?2\b/gi, "sans-zul two")
+    .replace(/\bsansxel\b/gi, "sans-zul");
+
+  // Optional voice + speed knobs from the client (default = shimmer).
+  const voice =
+    typeof (payload as { voice?: string }).voice === "string"
+      ? ((payload as { voice?: string }).voice as
+          | "alloy" | "ash" | "ballad" | "coral" | "echo"
+          | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse")
+      : "shimmer";
 
   try {
     const speech = await client.audio.speech.create({
       model: "gpt-4o-mini-tts",
-      voice: "shimmer",
+      voice,
       input: text,
       response_format: "mp3",
     });
