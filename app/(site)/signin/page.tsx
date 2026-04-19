@@ -41,7 +41,7 @@ export default async function SignInPage({
               callbackUrl={getSafeRedirectPath(callbackUrl)}
               initialSessionEmail={session?.user?.email ?? null}
             />
-            <OAuthSection />
+            <OAuthSection callbackUrl={getSafeRedirectPath(callbackUrl)} />
           </div>
         </div>
     </section>

@@ -15,6 +15,7 @@ import {
   isPersona,
   type Persona,
 } from "../../../../lib/ai-voices";
+import { recordUsage } from "../../../../lib/usage";
 
 export const runtime = "nodejs";
 
@@ -308,11 +309,26 @@ export async function POST(request: Request) {
       messages,
     });
 
+    const startedAt = Date.now();
+    // Capture from the surface header so the dashboard can split
+    // web vs desktop usage.
+    const surface =
+      request.headers.get("x-sansxel-surface") === "desktop"
+        ? "desktop"
+        : "web";
     const encoder = new TextEncoder();
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
+        let inputTokens = 0;
+        let outputTokens = 0;
         try {
           for await (const event of stream) {
+            if (event.type === "message_start") {
+              inputTokens = event.message?.usage?.input_tokens ?? 0;
+            }
+            if (event.type === "message_delta") {
+              outputTokens = event.usage?.output_tokens ?? outputTokens;
+            }
             if (
               event.type === "content_block_delta" &&
               event.delta.type === "text_delta"
@@ -324,6 +340,17 @@ export async function POST(request: Request) {
           console.error("ai/chat stream error:", err);
         } finally {
           controller.close();
+          // Fire-and-forget usage record after the stream resolves
+          void recordUsage({
+            email,
+            kind: "chat",
+            model: descriptor.model,
+            surface,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            total_tokens: inputTokens + outputTokens,
+            duration_ms: Date.now() - startedAt,
+          });
         }
       },
     });

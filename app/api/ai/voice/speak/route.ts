@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../../lib/desktop-auth";
+import { recordUsage } from "../../../../../lib/usage";
 
 export const runtime = "nodejs";
 
@@ -52,6 +53,10 @@ export async function POST(request: Request) {
           | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse")
       : "fable";
 
+  const startedAt = Date.now();
+  const surface =
+    request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+
   try {
     const speech = await client.audio.speech.create({
       model: "gpt-4o-mini-tts",
@@ -61,6 +66,20 @@ export async function POST(request: Request) {
     });
 
     const arrayBuf = await speech.arrayBuffer();
+    // TTS pricing is per character on OpenAI; use char count as the
+    // input metric. ~140 wpm reading speed → audio_seconds estimate.
+    const charCount = text.length;
+    const estimatedSeconds = Math.round((charCount / 14) * 0.6) / 10; // ~14 chars/sec @ 140wpm
+    void recordUsage({
+      email,
+      kind: "voice_speak",
+      model: "gpt-4o-mini-tts",
+      surface,
+      input_tokens: charCount,
+      audio_seconds: estimatedSeconds,
+      duration_ms: Date.now() - startedAt,
+    });
+
     return new Response(arrayBuf, {
       headers: {
         "Content-Type": "audio/mpeg",

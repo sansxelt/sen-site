@@ -191,15 +191,17 @@ export default function UpdatesPage() {
       </div>
 
       {/* ── Platform note ─────────────────────────────────────────── */}
-      <div className="mt-3 flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-        <div className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/60" />
-        <p className="text-xs leading-relaxed text-neutral-500">
-          macOS and Linux builds are on the roadmap, after the Windows-first
-          rollout.
-          <Link href={platformRequestHref} className="sansxel-subtle-link ml-1">
+      <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+        <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/60" />
+        <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs leading-5 text-neutral-500">
+          <span>
+            macOS and Linux builds are on the roadmap, after the Windows-first
+            rollout.
+          </span>
+          <Link href={platformRequestHref} className="sansxel-subtle-link">
             Notify me when available →
           </Link>
-        </p>
+        </div>
       </div>
 
       {/* ── Release notes — empty state until the first build ships ── */}

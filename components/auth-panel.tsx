@@ -7,6 +7,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import {
   getAuthErrorMessage,
   getSafeRedirectPath,
+  getSignInPath,
   oauthProviders,
   type OauthProvider,
 } from "../lib/auth-ui";
@@ -318,7 +319,7 @@ export function AuthPanel({
 
     try {
       await signOut({
-        redirectTo: "/",
+        redirectTo: getSignInPath(safeRedirectPath),
       });
     } catch (error) {
       console.error("Sign out failed:", error);

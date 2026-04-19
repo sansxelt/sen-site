@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../../lib/desktop-auth";
+import { recordUsage } from "../../../../../lib/usage";
 
 export const runtime = "nodejs";
 
@@ -38,10 +39,25 @@ export async function POST(request: Request) {
     type: audio.type || "audio/webm",
   });
 
+  const startedAt = Date.now();
+  const surface =
+    request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+
   try {
     const result = await client.audio.transcriptions.create({
       file,
       model: "whisper-1",
+    });
+    void recordUsage({
+      email,
+      kind: "voice_transcribe",
+      model: "whisper-1",
+      surface,
+      // Whisper doesn't return token usage; approximate with byte size
+      // for cost-class tracking. Refine later if we add server-side
+      // duration estimation.
+      input_tokens: Math.ceil(audio.size / 1024), // KB as a rough proxy
+      duration_ms: Date.now() - startedAt,
     });
     return NextResponse.json({ text: result.text });
   } catch (err) {
