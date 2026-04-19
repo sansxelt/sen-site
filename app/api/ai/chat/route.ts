@@ -8,7 +8,13 @@ import {
   type ModelTier,
   resolveTier,
 } from "../../../../lib/ai-models";
+import { humanizeText, type HumanizationTone } from "../../../../lib/humanize-engine";
 import { SANSXEL_PRODUCT_BRIEF } from "../../../../lib/sansxel-context";
+import {
+  describePersona,
+  isPersona,
+  type Persona,
+} from "../../../../lib/ai-voices";
 
 export const runtime = "nodejs";
 
@@ -100,6 +106,7 @@ type ChatBody = {
   context?: { note_title?: string; note_body?: string };
   tier?: ModelTier;
   input_mode?: ChatInputMode;
+  persona?: Persona;
 };
 
 function latestUserMessage(messages: ChatMessage[]): string {
@@ -124,7 +131,7 @@ function recentUserContext(
   return recent.join("\n\n");
 }
 
-function shouldUseVoiceHumanization(payload: ChatBody): boolean {
+function matchesVoiceHumanizationIntent(payload: ChatBody): boolean {
   if (payload.input_mode !== "voice") {
     return false;
   }
@@ -144,12 +151,85 @@ function shouldUseVoiceHumanization(payload: ChatBody): boolean {
   );
 }
 
-function systemPromptForPayload(payload: ChatBody): string {
-  if (!shouldUseVoiceHumanization(payload)) {
-    return SYSTEM_PROMPT;
+function requestedHumanizationTone(payload: ChatBody): HumanizationTone | undefined {
+  const context = recentUserContext(payload.messages, 2).toLowerCase();
+  if (/\bformal\b|\bprofessional\b|\bpolished\b/.test(context)) {
+    return "formal";
+  }
+  if (/\bcasual\b|\bconversational\b|\bfriendly\b/.test(context)) {
+    return "conversational";
+  }
+  if (/\bbalanced\b|\bneutral\b|\bclear\b/.test(context)) {
+    return "balanced";
+  }
+  return undefined;
+}
+
+function extractInlineRewriteTarget(message: string): string | null {
+  const fenced = [...message.matchAll(/```(?:[\w-]+)?\n?([\s\S]+?)```/g)]
+    .map((match) => match[1]?.trim())
+    .filter((value): value is string => !!value && value.length > 24)
+    .sort((a, b) => b.length - a.length)[0];
+  if (fenced) {
+    return fenced;
   }
 
-  return `${SYSTEM_PROMPT}\n\n${VOICE_HUMANIZATION_PROMPT}`;
+  const quoted = [...message.matchAll(/["“]([\s\S]{24,}?)["”]/g)]
+    .map((match) => match[1]?.trim())
+    .filter((value): value is string => !!value && value.split(/\s+/).length >= 5)
+    .sort((a, b) => b.length - a.length)[0];
+  if (quoted) {
+    return quoted;
+  }
+
+  const afterBlankLine = message.match(/\n\s*\n([\s\S]{24,})$/)?.[1]?.trim();
+  if (afterBlankLine && afterBlankLine.split(/\s+/).length >= 5) {
+    return afterBlankLine;
+  }
+
+  const afterColon = message.match(/:\s*([\s\S]{24,})$/)?.[1]?.trim();
+  if (afterColon && afterColon.split(/\s+/).length >= 5) {
+    return afterColon;
+  }
+
+  return null;
+}
+
+function resolveVoiceHumanizationSource(payload: ChatBody): string | null {
+  if (!matchesVoiceHumanizationIntent(payload)) {
+    return null;
+  }
+
+  const latestMessage = latestUserMessage(payload.messages);
+  const inlineTarget = extractInlineRewriteTarget(latestMessage);
+  if (inlineTarget) {
+    return inlineTarget;
+  }
+
+  const noteBody = payload.context?.note_body?.trim();
+  if (noteBody && noteBody.split(/\s+/).length >= 5) {
+    return noteBody;
+  }
+
+  return null;
+}
+
+function systemPromptForPayload(payload: ChatBody): string {
+  let prompt = SYSTEM_PROMPT;
+
+  // Persona overlay (direct/warm/technical/playful) — short style
+  // directive appended to the base prompt. Keep this AFTER the base
+  // so persona instructions override hedge-y behavior in the base.
+  if (payload.persona && isPersona(payload.persona)) {
+    const persona = describePersona(payload.persona);
+    prompt = `${prompt}\n\n${persona.style_directive}`;
+  }
+
+  if (matchesVoiceHumanizationIntent(payload)) {
+    prompt = `${prompt}\n\n${VOICE_HUMANIZATION_PROMPT}`;
+  }
+
+  return prompt;
 }
 
 export async function POST(request: Request) {
@@ -174,6 +254,21 @@ export async function POST(request: Request) {
 
   if (!Array.isArray(payload.messages) || payload.messages.length === 0) {
     return NextResponse.json({ error: "Missing messages." }, { status: 400 });
+  }
+
+  const directHumanizationSource = resolveVoiceHumanizationSource(payload);
+  if (directHumanizationSource) {
+    return new Response(
+      humanizeText(directHumanizationSource, {
+        tone: requestedHumanizationTone(payload),
+      }),
+      {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "no-store",
+        },
+      },
+    );
   }
 
   // Resolve the requested tier against the user's plan. If they ask
@@ -232,6 +327,11 @@ export async function POST(request: Request) {
       },
     });
 
+    const personaDescriptor =
+      payload.persona && isPersona(payload.persona)
+        ? describePersona(payload.persona)
+        : null;
+
     return new Response(body, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
@@ -239,6 +339,10 @@ export async function POST(request: Request) {
         "x-sansxel-tier": resolvedTier,
         "x-sansxel-tier-requested": requestedTier,
         "x-sansxel-plan": plan,
+        "x-sansxel-persona": personaDescriptor?.key ?? "",
+        "x-sansxel-persona-delay-multiplier": String(
+          personaDescriptor?.delay_multiplier ?? 1,
+        ),
       },
     });
   } catch (err) {

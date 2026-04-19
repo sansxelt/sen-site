@@ -21,6 +21,7 @@ import {
   type Subscription,
   transcribeAudio,
   TTS_VOICES,
+  PERSONA_OPTIONS,
 } from "./api";
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
@@ -329,6 +330,7 @@ function ChatView({ session }: { session: DesktopSession }) {
       for await (const chunk of streamChat(session.token, nextMsgs, {
         tier,
         inputMode: fromVoice ? "voice" : "text",
+        persona: prefs.persona,
         signal: ac.signal,
         onMeta: (meta) => {
           if (
@@ -1187,6 +1189,25 @@ function PreferencesView() {
                 label: m.display_name.replace("sansxel-1 ", "") || "default",
               }))}
             />
+          </PrefSection>
+
+          <PrefSection
+            label="Persona"
+            help="How sansxel-1 talks. Changes voice + sentence rhythm without changing the model."
+          >
+            <select
+              value={prefs.persona}
+              onChange={(e) =>
+                update({ persona: e.target.value as DesktopPreferences["persona"] })
+              }
+              className="pref-select"
+            >
+              {PERSONA_OPTIONS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label} — {p.blurb}
+                </option>
+              ))}
+            </select>
           </PrefSection>
 
           <PrefSection

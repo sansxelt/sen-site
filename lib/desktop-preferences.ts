@@ -5,6 +5,8 @@ export type TtsVoice =
   | "alloy" | "ash" | "ballad" | "coral" | "echo"
   | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse";
 
+export type Persona = "direct" | "warm" | "technical" | "playful";
+
 export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
@@ -14,6 +16,7 @@ export type DesktopPreferences = {
   conversational: boolean;
   window_mode: "normal" | "toolbar-top" | "toolbar-left" | "toolbar-right";
   voice: TtsVoice;
+  persona: Persona;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -25,6 +28,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   conversational: false,
   window_mode: "normal",
   voice: "fable",
+  persona: "warm",
 };
 
 function normalize(raw: unknown): DesktopPreferences {
@@ -76,6 +80,13 @@ function normalize(raw: unknown): DesktopPreferences {
       ).includes(r.voice as TtsVoice)
         ? (r.voice as TtsVoice)
         : DEFAULT_PREFERENCES.voice,
+    persona:
+      r.persona === "direct" ||
+      r.persona === "warm" ||
+      r.persona === "technical" ||
+      r.persona === "playful"
+        ? r.persona
+        : DEFAULT_PREFERENCES.persona,
   };
 }
 

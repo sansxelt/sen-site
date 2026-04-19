@@ -160,6 +160,19 @@ export const TTS_VOICES: ReadonlyArray<{ value: TtsVoice; label: string; vibe: s
   { value: "verse",   label: "Verse",    vibe: "Lyrical, light" },
 ];
 
+export type Persona = "direct" | "warm" | "technical" | "playful";
+
+export const PERSONA_OPTIONS: ReadonlyArray<{
+  value: Persona;
+  label: string;
+  blurb: string;
+}> = [
+  { value: "warm",      label: "Warm",      blurb: "Conversational, patient, slightly longer sentences (default)." },
+  { value: "direct",    label: "Direct",    blurb: "Short sentences. No hedging. Lead with the answer." },
+  { value: "technical", label: "Technical", blurb: "Precise terminology. Code-first. Cite assumptions." },
+  { value: "playful",   label: "Playful",   blurb: "Witty, light, dry humor. Never mean." },
+];
+
 export type DesktopPreferences = {
   default_tier: ModelTier;
   density: "compact" | "comfortable" | "spacious";
@@ -169,6 +182,7 @@ export type DesktopPreferences = {
   conversational: boolean;
   window_mode: WindowMode;
   voice: TtsVoice;
+  persona: Persona;
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -180,6 +194,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   conversational: false,
   window_mode: "normal",
   voice: "fable",
+  persona: "warm",
 };
 
 export async function getPreferences(token: string): Promise<DesktopPreferences> {
@@ -264,6 +279,8 @@ export type StreamMeta = {
   tier_requested: ModelTier | null;
   tier_resolved: ModelTier | null;
   plan: string | null;
+  persona: Persona | null;
+  persona_delay_multiplier: number;
 };
 
 export async function* streamChat(
@@ -273,6 +290,7 @@ export async function* streamChat(
     context?: { note_title?: string; note_body?: string };
     tier?: ModelTier;
     inputMode?: ChatInputMode;
+    persona?: Persona;
     signal?: AbortSignal;
     onMeta?: (meta: StreamMeta) => void;
   } = {},
@@ -285,16 +303,23 @@ export async function* streamChat(
       context: options.context,
       tier: options.tier,
       input_mode: options.inputMode,
+      persona: options.persona,
     }),
     signal: options.signal,
   });
 
   if (options.onMeta) {
+    const personaHeader = res.headers.get("x-sansxel-persona");
+    const delayHeader = res.headers.get("x-sansxel-persona-delay-multiplier");
     options.onMeta({
       tier_requested:
         (res.headers.get("x-sansxel-tier-requested") as ModelTier | null) ?? null,
       tier_resolved:
         (res.headers.get("x-sansxel-tier") as ModelTier | null) ?? null,
+      persona: personaHeader
+        ? (personaHeader as Persona | null)
+        : null,
+      persona_delay_multiplier: delayHeader ? Number(delayHeader) : 1,
       plan: res.headers.get("x-sansxel-plan"),
     });
   }
