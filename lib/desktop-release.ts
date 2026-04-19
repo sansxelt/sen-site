@@ -22,11 +22,12 @@ export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.4_x64-setup.exe
 export const desktopWindowsInstallerFilename = "sansxel_0.1.4_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.4";
+export const desktopNextVersion = "0.1.5";
 export const desktopNextVersionHighlights = [
-  "Chat-style thread rail with smoother title retitling as topics shift.",
-  "A reversible PC copilot shell plus faster-feeling voice response handoff.",
-  "More native billing, usage, and model-aware desktop UI work landing in-app.",
+  "Smart Action Launcher panel \u2014 the elaborate quick-actions UI Codex scaffolded for v0.1.4 lands fully wired with previews + tier locks.",
+  "Real Stripe products + webhooks for the v0.1.4 monetization stack (top-up packs, Power Pack bundle, annual discount).",
+  "Silent NSIS installer (no wizard ever \u2014 the splash takes over for installs too) + non-EN translation tables filled out.",
+  "GitHub OAuth callback persistence + sources view PDF text extraction + scrollbar audit + final layout densification pass.",
 ];
 
 export const desktopLatestUpdaterNotes =
