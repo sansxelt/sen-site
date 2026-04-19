@@ -26,11 +26,73 @@
         color: #fafafa;
         user-select: none;
       }
+
+      /* Pre-React fallback shown the instant the window appears so
+         the user never stares at a black void while React loads +
+         the session restore call resolves. React replaces #root
+         contents on first paint, wiping this. */
+      .boot-fallback {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background:
+          radial-gradient(ellipse 60% 60% at 50% 50%, rgba(140, 92, 246, 0.18), transparent 70%),
+          #050505;
+        animation: boot-fade-in 220ms ease-out;
+      }
+
+      .boot-fallback-mark {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        color: #fcfcff;
+        text-shadow: 0 0 30px rgba(196, 168, 252, 0.45);
+      }
+
+      .boot-fallback-pulse {
+        width: 48px;
+        height: 4px;
+        border-radius: 4px;
+        background: rgba(167, 139, 250, 0.18);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .boot-fallback-pulse::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          #a78bfa,
+          transparent
+        );
+        animation: boot-pulse 1.1s linear infinite;
+      }
+
+      @keyframes boot-fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+      @keyframes boot-pulse {
+        from { transform: translateX(-100%); }
+        to   { transform: translateX(100%); }
+      }
     </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot-fallback">
+        <div class="boot-fallback-mark">sansxel</div>
+        <div class="boot-fallback-pulse"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

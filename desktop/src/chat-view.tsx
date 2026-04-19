@@ -157,6 +157,11 @@ export function DesktopChatView({
   const abortRef = useRef<AbortController | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  // Bumped each time the user explicitly exits voice mode. The recorder
+  // captures the value on start; if onstop sees it changed, we abandon
+  // the recording (don't transcribe, don't send). Stops "Esc while
+  // recording" from sending a hallucinated message.
+  const voiceTurnIdRef = useRef(0);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -447,11 +452,28 @@ export function DesktopChatView({
       }
 
       const recorder = new MediaRecorder(stream);
+      // Snapshot the turn id at start. If the user exits before this
+      // recorder finishes, the id will have advanced and we'll bail.
+      const turnIdAtStart = voiceTurnIdRef.current;
       recordedChunksRef.current = [];
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) recordedChunksRef.current.push(event.data);
       };
       recorder.onstop = async () => {
+        // User exited / cancelled this turn — drop everything, do not
+        // transcribe, do not auto-send. This kills the "Esc-while-
+        // recording sent a message" bug and the late-arrival bug
+        // where a stale transcript pops in mid-typing.
+        const cancelled = voiceTurnIdRef.current !== turnIdAtStart;
+        if (cancelled) {
+          recordedChunksRef.current = [];
+          if (!voiceModeRef.current && micStreamRef.current) {
+            micStreamRef.current.getTracks().forEach((track) => track.stop());
+            micStreamRef.current = null;
+            stopAnalyser();
+          }
+          return;
+        }
         if (!voiceModeRef.current && micStreamRef.current) {
           micStreamRef.current.getTracks().forEach((track) => track.stop());
           micStreamRef.current = null;
@@ -463,9 +485,15 @@ export function DesktopChatView({
         setVoiceState("transcribing");
         try {
           const text = await transcribeAudio(session.token, blob);
-          if (text.trim()) {
+          // Cancellation may have happened DURING the network call.
+          if (voiceTurnIdRef.current !== turnIdAtStart) {
             setVoiceState("idle");
-            await sendRef.current(text, true);
+            return;
+          }
+          const cleaned = text.trim();
+          if (cleaned && !isWhisperHallucination(cleaned)) {
+            setVoiceState("idle");
+            await sendRef.current(cleaned, true);
           } else {
             setVoiceState("idle");
           }
@@ -490,14 +518,10 @@ export function DesktopChatView({
     startRecordingRef.current = startRecording;
   }, [startRecording]);
 
-  const stopRecording = useCallback(() => {
-    const recorder = mediaRecorderRef.current;
-    if (recorder && recorder.state !== "inactive") {
-      recorder.stop();
-    }
-  }, []);
-
   const exitVoiceMode = useCallback(() => {
+    // Invalidate any in-flight recording / transcription. Their onstop
+    // handlers will see the turn id changed and bail without sending.
+    voiceTurnIdRef.current += 1;
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
@@ -731,15 +755,6 @@ export function DesktopChatView({
         <VoiceOverlay
           state={voiceState}
           level={audioLevel}
-          onMicTap={() => {
-            if (voiceState === "recording") {
-              stopRecording();
-            } else if (voiceState === "warming" || voiceState === "speaking") {
-              stopVoicePlayback(true);
-            } else if (voiceState === "idle") {
-              void startRecording();
-            }
-          }}
           onExit={exitVoiceMode}
         />
       )}
@@ -983,15 +998,50 @@ export function DesktopChatView({
   );
 }
 
+// Whisper systematically hallucinates these short phrases on silence
+// or near-silence. We drop them so the user doesn't get a phantom
+// "you" message every time they exit voice mode without speaking.
+const WHISPER_HALLUCINATIONS = new Set([
+  "you",
+  "you.",
+  "thank you",
+  "thank you.",
+  "thanks",
+  "thanks.",
+  "thanks for watching",
+  "thanks for watching.",
+  "thanks for watching!",
+  "thanks for watching the video",
+  "thanks for watching the video.",
+  "bye",
+  "bye.",
+  "okay",
+  "okay.",
+  "ok",
+  ".",
+  ",",
+  "...",
+  "uh",
+  "um",
+  "hmm",
+]);
+
+function isWhisperHallucination(text: string): boolean {
+  const normalized = text.toLowerCase().trim();
+  if (!normalized) return true;
+  if (WHISPER_HALLUCINATIONS.has(normalized)) return true;
+  // Single-character noise (a stray letter, period, etc.)
+  if (normalized.length <= 2) return true;
+  return false;
+}
+
 function VoiceOverlay({
   state,
   level,
-  onMicTap,
   onExit,
 }: {
   state: VoiceState;
   level: number;
-  onMicTap: () => void;
   onExit: () => void;
 }) {
   const status =
@@ -1017,28 +1067,17 @@ function VoiceOverlay({
 
   return (
     <div className="voice-overlay">
-      <button
-        type="button"
-        onClick={onExit}
-        className="voice-overlay-close"
-        aria-label="Exit voice mode"
-        title="Exit (Esc)"
-      >
-        x
-      </button>
-
       <div className="voice-overlay-stage">
-        <button
-          type="button"
-          onClick={onMicTap}
+        <div
           className={`voice-orb voice-orb--${state}`}
           style={{ transform: `scale(${scale})` }}
+          role="img"
           aria-label={status}
         >
           <span className="voice-orb-inner" />
           <span className="voice-orb-ring" />
           <span className="voice-orb-ring voice-orb-ring--lg" />
-        </button>
+        </div>
 
         <div className="voice-overlay-status">
           <span className={`voice-overlay-dot voice-overlay-dot--${state}`} />
@@ -1046,7 +1085,7 @@ function VoiceOverlay({
         </div>
 
         <div className="voice-overlay-hint">
-          Faster turn-taking with a soft cue if speech generation takes a second.
+          Hands-free — just talk. Press <kbd>Esc</kbd> to leave.
         </div>
       </div>
     </div>
