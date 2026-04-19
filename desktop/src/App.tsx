@@ -10,6 +10,7 @@ import {
   saveSession,
   validateToken,
 } from "./auth";
+import { NotesWorkspace } from "./notes-workspace";
 
 type AuthStatus =
   | { kind: "loading" }
@@ -36,7 +37,6 @@ function App() {
       );
 
       unlisten = await onSansxelDeepLink(async (requestId) => {
-        // Only honor the deep-link if we kicked off this request
         if (
           pendingRequestId.current &&
           pendingRequestId.current !== requestId
@@ -94,21 +94,27 @@ function App() {
     setAuth({ kind: "signed-out", signingIn: false, error: null });
   }, []);
 
+  if (auth.kind === "signed-in") {
+    return (
+      <div className="stage stage--workspace">
+        <NotesWorkspace session={auth.session} onSignOut={handleSignOut} />
+      </div>
+    );
+  }
+
   return (
     <div className="stage">
-      <MainShell auth={auth} onSignIn={handleSignIn} onSignOut={handleSignOut} />
+      <SignedOutShell auth={auth} onSignIn={handleSignIn} />
     </div>
   );
 }
 
-function MainShell({
+function SignedOutShell({
   auth,
   onSignIn,
-  onSignOut,
 }: {
-  auth: AuthStatus;
+  auth: Exclude<AuthStatus, { kind: "signed-in" }>;
   onSignIn: () => void;
-  onSignOut: () => void;
 }) {
   return (
     <div className="main">
@@ -120,51 +126,34 @@ function MainShell({
           <span className="main-brand-name">sansxel</span>
           <span className="main-brand-sub">desktop</span>
         </div>
-        <AuthControl auth={auth} onSignIn={onSignIn} onSignOut={onSignOut} />
+        <SignInControl auth={auth} onSignIn={onSignIn} />
       </header>
 
       <div className="main-body">
         <div className="main-empty">
-          <h1>{authBodyTitle(auth)}</h1>
-          <p>{authBodyDetail(auth)}</p>
+          <h1>{auth.kind === "loading" ? "Checking your session…" : "Workspace coming online."}</h1>
+          <p>
+            {auth.kind === "loading"
+              ? "Looking for a saved sign-in on this machine."
+              : auth.kind === "signed-out" && auth.signingIn
+                ? "Approve sansxel desktop in the browser tab that just opened."
+                : "Sign in to connect this desktop to your sansxel.ai account."}
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-function AuthControl({
+function SignInControl({
   auth,
   onSignIn,
-  onSignOut,
 }: {
-  auth: AuthStatus;
+  auth: Exclude<AuthStatus, { kind: "signed-in" }>;
   onSignIn: () => void;
-  onSignOut: () => void;
 }) {
   if (auth.kind === "loading") {
     return <span className="main-auth-pill main-auth-pill--muted">Checking session…</span>;
-  }
-
-  if (auth.kind === "signed-in") {
-    const label =
-      auth.session.displayName ?? auth.session.email.split("@")[0];
-    return (
-      <div className="main-auth-row">
-        <span className="main-auth-pill main-auth-pill--ok">
-          <span className="main-auth-dot main-auth-dot--ok" />
-          {label}
-        </span>
-        <button
-          type="button"
-          onClick={onSignOut}
-          className="main-auth-link"
-          title={`Signed in as ${auth.session.email}`}
-        >
-          Sign out
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -181,28 +170,6 @@ function AuthControl({
       </button>
     </div>
   );
-}
-
-function authBodyTitle(auth: AuthStatus): string {
-  if (auth.kind === "signed-in") {
-    const first = auth.session.displayName?.split(" ")[0];
-    return first ? `Welcome back, ${first}.` : "Welcome back.";
-  }
-  if (auth.kind === "loading") return "Checking your session…";
-  return "Workspace coming online.";
-}
-
-function authBodyDetail(auth: AuthStatus): string {
-  if (auth.kind === "signed-in") {
-    return "Notes, sansxel-1, and the rest of the workspace land in the next iterations. The sign-in foundation is real.";
-  }
-  if (auth.kind === "loading") {
-    return "Looking for a saved sign-in on this machine.";
-  }
-  if (auth.kind === "signed-out" && auth.signingIn) {
-    return "Approve sansxel desktop in the browser tab that just opened.";
-  }
-  return "Sign in to connect this desktop to your sansxel.ai account.";
 }
 
 export default App;
