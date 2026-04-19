@@ -54,6 +54,8 @@ export function WebChat({
   const [voiceState, setVoiceState] = useState<
     "idle" | "recording" | "transcribing" | "speaking"
   >("idle");
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
   // True when this turn was started by voice — used to auto-speak the response
   const lastTurnWasVoice = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -61,8 +63,40 @@ export function WebChat({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const startRecordingRef = useRef<() => Promise<void>>(async () => {});
 
   const isFreePlan = plan === "free";
+
+  const stopAnalyser = useCallback(() => {
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {});
+      audioCtxRef.current = null;
+    }
+    analyserRef.current = null;
+    setAudioLevel(0);
+  }, []);
+
+  const beginVolumeLoop = useCallback(() => {
+    const a = analyserRef.current;
+    if (!a) return;
+    const data = new Uint8Array(a.frequencyBinCount);
+    const tick = () => {
+      a.getByteFrequencyData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) sum += data[i];
+      setAudioLevel(Math.min(1, (sum / data.length) / 110));
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    tick();
+  }, []);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -161,24 +195,46 @@ export function WebChat({
             const blob = await tts.blob();
             const url = URL.createObjectURL(blob);
             const audio = new Audio(url);
+            audio.crossOrigin = "anonymous";
             audioElRef.current = audio;
-            audio.onended = () => {
+
+            // Hook the AI's voice into the orb visualization
+            stopAnalyser();
+            try {
+              const ctx = new AudioContext();
+              const source = ctx.createMediaElementSource(audio);
+              const analyser = ctx.createAnalyser();
+              analyser.fftSize = 256;
+              source.connect(analyser);
+              analyser.connect(ctx.destination);
+              audioCtxRef.current = ctx;
+              analyserRef.current = analyser;
+              beginVolumeLoop();
+            } catch {
+              // playback still works; just no orb pulse
+            }
+
+            const cleanup = () => {
               URL.revokeObjectURL(url);
+              stopAnalyser();
               if (audioElRef.current === audio) {
                 audioElRef.current = null;
                 setVoiceState("idle");
+                if (voiceMode) {
+                  void startRecordingRef.current();
+                }
               }
             };
-            audio.onerror = () => {
-              URL.revokeObjectURL(url);
-              setVoiceState("idle");
-            };
+            audio.onended = cleanup;
+            audio.onerror = cleanup;
             await audio.play();
           } else {
             setVoiceState("idle");
+            stopAnalyser();
           }
         } catch {
           setVoiceState("idle");
+          stopAnalyser();
         }
       }
     } catch (err) {
@@ -197,7 +253,7 @@ export function WebChat({
         setStreaming(false);
       }
     }
-  }, [input, messages, tier]);
+  }, [input, messages, tier, voiceMode, stopAnalyser, beginVolumeLoop]);
 
   const stop = useCallback(() => {
     if (abortRef.current) {
@@ -215,6 +271,19 @@ export function WebChat({
     if (isFreePlan) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStreamRef.current = stream;
+
+      // Hook the mic into an analyser so the orb pulses with volume
+      stopAnalyser();
+      const ctx = new AudioContext();
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      audioCtxRef.current = ctx;
+      analyserRef.current = analyser;
+      beginVolumeLoop();
+
       const recorder = new MediaRecorder(stream);
       recordedChunksRef.current = [];
       recorder.ondataavailable = (ev) => {
@@ -222,6 +291,8 @@ export function WebChat({
       };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        micStreamRef.current = null;
+        stopAnalyser();
         const blob = new Blob(recordedChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
@@ -237,7 +308,6 @@ export function WebChat({
           const data = (await res.json()) as { text: string };
           const transcribed = data.text.trim();
           if (transcribed) {
-            // Auto-send so the conversation stays voice-driven
             setVoiceState("idle");
             await send(transcribed, true);
           } else {
@@ -255,7 +325,35 @@ export function WebChat({
       setChatError(err instanceof Error ? err.message : "Mic access denied.");
       setVoiceState("idle");
     }
-  }, [isFreePlan, send]);
+  }, [isFreePlan, send, stopAnalyser, beginVolumeLoop]);
+
+  // Keep ref pointing at latest startRecording (for the conversational
+  // loop in send())
+  useEffect(() => {
+    startRecordingRef.current = startRecording;
+  }, [startRecording]);
+
+  const enterVoiceMode = useCallback(async () => {
+    setVoiceMode(true);
+    await startRecording();
+  }, [startRecording]);
+
+  const exitVoiceMode = useCallback(() => {
+    if (recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.stop();
+    }
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
+    }
+    stopAnalyser();
+    setVoiceState("idle");
+    setVoiceMode(false);
+  }, [stopAnalyser]);
 
   const stopVoice = useCallback(() => {
     // Three cases — all routed through the same button:
@@ -276,6 +374,30 @@ export function WebChat({
 
   return (
     <section className="webchat">
+      {voiceMode && (
+        <WebVoiceOverlay
+          state={voiceState}
+          level={audioLevel}
+          onMicTap={() => {
+            if (voiceState === "recording") {
+              const r = recorderRef.current;
+              if (r && r.state !== "inactive") r.stop();
+            } else if (voiceState === "speaking") {
+              if (audioElRef.current) {
+                audioElRef.current.pause();
+                audioElRef.current = null;
+              }
+              stopAnalyser();
+              setVoiceState("idle");
+              void startRecording();
+            } else if (voiceState === "idle") {
+              void startRecording();
+            }
+          }}
+          onExit={exitVoiceMode}
+        />
+      )}
+
       <div className="webchat-bar">
         <div className="webchat-bar-left">
           <span className="webchat-eyebrow">sansxel-1</span>
@@ -427,7 +549,7 @@ export function WebChat({
           <VoiceButton
             voiceState={voiceState}
             isFreePlan={isFreePlan}
-            onStart={startRecording}
+            onStart={() => void enterVoiceMode()}
             onStop={stopVoice}
           />
 
@@ -531,6 +653,74 @@ function WebVoiceWave({ mode }: { mode: "listening" | "speaking" }) {
       <span className="webchat-wave-label">
         {mode === "listening" ? "Listening" : "Speaking"}
       </span>
+    </div>
+  );
+}
+
+function WebVoiceOverlay({
+  state,
+  level,
+  onMicTap,
+  onExit,
+}: {
+  state: "idle" | "recording" | "transcribing" | "speaking";
+  level: number;
+  onMicTap: () => void;
+  onExit: () => void;
+}) {
+  const status =
+    state === "recording"
+      ? "Listening"
+      : state === "transcribing"
+        ? "Thinking"
+        : state === "speaking"
+          ? "Speaking"
+          : "Tap to talk";
+
+  const scale = 1 + Math.min(level * 0.55, 0.55);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onExit();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onExit]);
+
+  return (
+    <div className="voice-overlay">
+      <button
+        type="button"
+        onClick={onExit}
+        className="voice-overlay-close"
+        aria-label="Exit voice mode"
+        title="Exit (Esc)"
+      >
+        ✕
+      </button>
+
+      <div className="voice-overlay-stage">
+        <button
+          type="button"
+          onClick={onMicTap}
+          className={`voice-orb voice-orb--${state}`}
+          style={{ transform: `scale(${scale})` }}
+          aria-label={status}
+        >
+          <span className="voice-orb-inner" />
+          <span className="voice-orb-ring" />
+          <span className="voice-orb-ring voice-orb-ring--lg" />
+        </button>
+
+        <div className="voice-overlay-status">
+          <span className={`voice-overlay-dot voice-overlay-dot--${state}`} />
+          {status}
+        </div>
+
+        <div className="voice-overlay-hint">
+          Press the orb to switch turns. Esc to leave.
+        </div>
+      </div>
     </div>
   );
 }

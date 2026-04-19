@@ -154,6 +154,11 @@ function ChatView({ session }: { session: DesktopSession }) {
   const [tier, setTier] = useState<ModelTier>(prefs.default_tier);
   const [planNotice, setPlanNotice] = useState<string | null>(null);
   const [voiceState, setVoiceState] = useState<"idle" | "recording" | "transcribing" | "speaking">("idle");
+  // True = full-screen voice mode (orb takeover). False = inline mic button only.
+  const [voiceMode, setVoiceMode] = useState(false);
+  // Live audio volume 0..1, drives the orb scale. Read from mic when
+  // listening, from the playback audio when speaking.
+  const [audioLevel, setAudioLevel] = useState(0);
   const [allowedTiers, setAllowedTiers] = useState<Set<ModelTier>>(
     new Set(["fast", "balanced", "smart"]),
   );
@@ -163,6 +168,11 @@ function ChatView({ session }: { session: DesktopSession }) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
+  // Audio analysis (for the orb)
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
 
   // Pull the user's plan once so the picker can lock paid tiers
   useEffect(() => {
@@ -187,6 +197,39 @@ function ChatView({ session }: { session: DesktopSession }) {
   useEffect(() => {
     setTier(prefs.default_tier);
   }, [prefs.default_tier]);
+
+  // Hoisted so `send` can reference them — they don't depend on send.
+  const stopAnalyser = useCallback(() => {
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {});
+      audioCtxRef.current = null;
+    }
+    analyserRef.current = null;
+    setAudioLevel(0);
+  }, []);
+
+  const beginVolumeLoop = useCallback(() => {
+    const a = analyserRef.current;
+    if (!a) return;
+    const data = new Uint8Array(a.frequencyBinCount);
+    const tick = () => {
+      a.getByteFrequencyData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) sum += data[i];
+      setAudioLevel(Math.min(1, (sum / data.length) / 110));
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    tick();
+  }, []);
+
+  // startRecording is defined AFTER send (because it calls send), but
+  // send needs to be able to (re)trigger recording when AI finishes
+  // speaking in conversational mode. Bridge with a ref.
+  const startRecordingRef = useRef<() => Promise<void>>(async () => {});
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -255,26 +298,45 @@ function ChatView({ session }: { session: DesktopSession }) {
           const blob = await fetchSpeech(session.token, assistant);
           const url = URL.createObjectURL(blob);
           const audio = new Audio(url);
+          audio.crossOrigin = "anonymous";
           audioElRef.current = audio;
-          audio.onended = () => {
+
+          // Hook the audio element through an analyser so the orb
+          // pulses with sansxel-1's voice the same way it pulses
+          // with the user's mic.
+          stopAnalyser();
+          try {
+            const ctx = new AudioContext();
+            const source = ctx.createMediaElementSource(audio);
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+            analyser.connect(ctx.destination);
+            audioCtxRef.current = ctx;
+            analyserRef.current = analyser;
+            beginVolumeLoop();
+          } catch {
+            // If the AudioContext fails (some webview quirks), the
+            // playback still works — just no orb pulse.
+          }
+
+          const cleanup = () => {
             URL.revokeObjectURL(url);
+            stopAnalyser();
             if (audioElRef.current === audio) {
               audioElRef.current = null;
               setVoiceState("idle");
-              // Conversational mode: kick the mic back on after AI
-              // finishes speaking, so it's a back-and-forth.
-              if (prefs.conversational) {
-                void startRecording();
+              if (prefs.conversational || voiceMode) {
+                void startRecordingRef.current();
               }
             }
           };
-          audio.onerror = () => {
-            URL.revokeObjectURL(url);
-            setVoiceState("idle");
-          };
+          audio.onended = cleanup;
+          audio.onerror = cleanup;
           await audio.play();
         } catch {
           setVoiceState("idle");
+          stopAnalyser();
         }
       }
     } catch (err) {
@@ -305,7 +367,28 @@ function ChatView({ session }: { session: DesktopSession }) {
     tier,
     prefs.auto_speak_replies,
     prefs.conversational,
+    voiceMode,
+    stopAnalyser,
+    beginVolumeLoop,
   ]);
+
+  const exitVoiceMode = useCallback(() => {
+    // Stop everything voice-related
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
+    }
+    stopAnalyser();
+    setVoiceState("idle");
+    setVoiceMode(false);
+  }, [stopAnalyser]);
 
   const stop = useCallback(() => {
     if (abortRef.current) {
@@ -316,9 +399,23 @@ function ChatView({ session }: { session: DesktopSession }) {
   }, []);
 
   // ── Voice ──────────────────────────────────────────────────────
+
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStreamRef.current = stream;
+
+      // Hook AudioContext to drive the orb visualization
+      stopAnalyser();
+      const ctx = new AudioContext();
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      audioCtxRef.current = ctx;
+      analyserRef.current = analyser;
+      beginVolumeLoop();
+
       const recorder = new MediaRecorder(stream);
       recordedChunksRef.current = [];
       recorder.ondataavailable = (ev) => {
@@ -327,6 +424,8 @@ function ChatView({ session }: { session: DesktopSession }) {
       recorder.onstop = async () => {
         // Stop the underlying tracks so the OS releases the mic
         stream.getTracks().forEach((t) => t.stop());
+        micStreamRef.current = null;
+        stopAnalyser();
         const blob = new Blob(recordedChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
@@ -352,7 +451,7 @@ function ChatView({ session }: { session: DesktopSession }) {
       setChatError(err instanceof Error ? err.message : "Mic access denied.");
       setVoiceState("idle");
     }
-  }, [session.token, send]);
+  }, [session.token, send, stopAnalyser, beginVolumeLoop]);
 
   const stopRecording = useCallback(() => {
     const recorder = mediaRecorderRef.current;
@@ -360,6 +459,18 @@ function ChatView({ session }: { session: DesktopSession }) {
       recorder.stop();
     }
   }, []);
+
+  // Keep the ref pointing at the latest startRecording so send() can
+  // re-trigger recording in conversational mode without circular deps.
+  useEffect(() => {
+    startRecordingRef.current = startRecording;
+  }, [startRecording]);
+
+  // Voice-mode entry — opens the orb overlay and starts recording.
+  const enterVoiceMode = useCallback(async () => {
+    setVoiceMode(true);
+    await startRecording();
+  }, [startRecording]);
 
   const speak = useCallback(
     async (text: string) => {
@@ -401,6 +512,28 @@ function ChatView({ session }: { session: DesktopSession }) {
 
   return (
     <div className="chat">
+      {voiceMode && (
+        <VoiceOverlay
+          state={voiceState}
+          level={audioLevel}
+          onMicTap={() => {
+            if (voiceState === "recording") stopRecording();
+            else if (voiceState === "speaking") {
+              if (audioElRef.current) {
+                audioElRef.current.pause();
+                audioElRef.current = null;
+              }
+              stopAnalyser();
+              setVoiceState("idle");
+              void startRecording();
+            } else if (voiceState === "idle") {
+              void startRecording();
+            }
+          }}
+          onExit={exitVoiceMode}
+        />
+      )}
+
       <div className="chat-topbar">
         <ModelPicker tier={tier} onChange={setTier} allowedTiers={allowedTiers} />
       </div>
@@ -468,9 +601,6 @@ function ChatView({ session }: { session: DesktopSession }) {
           void send();
         }}
       >
-        {voiceState === "recording" && <VoiceWaveform mode="listening" />}
-        {voiceState === "speaking" && <VoiceWaveform mode="speaking" />}
-
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -529,27 +659,16 @@ function ChatView({ session }: { session: DesktopSession }) {
             );
           })()}
 
-          {/* Mic / record */}
-          {voiceState === "recording" ? (
-            <button
-              type="button"
-              onClick={stopRecording}
-              className="chat-icon-btn chat-icon-btn--recording"
-              title="Stop recording"
-            >
-              <MicIcon />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={startRecording}
-              disabled={voiceState !== "idle"}
-              className="chat-icon-btn"
-              title="Voice message"
-            >
-              <MicIcon />
-            </button>
-          )}
+          {/* Voice mode toggle — kicks off the orb takeover */}
+          <button
+            type="button"
+            onClick={() => void enterVoiceMode()}
+            disabled={voiceState !== "idle"}
+            className="chat-icon-btn"
+            title="Talk to sansxel-1"
+          >
+            <MicIcon />
+          </button>
 
           {streaming ? (
             <button
@@ -576,17 +695,79 @@ function ChatView({ session }: { session: DesktopSession }) {
   );
 }
 
-// Animated bars that pulse while sansxel is listening or speaking.
-function VoiceWaveform({ mode }: { mode: "listening" | "speaking" }) {
+// Full-screen voice mode — orb takeover that floats above the chat.
+// The chat stays visible, dimmed underneath the overlay.
+function VoiceOverlay({
+  state,
+  level,
+  onMicTap,
+  onExit,
+}: {
+  state: "idle" | "recording" | "transcribing" | "speaking";
+  level: number;
+  onMicTap: () => void;
+  onExit: () => void;
+}) {
+  const status =
+    state === "recording"
+      ? "Listening"
+      : state === "transcribing"
+        ? "Thinking"
+        : state === "speaking"
+          ? "Speaking"
+          : "Tap to talk";
+
+  // Gentle baseline + level-driven pulse. Capped so loud audio doesn't
+  // blow the orb out of view.
+  const scale = 1 + Math.min(level * 0.55, 0.55);
+
+  // ESC closes voice mode
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onExit();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onExit]);
+
   return (
-    <div className={`voice-wave voice-wave--${mode}`}>
-      <span /> <span /> <span /> <span /> <span /> <span /> <span /> <span />
-      <span className="voice-wave-label">
-        {mode === "listening" ? "Listening" : "Speaking"}
-      </span>
+    <div className="voice-overlay">
+      <button
+        type="button"
+        onClick={onExit}
+        className="voice-overlay-close"
+        aria-label="Exit voice mode"
+        title="Exit (Esc)"
+      >
+        ✕
+      </button>
+
+      <div className="voice-overlay-stage">
+        <button
+          type="button"
+          onClick={onMicTap}
+          className={`voice-orb voice-orb--${state}`}
+          style={{ transform: `scale(${scale})` }}
+          aria-label={status}
+        >
+          <span className="voice-orb-inner" />
+          <span className="voice-orb-ring" />
+          <span className="voice-orb-ring voice-orb-ring--lg" />
+        </button>
+
+        <div className="voice-overlay-status">
+          <span className={`voice-overlay-dot voice-overlay-dot--${state}`} />
+          {status}
+        </div>
+
+        <div className="voice-overlay-hint">
+          Press the orb to switch turns. Esc to leave.
+        </div>
+      </div>
     </div>
   );
 }
+
 
 function ModelPicker({
   tier,
