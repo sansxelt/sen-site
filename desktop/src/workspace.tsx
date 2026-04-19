@@ -31,6 +31,7 @@ import {
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
 import { parseSections } from "./sections";
+import { useSmoothStream } from "./use-smooth-stream";
 
 type View = "chat" | "account" | "plan" | "usage" | "keys" | "preferences";
 
@@ -216,6 +217,22 @@ function ChatView({ session }: { session: DesktopSession }) {
     setTier(prefs.default_tier);
   }, [prefs.default_tier]);
 
+  // Smooth streaming text — drains chunk buffer at a steady ~300
+  // chars/sec so the reveal looks even, not jittery.
+  const smoothStream = useSmoothStream({
+    charsPerFrame: 5,
+    onTick: (visible) => {
+      setMessages((prev) => {
+        const copy = [...prev];
+        const last = copy[copy.length - 1];
+        if (last && last.role === "assistant") {
+          copy[copy.length - 1] = { ...last, content: visible };
+        }
+        return copy;
+      });
+    },
+  });
+
   // ── Voice-mode central state (refs so the rAF loop stays current)
   const voiceStateRef = useRef(voiceState);
   useEffect(() => {
@@ -342,7 +359,7 @@ function ChatView({ session }: { session: DesktopSession }) {
     abortRef.current = ac;
 
     try {
-      let assistant = "";
+      smoothStream.reset();
       for await (const chunk of streamChat(session.token, nextMsgs, {
         tier,
         inputMode: fromVoice ? "voice" : "text",
@@ -362,13 +379,12 @@ function ChatView({ session }: { session: DesktopSession }) {
           }
         },
       })) {
-        assistant += chunk;
-        setMessages((prev) => {
-          const copy = [...prev];
-          copy[copy.length - 1] = { role: "assistant", content: assistant };
-          return copy;
-        });
+        smoothStream.push(chunk);
       }
+      smoothStream.end();
+      // Wait for the reveal to catch up before kicking off TTS so the
+      // spoken audio matches what's visible on screen.
+      const assistant = await smoothStream.drained();
 
       // Auto-speak if this turn was voice OR the user prefers
       // every reply spoken.
@@ -1297,6 +1313,38 @@ function UsageView({ session }: { session: DesktopSession }) {
               </div>
             )}
 
+            {data.daily_requests && data.daily_requests.length > 0 && (
+              <>
+                <div className="view-section-title">Last 7 days</div>
+                <div className="usage-chart">
+                  {(() => {
+                    const max = Math.max(1, ...data.daily_requests);
+                    const today = new Date();
+                    return data.daily_requests.map((count, i) => {
+                      const date = new Date(today);
+                      date.setUTCDate(today.getUTCDate() - (6 - i));
+                      const label = date.toLocaleDateString("en-US", {
+                        weekday: "short",
+                      });
+                      const pct = (count / max) * 100;
+                      return (
+                        <div key={i} className="usage-chart-bar-wrap">
+                          <div className="usage-chart-count">{count}</div>
+                          <div className="usage-chart-bar">
+                            <div
+                              className="usage-chart-bar-fill"
+                              style={{ height: `${Math.max(pct, 4)}%` }}
+                            />
+                          </div>
+                          <div className="usage-chart-label">{label}</div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </>
+            )}
+
             <div className="view-section-title">Recent activity</div>
             {data.recent.length === 0 ? (
               <div className="usage-empty">No requests recorded yet.</div>
@@ -1602,7 +1650,50 @@ function PreferencesView() {
             </div>
           </PrefSection>
         </PrefSectionGroup>
+
+        <PrefSectionGroup title="Shortcuts">
+          <div className="kbd-list">
+            <KbdRow combo={["Enter"]}      label="Send message (when send-on-Enter is on)" />
+            <KbdRow combo={["Shift", "Enter"]} label="Newline in message" />
+            <KbdRow combo={["Ctrl", "Enter"]}  label="Send message (when send-on-Enter is off)" />
+            <KbdRow combo={["Esc"]}        label="Exit voice mode / close overlays" />
+          </div>
+        </PrefSectionGroup>
+
+        <PrefSectionGroup title="About">
+          <div className="about-card">
+            <div className="about-row">
+              <span className="about-label">Brand</span>
+              <span className="about-value">sansxel · pronounced “sans-zul”</span>
+            </div>
+            <div className="about-row">
+              <span className="about-label">Engine</span>
+              <span className="about-value">sansxel-1 (3 tiers)</span>
+            </div>
+            <div className="about-row">
+              <span className="about-label">Voice</span>
+              <span className="about-value">11 voices, default Fable (British)</span>
+            </div>
+            <div className="about-row">
+              <span className="about-label">Surface</span>
+              <span className="about-value">Desktop · Tauri · Windows</span>
+            </div>
+          </div>
+        </PrefSectionGroup>
       </div>
+    </div>
+  );
+}
+
+function KbdRow({ combo, label }: { combo: string[]; label: string }) {
+  return (
+    <div className="kbd-row">
+      <span className="kbd-keys">
+        {combo.map((k, i) => (
+          <span key={i} className="kbd-chip">{k}</span>
+        ))}
+      </span>
+      <span className="kbd-label">{label}</span>
     </div>
   );
 }

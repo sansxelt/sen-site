@@ -260,8 +260,37 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
       <div className="copilot-scroll" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="copilot-empty">
-            Ask anything about this page. Highlight text to ask about a specific
-            quote.
+            <p>
+              Ask anything about this page. Highlight text to ask about a
+              specific quote.
+            </p>
+            <div className="copilot-mcp-card">
+              <div className="copilot-mcp-tag">Desktop only</div>
+              <div className="copilot-mcp-title">MCP tools</div>
+              <p>
+                In the desktop app, sansxel-1 can read files, run code, and
+                connect to your tools through the Model Context Protocol.
+                Examples:
+              </p>
+              <ul>
+                <li>
+                  <span className="copilot-mcp-mono">read this folder</span> —
+                  scan a directory for context
+                </li>
+                <li>
+                  <span className="copilot-mcp-mono">edit my resume.docx</span> —
+                  modify a file in place
+                </li>
+                <li>
+                  <span className="copilot-mcp-mono">connect Notion</span> —
+                  pull pages into the conversation
+                </li>
+              </ul>
+              <p className="copilot-mcp-foot">
+                MCP is desktop-only because it needs file + tool access the
+                browser can't grant.
+              </p>
+            </div>
           </div>
         ) : (
           messages.map((m, i) => (

@@ -256,6 +256,7 @@ export type WeeklyUsageSummary = {
     current_tier: ModelTier | null;
     next_downshift_in: number | null;
   } | null;
+  daily_requests: number[]; // last 7 days, oldest → newest
   recent: Array<{
     id: string;
     kind: string;

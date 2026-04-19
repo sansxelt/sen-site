@@ -220,6 +220,34 @@ export function WebChat({
       const decoder = new TextDecoder();
       let assistant = "";
 
+      // ── Smooth render: decouple visual reveal from network jitter
+      // by walking a rendered-length cursor toward the assistant
+      // buffer at ~300 chars/sec via requestAnimationFrame.
+      let renderedLen = 0;
+      let smoothRaf: number | null = null;
+      let smoothActive = true;
+      const CHARS_PER_FRAME = 5;
+      const tickRender = () => {
+        if (renderedLen < assistant.length) {
+          renderedLen = Math.min(assistant.length, renderedLen + CHARS_PER_FRAME);
+          const visible = assistant.slice(0, renderedLen);
+          setMessages((prev) => {
+            const copy = [...prev];
+            const last = copy[copy.length - 1];
+            if (last && last.role === "assistant") {
+              copy[copy.length - 1] = { ...last, content: visible };
+            }
+            return copy;
+          });
+        }
+        if (smoothActive || renderedLen < assistant.length) {
+          smoothRaf = requestAnimationFrame(tickRender);
+        } else {
+          smoothRaf = null;
+        }
+      };
+      smoothRaf = requestAnimationFrame(tickRender);
+
       // Sentence-streaming TTS: as text streams in, slice off
       // complete sentences and fire TTS for each one in parallel.
       // Audio plays back in order so the voice reply starts well
@@ -351,11 +379,9 @@ export function WebChat({
           const chunk = decoder.decode(value, { stream: true });
           assistant += chunk;
           if (willSpeak) ttsBuf.text += chunk;
-          setMessages((prev) => {
-            const copy = [...prev];
-            copy[copy.length - 1] = { role: "assistant", content: assistant };
-            return copy;
-          });
+          // Note: NOT calling setMessages here — the rAF tick handles
+          // visual updates so the reveal stays evenly paced. The
+          // assistant buffer is what tickRender walks toward.
           if (willSpeak) flushSentencesFromBuffer();
         }
       }
@@ -363,12 +389,24 @@ export function WebChat({
       if (tail) {
         assistant += tail;
         if (willSpeak) ttsBuf.text += tail;
-        setMessages((prev) => {
-          const copy = [...prev];
-          copy[copy.length - 1] = { role: "assistant", content: assistant };
-          return copy;
-        });
       }
+      // Stream is done — let the smooth render drain the rest.
+      smoothActive = false;
+      // Wait for the visual to catch up before any post-stream work
+      await new Promise<void>((resolve) => {
+        const wait = () => {
+          if (renderedLen >= assistant.length) {
+            if (smoothRaf !== null) {
+              cancelAnimationFrame(smoothRaf);
+              smoothRaf = null;
+            }
+            resolve();
+          } else {
+            requestAnimationFrame(wait);
+          }
+        };
+        wait();
+      });
 
       if (willSpeak) {
         // Final sentence flush
@@ -625,10 +663,25 @@ export function WebChat({
 
       {/* Subtle reminder that the desktop is the bigger surface */}
       <div className="webchat-desktop-cta">
-        The desktop unlocks MCP tools, file edits, toolbar modes, the full voice loop, and more.
-        <a href="/download" className="webchat-desktop-cta-link">
-          Get sansxel desktop →
-        </a>
+        <div className="webchat-desktop-cta-copy">
+          <span className="webchat-desktop-cta-kicker">
+            Desktop feels more like your assistant
+          </span>
+          <p>
+            Better memory, a custom UI around how you work, MCP tools, file
+            edits, toolbar modes, and the full voice loop.
+          </p>
+        </div>
+        <div className="webchat-desktop-cta-actions">
+          <div className="webchat-desktop-cta-badges" aria-hidden="true">
+            <span className="webchat-desktop-chip">Better memory</span>
+            <span className="webchat-desktop-chip">Custom UI/UX</span>
+            <span className="webchat-desktop-chip">MCP + file edits</span>
+          </div>
+          <a href="/download" className="webchat-desktop-cta-link">
+            Get sansxel desktop →
+          </a>
+        </div>
       </div>
 
       <div className="webchat-scroll" ref={scrollRef}>
