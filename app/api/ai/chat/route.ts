@@ -1,22 +1,23 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
+import { getPlanForEmail } from "../../../../lib/account-billing";
+import {
+  descriptorForTier,
+  type ModelTier,
+  resolveTier,
+} from "../../../../lib/ai-models";
 
-// Anthropic SDK does network IO + streaming — needs the Node runtime,
-// not the Edge runtime.
 export const runtime = "nodejs";
 
 const client = new Anthropic();
 
-// "sansxel-1" is the brand name for this engine. Keep the model name
-// (Claude / Anthropic) hidden from the user — they're talking to
-// sansxel-1, not Claude.
-const SYSTEM_PROMPT = `You are sansxel-1, the AI inside the sansxel desktop workspace — an adaptive note-taking and writing tool. The user is working on personal notes.
+const SYSTEM_PROMPT = `You are sansxel-1, the AI inside the sansxel workspace — an adaptive product for thinking, writing, and building.
 
 Be:
 - Concise. No filler. No "Sure! Here's...". Just answer.
 - Direct. No throat-clearing.
-- Useful. If they ask for a continuation of a note, write the continuation. If they ask for an outline, give the outline. Don't over-explain what you're about to do.
+- Useful. If they ask for a continuation, write the continuation. If they ask for an outline, give the outline. Don't over-explain what you're about to do.
 - Voice-matched. Mirror the user's tone — casual, formal, technical, whatever they're writing in.
 
 You are sansxel-1. Never mention Claude, Anthropic, or any model details. You are the brain inside this workspace.`;
@@ -26,6 +27,7 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 type ChatBody = {
   messages: ChatMessage[];
   context?: { note_title?: string; note_body?: string };
+  tier?: ModelTier;
 };
 
 export async function POST(request: Request) {
@@ -45,8 +47,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing messages." }, { status: 400 });
   }
 
-  // Prepend the working note as context so the model has it without
-  // forcing the user to paste it into every message.
+  // Resolve the requested tier against the user's plan. If they ask
+  // for a tier their plan can't run, we silently downgrade — rejecting
+  // would force the client to handle yet another error path. The
+  // resolved tier is sent back via headers so the UI can surface it.
+  const requestedTier: ModelTier = payload.tier ?? "balanced";
+  const plan = await getPlanForEmail(email);
+  const resolvedTier = resolveTier(plan, requestedTier);
+  const descriptor = descriptorForTier(resolvedTier);
+
+  // Build the messages list with optional note context as a leading turn
   const messages: ChatMessage[] = [];
   const ctx = payload.context;
   if (ctx && (ctx.note_title || ctx.note_body)) {
@@ -67,7 +77,7 @@ export async function POST(request: Request) {
 
   try {
     const stream = await client.messages.stream({
-      model: "claude-opus-4-7",
+      model: descriptor.model,
       max_tokens: 2048,
       system: SYSTEM_PROMPT,
       messages,
@@ -97,6 +107,9 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-store",
+        "x-sansxel-tier": resolvedTier,
+        "x-sansxel-tier-requested": requestedTier,
+        "x-sansxel-plan": plan,
       },
     });
   } catch (err) {

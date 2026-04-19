@@ -13,6 +13,33 @@ export type Note = {
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
+export type ModelTier = "fast" | "balanced" | "smart";
+
+export type ModelOption = {
+  tier: ModelTier;
+  display_name: string;
+  blurb: string;
+  locked?: boolean; // true if the user's plan can't actually use this tier
+};
+
+export const ALL_MODEL_OPTIONS: ReadonlyArray<ModelOption> = [
+  {
+    tier: "fast",
+    display_name: "sansxel-1 fast",
+    blurb: "Quick replies, simple tasks. Free for all plans.",
+  },
+  {
+    tier: "balanced",
+    display_name: "sansxel-1",
+    blurb: "Default. Strong on writing, code, planning. Apprentice and up.",
+  },
+  {
+    tier: "smart",
+    display_name: "sansxel-1 deep",
+    blurb: "Heaviest reasoning. Long context. Pro and up.",
+  },
+];
+
 function authHeaders(token: string): Record<string, string> {
   return {
     "Content-Type": "application/json",
@@ -73,18 +100,42 @@ export async function deleteNote(token: string, id: string): Promise<void> {
 
 // ── AI chat (streaming) ─────────────────────────────────────────────
 
+export type StreamMeta = {
+  tier_requested: ModelTier | null;
+  tier_resolved: ModelTier | null;
+  plan: string | null;
+};
+
 export async function* streamChat(
   token: string,
   messages: ChatMessage[],
-  context?: { note_title?: string; note_body?: string },
-  signal?: AbortSignal,
+  options: {
+    context?: { note_title?: string; note_body?: string };
+    tier?: ModelTier;
+    signal?: AbortSignal;
+    onMeta?: (meta: StreamMeta) => void;
+  } = {},
 ): AsyncGenerator<string, void, unknown> {
   const res = await fetch(`${API_BASE}/api/ai/chat`, {
     method: "POST",
     headers: authHeaders(token),
-    body: JSON.stringify({ messages, context }),
-    signal,
+    body: JSON.stringify({
+      messages,
+      context: options.context,
+      tier: options.tier,
+    }),
+    signal: options.signal,
   });
+
+  if (options.onMeta) {
+    options.onMeta({
+      tier_requested:
+        (res.headers.get("x-sansxel-tier-requested") as ModelTier | null) ?? null,
+      tier_resolved:
+        (res.headers.get("x-sansxel-tier") as ModelTier | null) ?? null,
+      plan: res.headers.get("x-sansxel-plan"),
+    });
+  }
 
   if (!res.ok || !res.body) {
     let detail = `chat ${res.status}`;

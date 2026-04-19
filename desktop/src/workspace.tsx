@@ -4,7 +4,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { type ChatMessage, streamChat } from "./api";
+import {
+  ALL_MODEL_OPTIONS,
+  type ChatMessage,
+  type ModelTier,
+  streamChat,
+} from "./api";
 import type { DesktopSession } from "./auth";
 
 type View = "chat" | "account" | "plan" | "preferences";
@@ -131,6 +136,8 @@ function ChatView({ session }: { session: DesktopSession }) {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [tier, setTier] = useState<ModelTier>("balanced");
+  const [planNotice, setPlanNotice] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -163,12 +170,23 @@ function ChatView({ session }: { session: DesktopSession }) {
 
     try {
       let assistant = "";
-      for await (const chunk of streamChat(
-        session.token,
-        nextMsgs,
-        undefined,
-        ac.signal,
-      )) {
+      for await (const chunk of streamChat(session.token, nextMsgs, {
+        tier,
+        signal: ac.signal,
+        onMeta: (meta) => {
+          if (
+            meta.tier_requested &&
+            meta.tier_resolved &&
+            meta.tier_requested !== meta.tier_resolved
+          ) {
+            setPlanNotice(
+              `Your plan doesn't include ${meta.tier_requested} — replied with ${meta.tier_resolved} instead.`,
+            );
+          } else {
+            setPlanNotice(null);
+          }
+        },
+      })) {
         assistant += chunk;
         setMessages((prev) => {
           const copy = [...prev];
@@ -197,7 +215,7 @@ function ChatView({ session }: { session: DesktopSession }) {
         setStreaming(false);
       }
     }
-  }, [input, messages, session.token]);
+  }, [input, messages, session.token, tier]);
 
   const stop = useCallback(() => {
     if (abortRef.current) {
@@ -211,6 +229,24 @@ function ChatView({ session }: { session: DesktopSession }) {
 
   return (
     <div className="chat">
+      <div className="chat-topbar">
+        <ModelPicker tier={tier} onChange={setTier} />
+      </div>
+
+      {planNotice && (
+        <div className="chat-plan-notice">
+          {planNotice}
+          <button
+            type="button"
+            className="chat-plan-notice-x"
+            onClick={() => setPlanNotice(null)}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className="chat-scroll" ref={scrollRef}>
         {showEmpty ? (
           <div className="chat-empty">
@@ -288,6 +324,48 @@ function ChatView({ session }: { session: DesktopSession }) {
           )}
         </div>
       </form>
+    </div>
+  );
+}
+
+function ModelPicker({
+  tier,
+  onChange,
+}: {
+  tier: ModelTier;
+  onChange: (t: ModelTier) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const current = ALL_MODEL_OPTIONS.find((m) => m.tier === tier) ?? ALL_MODEL_OPTIONS[0];
+
+  return (
+    <div className="model-picker">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="model-picker-trigger"
+      >
+        <span className="model-picker-name">{current.display_name}</span>
+        <span className="model-picker-caret">▾</span>
+      </button>
+      {open && (
+        <div className="model-picker-menu">
+          {ALL_MODEL_OPTIONS.map((opt) => (
+            <button
+              type="button"
+              key={opt.tier}
+              onClick={() => {
+                onChange(opt.tier);
+                setOpen(false);
+              }}
+              className={`model-picker-item${opt.tier === tier ? " active" : ""}`}
+            >
+              <div className="model-picker-item-name">{opt.display_name}</div>
+              <div className="model-picker-item-blurb">{opt.blurb}</div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
