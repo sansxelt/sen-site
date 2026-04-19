@@ -49,8 +49,14 @@ export function WebChat({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [planNotice, setPlanNotice] = useState<string | null>(null);
   const [chatError, setChatError] = useState<string | null>(null);
+  const [voiceState, setVoiceState] = useState<
+    "idle" | "recording" | "transcribing" | "speaking"
+  >("idle");
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -155,6 +161,91 @@ export function WebChat({
       abortRef.current = null;
       setStreaming(false);
     }
+  }, []);
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      recordedChunksRef.current = [];
+      recorder.ondataavailable = (ev) => {
+        if (ev.data.size > 0) recordedChunksRef.current.push(ev.data);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(recordedChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+        setVoiceState("transcribing");
+        try {
+          const form = new FormData();
+          form.append("audio", blob, "audio.webm");
+          const res = await fetch("/api/ai/voice/transcribe", {
+            method: "POST",
+            body: form,
+          });
+          if (!res.ok) throw new Error(`transcribe ${res.status}`);
+          const data = (await res.json()) as { text: string };
+          if (data.text.trim()) {
+            setInput((prev) => (prev ? `${prev} ${data.text}` : data.text));
+          }
+        } catch (err) {
+          setChatError(err instanceof Error ? err.message : "Transcribe failed.");
+        } finally {
+          setVoiceState("idle");
+        }
+      };
+      recorderRef.current = recorder;
+      recorder.start();
+      setVoiceState("recording");
+    } catch (err) {
+      setChatError(err instanceof Error ? err.message : "Mic access denied.");
+      setVoiceState("idle");
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    const r = recorderRef.current;
+    if (r && r.state !== "inactive") r.stop();
+  }, []);
+
+  const speak = useCallback(async (text: string) => {
+    try {
+      setVoiceState("speaking");
+      const res = await fetch("/api/ai/voice/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error(`speak ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioElRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        if (audioElRef.current === audio) {
+          audioElRef.current = null;
+          setVoiceState("idle");
+        }
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        setVoiceState("idle");
+      };
+      await audio.play();
+    } catch (err) {
+      setChatError(err instanceof Error ? err.message : "TTS failed.");
+      setVoiceState("idle");
+    }
+  }, []);
+
+  const stopSpeaking = useCallback(() => {
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
+    setVoiceState("idle");
   }, []);
 
   const showEmpty = messages.length === 0;
@@ -262,6 +353,9 @@ export function WebChat({
           void send();
         }}
       >
+        {voiceState === "recording" && <WebVoiceWave mode="listening" />}
+        {voiceState === "speaking" && <WebVoiceWave mode="speaking" />}
+
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -271,10 +365,69 @@ export function WebChat({
               void send();
             }
           }}
-          placeholder="Message sansxel-1…"
+          placeholder={
+            voiceState === "recording"
+              ? "Listening…"
+              : voiceState === "transcribing"
+                ? "Transcribing…"
+                : voiceState === "speaking"
+                  ? "Speaking…"
+                  : "Message sansxel-1…"
+          }
           rows={1}
+          disabled={voiceState === "recording" || voiceState === "transcribing"}
         />
         <div className="webchat-input-actions">
+          {(() => {
+            const last = messages[messages.length - 1];
+            const canSpeak =
+              !!last && last.role === "assistant" && !!last.content && !streaming;
+            if (voiceState === "speaking") {
+              return (
+                <button
+                  type="button"
+                  onClick={stopSpeaking}
+                  className="webchat-icon-btn webchat-icon-btn--active"
+                  title="Stop"
+                >
+                  Stop voice
+                </button>
+              );
+            }
+            return (
+              <button
+                type="button"
+                onClick={() => canSpeak && speak(last.content)}
+                disabled={!canSpeak}
+                className="webchat-icon-btn"
+                title="Read aloud"
+              >
+                Speak
+              </button>
+            );
+          })()}
+
+          {voiceState === "recording" ? (
+            <button
+              type="button"
+              onClick={stopRecording}
+              className="webchat-icon-btn webchat-icon-btn--recording"
+              title="Stop recording"
+            >
+              Stop mic
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={startRecording}
+              disabled={voiceState !== "idle"}
+              className="webchat-icon-btn"
+              title="Record voice message"
+            >
+              Mic
+            </button>
+          )}
+
           {streaming ? (
             <button
               type="button"
@@ -295,6 +448,17 @@ export function WebChat({
         </div>
       </form>
     </section>
+  );
+}
+
+function WebVoiceWave({ mode }: { mode: "listening" | "speaking" }) {
+  return (
+    <div className={`webchat-wave webchat-wave--${mode}`}>
+      <span /><span /><span /><span /><span /><span /><span /><span />
+      <span className="webchat-wave-label">
+        {mode === "listening" ? "Listening" : "Speaking"}
+      </span>
+    </div>
   );
 }
 

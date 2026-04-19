@@ -191,6 +191,34 @@ export async function getSubscription(token: string): Promise<Subscription> {
   return (await res.json()) as Subscription;
 }
 
+// ── Voice ────────────────────────────────────────────────────────────
+
+export async function transcribeAudio(
+  token: string,
+  blob: Blob,
+): Promise<string> {
+  const form = new FormData();
+  form.append("audio", blob, "audio.webm");
+  const res = await fetch(`${API_BASE}/api/ai/voice/transcribe`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!res.ok) throw new Error(`transcribe ${res.status}`);
+  const data = (await res.json()) as { text: string };
+  return data.text;
+}
+
+export async function fetchSpeech(token: string, text: string): Promise<Blob> {
+  const res = await fetch(`${API_BASE}/api/ai/voice/speak`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(`speak ${res.status}`);
+  return await res.blob();
+}
+
 // ── AI chat (streaming) ─────────────────────────────────────────────
 
 export type StreamMeta = {

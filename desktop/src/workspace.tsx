@@ -9,12 +9,14 @@ import {
   ALL_MODEL_OPTIONS,
   type ChatMessage,
   type DesktopPreferences,
+  fetchSpeech,
   getAccount,
   getSubscription,
   type ModelTier,
   patchAccount,
   streamChat,
   type Subscription,
+  transcribeAudio,
 } from "./api";
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
@@ -146,8 +148,12 @@ function ChatView({ session }: { session: DesktopSession }) {
   const [chatError, setChatError] = useState<string | null>(null);
   const [tier, setTier] = useState<ModelTier>(prefs.default_tier);
   const [planNotice, setPlanNotice] = useState<string | null>(null);
+  const [voiceState, setVoiceState] = useState<"idle" | "recording" | "transcribing" | "speaking">("idle");
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
 
   // Re-sync the chat tier when the preference changes (e.g. user
   // changes default in PreferencesView).
@@ -239,6 +245,87 @@ function ChatView({ session }: { session: DesktopSession }) {
     }
   }, []);
 
+  // ── Voice ──────────────────────────────────────────────────────
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      recordedChunksRef.current = [];
+      recorder.ondataavailable = (ev) => {
+        if (ev.data.size > 0) recordedChunksRef.current.push(ev.data);
+      };
+      recorder.onstop = async () => {
+        // Stop the underlying tracks so the OS releases the mic
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(recordedChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+        setVoiceState("transcribing");
+        try {
+          const text = await transcribeAudio(session.token, blob);
+          if (text.trim()) {
+            // Append to whatever's already in the input so users can
+            // dictate additions
+            setInput((prev) => (prev ? `${prev} ${text}` : text));
+          }
+        } catch (err) {
+          setChatError(err instanceof Error ? err.message : "Transcribe failed.");
+        } finally {
+          setVoiceState("idle");
+        }
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setVoiceState("recording");
+    } catch (err) {
+      setChatError(err instanceof Error ? err.message : "Mic access denied.");
+      setVoiceState("idle");
+    }
+  }, [session.token]);
+
+  const stopRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stop();
+    }
+  }, []);
+
+  const speak = useCallback(
+    async (text: string) => {
+      try {
+        setVoiceState("speaking");
+        const blob = await fetchSpeech(session.token, text);
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioElRef.current = audio;
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          if (audioElRef.current === audio) {
+            audioElRef.current = null;
+            setVoiceState("idle");
+          }
+        };
+        audio.onerror = () => {
+          URL.revokeObjectURL(url);
+          setVoiceState("idle");
+        };
+        await audio.play();
+      } catch (err) {
+        setChatError(err instanceof Error ? err.message : "TTS failed.");
+        setVoiceState("idle");
+      }
+    },
+    [session.token],
+  );
+
+  const stopSpeaking = useCallback(() => {
+    if (audioElRef.current) {
+      audioElRef.current.pause();
+      audioElRef.current = null;
+    }
+    setVoiceState("idle");
+  }, []);
+
   const showEmpty = messages.length === 0;
 
   return (
@@ -295,6 +382,9 @@ function ChatView({ session }: { session: DesktopSession }) {
           void send();
         }}
       >
+        {voiceState === "recording" && <VoiceWaveform mode="listening" />}
+        {voiceState === "speaking" && <VoiceWaveform mode="speaking" />}
+
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -304,19 +394,71 @@ function ChatView({ session }: { session: DesktopSession }) {
               void send();
             }
           }}
-          placeholder="Message sansxel-1…"
+          placeholder={
+            voiceState === "recording"
+              ? "Listening…"
+              : voiceState === "transcribing"
+                ? "Transcribing…"
+                : voiceState === "speaking"
+                  ? "Speaking…"
+                  : "Message sansxel-1…"
+          }
           rows={1}
+          disabled={voiceState === "recording" || voiceState === "transcribing"}
         />
         <div className="chat-input-actions">
-          {/* Voice button — wired up next push */}
-          <button
-            type="button"
-            className="chat-icon-btn"
-            title="Voice (coming next)"
-            disabled
-          >
-            <MicIcon />
-          </button>
+          {/* Speak last assistant turn */}
+          {(() => {
+            const last = messages[messages.length - 1];
+            const canSpeak =
+              !!last && last.role === "assistant" && !!last.content && !streaming;
+            if (voiceState === "speaking") {
+              return (
+                <button
+                  type="button"
+                  onClick={stopSpeaking}
+                  className="chat-icon-btn chat-icon-btn--active"
+                  title="Stop speaking"
+                >
+                  <SpeakerIcon />
+                </button>
+              );
+            }
+            return (
+              <button
+                type="button"
+                onClick={() => canSpeak && speak(last.content)}
+                disabled={!canSpeak}
+                className="chat-icon-btn"
+                title="Read aloud"
+              >
+                <SpeakerIcon />
+              </button>
+            );
+          })()}
+
+          {/* Mic / record */}
+          {voiceState === "recording" ? (
+            <button
+              type="button"
+              onClick={stopRecording}
+              className="chat-icon-btn chat-icon-btn--recording"
+              title="Stop recording"
+            >
+              <MicIcon />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={startRecording}
+              disabled={voiceState !== "idle"}
+              className="chat-icon-btn"
+              title="Voice message"
+            >
+              <MicIcon />
+            </button>
+          )}
+
           {streaming ? (
             <button
               type="button"
@@ -338,6 +480,18 @@ function ChatView({ session }: { session: DesktopSession }) {
           )}
         </div>
       </form>
+    </div>
+  );
+}
+
+// Animated bars that pulse while sansxel is listening or speaking.
+function VoiceWaveform({ mode }: { mode: "listening" | "speaking" }) {
+  return (
+    <div className={`voice-wave voice-wave--${mode}`}>
+      <span /> <span /> <span /> <span /> <span /> <span /> <span /> <span />
+      <span className="voice-wave-label">
+        {mode === "listening" ? "Listening" : "Speaking"}
+      </span>
     </div>
   );
 }
@@ -788,6 +942,16 @@ function PrefsIcon() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="3" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+function SpeakerIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
     </svg>
   );
 }
