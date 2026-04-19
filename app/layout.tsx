@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
+import { CommandPalette } from "../components/command-palette";
+import { RevealOnScroll } from "../components/reveal-on-scroll";
 
 const BASE = "https://www.sansxel.ai";
 
@@ -98,6 +100,8 @@ export default function RootLayout({
           }}
         />
         {children}
+        <CommandPalette />
+        <RevealOnScroll />
       </body>
     </html>
   );
