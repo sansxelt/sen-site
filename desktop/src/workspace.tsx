@@ -1395,6 +1395,7 @@ function KeysView({ session }: { session: DesktopSession }) {
   const [keys, setKeys] = useState<ApiKeySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const keyManagerUrl = "https://sansxel.ai/account/keys";
 
   useEffect(() => {
     let cancelled = false;
@@ -1418,8 +1419,8 @@ function KeysView({ session }: { session: DesktopSession }) {
       <div className="view-head">
         <h1>API keys</h1>
         <p>
-          Your active <code>sk_sen_…</code> keys. Create + revoke happens on
-          sansxel.ai (opens in your browser).
+          View your active <code>sk_sen_…</code> keys here. Creating and
+          revoking opens the secure key manager on sansxel.ai in your browser.
         </p>
       </div>
       <div className="view-body">
@@ -1429,48 +1430,53 @@ function KeysView({ session }: { session: DesktopSession }) {
           <>
             {keys.length === 0 ? (
               <div className="usage-empty">
-                No keys yet.{" "}
+                <div className="upgrade-cta-head">No API keys yet</div>
+                <div className="usage-empty-note">
+                  Keys are created on the website so the full secret never has
+                  to pass through the desktop app.
+                </div>
                 <button
                   type="button"
-                  onClick={() => void openUrl("https://sansxel.ai/account/keys")}
+                  onClick={() => void openUrl(keyManagerUrl)}
                   className="upgrade-cta-btn"
-                  style={{ marginTop: 12 }}
                 >
-                  Create one →
+                  Open key manager →
                 </button>
               </div>
             ) : (
-              <div className="usage-list">
-                {keys.map((k) => (
-                  <div key={k.id} className="usage-row">
-                    <span className="usage-row-kind">{k.name}</span>
-                    <span className="usage-row-meta usage-row-mono">
-                      {k.key_prefix}
-                    </span>
-                    <span className="usage-row-time">
-                      {k.last_used_at
-                        ? `last used ${new Date(k.last_used_at).toLocaleDateString()}`
-                        : `created ${new Date(k.created_at).toLocaleDateString()}`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+              <>
+                <div className="usage-list">
+                  {keys.map((k) => (
+                    <div key={k.id} className="usage-row">
+                      <span className="usage-row-kind">{k.name}</span>
+                      <span className="usage-row-meta usage-row-mono">
+                        {k.key_prefix}
+                      </span>
+                      <span className="usage-row-time">
+                        {k.last_used_at
+                          ? `last used ${new Date(k.last_used_at).toLocaleDateString()}`
+                          : `created ${new Date(k.created_at).toLocaleDateString()}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
 
-            <div className="upgrade-cta">
-              <div className="upgrade-cta-head">Manage keys on the website</div>
-              <p>
-                Create new keys, name them, and revoke compromised ones from
-                your account on sansxel.ai.
-              </p>
-              <button
-                type="button"
-                onClick={() => void openUrl("https://sansxel.ai/account/keys")}
-                className="upgrade-cta-btn"
-              >
-                Open key manager →
-              </button>
-            </div>
+                <div className="upgrade-cta">
+                  <div className="upgrade-cta-head">Manage keys on the website</div>
+                  <p>
+                    Create new keys, name them, and revoke compromised ones from
+                    your account on sansxel.ai.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void openUrl(keyManagerUrl)}
+                    className="upgrade-cta-btn"
+                  >
+                    Open key manager →
+                  </button>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

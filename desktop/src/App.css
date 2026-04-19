@@ -619,6 +619,12 @@
   border-radius: 12px;
 }
 
+.usage-empty-note {
+  max-width: 420px;
+  margin: 0 auto 12px auto;
+  line-height: 1.6;
+}
+
 /* Keyboard shortcut display */
 .kbd-list {
   display: flex;

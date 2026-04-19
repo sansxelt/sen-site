@@ -10,16 +10,36 @@ import {
 import { usePathname } from "next/navigation";
 
 type Msg = { role: "user" | "assistant"; content: string };
+type Dock = "right" | "left" | "top";
+
+const DOCK_KEY = "sansxel.copilot.dock";
 
 export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname() ?? "/";
   const [open, setOpen] = useState(false);
+  const [dock, setDock] = useState<Dock>("right");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [selection, setSelection] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Restore dock choice
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = window.localStorage.getItem(DOCK_KEY);
+    if (saved === "right" || saved === "left" || saved === "top") {
+      setDock(saved);
+    }
+  }, []);
+
+  const setDockPref = useCallback((next: Dock) => {
+    setDock(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(DOCK_KEY, next);
+    }
+  }, []);
 
   // Don't render at all on the desktop's chat surface or while signed
   // out (cookie path; copilot needs a session to call the AI)
@@ -194,17 +214,20 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
     );
   }
 
-  // ── Open state: full-screen takeover (boot-style) ──────────────
+  // ── Open state: docked panel (top / left / right) ─────────────
   return (
-    <div className="copilot-takeover" role="dialog" aria-label="Copilot">
-      <div className="copilot-takeover-bg" aria-hidden />
-
+    <div
+      className={`copilot-bar copilot-bar--${dock}`}
+      role="dialog"
+      aria-label="Copilot"
+    >
       <div className="copilot-head">
         <div className="copilot-title">
           <SparkIcon />
           <span>Copilot</span>
         </div>
         <div className="copilot-head-actions">
+          <DockToggle dock={dock} onChange={setDockPref} />
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -320,6 +343,40 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
           </button>
         )}
       </form>
+    </div>
+  );
+}
+
+function DockToggle({
+  dock,
+  onChange,
+}: {
+  dock: Dock;
+  onChange: (d: Dock) => void;
+}) {
+  return (
+    <div className="copilot-dock-toggle" role="group" aria-label="Dock position">
+      <button
+        type="button"
+        onClick={() => onChange("top")}
+        className={dock === "top" ? "is-active" : ""}
+        title="Dock top"
+        aria-label="Dock top"
+      >▔</button>
+      <button
+        type="button"
+        onClick={() => onChange("left")}
+        className={dock === "left" ? "is-active" : ""}
+        title="Dock left"
+        aria-label="Dock left"
+      >▏</button>
+      <button
+        type="button"
+        onClick={() => onChange("right")}
+        className={dock === "right" ? "is-active" : ""}
+        title="Dock right"
+        aria-label="Dock right"
+      >▕</button>
     </div>
   );
 }
