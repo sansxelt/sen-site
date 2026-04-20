@@ -1,6 +1,6 @@
 [package]
 name = "sansxel"
-version = "0.1.0"
+version = "0.1.9"
 description = "sansxel desktop — the AI that remembers"
 authors = ["sansxel"]
 edition = "2021"

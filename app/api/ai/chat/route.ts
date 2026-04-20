@@ -22,6 +22,7 @@ import {
 import { recordUsage } from "../../../../lib/usage";
 import {
   consumeBoostForKind,
+  consumeCreditFor,
   decideChatRequest,
   getWeeklyUsage,
   hasUnconsumedBoost,
@@ -591,12 +592,17 @@ export async function POST(request: Request) {
   const throttledTierFromDecision =
     decision.kind === "ok" ? decision.throttledTier : null;
   if (decision.kind === "blocked") {
-    let boostConsumed = false;
+    let allowed = false;
     if (await hasUnconsumedBoost(email, "chat")) {
       const burnt = await consumeBoostForKind(email, "chat");
-      if (burnt) boostConsumed = true;
+      if (burnt) allowed = true;
     }
-    if (!boostConsumed) {
+    // v0.1.9 — credit ledger fallback. When no boost is on file, try
+    // burning credits before returning 429.
+    if (!allowed && (await consumeCreditFor(email, "chat"))) {
+      allowed = true;
+    }
+    if (!allowed) {
       return NextResponse.json(
         {
           error: decision.reason,

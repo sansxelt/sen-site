@@ -4171,17 +4171,18 @@
 }
 
 /* ── Boost cards (monetization) ────────────────────────────────────
-   Two horizontal scrollable rows of compact pricing cards. The
-   featured Power Pack gets a stronger purple border + Best value pill. */
+   v0.1.9 — pared down to 2 one-time + 2 recurring boosts after the
+   credit ledger replaced the per-feature SKUs. The row uses an
+   auto-fit grid so it stays balanced regardless of card count. */
 .boost-row {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px;
   margin-top: 10px;
 }
 
 .boost-row--four {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 @media (max-width: 1180px) {

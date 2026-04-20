@@ -12,19 +12,19 @@ export type BillingAddonKey =
   | "api_boost"
   | "key_pack"
   // v0.1.4 monetization — recurring add-on packs (monthly/yearly).
-  | "voice_pack"
-  | "image_pack"
+  // v0.1.9 dropped voice_pack + image_pack — those features are now
+  // covered by the credit ledger (lib/credits.ts). Copilot Pro Pack
+  // and Power Pack stay as real Stripe subscriptions.
   | "copilot_pro_pack"
   | "power_pack"
   // v0.1.4 monetization — one-time top-ups. These are NOT subscription
   // items — payment-intent route handles them via Stripe checkout in
   // mode: "payment" (or a one-shot PaymentIntent). They still get
   // priced through STRIPE_PRICES so the same price-id lookup works.
+  // v0.1.9 dropped voice_minute_pack / image_credit_pack /
+  // copilot_time_pack — replaced by buy-credits flow.
   | "session_boost"
-  | "weekly_boost"
-  | "voice_minute_pack"
-  | "image_credit_pack"
-  | "copilot_time_pack";
+  | "weekly_boost";
 
 // One-time top-up keys that are charged with a single PaymentIntent
 // instead of being attached as a recurring subscription item. Centralized
@@ -32,9 +32,6 @@ export type BillingAddonKey =
 export const ONE_TIME_BOOST_KEYS: ReadonlySet<BillingAddonKey> = new Set([
   "session_boost",
   "weekly_boost",
-  "voice_minute_pack",
-  "image_credit_pack",
-  "copilot_time_pack",
 ]);
 
 export function isOneTimeBoost(key: string): key is BillingAddonKey {
@@ -292,29 +289,9 @@ export const billingAddons: BillingAddon[] = [
   // v0.1.4 monetization — recurring add-on packs.
   // Stripe products/prices need to be created in the dashboard and
   // wired through STRIPE_PRICE_<KEY>_MONTHLY / _YEARLY env vars.
+  // v0.1.9 — Voice Pack + Image Pack were dropped. Voice / image usage
+  // is now covered by the credit ledger (lib/credits.ts).
   // ──────────────────────────────────────────────────────────────────
-  {
-    ctaLabel: "Add Voice Pack",
-    description: "Unlimited voice minutes for any plan.",
-    key: "voice_pack",
-    monthlyLabel: "$8 / month",
-    monthlyValue: 8,
-    name: "Voice Pack",
-    note: "Unlimited voice",
-    points: ["Unlimited TTS minutes", "Unlimited voice transcription"],
-    yearlyLabel: "$80 / year",
-  },
-  {
-    ctaLabel: "Add Image Pack",
-    description: "Unlimited image generations for any plan.",
-    key: "image_pack",
-    monthlyLabel: "$10 / month",
-    monthlyValue: 10,
-    name: "Image Pack",
-    note: "Unlimited images",
-    points: ["Unlimited image generations", "Higher-resolution output"],
-    yearlyLabel: "$100 / year",
-  },
   {
     ctaLabel: "Add Copilot Pro Pack",
     description: "Unlimited copilot for any plan.",
@@ -328,15 +305,16 @@ export const billingAddons: BillingAddon[] = [
   },
   {
     ctaLabel: "Add Power Pack",
-    description: "All recurring boosts active — saves ~$15/mo vs. buying separately.",
+    description: "Unlimited copilot + monthly credit allowance — best ongoing value.",
     key: "power_pack",
     monthlyLabel: "$25 / month",
     monthlyValue: 25,
     name: "Power Pack",
-    note: "Bundle of all boosts",
+    note: "Bundle of boosts + credits",
     points: [
-      "Voice Pack + Image Pack + Copilot Pro Pack",
-      "Best ongoing value (~$45 of value for $25)",
+      "Includes Copilot Pro Pack",
+      "Bonus credit allowance for voice + image",
+      "Best ongoing value vs. separate purchases",
     ],
     yearlyLabel: "$240 / year",
   },
@@ -366,36 +344,10 @@ export const billingAddons: BillingAddon[] = [
     note: "One-time",
     points: ["+500 weekly requests", "Resets at end of week"],
   },
-  {
-    ctaLabel: "Buy Voice Minute Pack",
-    description: "+60 voice minutes.",
-    key: "voice_minute_pack",
-    monthlyLabel: "$3",
-    monthlyValue: 3,
-    name: "Voice Minute Pack",
-    note: "One-time",
-    points: ["+60 voice minutes", "Stacks with plan minutes"],
-  },
-  {
-    ctaLabel: "Buy Image Credit Pack",
-    description: "+25 image generations.",
-    key: "image_credit_pack",
-    monthlyLabel: "$4",
-    monthlyValue: 4,
-    name: "Image Credit Pack",
-    note: "One-time",
-    points: ["+25 image generations", "Never expires"],
-  },
-  {
-    ctaLabel: "Buy Copilot Time Pack",
-    description: "+5 hours of copilot time.",
-    key: "copilot_time_pack",
-    monthlyLabel: "$5",
-    monthlyValue: 5,
-    name: "Copilot Time Pack",
-    note: "One-time",
-    points: ["+5 copilot hours", "Stacks with plan time"],
-  },
+  // v0.1.9 — Voice Minute Pack / Image Credit Pack / Copilot Time Pack
+  // were dropped in favour of the flexible credit ledger. Users buy a
+  // dollar balance and each feature burns credits at
+  // CREDIT_COSTS[kind] (see lib/credits.ts).
 ];
 
 export const pricingPlanMap = Object.fromEntries(

@@ -10,8 +10,10 @@ import {
 import {
   cancelDesktopSubscription,
   changeDesktopPlan,
+  createCreditPurchase,
   createDesktopBillingIntent,
   createDesktopSetupIntent,
+  getCreditBalance,
   isOneTimeBoost,
   removeDesktopAddon,
   updateDesktopPaymentMethod,
@@ -19,6 +21,7 @@ import {
   type BillingAddonSummary,
   type BillingCycle,
   type BillingPlanSummary,
+  type CreditBalance,
   type DesktopBillingState,
   type PricingPlanKey,
 } from "./billing-api";
@@ -36,26 +39,29 @@ type BoostCard = {
   featured?: boolean;
 };
 
+// v0.1.9 — pared down to the SKUs that actually exist in Stripe.
+// voice_minute_pack / image_credit_pack / copilot_time_pack were
+// dropped in favour of the credit ledger; voice_pack / image_pack
+// were dropped because credits cover both surfaces.
 const ONE_TIME_BOOSTS: BoostCard[] = [
   { key: "session_boost", name: "Session Boost", price: "$2", detail: "+50 chats" },
   { key: "weekly_boost", name: "Weekly Boost", price: "$5", detail: "+500 weekly requests" },
-  { key: "voice_minute_pack", name: "Voice Minute Pack", price: "$3", detail: "+60 voice minutes" },
-  { key: "image_credit_pack", name: "Image Credit Pack", price: "$4", detail: "+25 image generations" },
-  { key: "copilot_time_pack", name: "Copilot Time Pack", price: "$5", detail: "+5 hours of copilot" },
 ];
 
 const RECURRING_BOOSTS: BoostCard[] = [
-  { key: "voice_pack", name: "Voice Pack", price: "$8/mo", detail: "Unlimited voice" },
-  { key: "image_pack", name: "Image Pack", price: "$10/mo", detail: "Unlimited images" },
   { key: "copilot_pro_pack", name: "Copilot Pro Pack", price: "$12/mo", detail: "Unlimited copilot for any plan" },
   {
     key: "power_pack",
     name: "Power Pack BUNDLE",
     price: "$25/mo",
-    detail: "All boosts active (~$45 of value)",
+    detail: "Copilot Pro + bonus credits — best ongoing value",
     featured: true,
   },
 ];
+
+// v0.1.9 — preset top-up amounts shown as quick buttons in the
+// "Buy credits" modal. The slider covers the full $1–$500 range.
+const CREDIT_PRESETS = [5, 10, 25, 50, 100] as const;
 
 const stripePromiseCache = new Map<string, Promise<StripeJs | null>>();
 function stripePromise(key: string): Promise<StripeJs | null> {
@@ -95,6 +101,13 @@ export function DesktopBillingPanel({
     price: string;
     clientSecret: string;
   } | null>(null);
+  // v0.1.9 — credits balance + buy-credits modal state. The balance
+  // refreshes after a successful credit purchase and on every billing
+  // panel mount/refresh; we never block the panel render on it (null
+  // means "still loading"; 0 is a real value).
+  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null);
+  const [creditsModalOpen, setCreditsModalOpen] = useState(false);
+  const [creditToast, setCreditToast] = useState<string | null>(null);
 
   const currentPlanKey = billing.state.planKey ?? billing.currentPlanKey;
   const hasPaidPlan = currentPlanKey !== "free";
@@ -118,7 +131,32 @@ export function DesktopBillingPanel({
   async function refreshWithReset() {
     setError(null);
     await onRefresh();
+    void refreshCreditBalance();
   }
+
+  // v0.1.9 — fetch credit balance. Failures are silent — we just
+  // leave the previous value (or null). The credits card renders
+  // "—" while loading; a buy-credits success forces a refresh.
+  async function refreshCreditBalance() {
+    try {
+      const balance = await getCreditBalance(token);
+      setCreditBalance(balance);
+    } catch (err) {
+      console.warn("getCreditBalance failed:", err);
+    }
+  }
+
+  // Initial load + clear toast on unmount.
+  useEffect(() => {
+    void refreshCreditBalance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  useEffect(() => {
+    if (!creditToast) return;
+    const id = window.setTimeout(() => setCreditToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [creditToast]);
 
   async function handlePlanChange(planKey: PricingPlanKey, cycle: BillingCycle) {
     setBusy(`plan-${planKey}-${cycle}`);
@@ -446,8 +484,58 @@ export function DesktopBillingPanel({
           </div>
         </section>
 
-        {/* NEW monetization section: one-time top-ups + recurring boosts.
-            These are placeholders — wire to Stripe in v0.1.5. */}
+        {/* v0.1.9 — Credits card. Shows balance and opens the buy modal.
+            One credit = $0.01 worth of usage; chat = 1 credit, image = 5,
+            voice = 2/min, copilot = 1. Sits above the boost packs because
+            it's the new primary monetization surface. */}
+        <section className="billing-panel billing-panel--dense">
+          <div className="billing-section-head">
+            <div className="billing-kicker">Credits</div>
+            <span className="billing-note billing-note--inline">
+              Pay-as-you-go usage. Stacks on any plan.
+            </span>
+          </div>
+          <div className="boost-row">
+            <div className="boost-card boost-card--featured" style={{ flex: "1 1 100%" }}>
+              <div className="boost-card-head">
+                <div className="boost-card-name">Credit balance</div>
+                <div className="boost-card-price">
+                  {creditBalance == null
+                    ? "—"
+                    : `$${creditBalance.balance_dollars.toFixed(2)}`}
+                </div>
+              </div>
+              <div className="boost-card-meta">
+                {creditBalance == null
+                  ? "Loading balance..."
+                  : creditBalance.balance > 0
+                    ? `${creditBalance.balance.toLocaleString()} credits remaining — chat = 1, image = 5, voice = 2/min, copilot = 1.`
+                    : "Buy credits to keep going past your plan caps. 1 USD = 100 credits."}
+              </div>
+              <button
+                type="button"
+                className="upgrade-cta-btn boost-card-btn"
+                onClick={() => setCreditsModalOpen(true)}
+                disabled={!billing.stripeConfigured || !billing.publishableKey}
+                title={
+                  !billing.stripeConfigured
+                    ? "Billing isn't configured on this server yet."
+                    : undefined
+                }
+              >
+                Buy credits
+              </button>
+              {creditToast && (
+                <div className="billing-note billing-note--inline" style={{ marginTop: 8 }}>
+                  {creditToast}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* One-time top-ups + recurring boosts. v0.1.9 trimmed to the
+            SKUs the operator actually created in Stripe. */}
         <section className="billing-panel billing-panel--dense">
           <div className="billing-section-head">
             <div className="billing-kicker">Boost your account</div>
@@ -634,7 +722,127 @@ export function DesktopBillingPanel({
           }}
         />
       )}
+
+      {creditsModalOpen && billing.publishableKey && (
+        <BuyCreditsModal
+          token={token}
+          publishableKey={billing.publishableKey}
+          onClose={() => setCreditsModalOpen(false)}
+          onSuccess={async (dollars) => {
+            setCreditsModalOpen(false);
+            setCreditToast(`+${dollars * 100} credits added`);
+            await refreshWithReset();
+          }}
+        />
+      )}
     </>
+  );
+}
+
+// v0.1.9 — Buy credits modal.
+// Slider for $1–$500 plus five preset buttons ($5/$10/$25/$50/$100).
+// Fetches a PaymentIntent client_secret from /api/desktop/billing/credits
+// when the user confirms an amount, then renders Stripe Elements for
+// the actual payment. On success the parent bumps the credit balance
+// via refreshWithReset + shows a toast.
+function BuyCreditsModal({
+  token,
+  publishableKey,
+  onClose,
+  onSuccess,
+}: {
+  token: string;
+  publishableKey: string;
+  onClose: () => void;
+  onSuccess: (dollars: number) => Promise<void> | void;
+}) {
+  const [dollars, setDollars] = useState<number>(10);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const stripeP = useMemo(() => stripePromise(publishableKey), [publishableKey]);
+
+  async function startCheckout() {
+    if (dollars < 1 || dollars > 500) {
+      setError("Pick an amount between $1 and $500.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await createCreditPurchase(token, dollars);
+      setClientSecret(result.clientSecret);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start credits purchase.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <BillingModalFrame
+      kicker="Credits"
+      title="Buy credits"
+      subtitle="Pay-as-you-go. 1 USD = 100 credits. Never expires."
+      error={error}
+      onClose={onClose}
+    >
+      {!clientSecret ? (
+        <div className="billing-form">
+          <div className="billing-note">
+            You&apos;ll get <strong>{(dollars * 100).toLocaleString()} credits</strong> for ${dollars}.
+            Chat = 1, image = 5, voice = 2/min, copilot = 1.
+          </div>
+
+          <div className="boost-row" style={{ marginTop: 4 }}>
+            {CREDIT_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                className={`billing-secondary-btn${dollars === preset ? " active" : ""}`}
+                onClick={() => setDollars(preset)}
+              >
+                ${preset}
+              </button>
+            ))}
+          </div>
+
+          <label className="billing-note" style={{ marginTop: 8 }}>
+            Custom amount: <strong>${dollars}</strong>
+            <input
+              type="range"
+              min={1}
+              max={500}
+              step={1}
+              value={dollars}
+              onChange={(event) => setDollars(Number(event.target.value))}
+              style={{ width: "100%", marginTop: 6 }}
+            />
+          </label>
+
+          <button
+            type="button"
+            className="upgrade-cta-btn billing-submit"
+            onClick={() => void startCheckout()}
+            disabled={busy || dollars < 1 || dollars > 500}
+          >
+            {busy ? "Preparing..." : `Continue to pay $${dollars}`}
+          </button>
+        </div>
+      ) : (
+        <Elements
+          stripe={stripeP}
+          options={{ clientSecret, appearance: billingAppearance }}
+        >
+          <CheckoutForm
+            amountLabel={`$${dollars}`}
+            submitVerb="Pay"
+            onSuccess={() => onSuccess(dollars)}
+            onError={setError}
+          />
+        </Elements>
+      )}
+    </BillingModalFrame>
   );
 }
 
@@ -672,7 +880,8 @@ function OneTimeBoostModal({
         }}
       >
         <CheckoutForm
-          amountLabel={`Pay ${boost.price}`}
+          amountLabel={boost.price}
+          submitVerb="Pay"
           onSuccess={onSuccess}
           onError={setError}
         />
@@ -849,10 +1058,15 @@ function BillingModalFrame({
 
 function CheckoutForm({
   amountLabel,
+  // v0.1.9 — when set, replaces the default "Subscribe • {amountLabel}"
+  // copy. One-time charges (credits, session boost) pass "Pay $X" so
+  // we don't say "Subscribe" on a single charge.
+  submitVerb = "Subscribe",
   onError,
   onSuccess,
 }: {
   amountLabel: string;
+  submitVerb?: string;
   onError: (message: string) => void;
   onSuccess: () => Promise<void> | void;
 }) {
@@ -906,7 +1120,7 @@ function CheckoutForm({
         className="upgrade-cta-btn billing-submit"
         disabled={!stripe || submitting}
       >
-        {submitting ? "Processing..." : `Subscribe • ${amountLabel}`}
+        {submitting ? "Processing..." : `${submitVerb} • ${amountLabel}`}
       </button>
     </form>
   );

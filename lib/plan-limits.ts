@@ -1,6 +1,12 @@
 import type { ModelTier, PlanKey } from "./ai-models";
 import type { BillingAddonKey } from "./pricing";
 import { getSupabaseAdminClient } from "./supabase-admin";
+import {
+  consumeCredits,
+  CREDIT_COSTS,
+  getCreditBalance,
+  type CreditKind,
+} from "./credits";
 
 // v0.1.8 — kinds the gating layer asks about. Map to the boost addons
 // that satisfy them. A user with an unconsumed credit for any of these
@@ -12,9 +18,13 @@ const BOOST_KIND_TO_ADDONS: Record<BoostKind, BillingAddonKey[]> = {
   // We treat both as chat-eligible — gating consumes whichever the user
   // bought first (cheapest first so weekly_boost outlives the cheaper one).
   chat: ["session_boost", "weekly_boost"],
-  image: ["image_credit_pack"],
-  voice: ["voice_minute_pack"],
-  copilot: ["copilot_time_pack"],
+  // v0.1.9 — image / voice / copilot one-time SKUs were dropped in
+  // favour of the credit ledger. Empty arrays here mean
+  // hasUnconsumedBoost / consumeBoostForKind no-op for those kinds and
+  // the gating layer falls through to consumeCreditFor instead.
+  image: [],
+  voice: [],
+  copilot: [],
 };
 
 // Sansxel limit model — our take, not a copy of anyone else's.
@@ -402,4 +412,56 @@ export async function consumeBoostForKind(
     if (await consumeBoost(email, addonKey)) return addonKey;
   }
   return null;
+}
+
+// ───────────────────────────────────────────────────────────────────
+// v0.1.9 — credit ledger fallback
+// ───────────────────────────────────────────────────────────────────
+//
+// When a plan limit blocks a request and no boost credit is available,
+// the gating layer asks consumeCreditFor() whether the user can pay
+// for it out of their credit balance instead. Returns true (and burns
+// CREDIT_COSTS[kind] credits) when the user has enough; false when
+// they don't. The boost path stays as a v0.1.8 fallback for users who
+// already bought a session_boost / weekly_boost.
+
+/**
+ * Burn credits for a chat / image / voice_minute / copilot request.
+ * Returns true if the user had enough credits and the call should be
+ * allowed past the limit; false if the credit balance is insufficient.
+ *
+ * The refId stitches consume rows back to the request that spent them
+ * so support can reconstruct what was paid for. We mix in a coarse
+ * timestamp (per-second) so a retried request inside the same second
+ * de-duplicates against itself and a longer interval doesn't.
+ */
+export async function consumeCreditFor(
+  email: string,
+  kind: CreditKind,
+): Promise<boolean> {
+  const cost = CREDIT_COSTS[kind];
+  if (!cost || cost <= 0) return false;
+  const refId = `${kind}:${Math.floor(Date.now() / 1000)}`;
+  try {
+    const result = await consumeCredits(email, cost, "consume", refId);
+    return result.ok;
+  } catch (err) {
+    console.warn("consumeCreditFor threw:", err);
+    return false;
+  }
+}
+
+/**
+ * Cheap "would consumeCreditFor succeed?" check that does not mutate
+ * the balance. Useful for surfacing "you have $X.XX of credits left"
+ * UI without spending any.
+ */
+export async function hasEnoughCreditFor(
+  email: string,
+  kind: CreditKind,
+): Promise<boolean> {
+  const cost = CREDIT_COSTS[kind];
+  if (!cost || cost <= 0) return false;
+  const balance = await getCreditBalance(email);
+  return balance >= cost;
 }

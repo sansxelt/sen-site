@@ -20,6 +20,7 @@ import {
 } from "../../../../lib/pricing";
 import { getUserProfileByEmail } from "../../../../lib/user-profile";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
+import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
 
 /**
  * Look up the customer's display name so every billing email greets
@@ -309,6 +310,39 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
 // retried webhook is a no-op (we swallow the unique-violation error).
 async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
   const meta = intent.metadata ?? {};
+
+  // ── v0.1.9 — credits top-up ────────────────────────────────────────
+  // metadata.kind === "credits" means the desktop billing panel asked
+  // /api/desktop/billing/credits to mint a PaymentIntent for $N. On
+  // success we credit the user's running balance (1 USD = 100 credits)
+  // via the addCredits journal — idempotent on the payment_intent id.
+  const kind = meta.kind ?? "";
+  if (kind === "credits") {
+    const userEmail = (meta.email ?? meta.userEmail ?? meta.user_email) as string | undefined;
+    const dollarsRaw = meta.dollars ?? "";
+    const dollars = Math.floor(Number(dollarsRaw));
+    if (!userEmail || !Number.isFinite(dollars) || dollars <= 0) {
+      console.warn("[stripe webhook] credits intent missing metadata:", intent.id);
+      return;
+    }
+    try {
+      await addCredits(
+        userEmail,
+        dollars * CREDITS_PER_DOLLAR,
+        "purchase",
+        intent.id,
+      );
+    } catch (err) {
+      console.error("[stripe webhook] addCredits failed:", err);
+    }
+    return;
+  }
+
+  // ── v0.1.8 legacy one-time boost top-ups ───────────────────────────
+  // session_boost / weekly_boost still flow through boost_credits so
+  // the existing gating layer keeps working. The other v0.1.8 keys
+  // (voice_minute_pack, image_credit_pack, copilot_time_pack) were
+  // dropped in v0.1.9 — credits cover those features now.
   const purchaseKind = meta.purchaseKind ?? meta.purchase_kind;
   if (purchaseKind !== "one_time_boost") return; // Not a boost charge.
 

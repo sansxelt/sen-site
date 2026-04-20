@@ -6,6 +6,7 @@ import { recordUsage } from "../../../../../lib/usage";
 import { getPlanForEmail } from "../../../../../lib/account-billing";
 import {
   consumeBoostForKind,
+  consumeCreditFor,
   decideVoiceRequest,
   getWeeklyUsage,
   hasUnconsumedBoost,
@@ -76,22 +77,18 @@ export async function POST(request: Request) {
     added_seconds: projectedSeconds,
   });
   if (voiceDecision.kind === "blocked") {
-    // v0.1.8 — voice_minute_pack override. One pack covers one
-    // request regardless of duration; we don't pro-rate per second.
+    // v0.1.8 — legacy voice_minute_pack override (the SKU was dropped
+    // in v0.1.9 but already-purchased boost rows still redeem here).
+    // v0.1.9 — fall through to credits if no boost is available.
+    let allowed = false;
     if (await hasUnconsumedBoost(email, "voice")) {
       const burnt = await consumeBoostForKind(email, "voice");
-      if (!burnt) {
-        return NextResponse.json(
-          {
-            error: voiceDecision.reason,
-            limit: voiceDecision.limit,
-            used: voiceDecision.used,
-            reset: voiceDecision.reset,
-          },
-          { status: 429 },
-        );
-      }
-    } else {
+      if (burnt) allowed = true;
+    }
+    if (!allowed && (await consumeCreditFor(email, "voice_minute"))) {
+      allowed = true;
+    }
+    if (!allowed) {
       return NextResponse.json(
         {
           error: voiceDecision.reason,

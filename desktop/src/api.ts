@@ -899,6 +899,17 @@ export async function* streamDeepResearch(
   if (tail) yield tail;
 }
 
+// ── v0.1.9 credits (re-export from billing-api) ─────────────────────
+//
+// Surfaced from api.ts for callers that already import the rest of
+// the desktop client API from here. The implementation lives in
+// billing-api.ts alongside the other billing helpers.
+export {
+  getCreditBalance,
+  createCreditPurchase,
+  type CreditBalance,
+} from "./billing-api";
+
 // ── AI quiz (one-shot) ─────────────────────────────────────────────
 
 export type QuizQuestion = {

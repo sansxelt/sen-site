@@ -6,6 +6,7 @@ import { recordUsage } from "../../../../lib/usage";
 import { getPlanForEmail } from "../../../../lib/account-billing";
 import {
   consumeBoostForKind,
+  consumeCreditFor,
   decideImageRequest,
   getWeeklyUsage,
   hasUnconsumedBoost,
@@ -65,23 +66,21 @@ export async function POST(request: Request) {
   const plan = await getPlanForEmail(email);
   const weekly = await getWeeklyUsage(email);
   const decision = decideImageRequest({ plan, weekly });
-  // v0.1.8 — image_credit_pack override. Burn one credit per image
-  // generation when the plan cap would have blocked the request.
+  // v0.1.8 — image_credit_pack override (legacy v0.1.8 boost path; the
+  // image_credit_pack SKU was dropped in v0.1.9 so hasUnconsumedBoost
+  // for "image" always returns false now, but the path is kept so any
+  // already-purchased boost rows in boost_credits keep redeeming).
+  // v0.1.9 — fall through to consumeCreditFor as the new default.
   if (decision.kind === "blocked") {
+    let allowed = false;
     if (await hasUnconsumedBoost(email, "image")) {
       const burnt = await consumeBoostForKind(email, "image");
-      if (!burnt) {
-        return NextResponse.json(
-          {
-            error: decision.reason,
-            limit: decision.limit,
-            used: decision.used,
-            reset: decision.reset,
-          },
-          { status: 429 },
-        );
-      }
-    } else {
+      if (burnt) allowed = true;
+    }
+    if (!allowed && (await consumeCreditFor(email, "image"))) {
+      allowed = true;
+    }
+    if (!allowed) {
       return NextResponse.json(
         {
           error: decision.reason,

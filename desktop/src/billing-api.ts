@@ -21,23 +21,18 @@ export type BillingAddonKey =
   | "api_boost"
   | "key_pack"
   // v0.1.4 monetization — recurring add-on packs.
-  | "voice_pack"
-  | "image_pack"
+  // v0.1.9 dropped voice_pack + image_pack — replaced by credits flow.
   | "copilot_pro_pack"
   | "power_pack"
   // v0.1.4 monetization — one-time top-ups.
+  // v0.1.9 dropped voice_minute_pack / image_credit_pack /
+  // copilot_time_pack — those features burn credits now.
   | "session_boost"
-  | "weekly_boost"
-  | "voice_minute_pack"
-  | "image_credit_pack"
-  | "copilot_time_pack";
+  | "weekly_boost";
 
 export const ONE_TIME_BOOST_KEYS: ReadonlySet<BillingAddonKey> = new Set([
   "session_boost",
   "weekly_boost",
-  "voice_minute_pack",
-  "image_credit_pack",
-  "copilot_time_pack",
 ]);
 
 export function isOneTimeBoost(key: BillingAddonKey): boolean {
@@ -225,4 +220,50 @@ export async function updateDesktopPaymentMethod(
   });
   const data = (await res.json().catch(() => ({}))) as { error?: string };
   if (!res.ok) throw new Error(data.error ?? `updateDesktopPaymentMethod ${res.status}`);
+}
+
+// ── v0.1.9 — credits ─────────────────────────────────────────────────
+//
+// Buy credits in dollars; each USD becomes 100 credits. Used by the
+// Credits card in the billing panel. Server route enforces the
+// $1–$500 range so we don't have to validate twice.
+
+export type CreditBalance = {
+  balance: number;
+  balance_dollars: number;
+};
+
+export async function getCreditBalance(token: string): Promise<CreditBalance> {
+  const res = await fetch(`${API_BASE}/api/desktop/billing/balance`, {
+    method: "GET",
+    headers: authHeaders(token),
+  });
+  const data = (await res.json().catch(() => ({}))) as Partial<CreditBalance> & {
+    error?: string;
+  };
+  if (!res.ok) throw new Error(data.error ?? `getCreditBalance ${res.status}`);
+  return {
+    balance: typeof data.balance === "number" ? data.balance : 0,
+    balance_dollars:
+      typeof data.balance_dollars === "number" ? data.balance_dollars : 0,
+  };
+}
+
+export async function createCreditPurchase(
+  token: string,
+  dollars: number,
+): Promise<{ clientSecret: string }> {
+  const res = await fetch(`${API_BASE}/api/desktop/billing/credits`, {
+    method: "POST",
+    headers: authHeaders(token),
+    body: JSON.stringify({ amount_dollars: dollars }),
+  });
+  const data = (await res.json().catch(() => ({}))) as {
+    clientSecret?: string;
+    error?: string;
+  };
+  if (!res.ok || !data.clientSecret) {
+    throw new Error(data.error ?? `createCreditPurchase ${res.status}`);
+  }
+  return { clientSecret: data.clientSecret };
 }
