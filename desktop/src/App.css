@@ -5195,6 +5195,64 @@ input[type="number"]::-webkit-inner-spin-button {
   color: rgba(232, 232, 240, 0.92);
 }
 
+/* v0.1.13 \u2014 next-version "in progress" card sits above the shipped
+   list with a softer, work-in-progress accent. */
+.update-card--next {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(167, 139, 250, 0.32);
+  margin-bottom: 12px;
+}
+.update-card--next .update-card-tag {
+  background: rgba(167, 139, 250, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+}
+.update-card--next .update-card-changes li {
+  color: rgba(210, 210, 230, 0.7);
+  font-style: italic;
+}
+
+/* v0.1.13 \u2014 short summary line under the version badge. Each release
+   now leads with one sentence instead of dumping straight into bullets. */
+.update-card-summary {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(220, 220, 235, 0.86);
+}
+.update-card--highlight .update-card-summary {
+  color: rgba(240, 240, 246, 0.95);
+}
+
+/* v0.1.13 \u2014 inline change-type tag (NEW / FIX / IMPROVE) prefixed
+   to each bullet so users can scan the changelog by category. */
+.update-card-tag-inline {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+.update-card-tag-inline--new {
+  background: rgba(167, 139, 250, 0.18);
+  color: rgba(232, 224, 255, 0.95);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+}
+.update-card-tag-inline--fix {
+  background: rgba(248, 113, 113, 0.14);
+  color: rgba(255, 220, 220, 0.94);
+  border: 1px solid rgba(248, 113, 113, 0.36);
+}
+.update-card-tag-inline--improve {
+  background: rgba(52, 211, 153, 0.14);
+  color: rgba(220, 255, 235, 0.95);
+  border: 1px solid rgba(52, 211, 153, 0.36);
+}
+
 /* ─────────────────────────────────────────────────────────────────────
    v0.1.4 — Sources view (RAG scaffold)
    ───────────────────────────────────────────────────────────────────── */

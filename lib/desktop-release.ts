@@ -24,62 +24,151 @@ export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
 export const desktopNextVersion = "0.1.14";
 export const desktopNextVersionHighlights = [
-  "Final copilot UI design pass \u2014 deep, focused redesign of the floating Sansxel Copilot surfaces with the v0.1.11 \"alive\" engine fully visualized.",
-  "Real MCP wiring through the copilot route: web_search + navigate + thread tools surface as live status dots on the rail.",
+  "Pure copilot rework \u2014 finalized UI design pass on the floating Sansxel Copilot, scoped narrow but with depth (spec being planned).",
   "Server-side sync for Live Mode consent (currently localStorage only) + Settings toggle to revoke / re-grant.",
+  "Multi-tool MCP expansion: navigate + thread tools wired alongside web_search.",
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.12 \u2014 patch release on top of v0.1.11. Splash now PATIENT: the minigame stays interactive indefinitely while the app boots; ENTER is the only thing that advances; hint pulses cyan when the app is ready so you know ENTER will instantly hand off. Ctrl+Q now actually quits cleanly (was leaving a zombie process so reopening required Task Manager). Smart Action Launcher panel no longer overflows the right side of the screen. Floating-copilot 401 fixed by refreshing the saved session on window focus. Capsule Rail launcher in the nav rail is now a prominent CTA. Chat-header \"PC copilot\" renamed to \"Toolbar mode\" to remove the naming collision with the floating copilot. AI now knows your local time + timezone (no more \"good afternoon\" replies at 8 PM). Three dead-end addons (Memory/API/Key Pack) removed. GitHub integration enabled site-wide. Inline Billing section on /account replaces the bare /account/billing page \u2014 plan, addons, payment, invoices, credits all in one place.";
+  "v0.1.13 \u2014 floating copilot can SEARCH THE WEB (Anthropic web_search tool, max 3 uses per turn). Persistent thread history (8 conversations, restorable from a Recent dropdown). Live Mode hints are dismissible + debounced. Splash bottom corners back \u2014 status + boot step on the left, keyboard shortcuts on the right, always visible. ESC\u00d73 from app revisits the splash; the shortcut is advertised on the splash itself. Settings page gets a Keyboard shortcuts section listing Ctrl+Q (force quit), ESC\u00d73 (revisit splash), Enter (open from splash), Space (play minigame). Toolbar mode killed entirely (broken at non-full scale, redundant with floating copilot). Sansxel Copilot launcher renamed properly. Plan + billing reconciled \u2014 comped users see Pro \u00b7 Comped instead of Free. Only paid invoices show. Buy Credits cap raised to $10k with $200 + centered $500 added. Cycle pill text fixed (was white-on-white). 3D tilt on billing cards. Global white-on-white safety net stops the recurring invisible-label bug. /account hero stops going blank (data-reveal stripped + CSS safety fallback). AI knows your local time. Web copilot stays open across navigations.";
 
 export const desktopShippedReleases: DesktopRelease[] = [
   {
     version: "0.1.13",
     dateLabel: "Apr 19, 2026",
-    dateIso: "2026-04-19T23:00:00Z",
+    dateIso: "2026-04-19T23:30:00Z",
     channel: "alpha",
     summary:
-      "Polish patch on top of v0.1.12. Toolbar mode is gone, Sansxel Copilot launcher is properly named, plans grid no longer overflows, Buy Credits cap raised to $10k with $200 + centered $500 added, comped users no longer see 'Not set' chips, splash hint advertises the ESC\u00d73 shortcut, and a few smaller cleanup items.",
+      "Big polish + copilot rework. Web search wired into the floating copilot via Anthropic's web_search tool with live status dots; persistent thread history (8 conversations, localStorage); Live Mode hints are dismissible + debounced; splash bottom corners back; Ctrl+Q shortcut surfaced everywhere; Toolbar mode killed; plan + billing reconciliation so comped users see Pro instead of Free; only paid invoices show; global white-on-white safety net; 3D tilt on billing cards; reveal-on-scroll bulletproofed against blank-top regressions.",
     changes: [
+      // ─── Copilot rework ──────────────────────────────────────────
+      {
+        type: "new",
+        text: "Floating copilot can now SEARCH THE WEB. Anthropic's web_search server tool is wired through /api/ai/copilot for the desktop surface (max 3 uses per turn). Ask it for current events / live prices / recent news and the rail's status dots fire yellow \u2192 green as the model queries the web. Web sources appear inline in the reply.",
+      },
+      {
+        type: "new",
+        text: "Persistent copilot thread history. Every conversation auto-saves to localStorage (capped at 8 most-recent threads). Panel head gets two new buttons: \"+ New\" clears the conversation; \"Recent (N)\" opens a dropdown listing past threads with auto-derived titles + relative timestamps. Click any to restore.",
+      },
+      {
+        type: "new",
+        text: "Floating-copilot 401 fixed by refreshing the saved session on window focus + visibilitychange. The session was previously captured ONCE on mount, so signing out + back in stranded the rail with the old token and every send returned \"copilot 401\".",
+      },
+      {
+        type: "improve",
+        text: "Live Mode hints are now dismissible \u2014 X on the chip hides that suggestion for the rest of the session so it stops re-appearing every time you alt-tab back to that app. 600ms debounce on title changes also stops the chip from flashing during rapid foreground flicker.",
+      },
+      // ─── Splash + shortcuts ──────────────────────────────────────
       {
         type: "fix",
-        text: "Removed Toolbar mode entirely \u2014 it never worked properly outside full-window scale (header text overlapped, buttons collided), and the floating Sansxel Copilot covers the same use case. Chat header no longer has the toggle; window-mode auto-resets to normal on launch.",
+        text: "Splash now PATIENT: the minigame stays interactive indefinitely while the app boots; ENTER is the only thing that advances; the hint pulses cyan when the app is ready so you know ENTER will instantly hand off. Old centered hint replaced with corner footer \u2014 status + boot step on the bottom-left, keyboard shortcuts + version on the bottom-right (always visible regardless of minigame state).",
+      },
+      {
+        type: "improve",
+        text: "Splash advertises the ESC\u00d73 shortcut (\"in app: tap esc esc esc to return here\") so users discover that pressing Escape three times in a row from inside the app revisits the splash + minigame any time.",
+      },
+      {
+        type: "fix",
+        text: "Triple-Esc handler restored in App.tsx (was accidentally removed in an earlier refactor). The shortcut actually works again.",
+      },
+      {
+        type: "improve",
+        text: "Settings page gets a new top-most \"Keyboard shortcuts\" section listing Ctrl+Q / \u2318Q (force quit), Esc Esc Esc (revisit splash), Enter (open app from splash), Space (play minigame). Plus the X close button + Update banner now spell out the hide-vs-quit distinction explicitly.",
+      },
+      // ─── Toolbar mode kill ───────────────────────────────────────
+      {
+        type: "fix",
+        text: "Removed Toolbar mode entirely \u2014 it never worked properly outside full-window scale (header text overlapped, buttons collided), and the floating Sansxel Copilot covers the same use case. Chat header no longer has the toggle; Settings page Window mode setting is gone; window-mode auto-resets to normal on launch.",
       },
       {
         type: "improve",
         text: "Renamed the floating-copilot launcher in the nav rail from \"Capsule Rail\" (internal codename) to \"Sansxel Copilot\" with a clearer \"Always on, anywhere\" subtitle.",
       },
       {
+        type: "improve",
+        text: "Removed Export button from the chat header (clutter \u2014 had no obvious affordance; the same Markdown export will return as a thread-context-menu item later).",
+      },
+      // ─── Ctrl+Q force-quit ───────────────────────────────────────
+      {
         type: "fix",
-        text: "Plan-status badge was rendering literal \"Comped \\u0087 no card needed\" text because JSX text nodes don't interpret backslash escape sequences. Switched to template literals so the middle-dot character renders correctly.",
+        text: "Ctrl+Q now actually quits cleanly (was leaving a zombie Tauri process alive because close() on the main webview kept the splash + copilot windows holding the process open). Reopening sansxel after Ctrl+Q used to require killing sansxel.exe in Task Manager. plugin-process exit() terminates the entire process now.",
+      },
+      // ─── AI quality ──────────────────────────────────────────────
+      {
+        type: "fix",
+        text: "AI now knows your local time + IANA timezone. Client sends client_time_iso / client_time_label / client_timezone with every chat request (both desktop chat-view and web chat). System prompt includes \"the user's current local time is X (timezone: Y)\u2026\" with a directive never to claim it can't see the clock. No more \"good afternoon\" replies at 8 PM.",
       },
       {
         type: "fix",
-        text: "Plans-in-app grid was overflowing at non-full window scale (Pro card running off the right edge with horizontal-scroll that wasn't obvious). Switched to a responsive auto-fit grid that wraps cleanly to 2-up then 1-up as the window narrows. No more clipped Pro card.",
+        text: "Web chat was dumping raw JSON-Lines events ({\"type\":\"text\",\"text\":\"\u2026\"}) into message bubbles because the chat route's tools_enabled default was inverted (treated absent flag as opt-in). Default is now FALSE; desktop callers all set it explicitly so they're unaffected.",
+      },
+      // ─── Billing + plan reconciliation ───────────────────────────
+      {
+        type: "fix",
+        text: "Plan reconciliation across /account, /account/usage, and the inline billing panel. Comped Pro accounts (Pro in our DB but no Stripe subscription) used to show \"Pro\" in the user card and \"Free / No billing active\" in the billing section on the same page. Now reconciled \u2014 the snapshot's plan injects into the billing state when Stripe doesn't have one, so the panel renders \"Pro \u00b7 Comped \u00b7 no card needed\" everywhere.",
       },
       {
         type: "fix",
-        text: "Comped users no longer see misleading \"Renews: Not set\" / \"Card: Not added\" chips that imply a billing problem. Both chips hide entirely when the plan is comped; for real subscribers the Renews chip relabels to \"Ends\" when the subscription is cancelling.",
+        text: "Plan-status badge always visible (was only shown when cancelling). Four explicit states now: Free \u00b7 Active renews <date> \u00b7 Cancelling ends <date> \u00b7 Comped no card needed. Same on /account/usage and inside the billing panel.",
+      },
+      {
+        type: "fix",
+        text: "Comped users no longer see misleading \"Renews: Not set\" / \"Card: Not added\" chips. Both hide entirely when comped; for real subscribers the Renews chip relabels to \"Ends\" when cancelling. The dead \"Cancel subscription\" button for comped users is replaced with a \"Start paying \u2014 unlock annual + invoices\" CTA linking to /pricing.",
+      },
+      {
+        type: "fix",
+        text: "Plan-status badge was rendering literal \"Comped \\u0087 no card needed\" because JSX text nodes don't interpret \\uXXXX escapes. Switched to template literals so the middle-dot renders correctly.",
+      },
+      {
+        type: "fix",
+        text: "Plans-in-app grid no longer overflows at non-full window scale. Was using a 4-column layout with horizontal-scroll fallback that silently clipped the Pro card off the right side. Switched to responsive auto-fit grid that wraps cleanly to 2-up then 1-up as the window narrows.",
       },
       {
         type: "improve",
-        text: "Buy Credits modal: added $200 next to $100 and a wider centered $500 button below. Cap raised from $500 \u2192 $10,000 (Stripe per-charge ceiling is ~$999k but most cards reject above ~$10k). Server route's MAX_DOLLARS bumped to match.",
+        text: "Buy Credits modal: $200 added next to $100, wider centered $500 button below. Cap raised from $500 \u2192 $10,000 (Stripe per-charge ceiling is ~$999k but most cards reject above ~$10k). Server route's MAX_DOLLARS bumped to match. OS-tinted +/- spinner buttons stripped from the number input.",
       },
       {
         type: "fix",
-        text: "Stripped the OS-tinted +/- spinner buttons from the Buy Credits number input \u2014 they were ignoring the dark UI palette. The slider + keyboard arrows still work for adjusting the amount.",
-      },
-      {
-        type: "improve",
-        text: "Splash hint now advertises the ESC\u00d73 shortcut so users discover that pressing Esc three times from inside the app revisits the splash + minigame any time.",
+        text: "Recent invoices now show ONLY paid invoices. Was listing every invoice including draft/open/uncollectible/void, which produced a wall of \"$X.XX \u00b7 void\" rows from failed-to-finalize tests \u2014 read as \"sansxel is showing me charges that didn't go through\". Filter applied in the data layer so both web and desktop billing panels are clean.",
       },
       {
         type: "fix",
-        text: "Restored the triple-Esc handler in App.tsx (accidentally removed in an earlier refactor) so the shortcut actually works again.",
+        text: "Cycle pill (Monthly / Yearly toggle) on the web BillingPanel: active label was rendering white-on-white because Tailwind's text-black was being out-cascaded. Now forces dark text via inline style \u2014 same fix pattern as other white-bg buttons.",
+      },
+      // ─── /account page ───────────────────────────────────────────
+      {
+        type: "new",
+        text: "Inline Billing section on /account replaces the bare /account/billing page. The full BillingPanel (plan picker, status badge, addons grid, payment method, invoices, credits modal) lives inline so users land on it directly. /account/billing now redirects to /account#billing so the copilot's nav marker still works.",
+      },
+      {
+        type: "fix",
+        text: "/account page hero (Continue panel + Quick prefs) was repeatedly stranded blank because reveal-on-scroll wasn't picking up above-fold elements. Stripped data-reveal entirely \u2014 they render visible immediately. Plus a CSS safety fallback in globals.css force-reveals any data-reveal element after 2.5s if JS hasn't fired (no future blank-top regressions ever).",
+      },
+      // ─── Site / web ──────────────────────────────────────────────
+      {
+        type: "new",
+        text: "GitHub integration is live on /account/integrations \u2014 \"Connect GitHub\" replaces the \"Coming soon\" badge and launches the OAuth flow.",
       },
       {
         type: "improve",
-        text: "Removed Export button from the chat header (clutter \u2014 had no obvious affordance and the same Markdown export will return as a thread-context-menu item later).",
+        text: "Web copilot stays open across navigations now (was auto-closing itself after \"take me to billing\"-style navigation, punishing the user for using the feature). CopilotBar lives in the root layout so React preserves the open state through Next.js routing. Close explicitly via X / Esc / \u2318J.",
+      },
+      // ─── Visual polish ───────────────────────────────────────────
+      {
+        type: "improve",
+        text: "Global white-on-white safety net. New :where(.bg-white, .bg-neutral-50, .bg-zinc-50, .bg-neutral-100) rule sets dark text by default \u2014 specificity 0 so explicit text-* utilities still win, but the recurring \"white pill with invisible label\" bug is dead at the source. (Patched the Open chat button + Monthly/Yearly toggle individually before this fix landed.)",
+      },
+      {
+        type: "improve",
+        text: "3D tilt on the BillingPanel sections (Plan, Addons, Payment, Invoices) so the \"main changing UI\" matches the heist-style parallax the marketing cards have. New components/use-tilt.ts hook is reusable for any other surface.",
+      },
+      {
+        type: "fix",
+        text: "Smart Action Launcher panel no longer overflows the right side of the screen. Was positioned with absolute left:0 from the trigger, so when the trigger sat anywhere except the far left of the input area the 980px panel ran off the right. Switched to position:fixed with viewport-clamped left + width.",
+      },
+      {
+        type: "improve",
+        text: "Removed Memory Boost ($8/mo), API Boost ($15/mo), and Key Pack ($6/mo) from the billing panel. Stripe products were never created for them, so every \"Add\" click was 500-ing with \"no price configured\". Cleaner to delete than to env-gate dead UI.",
       },
     ],
   },
