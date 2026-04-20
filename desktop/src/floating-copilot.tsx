@@ -1251,7 +1251,7 @@ export function FloatingCopilot() {
                 onClick={() => setStreamProof((s) => !s)}
                 title={streamProof ? "Stream-proof on (invisible to screen recorders)" : "Stream-proof off (visible to screen recorders)"}
               >
-                {streamProof ? "\ud83d\udd07 Stealth" : "\ud83d\udc41 Visible"}
+                {streamProof ? "🔇 Stealth" : "👁 Visible"}
               </button>
               <button
                 type="button"
@@ -1260,7 +1260,7 @@ export function FloatingCopilot() {
                 title="Collapse to bar"
                 aria-label="Collapse to bar"
               >
-                \u2013
+                –
               </button>
               <button
                 type="button"
@@ -1269,7 +1269,7 @@ export function FloatingCopilot() {
                 aria-label="Close"
                 title="Close (Esc)"
               >
-                \u00d7
+                ×
               </button>
             </div>
           </div>

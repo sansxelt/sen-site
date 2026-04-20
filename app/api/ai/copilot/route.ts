@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
+import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
 import { getPlanForEmail } from "../../../../lib/account-billing";
 import { descriptorForTier, resolveTier } from "../../../../lib/ai-models";
 import { SANSXEL_PRODUCT_BRIEF } from "../../../../lib/sansxel-context";
@@ -71,8 +72,16 @@ type CopilotBody = {
 };
 
 export async function POST(request: Request) {
-  const session = await auth();
-  const email = session?.user?.email ?? null;
+  // v0.1.14 \u2014 Accept BOTH desktop Bearer tokens and NextAuth cookie
+  // sessions. Previously this route only called auth() (cookie-only),
+  // so every desktop floating-copilot request returned 401 because the
+  // desktop sends an Authorization: Bearer header instead of a cookie.
+  // Same dual-auth pattern as /api/ai/chat.
+  let email = await getDesktopUserEmailFromRequest(request);
+  if (!email) {
+    const session = await auth();
+    email = session?.user?.email ?? null;
+  }
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
