@@ -191,7 +191,23 @@ function TitleBar() {
     void getCurrentWindow().toggleMaximize();
   }, []);
   const close = useCallback(() => {
-    void getCurrentWindow().close();
+    // v0.1.9: hide the window instead of destroying it. The app stays
+    // running in the background; re-launching sansxel from start menu /
+    // taskbar bumps single-instance which re-shows the same window.
+    // If users actually want to quit they Ctrl+Q (handled below).
+    void getCurrentWindow().hide();
+  }, []);
+
+  // Ctrl+Q quits the app entirely (vs the X which just hides).
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "q") {
+        event.preventDefault();
+        void getCurrentWindow().close();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
   return (
