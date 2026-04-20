@@ -81,8 +81,11 @@ export default async function AccountPage() {
 
   return (
     <div className="space-y-6">
-      {/* ── Continue panel — the central "pick up where you left off" moment ── */}
-      <div data-reveal className="hx-card-lift relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 via-white/[0.03] to-white/[0.02] p-6 sm:p-7">
+      {/* ── Continue panel — the central "pick up where you left off" moment ──
+           v0.1.13 \u2014 stripped data-reveal: the panel is always above the
+           fold and the scroll-reveal hook kept failing to pick it up
+           (opacity:0 stuck), leaving the page with a giant blank top. */}
+      <div className="hx-card-lift relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 via-white/[0.03] to-white/[0.02] p-6 sm:p-7">
         <div className="absolute inset-0 -z-10 opacity-50" aria-hidden>
           <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-purple-500/30 blur-3xl" />
         </div>
@@ -119,8 +122,10 @@ export default async function AccountPage() {
         </div>
       </div>
 
-      {/* ── Quick prefs row — three knobs people change most ── */}
-      <div data-reveal className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {/* ── Quick prefs row — three knobs people change most ──
+           v0.1.13 \u2014 stripped data-reveal for the same reason as the
+           Continue panel above. Always above the fold; render visible. */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Link
           href="/account/settings#voice"
           className="hx-card-lift group rounded-xl border border-white/10 bg-white/[0.03] p-4"
