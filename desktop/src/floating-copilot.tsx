@@ -213,18 +213,42 @@ export function FloatingCopilot() {
     moved: boolean;
   } | null>(null);
 
+  // v0.1.12 \u2014 Session refresh wired to BOTH initial mount AND window
+  // focus / show. The previous code only restored on mount, so when a
+  // user signed out + back in (in the main window) the floating copilot
+  // kept using the now-invalidated token and every send returned "copilot
+  // 401". Re-running restoreSession() each time the floating window
+  // gains focus picks up whatever's currently in the persistent store.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    let lastTokenSeen: string | null = null;
+
+    const refresh = async () => {
       try {
         const restored = await restoreSession();
-        if (!cancelled) setSession(restored);
+        if (cancelled) return;
+        const next = restored?.token ?? null;
+        if (next === lastTokenSeen) return;
+        lastTokenSeen = next;
+        setSession(restored);
       } catch {
         if (!cancelled) setSession(null);
       }
-    })();
+    };
+
+    void refresh();
+
+    const onFocus = () => void refresh();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 

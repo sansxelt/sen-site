@@ -169,6 +169,15 @@ type ChatBody = {
   // model and the response is streamed as JSON-Lines so the client
   // can dispatch tool_use blocks and feed tool_result back in.
   tools_enabled?: boolean;
+  // v0.1.12 — client-supplied local time so the model can answer
+  // "what time is it for me" without claiming it has no access to
+  // the system clock. Client passes IANA timezone + a pre-formatted
+  // local time string + ISO timestamp; server injects all three into
+  // the system prompt. All optional — falls back to UTC server time
+  // if the client doesn't send any of them.
+  client_time_iso?: string;
+  client_timezone?: string;
+  client_time_label?: string;
 };
 
 // v0.1.8 — Desktop tool registry. The model sees these as available
@@ -525,6 +534,18 @@ function systemPromptForPayload(
     }
   }
 
+  // v0.1.12 — Client-supplied local time so the model can answer
+  // time-of-day questions and frame replies appropriately ("good
+  // evening" not "good afternoon" at 8pm). Client passes its own
+  // IANA timezone + a formatted label; server falls back to UTC
+  // when none of them are present.
+  const tzLabel = payload.client_timezone ?? "UTC";
+  const timeLabel =
+    payload.client_time_label ??
+    payload.client_time_iso ??
+    new Date().toISOString();
+  prompt += `\n\nThe user's current local time is ${timeLabel} (timezone: ${tzLabel}). Use this when answering time-of-day questions or framing greetings — never claim you don't have access to the time.`;
+
   return prompt;
 }
 
@@ -659,9 +680,13 @@ export async function POST(request: Request) {
   try {
     // v0.1.8 — when tools_enabled, expose the desktop tool registry
     // and stream JSON-Lines events so the client can dispatch
-    // tool_use blocks. When false (or absent), behaves identically
-    // to the v0.1.7 plain-text stream so older callers keep working.
-    const toolsEnabled = payload.tools_enabled !== false;
+    // tool_use blocks. v0.1.12 fix: default is now FALSE (must be
+    // EXPLICITLY enabled). The previous "!== false" default treated
+    // an absent flag as opt-in, so the website chat (which doesn't
+    // send the flag) received raw JSON-Lines and dumped it into
+    // the message bubble verbatim. Desktop callers all set
+    // tools_enabled: true explicitly, so this is safe.
+    const toolsEnabled = payload.tools_enabled === true;
 
     const stream = await client.messages.stream({
       model: descriptor.model,

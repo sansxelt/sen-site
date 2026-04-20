@@ -291,11 +291,38 @@ export function DesktopBillingPanel({
                   <h2>{billing.currentPlanName}</h2>
                   <p>{billing.currentPlanDescription}</p>
                 </div>
-                {billing.state.cancelAtPeriodEnd && (
-                  <span className="billing-badge billing-badge--warn">
-                    Ends {formatDate(billing.state.currentPeriodEnd)}
-                  </span>
-                )}
+                {/* v0.1.12 \u2014 Plan status is now ALWAYS visible. The old
+                    code only showed a badge when the user was cancelling,
+                    so most users had no idea whether their plan was active,
+                    comped, or expiring. Four explicit states now: */}
+                {(() => {
+                  if (!hasPaidPlan) {
+                    return (
+                      <span className="billing-badge billing-badge--neutral">
+                        Free plan
+                      </span>
+                    );
+                  }
+                  if (isComped) {
+                    return (
+                      <span className="billing-badge billing-badge--neutral">
+                        Comped \u00b7 no card needed
+                      </span>
+                    );
+                  }
+                  if (billing.state.cancelAtPeriodEnd) {
+                    return (
+                      <span className="billing-badge billing-badge--warn">
+                        Cancelling \u2014 ends {formatDate(billing.state.currentPeriodEnd)}
+                      </span>
+                    );
+                  }
+                  return (
+                    <span className="billing-badge billing-badge--ok">
+                      Active \u00b7 renews {formatDate(billing.state.currentPeriodEnd)}
+                    </span>
+                  );
+                })()}
               </div>
 
               <div className="billing-chip-row billing-chip-row--dense">
@@ -550,131 +577,13 @@ export function DesktopBillingPanel({
           </div>
         </section>
 
-        {/* One-time top-ups + recurring boosts. v0.1.9 trimmed to the
-            SKUs the operator actually created in Stripe. v0.1.10 hides
-            individual cards (and their section headers) whose
-            STRIPE_PRICE_* env var isn't set on the server, so we
-            never offer a boost that would 500 with "No Stripe price
-            configured." If both lists are empty we drop the entire
-            section + the annual-savings notice that hangs off it. */}
-        {(visibleOneTimeBoosts.length > 0 ||
-          visibleRecurringBoosts.length > 0) && (
-          <section className="billing-panel billing-panel--dense">
-            {visibleOneTimeBoosts.length > 0 && (
-              <>
-                <div className="billing-section-head">
-                  <div className="billing-kicker">Boost your account</div>
-                  <span className="billing-note billing-note--inline">
-                    One-time top-ups for power users.
-                  </span>
-                </div>
-                <div className="boost-row">
-                  {visibleOneTimeBoosts.map((boost) => (
-                    <div key={boost.key} className="boost-card">
-                      <div className="boost-card-head">
-                        <div className="boost-card-name">{boost.name}</div>
-                        <div className="boost-card-price">{boost.price}</div>
-                      </div>
-                      <div className="boost-card-meta">{boost.detail}</div>
-                      <button
-                        type="button"
-                        className="upgrade-cta-btn boost-card-btn"
-                        onClick={() => void handleBoostClick(boost)}
-                        disabled={busy === `add-${boost.key}`}
-                        title={
-                          !billing.stripeConfigured
-                            ? "Billing isn't configured on this server yet."
-                            : undefined
-                        }
-                      >
-                        {busy === `add-${boost.key}` ? "..." : "Buy"}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {visibleRecurringBoosts.length > 0 && (
-              <>
-                <div
-                  className={
-                    visibleOneTimeBoosts.length > 0
-                      ? "billing-section-head billing-section-head--spaced"
-                      : "billing-section-head"
-                  }
-                >
-                  <div className="billing-kicker">Recurring add-on packs</div>
-                  <span className="billing-note billing-note--inline">
-                    Stack on any plan, monthly.
-                  </span>
-                </div>
-                <div className="boost-row boost-row--four">
-                  {visibleRecurringBoosts.map((boost) => {
-                    const alreadyActive = activeAddonKeys.has(boost.key);
-                    return (
-                      <div
-                        key={boost.key}
-                        className={`boost-card boost-card--recurring${boost.featured ? " boost-card--featured" : ""}`}
-                      >
-                        <div className="boost-card-head">
-                          <div className="boost-card-name">
-                            {boost.name}
-                            {boost.featured && (
-                              <span className="billing-badge boost-card-badge">Best value</span>
-                            )}
-                          </div>
-                          <div className="boost-card-price">{boost.price}</div>
-                        </div>
-                        <div className="boost-card-meta">{boost.detail}</div>
-                        <button
-                          type="button"
-                          className="upgrade-cta-btn boost-card-btn"
-                          onClick={() => void handleBoostClick(boost)}
-                          disabled={
-                            !hasPaidPlan ||
-                            alreadyActive ||
-                            busy === `add-${boost.key}`
-                          }
-                          title={
-                            !hasPaidPlan
-                              ? "Choose a paid plan before adding recurring boosts"
-                              : alreadyActive
-                                ? "Already active on your subscription"
-                                : undefined
-                          }
-                        >
-                          {alreadyActive
-                            ? "Active"
-                            : busy === `add-${boost.key}`
-                              ? "..."
-                              : "Add"}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            <div className="boost-annual-notice">
-              <div>
-                <div className="boost-annual-title">Save 20% with annual</div>
-                <div className="boost-annual-copy">
-                  Switch any subscription to yearly billing and we knock 20% off the
-                  monthly price — applies to plans and recurring add-on packs above.
-                </div>
-              </div>
-              <button
-                type="button"
-                className="billing-secondary-btn"
-                onClick={() => setCheckoutCycle("yearly")}
-              >
-                Show yearly pricing
-              </button>
-            </div>
-          </section>
-        )}
+        {/* v0.1.12 \u2014 The standalone "Boost your account" + "Recurring
+            add-on packs" sections were removed here. They duplicated the
+            inline ADDONS micro-grid in the plan hero (above) and the
+            Credits card (also above) wholesale: same Buy/Add buttons,
+            same Stripe wiring, just rendered in two places. The hero
+            addons grid handles all add/remove flow now; flexible Credits
+            cover one-time top-up needs. */}
 
         {/* Bottom: invoices, compact — last 3 then expand */}
         <section className="billing-panel billing-panel--dense">

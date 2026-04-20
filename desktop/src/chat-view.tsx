@@ -2940,7 +2940,7 @@ export function DesktopChatView({
         <div className="chat-topbar">
           <div className="chat-title-wrap">
             <div className="chat-title-kicker">
-              {isCopilot ? "PC copilot" : "Current thread"}
+              {isCopilot ? "Toolbar mode" : "Current thread"}
             </div>
             <div className={`chat-title${titleFlashId === activeThreadId ? " is-updating" : ""}`}>
               {activeThread?.title ?? "New chat"}
@@ -2973,8 +2973,9 @@ export function DesktopChatView({
               type="button"
               className={`chat-copilot-btn${isCopilot ? " active" : ""}`}
               onClick={() => void toggleCopilot()}
+              title="Pin sansxel to a screen edge as a toolbar (separate from the floating Capsule Rail copilot)"
             >
-              {isCopilot ? "Exit copilot" : "PC copilot"}
+              {isCopilot ? "Exit toolbar" : "Toolbar mode"}
             </button>
             <ModelPicker tier={tier} onChange={setTier} allowedTiers={allowedTiers} />
           </div>

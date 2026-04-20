@@ -208,6 +208,32 @@ export function WebChat({
     abortRef.current = ac;
 
     try {
+      // v0.1.12 \u2014 send the user's local time + IANA timezone with
+      // every web chat request so the model can answer time-of-day
+      // questions accurately. Without this it claimed "I don't have
+      // access to your system clock" and used UTC, which produced
+      // "good afternoon" replies at 8 PM local time.
+      let clientTimezone = "UTC";
+      let clientTimeLabel = new Date().toISOString();
+      try {
+        clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      } catch {
+        // Old browser \u2014 fall back to UTC.
+      }
+      try {
+        clientTimeLabel = new Intl.DateTimeFormat(undefined, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          timeZoneName: "short",
+        }).format(new Date());
+      } catch {
+        // ignore \u2014 ISO fallback
+      }
+
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -215,6 +241,9 @@ export function WebChat({
           messages: next,
           tier,
           input_mode: fromVoice ? "voice" : "text",
+          client_time_iso: new Date().toISOString(),
+          client_timezone: clientTimezone,
+          client_time_label: clientTimeLabel,
         }),
         signal: ac.signal,
       });

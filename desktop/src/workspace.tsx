@@ -191,17 +191,28 @@ function NavRail({
 
   return (
     <aside className="ws-nav">
+      {/* v0.1.12 \u2014 dedicated, prominent launcher for the floating
+          Capsule Rail. Was previously a tiny status-style row at the
+          top of the nav; users couldn't tell it was clickable, much
+          less that it summoned the rail. Now a real CTA with a
+          violet accent border, capsule icon, and short description
+          underneath so people know what they're getting. */}
       <button
         type="button"
-        className="ws-nav-status ws-nav-status--button"
-        title="Open floating copilot"
+        className="ws-nav-copilot-cta"
+        title="Open the floating Capsule Rail copilot"
         onClick={() => {
           void invoke("show_copilot").catch(() => {});
           void invoke("position_copilot_window", { edge: "right", open: false }).catch(() => {});
         }}
       >
-        <span className="ws-nav-status-dot" />
-        <span className="ws-nav-label ws-nav-status-label">Open copilot</span>
+        <span className="ws-nav-copilot-cta-icon" aria-hidden>
+          <span className="ws-nav-copilot-cta-pulse" />
+        </span>
+        <span className="ws-nav-copilot-cta-text">
+          <span className="ws-nav-copilot-cta-title">Capsule Rail</span>
+          <span className="ws-nav-copilot-cta-sub">Floating copilot</span>
+        </span>
       </button>
 
       <div className="ws-nav-items">

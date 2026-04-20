@@ -498,6 +498,107 @@
 /* ── Nav rail (always 220px wide) ────────────────────────────────
    v0.1.7: dropped the hover-to-expand. Always expanded so users
    can read labels without discovering the hover trick. */
+/* ── v0.1.12 \u2014 Capsule Rail launcher CTA in the nav rail ────────────
+   Replaces the old tiny ws-nav-status row that was easy to miss.
+   This is now a real CTA: violet-accented card, pulsing dot, name +
+   subtitle. Sits at the top of the nav so the floating copilot has
+   a discoverable entry point. */
+.ws-nav-copilot-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 12px 8px 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.18), transparent 60%),
+    rgba(167, 139, 250, 0.06);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: rgba(245, 245, 250, 0.96);
+  transition:
+    transform 160ms ease,
+    border-color 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.ws-nav-copilot-cta:hover {
+  border-color: rgba(196, 168, 252, 0.55);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.26), transparent 60%),
+    rgba(167, 139, 250, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(167, 139, 250, 0.18);
+}
+
+.ws-nav-copilot-cta:active {
+  transform: translateY(0);
+}
+
+.ws-nav-copilot-cta-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 168, 252, 0.55);
+  background: rgba(167, 139, 250, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-nav-copilot-cta-pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #c4b5fd;
+  box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.5);
+  animation: ws-nav-copilot-pulse 2200ms ease-in-out infinite;
+}
+
+@keyframes ws-nav-copilot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(167, 139, 250, 0);
+    opacity: 0.85;
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(167, 139, 250, 0.18);
+    opacity: 1;
+  }
+}
+
+.ws-nav-copilot-cta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ws-nav-copilot-cta-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: #fafafa;
+}
+
+.ws-nav-copilot-cta-sub {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(196, 168, 252, 0.78);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-nav-copilot-cta-pulse {
+    animation: none;
+  }
+}
+
 .ws-nav {
   width: 220px;
   display: flex;

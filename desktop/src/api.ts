@@ -612,6 +612,44 @@ export type StreamMeta = {
   persona_delay_multiplier: number;
 };
 
+// v0.1.12 \u2014 Captures the user's local time + IANA timezone + a
+// pre-formatted "Saturday, April 19, 2026 at 8:05 PM EDT"-style label.
+// Sent with every chat request so the model can answer "what time is
+// it for me" / "good morning vs evening" without claiming it can't see
+// the clock. Falls back gracefully on hosts that lack Intl support.
+function buildClientTimePayload(): {
+  client_time_iso: string;
+  client_timezone: string;
+  client_time_label: string;
+} {
+  const now = new Date();
+  let timezone = "UTC";
+  let label = now.toISOString();
+  try {
+    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    // Old browser \u2014 leave timezone as UTC.
+  }
+  try {
+    label = new Intl.DateTimeFormat(undefined, {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
+    }).format(now);
+  } catch {
+    // Old browser \u2014 leave label as ISO.
+  }
+  return {
+    client_time_iso: now.toISOString(),
+    client_timezone: timezone,
+    client_time_label: label,
+  };
+}
+
 // v0.1.8 — When tools are enabled the stream emits typed chunks the
 // caller can dispatch on. Plain-text callers (toolsEnabled=false or
 // omitted with the legacy generator below) keep getting strings.
@@ -653,6 +691,7 @@ export async function* streamChat(
       agent_mode: options.agentMode ?? false,
       source_ids: options.sourceIds ?? [],
       tools_enabled: toolsEnabled,
+      ...buildClientTimePayload(),
     }),
     signal: options.signal,
   });
@@ -730,6 +769,7 @@ export async function* streamChatWithTools(
       agent_mode: options.agentMode ?? false,
       source_ids: options.sourceIds ?? [],
       tools_enabled: true,
+      ...buildClientTimePayload(),
     }),
     signal: options.signal,
   });

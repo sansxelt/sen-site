@@ -237,6 +237,19 @@
           color 80ms ease-out;
       }
 
+      /* v0.1.12 \u2014 the hint switches to a brighter cyan tone the moment
+         the app reports ready, so the user sees at a glance that pressing
+         ENTER will instantly hand off (no more guessing if the app is
+         loaded yet). */
+      .skip-hint.ready {
+        color: rgba(165, 243, 252, 0.92);
+        animation: hint-ready-pulse 1800ms ease-in-out infinite;
+      }
+      @keyframes hint-ready-pulse {
+        0%, 100% { text-shadow: 0 0 0 rgba(165, 243, 252, 0); }
+        50%      { text-shadow: 0 0 12px rgba(165, 243, 252, 0.4); }
+      }
+
       @keyframes hint-fade-in {
         to {
           opacity: 1;
@@ -476,12 +489,20 @@
           { label: "Connecting sansxel-1", weight: 1.4 },
           { label: "Preparing your space", weight: 0.8 },
         ];
-        // Keep the splash on-screen long enough to feel intentional,
-        // but avoid letting the bar sit at 100% while the app is
-        // still booting underneath.
-        var MIN_SPLASH_MS = 4600;
+        // v0.1.12 splash overhaul — patient by default.
+        // - Loader bar fills as a visual indicator of real boot progress
+        //   but NEVER triggers handover on its own.
+        // - The minigame stays interactive indefinitely so the user
+        //   can play as long as they want.
+        // - Handover ONLY happens when the user presses ENTER, AND only
+        //   after the main app has reported ready (so we never hand off
+        //   into a black gap).
+        // - Hard safety cap at 5 minutes so a true crash can't strand
+        //   the user staring at a splash forever (defensive, not normal).
+        var MIN_SPLASH_MS = 2800;     // visual fill duration for the loader bar
         var TICK_MS = 40;
-        var PRE_HANDOFF_CAP = 0.94;
+        var PRE_HANDOFF_CAP = 0.94;   // bar caps here until main reports ready
+        var SAFETY_CAP_MS = 5 * 60 * 1000;
         var splashStartedAt = Date.now();
 
         // Cumulative progress thresholds where the label swaps
@@ -541,10 +562,6 @@
           }
         }
 
-        function canAutoHandover() {
-          return mainReady && Date.now() - splashStartedAt >= MIN_SPLASH_MS;
-        }
-
         function finishBootSequence() {
           if (handedOver) return;
           handedOver = true;
@@ -555,16 +572,22 @@
           handover();
         }
 
+        // v0.1.12 — ENTER is the ONLY way to advance from splash.
+        // - If main is ready, hand over immediately.
+        // - If main isn't ready yet, mark continueRequested + show
+        //   "Waiting for app..." so the user knows we'll go the
+        //   moment it's ready. No need to press ENTER again.
         function requestContinue() {
           continueRequested = true;
-          if (canAutoHandover()) {
+          if (mainReady) {
             finishBootSequence();
             return;
           }
-          progress = Math.max(progress, PRE_HANDOFF_CAP * 0.9);
-          paint();
           if (MG.metaLabel) {
-            MG.metaLabel.textContent = mainReady ? "Finishing launch..." : "Waiting for app...";
+            MG.metaLabel.textContent = "Waiting for app\u2026";
+          }
+          if (hintEl) {
+            hintEl.textContent = "App still booting \u2014 we'll continue the moment it's ready.";
           }
         }
 
@@ -576,39 +599,58 @@
           }, 110);
         }
 
+        // v0.1.12 \u2014 boost is now PURELY visual. Pressing Space nudges
+        // the loader bar but never auto-advances the splash. The user
+        // controls when to leave (ENTER).
         function boost() {
           var now = Date.now();
-          // Refill spam energy based on time since last press
           if (lastBoostAt) {
             spamLoad = Math.max(0, spamLoad - (now - lastBoostAt) * REFILL_PER_MS);
           }
           lastBoostAt = now;
 
-          // Boost amount scales with available headroom (1 - spamLoad)
           var headroom = 1 - spamLoad;
           var amount = BOOST_MIN + (BOOST_MAX - BOOST_MIN) * headroom;
-          var maxProgress = canAutoHandover() ? 1 : PRE_HANDOFF_CAP;
+          // Bar caps at PRE_HANDOFF_CAP until the app reports ready,
+          // at which point it can finish to 100%. Either way: visual
+          // feedback only, no handover.
+          var maxProgress = mainReady ? 1 : PRE_HANDOFF_CAP;
           progress = Math.min(maxProgress, progress + amount);
 
-          // Consume some energy for this press
           spamLoad = Math.min(1, spamLoad + SPAM_DECAY_PER_PRESS);
 
           paint();
           flashHint();
-          if (canAutoHandover()) finishBootSequence();
         }
 
-        // Splash design (v0.1.5+):
-        //   - The bar fills smoothly over ~TOTAL_MS so the splash
-        //     LOOKS like progress is happening.
+        // v0.1.12 splash flow:
+        //   - Loader bar fills smoothly to PRE_HANDOFF_CAP over MIN_SPLASH_MS
+        //     as a visual indicator that boot is in progress.
         //   - In parallel we poll Rust for is_main_ready every 80ms.
-        //   - The MOMENT main signals ready, we slam the bar to 100%
-        //     and hand over IMMEDIATELY — no waiting for the bar.
-        //   - If the bar fills first, we hold and keep polling until
-        //     main is ready (capped at ~10s so a bug can't strand us).
-        // This guarantees: when the splash fades, the app is already
-        // up and visible. No black gap. No waiting on a fixed timer.
-        var FORCE_HANDOVER_AT = splashStartedAt + MIN_SPLASH_MS + 12000;
+        //   - The MOMENT main signals ready, the bar releases to 100%,
+        //     the hint switches to "READY \u00b7 Press ENTER to continue",
+        //     and IF the user has already pressed ENTER (continueRequested)
+        //     we hand over immediately. Otherwise we wait \u2014 the user
+        //     controls when to leave so they can keep playing the minigame.
+        //   - Hard SAFETY_CAP_MS (5 min) prevents a true crash from
+        //     stranding the user staring at a splash forever.
+        var FORCE_HANDOVER_AT = splashStartedAt + SAFETY_CAP_MS;
+
+        function refreshHintForReady() {
+          if (!hintEl) return;
+          if (mainReady) {
+            hintEl.innerHTML =
+              '<span class="skip-key">enter</span> ready when you are \u2014 keep playing or continue';
+            hintEl.classList.add("ready");
+          } else {
+            hintEl.innerHTML =
+              '<span class="skip-key">space</span> play' +
+              ' <span class="skip-divider">\u00b7</span> ' +
+              '<span class="skip-key">enter</span> continue (booting\u2026)';
+            hintEl.classList.remove("ready");
+          }
+        }
+        refreshHintForReady();
 
         var ticker = setInterval(function () {
           if (handedOver) {
@@ -616,13 +658,13 @@
             return;
           }
           var elapsed = Date.now() - splashStartedAt;
+          var cap = mainReady ? 1 : PRE_HANDOFF_CAP;
           var target = Math.min(
-            PRE_HANDOFF_CAP,
-            (elapsed / MIN_SPLASH_MS) * PRE_HANDOFF_CAP
+            cap,
+            (elapsed / MIN_SPLASH_MS) * cap
           );
-          progress = Math.min(PRE_HANDOFF_CAP, Math.max(progress, target));
+          progress = Math.min(cap, Math.max(progress, target));
           paint();
-          if (canAutoHandover()) finishBootSequence();
         }, TICK_MS);
 
         var readyPoll = setInterval(function () {
@@ -632,25 +674,39 @@
           }
           var readyRequest = tauriInvoke("is_main_ready");
           if (!readyRequest || typeof readyRequest.then !== "function") {
-            finishBootSequence();
+            // Non-Tauri host (dev preview): mark ready so ENTER works.
+            if (!mainReady) {
+              mainReady = true;
+              refreshHintForReady();
+              if (continueRequested) finishBootSequence();
+            }
             return;
           }
           readyRequest.then(function (ready) {
-            if (ready === true) {
+            if (ready === true && !mainReady) {
               mainReady = true;
-              if (continueRequested && MG.metaLabel) {
-                MG.metaLabel.textContent = "Finishing launch...";
+              refreshHintForReady();
+              if (MG.metaLabel) {
+                MG.metaLabel.textContent = continueRequested
+                  ? "Finishing launch\u2026"
+                  : "Mini\u2011hop \u00b7 ready when you are";
               }
-              if (canAutoHandover()) finishBootSequence();
+              if (continueRequested) finishBootSequence();
               return;
             }
-            // Hard cap: if main never reports ready, hand over anyway
+            // Safety net: if main truly never reports ready, eventually
+            // bail so the user isn't trapped. 5 min is generous; real
+            // boot is sub-second.
             if (Date.now() > FORCE_HANDOVER_AT) {
               finishBootSequence();
             }
           }).catch(function () {
-            // No Tauri / dev preview — fire immediately
-            finishBootSequence();
+            // tauriInvoke threw \u2014 dev preview / no Tauri host.
+            if (!mainReady) {
+              mainReady = true;
+              refreshHintForReady();
+              if (continueRequested) finishBootSequence();
+            }
           });
         }, 80);
 
