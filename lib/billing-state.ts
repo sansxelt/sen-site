@@ -135,18 +135,27 @@ export async function getBillingState(email: string): Promise<BillingState> {
     }
   }
 
-  // Recent invoices (up to 6).
+  // Recent invoices (up to 6 paid).
+  // v0.1.13 \u2014 filter to status === "paid" only. The previous version
+  // listed every invoice including draft / open / uncollectible / void,
+  // which surfaced a wall of "$X.XX \u00b7 void" rows for failed-to-finalize
+  // test invoices. Users (rightly) read this as "you're showing me
+  // charges that didn't go through." Only paid ones are real receipts.
+  // Pull a wider page (24) since we're filtering, then cap at 6 paid.
   try {
-    const invoices = await stripe.invoices.list({ customer: customer.id, limit: 6 });
-    result.invoices = invoices.data.map((invoice) => ({
-      amountDue: invoice.amount_paid || invoice.amount_due,
-      currency:  invoice.currency,
-      date:      new Date((invoice.created ?? 0) * 1000).toISOString(),
-      hostedUrl: invoice.hosted_invoice_url ?? null,
-      number:    invoice.number ?? null,
-      pdfUrl:    invoice.invoice_pdf ?? null,
-      status:    invoice.status,
-    }));
+    const invoices = await stripe.invoices.list({ customer: customer.id, limit: 24 });
+    result.invoices = invoices.data
+      .filter((invoice) => invoice.status === "paid")
+      .slice(0, 6)
+      .map((invoice) => ({
+        amountDue: invoice.amount_paid || invoice.amount_due,
+        currency:  invoice.currency,
+        date:      new Date((invoice.created ?? 0) * 1000).toISOString(),
+        hostedUrl: invoice.hosted_invoice_url ?? null,
+        number:    invoice.number ?? null,
+        pdfUrl:    invoice.invoice_pdf ?? null,
+        status:    invoice.status,
+      }));
   } catch {
     // leave empty
   }
