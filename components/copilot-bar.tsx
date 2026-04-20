@@ -165,15 +165,22 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
           }
         }
         // Stream done — if the model emitted [go:/path], navigate.
+        // v0.1.13 \u2014 the copilot used to auto-close itself after
+        // navigating ("setOpen(false)"), but that punished the user
+        // for using a feature that's literally about chaining
+        // "where do I go next" questions. Now it stays open across
+        // route changes (both marketing + /account routes); the
+        // CopilotBar lives in the root layout so React preserves the
+        // open state through Next.js navigation. User closes it
+        // explicitly via the X / Esc / Ctrl+J.
         const { target } = stripGoMarker(assistant);
         if (target) {
-          // Small beat so the user sees the "Heading to…" text first.
+          // Small beat so the user sees the "Heading to\u2026" text first.
           setTimeout(() => {
             try {
               router.push(target);
-              setOpen(false);
             } catch {
-              // Bad path — silently ignore; the answer is still shown.
+              // Bad path \u2014 silently ignore; the answer is still shown.
             }
           }, 350);
         }
