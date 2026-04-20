@@ -392,6 +392,18 @@ a {
   text-decoration: none;
 }
 
+/* v0.1.13 — Global white-on-white safeguard.
+   Any element with a white (or near-white) background gets dark
+   default text. :where() means specificity is 0, so explicit
+   text-* utilities (text-purple-300, text-emerald-400, etc.) still
+   win — this only fills the gap when no explicit text color is set
+   AND the parent's color is light (which the dark site default
+   triggers everywhere). Stops the recurring "white pill with
+   invisible text" bug we kept patching button-by-button. */
+:where(.bg-white, .bg-neutral-50, .bg-zinc-50, .bg-neutral-100) {
+  color: #0a0a0c;
+}
+
 .sansxel-subtle-link {
   color: rgba(229, 229, 229, 0.88);
   text-decoration-line: underline;
@@ -704,7 +716,13 @@ div[id] {
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* ── Reveal-on-scroll — fires once per element ───────────────────── */
+/* ── Reveal-on-scroll — fires once per element ─────────────────────
+   v0.1.13 — CSS-only safety fallback so the reveal-on-scroll JS
+   failing to fire CAN'T strand content invisible. After 2.5s without
+   .is-revealed being applied, the animation force-reveals the
+   element. When .is-revealed IS applied (the happy path), `animation:
+   none` cancels the fallback and the class-driven transition takes
+   over normally. */
 [data-reveal] {
   opacity: 0;
   transform: translateY(14px);
@@ -712,10 +730,18 @@ div[id] {
     opacity 360ms var(--ease),
     transform 360ms var(--ease);
   will-change: opacity, transform;
+  animation: data-reveal-safety 0s linear 2500ms forwards;
+}
+@keyframes data-reveal-safety {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 [data-reveal].is-revealed {
   opacity: 1;
   transform: translateY(0);
+  animation: none;
 }
 
 /* ── Sticky translucent nav (the existing header has bg-neutral-950
