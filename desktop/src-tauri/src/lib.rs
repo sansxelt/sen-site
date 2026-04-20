@@ -461,9 +461,17 @@ fn set_window_mode(app: tauri::AppHandle, mode: String) -> Result<(), String> {
 // Splash window calls this when its boot sequence finishes.
 //
 // Order matters: show the main window FIRST (it appears under the
-// always-on-top splash, so the user doesn't see it yet), THEN close
-// the splash. The result is a zero-frame handover — the splash
+// always-on-top splash, so the user doesn't see it yet), THEN hide
+// the splash. The result is a zero-frame handover \u2014 the splash
 // vanishes and the main is already there underneath.
+//
+// v0.1.13 fix: HIDE the splash instead of CLOSING it. Closing
+// destroys the webview, so revisit_splash had to recreate a brand
+// new one with a fresh WebviewWindowBuilder \u2014 which doesn't carry
+// the original background_color from tauri.conf.json, so users hit
+// ESC\u00d7\u00d73 and saw a white screen while the new HTML loaded.
+// Hiding keeps the original webview + its dark bg + its loaded HTML
+// alive, so revisit is instant and visually correct.
 #[tauri::command]
 fn boot_complete(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(main) = app.get_webview_window("main") {
@@ -471,7 +479,7 @@ fn boot_complete(app: tauri::AppHandle) -> Result<(), String> {
         let _ = main.set_focus();
     }
     if let Some(splash) = app.get_webview_window("splash") {
-        let _ = splash.close();
+        let _ = splash.hide();
     }
     Ok(())
 }

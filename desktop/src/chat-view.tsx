@@ -2641,6 +2641,39 @@ export function DesktopChatView({
     }, 0);
   }, []);
 
+  // v0.1.13 \u2014 type-anywhere-to-focus: when the user is on the chat
+  // surface and presses "/" or any printable character, focus the
+  // composer so they don't have to click it first. Skip when an input
+  // / textarea / contentEditable is already focused (so typing inside
+  // the search bar / addon modals / etc. isn't hijacked). Modifier
+  // key presses (Ctrl/Cmd/Alt + X) skip too \u2014 those are shortcuts.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) {
+          return;
+        }
+      }
+      // The "/" hotkey is the explicit focus shortcut; we also accept
+      // any single printable character so just typing focuses the
+      // composer (the keystroke falls through and lands in the input).
+      const isSlash = event.key === "/";
+      const isPrintable = event.key.length === 1;
+      if (!isSlash && !isPrintable) return;
+      if (composerInputRef.current && document.activeElement !== composerInputRef.current) {
+        // For "/" we swallow the keystroke; for printable chars we
+        // let it through so the typed letter actually appears.
+        if (isSlash) event.preventDefault();
+        composerInputRef.current.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const openLauncher = useCallback(
     (
       root: LauncherRootId = composerContext.suggestedRoot,

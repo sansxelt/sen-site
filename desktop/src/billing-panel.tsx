@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { loadStripe, type Stripe as StripeJs } from "@stripe/stripe-js";
 import {
   Elements,
@@ -127,6 +128,12 @@ export function DesktopBillingPanel({
   const personalPlans = billing.plans.filter(
     (plan) => plan.key === "free" || plan.key === "apprentice" || plan.key === "studio" || plan.key === "pro",
   );
+  // v0.1.13 \u2014 Teams + Enterprise are not buyable inline; they
+  // redirect to the website (Stripe per-seat checkout for Teams,
+  // /contact for Enterprise). Pulled out of personalPlans so the
+  // grid doesn't try to render them as regular Switch-to-Plan cards.
+  const teamsPlan = billing.plans.find((plan) => plan.key === "teams");
+  const enterprisePlan = billing.plans.find((plan) => plan.key === "enterprise");
   const activeAddonKeys = new Set(
     billing.state.activeAddons.map(({ addon }) => addon.key),
   );
@@ -316,7 +323,7 @@ export function DesktopBillingPanel({
                   if (isComped) {
                     return (
                       <span className="billing-badge billing-badge--status">
-                        {"Comped \u00b7 no renewal"}
+                        {"Active \u00b7 free access"}
                       </span>
                     );
                   }
@@ -419,8 +426,8 @@ export function DesktopBillingPanel({
           <div className="billing-hero-side">
             <div className="billing-actions billing-actions--column">
               {isComped ? (
-                <span className="billing-comped-pill" title="Comped tier — no payment method on file">
-                  Comped · no card needed
+                <span className="billing-comped-pill" title="Free access \u2014 plan is active without a payment method on file. Common for early supporters, founders, and team members.">
+                  Active · free access
                 </span>
               ) : (
                 <>
@@ -545,6 +552,42 @@ export function DesktopBillingPanel({
               );
             })}
           </div>
+
+          {/* v0.1.13 \u2014 Teams + Enterprise CTAs. Both redirect to the
+              website (Teams = per-seat Stripe checkout on /pricing#teams,
+              Enterprise = /contact for sales). The desktop billing panel
+              doesn't try to handle per-seat or custom-contract flows
+              inline because those need a real form / sales-team loop. */}
+          {(teamsPlan || enterprisePlan) && (
+            <div className="billing-team-row" style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {teamsPlan && (
+                <button
+                  type="button"
+                  className="billing-team-card"
+                  onClick={() => void openUrl("https://sansxel.ai/pricing#teams").catch(() => {})}
+                >
+                  <div className="billing-team-card-name">Teams</div>
+                  <div className="billing-team-card-copy">
+                    Per-seat plans for groups. Opens checkout in your browser.
+                  </div>
+                  <span className="billing-team-card-cta">Set up Teams \u2192</span>
+                </button>
+              )}
+              {enterprisePlan && (
+                <button
+                  type="button"
+                  className="billing-team-card"
+                  onClick={() => void openUrl("https://sansxel.ai/contact?subject=Enterprise").catch(() => {})}
+                >
+                  <div className="billing-team-card-name">Enterprise</div>
+                  <div className="billing-team-card-copy">
+                    Custom contracts, dedicated capacity, SSO. Opens our contact form.
+                  </div>
+                  <span className="billing-team-card-cta">Talk to us \u2192</span>
+                </button>
+              )}
+            </div>
+          )}
         </section>
 
         {/* v0.1.9 — Credits card. Shows balance and opens the buy modal.

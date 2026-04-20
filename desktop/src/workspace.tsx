@@ -30,10 +30,12 @@ import {
   type WeeklyUsageSummary,
   type ApiKeySummary,
 } from "./api";
+import packageJson from "../package.json";
 
-// Single source of truth for the version string shown in the
-// account card. Bumped each release alongside tauri.conf.json.
-const APP_VERSION = "0.1.10";
+// v0.1.13 \u2014 read version from package.json instead of hardcoding,
+// so the nav-rail account-card label can never drift behind the
+// actual installed build (was stuck at "0.1.10" for several releases).
+const APP_VERSION = packageJson.version;
 import { usePreferences } from "./preferences";
 import type { DesktopSession } from "./auth";
 import { parseSections } from "./sections";

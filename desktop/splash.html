@@ -481,33 +481,22 @@
         <div class="brand-spotlight"></div>
       </div>
 
-      <!-- v0.1.13 \u2014 Bottom corner footer with status (left) +
-           keyboard shortcuts (right). ALWAYS visible regardless of
-           minigame state so users can see what to do. The old
-           centered .skip-hint was removed in favor of these corners. -->
+      <!-- v0.1.13 \u2014 Clean bottom corners: status (boot step) on the
+           left, version on the right. Keyboard shortcuts moved to the
+           Settings > Keyboard shortcuts panel so users can discover
+           them once and the splash stays uncluttered. The id stubs for
+           shortcut-row-primary + skip-hint stay (display:none) so the
+           existing JS that toggles their state classes doesn't crash. -->
       <div class="footer">
         <div class="footer-status">
           <span class="footer-status-dot"></span>
           <span class="footer-status-label" id="status-label">Initializing sansxel core</span>
         </div>
-        <div class="footer-shortcuts">
-          <div class="footer-shortcut-row" id="shortcut-row-primary">
-            <kbd>space</kbd> play
-            <span style="margin: 0 4px; opacity: 0.4;">&middot;</span>
-            <kbd>enter</kbd> open app
-          </div>
-          <div class="footer-shortcut-row" style="opacity: 0.7;">
-            in app: <kbd>esc</kbd><kbd>esc</kbd><kbd>esc</kbd> to revisit
-          </div>
-          <div class="footer-build">v0.1.13</div>
-        </div>
+        <div class="footer-build">v0.1.13</div>
       </div>
 
-      <!-- v0.1.13 \u2014 the centered .skip-hint was replaced by the
-           bottom-right shortcuts in the footer above. Keeping the
-           id="skip-hint" stub so the existing JS that toggles
-           .ready / .flash classes on it still has a target without
-           crashing. Hidden visually. -->
+      <!-- Hidden stubs kept for legacy JS callers. -->
+      <div id="shortcut-row-primary" style="display:none" aria-hidden="true"></div>
       <div class="skip-hint" id="skip-hint" style="display:none" aria-hidden="true"></div>
 
       <!-- v0.1.6 — tiny one-key mini-game while the splash holds.

@@ -5253,6 +5253,52 @@ input[type="number"]::-webkit-inner-spin-button {
   border: 1px solid rgba(52, 211, 153, 0.36);
 }
 
+/* v0.1.13 \u2014 Teams + Enterprise CTA cards in the desktop BillingPanel.
+   Sit below the personal plans grid; both redirect to the website
+   (Stripe checkout for Teams, /contact for Enterprise) because per-seat
+   and custom contracts can't be handled inline. */
+.billing-team-card {
+  flex: 1 1 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.billing-team-card:hover {
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.35);
+  transform: translateY(-1px);
+}
+
+.billing-team-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.billing-team-card-copy {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(180, 180, 200, 0.7);
+}
+
+.billing-team-card-cta {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(196, 168, 252, 0.9);
+}
+
 /* ─────────────────────────────────────────────────────────────────────
    v0.1.4 — Sources view (RAG scaffold)
    ───────────────────────────────────────────────────────────────────── */
