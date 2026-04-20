@@ -27,10 +27,16 @@ body,
 /* ── Edge alignment ──────────────────────────────────────────────── */
 .fc--edge-right { justify-content: flex-end; align-items: stretch; }
 .fc--edge-left  { justify-content: flex-start; align-items: stretch; }
-.fc--edge-top    { align-items: flex-start; justify-content: stretch; flex-direction: column; }
+/* v0.1.15 \u2014 horizontal edges (top/bottom) now CENTER the rail bar
+   horizontally instead of stretching it. Was rendering offset to
+   the left because justify-content: stretch + flex-direction: column
+   stretched the bar full-width with no horizontal centering of the
+   icon cluster. align-items: center centers the bar's cross-axis
+   (horizontal in a column flex). */
+.fc--edge-top    { align-items: center; justify-content: flex-start; flex-direction: column; }
 /* v0.1.8 — bottom anchor mirrors top but flex-end so the capsule
    hugs the bottom edge instead of the top */
-.fc--edge-bottom { align-items: flex-end;   justify-content: stretch; flex-direction: column; }
+.fc--edge-bottom { align-items: center; justify-content: flex-end;   flex-direction: column; }
 
 /* v0.1.8 — drag-to-snap visual: dim slightly + grabbing cursor while
    the user is mid-drag so they know the snap is armed */
@@ -150,6 +156,9 @@ body,
 .fc--edge-bottom .fc-bar--icons {
   flex-direction: row;
   padding: 6px 8px;
+  /* v0.1.15 \u2014 reset the auto-margin from the base .fc-bar so
+     align-items: center on the outer container can position us. */
+  margin: 8px 0;
 }
 
 .fc-bar-icons {

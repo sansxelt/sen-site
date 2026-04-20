@@ -518,11 +518,40 @@ export function DesktopBillingPanel({
                     ))}
                   </ul>
                   <div className="billing-plan-actions">
+                    {/* v0.1.15 plan-action logic.
+                        - isCurrent  \u2192 disabled "Current plan"
+                        - free target on a paid plan \u2192 cancel CTA (real
+                          Stripe sub) or "Already on free" (comped)
+                        - paid target on a real Stripe sub \u2192 Switch
+                          (handlePlanChange does a Stripe sub modify)
+                        - paid target on comped or free \u2192 must check
+                          out (force them through Stripe). Comped users
+                          previously could "switch" between paid plans
+                          without paying because handlePlanChange just
+                          flipped the plan key in our DB \u2014 fixed by
+                          routing them through setCheckoutPlan instead. */}
                     {isCurrent ? (
                       <button type="button" className="billing-secondary-btn" disabled>
                         Current plan
                       </button>
-                    ) : hasPaidPlan ? (
+                    ) : plan.key === "free" ? (
+                      // Downgrading TO free
+                      hasPaidPlan && !isComped && billing.state.currentPeriodEnd ? (
+                        <button
+                          type="button"
+                          className="billing-secondary-btn"
+                          onClick={() => void handleCancel()}
+                          disabled={busy === "cancel"}
+                        >
+                          {busy === "cancel" ? "Cancelling\u2026" : "Cancel \u2192 Free"}
+                        </button>
+                      ) : (
+                        <button type="button" className="billing-secondary-btn" disabled>
+                          Already free
+                        </button>
+                      )
+                    ) : !isComped && billing.state.currentPeriodEnd ? (
+                      // Real Stripe subscriber \u2014 in-place plan modify
                       <button
                         type="button"
                         className="upgrade-cta-btn"
@@ -530,21 +559,22 @@ export function DesktopBillingPanel({
                         disabled={busy === `plan-${plan.key}-${checkoutCycle}`}
                       >
                         {busy === `plan-${plan.key}-${checkoutCycle}`
-                          ? "Updating..."
+                          ? "Updating\u2026"
                           : `Switch to ${plan.name}`}
                       </button>
-                    ) : plan.key === "free" ? (
-                      <button type="button" className="billing-secondary-btn" disabled>
-                        Current plan
-                      </button>
                     ) : (
+                      // Free OR comped user picking a paid plan \u2192
+                      // FORCE checkout. Comped users get a "free access"
+                      // hint so they understand what they're losing /
+                      // gaining by converting to a real subscription.
                       <button
                         type="button"
                         className="upgrade-cta-btn"
                         onClick={() => setCheckoutPlan(plan)}
                         disabled={!billing.stripeConfigured || !billing.publishableKey}
+                        title={isComped ? "Convert your free access into a real subscription" : undefined}
                       >
-                        Start {plan.name}
+                        {isComped ? `Subscribe to ${plan.name}` : `Start ${plan.name}`}
                       </button>
                     )}
                   </div>
@@ -558,33 +588,71 @@ export function DesktopBillingPanel({
               Enterprise = /contact for sales). The desktop billing panel
               doesn't try to handle per-seat or custom-contract flows
               inline because those need a real form / sales-team loop. */}
+          {/* v0.1.15 \u2014 Teams + Enterprise cards rebuilt to match the
+              regular plan-card design (header / price tier / copy /
+              feature bullets / CTA) so they read as real upgrade
+              options instead of small text rectangles. Both still
+              open in browser since per-seat / custom contracts can't
+              be handled inline. */}
           {(teamsPlan || enterprisePlan) && (
-            <div className="billing-team-row" style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div className="billing-plan-list billing-plan-list--horizontal" style={{ marginTop: 16 }}>
               {teamsPlan && (
-                <button
-                  type="button"
-                  className="billing-team-card"
-                  onClick={() => void openUrl("https://sansxel.ai/pricing#teams").catch(() => {})}
-                >
-                  <div className="billing-team-card-name">Teams</div>
-                  <div className="billing-team-card-copy">
-                    Per-seat plans for groups. Opens checkout in your browser.
+                <div className="billing-plan-card billing-plan-card--external">
+                  <div className="billing-plan-head">
+                    <div>
+                      <div className="billing-plan-title">Teams</div>
+                      <div className="billing-plan-price">From $24 / seat</div>
+                    </div>
+                    <div className="billing-plan-note">For groups</div>
                   </div>
-                  <span className="billing-team-card-cta">Set up Teams \u2192</span>
-                </button>
+                  <p className="billing-plan-copy">
+                    Per-seat plans with shared usage pool, central billing, and admin controls.
+                  </p>
+                  <ul className="billing-point-list">
+                    <li>Shared usage across the team</li>
+                    <li>Central billing + invoicing</li>
+                    <li>Admin controls</li>
+                    <li>Volume discount at 5+ seats</li>
+                  </ul>
+                  <div className="billing-plan-actions">
+                    <button
+                      type="button"
+                      className="upgrade-cta-btn"
+                      onClick={() => void openUrl("https://sansxel.ai/pricing#teams").catch(() => {})}
+                    >
+                      Set up in browser →
+                    </button>
+                  </div>
+                </div>
               )}
               {enterprisePlan && (
-                <button
-                  type="button"
-                  className="billing-team-card"
-                  onClick={() => void openUrl("https://sansxel.ai/contact?subject=Enterprise").catch(() => {})}
-                >
-                  <div className="billing-team-card-name">Enterprise</div>
-                  <div className="billing-team-card-copy">
-                    Custom contracts, dedicated capacity, SSO. Opens our contact form.
+                <div className="billing-plan-card billing-plan-card--external">
+                  <div className="billing-plan-head">
+                    <div>
+                      <div className="billing-plan-title">Enterprise</div>
+                      <div className="billing-plan-price">Custom</div>
+                    </div>
+                    <div className="billing-plan-note">Custom terms</div>
                   </div>
-                  <span className="billing-team-card-cta">Talk to us \u2192</span>
-                </button>
+                  <p className="billing-plan-copy">
+                    Custom contracts, dedicated capacity, SSO, and security review for larger orgs.
+                  </p>
+                  <ul className="billing-point-list">
+                    <li>Custom contract + SLAs</li>
+                    <li>Dedicated capacity</li>
+                    <li>SSO + security review</li>
+                    <li>Direct support channel</li>
+                  </ul>
+                  <div className="billing-plan-actions">
+                    <button
+                      type="button"
+                      className="upgrade-cta-btn"
+                      onClick={() => void openUrl("https://sansxel.ai/contact?subject=Enterprise").catch(() => {})}
+                    >
+                      Talk to us →
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}

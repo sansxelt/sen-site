@@ -5304,6 +5304,21 @@ input[type="number"]::-webkit-inner-spin-button {
   color: rgba(196, 168, 252, 0.9);
 }
 
+/* v0.1.15 \u2014 External plan card (Teams / Enterprise). Same shape as
+   the regular billing-plan-card but with a softer dashed border so
+   users register them as "leaves the app" cards rather than inline
+   subscription targets. */
+.billing-plan-card--external {
+  border-style: dashed;
+  border-color: rgba(167, 139, 250, 0.3);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.08), transparent 60%),
+    rgba(255, 255, 255, 0.02);
+}
+.billing-plan-card--external:hover {
+  border-color: rgba(196, 168, 252, 0.5);
+}
+
 /* ─────────────────────────────────────────────────────────────────────
    v0.1.4 — Sources view (RAG scaffold)
    ───────────────────────────────────────────────────────────────────── */
