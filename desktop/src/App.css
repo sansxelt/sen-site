@@ -1003,6 +1003,25 @@
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
+.upd-banner-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(180, 180, 200, 0.62);
+}
+
+.upd-banner-hint kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  margin: 0 1px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 10px;
+  color: rgba(232, 224, 255, 0.94);
+}
+
 .upd-banner-actions {
   display: flex;
   align-items: center;
@@ -1972,15 +1991,18 @@
 }
 
 .chat-launcher-panel {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 12px);
-  /* Width is viewport-relative, NOT parent-relative. The trigger's
-     parent (.chat-launcher) can be narrow (~320px) inside the input
-     footer; min(100%, 980px) would resolve to 320px and collapse the
-     middle 1fr column to ~10px wide. */
+  /* v0.1.12 — switched from absolute (parent-relative) to fixed
+     (viewport-relative). The previous absolute + left:0 positioning
+     anchored the panel to the trigger; when the trigger sat anywhere
+     except the far left, the 980px panel ran off the right side of
+     the screen. Fixed positioning + viewport-clamped width + viewport-
+     anchored left guarantees the panel always fits regardless of
+     trigger location. Bottom clears the input bar. */
+  position: fixed;
+  left: max(16px, calc(50vw - 490px));
+  bottom: 96px;
   width: min(980px, calc(100vw - 32px));
-  min-width: 640px;
+  min-width: 0;
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr) 250px;
   border-radius: 22px;

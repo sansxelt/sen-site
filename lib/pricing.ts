@@ -7,10 +7,9 @@ export type PricingPlanKey =
   | "enterprise";
 
 export type BillingAddonKey =
-  // Existing recurring addons (v0.1.3).
-  | "memory_boost"
-  | "api_boost"
-  | "key_pack"
+  // v0.1.12 — memory_boost / api_boost / key_pack removed (no Stripe
+  // products were ever created for them; the buttons rendered as
+  // buyable but every click 500'd "no price configured").
   // v0.1.4 monetization — recurring add-on packs (monthly/yearly).
   // v0.1.9 dropped voice_pack + image_pack — those features are now
   // covered by the credit ledger (lib/credits.ts). Copilot Pro Pack
@@ -237,54 +236,10 @@ export const pricingPlans: PricingPlan[] = [
 ];
 
 export const billingAddons: BillingAddon[] = [
-  {
-    ctaLabel: "Add Memory Boost",
-    description:
-      "For people saving more screenshots, exports, files, and reference material inside Sansxel.",
-    key: "memory_boost",
-    monthlyLabel: "$8 / month",
-    monthlyValue: 8,
-    name: "Memory Boost",
-    note: "More saved context + library space",
-    points: [
-      "Extra storage for saved outputs and project files",
-      "More room for longer-lived research and context",
-      "Built for media-heavy AI workflows",
-    ],
-    yearlyLabel: "$80 / year",
-  },
-  {
-    ctaLabel: "Add API Boost",
-    description:
-      "For builders who need more request headroom when Sansxel is wired into real tools and workflows.",
-    key: "api_boost",
-    monthlyLabel: "$15 / month",
-    monthlyValue: 15,
-    name: "API Boost",
-    note: "Higher request volume",
-    points: [
-      "Extra monthly API allowance",
-      "Better burst room for automations and scripts",
-      "Made for heavier build workflows",
-    ],
-    yearlyLabel: "$150 / year",
-  },
-  {
-    ctaLabel: "Add Key Pack",
-    description:
-      "For people running multiple apps, staging environments, desktop installs, or shared integrations.",
-    key: "key_pack",
-    monthlyLabel: "$6 / month",
-    monthlyValue: 6,
-    name: "Key Pack",
-    note: "More key slots for real usage",
-    points: [
-      "Additional API key capacity",
-      "Cleaner separation for dev, prod, and personal use",
-      "More room for service accounts and experiments",
-    ],
-    yearlyLabel: "$60 / year",
-  },
+  // v0.1.12 — Memory Boost / API Boost / Key Pack removed: never had
+  // Stripe products created, so the buttons rendered as buyable but
+  // every click 500'd with "no price configured." Cleaner to delete
+  // the entries than to env-gate dead UI.
   // ──────────────────────────────────────────────────────────────────
   // v0.1.4 monetization — recurring add-on packs.
   // Stripe products/prices need to be created in the dashboard and

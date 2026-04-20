@@ -47,8 +47,9 @@ const integrations: Integration[] = [
     name: "GitHub",
     description:
       "Pull in repos, PRs, and issues for code analysis, review summaries, and project planning.",
-    status: "coming_soon",
-    cta: "Coming soon",
+    status: "available",
+    href: "/api/integrations/github/oauth",
+    cta: "Connect GitHub",
   },
   {
     name: "Linear",

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { exit } from "@tauri-apps/plugin-process";
 import "./App.css";
 import {
   beginSignInFlow,
@@ -169,11 +170,17 @@ function TitleBar() {
   }, []);
 
   // Ctrl+Q quits the app entirely (vs the X which just hides).
+  // v0.1.12 fix: getCurrentWindow().close() only destroys the main
+  // webview \u2014 the splash and floating-copilot windows kept the Tauri
+  // process alive, so re-launching after Ctrl+Q hit the single-instance
+  // guard but found no window to focus, leaving sansxel "open" with no
+  // UI until the user killed it via Task Manager. plugin-process.exit()
+  // terminates the entire process cleanly so the next launch starts fresh.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "q") {
         event.preventDefault();
-        void getCurrentWindow().close();
+        void exit(0);
       }
     };
     window.addEventListener("keydown", handler);
@@ -222,7 +229,7 @@ function TitleBar() {
           className="titlebar-btn titlebar-btn--close"
           onClick={close}
           aria-label="Close"
-          title="Close"
+          title="Hide window — sansxel keeps running. Ctrl+Q to fully quit (and to install pending updates)."
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M0 0 L10 10 M10 0 L0 10" stroke="currentColor" strokeWidth="1" />

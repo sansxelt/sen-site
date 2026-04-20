@@ -124,6 +124,10 @@ function UpdateConsentBanner({
             {notes.length > 80 ? notes.slice(0, 80) + "…" : notes}
           </span>
         )}
+        <span className="upd-banner-hint">
+          Closing with X just hides the window. To apply this update later,
+          press <kbd>Ctrl</kbd> + <kbd>Q</kbd> to fully quit, then relaunch sansxel.
+        </span>
       </div>
       <div className="upd-banner-actions">
         <button
@@ -138,7 +142,7 @@ function UpdateConsentBanner({
           className="upd-banner-x"
           onClick={onDismiss}
           aria-label="Dismiss"
-          title="Later (we'll ask again next launch)"
+          title="Later — Ctrl+Q + relaunch installs this update on next launch."
         >
           ×
         </button>

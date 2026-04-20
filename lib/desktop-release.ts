@@ -14,7 +14,7 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.11";
+export const desktopCurrentCodeVersion = "0.1.12";
 export const desktopLatestShippedVersion = "0.1.11";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
 export const desktopLatestShippedDateIso = "2026-04-19T20:30:00Z";
@@ -22,18 +22,49 @@ export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.11_x64-setup.ex
 export const desktopWindowsInstallerFilename = "sansxel_0.1.11_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.12";
+export const desktopNextVersion = "0.1.13";
 export const desktopNextVersionHighlights = [
+  "Splash patience rework: minigame stays interactive indefinitely while the app boots in the background; ENTER to advance only when you're ready.",
+  "AI knows your local time + timezone (currently it doesn't, leading to \"good afternoon\" replies at 8 PM).",
+  "Floating-copilot session refresh on focus so signing back in doesn't strand the rail with a stale token (\"copilot 401\").",
   "Final copilot UI design pass \u2014 deep, focused redesign of the Capsule Rail surfaces with the v0.1.11 \"alive\" engine fully visualized.",
   "Real MCP wiring through the copilot route: web_search + navigate + thread tools surface as live status dots on the rail.",
-  "Server-side sync for Live Mode consent (currently localStorage only) + Settings toggle to revoke / re-grant.",
-  "Silent NSIS installer (proper plugin wiring), Memory view full impl, multi-monitor Capsule polish.",
 ];
 
 export const desktopLatestUpdaterNotes =
   "v0.1.11 \u2014 the Capsule Rail comes alive. Activity-state engine (idle/listening/thinking/streaming/ready) drives every visual cue so the rail can't lie about what it's doing. Live Mode: opt-in, reads ONLY the title of your focused window (never contents) every 800ms and offers context-aware hints \u2014 Summarize page in browsers, Explain selection in editors, Critique design in Figma, Tighten this in docs, Draft a reply in Slack/Discord, etc. Continuity loop: every reply ends with 3 next-action chips so the rail is never a dead end. MCP status dots ready on the rail. Plus carried-over v0.1.10 work (typed dollar input on credits, env-var-gated boost cards) and 3 nasty bug fixes (sidebar title refresh loop, search input on divider, Smart Launcher middle column collapse).";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.12",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-19T21:30:00Z",
+    channel: "alpha",
+    summary:
+      "Patch release \u2014 Ctrl+Q now actually quits, Smart Action Launcher no longer overflows the right side of the screen, three dead-end addon products removed, GitHub integration enabled site-wide.",
+    changes: [
+      {
+        type: "fix",
+        text: "Ctrl+Q was leaving a zombie Tauri process alive (it called close() on the main webview, but the splash + copilot windows kept the process running). Reopening sansxel hit the single-instance guard but found no window to focus, leaving the user stuck until they killed sansxel.exe in Task Manager. Now uses plugin-process exit() to terminate the entire process cleanly.",
+      },
+      {
+        type: "fix",
+        text: "Smart Action Launcher panel was positioned with absolute left:0 from the trigger button, so when the trigger sat anywhere except the far left of the input area, the 980px panel ran off the right side of the viewport. Switched to position:fixed with viewport-clamped left (max(16px, 50vw - 490px)) and width (min(980, 100vw - 32)). Always fits regardless of trigger location.",
+      },
+      {
+        type: "improve",
+        text: "X close button title now spells out the hide-vs-quit distinction (\"Hides window \u2014 sansxel keeps running. Ctrl+Q to fully quit\u2026\"), and the Update Available banner explicitly tells users to Ctrl+Q + relaunch if they hit Later. People shouldn't have to guess that closing the window doesn't apply updates.",
+      },
+      {
+        type: "improve",
+        text: "Removed Memory Boost ($8/mo), API Boost ($15/mo), and Key Pack ($6/mo) from the billing panel. Stripe products were never created for them, so every \"Add\" click was 500-ing with \"no price configured.\" Cleaner to delete the entries than to env-gate dead UI.",
+      },
+      {
+        type: "new",
+        text: "GitHub integration is now live on /account/integrations \u2014 \"Connect GitHub\" replaces the \"Coming soon\" badge and launches the OAuth flow. (Operator side: GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET env vars must be set, which they now are.)",
+      },
+    ],
+  },
   {
     version: "0.1.11",
     dateLabel: "Apr 19, 2026",

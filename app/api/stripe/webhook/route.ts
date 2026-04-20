@@ -49,7 +49,10 @@ function resolvePlanFromPriceId(priceId: string | null): { planKey: string; cycl
 function pickPlanItem(subscription: Stripe.Subscription): Stripe.SubscriptionItem | null {
   const items = subscription.items.data;
   if (items.length === 0) return null;
-  const addonKeys = new Set(["memory_boost", "api_boost", "key_pack"]);
+  // v0.1.12 \u2014 memory_boost / api_boost / key_pack removed (no Stripe
+  // products were ever created). Empty set kept so the structure is
+  // ready if real addon SKUs land later.
+  const addonKeys = new Set<string>();
   for (const item of items) {
     const resolved = resolvePlanFromPriceId(item.price.id);
     if (resolved && !addonKeys.has(resolved.planKey)) return item;

@@ -51,18 +51,8 @@ export const STRIPE_PRICES: Record<StripePricedItemKey, Partial<Record<BillingCy
   },
   teams: {},
   enterprise: {},
-  memory_boost: {
-    monthly: process.env.STRIPE_PRICE_MEMORY_BOOST_MONTHLY,
-    yearly: process.env.STRIPE_PRICE_MEMORY_BOOST_YEARLY,
-  },
-  api_boost: {
-    monthly: process.env.STRIPE_PRICE_API_BOOST_MONTHLY,
-    yearly: process.env.STRIPE_PRICE_API_BOOST_YEARLY,
-  },
-  key_pack: {
-    monthly: process.env.STRIPE_PRICE_KEY_PACK_MONTHLY,
-    yearly: process.env.STRIPE_PRICE_KEY_PACK_YEARLY,
-  },
+  // v0.1.12 — memory_boost / api_boost / key_pack dropped (no Stripe
+  // products created; entries removed from billingAddons + BillingAddonKey).
   // v0.1.4 monetization — recurring add-on packs (subscription items).
   // v0.1.9 dropped voice_pack + image_pack — replaced by credit ledger.
   copilot_pro_pack: {

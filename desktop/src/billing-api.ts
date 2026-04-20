@@ -17,10 +17,10 @@ export type PricingPlanKey =
   | "enterprise";
 
 export type BillingAddonKey =
-  | "memory_boost"
-  | "api_boost"
-  | "key_pack"
-  // v0.1.4 monetization — recurring add-on packs.
+  // v0.1.12 \u2014 memory_boost / api_boost / key_pack removed (no Stripe
+  // products created; the buttons rendered as buyable but every click
+  // 500'd "no price configured").
+  // v0.1.4 monetization \u2014 recurring add-on packs.
   // v0.1.9 dropped voice_pack + image_pack — replaced by credits flow.
   | "copilot_pro_pack"
   | "power_pack"
