@@ -39,6 +39,7 @@ const SYSTEM_PROMPT = `You are the sansxel copilot - a fast, helpful assistant l
 Behavior:
 - Answer in 1-3 short sentences. The copilot is a side panel, not a doc.
 - The current page context is provided as background, but you are NOT limited to it. Answer general questions, sansxel questions, coding questions, anything.
+- If the user asks for current/live info you need to look up (news, prices, recent events, real-time facts), USE the web_search tool when it is available. Don't apologize for not having current data \u2014 just search.
 - If the user asks to go somewhere, take them there: end your reply with a single navigation marker on its own line - \`[go:/path]\` - using one of the routes below. Examples: "Opening pricing now.\n[go:/pricing]" or "Heading to your usage page.\n[go:/account/usage]". Only emit the marker when navigation is the right action; don't emit one for purely informational questions.
 - Never invent routes. Only use paths from the list below.
 - No preamble. No "Sure!". No "Based on the page...". Just the answer.
@@ -47,6 +48,19 @@ Behavior:
 ${SITE_ROUTES}
 
 ${SANSXEL_PRODUCT_BRIEF}`;
+
+// v0.1.13 \u2014 Server tools the copilot can use. web_search is
+// Anthropic's hosted search tool: the model decides when to invoke it,
+// the API runs the search and returns results, no client round-trip
+// needed. We just stream the events through to the desktop surface as
+// JSON-Lines so the rail's status dots can light up.
+const COPILOT_SERVER_TOOLS = [
+  {
+    type: "web_search_20250305",
+    name: "web_search",
+    max_uses: 3,
+  },
+] as unknown as Anthropic.Messages.Tool[];
 
 type CopilotBody = {
   question: string;
@@ -77,6 +91,15 @@ export async function POST(request: Request) {
   const plan = await getPlanForEmail(email);
   const descriptor = descriptorForTier(resolveTier(plan, "fast"));
 
+  // v0.1.13 \u2014 Surface detection. Desktop callers get JSON-Lines + tools
+  // (so the floating-copilot rail can dispatch tool events to its
+  // status dots). Web callers stay on plain-text streaming for
+  // backward compat with components/copilot-bar.tsx.
+  const surface = request.headers.get("x-sansxel-surface") === "desktop"
+    ? "desktop"
+    : "web";
+  const toolsEnabled = surface === "desktop";
+
   const pageText = (payload.page_text ?? "").slice(0, 12000);
 
   const contextBlock = [
@@ -93,13 +116,14 @@ export async function POST(request: Request) {
   try {
     const stream = await client.messages.stream({
       model: descriptor.model,
-      max_tokens: 512,
+      max_tokens: 1024,
       system: SYSTEM_PROMPT,
       messages: [
         { role: "user", content: `Context (background only - answer anything they ask):\n\n${contextBlock}` },
         { role: "assistant", content: "Got it." },
         { role: "user", content: payload.question },
       ],
+      ...(toolsEnabled ? { tools: COPILOT_SERVER_TOOLS } : {}),
     });
 
     const startedAt = Date.now();
@@ -108,6 +132,26 @@ export async function POST(request: Request) {
       async start(controller) {
         let inputTokens = 0;
         let outputTokens = 0;
+        // v0.1.13 \u2014 JSON-Lines emitter for the desktop surface. Each
+        // line is a self-contained JSON object the rail can dispatch
+        // on. Web surface keeps writing raw text bytes for backward
+        // compat with components/copilot-bar.tsx.
+        const writeLine = (obj: Record<string, unknown>) => {
+          controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+        };
+        const writeText = (text: string) => {
+          if (toolsEnabled) {
+            writeLine({ type: "text", text });
+          } else {
+            controller.enqueue(encoder.encode(text));
+          }
+        };
+
+        // Active server-tool blocks keyed by content_block index, so
+        // we can emit "tool_start" when a block opens and "tool_done"
+        // (with status) when it closes.
+        const activeTools: Map<number, { name: string; id: string }> = new Map();
+
         try {
           for await (const event of stream) {
             if (event.type === "message_start") {
@@ -116,22 +160,56 @@ export async function POST(request: Request) {
             if (event.type === "message_delta") {
               outputTokens = event.usage?.output_tokens ?? outputTokens;
             }
+            if (event.type === "content_block_start") {
+              const block = event.content_block as
+                | { type: string; id?: string; name?: string }
+                | undefined;
+              if (
+                toolsEnabled &&
+                block &&
+                (block.type === "server_tool_use" || block.type === "tool_use")
+              ) {
+                const id = block.id ?? `tool-${event.index}`;
+                const name = block.name ?? "tool";
+                activeTools.set(event.index, { id, name });
+                writeLine({ type: "tool_start", id, name });
+              }
+            }
+            if (event.type === "content_block_stop") {
+              if (toolsEnabled) {
+                const tool = activeTools.get(event.index);
+                if (tool) {
+                  writeLine({ type: "tool_done", id: tool.id, name: tool.name, status: "ok" });
+                  activeTools.delete(event.index);
+                }
+              }
+            }
             if (
               event.type === "content_block_delta" &&
               event.delta.type === "text_delta"
             ) {
-              controller.enqueue(encoder.encode(event.delta.text));
+              writeText(event.delta.text);
             }
+          }
+          if (toolsEnabled) {
+            writeLine({ type: "message_stop", reason: "end_turn" });
           }
         } catch (err) {
           console.error("copilot stream error:", err);
+          if (toolsEnabled) {
+            // Mark any still-running tools as errored so dots don't hang.
+            for (const tool of activeTools.values()) {
+              writeLine({ type: "tool_done", id: tool.id, name: tool.name, status: "error" });
+            }
+            writeLine({ type: "error", message: "Copilot stream interrupted." });
+          }
         } finally {
           controller.close();
           void recordUsage({
             email,
             kind: "copilot",
             model: descriptor.model,
-            surface: "web",
+            surface,
             input_tokens: inputTokens,
             output_tokens: outputTokens,
             total_tokens: inputTokens + outputTokens,
@@ -143,8 +221,11 @@ export async function POST(request: Request) {
 
     return new Response(body, {
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
+        "Content-Type": toolsEnabled
+          ? "application/x-ndjson; charset=utf-8"
+          : "text/plain; charset=utf-8",
         "Cache-Control": "no-store",
+        "x-sansxel-stream-format": toolsEnabled ? "jsonl" : "text",
       },
     });
   } catch (err) {

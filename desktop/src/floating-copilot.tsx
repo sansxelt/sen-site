@@ -617,11 +617,20 @@ export function FloatingCopilot() {
           throw new Error(`copilot ${res.status}`);
         }
         const contentType = res.headers.get("content-type") ?? "";
-        if (!contentType.includes("text/plain") && !contentType.includes("text/event-stream")) {
+        const streamFormat = res.headers.get("x-sansxel-stream-format") ?? "";
+        const isJsonl =
+          streamFormat === "jsonl" ||
+          contentType.includes("application/x-ndjson") ||
+          contentType.includes("application/jsonl");
+        if (
+          !isJsonl &&
+          !contentType.includes("text/plain") &&
+          !contentType.includes("text/event-stream")
+        ) {
           let body = "";
           try {
             const cloned = await res.text();
-            body = cloned.length > 200 ? cloned.slice(0, 200) + "…" : cloned;
+            body = cloned.length > 200 ? cloned.slice(0, 200) + "\u2026" : cloned;
           } catch {
             body = "(no body)";
           }
@@ -629,28 +638,102 @@ export function FloatingCopilot() {
         }
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          if (value) {
-            // v0.1.11: flip state to "streaming" on first byte. This
-            // distinguishes the "thinking" phase (waiting on the model)
-            // from active token output, so the rail visuals can shift.
-            if (!firstByteSeen) {
-              firstByteSeen = true;
-              setLiveState("streaming");
+
+        // v0.1.13 \u2014 JSON-Lines parser for the desktop surface. Each
+        // line is one event: { type: "text" | "tool_start" | "tool_done"
+        // | "message_stop" | "error", ... }. Buffer partial lines across
+        // chunk boundaries. Plain-text path (web) still works \u2014
+        // isJsonl branches all the per-event handling.
+        let lineBuffer = "";
+        const handleEvent = (event: Record<string, unknown>) => {
+          const type = event.type as string | undefined;
+          if (type === "text" && typeof event.text === "string") {
+            assistant += event.text;
+            setMessages((current) => {
+              const copy = [...current];
+              copy[copy.length - 1] = { role: "assistant", content: assistant };
+              return copy;
+            });
+          } else if (type === "tool_start") {
+            const id = String(event.id ?? `tool-${Date.now()}`);
+            const name = String(event.name ?? "tool");
+            setActiveTools((current) => [
+              ...current.filter((t) => t.id !== id),
+              { id, name, status: "running" },
+            ]);
+          } else if (type === "tool_done") {
+            const id = String(event.id ?? "");
+            const status = (event.status === "error" ? "error" : "ok") as
+              | "ok"
+              | "error";
+            setActiveTools((current) =>
+              current.map((t) => (t.id === id ? { ...t, status } : t)),
+            );
+            // Auto-clear successful tool dots after a beat so the rail
+            // doesn't permanently look "occupied" after a single search.
+            if (status === "ok") {
+              window.setTimeout(() => {
+                setActiveTools((current) => current.filter((t) => t.id !== id));
+              }, 2400);
             }
-            assistant += decoder.decode(value, { stream: true });
+          } else if (type === "error" && typeof event.message === "string") {
+            // Surface as inline error in the bubble.
+            assistant += `\n\u26a0 ${event.message}`;
             setMessages((current) => {
               const copy = [...current];
               copy[copy.length - 1] = { role: "assistant", content: assistant };
               return copy;
             });
           }
+          // message_stop is informational; the for-loop ends naturally
+          // when the response body is closed by the server.
+        };
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            if (!firstByteSeen) {
+              firstByteSeen = true;
+              setLiveState("streaming");
+            }
+            const chunk = decoder.decode(value, { stream: true });
+            if (isJsonl) {
+              lineBuffer += chunk;
+              let nl = lineBuffer.indexOf("\n");
+              while (nl !== -1) {
+                const line = lineBuffer.slice(0, nl).trim();
+                lineBuffer = lineBuffer.slice(nl + 1);
+                nl = lineBuffer.indexOf("\n");
+                if (!line) continue;
+                try {
+                  handleEvent(JSON.parse(line));
+                } catch {
+                  // Malformed line \u2014 skip rather than crash the stream.
+                }
+              }
+            } else {
+              assistant += chunk;
+              setMessages((current) => {
+                const copy = [...current];
+                copy[copy.length - 1] = { role: "assistant", content: assistant };
+                return copy;
+              });
+            }
+          }
         }
-        // v0.1.11: reply finished — generate next-action chips from the
-        // content shape and flip to "ready" so the rail glows briefly,
-        // then decays to idle.
+        // Flush any trailing partial JSON-Lines line.
+        if (isJsonl && lineBuffer.trim()) {
+          try {
+            handleEvent(JSON.parse(lineBuffer.trim()));
+          } catch {
+            // ignore trailing malformed
+          }
+        }
+        // Clear any still-running tool dots (server crashed mid-tool).
+        setActiveTools((current) => current.filter((t) => t.status !== "running"));
+        // v0.1.11: reply finished \u2014 generate next-action chips and
+        // flip to "ready" so the rail glows briefly, then decays.
         setNextActions(deriveNextActions(assistant));
         setLiveState("ready");
       } catch (err) {
