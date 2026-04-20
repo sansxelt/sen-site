@@ -120,28 +120,46 @@ export function BillingPanel({ state, publishableKey }: Props) {
           )}
         </div>
 
-        {hasPlan && (
-          <div className="mt-4 grid gap-3 text-sm text-neutral-300 sm:grid-cols-2">
-            <div>
-              <div className="text-xs uppercase tracking-[0.15em] text-neutral-500">Price</div>
-              <div className="mt-1">
-                {state.cycle === "yearly"
-                  ? state.plan?.yearlyLabel ?? state.plan?.monthlyLabel
-                  : state.plan?.monthlyLabel}
+        {hasPlan && (() => {
+          // v0.1.13 \u2014 Comped accounts (plan in our DB but no Stripe sub)
+          // were showing misleading "Renews \u2014" with an em-dash. Show
+          // honest copy depending on actual state:
+          //   active     \u2192 Renews <date>
+          //   cancelling \u2192 Expires <date>
+          //   comped     \u2192 No expiry \u00b7 comped
+          const isCancelling = state.cancelAtPeriodEnd;
+          const isComped =
+            !state.stripeSubscriptionId && !state.currentPeriodEnd;
+          const renewLabel = isCancelling ? "Expires" : "Renews";
+          const renewValue = isComped
+            ? "No expiry \u00b7 comped"
+            : formatDate(state.currentPeriodEnd);
+          return (
+            <div className="mt-4 grid gap-3 text-sm text-neutral-300 sm:grid-cols-2">
+              <div>
+                <div className="text-xs uppercase tracking-[0.15em] text-neutral-500">Price</div>
+                <div className="mt-1">
+                  {isComped
+                    ? "$0 \u00b7 comped"
+                    : state.cycle === "yearly"
+                      ? state.plan?.yearlyLabel ?? state.plan?.monthlyLabel
+                      : state.plan?.monthlyLabel}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.15em] text-neutral-500">{renewLabel}</div>
+                <div className="mt-1">{renewValue}</div>
               </div>
             </div>
-            <div>
-              <div className="text-xs uppercase tracking-[0.15em] text-neutral-500">Renews</div>
-              <div className="mt-1">{formatDate(state.currentPeriodEnd)}</div>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         <div className="mt-6 flex flex-wrap gap-3">
           {!hasPlan ? (
             <Link
               href="/pricing"
-              className="sansxel-white-button rounded-2xl bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:opacity-90"
+              className="sansxel-white-button rounded-2xl bg-white px-5 py-2.5 text-sm font-medium transition hover:opacity-90"
+              style={{ color: "#0a0a0c" }}
             >
               Choose a plan
             </Link>
@@ -154,14 +172,26 @@ export function BillingPanel({ state, publishableKey }: Props) {
                 setBusy={setBusy}
                 setError={setError}
               />
-              {state.cancelAtPeriodEnd ? (
+              {/* v0.1.13 \u2014 Comped users (no real Stripe sub) saw a
+                  "Cancel subscription" button that did nothing. Hide it
+                  when there's no sub to cancel; show "Activate billing"
+                  instead so they can convert to a real paying customer. */}
+              {!state.stripeSubscriptionId ? (
+                <Link
+                  href="/pricing"
+                  className="rounded-2xl bg-white px-5 py-2.5 text-sm font-medium transition hover:opacity-90"
+                  style={{ color: "#0a0a0c" }}
+                >
+                  {"Start paying \u2014 unlock annual + invoices"}
+                </Link>
+              ) : state.cancelAtPeriodEnd ? (
                 <button
                   type="button"
                   onClick={handleResume}
                   disabled={busy === "resume"}
                   className="rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/10 disabled:opacity-60"
                 >
-                  {busy === "resume" ? "Resuming…" : "Resume subscription"}
+                  {busy === "resume" ? "Resuming\u2026" : "Resume subscription"}
                 </button>
               ) : (
                 <button
@@ -170,7 +200,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
                   disabled={busy === "cancel"}
                   className="rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-neutral-300 transition hover:bg-white/10 disabled:opacity-60"
                 >
-                  {busy === "cancel" ? "Canceling…" : "Cancel subscription"}
+                  {busy === "cancel" ? "Canceling\u2026" : "Cancel subscription"}
                 </button>
               )}
             </>
@@ -341,18 +371,24 @@ function ChangePlanSelect({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {/* v0.1.13 \u2014 cycle pill text-black was being out-cascaded so the
+          ACTIVE label rendered white-on-white (invisible). Inline style
+          forces dark text on the white-bg active state regardless of
+          cascade order. */}
       <div className="inline-flex rounded-full border border-white/10 bg-black/20 p-0.5 text-xs">
         <button
           type="button"
           onClick={() => setCycle("monthly")}
-          className={`rounded-full px-3 py-1 transition ${cycle === "monthly" ? "bg-white text-black" : "text-neutral-400 hover:text-white"}`}
+          className={`rounded-full px-3 py-1 transition ${cycle === "monthly" ? "bg-white" : "text-neutral-400 hover:text-white"}`}
+          style={cycle === "monthly" ? { color: "#0a0a0c" } : undefined}
         >
           Monthly
         </button>
         <button
           type="button"
           onClick={() => setCycle("yearly")}
-          className={`rounded-full px-3 py-1 transition ${cycle === "yearly" ? "bg-white text-black" : "text-neutral-400 hover:text-white"}`}
+          className={`rounded-full px-3 py-1 transition ${cycle === "yearly" ? "bg-white" : "text-neutral-400 hover:text-white"}`}
+          style={cycle === "yearly" ? { color: "#0a0a0c" } : undefined}
         >
           Yearly
         </button>
