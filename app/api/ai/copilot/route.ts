@@ -95,10 +95,14 @@ export async function POST(request: Request) {
   // (so the floating-copilot rail can dispatch tool events to its
   // status dots). Web callers stay on plain-text streaming for
   // backward compat with components/copilot-bar.tsx.
+  // v0.1.14 \u2014 Tools temporarily disabled while we diagnose a "copilot
+  // not working" report. JSON-Lines path stays available (toolsEnabled
+  // controls both) but no tools are passed in until verified.
   const surface = request.headers.get("x-sansxel-surface") === "desktop"
     ? "desktop"
     : "web";
   const toolsEnabled = surface === "desktop";
+  const passServerTools = false;
 
   const pageText = (payload.page_text ?? "").slice(0, 12000);
 
@@ -123,7 +127,7 @@ export async function POST(request: Request) {
         { role: "assistant", content: "Got it." },
         { role: "user", content: payload.question },
       ],
-      ...(toolsEnabled ? { tools: COPILOT_SERVER_TOOLS } : {}),
+      ...(passServerTools ? { tools: COPILOT_SERVER_TOOLS } : {}),
     });
 
     const startedAt = Date.now();
