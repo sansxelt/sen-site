@@ -128,6 +128,22 @@ export function DesktopBillingPanel({
     (addon) => !activeAddonKeys.has(addon.key),
   );
 
+  // v0.1.10 — hide boost cards whose Stripe price env var is missing.
+  // The server advertises which addon keys are wired up via
+  // `configured_addons`; if it's absent (older server build), we
+  // fall back to showing everything so local dev still works.
+  const configuredAddonSet = useMemo(
+    () => new Set<BillingAddonKey>(billing.configured_addons ?? []),
+    [billing.configured_addons],
+  );
+  const hasConfiguredList = Array.isArray(billing.configured_addons);
+  const visibleOneTimeBoosts = ONE_TIME_BOOSTS.filter(
+    (b) => !hasConfiguredList || configuredAddonSet.has(b.key),
+  );
+  const visibleRecurringBoosts = RECURRING_BOOSTS.filter(
+    (b) => !hasConfiguredList || configuredAddonSet.has(b.key),
+  );
+
   async function refreshWithReset() {
     setError(null);
     await onRefresh();
@@ -535,108 +551,130 @@ export function DesktopBillingPanel({
         </section>
 
         {/* One-time top-ups + recurring boosts. v0.1.9 trimmed to the
-            SKUs the operator actually created in Stripe. */}
-        <section className="billing-panel billing-panel--dense">
-          <div className="billing-section-head">
-            <div className="billing-kicker">Boost your account</div>
-            <span className="billing-note billing-note--inline">
-              One-time top-ups for power users.
-            </span>
-          </div>
-          <div className="boost-row">
-            {ONE_TIME_BOOSTS.map((boost) => (
-              <div key={boost.key} className="boost-card">
-                <div className="boost-card-head">
-                  <div className="boost-card-name">{boost.name}</div>
-                  <div className="boost-card-price">{boost.price}</div>
+            SKUs the operator actually created in Stripe. v0.1.10 hides
+            individual cards (and their section headers) whose
+            STRIPE_PRICE_* env var isn't set on the server, so we
+            never offer a boost that would 500 with "No Stripe price
+            configured." If both lists are empty we drop the entire
+            section + the annual-savings notice that hangs off it. */}
+        {(visibleOneTimeBoosts.length > 0 ||
+          visibleRecurringBoosts.length > 0) && (
+          <section className="billing-panel billing-panel--dense">
+            {visibleOneTimeBoosts.length > 0 && (
+              <>
+                <div className="billing-section-head">
+                  <div className="billing-kicker">Boost your account</div>
+                  <span className="billing-note billing-note--inline">
+                    One-time top-ups for power users.
+                  </span>
                 </div>
-                <div className="boost-card-meta">{boost.detail}</div>
-                <button
-                  type="button"
-                  className="upgrade-cta-btn boost-card-btn"
-                  onClick={() => void handleBoostClick(boost)}
-                  disabled={busy === `add-${boost.key}`}
-                  title={
-                    !billing.stripeConfigured
-                      ? "Billing isn't configured on this server yet."
-                      : undefined
+                <div className="boost-row">
+                  {visibleOneTimeBoosts.map((boost) => (
+                    <div key={boost.key} className="boost-card">
+                      <div className="boost-card-head">
+                        <div className="boost-card-name">{boost.name}</div>
+                        <div className="boost-card-price">{boost.price}</div>
+                      </div>
+                      <div className="boost-card-meta">{boost.detail}</div>
+                      <button
+                        type="button"
+                        className="upgrade-cta-btn boost-card-btn"
+                        onClick={() => void handleBoostClick(boost)}
+                        disabled={busy === `add-${boost.key}`}
+                        title={
+                          !billing.stripeConfigured
+                            ? "Billing isn't configured on this server yet."
+                            : undefined
+                        }
+                      >
+                        {busy === `add-${boost.key}` ? "..." : "Buy"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {visibleRecurringBoosts.length > 0 && (
+              <>
+                <div
+                  className={
+                    visibleOneTimeBoosts.length > 0
+                      ? "billing-section-head billing-section-head--spaced"
+                      : "billing-section-head"
                   }
                 >
-                  {busy === `add-${boost.key}` ? "..." : "Buy"}
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="billing-section-head billing-section-head--spaced">
-            <div className="billing-kicker">Recurring add-on packs</div>
-            <span className="billing-note billing-note--inline">
-              Stack on any plan, monthly.
-            </span>
-          </div>
-          <div className="boost-row boost-row--four">
-            {RECURRING_BOOSTS.map((boost) => {
-              const alreadyActive = activeAddonKeys.has(boost.key);
-              return (
-                <div
-                  key={boost.key}
-                  className={`boost-card boost-card--recurring${boost.featured ? " boost-card--featured" : ""}`}
-                >
-                  <div className="boost-card-head">
-                    <div className="boost-card-name">
-                      {boost.name}
-                      {boost.featured && (
-                        <span className="billing-badge boost-card-badge">Best value</span>
-                      )}
-                    </div>
-                    <div className="boost-card-price">{boost.price}</div>
-                  </div>
-                  <div className="boost-card-meta">{boost.detail}</div>
-                  <button
-                    type="button"
-                    className="upgrade-cta-btn boost-card-btn"
-                    onClick={() => void handleBoostClick(boost)}
-                    disabled={
-                      !hasPaidPlan ||
-                      alreadyActive ||
-                      busy === `add-${boost.key}`
-                    }
-                    title={
-                      !hasPaidPlan
-                        ? "Choose a paid plan before adding recurring boosts"
-                        : alreadyActive
-                          ? "Already active on your subscription"
-                          : undefined
-                    }
-                  >
-                    {alreadyActive
-                      ? "Active"
-                      : busy === `add-${boost.key}`
-                        ? "..."
-                        : "Add"}
-                  </button>
+                  <div className="billing-kicker">Recurring add-on packs</div>
+                  <span className="billing-note billing-note--inline">
+                    Stack on any plan, monthly.
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+                <div className="boost-row boost-row--four">
+                  {visibleRecurringBoosts.map((boost) => {
+                    const alreadyActive = activeAddonKeys.has(boost.key);
+                    return (
+                      <div
+                        key={boost.key}
+                        className={`boost-card boost-card--recurring${boost.featured ? " boost-card--featured" : ""}`}
+                      >
+                        <div className="boost-card-head">
+                          <div className="boost-card-name">
+                            {boost.name}
+                            {boost.featured && (
+                              <span className="billing-badge boost-card-badge">Best value</span>
+                            )}
+                          </div>
+                          <div className="boost-card-price">{boost.price}</div>
+                        </div>
+                        <div className="boost-card-meta">{boost.detail}</div>
+                        <button
+                          type="button"
+                          className="upgrade-cta-btn boost-card-btn"
+                          onClick={() => void handleBoostClick(boost)}
+                          disabled={
+                            !hasPaidPlan ||
+                            alreadyActive ||
+                            busy === `add-${boost.key}`
+                          }
+                          title={
+                            !hasPaidPlan
+                              ? "Choose a paid plan before adding recurring boosts"
+                              : alreadyActive
+                                ? "Already active on your subscription"
+                                : undefined
+                          }
+                        >
+                          {alreadyActive
+                            ? "Active"
+                            : busy === `add-${boost.key}`
+                              ? "..."
+                              : "Add"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
-          <div className="boost-annual-notice">
-            <div>
-              <div className="boost-annual-title">Save 20% with annual</div>
-              <div className="boost-annual-copy">
-                Switch any subscription to yearly billing and we knock 20% off the
-                monthly price — applies to plans and recurring add-on packs above.
+            <div className="boost-annual-notice">
+              <div>
+                <div className="boost-annual-title">Save 20% with annual</div>
+                <div className="boost-annual-copy">
+                  Switch any subscription to yearly billing and we knock 20% off the
+                  monthly price — applies to plans and recurring add-on packs above.
+                </div>
               </div>
+              <button
+                type="button"
+                className="billing-secondary-btn"
+                onClick={() => setCheckoutCycle("yearly")}
+              >
+                Show yearly pricing
+              </button>
             </div>
-            <button
-              type="button"
-              className="billing-secondary-btn"
-              onClick={() => setCheckoutCycle("yearly")}
-            >
-              Show yearly pricing
-            </button>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* Bottom: invoices, compact — last 3 then expand */}
         <section className="billing-panel billing-panel--dense">
@@ -757,6 +795,10 @@ function BuyCreditsModal({
   onSuccess: (dollars: number) => Promise<void> | void;
 }) {
   const [dollars, setDollars] = useState<number>(10);
+  // v0.1.10 — raw text for the custom-amount input. Kept separate
+  // from `dollars` so mid-edit values (empty string, "1" before "10",
+  // etc.) don't thrash the slider or the "Continue to pay" button.
+  const [amountText, setAmountText] = useState<string>("10");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -800,23 +842,91 @@ function BuyCreditsModal({
                 key={preset}
                 type="button"
                 className={`billing-secondary-btn${dollars === preset ? " active" : ""}`}
-                onClick={() => setDollars(preset)}
+                onClick={() => {
+                  setDollars(preset);
+                  setAmountText(String(preset));
+                }}
               >
                 ${preset}
               </button>
             ))}
           </div>
 
-          <label className="billing-note" style={{ marginTop: 8 }}>
-            Custom amount: <strong>${dollars}</strong>
+          {/* v0.1.10 — text input + slider both bound to `dollars`.
+              Typing in the field moves the slider and vice versa.
+              We hold the raw text in `amountText` so a user can
+              clear the field and keep typing without snapping back
+              to the previous number on every keystroke; we only
+              commit a clamped numeric value to `dollars` once the
+              parsed value is a finite integer in [1, 500]. */}
+          <label
+            className="billing-note"
+            htmlFor="credits-amount-input"
+            style={{ marginTop: 8, display: "block" }}
+          >
+            Custom amount:
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 6,
+              }}
+            >
+              <span style={{ opacity: 0.7 }}>$</span>
+              <input
+                id="credits-amount-input"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={500}
+                step={1}
+                value={amountText}
+                onChange={(event) => {
+                  const raw = event.target.value;
+                  setAmountText(raw);
+                  const parsed = Number(raw);
+                  if (Number.isFinite(parsed)) {
+                    const clamped = Math.max(
+                      1,
+                      Math.min(500, Math.floor(parsed)),
+                    );
+                    setDollars(clamped);
+                  }
+                }}
+                onBlur={() => {
+                  // Snap the visible text back to the canonical
+                  // clamped value so the field never shows "" or
+                  // "501" after the user moves on.
+                  setAmountText(String(dollars));
+                }}
+                style={{
+                  flex: "0 0 auto",
+                  width: 96,
+                  padding: "6px 10px",
+                  borderRadius: 8,
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "rgba(255,255,255,0.04)",
+                  color: "inherit",
+                  font: "inherit",
+                }}
+              />
+              <span style={{ opacity: 0.6, fontSize: "0.85em" }}>
+                ($1–$500)
+              </span>
+            </span>
             <input
               type="range"
               min={1}
               max={500}
               step={1}
               value={dollars}
-              onChange={(event) => setDollars(Number(event.target.value))}
-              style={{ width: "100%", marginTop: 6 }}
+              onChange={(event) => {
+                const next = Number(event.target.value);
+                setDollars(next);
+                setAmountText(String(next));
+              }}
+              style={{ width: "100%", marginTop: 8 }}
             />
           </label>
 
@@ -834,6 +944,13 @@ function BuyCreditsModal({
           stripe={stripeP}
           options={{ clientSecret, appearance: billingAppearance }}
         >
+          {/* v0.1.10 — restate the amount + credit count above the
+              payment form so the user can sanity-check what they're
+              about to be charged for. */}
+          <div className="billing-note" style={{ marginBottom: 8 }}>
+            Paying <strong>${dollars}</strong> for{" "}
+            <strong>{(dollars * 100).toLocaleString()} credits</strong>.
+          </div>
           <CheckoutForm
             amountLabel={`$${dollars}`}
             submitVerb="Pay"

@@ -3,7 +3,7 @@ import { getSubscriptionForEmail, getPlanForEmail } from "../../../../../lib/acc
 import { getBillingState } from "../../../../../lib/billing-state";
 import { getDesktopUserEmailFromRequest } from "../../../../../lib/desktop-auth";
 import { billingAddons, pricingPlanMap, pricingPlans } from "../../../../../lib/pricing";
-import { getStripePublishableKey, isStripeConfigured } from "../../../../../lib/stripe";
+import { getStripePublishableKey, isStripeConfigured, STRIPE_PRICES } from "../../../../../lib/stripe";
 
 export async function GET(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
@@ -22,8 +22,24 @@ export async function GET(request: Request) {
 
     const currentPlan = pricingPlanMap[planKey] ?? pricingPlanMap.free;
 
+    // v0.1.10 — list addon keys whose Stripe price env var is set
+    // and non-empty. The desktop billing panel uses this to hide
+    // boost cards for products the operator hasn't created in
+    // Stripe yet (otherwise clicking the card fails with "No
+    // Stripe price configured.").
+    const configuredAddons = billingAddons
+      .map((addon) => addon.key)
+      .filter((key) => {
+        const prices = STRIPE_PRICES[key];
+        if (!prices) return false;
+        return Object.values(prices).some(
+          (price) => typeof price === "string" && price.length > 0,
+        );
+      });
+
     return NextResponse.json({
       stripeConfigured,
+      configured_addons: configuredAddons,
       publishableKey: getStripePublishableKey(),
       currentPlanKey: currentPlan.key,
       currentPlanName: currentPlan.name,

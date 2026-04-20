@@ -67,6 +67,10 @@ export type BillingAddonSummary = {
 
 export type DesktopBillingState = {
   stripeConfigured: boolean;
+  // v0.1.10 — addon keys whose STRIPE_PRICE_* env var is set on the
+  // server. The billing panel uses this to hide boost cards for
+  // products the operator hasn't created in Stripe yet.
+  configured_addons: BillingAddonKey[];
   publishableKey: string | null;
   currentPlanKey: PricingPlanKey;
   currentPlanName: string;
