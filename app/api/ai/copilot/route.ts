@@ -104,14 +104,17 @@ export async function POST(request: Request) {
   // (so the floating-copilot rail can dispatch tool events to its
   // status dots). Web callers stay on plain-text streaming for
   // backward compat with components/copilot-bar.tsx.
-  // v0.1.14 \u2014 Tools temporarily disabled while we diagnose a "copilot
-  // not working" report. JSON-Lines path stays available (toolsEnabled
-  // controls both) but no tools are passed in until verified.
+  // v0.1.14 \u2014 Re-enabled web_search after isolating the actual cause
+  // of the "copilot not working" report (it was a 401 from missing
+  // desktop Bearer token support, fixed above \u2014 NOT the tool).
+  // Without web_search the model declines current-data questions
+  // ("knowledge has a cutoff"), which contradicts what the rail
+  // advertises about live grounding.
   const surface = request.headers.get("x-sansxel-surface") === "desktop"
     ? "desktop"
     : "web";
   const toolsEnabled = surface === "desktop";
-  const passServerTools = false;
+  const passServerTools = toolsEnabled;
 
   const pageText = (payload.page_text ?? "").slice(0, 12000);
 
