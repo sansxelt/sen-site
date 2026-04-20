@@ -250,6 +250,28 @@
         50%      { text-shadow: 0 0 12px rgba(165, 243, 252, 0.4); }
       }
 
+      /* v0.1.13 \u2014 secondary line under the main keys hint that
+         mentions the in-app ESC\u00d73 shortcut so users can discover
+         the splash-revisit trick. Wraps to its own row inside the
+         hint container. */
+      .skip-hint {
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: calc(100vw - 32px);
+      }
+      .skip-meta {
+        flex-basis: 100%;
+        margin-top: 6px;
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        color: rgba(180, 180, 200, 0.42);
+      }
+      .skip-meta .skip-key {
+        margin: 0 2px;
+        padding: 1px 5px;
+        font-size: 8px;
+      }
+
       @keyframes hint-fade-in {
         to {
           opacity: 1;
@@ -636,17 +658,31 @@
         //     stranding the user staring at a splash forever.
         var FORCE_HANDOVER_AT = splashStartedAt + SAFETY_CAP_MS;
 
+        // v0.1.13 \u2014 hint copy now spells out BOTH directions so users
+        // discover the splash-revisit shortcut: SPACE to play, ENTER to
+        // enter the app, and (once they're inside) ESC ESC ESC to come
+        // back to the splash from anywhere. Three states: pre-ready
+        // (boot in progress), ready, and a tiny meta-line that always
+        // mentions the ESC\u00d73 trick.
         function refreshHintForReady() {
           if (!hintEl) return;
+          var triplePart =
+            '<span class="skip-meta">' +
+            'In-app: tap <span class="skip-key">esc</span><span class="skip-key">esc</span><span class="skip-key">esc</span> to return here' +
+            '</span>';
           if (mainReady) {
             hintEl.innerHTML =
-              '<span class="skip-key">enter</span> ready when you are \u2014 keep playing or continue';
+              '<span class="skip-key">enter</span> open the app' +
+              ' <span class="skip-divider">\u00b7</span> ' +
+              '<span class="skip-key">space</span> keep playing' +
+              triplePart;
             hintEl.classList.add("ready");
           } else {
             hintEl.innerHTML =
               '<span class="skip-key">space</span> play' +
               ' <span class="skip-divider">\u00b7</span> ' +
-              '<span class="skip-key">enter</span> continue (booting\u2026)';
+              '<span class="skip-key">enter</span> open app (when ready)' +
+              triplePart;
             hintEl.classList.remove("ready");
           }
         }

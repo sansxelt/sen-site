@@ -1238,7 +1238,11 @@ export function DesktopChatView({
   }, []);
 
   const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
-  const isCopilot = prefs.window_mode !== "normal";
+  // v0.1.13 \u2014 Toolbar mode (the "PC copilot" / window-mode feature)
+  // was deleted: it never worked well outside normal scale and offered
+  // no value over the floating Sansxel Copilot. Hardcoded to false so
+  // any existing isCopilot conditionals collapse to the normal path.
+  const isCopilot = false;
   const activeModel = useMemo(
     () => ALL_MODEL_OPTIONS.find((option) => option.tier === tier) ?? ALL_MODEL_OPTIONS[0],
     [tier],
@@ -2614,15 +2618,20 @@ export function DesktopChatView({
     updateThread,
   ]);
 
+  // v0.1.13 \u2014 toggleCopilot kept as a no-op stub so the existing
+  // ref/dep wiring doesn't have to be ripped out. Toolbar mode is gone
+  // \u2014 the actual button that called this was removed from the chat
+  // header. The body still forces normal window mode if the prefs got
+  // stuck in toolbar from a prior version.
   const toggleCopilot = useCallback(async () => {
-    const nextMode = prefs.window_mode === "normal" ? "toolbar-right" : "normal";
+    const nextMode = "normal" as const;
     await update({ window_mode: nextMode });
     try {
       await invoke("set_window_mode", { mode: nextMode });
     } catch {
       // saved even if the native call fails in development
     }
-  }, [prefs.window_mode, update]);
+  }, [update]);
 
   const focusComposer = useCallback(() => {
     window.setTimeout(() => {
@@ -2959,24 +2968,10 @@ export function DesktopChatView({
                 Agent ON
               </span>
             )}
-            {activeThread && activeThread.messages.length > 0 && (
-              <button
-                type="button"
-                className="chat-export-btn"
-                onClick={() => handleExportThread(activeThread)}
-                title="Export this thread as Markdown"
-              >
-                Export
-              </button>
-            )}
-            <button
-              type="button"
-              className={`chat-copilot-btn${isCopilot ? " active" : ""}`}
-              onClick={() => void toggleCopilot()}
-              title="Pin sansxel to a screen edge as a toolbar (separate from the floating Capsule Rail copilot)"
-            >
-              {isCopilot ? "Exit toolbar" : "Toolbar mode"}
-            </button>
+            {/* v0.1.13 \u2014 Removed Export and Toolbar mode buttons.
+                Export had no obvious affordance (just dumps a .md file)
+                and Toolbar mode broke the layout at non-full scale plus
+                offered no value over the floating Sansxel Copilot. */}
             <ModelPicker tier={tier} onChange={setTier} allowedTiers={allowedTiers} />
           </div>
         </div>

@@ -14,7 +14,7 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.12";
+export const desktopCurrentCodeVersion = "0.1.13";
 export const desktopLatestShippedVersion = "0.1.12";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
 export const desktopLatestShippedDateIso = "2026-04-19T22:00:00Z";
@@ -22,19 +22,67 @@ export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.12_x64-setup.ex
 export const desktopWindowsInstallerFilename = "sansxel_0.1.12_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.13";
+export const desktopNextVersion = "0.1.14";
 export const desktopNextVersionHighlights = [
-  "Splash patience rework: minigame stays interactive indefinitely while the app boots in the background; ENTER to advance only when you're ready.",
-  "AI knows your local time + timezone (currently it doesn't, leading to \"good afternoon\" replies at 8 PM).",
-  "Floating-copilot session refresh on focus so signing back in doesn't strand the rail with a stale token (\"copilot 401\").",
-  "Final copilot UI design pass \u2014 deep, focused redesign of the Capsule Rail surfaces with the v0.1.11 \"alive\" engine fully visualized.",
+  "Final copilot UI design pass \u2014 deep, focused redesign of the floating Sansxel Copilot surfaces with the v0.1.11 \"alive\" engine fully visualized.",
   "Real MCP wiring through the copilot route: web_search + navigate + thread tools surface as live status dots on the rail.",
+  "Server-side sync for Live Mode consent (currently localStorage only) + Settings toggle to revoke / re-grant.",
 ];
 
 export const desktopLatestUpdaterNotes =
   "v0.1.12 \u2014 patch release on top of v0.1.11. Splash now PATIENT: the minigame stays interactive indefinitely while the app boots; ENTER is the only thing that advances; hint pulses cyan when the app is ready so you know ENTER will instantly hand off. Ctrl+Q now actually quits cleanly (was leaving a zombie process so reopening required Task Manager). Smart Action Launcher panel no longer overflows the right side of the screen. Floating-copilot 401 fixed by refreshing the saved session on window focus. Capsule Rail launcher in the nav rail is now a prominent CTA. Chat-header \"PC copilot\" renamed to \"Toolbar mode\" to remove the naming collision with the floating copilot. AI now knows your local time + timezone (no more \"good afternoon\" replies at 8 PM). Three dead-end addons (Memory/API/Key Pack) removed. GitHub integration enabled site-wide. Inline Billing section on /account replaces the bare /account/billing page \u2014 plan, addons, payment, invoices, credits all in one place.";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.13",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-19T23:00:00Z",
+    channel: "alpha",
+    summary:
+      "Polish patch on top of v0.1.12. Toolbar mode is gone, Sansxel Copilot launcher is properly named, plans grid no longer overflows, Buy Credits cap raised to $10k with $200 + centered $500 added, comped users no longer see 'Not set' chips, splash hint advertises the ESC\u00d73 shortcut, and a few smaller cleanup items.",
+    changes: [
+      {
+        type: "fix",
+        text: "Removed Toolbar mode entirely \u2014 it never worked properly outside full-window scale (header text overlapped, buttons collided), and the floating Sansxel Copilot covers the same use case. Chat header no longer has the toggle; window-mode auto-resets to normal on launch.",
+      },
+      {
+        type: "improve",
+        text: "Renamed the floating-copilot launcher in the nav rail from \"Capsule Rail\" (internal codename) to \"Sansxel Copilot\" with a clearer \"Always on, anywhere\" subtitle.",
+      },
+      {
+        type: "fix",
+        text: "Plan-status badge was rendering literal \"Comped \\u0087 no card needed\" text because JSX text nodes don't interpret backslash escape sequences. Switched to template literals so the middle-dot character renders correctly.",
+      },
+      {
+        type: "fix",
+        text: "Plans-in-app grid was overflowing at non-full window scale (Pro card running off the right edge with horizontal-scroll that wasn't obvious). Switched to a responsive auto-fit grid that wraps cleanly to 2-up then 1-up as the window narrows. No more clipped Pro card.",
+      },
+      {
+        type: "fix",
+        text: "Comped users no longer see misleading \"Renews: Not set\" / \"Card: Not added\" chips that imply a billing problem. Both chips hide entirely when the plan is comped; for real subscribers the Renews chip relabels to \"Ends\" when the subscription is cancelling.",
+      },
+      {
+        type: "improve",
+        text: "Buy Credits modal: added $200 next to $100 and a wider centered $500 button below. Cap raised from $500 \u2192 $10,000 (Stripe per-charge ceiling is ~$999k but most cards reject above ~$10k). Server route's MAX_DOLLARS bumped to match.",
+      },
+      {
+        type: "fix",
+        text: "Stripped the OS-tinted +/- spinner buttons from the Buy Credits number input \u2014 they were ignoring the dark UI palette. The slider + keyboard arrows still work for adjusting the amount.",
+      },
+      {
+        type: "improve",
+        text: "Splash hint now advertises the ESC\u00d73 shortcut so users discover that pressing Esc three times from inside the app revisits the splash + minigame any time.",
+      },
+      {
+        type: "fix",
+        text: "Restored the triple-Esc handler in App.tsx (accidentally removed in an earlier refactor) so the shortcut actually works again.",
+      },
+      {
+        type: "improve",
+        text: "Removed Export button from the chat header (clutter \u2014 had no obvious affordance and the same Markdown export will return as a thread-context-menu item later).",
+      },
+    ],
+  },
   {
     version: "0.1.12",
     dateLabel: "Apr 19, 2026",

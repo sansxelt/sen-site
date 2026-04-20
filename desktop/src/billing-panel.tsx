@@ -59,9 +59,15 @@ const RECURRING_BOOSTS: BoostCard[] = [
   },
 ];
 
-// v0.1.9 — preset top-up amounts shown as quick buttons in the
-// "Buy credits" modal. The slider covers the full $1–$500 range.
-const CREDIT_PRESETS = [5, 10, 25, 50, 100] as const;
+// v0.1.13 \u2014 Buy credits presets. Small grid of common values with
+// $500 promoted to its own centered "big" button below. Cap raised
+// from $500 \u2192 $10,000 (Stripe's per-charge ceiling is ~$999k but
+// most cards reject transactions above ~$10k anyway, so this is the
+// realistic upper bound).
+const CREDIT_PRESETS_GRID = [5, 10, 25, 50, 100, 200] as const;
+const CREDIT_PRESET_BIG = 500;
+const CREDIT_MIN = 1;
+const CREDIT_MAX = 10000;
 
 const stripePromiseCache = new Map<string, Promise<StripeJs | null>>();
 function stripePromise(key: string): Promise<StripeJs | null> {
@@ -296,35 +302,43 @@ export function DesktopBillingPanel({
                     so most users had no idea whether their plan was active,
                     comped, or expiring. Four explicit states now: */}
                 {(() => {
+                  // v0.1.13 \u2014 JSX text nodes don't interpret backslash
+                  // escapes, so the previous version rendered literal
+                  // "Comped \u0087 no card needed". Use actual unicode
+                  // characters directly OR wrap in a JS string expression.
                   if (!hasPaidPlan) {
                     return (
-                      <span className="billing-badge billing-badge--neutral">
+                      <span className="billing-badge billing-badge--status">
                         Free plan
                       </span>
                     );
                   }
                   if (isComped) {
                     return (
-                      <span className="billing-badge billing-badge--neutral">
-                        Comped \u00b7 no card needed
+                      <span className="billing-badge billing-badge--status">
+                        {"Comped \u00b7 no renewal"}
                       </span>
                     );
                   }
                   if (billing.state.cancelAtPeriodEnd) {
                     return (
-                      <span className="billing-badge billing-badge--warn">
-                        Cancelling \u2014 ends {formatDate(billing.state.currentPeriodEnd)}
+                      <span className="billing-badge billing-badge--warn billing-badge--status">
+                        {`Cancelling \u00b7 ends ${formatDate(billing.state.currentPeriodEnd)}`}
                       </span>
                     );
                   }
                   return (
-                    <span className="billing-badge billing-badge--ok">
-                      Active \u00b7 renews {formatDate(billing.state.currentPeriodEnd)}
+                    <span className="billing-badge billing-badge--ok billing-badge--status">
+                      {`Active \u00b7 renews ${formatDate(billing.state.currentPeriodEnd)}`}
                     </span>
                   );
                 })()}
               </div>
 
+              {/* v0.1.13 \u2014 Renews / Card chips now hide entirely
+                  when the user is comped (they were showing misleading
+                  "Not set" / "Not added" copy that implied a billing
+                  problem). For real subscribers they show normally. */}
               <div className="billing-chip-row billing-chip-row--dense">
                 <div className="billing-chip">
                   <span className="billing-chip-label">Memory</span>
@@ -334,18 +348,24 @@ export function DesktopBillingPanel({
                   <span className="billing-chip-label">Usage</span>
                   <span>{billing.currentPlanMonthlyCredits}</span>
                 </div>
-                <div className="billing-chip">
-                  <span className="billing-chip-label">Renews</span>
-                  <span>{formatDate(billing.state.currentPeriodEnd)}</span>
-                </div>
-                <div className="billing-chip">
-                  <span className="billing-chip-label">Card</span>
-                  <span>
-                    {billing.state.paymentMethod
-                      ? `${(billing.state.paymentMethod.brand ?? "card").toUpperCase()} •••• ${billing.state.paymentMethod.last4 ?? ""}`
-                      : "Not added"}
-                  </span>
-                </div>
+                {!isComped && hasPaidPlan && (
+                  <div className="billing-chip">
+                    <span className="billing-chip-label">
+                      {billing.state.cancelAtPeriodEnd ? "Ends" : "Renews"}
+                    </span>
+                    <span>{formatDate(billing.state.currentPeriodEnd)}</span>
+                  </div>
+                )}
+                {!isComped && (
+                  <div className="billing-chip">
+                    <span className="billing-chip-label">Card</span>
+                    <span>
+                      {billing.state.paymentMethod
+                        ? `${(billing.state.paymentMethod.brand ?? "card").toUpperCase()} \u2022\u2022\u2022\u2022 ${billing.state.paymentMethod.last4 ?? ""}`
+                        : "Not added"}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -714,8 +734,8 @@ function BuyCreditsModal({
   const stripeP = useMemo(() => stripePromise(publishableKey), [publishableKey]);
 
   async function startCheckout() {
-    if (dollars < 1 || dollars > 500) {
-      setError("Pick an amount between $1 and $500.");
+    if (dollars < CREDIT_MIN || dollars > CREDIT_MAX) {
+      setError(`Pick an amount between $${CREDIT_MIN} and $${CREDIT_MAX.toLocaleString()}.`);
       return;
     }
     setBusy(true);
@@ -745,8 +765,11 @@ function BuyCreditsModal({
             Chat = 1, image = 5, voice = 2/min, copilot = 1.
           </div>
 
+          {/* v0.1.13 \u2014 6 small presets in a 2-column wrapping grid
+              (5/10 \u2192 25/50 \u2192 100/200), then a wide centered $500 button
+              below as the "big buy" affordance. */}
           <div className="boost-row" style={{ marginTop: 4 }}>
-            {CREDIT_PRESETS.map((preset) => (
+            {CREDIT_PRESETS_GRID.map((preset) => (
               <button
                 key={preset}
                 type="button"
@@ -759,6 +782,19 @@ function BuyCreditsModal({
                 ${preset}
               </button>
             ))}
+          </div>
+          <div style={{ marginTop: 8, display: "flex", justifyContent: "center" }}>
+            <button
+              type="button"
+              className={`billing-secondary-btn${dollars === CREDIT_PRESET_BIG ? " active" : ""}`}
+              style={{ minWidth: 200 }}
+              onClick={() => {
+                setDollars(CREDIT_PRESET_BIG);
+                setAmountText(String(CREDIT_PRESET_BIG));
+              }}
+            >
+              ${CREDIT_PRESET_BIG}
+            </button>
           </div>
 
           {/* v0.1.10 — text input + slider both bound to `dollars`.
@@ -787,8 +823,8 @@ function BuyCreditsModal({
                 id="credits-amount-input"
                 type="number"
                 inputMode="numeric"
-                min={1}
-                max={500}
+                min={CREDIT_MIN}
+                max={CREDIT_MAX}
                 step={1}
                 value={amountText}
                 onChange={(event) => {
@@ -797,8 +833,8 @@ function BuyCreditsModal({
                   const parsed = Number(raw);
                   if (Number.isFinite(parsed)) {
                     const clamped = Math.max(
-                      1,
-                      Math.min(500, Math.floor(parsed)),
+                      CREDIT_MIN,
+                      Math.min(CREDIT_MAX, Math.floor(parsed)),
                     );
                     setDollars(clamped);
                   }
@@ -806,12 +842,12 @@ function BuyCreditsModal({
                 onBlur={() => {
                   // Snap the visible text back to the canonical
                   // clamped value so the field never shows "" or
-                  // "501" after the user moves on.
+                  // out-of-range after the user moves on.
                   setAmountText(String(dollars));
                 }}
                 style={{
                   flex: "0 0 auto",
-                  width: 96,
+                  width: 110,
                   padding: "6px 10px",
                   borderRadius: 8,
                   border: "1px solid rgba(255,255,255,0.12)",
@@ -821,13 +857,13 @@ function BuyCreditsModal({
                 }}
               />
               <span style={{ opacity: 0.6, fontSize: "0.85em" }}>
-                ($1–$500)
+                {`($${CREDIT_MIN}\u2013$${CREDIT_MAX.toLocaleString()})`}
               </span>
             </span>
             <input
               type="range"
-              min={1}
-              max={500}
+              min={CREDIT_MIN}
+              max={CREDIT_MAX}
               step={1}
               value={dollars}
               onChange={(event) => {
@@ -843,9 +879,9 @@ function BuyCreditsModal({
             type="button"
             className="upgrade-cta-btn billing-submit"
             onClick={() => void startCheckout()}
-            disabled={busy || dollars < 1 || dollars > 500}
+            disabled={busy || dollars < CREDIT_MIN || dollars > CREDIT_MAX}
           >
-            {busy ? "Preparing..." : `Continue to pay $${dollars}`}
+            {busy ? "Preparing..." : `Continue to pay $${dollars.toLocaleString()}`}
           </button>
         </div>
       ) : (

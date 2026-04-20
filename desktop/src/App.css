@@ -202,6 +202,22 @@
   background: transparent;
 }
 
+/* v0.1.13 \u2014 strip the native +/- spinner buttons from <input type=
+   "number"> across the app. They render as ugly OS-tinted arrow blocks
+   that ignore the rest of the dark UI (Buy Credits modal screenshot
+   was showing this). User can still type any value and the slider /
+   keyboard arrows still adjust the number. */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
 /* ── Custom borderless title bar ────────────────────────────────────
    Native window decorations are off (decorations: false). This
    strip provides the drag region + window controls + brand mark.
@@ -4269,21 +4285,24 @@
   margin: 0;
 }
 
-/* Plans-in-app: horizontal row of cards (4-up, scroll on narrow) */
+/* Plans-in-app: 4-up at full scale, gracefully wraps to 2-up then
+   1-up on narrower windows. v0.1.13 \u2014 the previous version switched
+   to horizontal-scroll at <1180px which silently hid the rightmost
+   plan offscreen; users couldn't tell anything was scrollable so the
+   Pro card just looked clipped. Auto-fit grid is honest: cards wrap. */
 .billing-plan-list--horizontal {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
   margin-top: 12px;
+  width: 100%;
 }
 
-@media (max-width: 1180px) {
+/* At very narrow widths force 1 column so the cards don't squeeze
+   into 200px with text overflowing internally. */
+@media (max-width: 560px) {
   .billing-plan-list--horizontal {
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(240px, 1fr);
-    grid-template-columns: none;
-    overflow-x: auto;
-    padding-bottom: 4px;
+    grid-template-columns: 1fr;
   }
 }
 

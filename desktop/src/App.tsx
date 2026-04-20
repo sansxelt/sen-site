@@ -187,6 +187,33 @@ function TitleBar() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  // v0.1.13 \u2014 Triple-Esc within ~600ms revisits the splash mini-game.
+  // Originally added in v0.1.7, accidentally removed in a refactor;
+  // restored because the splash hint copy advertises this shortcut.
+  // We skip while typing in inputs so it doesn't fight Esc-as-clear.
+  useEffect(() => {
+    let presses: number[] = [];
+    const handler = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const target = event.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) {
+          return;
+        }
+      }
+      const now = Date.now();
+      presses = presses.filter((t) => now - t < 600);
+      presses.push(now);
+      if (presses.length >= 3) {
+        presses = [];
+        void invoke("revisit_splash").catch(() => {});
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <div className="titlebar" data-tauri-drag-region>
       <div className="titlebar-brand" data-tauri-drag-region>
