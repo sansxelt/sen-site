@@ -5826,3 +5826,338 @@
 .view {
   min-height: 0;
 }
+
+/* =====================================================================
+   v0.1.10 — heist.lol-style premium polish
+   =====================================================================
+   Layered on top of the existing v0.1.9 layout pass. The earlier pass got
+   structure right; this pass adds the "alive" feel:
+   - Smooth 180–220ms transitions on cards / buttons / inputs / links
+   - Soft hover lift (translateY(-1px)) + violet-tinted glow shadow
+   - Inner top-highlight for "lit from above" cards
+   - Violet-tinted focus-visible rings (global)
+   - Press-down feel on buttons (translateY(1px) + slight darken)
+   - Pulse animations for status dots
+   - Letter-spacing rhythm aligned across heads + uppercase labels
+   - Text-overflow guards on long content (emails, keys, paths)
+   ===================================================================== */
+
+/* ── 1. Smooth scroll inside views ─────────────────────────────────── */
+.view {
+  scroll-behavior: smooth;
+}
+
+/* ── 2. Global focus-visible — violet-tinted rings ─────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(167, 139, 250, 0.5);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Inputs that already get violet borders on focus shouldn't double up. */
+.field-input:focus-visible,
+.chat-history-search-input:focus-visible,
+.chat-input-textarea:focus-visible,
+textarea:focus-visible,
+input[type="text"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="password"]:focus-visible,
+input[type="search"]:focus-visible,
+input[type="number"]:focus-visible,
+input[type="url"]:focus-visible {
+  outline: none;
+}
+
+/* ── 3. Card hover/lift system ──────────────────────────────────────
+   Apply the heist surface treatment uniformly: subtle lift, violet
+   border tint, soft glow, slight background brighten.
+   Inner top-highlight gives the "lit from above" feel. */
+.view-card,
+.usage-panel,
+.billing-panel,
+.update-card,
+.integration-card,
+.pref-section,
+.account-jump,
+.boost-card,
+.field-row,
+.plan-tier-card {
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    background 200ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.view-card:hover,
+.usage-panel:hover,
+.billing-panel:hover,
+.update-card:hover,
+.integration-card:hover,
+.pref-section:hover,
+.account-jump:hover,
+.boost-card:hover,
+.field-row:hover,
+.plan-tier-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(167, 139, 250, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+
+/* Hero / accent variants keep their gradient backgrounds on hover —
+   only adjust the lift + glow shadow, not the underlying paint. */
+.usage-panel--accent:hover,
+.billing-panel--hero:hover,
+.boost-card--featured:hover,
+.update-card--highlight:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(167, 139, 250, 0.18),
+    rgba(12, 12, 16, 0.92)
+  );
+}
+
+/* ── 4. Account card in nav rail — lift + violet glow on hover ────── */
+.ws-nav-account {
+  transition:
+    transform 200ms ease,
+    background 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+.ws-nav-account:hover {
+  transform: translateY(-1px);
+  border-color: rgba(167, 139, 250, 0.22);
+  background: rgba(167, 139, 250, 0.06);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+.ws-nav-account:active {
+  transform: translateY(0);
+}
+
+/* ── 5. Button polish — smooth transitions + press-down feel ───────── */
+.upgrade-cta-btn,
+.billing-secondary-btn,
+.chat-history-new,
+.chat-copilot-btn,
+.keys-revoke-btn,
+.upd-banner-btn,
+.upd-banner-x,
+.whats-new-btn,
+.boost-card-btn,
+.boost-btn,
+.titlebar-btn,
+.ws-nav-btn,
+.chat-icon-btn,
+.chat-send,
+.view-save-btn,
+.account-signout,
+.integration-card-btn,
+.main-signin-btn,
+.chat-history-search-clear {
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+/* Press-down: translateY(1px) + slight darken via filter so we don't
+   need to override every button's hover background. */
+.upgrade-cta-btn:active:not(:disabled),
+.billing-secondary-btn:active:not(:disabled),
+.chat-history-new:active:not(:disabled),
+.chat-copilot-btn:active:not(:disabled),
+.keys-revoke-btn:active:not(:disabled),
+.upd-banner-btn:active:not(:disabled),
+.upd-banner-x:active:not(:disabled),
+.whats-new-btn:active:not(:disabled),
+.boost-card-btn:active:not(:disabled),
+.boost-btn:active:not(:disabled),
+.ws-nav-btn:active:not(:disabled),
+.chat-icon-btn:active:not(:disabled),
+.chat-send:active:not(:disabled),
+.view-save-btn:active:not(:disabled),
+.account-signout:active:not(:disabled),
+.integration-card-btn:not([disabled]):active,
+.main-signin-btn:active:not(:disabled),
+.account-jump:active,
+.ws-nav-account:active {
+  transform: translateY(1px);
+  filter: brightness(0.94);
+}
+
+/* Titlebar buttons sit in a compressed strip — keep the press but skip
+   the lift so they don't visually leave the bar. */
+.titlebar-btn:active {
+  filter: brightness(0.9);
+}
+
+/* Solid violet buttons get a subtle brighten on hover (already true for
+   most), with a soft violet glow that mirrors card hover. */
+.upgrade-cta-btn:hover,
+.whats-new-btn:hover,
+.upd-banner-btn:hover,
+.view-save-btn:hover:not(:disabled),
+.chat-send:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.28);
+}
+
+/* ── 6. Input polish — smooth focus, violet border, gentle brighten ─ */
+.field-input,
+.chat-history-search-input,
+.chat-history-search,
+.keys-create-form input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+input[type="url"],
+textarea {
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.field-input:focus {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.14);
+}
+
+/* ── 7. Letter-spacing rhythm ───────────────────────────────────────
+   Headings tighten slightly, uppercase labels open up. */
+.view-head h1,
+.account-name,
+.billing-panel h2,
+.usage-panel-title,
+.billing-modal-title,
+.chat-title,
+.whats-new-title {
+  letter-spacing: -0.01em;
+}
+
+.view-meta,
+.billing-kicker,
+.usage-mini-label,
+.billing-chip-label,
+.chat-history-kicker,
+.ws-nav-account-plan,
+.ws-nav-account-version,
+.usage-card-tag,
+.update-card-tag,
+.upd-splash-build {
+  letter-spacing: 0.16em;
+}
+
+/* ── 8. Text-shadow on bold headings sitting on dark gradients ───── */
+.view-head h1,
+.billing-panel h2,
+.usage-panel-title,
+.whats-new-title {
+  text-shadow: 0 2px 24px rgba(167, 139, 250, 0.12);
+}
+
+/* ── 9. Pulse for status indicators ─────────────────────────────────
+   The nav-rail dot already has status-pulse 2.6s; broaden the family
+   so any other "live" dot breathes the same way. */
+@keyframes heist-soft-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* ── 10. Toast / pill animations ────────────────────────────────────
+   Gentle slide-down entry; the existing .chat-toast had no animation. */
+@keyframes heist-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.chat-toast {
+  animation: heist-toast-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
+
+@keyframes heist-pill-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.billing-comped-pill,
+.billing-badge {
+  animation: heist-pill-in 240ms ease-out;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+/* ── 11. Backdrop blur on overlay surfaces ─────────────────────────── */
+.whats-new {
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+
+/* ── 12. Text overflow guards ───────────────────────────────────────
+   Long emails / keys / paths should break instead of overflowing. */
+.ws-nav-account-email,
+.account-jump-sub {
+  word-break: break-word;
+}
+
+.field-value,
+.keys-row code,
+.keys-row span[title] {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Buttons with potentially long labels — never let them squish. */
+.upgrade-cta-btn,
+.billing-secondary-btn,
+.boost-card-btn,
+.boost-btn,
+.whats-new-btn,
+.upd-banner-btn,
+.view-save-btn,
+.account-signout,
+.keys-revoke-btn,
+.integration-card-btn,
+.chat-history-new {
+  flex-shrink: 0;
+}
+
+/* Single-line ellipsis for elements that musn't wrap — billing/account
+   meta lines, integration card titles. */
+.integration-card-name,
+.update-card-version,
+.boost-card-price {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ── 13. Link polish ───────────────────────────────────────────────── */
+a {
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
