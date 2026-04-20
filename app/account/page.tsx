@@ -7,38 +7,36 @@ import {
   desktopCurrentCodeVersion,
   desktopLatestShippedVersion,
 } from "../../lib/desktop-release";
-import { getPlanActionHref, pricingPlans } from "../../lib/pricing";
 import { getSubscriptionByEmail, readPricingSnapshot } from "../../lib/subscriptions";
 import { getUserProfileByEmail } from "../../lib/user-profile";
+// v0.1.12 \u2014 billing section now lives inline on /account so users
+// see plan / addons / payment / invoices in one place. /account/billing
+// redirects here. BillingPanel is a client component; embedding from a
+// server component creates a clean client-island boundary.
+import { BillingPanel } from "../../components/billing-panel";
+import { getBillingState } from "../../lib/billing-state";
+import { isStripeConfigured, getStripePublishableKey } from "../../lib/stripe";
+import { getCreditBalance } from "../../lib/credits";
 
 export const metadata: Metadata = {
   title: "Overview",
   description: "Your sansxel account overview.",
 };
 
-function formatSubscriptionStatus(value: string) {
-  switch (value) {
-    case "selection_pending":
-      return "Saved for rollout";
-    case "active":
-      return "Active";
-    case "contact_required":
-      return "Contact required";
-    case "canceled":
-      return "Canceled";
-    default:
-      return "Free";
-  }
-}
-
 export default async function AccountPage() {
   const session = await auth();
   const email = session?.user?.email ?? "";
-  const [profile, keys, rawSubscription] = await Promise.all([
+  const stripeReady = isStripeConfigured();
+  const publishableKey = getStripePublishableKey();
+  const [profile, keys, rawSubscription, billingState, credits] = await Promise.all([
     getUserProfileByEmail(email),
     listApiKeys(email),
     getSubscriptionByEmail(email),
+    stripeReady && email ? getBillingState(email.toLowerCase()) : Promise.resolve(null),
+    email ? getCreditBalance(email.toLowerCase()) : Promise.resolve(0),
   ]);
+  // v0.1.12 \u2014 1 USD = 100 credits per CREDITS_PER_DOLLAR in lib/credits.ts.
+  const creditsDollars = (credits / 100).toFixed(2);
   const subscription = readPricingSnapshot(rawSubscription);
   const sessionState = readSessionState(session, profile);
 
@@ -69,9 +67,6 @@ export default async function AccountPage() {
     monthlyLimit && monthlyLimit > 0
       ? Math.min((usedRequests / monthlyLimit) * 100, 100)
       : 0;
-  const nextPlans = pricingPlans.filter(
-    (plan) => plan.key !== subscription.plan.key && plan.key !== "enterprise",
-  );
 
   const checks = [
     { label: "Account created", done: true },
@@ -200,8 +195,17 @@ export default async function AccountPage() {
         </Link>
       </div>
 
+      {/* v0.1.12 \u2014 dropped the redundant "Plan" mini-stat tile (the
+          full plan + status now lives in the Billing section below).
+          Replaced with a "Credits" tile pulled from the live billing
+          state so users see at a glance what they have to spend on
+          pay-as-you-go usage. */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <MiniStat label="Plan" value={subscription.plan.name} href="/pricing" />
+        <MiniStat
+          label="Credits"
+          value={`$${creditsDollars}`}
+          href="#billing"
+        />
         <MiniStat label="API keys" value={String(keys.length)} href="/account/keys" />
         <MiniStat
           label="Monthly limit"
@@ -214,6 +218,44 @@ export default async function AccountPage() {
           href="/account/memory"
         />
       </div>
+
+      {/* v0.1.12 \u2014 Inline Billing section. Used to live ONLY at
+          /account/billing as a barebones page; now the full BillingPanel
+          (plan + status badge, addons grid, payment method, invoices,
+          credits modal) is here so users land on it directly. The
+          /account/billing route now redirects to /account#billing so
+          deep links still work. */}
+      <section
+        id="billing"
+        className="scroll-mt-24 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7"
+      >
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-300/85">
+              Billing
+            </div>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight text-white sm:text-xl">
+              Plan, addons, payment, and invoices
+            </h2>
+          </div>
+          {!stripeReady && (
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-400">
+              Billing not configured on this server
+            </span>
+          )}
+        </div>
+        {stripeReady && billingState ? (
+          <BillingPanel state={billingState} publishableKey={publishableKey ?? ""} />
+        ) : (
+          <p className="text-sm text-neutral-400">
+            Sign in to manage your subscription. Visit{" "}
+            <Link href="/pricing" className="sansxel-subtle-link">
+              pricing
+            </Link>{" "}
+            to compare plans.
+          </p>
+        )}
+      </section>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="space-y-5">
@@ -298,72 +340,10 @@ export default async function AccountPage() {
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-white">Plan</span>
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-neutral-400">
-                {formatSubscriptionStatus(subscription.status)}
-              </span>
-            </div>
-            <div className="mt-3">
-              <div className="text-lg font-semibold text-white">
-                {subscription.plan.name}
-              </div>
-              <div className="mt-1 text-xs text-neutral-500">
-                {subscription.plan.monthlyLabel}
-              </div>
-            </div>
-            <div className="mt-3 text-xs leading-6 text-neutral-400">
-              {subscription.plan.description}
-            </div>
-            <ul className="mt-4 space-y-1.5 text-xs text-neutral-400">
-              <li className="flex items-center gap-2">
-                <span className="text-neutral-500">—</span>
-                {subscription.plan.monthlyCredits}
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-neutral-500">—</span>
-                {subscription.plan.support}
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="text-neutral-500">—</span>
-                {subscription.plan.seats}
-              </li>
-            </ul>
-            <div className="mt-4 border-t border-white/10 pt-3">
-              <Link
-                href="/pricing"
-                className="sansxel-subtle-link text-xs"
-              >
-                Review all plans →
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-white/[0.02]">
-            <div className="border-b border-white/10 px-5 py-3.5">
-              <span className="text-sm font-medium text-white">Upgrade path</span>
-            </div>
-            <div className="space-y-2 px-5 py-4">
-              {nextPlans.slice(0, 3).map((plan) => (
-                <Link
-                  key={plan.key}
-                  href={getPlanActionHref(plan)}
-                  className="block rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 transition hover:bg-white/[0.06]"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-white">{plan.name}</span>
-                    <span className="text-xs text-neutral-400">
-                      {plan.monthlyLabel}
-                    </span>
-                  </div>
-                  <div className="mt-1 text-xs text-neutral-500">
-                    {plan.note}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+          {/* v0.1.12 \u2014 Removed the right-sidebar "Plan" card and
+              "Upgrade path" card. The full Billing section above now
+              owns plan info, status, addons, payment, invoices, and
+              upgrade flow \u2014 keeping them here was duplication. */}
 
           <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
             <div className="flex items-center justify-between">
