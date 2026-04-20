@@ -27,14 +27,8 @@ export function DesktopSettingsView() {
     );
   }
 
-  async function applyWindowMode(mode: DesktopPreferences["window_mode"]) {
-    await update({ window_mode: mode });
-    try {
-      await invoke("set_window_mode", { mode });
-    } catch {
-      // No-op — native call may fail in dev hot reload, the pref is saved.
-    }
-  }
+  // v0.1.13 \u2014 applyWindowMode removed alongside the Window mode setting
+  // (Toolbar modes are gone \u2014 see chat-view.tsx).
 
   return (
     <div className="view view--settings">
@@ -80,22 +74,11 @@ export function DesktopSettingsView() {
           </div>
         </PrefSection>
 
-        <PrefSection
-          label="Window mode"
-          help="Pin sansxel to a screen edge for interviews, recordings, study sessions. Toolbar modes float above other apps."
-        >
-          <SegmentedControl<DesktopPreferences["window_mode"]>
-            value={prefs.window_mode}
-            onChange={(v) => void applyWindowMode(v)}
-            options={[
-              { value: "normal", label: "Window" },
-              { value: "toolbar-top", label: "Top" },
-              { value: "toolbar-left", label: "Left" },
-              { value: "toolbar-right", label: "Right" },
-            ]}
-          />
-        </PrefSection>
-
+        {/* v0.1.13 \u2014 Window mode setting removed. Toolbar modes never
+            worked properly outside full-window scale (header text overlapped,
+            buttons collided), and the floating Sansxel Copilot covers the
+            same use case. The window_mode preference defaults to "normal"
+            and gets force-reset on every launch (chat-view.tsx). */}
         {/* v0.1.8 Capsule Rail — where the floating copilot lives.
             Right/Left/Top are the recommended positions; Bottom is
             opt-in via the Advanced expander because it conflicts with
