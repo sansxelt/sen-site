@@ -15,11 +15,11 @@ export type DesktopRelease = {
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
 export const desktopCurrentCodeVersion = "0.1.13";
-export const desktopLatestShippedVersion = "0.1.12";
+export const desktopLatestShippedVersion = "0.1.13";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T22:00:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.12_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.12_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-19T23:45:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.13_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.13_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
 export const desktopNextVersion = "0.1.14";
