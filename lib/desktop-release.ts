@@ -14,7 +14,7 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.13";
+export const desktopCurrentCodeVersion = "0.1.14";
 export const desktopLatestShippedVersion = "0.1.13";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
 export const desktopLatestShippedDateIso = "2026-04-19T23:45:00Z";
@@ -22,17 +22,94 @@ export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.13_x64-setup.ex
 export const desktopWindowsInstallerFilename = "sansxel_0.1.13_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.14";
+export const desktopNextVersion = "0.1.15";
 export const desktopNextVersionHighlights = [
-  "Pure copilot rework \u2014 finalized UI design pass on the floating Sansxel Copilot, scoped narrow but with depth (spec being planned).",
-  "Server-side sync for Live Mode consent (currently localStorage only) + Settings toggle to revoke / re-grant.",
-  "Multi-tool MCP expansion: navigate + thread tools wired alongside web_search.",
+  "Polish + bug-fix pass on top of v0.1.14's full Capsule Rail rebuild \u2014 specifics TBD based on what surfaces in real use.",
+  "Per the every-15-patches convention, v0.1.15 is the last 0.1.x; v0.2.0 follows with a major UX milestone.",
 ];
 
 export const desktopLatestUpdaterNotes =
   "v0.1.13 \u2014 floating copilot can SEARCH THE WEB (Anthropic web_search tool, max 3 uses per turn). Persistent thread history (8 conversations, restorable from a Recent dropdown). Live Mode hints are dismissible + debounced. Splash bottom corners back \u2014 status + boot step on the left, keyboard shortcuts on the right, always visible. ESC\u00d73 from app revisits the splash; the shortcut is advertised on the splash itself. Settings page gets a Keyboard shortcuts section listing Ctrl+Q (force quit), ESC\u00d73 (revisit splash), Enter (open from splash), Space (play minigame). Toolbar mode killed entirely (broken at non-full scale, redundant with floating copilot). Sansxel Copilot launcher renamed properly. Plan + billing reconciled \u2014 comped users see Pro \u00b7 Comped instead of Free. Only paid invoices show. Buy Credits cap raised to $10k with $200 + centered $500 added. Cycle pill text fixed (was white-on-white). 3D tilt on billing cards. Global white-on-white safety net stops the recurring invisible-label bug. /account hero stops going blank (data-reveal stripped + CSS safety fallback). AI knows your local time. Web copilot stays open across navigations.";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.14",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-20T00:30:00Z",
+    channel: "alpha",
+    summary:
+      "The Capsule Rail rebuild. Six-step copilot rework end-to-end: icon-stack rail, restructured panel with command input on top, Output Blocks with copy/refine/rerun, MCP attachments (drag/paste/file picker), voice (mic \u2192 transcription \u2192 send), unified panel for all 4 dock edges, Ctrl+Space global hotkey. Plus plan-gating that shows locked icons + redirects to /pricing on second tap. Plus the copilot 401 root-cause fix and the Updates page CORS fix.",
+    changes: [
+      {
+        type: "fix",
+        text: "Floating copilot was returning 401 on every send. Root cause: /api/ai/copilot only checked NextAuth cookie sessions, never the desktop Bearer token. Same dual-auth pattern as the chat route now applies, so desktop callers authenticate cleanly.",
+      },
+      {
+        type: "new",
+        text: "Step 1 \u2014 Capsule Rail icon stack: \u26a1 Ask, \u2318 Commands, \ud83d\udcce Attach, \ud83e\udde0 Context, \ud83c\udf99\ufe0f Voice. Each icon shows a hover-peek label on the side opposite the screen edge. Click sets a panelIntent that routes to the matching panel mode.",
+      },
+      {
+        type: "new",
+        text: "Step 2 \u2014 Panel restructured per spec: Header (with state pill) \u2192 COMMAND INPUT (top, primary) \u2192 Quick Actions (Summarize / Explain / Search web / Draft) \u2192 Context (MCP) Panel \u2192 Output Area. Input moved from bottom to top so the panel reads as a workspace, not a chat.",
+      },
+      {
+        type: "new",
+        text: "Step 3 \u2014 Output Blocks: assistant turns now render as typed cards (text / code / summary) with per-block actions: Copy / Refine / Rerun. Code blocks get a language tag and a scrollable pre. Summary cards (bullet lists) get a cyan accent.",
+      },
+      {
+        type: "new",
+        text: "Step 4 \u2014 MCP attachments: drag files into the panel, paste images (Ctrl+V), or click + Attach to file-pick. Items appear as removable chips in the Context Panel. Drop overlay shows a clear \"Drop to attach\" target. Sent inline with the next prompt.",
+      },
+      {
+        type: "new",
+        text: "Step 5 \u2014 Voice in the rail: tap the mic button (or click the \ud83c\udf99\ufe0f rail icon to auto-start) \u2192 record \u2192 tap again to stop \u2192 transcript fires sendText automatically. Recording state pulses red so the mic state is unmistakable.",
+      },
+      {
+        type: "new",
+        text: "Step 6 \u2014 Unified panel for all 4 dock edges (the old horizontal cmdbar layout was dropped; the v2 panel layout works on left/right/top/bottom equally). Plus Ctrl+Space global hotkey: summons the floating copilot from any app, anywhere.",
+      },
+      {
+        type: "new",
+        text: "Plan-gating on the rail: icons that need a paid tier (\ud83d\udcce Attach, \ud83c\udf99\ufe0f Voice on Apprentice and up) get a \ud83d\udd12 lock badge and a \"needs upgrade\" toast on first click. Second tap opens /pricing in the browser so users can convert immediately.",
+      },
+      {
+        type: "fix",
+        text: "Updates view (desktop) was showing \"Couldn't load release notes \u2014 Failed to fetch\" because regular fetch from a Tauri webview to sansxel.ai was getting blocked by WebView2 CORS. Switched to tauriFetch (Tauri HTTP plugin) which bypasses the gate.",
+      },
+      {
+        type: "fix",
+        text: "Panel header was rendering literal \"\\u2013\" and \"\\u00d7\" characters because JSX text nodes don't interpret backslash escapes. Switched to real em-dash and \u00d7 characters \u2014 same recurring fix pattern.",
+      },
+      {
+        type: "improve",
+        text: "Renamed \"Comped\" to \"Active \u00b7 free access\" everywhere it appears (rail, billing, plan badge). \"Comped\" was restaurant/casino jargon nobody understands; same meaning, plain English.",
+      },
+      {
+        type: "improve",
+        text: "Nav-rail account-card version label is now read from package.json instead of hardcoded \u2014 was stuck at \"v0.1.10\" through several releases.",
+      },
+      {
+        type: "new",
+        text: "Teams + Enterprise CTAs in the desktop billing panel \u2014 both redirect to the website (Stripe per-seat checkout for Teams, /contact for Enterprise) via openUrl since per-seat / custom-contract flows need a real form.",
+      },
+      {
+        type: "new",
+        text: "Type-anywhere-to-focus on the chat surface: pressing \"/\" or any printable character focuses the composer when no input is already active. Skips when typing in inputs / textareas / contentEditable, and when modifier keys are held.",
+      },
+      {
+        type: "fix",
+        text: "Splash bottom corners decluttered \u2014 stripped back to clean status (boot step) on the left + version on the right. Keyboard shortcuts (Ctrl+Q, ESC\u00d73, Enter, Space) discoverable in Settings > Keyboard shortcuts panel.",
+      },
+      {
+        type: "fix",
+        text: "ESC\u00d73 was showing a white screen because boot_complete called splash.close() which destroyed the webview, so revisit_splash had to recreate it without the dark background. Now boot_complete just hides the splash \u2014 instant revisit.",
+      },
+      {
+        type: "fix",
+        text: "Model-picker dropdown anchored right (was overflowing the right edge of the chat). Settings page Window mode toggle removed (Toolbar mode is dead, leftover UI could re-enable it).",
+      },
+    ],
+  },
   {
     version: "0.1.13",
     dateLabel: "Apr 19, 2026",

@@ -21,6 +21,7 @@
     "store:default",
     "updater:default",
     "process:default",
+    "global-shortcut:default",
     {
       "identifier": "http:default",
       "allow": [

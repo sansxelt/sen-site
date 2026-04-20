@@ -521,6 +521,330 @@ body,
    steps may toggle Quick Actions vs Voice control vs Attach drop
    zone based on the active intent. */
 
+/* ─── v0.1.14 STEP 3: Output Blocks ──────────────────────────────────
+   Assistant turns now render as a stack of typed blocks (text / code
+   / summary) with per-block actions. User turns render as a small
+   inline pill so the input stays the visual focus. */
+.fc-user-turn {
+  align-self: flex-end;
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(167, 139, 250, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  color: rgba(245, 240, 255, 0.96);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.fc-assistant-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fc-assistant-streaming {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.fc-assistant-streaming-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(196, 168, 252, 0.7);
+  animation: fc-stream-bounce 1100ms ease-in-out infinite;
+}
+
+.fc-assistant-streaming-dot:nth-child(2) { animation-delay: 140ms; }
+.fc-assistant-streaming-dot:nth-child(3) { animation-delay: 280ms; }
+
+@keyframes fc-stream-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50%      { transform: translateY(-3px); opacity: 1; }
+}
+
+.fc-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.fc-block--code {
+  background: rgba(8, 8, 12, 0.7);
+  border-color: rgba(167, 139, 250, 0.22);
+}
+
+.fc-block--summary {
+  background: rgba(165, 243, 252, 0.06);
+  border-color: rgba(165, 243, 252, 0.22);
+}
+
+.fc-block-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.fc-block-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(196, 168, 252, 0.9);
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+}
+
+.fc-block--summary .fc-block-tag {
+  color: rgba(165, 243, 252, 0.96);
+  background: rgba(165, 243, 252, 0.1);
+  border-color: rgba(165, 243, 252, 0.32);
+}
+
+.fc-block-body {
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(220, 220, 235, 0.92);
+}
+
+.fc-block-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.fc-block-pre {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.32);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.55;
+  color: rgba(220, 220, 240, 0.96);
+  overflow-x: auto;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.fc-block-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fc-block-list li {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(220, 220, 235, 0.92);
+}
+
+.fc-block-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.fc-block-action {
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: rgba(180, 180, 200, 0.78);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.fc-block-action:hover {
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.3);
+  color: #ffffff;
+}
+
+/* ─── v0.1.14 STEP 4: Attachments + drag overlay ────────────────────── */
+.fc-context-attach-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  background: rgba(167, 139, 250, 0.08);
+  color: rgba(232, 224, 255, 0.94);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.fc-context-attach-btn:hover {
+  background: rgba(167, 139, 250, 0.18);
+  border-color: rgba(167, 139, 250, 0.5);
+}
+
+.fc-context-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
+}
+
+.fc-context-chip-icon {
+  font-size: 11px;
+}
+
+.fc-context-chip-name {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fc-context-chip-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 4px;
+  border: 0;
+  background: transparent;
+  color: rgba(180, 180, 200, 0.6);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+.fc-context-chip-x:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.fc-context-chip--live {
+  border-color: rgba(255, 191, 0, 0.32);
+  background: rgba(255, 191, 0, 0.08);
+  color: rgba(255, 232, 168, 0.94);
+}
+
+/* Drag overlay: when files are being dragged over the panel, the
+   panel gets a brighter purple ring + a soft "drop here" haze so
+   users see a clear drop target. */
+.fc-panel--v2.is-dragover {
+  outline: 2px dashed rgba(196, 168, 252, 0.55);
+  outline-offset: -8px;
+  background:
+    radial-gradient(circle at center, rgba(167, 139, 250, 0.12), transparent 60%),
+    rgba(14, 14, 18, 0.96);
+}
+.fc-panel--v2.is-dragover::before {
+  content: "Drop to attach";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(167, 139, 250, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.48);
+  color: rgba(245, 240, 255, 0.96);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  z-index: 80;
+}
+
+/* ─── v0.1.14 STEP 5: Voice button + transcript chip ───────────────── */
+.fc-voice-btn {
+  flex: 0 0 auto;
+  width: 44px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(232, 224, 255, 0.94);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.fc-voice-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.fc-voice-btn.is-recording {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.55);
+  color: rgba(255, 220, 220, 0.96);
+  animation: fc-voice-pulse 1100ms ease-in-out infinite;
+}
+@keyframes fc-voice-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.4); }
+  50%      { box-shadow: 0 0 0 5px rgba(248, 113, 113, 0.12); }
+}
+
+.fc-voice-transcript {
+  margin: 0 14px 8px 14px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-style: italic;
+  color: rgba(196, 168, 252, 0.92);
+  border-left: 2px solid rgba(167, 139, 250, 0.55);
+  background: rgba(167, 139, 250, 0.05);
+  border-radius: 0 6px 6px 0;
+}
+
+/* ─── v0.1.14 Plan-gating: locked rail icons + tap-twice toast ─────── */
+.fc-rail-icon.is-locked {
+  opacity: 0.55;
+  cursor: pointer;
+}
+.fc-rail-icon.is-locked:hover {
+  opacity: 0.85;
+  background: rgba(255, 191, 0, 0.1);
+  border-color: rgba(255, 191, 0, 0.3);
+}
+.fc-rail-icon-lock {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 9px;
+  background: rgba(8, 8, 12, 0.92);
+  border-radius: 999px;
+  padding: 1px 3px;
+  pointer-events: none;
+}
+
+.fc-locked-toast {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255, 191, 0, 0.12);
+  border: 1px solid rgba(255, 191, 0, 0.4);
+  color: rgba(255, 232, 168, 0.96);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  white-space: normal;
+  max-width: 220px;
+}
+
 /* ── Hover state: peek + position switcher ──────────────────────── */
 .fc-hover {
   display: flex;

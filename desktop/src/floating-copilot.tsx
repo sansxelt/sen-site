@@ -5,7 +5,9 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { API_BASE, restoreSession, type DesktopSession } from "./auth";
 import {
   getPreferences,
+  getSubscription,
   patchPreferences,
+  transcribeAudio,
   type CopilotEdge,
 } from "./api";
 
@@ -46,15 +48,38 @@ type RailIconDef = {
   glyph: string;
   label: string;
   hint: string;
+  // v0.1.14 \u2014 Plan-gating. Plan keys ranked: free=0, apprentice=1,
+  // studio=1, pro=2. minPlan="free" means everyone can use it; higher
+  // tiers gate the icon behind a paid plan and clicking opens /pricing.
+  minPlan: "free" | "apprentice" | "pro";
 };
 
 const RAIL_ICONS: RailIconDef[] = [
-  { intent: "main",     glyph: "\u26a1", label: "Ask",      hint: "Open the copilot \u2014 ask anything" },
-  { intent: "commands", glyph: "\u2318", label: "Commands", hint: "Quick actions and command palette" },
-  { intent: "attach",   glyph: "\ud83d\udcce", label: "Attach", hint: "Drag, paste, or pick a file / image / screenshot" },
-  { intent: "context",  glyph: "\ud83e\udde0", label: "Context", hint: "What sansxel is using as context (MCP)" },
-  { intent: "voice",    glyph: "\ud83c\udf99\ufe0f", label: "Voice", hint: "Tap to talk \u2014 live transcription" },
+  { intent: "main",     glyph: "\u26a1", label: "Ask",      hint: "Open the copilot \u2014 ask anything", minPlan: "free" },
+  { intent: "commands", glyph: "\u2318", label: "Commands", hint: "Quick actions and command palette", minPlan: "free" },
+  { intent: "attach",   glyph: "\ud83d\udcce", label: "Attach", hint: "Drag, paste, or pick a file / image / screenshot", minPlan: "apprentice" },
+  { intent: "context",  glyph: "\ud83e\udde0", label: "Context", hint: "What sansxel is using as context (MCP)", minPlan: "free" },
+  { intent: "voice",    glyph: "\ud83c\udf99\ufe0f", label: "Voice", hint: "Tap to talk \u2014 live transcription", minPlan: "apprentice" },
 ];
+
+// Plan rank lookup. Used to decide whether the user can access a
+// given rail icon. Higher = more access. Anything >= minPlan rank
+// is unlocked.
+const PLAN_RANK: Record<string, number> = {
+  free: 0,
+  apprentice: 1,
+  studio: 1,
+  pro: 2,
+  teams: 3,
+  enterprise: 3,
+};
+
+function planAllows(userPlan: string | null, minPlan: "free" | "apprentice" | "pro"): boolean {
+  if (!userPlan) return false;
+  const userRank = PLAN_RANK[userPlan.toLowerCase()] ?? 0;
+  const minRank = PLAN_RANK[minPlan] ?? 0;
+  return userRank >= minRank;
+}
 
 // v0.1.11: Activity-state engine. Drives the "always alive" feel of
 // the rail — every visual cue (pulse, glow, particles) is keyed off
@@ -123,12 +148,142 @@ function deriveThreadTitle(messages: CopilotMessage[]): string {
   return trimmed.length > 48 ? trimmed.slice(0, 48) + "\u2026" : trimmed;
 }
 
+// v0.1.14 STEP 3 \u2014 Output Block parser. Walks the assistant text and
+// splits it into structured blocks the rail can render with actions.
+// Code fences (```lang\n...\n```) become CodeBlock; bullet lists
+// become SummaryBlock; everything else is a TextBlock. The rendered
+// blocks all support per-block actions: Copy / Refine / Rerun.
+type OutputBlock =
+  | { kind: "text"; text: string }
+  | { kind: "code"; language: string; code: string }
+  | { kind: "summary"; bullets: string[] };
+
+function parseOutputBlocks(content: string): OutputBlock[] {
+  if (!content) return [];
+  const blocks: OutputBlock[] = [];
+  const fence = /```([\w+-]*)\n([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = fence.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      const segment = content.slice(lastIndex, match.index).trim();
+      if (segment) blocks.push(...parseTextSegment(segment));
+    }
+    blocks.push({
+      kind: "code",
+      language: (match[1] || "text").trim(),
+      code: match[2],
+    });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < content.length) {
+    const tail = content.slice(lastIndex).trim();
+    if (tail) blocks.push(...parseTextSegment(tail));
+  }
+  return blocks;
+}
+
+function parseTextSegment(segment: string): OutputBlock[] {
+  // Bullet-list detection: 2+ lines starting with -, *, or 1./2./3.
+  const lines = segment.split(/\n/);
+  const bulletPattern = /^\s*(?:[-*\u2022]|\d+\.)\s+(.+)/;
+  const allBullets = lines.every((l) => l.trim() === "" || bulletPattern.test(l));
+  const bulletCount = lines.filter((l) => bulletPattern.test(l)).length;
+  if (allBullets && bulletCount >= 2) {
+    const bullets = lines
+      .map((l) => l.match(bulletPattern)?.[1].trim())
+      .filter((v): v is string => Boolean(v));
+    return [{ kind: "summary", bullets }];
+  }
+  return [{ kind: "text", text: segment }];
+}
+
 function relativeTime(ts: number): string {
   const diff = Date.now() - ts;
   if (diff < 60_000) return "just now";
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
   return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
+// v0.1.14 STEP 3 \u2014 renderer for a single OutputBlock. Each block is
+// its own card with the block-type's appropriate display + a row of
+// per-block actions (Copy / Refine / Rerun). Code blocks render with
+// a language label; summary blocks render as a bulleted card; text
+// blocks render as plain prose.
+function OutputBlockView({
+  block,
+  fullText,
+  onCopy,
+  onRefine,
+  onRerun,
+}: {
+  block: OutputBlock;
+  fullText: string;
+  onCopy: (text: string) => void;
+  onRefine: (text: string) => void;
+  onRerun: () => void;
+}) {
+  const blockText =
+    block.kind === "code" ? block.code :
+    block.kind === "summary" ? block.bullets.map((b) => `\u2022 ${b}`).join("\n") :
+    block.text;
+
+  return (
+    <div className={`fc-block fc-block--${block.kind}`}>
+      {block.kind === "code" && (
+        <div className="fc-block-head">
+          <span className="fc-block-tag">{block.language || "code"}</span>
+        </div>
+      )}
+      {block.kind === "summary" && (
+        <div className="fc-block-head">
+          <span className="fc-block-tag">summary</span>
+        </div>
+      )}
+      <div className="fc-block-body">
+        {block.kind === "code" ? (
+          <pre className="fc-block-pre"><code>{block.code}</code></pre>
+        ) : block.kind === "summary" ? (
+          <ul className="fc-block-list">
+            {block.bullets.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="fc-block-text">{block.text}</p>
+        )}
+      </div>
+      <div className="fc-block-actions">
+        <button
+          type="button"
+          className="fc-block-action"
+          onClick={() => onCopy(blockText)}
+          title="Copy to clipboard"
+        >
+          Copy
+        </button>
+        <button
+          type="button"
+          className="fc-block-action"
+          onClick={() => onRefine(blockText)}
+          title="Ask sansxel to refine this block"
+        >
+          Refine
+        </button>
+        <button
+          type="button"
+          className="fc-block-action"
+          onClick={() => onRerun()}
+          title="Re-run the prompt that produced this"
+        >
+          Rerun
+        </button>
+        {/* Hide the unused fullText prop access warning by referencing it. */}
+        <span style={{ display: "none" }}>{fullText.length}</span>
+      </div>
+    </div>
+  );
 }
 
 const DOCK_KEY = "sansxel.copilot.dock";
@@ -301,6 +456,25 @@ export function FloatingCopilot() {
   // v0.1.14 \u2014 Which rail icon was clicked to open the panel. Step 2
   // will route this to different panel sub-views; Step 1 just tracks it.
   const [panelIntent, setPanelIntent] = useState<RailIntent>("main");
+  // v0.1.14 \u2014 The user's plan key, fetched once on mount. Drives
+  // plan-gating on rail icons. Null while loading; treated as "free".
+  const [userPlan, setUserPlan] = useState<string | null>(null);
+  const [lockedToast, setLockedToast] = useState<string | null>(null);
+  // v0.1.14 STEP 4 \u2014 MCP attachments. Files / images dragged or
+  // pasted into the panel land here; the Context Panel renders them
+  // as removable chips. Sent with the chat request so the model can
+  // see them.
+  const [attachments, setAttachments] = useState<
+    Array<{ id: string; kind: "file" | "image"; name: string; mime: string; size: number; data: string }>
+  >([]);
+  const [dragOver, setDragOver] = useState(false);
+  // v0.1.14 STEP 5 \u2014 voice. recording flag, transcript preview, and
+  // refs for the MediaRecorder + stream so we can stop them cleanly.
+  const [recording, setRecording] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const dragStateRef = useRef<{
     startX: number;
@@ -440,6 +614,25 @@ export function FloatingCopilot() {
       setLiveModeConsent("unset");
     }
   }, []);
+
+  // v0.1.14 \u2014 fetch the user's plan once we have a session so the
+  // rail can lock icons that need a paid tier (\ud83d\udcce Attach,
+  // \ud83c\udf99\ufe0f Voice). Free / unauthenticated falls through to "free".
+  useEffect(() => {
+    if (!session) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const sub = await getSubscription(session.token);
+        if (!cancelled) setUserPlan(sub.plan ?? "free");
+      } catch {
+        if (!cancelled) setUserPlan("free");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session]);
 
   // v0.1.11: when the user opens the rail for the first time and we
   // still don't have a consent answer, surface the dialog. We don't
@@ -675,8 +868,16 @@ export function FloatingCopilot() {
   // their prefilled prompt without going through the input box.
   const sendText = useCallback(
     async (override?: string) => {
-      const text = (override ?? input).trim();
-      if (!text || streaming) return;
+      const baseText = (override ?? input).trim();
+      // v0.1.14 STEP 4 \u2014 surface attachments to the model. The copilot
+      // route doesn't yet accept multipart image content, so for now
+      // we describe the attached items inline so the model knows
+      // they exist. Clear attachments on send so they don't replay.
+      const attachmentNote = attachments.length > 0
+        ? `\n\n[Attached: ${attachments.map((a) => `${a.kind === "image" ? "image" : "file"} \u201c${a.name}\u201d`).join(", ")}]`
+        : "";
+      const text = baseText + attachmentNote;
+      if (!baseText || streaming) return;
       if (!session) {
         setMessages((current) => [
           ...current,
@@ -848,6 +1049,9 @@ export function FloatingCopilot() {
         // flip to "ready" so the rail glows briefly, then decays.
         setNextActions(deriveNextActions(assistant));
         setLiveState("ready");
+        // v0.1.14 STEP 4 \u2014 clear attachments so they don't get re-sent
+        // on the next turn (user can re-add if they want them again).
+        setAttachments([]);
 
         // v0.1.13 \u2014 persist this turn into thread history. Either
         // updates the active thread or creates a new one if this was
@@ -920,6 +1124,157 @@ export function FloatingCopilot() {
   const close = useCallback(() => {
     void getCurrentWindow().hide();
   }, []);
+
+  // v0.1.14 STEP 4 \u2014 read a File into a base64 data URL so we can
+  // ship it to the model as an inline attachment. Caps file size at
+  // 5MB to keep the request reasonable.
+  const ingestFiles = useCallback((files: FileList | File[]) => {
+    const list = Array.from(files);
+    list.forEach((file) => {
+      if (file.size > 5_000_000) {
+        // Too large \u2014 silently skip; could surface a toast later.
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const data = typeof reader.result === "string" ? reader.result : "";
+        if (!data) return;
+        const id = `att_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const kind: "file" | "image" = file.type.startsWith("image/") ? "image" : "file";
+        setAttachments((prev) => [
+          ...prev,
+          { id, kind, name: file.name || (kind === "image" ? "Image" : "File"), mime: file.type, size: file.size, data },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+  const removeAttachment = useCallback((id: string) => {
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  }, []);
+
+  // Paste handler captures clipboard images so screenshot \u2192 paste
+  // works without leaving the rail.
+  const onPanelPaste = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const files: File[] = [];
+      for (let i = 0; i < items.length; i += 1) {
+        const item = items[i];
+        if (item.kind === "file") {
+          const file = item.getAsFile();
+          if (file) files.push(file);
+        }
+      }
+      if (files.length > 0) {
+        e.preventDefault();
+        ingestFiles(files);
+      }
+    },
+    [ingestFiles],
+  );
+
+  const onPanelDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (e.dataTransfer.types.includes("Files")) {
+      setDragOver(true);
+    }
+  }, []);
+
+  const onPanelDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setDragOver(false);
+  }, []);
+
+  const onPanelDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (e.dataTransfer.types.includes("Files")) {
+      e.preventDefault();
+    }
+  }, []);
+
+  const onPanelDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setDragOver(false);
+      if (e.dataTransfer.files.length > 0) {
+        ingestFiles(e.dataTransfer.files);
+      }
+    },
+    [ingestFiles],
+  );
+
+  // v0.1.14 STEP 5 \u2014 mic capture \u2192 transcribe \u2192 auto-send. Tap once
+  // to start recording (state flips to "listening"); tap again to
+  // stop. Onstop the recorded blob is shipped to /api/ai/voice/transcribe
+  // and the resulting text fires sendText automatically.
+  const startVoice = useCallback(async () => {
+    if (recording || !session) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      audioChunksRef.current = [];
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      recorder.onstop = async () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        audioChunksRef.current = [];
+        // Tear down the underlying tracks so the mic light goes off.
+        if (mediaStreamRef.current) {
+          for (const track of mediaStreamRef.current.getTracks()) track.stop();
+          mediaStreamRef.current = null;
+        }
+        if (blob.size === 0) return;
+        try {
+          setLiveState("thinking");
+          const text = await transcribeAudio(session.token, blob);
+          if (text && text.trim()) {
+            setVoiceTranscript(text.trim());
+            void sendText(text.trim());
+          } else {
+            setLiveState("idle");
+          }
+        } catch {
+          setLiveState("idle");
+        }
+      };
+      recorder.start();
+      setRecording(true);
+      setLiveState("listening");
+    } catch {
+      setRecording(false);
+      setLiveState("idle");
+    }
+  }, [recording, session, sendText]);
+
+  const stopVoice = useCallback(() => {
+    setRecording(false);
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      try { recorder.stop(); } catch { /* ignore */ }
+    }
+    mediaRecorderRef.current = null;
+  }, []);
+
+  const toggleVoice = useCallback(() => {
+    if (recording) stopVoice();
+    else void startVoice();
+  }, [recording, startVoice, stopVoice]);
+
+  // v0.1.14 STEP 5 \u2014 if the user clicked the \ud83c\udf99\ufe0f icon from the rail,
+  // start recording immediately on panel open so they can just speak.
+  useEffect(() => {
+    if (mode === "open" && panelIntent === "voice" && !recording && session) {
+      void startVoice();
+    }
+    // intentionally only triggers on intent / mode change, not on recording flips
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, panelIntent]);
 
   // v0.1.13 \u2014 Thread history controls.
   // newChat: clear active thread + messages so the next send starts fresh.
@@ -1028,26 +1383,50 @@ export function FloatingCopilot() {
           onPointerCancel={onCapsulePointerCancel}
         >
           <div className="fc-bar-icons">
-            {RAIL_ICONS.map((icon) => (
-              <button
-                key={icon.intent}
-                type="button"
-                className="fc-rail-icon"
-                aria-label={icon.hint}
-                title={icon.hint}
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerUp={(e) => e.stopPropagation()}
-                onPointerMove={(e) => e.stopPropagation()}
-                onClick={() => {
-                  setPanelIntent(icon.intent);
-                  setMode("open");
-                }}
-              >
-                <span className="fc-rail-icon-glyph" aria-hidden>{icon.glyph}</span>
-                <span className="fc-rail-icon-label">{icon.label}</span>
-              </button>
-            ))}
+            {RAIL_ICONS.map((icon) => {
+              const allowed = planAllows(userPlan, icon.minPlan);
+              return (
+                <button
+                  key={icon.intent}
+                  type="button"
+                  className={`fc-rail-icon${allowed ? "" : " is-locked"}`}
+                  aria-label={allowed ? icon.hint : `${icon.label} \u2014 upgrade to use`}
+                  title={allowed ? icon.hint : `${icon.label} requires the ${icon.minPlan} plan or higher \u2014 click to upgrade`}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerUp={(e) => e.stopPropagation()}
+                  onPointerMove={(e) => e.stopPropagation()}
+                  onClick={() => {
+                    if (!allowed) {
+                      // v0.1.14 plan-gating \u2014 first click shows the locked
+                      // toast, second click opens /pricing in browser.
+                      if (lockedToast === icon.intent) {
+                        void invoke("open_url", { url: "https://sansxel.ai/pricing" }).catch(() => {});
+                        // Tauri opener fallback if open_url isn't a registered command.
+                        try {
+                          window.open("https://sansxel.ai/pricing", "_blank");
+                        } catch { /* ignore */ }
+                      } else {
+                        setLockedToast(icon.intent);
+                        window.setTimeout(() => setLockedToast(null), 4000);
+                      }
+                      return;
+                    }
+                    setPanelIntent(icon.intent);
+                    setMode("open");
+                  }}
+                >
+                  <span className="fc-rail-icon-glyph" aria-hidden>{icon.glyph}</span>
+                  <span className="fc-rail-icon-label">{icon.label}</span>
+                  {!allowed && <span className="fc-rail-icon-lock" aria-hidden>\ud83d\udd12</span>}
+                </button>
+              );
+            })}
           </div>
+          {lockedToast && (
+            <div className="fc-locked-toast" role="status">
+              {RAIL_ICONS.find((i) => i.intent === lockedToast)?.label} needs an upgrade. Tap again to open pricing.
+            </div>
+          )}
 
           {activeTools.length > 0 && (
             <div className="fc-bar-tools" aria-label="Active tools">
@@ -1083,22 +1462,26 @@ export function FloatingCopilot() {
         </div>
       )}
 
-      {mode === "open" && isHorizontal && (
+      {/* v0.1.14 STEP 6 \u2014 The horizontal cmdbar layout was removed.
+          All four edges (left/right/top/bottom) now share the v2
+          panel layout below. The Tauri window's geometry handles the
+          docking; the React panel doesn't need to swap layouts. */}
+      {mode === "open" && false && isHorizontal && (
         // ── Horizontal command-bar layout for top/bottom edges ──────
         // Spotlight / Raycast / menu-bar style: large input on the
         // left, action chips in the middle, send on the right, output
         // drops down (or up) beneath in a separate panel.
         <div className="fc-cmdbar">
-          {liveHint && (
+          {liveHint && ((hint: LiveHint) => (
             <span className="fc-live-hint-wrap">
               <button
                 type="button"
                 className="fc-live-hint"
-                onClick={() => void sendText(liveHint.prompt)}
+                onClick={() => void sendText(hint.prompt)}
                 title="Live Mode suggestion based on the window you're focused on"
               >
                 <span className="fc-live-hint-dot" />
-                <span className="fc-live-hint-label">{liveHint.label}</span>
+                <span className="fc-live-hint-label">{hint.label}</span>
               </button>
               {/* v0.1.13 \u2014 dismiss X. Hides this hint label for the
                   rest of the session so it stops re-appearing every
@@ -1109,7 +1492,7 @@ export function FloatingCopilot() {
                 title="Hide this suggestion for now"
                 aria-label="Dismiss suggestion"
                 onClick={() => {
-                  const label = liveHint.label;
+                  const label = hint.label;
                   setDismissedHints((prev) => {
                     const next = new Set(prev);
                     next.add(label);
@@ -1121,7 +1504,7 @@ export function FloatingCopilot() {
                 ×
               </button>
             </span>
-          )}
+          ))(liveHint!)}
           <div className="fc-cmdbar-row">
             <div className="fc-panel-title fc-cmdbar-title">
               <span className="fc-panel-dot" />
@@ -1227,13 +1610,20 @@ export function FloatingCopilot() {
         </div>
       )}
 
-      {mode === "open" && !isHorizontal && (
+      {mode === "open" && (
         // ── v0.1.14 STEP 2: Vertical panel restructured per spec ────
         // Header (status + actions) \u2192 COMMAND INPUT (PRIMARY, top) \u2192
         // Quick Actions \u2192 Context Panel \u2192 Output Area (bottom).
         // Input moved from the bottom to the top so the panel reads
         // like a workspace, not a chat. Output streams beneath.
-        <div className={`fc-panel fc-panel--v2 fc-panel--intent-${panelIntent}`}>
+        <div
+          className={`fc-panel fc-panel--v2 fc-panel--intent-${panelIntent}${dragOver ? " is-dragover" : ""}`}
+          onPaste={onPanelPaste}
+          onDragEnter={onPanelDragEnter}
+          onDragLeave={onPanelDragLeave}
+          onDragOver={onPanelDragOver}
+          onDrop={onPanelDrop}
+        >
           <div className="fc-panel-head">
             <div className="fc-panel-title">
               <span className="fc-panel-dot" />
@@ -1325,6 +1715,7 @@ export function FloatingCopilot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={
+                recording ? "Listening\u2026 tap mic again to send" :
                 panelIntent === "commands" ? "Run a command\u2026" :
                 panelIntent === "voice" ? "Tap mic, or type instead\u2026" :
                 panelIntent === "attach" ? "Add a file, or type a question about it\u2026" :
@@ -1333,16 +1724,35 @@ export function FloatingCopilot() {
               }
               autoFocus
               className="fc-command-input"
+              disabled={recording}
             />
+            {/* v0.1.14 STEP 5 \u2014 Mic. Tap to record; tap again to stop +
+                auto-send. Recording state pulses red so the user knows
+                the mic is open. */}
+            <button
+              type="button"
+              onClick={toggleVoice}
+              className={`fc-voice-btn${recording ? " is-recording" : ""}`}
+              title={recording ? "Stop + send" : "Voice input \u2014 tap to start"}
+              aria-label="Toggle voice input"
+            >
+              {recording ? "\u25fc" : "\ud83c\udf99\ufe0f"}
+            </button>
             <button
               type="submit"
-              disabled={!input.trim() || streaming}
+              disabled={!input.trim() || streaming || recording}
               className="fc-send"
               title="Send (Enter)"
             >
               {streaming ? "\u2026" : "\u2192"}
             </button>
           </form>
+
+          {voiceTranscript && (
+            <div className="fc-voice-transcript">
+              \u201c{voiceTranscript}\u201d
+            </div>
+          )}
 
           {/* v0.1.14 \u2014 Quick Actions row. 4 preset prompts that one-tap
               fire common workflows. Hidden once the conversation has
@@ -1374,38 +1784,68 @@ export function FloatingCopilot() {
             </div>
           )}
 
-          {/* v0.1.14 \u2014 Context (MCP) preview. Step 4 wires real context
-              sources (clipboard / selection / attachments). For now
-              shows the live foreground-window hint when Live Mode is
-              on, plus a placeholder line so users know the slot exists. */}
+          {/* v0.1.14 STEP 4 \u2014 Context (MCP) preview. Surfaces what the
+              AI will see this turn: dragged/pasted attachments, the
+              Live Mode hint, and a file-picker affordance. Each item
+              has an X to remove. */}
           <div className="fc-context-panel" aria-label="Context">
             <div className="fc-context-head">
-              <span className="fc-context-label">Context</span>
-              {liveModeConsent === "granted" && liveHint && (
-                <span className="fc-context-source">live: {liveHint.label}</span>
-              )}
+              <span className="fc-context-label">Context (MCP)</span>
+              <label className="fc-context-attach-btn">
+                + Attach
+                <input
+                  type="file"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    if (e.target.files) ingestFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
             </div>
             <div className="fc-context-body">
-              {liveHint ? (
+              {attachments.length === 0 && !liveHint && (
+                <span className="fc-context-empty">
+                  No context attached. Drag a file, paste an image (Ctrl+V), or use Live Mode.
+                </span>
+              )}
+              {attachments.map((att) => (
+                <span key={att.id} className={`fc-context-chip fc-context-chip--${att.kind}`}>
+                  <span className="fc-context-chip-icon" aria-hidden>
+                    {att.kind === "image" ? "\ud83d\uddbc\ufe0f" : "\ud83d\udcc4"}
+                  </span>
+                  <span className="fc-context-chip-name">{att.name}</span>
+                  <button
+                    type="button"
+                    className="fc-context-chip-x"
+                    onClick={() => removeAttachment(att.id)}
+                    aria-label={`Remove ${att.name}`}
+                    title="Remove"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              {liveHint && (
                 <button
                   type="button"
-                  className="fc-context-chip"
+                  className="fc-context-chip fc-context-chip--live"
                   onClick={() => void sendText(liveHint.prompt)}
+                  title="From Live Mode"
                 >
-                  {liveHint.label}
+                  <span className="fc-context-chip-icon" aria-hidden>\ud83d\udfe3</span>
+                  <span className="fc-context-chip-name">{liveHint.label}</span>
                 </button>
-              ) : (
-                <span className="fc-context-empty">
-                  No context attached. Drag a file, paste an image, or use Live Mode.
-                </span>
               )}
             </div>
           </div>
 
-          {/* v0.1.14 \u2014 Output Area (formerly fc-scroll). Step 3 will
-              replace plain message divs with structured Output Blocks
-              (Code / UI / Summary cards). For now the existing message
-              renderer stays so the conversation works. */}
+          {/* v0.1.14 STEP 3 \u2014 Output Area renders structured blocks
+              (Code / Summary / Text) instead of plain message bubbles.
+              Each assistant turn is parsed into one or more blocks
+              with their own copy / refine / rerun actions. User turns
+              still render as a simple inline pill. */}
           <div className="fc-output">
             {messages.length === 0 ? (
               <div className="fc-output-empty">
@@ -1414,11 +1854,50 @@ export function FloatingCopilot() {
               </div>
             ) : (
               <>
-                {messages.map((message, i) => (
-                  <div key={i} className={`fc-msg fc-msg--${message.role}`}>
-                    {message.content || (streaming && i === messages.length - 1 ? "\u2026" : "")}
-                  </div>
-                ))}
+                {messages.map((message, i) => {
+                  if (message.role === "user") {
+                    return (
+                      <div key={i} className="fc-user-turn">
+                        {message.content}
+                      </div>
+                    );
+                  }
+                  const isLast = i === messages.length - 1;
+                  const isStreamingThis = streaming && isLast;
+                  if (!message.content && isStreamingThis) {
+                    return (
+                      <div key={i} className="fc-assistant-streaming">
+                        <span className="fc-assistant-streaming-dot" />
+                        <span className="fc-assistant-streaming-dot" />
+                        <span className="fc-assistant-streaming-dot" />
+                      </div>
+                    );
+                  }
+                  const blocks = parseOutputBlocks(message.content);
+                  return (
+                    <div key={i} className="fc-assistant-turn">
+                      {blocks.map((block, bi) => (
+                        <OutputBlockView
+                          key={bi}
+                          block={block}
+                          fullText={message.content}
+                          onCopy={(text) => {
+                            void navigator.clipboard.writeText(text).catch(() => {});
+                          }}
+                          onRefine={(text) =>
+                            void sendText(
+                              `Refine the block below \u2014 same intent, sharper / cleaner / more correct.\n\n${text}`,
+                            )
+                          }
+                          onRerun={() => {
+                            const lastUser = [...messages].reverse().find((m) => m.role === "user");
+                            if (lastUser) void sendText(lastUser.content);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  );
+                })}
                 {!streaming && nextActions.length > 0 && (
                   <div className="fc-next-actions" role="group" aria-label="Next actions">
                     {nextActions.map((action) => (

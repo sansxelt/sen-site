@@ -1,6 +1,6 @@
 [package]
 name = "sansxel"
-version = "0.1.13"
+version = "0.1.14"
 description = "sansxel desktop — the AI that remembers"
 authors = ["sansxel"]
 edition = "2021"
@@ -25,6 +25,9 @@ tauri-plugin-store = "2"
 tauri-plugin-http = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+# v0.1.14 \u2014 global hotkey support so the floating copilot can be
+# summoned from anywhere with Ctrl+Space (\u2318Space on macOS).
+tauri-plugin-global-shortcut = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

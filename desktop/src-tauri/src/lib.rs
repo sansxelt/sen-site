@@ -535,6 +535,10 @@ pub fn run() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        // v0.1.14 \u2014 global hotkey support (Ctrl+Space summons the
+        // floating copilot from anywhere). Registration of the actual
+        // shortcut happens below in setup().
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             boot_complete,
             minimize_other_windows,
@@ -558,6 +562,29 @@ pub fn run() {
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
                 let _ = app.deep_link().register("sansxel");
+            }
+
+            // v0.1.14 \u2014 register the Ctrl+Space global hotkey so the
+            // floating copilot can be summoned from any app. The
+            // handler shows the copilot window + brings it to front.
+            #[cfg(desktop)]
+            {
+                use tauri_plugin_global_shortcut::{
+                    Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
+                };
+                let app_handle = app.handle().clone();
+                let shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::Space);
+                if let Err(e) = app.global_shortcut().on_shortcut(shortcut, move |_app, _scut, event| {
+                    if event.state() == ShortcutState::Pressed {
+                        if let Some(copilot) = app_handle.get_webview_window("copilot") {
+                            let _ = copilot.show();
+                            let _ = copilot.set_focus();
+                            let _ = copilot.set_always_on_top(true);
+                        }
+                    }
+                }) {
+                    eprintln!("[sansxel] global shortcut register failed: {e}");
+                }
             }
 
             schedule_splash_watchdog(app.handle().clone());
