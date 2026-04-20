@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { API_BASE, type DesktopSession } from "./auth";
 
 // v0.1.13 \u2014 fetched from /api/desktop/releases on mount so the desktop
@@ -30,7 +31,12 @@ export function DesktopUpdatesView({ session: _session }: { session: DesktopSess
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/desktop/releases`);
+        // v0.1.14 \u2014 Use tauriFetch (Tauri HTTP plugin) so the request
+        // bypasses the WebView2 CORS gate. Regular fetch from
+        // tauri://localhost to https://sansxel.ai was failing with
+        // "Failed to fetch" because the route doesn't return
+        // Access-Control-Allow-Origin headers.
+        const res = await tauriFetch(`${API_BASE}/api/desktop/releases`);
         if (!res.ok) throw new Error(`releases ${res.status}`);
         const body = (await res.json()) as ReleasesResponse;
         if (!cancelled) setData(body);

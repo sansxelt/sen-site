@@ -282,6 +282,245 @@ body,
   border-color: rgba(165, 243, 252, 0.5);
 }
 
+/* ─── v0.1.14 STEP 2: Restructured panel ─────────────────────────────
+   New layout per the Capsule Rail spec:
+     Header (status + actions)
+     COMMAND INPUT (PRIMARY \u2014 top)
+     Quick Actions
+     Context Panel (MCP preview)
+     Output Area
+   The composer was at the bottom in the old chat-style layout; the
+   new layout puts it on top so the panel reads as a workspace, not
+   a chat. Output streams beneath. */
+.fc-panel--v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  /* Tighter padding than the old chat panel since each section has
+     its own internal padding. */
+  padding: 0;
+}
+
+.fc-panel--v2 .fc-panel-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.fc-panel-state {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(180, 180, 200, 0.6);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.fc-panel-state--listening,
+.fc-panel-state--thinking,
+.fc-panel-state--streaming {
+  color: rgba(196, 168, 252, 0.96);
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.32);
+}
+
+.fc-panel-state--ready {
+  color: rgba(165, 243, 252, 0.96);
+  background: rgba(165, 243, 252, 0.1);
+  border-color: rgba(165, 243, 252, 0.32);
+}
+
+/* PRIMARY command input. Tall, prominent, bordered with violet
+   accent so it's unmistakably the focal point of the panel. */
+.fc-command {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.fc-command-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  background: rgba(167, 139, 250, 0.06);
+  color: #fafafa;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.fc-command-input:focus {
+  border-color: rgba(167, 139, 250, 0.6);
+  background: rgba(167, 139, 250, 0.1);
+}
+
+.fc-command-input::placeholder {
+  color: rgba(180, 180, 200, 0.55);
+}
+
+.fc-command .fc-send {
+  flex: 0 0 auto;
+  width: 44px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  background: #a78bfa;
+  color: #0a0a0c;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, transform 120ms ease;
+}
+
+.fc-command .fc-send:hover:not(:disabled) {
+  background: #c4b5fd;
+}
+
+.fc-command .fc-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fc-command .fc-send:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Quick Actions row: 4 preset chips below the command input. */
+.fc-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+
+.fc-quick-action {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(220, 220, 232, 0.86);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.fc-quick-action:hover {
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.32);
+  color: #ffffff;
+}
+
+/* Context (MCP) preview panel. Step 4 will populate this with real
+   sources (selection / clipboard / attachments). For now shows a
+   live-mode chip when available, or an empty-state placeholder. */
+.fc-context-panel {
+  padding: 10px 14px 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  flex-shrink: 0;
+}
+
+.fc-context-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.fc-context-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.78);
+}
+
+.fc-context-source {
+  font-size: 10px;
+  color: rgba(180, 180, 200, 0.55);
+}
+
+.fc-context-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fc-context-chip {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.08);
+  color: rgba(232, 224, 255, 0.92);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.fc-context-chip:hover {
+  background: rgba(167, 139, 250, 0.18);
+  border-color: rgba(167, 139, 250, 0.5);
+}
+
+.fc-context-empty {
+  font-size: 11px;
+  font-style: italic;
+  color: rgba(180, 180, 200, 0.45);
+}
+
+/* Output Area \u2014 the streaming response surface. Step 3 replaces the
+   plain message divs with structured Output Blocks; for now the
+   existing fc-msg renderer stays so the conversation works. */
+.fc-output {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fc-output-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  font-size: 12px;
+  color: rgba(180, 180, 200, 0.5);
+  font-style: italic;
+}
+
+.fc-output-empty-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(167, 139, 250, 0.4);
+}
+
+/* Hide elements when this panel intent is active that don't apply.
+   Step 2 keeps everything visible regardless of intent; future
+   steps may toggle Quick Actions vs Voice control vs Attach drop
+   zone based on the active intent. */
+
 /* ── Hover state: peek + position switcher ──────────────────────── */
 .fc-hover {
   display: flex;

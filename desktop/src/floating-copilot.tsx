@@ -1228,17 +1228,24 @@ export function FloatingCopilot() {
       )}
 
       {mode === "open" && !isHorizontal && (
-        // ── Vertical floating panel for left/right edges (existing) ─
-        <div className="fc-panel">
+        // ── v0.1.14 STEP 2: Vertical panel restructured per spec ────
+        // Header (status + actions) \u2192 COMMAND INPUT (PRIMARY, top) \u2192
+        // Quick Actions \u2192 Context Panel \u2192 Output Area (bottom).
+        // Input moved from the bottom to the top so the panel reads
+        // like a workspace, not a chat. Output streams beneath.
+        <div className={`fc-panel fc-panel--v2 fc-panel--intent-${panelIntent}`}>
           <div className="fc-panel-head">
             <div className="fc-panel-title">
               <span className="fc-panel-dot" />
-              sansxel-1 copilot
+              <span className="fc-panel-title-text">sansxel copilot</span>
+              <span className={`fc-panel-state fc-panel-state--${liveState}`}>
+                {liveState === "thinking" ? "thinking" :
+                 liveState === "streaming" ? "streaming" :
+                 liveState === "ready" ? "ready" :
+                 liveState === "listening" ? "listening" : "idle"}
+              </span>
             </div>
             <div className="fc-panel-actions">
-              {/* v0.1.13 \u2014 New chat + History controls. New clears the
-                  current conversation; History opens a small dropdown
-                  of recent threads (persisted in localStorage). */}
               <button
                 type="button"
                 className="fc-head-btn"
@@ -1282,14 +1289,14 @@ export function FloatingCopilot() {
                 onClick={() => setStreamProof((s) => !s)}
                 title={streamProof ? "Stream-proof on (invisible to screen recorders)" : "Stream-proof off (visible to screen recorders)"}
               >
-                {streamProof ? "🔇 Stealth" : "👁 Visible"}
+                {streamProof ? "🔇" : "👁"}
               </button>
               <button
                 type="button"
                 className="fc-collapse"
                 onClick={() => setMode("collapsed")}
-                title="Collapse to bar"
-                aria-label="Collapse to bar"
+                title="Collapse to rail"
+                aria-label="Collapse to rail"
               >
                 –
               </button>
@@ -1305,20 +1312,111 @@ export function FloatingCopilot() {
             </div>
           </div>
 
-          <div className="fc-scroll">
+          {/* v0.1.14 \u2014 PRIMARY: command input at the top. */}
+          <form
+            className="fc-command"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void send();
+            }}
+          >
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={
+                panelIntent === "commands" ? "Run a command\u2026" :
+                panelIntent === "voice" ? "Tap mic, or type instead\u2026" :
+                panelIntent === "attach" ? "Add a file, or type a question about it\u2026" :
+                panelIntent === "context" ? "Ask using your current context\u2026" :
+                "Ask anything\u2026"
+              }
+              autoFocus
+              className="fc-command-input"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || streaming}
+              className="fc-send"
+              title="Send (Enter)"
+            >
+              {streaming ? "\u2026" : "\u2192"}
+            </button>
+          </form>
+
+          {/* v0.1.14 \u2014 Quick Actions row. 4 preset prompts that one-tap
+              fire common workflows. Hidden once the conversation has
+              messages so the user isn't crowded mid-thread. */}
+          {messages.length === 0 && (
+            <div className="fc-quick-actions" role="group" aria-label="Quick actions">
+              {[
+                { label: "Summarize", prompt: "Summarize what I'm currently focused on in 3 bullets." },
+                { label: "Explain", prompt: "Explain what I'm looking at like I'm new to it." },
+                { label: "Search web", prompt: "Search the web for the latest on " },
+                { label: "Draft", prompt: "Draft a short, friendly reply to " },
+              ].map((q) => (
+                <button
+                  key={q.label}
+                  type="button"
+                  className="fc-quick-action"
+                  onClick={() => {
+                    if (q.prompt.endsWith(" ")) {
+                      // Open-ended prompt \u2014 prefill input, let user finish.
+                      setInput(q.prompt);
+                    } else {
+                      void sendText(q.prompt);
+                    }
+                  }}
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* v0.1.14 \u2014 Context (MCP) preview. Step 4 wires real context
+              sources (clipboard / selection / attachments). For now
+              shows the live foreground-window hint when Live Mode is
+              on, plus a placeholder line so users know the slot exists. */}
+          <div className="fc-context-panel" aria-label="Context">
+            <div className="fc-context-head">
+              <span className="fc-context-label">Context</span>
+              {liveModeConsent === "granted" && liveHint && (
+                <span className="fc-context-source">live: {liveHint.label}</span>
+              )}
+            </div>
+            <div className="fc-context-body">
+              {liveHint ? (
+                <button
+                  type="button"
+                  className="fc-context-chip"
+                  onClick={() => void sendText(liveHint.prompt)}
+                >
+                  {liveHint.label}
+                </button>
+              ) : (
+                <span className="fc-context-empty">
+                  No context attached. Drag a file, paste an image, or use Live Mode.
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* v0.1.14 \u2014 Output Area (formerly fc-scroll). Step 3 will
+              replace plain message divs with structured Output Blocks
+              (Code / UI / Summary cards). For now the existing message
+              renderer stays so the conversation works. */}
+          <div className="fc-output">
             {messages.length === 0 ? (
-              <div className="fc-empty">
-                <p>Quick questions, code snippets, anything live.</p>
-                <p className="fc-empty-sub">
-                  This copilot floats over every other app. Toggle Stealth
-                  mode to make it invisible to screen recorders.
-                </p>
+              <div className="fc-output-empty">
+                <span className="fc-output-empty-dot" />
+                Output will stream here.
               </div>
             ) : (
               <>
                 {messages.map((message, i) => (
                   <div key={i} className={`fc-msg fc-msg--${message.role}`}>
-                    {message.content || (streaming && i === messages.length - 1 ? "…" : "")}
+                    {message.content || (streaming && i === messages.length - 1 ? "\u2026" : "")}
                   </div>
                 ))}
                 {!streaming && nextActions.length > 0 && (
@@ -1339,6 +1437,7 @@ export function FloatingCopilot() {
             )}
           </div>
 
+          {/* Live Mode dismissible hint stays at the bottom. */}
           {liveHint && (
             <span className="fc-live-hint-wrap">
               <button
@@ -1350,9 +1449,6 @@ export function FloatingCopilot() {
                 <span className="fc-live-hint-dot" />
                 <span className="fc-live-hint-label">{liveHint.label}</span>
               </button>
-              {/* v0.1.13 \u2014 dismiss X. Hides this hint label for the
-                  rest of the session so it stops re-appearing every
-                  time the user alt-tabs back to that app. */}
               <button
                 type="button"
                 className="fc-live-hint-dismiss"
@@ -1373,28 +1469,9 @@ export function FloatingCopilot() {
             </span>
           )}
 
-          <form
-            className="fc-input"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void send();
-            }}
-          >
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask anything…"
-              autoFocus
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || streaming}
-              className="fc-send"
-            >
-              {streaming ? "…" : "Send"}
-            </button>
-          </form>
+          {/* v0.1.14 Step 2 \u2014 the bottom input form was removed; the
+              command input now lives at the top of the panel as the
+              PRIMARY surface (per the spec). */}
         </div>
       )}
     </div>
