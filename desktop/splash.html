@@ -161,6 +161,51 @@
           monospace;
       }
 
+      /* v0.1.13 \u2014 Bottom-corner shortcut hints. ALWAYS visible
+         regardless of minigame state so users know what to do.
+         Lives next to the footer-build on the right. */
+      .footer-shortcuts {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+      }
+
+      .footer-shortcut-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 9px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(180, 180, 200, 0.55);
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      .footer-shortcut-row.is-ready {
+        color: rgba(165, 243, 252, 0.92);
+      }
+
+      .footer-shortcut-row kbd {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: rgba(167, 139, 250, 0.12);
+        border: 1px solid rgba(167, 139, 250, 0.28);
+        color: rgba(220, 210, 255, 0.9);
+        font-family: inherit;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+      }
+
+      .footer-shortcut-row.is-ready kbd {
+        background: rgba(165, 243, 252, 0.16);
+        border-color: rgba(165, 243, 252, 0.42);
+        color: rgba(220, 250, 255, 0.96);
+      }
+
       /* ── Progress bar pinned to the very bottom edge ─────────────── */
       .progress {
         position: absolute;
@@ -436,11 +481,34 @@
         <div class="brand-spotlight"></div>
       </div>
 
-      <div class="skip-hint" id="skip-hint">
-        <span class="skip-key">space</span> play
-        <span class="skip-divider">·</span>
-        <span class="skip-key">enter</span> continue
+      <!-- v0.1.13 \u2014 Bottom corner footer with status (left) +
+           keyboard shortcuts (right). ALWAYS visible regardless of
+           minigame state so users can see what to do. The old
+           centered .skip-hint was removed in favor of these corners. -->
+      <div class="footer">
+        <div class="footer-status">
+          <span class="footer-status-dot"></span>
+          <span class="footer-status-label" id="status-label">Initializing sansxel core</span>
+        </div>
+        <div class="footer-shortcuts">
+          <div class="footer-shortcut-row" id="shortcut-row-primary">
+            <kbd>space</kbd> play
+            <span style="margin: 0 4px; opacity: 0.4;">&middot;</span>
+            <kbd>enter</kbd> open app
+          </div>
+          <div class="footer-shortcut-row" style="opacity: 0.7;">
+            in app: <kbd>esc</kbd><kbd>esc</kbd><kbd>esc</kbd> to revisit
+          </div>
+          <div class="footer-build">v0.1.13</div>
+        </div>
       </div>
+
+      <!-- v0.1.13 \u2014 the centered .skip-hint was replaced by the
+           bottom-right shortcuts in the footer above. Keeping the
+           id="skip-hint" stub so the existing JS that toggles
+           .ready / .flash classes on it still has a target without
+           crashing. Hidden visually. -->
+      <div class="skip-hint" id="skip-hint" style="display:none" aria-hidden="true"></div>
 
       <!-- v0.1.6 — tiny one-key mini-game while the splash holds.
            Tap Space to hop the sansxel orb over scrolling obstacles.
@@ -608,8 +676,9 @@
           if (MG.metaLabel) {
             MG.metaLabel.textContent = "Waiting for app\u2026";
           }
-          if (hintEl) {
-            hintEl.textContent = "App still booting \u2014 we'll continue the moment it's ready.";
+          if (primaryRowEl) {
+            primaryRowEl.innerHTML =
+              "waiting for app\u2026 we'll continue the moment it's ready";
           }
         }
 
@@ -658,32 +727,32 @@
         //     stranding the user staring at a splash forever.
         var FORCE_HANDOVER_AT = splashStartedAt + SAFETY_CAP_MS;
 
-        // v0.1.13 \u2014 hint copy now spells out BOTH directions so users
-        // discover the splash-revisit shortcut: SPACE to play, ENTER to
-        // enter the app, and (once they're inside) ESC ESC ESC to come
-        // back to the splash from anywhere. Three states: pre-ready
-        // (boot in progress), ready, and a tiny meta-line that always
-        // mentions the ESC\u00d73 trick.
+        // v0.1.13 \u2014 the bottom-right footer-shortcut row now owns the
+        // active hint copy. Goes cyan + reorders when the app reports
+        // ready so users see at a glance that ENTER will hand off
+        // instantly. The legacy centered .skip-hint is kept as a
+        // hidden stub so any existing callers still have an element
+        // to poke without crashing.
+        var primaryRowEl = document.getElementById("shortcut-row-primary");
         function refreshHintForReady() {
-          if (!hintEl) return;
-          var triplePart =
-            '<span class="skip-meta">' +
-            'In-app: tap <span class="skip-key">esc</span><span class="skip-key">esc</span><span class="skip-key">esc</span> to return here' +
-            '</span>';
-          if (mainReady) {
-            hintEl.innerHTML =
-              '<span class="skip-key">enter</span> open the app' +
-              ' <span class="skip-divider">\u00b7</span> ' +
-              '<span class="skip-key">space</span> keep playing' +
-              triplePart;
-            hintEl.classList.add("ready");
-          } else {
-            hintEl.innerHTML =
-              '<span class="skip-key">space</span> play' +
-              ' <span class="skip-divider">\u00b7</span> ' +
-              '<span class="skip-key">enter</span> open app (when ready)' +
-              triplePart;
-            hintEl.classList.remove("ready");
+          if (primaryRowEl) {
+            if (mainReady) {
+              primaryRowEl.innerHTML =
+                'ready! &nbsp;<kbd>enter</kbd> open app' +
+                ' <span style="margin: 0 4px; opacity: 0.5;">&middot;</span>' +
+                ' <kbd>space</kbd> keep playing';
+              primaryRowEl.classList.add("is-ready");
+            } else {
+              primaryRowEl.innerHTML =
+                '<kbd>space</kbd> play' +
+                ' <span style="margin: 0 4px; opacity: 0.4;">&middot;</span>' +
+                ' <kbd>enter</kbd> open app';
+              primaryRowEl.classList.remove("is-ready");
+            }
+          }
+          if (hintEl) {
+            // Legacy stub stays in sync for any external caller.
+            hintEl.classList.toggle("ready", mainReady);
           }
         }
         refreshHintForReady();
