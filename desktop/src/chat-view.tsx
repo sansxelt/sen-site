@@ -1650,7 +1650,10 @@ export function DesktopChatView({
       })();
     }, 1200);
     return () => window.clearTimeout(handle);
-  }, [streaming, activeThread, session.token, updateThread, flashTitle]);
+    // Deps intentionally use stable signals (id + messages.length) rather than
+    // the full activeThread object. summarizeThread → updateThread mutates the
+    // thread, so depending on the object would loop the effect every 1.2s.
+  }, [streaming, activeThread?.id, activeThread?.messages.length, session.token, updateThread, flashTitle]);
 
   const stopAnalyser = useCallback(() => {
     if (rafRef.current != null) {

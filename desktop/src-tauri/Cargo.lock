@@ -3544,7 +3544,7 @@ dependencies = [
 
 [[package]]
 name = "sansxel"
-version = "0.1.9"
+version = "0.1.11"
 dependencies = [
  "serde",
  "serde_json",

@@ -14,26 +14,76 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.9";
-export const desktopLatestShippedVersion = "0.1.9";
+export const desktopCurrentCodeVersion = "0.1.11";
+export const desktopLatestShippedVersion = "0.1.11";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T18:00:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.9_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.9_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-19T20:30:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.11_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.11_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.10";
+export const desktopNextVersion = "0.1.12";
 export const desktopNextVersionHighlights = [
-  "Silent NSIS installer (proper plugin wiring \u2014 no wizard ever for new installs).",
-  "Tighten the Capsule Rail drag-snap edge detection on multi-monitor setups + per-display position memory.",
-  "Voice + MCP tool registry expansion (search within thread, edit message, branch thread, attach file via voice).",
-  "Memory view full implementation (currently stub).",
+  "Final copilot UI design pass \u2014 deep, focused redesign of the Capsule Rail surfaces with the v0.1.11 \"alive\" engine fully visualized.",
+  "Real MCP wiring through the copilot route: web_search + navigate + thread tools surface as live status dots on the rail.",
+  "Server-side sync for Live Mode consent (currently localStorage only) + Settings toggle to revoke / re-grant.",
+  "Silent NSIS installer (proper plugin wiring), Memory view full impl, multi-monitor Capsule polish.",
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.9 \u2014 flexible credits flow + UI polish. Buy any dollar amount of credits ($1\u2013$500, 100 credits per dollar) that auto-spend across chat / image / voice / copilot when plan limits hit. 5 unused per-feature SKUs dropped (only the 4 you actually created in Stripe remain). 10 views responsive with proper max-widths so text doesn't span the whole window. Heist-style polish: hover lifts on every card, button press states, violet focus rings, unified letter-spacing, text-overflow fixes (long emails / API keys break properly). X button now hides instead of close (Ctrl+Q to quit). Account page hero no longer stranded invisible.";
+  "v0.1.11 \u2014 the Capsule Rail comes alive. Activity-state engine (idle/listening/thinking/streaming/ready) drives every visual cue so the rail can't lie about what it's doing. Live Mode: opt-in, reads ONLY the title of your focused window (never contents) every 800ms and offers context-aware hints \u2014 Summarize page in browsers, Explain selection in editors, Critique design in Figma, Tighten this in docs, Draft a reply in Slack/Discord, etc. Continuity loop: every reply ends with 3 next-action chips so the rail is never a dead end. MCP status dots ready on the rail. Plus carried-over v0.1.10 work (typed dollar input on credits, env-var-gated boost cards) and 3 nasty bug fixes (sidebar title refresh loop, search input on divider, Smart Launcher middle column collapse).";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.11",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-19T20:30:00Z",
+    channel: "alpha",
+    summary:
+      "The Capsule Rail comes alive: activity-state engine, instant-response, Live Mode (window-title-aware suggestions), continuity loop with next-action chips, MCP status dots. Plus the v0.1.10 work that never publicly shipped (typing input on credits, env-var-gated boost cards) and three nasty UI bugs squashed.",
+    changes: [
+      {
+        type: "new",
+        text: "Activity-state engine on the Capsule. The rail now has 5 explicit states (idle / listening / thinking / streaming / ready) each with its own pulse, glow, and color cue. The dot pulses gently when idle, brightens when you start typing, glows fast while sansxel thinks, shows a flowing gradient while tokens stream, and holds a brief cyan highlight when a reply lands before decaying back to idle. UI surface can no longer lie about activity.",
+      },
+      {
+        type: "new",
+        text: "Instant-response \u2014 the rail flips to \"thinking\" the moment you submit, not when the first byte arrives. First token flips it to \"streaming\". Perceived responsiveness now matches model latency, not network latency.",
+      },
+      {
+        type: "new",
+        text: "Continuity loop: every assistant reply ends with 3 contextual next-action chips (Refine / Explain / Test it / Sources / etc.) auto-derived from the reply shape \u2014 code replies get test/refine, link replies get sources/summarize, free-form gets refine/explain. The rail is never a dead end.",
+      },
+      {
+        type: "new",
+        text: "Live Mode foreground-window watcher. When enabled, sansxel reads ONLY the title (never contents) of the window you have focused, every 800ms, and surfaces a one-tap contextual hint chip in the rail \u2014 \"Summarize page\" in a browser, \"Explain selection\" in your editor, \"Critique design\" in Figma, \"Tighten this\" in a doc, etc. Consent-first: a clear dialog asks the first time you open the rail; localStorage answer, never re-asked. Works only on Windows (Win32 GetForegroundWindow + GetWindowText, our-process-skipped).",
+      },
+      {
+        type: "new",
+        text: "MCP tool status dots on the rail. Tools in flight render as small color-coded dots inside the capsule (yellow=running, green=done, red=error) so you always know what sansxel is doing. The state shape is in place for v0.1.12 to wire real MCP tools end-to-end through the copilot route.",
+      },
+      {
+        type: "new",
+        text: "Buy-credits modal now accepts a typed dollar amount in addition to the $5/$10/$25/$50/$100 presets and the slider \u2014 type any whole-dollar value $1\u2013$500. (Carried over from v0.1.10 which never shipped publicly.)",
+      },
+      {
+        type: "improve",
+        text: "Boost cards in the billing panel now hide gracefully when their Stripe price IDs aren't configured server-side. No more dead \"Buy\" buttons that 500 because the env var is missing. (Carried from v0.1.10.)",
+      },
+      {
+        type: "fix",
+        text: "Sidebar thread title was refreshing every 1.2 seconds in a loop. The auto-summarize useEffect depended on the whole activeThread object, so each successful summary mutated the thread \u2192 ref changed \u2192 effect re-fired \u2192 summary regenerated \u2192 forever. Now depends on stable signals (id + messages.length) so it fires exactly once per new message.",
+      },
+      {
+        type: "fix",
+        text: "\"Search threads\u2026\" input was sitting flush against the divider line below the sidebar header (looked like the divider cut through the input). Added 14px top margin so it breathes.",
+      },
+      {
+        type: "fix",
+        text: "Smart Action Launcher's middle column was collapsing to ~10px wide, with text wrapping char-by-char (\"F i x\" stacked). Root cause: panel width was parent-relative (min(100%, 980px)) but the parent .chat-launcher is only ~320px wide, so the 200px+1fr+250px grid couldn't fit. Switched to viewport-relative width (min(980px, 100vw - 32px)) with a 640px floor.",
+      },
+    ],
+  },
   {
     version: "0.1.9",
     dateLabel: "Apr 19, 2026",

@@ -172,6 +172,71 @@ mod copilot_win {
     pub fn set_capture_excluded(_hwnd: usize, _excluded: bool) {}
 }
 
+// ── v0.1.11 — Live Mode foreground-window watcher ───────────────────
+// Reads the title of the currently focused top-level window so the
+// Capsule Rail can offer context-aware hints ("Summarize this page",
+// "Fix this code", etc.). Privacy-critical: only ever reads the
+// WINDOW TITLE (no contents), only when the user has consented in
+// the Capsule's first-launch dialog, and skips windows that belong
+// to our own process so we never echo our own UI back as context.
+#[cfg(target_os = "windows")]
+mod live_mode {
+    use windows_sys::Win32::Foundation::HWND;
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        GetForegroundWindow, GetWindowTextLengthW, GetWindowTextW,
+        GetWindowThreadProcessId,
+    };
+
+    pub fn foreground_title() -> Option<String> {
+        unsafe {
+            let hwnd: HWND = GetForegroundWindow();
+            if hwnd.is_null() {
+                return None;
+            }
+            // Skip if the foreground window is ours — we don't want
+            // sansxel to suggest "fix sansxel" when the user is just
+            // looking at the rail itself.
+            let mut window_pid: u32 = 0;
+            GetWindowThreadProcessId(hwnd, &mut window_pid);
+            if window_pid == std::process::id() {
+                return None;
+            }
+            let len = GetWindowTextLengthW(hwnd);
+            if len <= 0 {
+                return None;
+            }
+            // +1 for the null terminator GetWindowTextW writes.
+            let mut buf: Vec<u16> = vec![0; (len as usize) + 1];
+            let copied = GetWindowTextW(hwnd, buf.as_mut_ptr(), buf.len() as i32);
+            if copied <= 0 {
+                return None;
+            }
+            let title = String::from_utf16_lossy(&buf[..copied as usize]);
+            let trimmed = title.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed.to_string())
+            }
+        }
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+mod live_mode {
+    pub fn foreground_title() -> Option<String> {
+        None
+    }
+}
+
+// Returns the title of the currently focused top-level window, or
+// null when there isn't one (or we're on a non-Windows build). The
+// JS side polls this every ~800ms while Live Mode is enabled.
+#[tauri::command]
+fn get_foreground_window_title() -> Option<String> {
+    live_mode::foreground_title()
+}
+
 #[cfg(not(target_os = "windows"))]
 mod win {
     pub fn send_win_m() {}
@@ -473,7 +538,8 @@ pub fn run() {
             set_copilot_stream_proof,
             notify_main_ready,
             is_main_ready,
-            revisit_splash
+            revisit_splash,
+            get_foreground_window_title
         ])
         .setup(|app| {
             // Dev/Linux: register the sansxel:// scheme at runtime so the

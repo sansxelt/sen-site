@@ -1975,8 +1975,12 @@
   position: absolute;
   left: 0;
   bottom: calc(100% + 12px);
-  width: min(100%, 980px);
-  max-width: min(980px, calc(100vw - 32px));
+  /* Width is viewport-relative, NOT parent-relative. The trigger's
+     parent (.chat-launcher) can be narrow (~320px) inside the input
+     footer; min(100%, 980px) would resolve to 320px and collapse the
+     middle 1fr column to ~10px wide. */
+  width: min(980px, calc(100vw - 32px));
+  min-width: 640px;
   display: grid;
   grid-template-columns: 200px minmax(0, 1fr) 250px;
   border-radius: 22px;
@@ -2228,8 +2232,8 @@
 
 @media (max-width: 1120px) {
   .chat-launcher-panel {
-    width: min(100%, 900px);
-    max-width: min(900px, calc(100vw - 32px));
+    width: min(900px, calc(100vw - 32px));
+    min-width: 560px;
     grid-template-columns: 184px minmax(0, 1fr);
   }
 
@@ -2262,8 +2266,8 @@
   }
 
   .chat-launcher-panel {
-    width: min(100%, 720px);
-    max-width: min(720px, calc(100vw - 24px));
+    width: min(720px, calc(100vw - 24px));
+    min-width: 0;
     grid-template-columns: 1fr;
   }
 
@@ -3320,7 +3324,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 16px 8px 16px;
+  margin: 14px 16px 8px 16px;
   padding: 8px 12px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 10px;

@@ -466,7 +466,8 @@
         try { window.focus(); document.body.focus(); } catch (_) {}
 
         // ── Progress + label scheduling ─────────────────────────────
-        // Steps sum to TOTAL_MS. Progress (0..1) is JS-driven via
+        // Steps describe the label order while progress advances.
+        // Progress itself is JS-driven via
         // setInterval so [Space] can boost it. Labels swap when
         // progress crosses each step's cumulative threshold.
         var steps = [
@@ -475,14 +476,13 @@
           { label: "Connecting sansxel-1", weight: 1.4 },
           { label: "Preparing your space", weight: 0.8 },
         ];
-        // v0.1.4 fix: splash should hold long enough that the main
-        // window has fully booted before handover — no black gap.
-        // The main app fires window.dispatchEvent("sansxel:main-ready")
-        // when React + session restore are both done. We hold here
-        // either until that event OR until TOTAL_MS, whichever's later.
-        var TOTAL_MS = 3200;
+        // Keep the splash on-screen long enough to feel intentional,
+        // but avoid letting the bar sit at 100% while the app is
+        // still booting underneath.
+        var MIN_SPLASH_MS = 4600;
         var TICK_MS = 40;
-        var BASE_PER_TICK = TICK_MS / TOTAL_MS;
+        var PRE_HANDOFF_CAP = 0.94;
+        var splashStartedAt = Date.now();
 
         // Cumulative progress thresholds where the label swaps
         var totalWeight = 0;
@@ -499,8 +499,10 @@
         var hintEl = document.getElementById("skip-hint");
 
         var progress = 0; // 0..1
-        var currentStep = 0;
+        var currentStep = -1;
         var handedOver = false;
+        var mainReady = false;
+        var continueRequested = false;
 
         // Anti-spam decay for [Space] boosts:
         //   - Each press normally adds BOOST_MAX progress (~7%).
@@ -517,7 +519,7 @@
         var lastBoostAt = 0;
 
         function setLabelFor(stepIdx) {
-          if (stepIdx >= steps.length) return;
+          if (!labelEl || stepIdx >= steps.length) return;
           if (stepIdx === currentStep) return;
           currentStep = stepIdx;
           labelEl.textContent = steps[stepIdx].label;
@@ -536,6 +538,33 @@
               break;
             }
             if (idx === thresholds.length - 1) setLabelFor(idx);
+          }
+        }
+
+        function canAutoHandover() {
+          return mainReady && Date.now() - splashStartedAt >= MIN_SPLASH_MS;
+        }
+
+        function finishBootSequence() {
+          if (handedOver) return;
+          handedOver = true;
+          clearInterval(ticker);
+          clearInterval(readyPoll);
+          progress = 1;
+          paint();
+          handover();
+        }
+
+        function requestContinue() {
+          continueRequested = true;
+          if (canAutoHandover()) {
+            finishBootSequence();
+            return;
+          }
+          progress = Math.max(progress, PRE_HANDOFF_CAP * 0.9);
+          paint();
+          if (MG.metaLabel) {
+            MG.metaLabel.textContent = mainReady ? "Finishing launch..." : "Waiting for app...";
           }
         }
 
@@ -558,17 +587,15 @@
           // Boost amount scales with available headroom (1 - spamLoad)
           var headroom = 1 - spamLoad;
           var amount = BOOST_MIN + (BOOST_MAX - BOOST_MIN) * headroom;
-          progress = Math.min(1, progress + amount);
+          var maxProgress = canAutoHandover() ? 1 : PRE_HANDOFF_CAP;
+          progress = Math.min(maxProgress, progress + amount);
 
           // Consume some energy for this press
           spamLoad = Math.min(1, spamLoad + SPAM_DECAY_PER_PRESS);
 
           paint();
           flashHint();
-
-          if (progress >= 1 && !handedOver) {
-            requestHandover();
-          }
+          if (canAutoHandover()) finishBootSequence();
         }
 
         // Splash design (v0.1.5+):
@@ -581,15 +608,21 @@
         //     main is ready (capped at ~10s so a bug can't strand us).
         // This guarantees: when the splash fades, the app is already
         // up and visible. No black gap. No waiting on a fixed timer.
-        var FORCE_HANDOVER_AT = Date.now() + TOTAL_MS + 10000;
+        var FORCE_HANDOVER_AT = splashStartedAt + MIN_SPLASH_MS + 12000;
 
         var ticker = setInterval(function () {
           if (handedOver) {
             clearInterval(ticker);
             return;
           }
-          progress = Math.min(1, progress + BASE_PER_TICK);
+          var elapsed = Date.now() - splashStartedAt;
+          var target = Math.min(
+            PRE_HANDOFF_CAP,
+            (elapsed / MIN_SPLASH_MS) * PRE_HANDOFF_CAP
+          );
+          progress = Math.min(PRE_HANDOFF_CAP, Math.max(progress, target));
           paint();
+          if (canAutoHandover()) finishBootSequence();
         }, TICK_MS);
 
         var readyPoll = setInterval(function () {
@@ -597,41 +630,27 @@
             clearInterval(readyPoll);
             return;
           }
-          tauriInvoke("is_main_ready").then(function (ready) {
+          var readyRequest = tauriInvoke("is_main_ready");
+          if (!readyRequest || typeof readyRequest.then !== "function") {
+            finishBootSequence();
+            return;
+          }
+          readyRequest.then(function (ready) {
             if (ready === true) {
-              // v0.1.7+: if the user is mid-play (started + still alive),
-              // DON'T auto-handover \u2014 wait for them to press Enter so
-              // they can play indefinitely. Update the hint to make
-              // that obvious. Otherwise, hand over now.
-              if (MG.started && MG.alive) {
-                if (MG.metaLabel && MG.metaLabel.textContent !== "Press Enter when done") {
-                  MG.metaLabel.textContent = "Press Enter when done";
-                }
-                progress = 1;
-                paint();
-                return;
+              mainReady = true;
+              if (continueRequested && MG.metaLabel) {
+                MG.metaLabel.textContent = "Finishing launch...";
               }
-              handedOver = true;
-              clearInterval(readyPoll);
-              clearInterval(ticker);
-              progress = 1;
-              paint();
-              handover();
+              if (canAutoHandover()) finishBootSequence();
               return;
             }
             // Hard cap: if main never reports ready, hand over anyway
             if (Date.now() > FORCE_HANDOVER_AT) {
-              handedOver = true;
-              clearInterval(readyPoll);
-              clearInterval(ticker);
-              handover();
+              finishBootSequence();
             }
           }).catch(function () {
             // No Tauri / dev preview — fire immediately
-            handedOver = true;
-            clearInterval(readyPoll);
-            clearInterval(ticker);
-            handover();
+            finishBootSequence();
           });
         }, 80);
 
@@ -651,8 +670,11 @@
           metaLabel: document.querySelector(".mini-game-label"),
           y: 0, vy: 0, jumping: false,
           GRAVITY: 0.7, JUMP_VY: 9.5,
+          usedDouble: false,
+          speed: 2.15,
           obstacles: [],
           spawnEvery: 80, sinceSpawn: 0,
+          respawnTimer: null,
           score: 0,
           best: parseInt(window.localStorage.getItem("sansxel.mg.best") || "0", 10) || 0,
           // Game starts in "idle" state \u2014 first Space starts it.
@@ -666,8 +688,7 @@
           if (!MG.alive) {
             // Crash recovery \u2014 restart AND immediately jump in one
             // press (not two). Single Space brings the game back.
-            mgRestart();
-            MG.started = true;
+            mgRestart(true);
             MG.vy = MG.JUMP_VY;
             MG.jumping = true;
             if (MG.metaLabel) MG.metaLabel.textContent = "Mini\u2011hop";
@@ -686,20 +707,33 @@
           }
         }
 
-        function mgRestart() {
+        function mgRestart(autoResume) {
+          if (MG.respawnTimer) {
+            clearTimeout(MG.respawnTimer);
+            MG.respawnTimer = null;
+          }
           MG.score = 0; MG.scoreEl.textContent = "0";
           MG.y = 0; MG.vy = 0; MG.jumping = false; MG.usedDouble = false;
           for (var i = 0; i < MG.obstacles.length; i++) MG.obstacles[i].el.remove();
           MG.obstacles = [];
-          MG.sinceSpawn = 0; MG.spawnEvery = 80;
+          MG.sinceSpawn = 0; MG.spawnEvery = 88;
           MG.alive = true;
-          MG.started = false;
-          if (MG.metaLabel) MG.metaLabel.textContent = "Press Space to play";
+          MG.started = !!autoResume;
+          if (MG.metaLabel) {
+            MG.metaLabel.textContent = autoResume ? "Mini\u2011hop" : "Press Space to play";
+          }
         }
 
         function mgCrash() {
+          if (!MG.alive) return;
           MG.alive = false;
-          if (MG.metaLabel) MG.metaLabel.textContent = "Crashed \u2014 Space to retry";
+          if (MG.metaLabel) MG.metaLabel.textContent = "Crashed \u2014 relaunching";
+          MG.respawnTimer = setTimeout(function () {
+            MG.respawnTimer = null;
+            if (!handedOver) {
+              mgRestart(true);
+            }
+          }, 900);
         }
 
         function mgSpawn() {
@@ -725,14 +759,14 @@
             MG.sinceSpawn++;
             if (MG.sinceSpawn >= MG.spawnEvery) {
               MG.sinceSpawn = 0;
-              MG.spawnEvery = 60 + Math.floor(Math.random() * 60);
+              MG.spawnEvery = 72 + Math.floor(Math.random() * 48);
               mgSpawn();
             }
 
             var keep = [];
             for (var i = 0; i < MG.obstacles.length; i++) {
               var o = MG.obstacles[i];
-              o.x -= 2.4;
+              o.x -= MG.speed;
               o.el.style.left = o.x + "px";
 
               // Collision: orb sits at x=28, width=14, height=14. Obstacle
@@ -770,31 +804,18 @@
 
         // Keys:
         //   Space \u2192 start game / hop / restart-after-crash + boost loader
-        //   Enter \u2192 handover to the main app (skip remaining boot wait)
-        //   Esc   \u2192 immediate bail to main
+        //   Enter \u2192 continue as soon as the app is actually ready
         document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape") {
-            handedOver = true;
-            tauriInvoke("boot_complete");
-            return;
-          }
           if (e.key === "Enter") {
             e.preventDefault();
-            if (!handedOver) {
-              handedOver = true;
-              clearInterval(ticker);
-              clearInterval(readyPoll);
-              progress = 1;
-              paint();
-              handover();
-            }
+            if (!handedOver) requestContinue();
             return;
           }
           if (e.code === "Space" || e.key === " " || e.key === "Spacebar") {
             e.preventDefault();
             if (!handedOver) {
-              boost();
               mgJump();
+              boost();
             }
           }
         });
