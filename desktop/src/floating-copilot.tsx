@@ -48,6 +48,68 @@ type LiveState = "idle" | "listening" | "thinking" | "streaming" | "ready";
 // end. Generated client-side from the assistant content.
 type NextAction = { label: string; prompt: string };
 
+// v0.1.13: persistent thread history. Each open conversation is one
+// CopilotThread. Stored in localStorage so the rail can restore past
+// chats on demand without a server round-trip. Capped at 8 threads;
+// oldest pruned on overflow.
+type CopilotMessage = { role: "user" | "assistant"; content: string };
+type CopilotThread = {
+  id: string;
+  title: string;
+  messages: CopilotMessage[];
+  createdAt: number;
+  updatedAt: number;
+};
+const COPILOT_THREADS_KEY = "sansxel.copilot.threads.v1";
+const COPILOT_THREADS_LIMIT = 8;
+
+function loadCopilotThreads(): CopilotThread[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(COPILOT_THREADS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (t): t is CopilotThread =>
+          !!t &&
+          typeof (t as CopilotThread).id === "string" &&
+          Array.isArray((t as CopilotThread).messages),
+      )
+      .slice(0, COPILOT_THREADS_LIMIT);
+  } catch {
+    return [];
+  }
+}
+
+function persistCopilotThreads(threads: CopilotThread[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      COPILOT_THREADS_KEY,
+      JSON.stringify(threads.slice(0, COPILOT_THREADS_LIMIT)),
+    );
+  } catch {
+    // Quota exceeded or storage disabled \u2014 not fatal.
+  }
+}
+
+function deriveThreadTitle(messages: CopilotMessage[]): string {
+  const firstUser = messages.find((m) => m.role === "user");
+  if (!firstUser) return "New conversation";
+  const trimmed = firstUser.content.trim().replace(/\s+/g, " ");
+  return trimmed.length > 48 ? trimmed.slice(0, 48) + "\u2026" : trimmed;
+}
+
+function relativeTime(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return "just now";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
+  return `${Math.floor(diff / 86_400_000)}d ago`;
+}
+
 const DOCK_KEY = "sansxel.copilot.dock";
 const ALLOW_BOTTOM_KEY = "sansxel.copilot.allowBottom";
 
@@ -206,6 +268,15 @@ export function FloatingCopilot() {
   // title. Null when there's nothing useful to suggest, when the user
   // is focused on us, or when Live Mode is off.
   const [liveHint, setLiveHint] = useState<LiveHint | null>(null);
+  // v0.1.13 \u2014 Hint labels the user has explicitly dismissed this
+  // session so we don't keep re-surfacing them every time they alt-tab
+  // back to that app. Cleared on copilot window close.
+  const [dismissedHints, setDismissedHints] = useState<Set<string>>(() => new Set());
+  // v0.1.13 \u2014 Thread history. threads = ordered (newest first).
+  // activeThreadId = the thread currently shown; null until first send.
+  const [threads, setThreads] = useState<CopilotThread[]>(() => loadCopilotThreads());
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const dragStateRef = useRef<{
     startX: number;
@@ -369,8 +440,12 @@ export function FloatingCopilot() {
   // v0.1.11: foreground-window watcher. Polls the Tauri command at
   // FOREGROUND_POLL_MS while consent is granted; immediately tears
   // down on denial / unset. Updates liveHint based on the title each
-  // tick — the hint engine returns null for windows we don't have
+  // tick \u2014 the hint engine returns null for windows we don't have
   // good suggestions for, so this is naturally quiet.
+  // v0.1.13: respect dismissedHints \u2014 if the user X'd a hint label,
+  // don't re-surface it this session even when they alt-tab back.
+  // Plus a soft 1500ms debounce so rapid foreground flicker doesn't
+  // make the chip flash.
   useEffect(() => {
     if (liveModeConsent !== "granted") {
       setLiveHint(null);
@@ -378,24 +453,37 @@ export function FloatingCopilot() {
     }
     let cancelled = false;
     let lastTitle: string | null = null;
+    let pendingTimer: number | null = null;
+    const apply = (title: string | null) => {
+      const hint = deriveLiveHint(title);
+      if (hint && dismissedHints.has(hint.label)) {
+        setLiveHint(null);
+        return;
+      }
+      setLiveHint(hint);
+    };
     const tick = async () => {
       try {
         const title = (await invoke<string | null>("get_foreground_window_title")) ?? null;
         if (cancelled) return;
         if (title === lastTitle) return;
         lastTitle = title;
-        setLiveHint(deriveLiveHint(title));
+        if (pendingTimer !== null) window.clearTimeout(pendingTimer);
+        pendingTimer = window.setTimeout(() => {
+          if (!cancelled) apply(title);
+        }, 600);
       } catch {
-        // Non-Windows / command not registered yet — fail quietly
+        // Non-Windows / command not registered yet \u2014 fail quietly
       }
     };
     void tick();
     const handle = window.setInterval(() => void tick(), FOREGROUND_POLL_MS);
     return () => {
       cancelled = true;
+      if (pendingTimer !== null) window.clearTimeout(pendingTimer);
       window.clearInterval(handle);
     };
-  }, [liveModeConsent]);
+  }, [liveModeConsent, dismissedHints]);
 
   // v0.1.11: state decay. After "ready" holds for READY_DECAY_MS, the
   // rail returns to idle so it doesn't permanently sit in highlight.
@@ -736,6 +824,51 @@ export function FloatingCopilot() {
         // flip to "ready" so the rail glows briefly, then decays.
         setNextActions(deriveNextActions(assistant));
         setLiveState("ready");
+
+        // v0.1.13 \u2014 persist this turn into thread history. Either
+        // updates the active thread or creates a new one if this was
+        // the first send of the session. Snapshots the messages at
+        // this exact moment so a follow-up turn appends cleanly.
+        const finalMessages: CopilotMessage[] = [
+          ...messages.filter((m) => m.role !== "assistant" || m.content),
+          { role: "user" as const, content: text },
+          { role: "assistant" as const, content: assistant },
+        ];
+        setThreads((prev) => {
+          const now = Date.now();
+          const existing = activeThreadId
+            ? prev.find((t) => t.id === activeThreadId)
+            : null;
+          let next: CopilotThread[];
+          if (existing) {
+            next = prev
+              .map((t) =>
+                t.id === existing.id
+                  ? {
+                      ...t,
+                      messages: finalMessages,
+                      title: t.title || deriveThreadTitle(finalMessages),
+                      updatedAt: now,
+                    }
+                  : t,
+              )
+              // bump active thread to top
+              .sort((a, b) => b.updatedAt - a.updatedAt);
+          } else {
+            const newThread: CopilotThread = {
+              id: `t_${now}_${Math.random().toString(36).slice(2, 8)}`,
+              title: deriveThreadTitle(finalMessages),
+              messages: finalMessages,
+              createdAt: now,
+              updatedAt: now,
+            };
+            setActiveThreadId(newThread.id);
+            next = [newThread, ...prev];
+          }
+          const trimmed = next.slice(0, COPILOT_THREADS_LIMIT);
+          persistCopilotThreads(trimmed);
+          return trimmed;
+        });
       } catch (err) {
         if ((err as { name?: string })?.name !== "AbortError") {
           const detail = err instanceof Error ? err.message : "Copilot failed";
@@ -763,6 +896,30 @@ export function FloatingCopilot() {
   const close = useCallback(() => {
     void getCurrentWindow().hide();
   }, []);
+
+  // v0.1.13 \u2014 Thread history controls.
+  // newChat: clear active thread + messages so the next send starts fresh.
+  // openThread: load a thread by id, hydrate messages, mark active.
+  const newChat = useCallback(() => {
+    setMessages([]);
+    setNextActions([]);
+    setActiveThreadId(null);
+    setHistoryOpen(false);
+    setLiveState("idle");
+  }, []);
+
+  const openThread = useCallback(
+    (id: string) => {
+      const thread = threads.find((t) => t.id === id);
+      if (!thread) return;
+      setMessages(thread.messages);
+      setNextActions(deriveNextActions(thread.messages.at(-1)?.content ?? ""));
+      setActiveThreadId(id);
+      setHistoryOpen(false);
+      setLiveState("ready");
+    },
+    [threads],
+  );
 
   // ── Rendering ─────────────────────────────────────────────────────
   // v0.1.8 Capsule Rail: collapsed state is always visible. Click to
@@ -902,15 +1059,37 @@ export function FloatingCopilot() {
         // drops down (or up) beneath in a separate panel.
         <div className="fc-cmdbar">
           {liveHint && (
-            <button
-              type="button"
-              className="fc-live-hint"
-              onClick={() => void sendText(liveHint.prompt)}
-              title="Live Mode suggestion based on the window you're focused on"
-            >
-              <span className="fc-live-hint-dot" />
-              <span className="fc-live-hint-label">{liveHint.label}</span>
-            </button>
+            <span className="fc-live-hint-wrap">
+              <button
+                type="button"
+                className="fc-live-hint"
+                onClick={() => void sendText(liveHint.prompt)}
+                title="Live Mode suggestion based on the window you're focused on"
+              >
+                <span className="fc-live-hint-dot" />
+                <span className="fc-live-hint-label">{liveHint.label}</span>
+              </button>
+              {/* v0.1.13 \u2014 dismiss X. Hides this hint label for the
+                  rest of the session so it stops re-appearing every
+                  time the user alt-tabs back to that app. */}
+              <button
+                type="button"
+                className="fc-live-hint-dismiss"
+                title="Hide this suggestion for now"
+                aria-label="Dismiss suggestion"
+                onClick={() => {
+                  const label = liveHint.label;
+                  setDismissedHints((prev) => {
+                    const next = new Set(prev);
+                    next.add(label);
+                    return next;
+                  });
+                  setLiveHint(null);
+                }}
+              >
+                ×
+              </button>
+            </span>
           )}
           <div className="fc-cmdbar-row">
             <div className="fc-panel-title fc-cmdbar-title">
@@ -1026,13 +1205,53 @@ export function FloatingCopilot() {
               sansxel-1 copilot
             </div>
             <div className="fc-panel-actions">
+              {/* v0.1.13 \u2014 New chat + History controls. New clears the
+                  current conversation; History opens a small dropdown
+                  of recent threads (persisted in localStorage). */}
+              <button
+                type="button"
+                className="fc-head-btn"
+                onClick={newChat}
+                title="Start a fresh conversation"
+                aria-label="New chat"
+              >
+                + New
+              </button>
+              <div className="fc-history-wrap">
+                <button
+                  type="button"
+                  className={`fc-head-btn${historyOpen ? " is-open" : ""}`}
+                  onClick={() => setHistoryOpen((v) => !v)}
+                  title="Recent conversations"
+                  aria-label="Recent conversations"
+                  disabled={threads.length === 0}
+                >
+                  Recent ({threads.length})
+                </button>
+                {historyOpen && threads.length > 0 && (
+                  <div className="fc-history-dropdown" role="menu">
+                    {threads.map((thread) => (
+                      <button
+                        key={thread.id}
+                        type="button"
+                        className={`fc-history-item${thread.id === activeThreadId ? " is-active" : ""}`}
+                        onClick={() => openThread(thread.id)}
+                        role="menuitem"
+                      >
+                        <span className="fc-history-item-title">{thread.title}</span>
+                        <span className="fc-history-item-time">{relativeTime(thread.updatedAt)}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
                 className={`fc-stream-toggle${streamProof ? " active" : ""}`}
                 onClick={() => setStreamProof((s) => !s)}
                 title={streamProof ? "Stream-proof on (invisible to screen recorders)" : "Stream-proof off (visible to screen recorders)"}
               >
-                {streamProof ? "🔇 Stealth" : "👁 Visible"}
+                {streamProof ? "\ud83d\udd07 Stealth" : "\ud83d\udc41 Visible"}
               </button>
               <button
                 type="button"
@@ -1041,7 +1260,7 @@ export function FloatingCopilot() {
                 title="Collapse to bar"
                 aria-label="Collapse to bar"
               >
-                –
+                \u2013
               </button>
               <button
                 type="button"
@@ -1050,7 +1269,7 @@ export function FloatingCopilot() {
                 aria-label="Close"
                 title="Close (Esc)"
               >
-                ×
+                \u00d7
               </button>
             </div>
           </div>
@@ -1090,15 +1309,37 @@ export function FloatingCopilot() {
           </div>
 
           {liveHint && (
-            <button
-              type="button"
-              className="fc-live-hint"
-              onClick={() => void sendText(liveHint.prompt)}
-              title="Live Mode suggestion based on the window you're focused on"
-            >
-              <span className="fc-live-hint-dot" />
-              <span className="fc-live-hint-label">{liveHint.label}</span>
-            </button>
+            <span className="fc-live-hint-wrap">
+              <button
+                type="button"
+                className="fc-live-hint"
+                onClick={() => void sendText(liveHint.prompt)}
+                title="Live Mode suggestion based on the window you're focused on"
+              >
+                <span className="fc-live-hint-dot" />
+                <span className="fc-live-hint-label">{liveHint.label}</span>
+              </button>
+              {/* v0.1.13 \u2014 dismiss X. Hides this hint label for the
+                  rest of the session so it stops re-appearing every
+                  time the user alt-tabs back to that app. */}
+              <button
+                type="button"
+                className="fc-live-hint-dismiss"
+                title="Hide this suggestion for now"
+                aria-label="Dismiss suggestion"
+                onClick={() => {
+                  const label = liveHint.label;
+                  setDismissedHints((prev) => {
+                    const next = new Set(prev);
+                    next.add(label);
+                    return next;
+                  });
+                  setLiveHint(null);
+                }}
+              >
+                ×
+              </button>
+            </span>
           )}
 
           <form
