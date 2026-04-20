@@ -15,7 +15,7 @@ export function DesktopSettingsView() {
 
   if (loading) {
     return (
-      <div className="view">
+      <div className="view view--settings">
         <div className="view-head">
           <h1>Settings</h1>
           <p>App behavior, window, and keyboard shortcuts.</p>
@@ -37,7 +37,7 @@ export function DesktopSettingsView() {
   }
 
   return (
-    <div className="view">
+    <div className="view view--settings">
       <div className="view-head">
         <h1>Settings</h1>
         <p>

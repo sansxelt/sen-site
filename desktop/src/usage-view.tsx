@@ -63,7 +63,7 @@ export function DesktopUsageView({
 
   if (loading) {
     return (
-      <div className="view">
+      <div className="view view--usage">
         <div className="view-head">
           <h1>Usage</h1>
           <p>Plan limits, weekly activity, and what your desktop is actually doing.</p>
@@ -96,7 +96,7 @@ export function DesktopUsageView({
       billing.currentPlanKey === "studio");
 
   return (
-    <div className="view">
+    <div className="view view--usage">
       <div className="view-head">
         <h1>Usage</h1>
         <p>

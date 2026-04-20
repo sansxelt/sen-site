@@ -72,7 +72,7 @@ export function DesktopIntegrationsView({ session }: { session: DesktopSession }
   };
 
   return (
-    <div className="view">
+    <div className="view view--integrations">
       <div className="view-head">
         <h1>Integrations</h1>
         <p>Connect your tools so sansxel-1 can read and act in real time.</p>

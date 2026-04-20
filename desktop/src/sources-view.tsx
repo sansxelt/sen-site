@@ -81,7 +81,7 @@ export function DesktopSourcesView({ session }: { session: DesktopSession }) {
   );
 
   return (
-    <div className="view">
+    <div className="view view--sources">
       <div className="view-head">
         <h1>Sources</h1>
         <p>

@@ -77,7 +77,7 @@ const RELEASES: ReleaseNote[] = [
 // pulls from a hosted feed so we can ship release notes without a build.
 export function DesktopUpdatesView({ session: _session }: { session: DesktopSession }) {
   return (
-    <div className="view">
+    <div className="view view--updates">
       <div className="view-head">
         <h1>Updates</h1>
         <p>What’s new in sansxel.</p>

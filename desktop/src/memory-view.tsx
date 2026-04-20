@@ -5,7 +5,7 @@ import type { DesktopSession } from "./auth";
 // understand what sansxel-1 will remember once the backend ships.
 export function DesktopMemoryView({ session: _session }: { session: DesktopSession }) {
   return (
-    <div className="view">
+    <div className="view view--memory">
       <div className="view-head">
         <h1>Memory</h1>
         <p>Saved context sansxel-1 references across every conversation.</p>
@@ -38,7 +38,7 @@ export function DesktopMemoryView({ session: _session }: { session: DesktopSessi
           </div>
         </div>
 
-        <div className="view-actions">
+        <div className="view-actions view-actions--center">
           <button
             type="button"
             className="memory-clear-btn"

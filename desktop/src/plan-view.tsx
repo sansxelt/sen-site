@@ -26,7 +26,7 @@ export function DesktopPlanView({ session }: { session: DesktopSession }) {
   }, [loadBilling]);
 
   return (
-    <div className="view">
+    <div className="view view--plan">
       <div className="view-head">
         <h1>Plan</h1>
         <p>

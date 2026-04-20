@@ -1185,7 +1185,7 @@ function AccountView({
   }
 
   return (
-    <div className="view">
+    <div className="view view--account">
       <div className="view-head">
         <h1>Account</h1>
         <p>How sansxel knows you. Used to personalize replies and the workspace.</p>
@@ -1290,7 +1290,7 @@ export function PlanView({ session }: { session: DesktopSession }) {
   }, [session.token]);
 
   return (
-    <div className="view">
+    <div className="view view--plan">
       <div className="view-head">
         <h1>Plan</h1>
         <p>Your subscription, the AI tiers it unlocks, and where to upgrade.</p>
@@ -1690,7 +1690,7 @@ function KeysView({ session }: { session: DesktopSession }) {
   }
 
   return (
-    <div className="view">
+    <div className="view view--keys">
       <div className="view-head">
         <h1>API keys</h1>
         <p>
@@ -1853,7 +1853,7 @@ function PreferencesView() {
 
   if (loading) {
     return (
-      <div className="view">
+      <div className="view view--preferences">
         <div className="view-head">
           <h1>Preferences</h1>
           <p>How sansxel adapts to you.</p>
@@ -1875,7 +1875,7 @@ function PreferencesView() {
   }
 
   return (
-    <div className="view">
+    <div className="view view--preferences">
       <div className="view-head">
         <h1>Preferences</h1>
         <p>How sansxel adapts to you. Everything autosaves.</p>
