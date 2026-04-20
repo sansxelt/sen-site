@@ -15,11 +15,11 @@ export type DesktopRelease = {
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
 export const desktopCurrentCodeVersion = "0.1.12";
-export const desktopLatestShippedVersion = "0.1.11";
+export const desktopLatestShippedVersion = "0.1.12";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T20:30:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.11_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.11_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-19T22:00:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.12_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.12_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
 export const desktopNextVersion = "0.1.13";
@@ -32,7 +32,7 @@ export const desktopNextVersionHighlights = [
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.11 \u2014 the Capsule Rail comes alive. Activity-state engine (idle/listening/thinking/streaming/ready) drives every visual cue so the rail can't lie about what it's doing. Live Mode: opt-in, reads ONLY the title of your focused window (never contents) every 800ms and offers context-aware hints \u2014 Summarize page in browsers, Explain selection in editors, Critique design in Figma, Tighten this in docs, Draft a reply in Slack/Discord, etc. Continuity loop: every reply ends with 3 next-action chips so the rail is never a dead end. MCP status dots ready on the rail. Plus carried-over v0.1.10 work (typed dollar input on credits, env-var-gated boost cards) and 3 nasty bug fixes (sidebar title refresh loop, search input on divider, Smart Launcher middle column collapse).";
+  "v0.1.12 \u2014 patch release on top of v0.1.11. Splash now PATIENT: the minigame stays interactive indefinitely while the app boots; ENTER is the only thing that advances; hint pulses cyan when the app is ready so you know ENTER will instantly hand off. Ctrl+Q now actually quits cleanly (was leaving a zombie process so reopening required Task Manager). Smart Action Launcher panel no longer overflows the right side of the screen. Floating-copilot 401 fixed by refreshing the saved session on window focus. Capsule Rail launcher in the nav rail is now a prominent CTA. Chat-header \"PC copilot\" renamed to \"Toolbar mode\" to remove the naming collision with the floating copilot. AI now knows your local time + timezone (no more \"good afternoon\" replies at 8 PM). Three dead-end addons (Memory/API/Key Pack) removed. GitHub integration enabled site-wide. Inline Billing section on /account replaces the bare /account/billing page \u2014 plan, addons, payment, invoices, credits all in one place.";
 
 export const desktopShippedReleases: DesktopRelease[] = [
   {
