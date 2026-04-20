@@ -14,26 +14,60 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.8";
-export const desktopLatestShippedVersion = "0.1.8";
+export const desktopCurrentCodeVersion = "0.1.9";
+export const desktopLatestShippedVersion = "0.1.9";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T16:55:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.8_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.8_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-19T18:00:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.9_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.9_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.9";
+export const desktopNextVersion = "0.1.10";
 export const desktopNextVersionHighlights = [
-  "Silent NSIS installer (proper plugin wiring this time \u2014 no wizard ever for new installs).",
+  "Silent NSIS installer (proper plugin wiring \u2014 no wizard ever for new installs).",
   "Tighten the Capsule Rail drag-snap edge detection on multi-monitor setups + per-display position memory.",
-  "Voice + MCP tool registry expansion: more granular tools (search messages within a thread, edit message, branch a thread, attach a file via voice).",
-  "Memory view full implementation (currently stub) + Stripe boost-credit balance display in plan view.",
+  "Voice + MCP tool registry expansion (search within thread, edit message, branch thread, attach file via voice).",
+  "Memory view full implementation (currently stub).",
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.8 \u2014 the everything release. Voice + MCP tools (12 client-side actions like 'navigate to usage', 'create a new API key'). Capsule Rail Copilot: 4 positions (right/left/top/bottom opt-in), drag-snap to nearest edge with smooth orientation morph, top-mode command bar with Spotlight-style chips. Real Stripe products + webhook + boost-credit ledger. GitHub OAuth callback persistence. Sources PDF text extraction. 9 hand-translated locales (ES/FR/DE/JA/ZH/PT/KO/HI/AR) + Arabic RTL flip. Smart Action Launcher fully wired. (Silent NSIS template hit a plugin issue; reverted to standard NSIS for this release \u2014 lands properly in v0.1.9.)";
+  "v0.1.9 \u2014 flexible credits flow + UI polish. Buy any dollar amount of credits ($1\u2013$500, 100 credits per dollar) that auto-spend across chat / image / voice / copilot when plan limits hit. 5 unused per-feature SKUs dropped (only the 4 you actually created in Stripe remain). 10 views responsive with proper max-widths so text doesn't span the whole window. Heist-style polish: hover lifts on every card, button press states, violet focus rings, unified letter-spacing, text-overflow fixes (long emails / API keys break properly). X button now hides instead of close (Ctrl+Q to quit). Account page hero no longer stranded invisible.";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.9",
+    dateLabel: "Apr 19, 2026",
+    dateIso: "2026-04-19T18:00:00Z",
+    channel: "alpha",
+    summary:
+      "Flexible credits flow + UI polish across all views. Heist-style hover lifts, press states, focus rings, text rhythm.",
+    changes: [
+      {
+        type: "new",
+        text: "Flexible credits: Buy any dollar amount ($1-$500, 100 credits per dollar). Spends auto-deduct across chat (1 credit), image (5), voice minute (2), copilot session (1) when plan limits hit. New Credits card in Plan view shows balance + Buy modal with $5/$10/$25/$50/$100 presets + slider.",
+      },
+      {
+        type: "improve",
+        text: "Dropped 5 unused per-feature SKUs (Voice/Image/Voice-Min/Image-Credit/Copilot-Time packs) so only the 4 actually-created Stripe products remain (Power Pack BUNDLE, Copilot Pro Pack, Weekly Boost, Session Boost).",
+      },
+      {
+        type: "improve",
+        text: "10 views polished + responsive: plan / usage / integrations / updates / sources / memory / settings / account / keys / preferences. Proper max-widths (880-1440 by view), 1/2/3-col grids at 900/1200/1600 breakpoints, heist-style outlined cards with gradient interiors.",
+      },
+      {
+        type: "improve",
+        text: "Premium-feel polish: every card lifts 1px + glows violet on hover, every button presses on click, focus rings violet-tinted, letter-spacing unified (-0.01em headings, 0.16em uppercase labels), text-overflow fixes so long emails / API keys break properly instead of overflowing.",
+      },
+      {
+        type: "fix",
+        text: "X button on the title bar now HIDES the window instead of destroying it. App stays running; re-launching from start menu / taskbar brings the same window back. Ctrl+Q quits entirely.",
+      },
+      {
+        type: "fix",
+        text: "/account page top hero (Continue panel + Quick prefs) was stranded invisible because IntersectionObserver didn't fire for above-the-fold elements before React commit. Now synchronously reveals anything already in viewport on mount.",
+      },
+    ],
+  },
   {
     version: "0.1.8",
     dateLabel: "Apr 19, 2026",
