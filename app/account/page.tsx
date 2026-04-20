@@ -108,7 +108,8 @@ export default async function AccountPage() {
           <div className="flex shrink-0 flex-wrap gap-2">
             <Link
               href="/app"
-              className="hx-press inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black transition hover:opacity-95"
+              className="hx-press inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold transition hover:opacity-95"
+              style={{ color: "#0a0a0c" }}
             >
               Open chat →
             </Link>
