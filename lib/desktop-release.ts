@@ -15,11 +15,11 @@ export type DesktopRelease = {
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
 export const desktopCurrentCodeVersion = "0.1.14";
-export const desktopLatestShippedVersion = "0.1.13";
+export const desktopLatestShippedVersion = "0.1.14";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
-export const desktopLatestShippedDateIso = "2026-04-19T23:45:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.13_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.13_x64-setup.exe";
+export const desktopLatestShippedDateIso = "2026-04-20T00:45:00Z";
+export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.14_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "sansxel_0.1.14_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
 export const desktopNextVersion = "0.1.15";
@@ -29,7 +29,7 @@ export const desktopNextVersionHighlights = [
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.13 \u2014 floating copilot can SEARCH THE WEB (Anthropic web_search tool, max 3 uses per turn). Persistent thread history (8 conversations, restorable from a Recent dropdown). Live Mode hints are dismissible + debounced. Splash bottom corners back \u2014 status + boot step on the left, keyboard shortcuts on the right, always visible. ESC\u00d73 from app revisits the splash; the shortcut is advertised on the splash itself. Settings page gets a Keyboard shortcuts section listing Ctrl+Q (force quit), ESC\u00d73 (revisit splash), Enter (open from splash), Space (play minigame). Toolbar mode killed entirely (broken at non-full scale, redundant with floating copilot). Sansxel Copilot launcher renamed properly. Plan + billing reconciled \u2014 comped users see Pro \u00b7 Comped instead of Free. Only paid invoices show. Buy Credits cap raised to $10k with $200 + centered $500 added. Cycle pill text fixed (was white-on-white). 3D tilt on billing cards. Global white-on-white safety net stops the recurring invisible-label bug. /account hero stops going blank (data-reveal stripped + CSS safety fallback). AI knows your local time. Web copilot stays open across navigations.";
+  "v0.1.14 \u2014 the Capsule Rail rebuild. Six-step copilot rework end-to-end: (1) icon-stack rail (\u26a1 \u2318 \ud83d\udcce \ud83e\udde0 \ud83c\udf99\ufe0f) with hover-peek labels, (2) restructured panel with command input on TOP, Quick Actions, Context (MCP) Panel, Output Area, (3) Output Blocks with copy/refine/rerun for code/text/summary cards, (4) MCP attachments \u2014 drag/paste/file picker, removable chips, drop overlay, (5) voice in the rail (mic \u2192 transcription \u2192 auto-send), (6) unified panel for all 4 dock edges + Ctrl+Space global hotkey to summon the copilot from anywhere. PLUS plan-gating on rail icons (\ud83d\udcce + \ud83c\udf99\ufe0f need Apprentice or higher; locked icons show \ud83d\udd12 + redirect to /pricing on second tap). Critical bug fixes: copilot 401 (route now accepts desktop Bearer tokens), Updates page fetch (CORS bypass via tauriFetch), literal escape rendering, splash white-screen on ESC\u00d73, dynamic version label.";
 
 export const desktopShippedReleases: DesktopRelease[] = [
   {
