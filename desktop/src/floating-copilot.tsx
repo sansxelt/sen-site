@@ -35,6 +35,27 @@ import {
 type DockEdge = CopilotEdge;
 type CopilotMode = "collapsed" | "open";
 
+// v0.1.14 \u2014 Capsule Rail icon stack. Each icon opens the panel into
+// a specific intent so the panel knows which mode to render. Step 2
+// will wire intents to actual panel sub-views; Step 1 just gets all
+// icons clicking through to the existing panel.
+type RailIntent = "main" | "commands" | "attach" | "context" | "voice";
+
+type RailIconDef = {
+  intent: RailIntent;
+  glyph: string;
+  label: string;
+  hint: string;
+};
+
+const RAIL_ICONS: RailIconDef[] = [
+  { intent: "main",     glyph: "\u26a1", label: "Ask",      hint: "Open the copilot \u2014 ask anything" },
+  { intent: "commands", glyph: "\u2318", label: "Commands", hint: "Quick actions and command palette" },
+  { intent: "attach",   glyph: "\ud83d\udcce", label: "Attach", hint: "Drag, paste, or pick a file / image / screenshot" },
+  { intent: "context",  glyph: "\ud83e\udde0", label: "Context", hint: "What sansxel is using as context (MCP)" },
+  { intent: "voice",    glyph: "\ud83c\udf99\ufe0f", label: "Voice", hint: "Tap to talk \u2014 live transcription" },
+];
+
 // v0.1.11: Activity-state engine. Drives the "always alive" feel of
 // the rail — every visual cue (pulse, glow, particles) is keyed off
 // this single state so visuals can never lie about what sansxel is
@@ -277,6 +298,9 @@ export function FloatingCopilot() {
   const [threads, setThreads] = useState<CopilotThread[]>(() => loadCopilotThreads());
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  // v0.1.14 \u2014 Which rail icon was clicked to open the panel. Step 2
+  // will route this to different panel sub-views; Step 1 just tracks it.
+  const [panelIntent, setPanelIntent] = useState<RailIntent>("main");
   const abortRef = useRef<AbortController | null>(null);
   const dragStateRef = useRef<{
     startX: number;
@@ -989,47 +1013,54 @@ export function FloatingCopilot() {
       )}
 
       {mode === "collapsed" && (
+        // v0.1.14 \u2014 Rail rebuilt as an icon stack per the Capsule Rail
+        // spec. Each icon click sets the panel intent + opens the panel.
+        // Drag-to-snap still lives on the outer container; icon clicks
+        // stop pointer propagation so they don't get swallowed by drag.
+        // Position switcher moved to a small bottom cluster (vertical
+        // edges) or right cluster (horizontal edges) so it's still
+        // reachable but no longer competes with the primary icons.
         <div
-          className="fc-bar"
-          role="button"
-          tabIndex={0}
+          className="fc-bar fc-bar--icons"
           onPointerDown={onCapsulePointerDown}
           onPointerMove={onCapsulePointerMove}
           onPointerUp={onCapsulePointerUp}
           onPointerCancel={onCapsulePointerCancel}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              setMode("open");
-            }
-          }}
         >
-          <div className="fc-bar-mark">
-            <span className="fc-bar-dot" />
-            <span className="fc-bar-label">sansxel</span>
+          <div className="fc-bar-icons">
+            {RAIL_ICONS.map((icon) => (
+              <button
+                key={icon.intent}
+                type="button"
+                className="fc-rail-icon"
+                aria-label={icon.hint}
+                title={icon.hint}
+                onPointerDown={(e) => e.stopPropagation()}
+                onPointerUp={(e) => e.stopPropagation()}
+                onPointerMove={(e) => e.stopPropagation()}
+                onClick={() => {
+                  setPanelIntent(icon.intent);
+                  setMode("open");
+                }}
+              >
+                <span className="fc-rail-icon-glyph" aria-hidden>{icon.glyph}</span>
+                <span className="fc-rail-icon-label">{icon.label}</span>
+              </button>
+            ))}
           </div>
-          <div className="fc-bar-cta">
-            {liveState === "thinking"
-              ? "Thinking…"
-              : liveState === "streaming"
-                ? "Replying…"
-                : liveState === "ready"
-                  ? "Ready"
-                  : liveState === "listening"
-                    ? "Listening…"
-                    : "Ask anything…"}
-          </div>
+
           {activeTools.length > 0 && (
             <div className="fc-bar-tools" aria-label="Active tools">
               {activeTools.map((tool) => (
                 <span
                   key={tool.id}
                   className={`fc-tool-dot fc-tool-dot--${tool.status}`}
-                  title={`${tool.name} — ${tool.status}`}
+                  title={`${tool.name} \u2014 ${tool.status}`}
                 />
               ))}
             </div>
           )}
+
           <div
             className="fc-position-switch"
             onPointerDown={(e) => e.stopPropagation()}

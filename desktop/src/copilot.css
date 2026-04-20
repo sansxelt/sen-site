@@ -121,6 +121,167 @@ body,
   padding-left: 12px;
 }
 
+/* ─── v0.1.14 STEP 1: Capsule Rail icon stack ────────────────────────
+   The collapsed rail is now a stack of icons (\u26a1 \u2318 \ud83d\udcce \ud83e\udde0 \ud83c\udf99) per the
+   spec. Each icon shows a hover-peek label and clicks through to the
+   panel with a specific intent. The stack is vertical for left/right
+   edges and horizontal for top/bottom \u2014 inherits orientation from
+   the parent .fc-bar's own flex direction (set elsewhere). */
+
+.fc-bar--icons {
+  flex-direction: inherit;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 6px;
+  /* Tighter rail than the old text bar \u2014 icons handle the visual
+     weight, no need for the wide pill shape. */
+  border-radius: 22px;
+}
+
+/* Vertical-edge stack (left/right): icons stacked top \u2192 bottom. */
+.fc--edge-left .fc-bar--icons,
+.fc--edge-right .fc-bar--icons {
+  flex-direction: column;
+  padding: 8px 6px;
+}
+
+/* Horizontal-edge stack (top/bottom): icons in a row. */
+.fc--edge-top .fc-bar--icons,
+.fc--edge-bottom .fc-bar--icons {
+  flex-direction: row;
+  padding: 6px 8px;
+}
+
+.fc-bar-icons {
+  display: flex;
+  flex-direction: inherit;
+  align-items: center;
+  gap: 4px;
+}
+
+.fc-rail-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(220, 220, 235, 0.78);
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+}
+
+.fc-rail-icon:hover {
+  background: rgba(167, 139, 250, 0.14);
+  border-color: rgba(167, 139, 250, 0.32);
+  color: #ffffff;
+  transform: scale(1.04);
+}
+
+.fc-rail-icon:active {
+  transform: scale(0.96);
+}
+
+.fc-rail-icon-glyph {
+  font-size: 17px;
+  line-height: 1;
+}
+
+/* Hover-peek labels: shown via a CSS-only tooltip that sits next to
+   the icon on the side opposite the screen edge (so the label
+   doesn't fall off-screen). Pointer-events: none so it never blocks
+   clicks on the next icon. */
+.fc-rail-icon-label {
+  position: absolute;
+  pointer-events: none;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  background: rgba(8, 8, 12, 0.96);
+  backdrop-filter: blur(10px);
+  color: rgba(232, 224, 255, 0.96);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+  z-index: 5;
+}
+
+.fc-rail-icon:hover .fc-rail-icon-label,
+.fc-rail-icon:focus-visible .fc-rail-icon-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Right edge: label peeks to the LEFT of the icon. */
+.fc--edge-right .fc-rail-icon-label {
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translate(4px, -50%);
+}
+.fc--edge-right .fc-rail-icon:hover .fc-rail-icon-label,
+.fc--edge-right .fc-rail-icon:focus-visible .fc-rail-icon-label {
+  transform: translate(0, -50%);
+}
+
+/* Left edge: label peeks to the RIGHT of the icon. */
+.fc--edge-left .fc-rail-icon-label {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translate(-4px, -50%);
+}
+.fc--edge-left .fc-rail-icon:hover .fc-rail-icon-label,
+.fc--edge-left .fc-rail-icon:focus-visible .fc-rail-icon-label {
+  transform: translate(0, -50%);
+}
+
+/* Top edge: label peeks BELOW the icon. */
+.fc--edge-top .fc-rail-icon-label {
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translate(-50%, -4px);
+}
+.fc--edge-top .fc-rail-icon:hover .fc-rail-icon-label,
+.fc--edge-top .fc-rail-icon:focus-visible .fc-rail-icon-label {
+  transform: translate(-50%, 0);
+}
+
+/* Bottom edge: label peeks ABOVE the icon. */
+.fc--edge-bottom .fc-rail-icon-label {
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translate(-50%, 4px);
+}
+.fc--edge-bottom .fc-rail-icon:hover .fc-rail-icon-label,
+.fc--edge-bottom .fc-rail-icon:focus-visible .fc-rail-icon-label {
+  transform: translate(-50%, 0);
+}
+
+/* State-driven glow on the rail itself (composes with the existing
+   .fc--state-* rules). When sansxel is thinking / streaming /
+   ready, the icon stack picks up a brighter accent so users can
+   tell what the rail is doing without opening the panel. */
+.fc--state-thinking .fc-bar--icons,
+.fc--state-streaming .fc-bar--icons {
+  border-color: rgba(167, 139, 250, 0.55);
+}
+
+.fc--state-ready .fc-bar--icons {
+  border-color: rgba(165, 243, 252, 0.5);
+}
+
 /* ── Hover state: peek + position switcher ──────────────────────── */
 .fc-hover {
   display: flex;
