@@ -17,6 +17,8 @@ import { BillingPanel } from "../../components/billing-panel";
 import { getBillingState } from "../../lib/billing-state";
 import { isStripeConfigured, getStripePublishableKey } from "../../lib/stripe";
 import { getCreditBalance } from "../../lib/credits";
+import { pricingPlanMap, getPricingPlan } from "../../lib/pricing";
+import type { PricingPlanKey } from "../../lib/pricing";
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -39,6 +41,25 @@ export default async function AccountPage() {
   const creditsDollars = (credits / 100).toFixed(2);
   const subscription = readPricingSnapshot(rawSubscription);
   const sessionState = readSessionState(session, profile);
+
+  // v0.1.13 \u2014 Reconcile the Supabase subscription snapshot with the
+  // Stripe billing state. Comped users (e.g. founders, internal accounts)
+  // are Pro in our DB but have no Stripe subscription, so getBillingState
+  // returns plan: null and the BillingPanel falls back to "Free" \u2014 which
+  // contradicts every other place we render their plan ("Pro" in the
+  // user card, on /account/usage, in the dashboard nav, etc.). When
+  // Stripe doesn't know the plan but our DB does, inject the snapshot's
+  // plan into billingState so the panel renders Pro \u00b7 Comped instead
+  // of "Free \u00b7 No billing active".
+  const reconciledBilling = (() => {
+    if (!billingState) return null;
+    if (billingState.plan) return billingState;
+    const snapshotKey = subscription.plan.key as PricingPlanKey;
+    if (snapshotKey === "free" || !(snapshotKey in pricingPlanMap)) {
+      return billingState;
+    }
+    return { ...billingState, plan: getPricingPlan(snapshotKey) };
+  })();
 
   const displayName =
     profile?.display_name ??
@@ -250,8 +271,8 @@ export default async function AccountPage() {
             </span>
           )}
         </div>
-        {stripeReady && billingState ? (
-          <BillingPanel state={billingState} publishableKey={publishableKey ?? ""} />
+        {stripeReady && reconciledBilling ? (
+          <BillingPanel state={reconciledBilling} publishableKey={publishableKey ?? ""} />
         ) : (
           <p className="text-sm text-neutral-400">
             Sign in to manage your subscription. Visit{" "}

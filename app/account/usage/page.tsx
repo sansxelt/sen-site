@@ -205,8 +205,52 @@ export default async function UsagePage() {
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
                 Current plan
               </div>
-              <div className="mt-2 text-xl font-semibold text-white">
-                {currentPlan.name}
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="text-xl font-semibold text-white">
+                  {currentPlan.name}
+                </span>
+                {/* v0.1.13 \u2014 Plan status badge so users always know
+                    whether their plan is Active, Comped, or Cancelling.
+                    Was missing entirely before \u2014 the page just said
+                    "Pro" with no answer to "is this still active?". */}
+                {(() => {
+                  if (currentPlan.key === "free") {
+                    return (
+                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-neutral-400">
+                        Free
+                      </span>
+                    );
+                  }
+                  if (subscription.status === "active") {
+                    return (
+                      <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-300">
+                        Active
+                      </span>
+                    );
+                  }
+                  if (subscription.status === "canceled") {
+                    return (
+                      <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-300">
+                        Canceled
+                      </span>
+                    );
+                  }
+                  if (subscription.status === "selection_pending") {
+                    return (
+                      <span className="rounded-full border border-purple-400/30 bg-purple-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-purple-300">
+                        Comped \u00b7 no card needed
+                      </span>
+                    );
+                  }
+                  if (subscription.status === "contact_required") {
+                    return (
+                      <span className="rounded-full border border-blue-400/30 bg-blue-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-300">
+                        Contact required
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
               <div className="mt-1 text-sm text-neutral-400">
                 {currentPlan.monthlyLabel}
@@ -214,7 +258,7 @@ export default async function UsagePage() {
             </div>
 
             <Link
-              href="/account/billing"
+              href="/account#billing"
               className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/[0.07]"
             >
               Manage
