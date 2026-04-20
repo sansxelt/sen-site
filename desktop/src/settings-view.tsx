@@ -41,6 +41,56 @@ export function DesktopSettingsView() {
       </div>
 
       <div className="view-body">
+        {/* v0.1.13 \u2014 Keyboard shortcuts surfaced explicitly so users
+            can discover the force-quit behavior + the splash-revisit
+            shortcut without having to read tooltips. Sits at the top
+            because Ctrl+Q is the most-asked-about behavior. */}
+        <PrefSection
+          label="Keyboard shortcuts"
+          help="The X button HIDES sansxel (it keeps running so reopening is instant). Use the shortcuts below to fully quit or revisit the splash."
+        >
+          <div className="shortcut-list">
+            <div className="shortcut-row">
+              <div className="shortcut-keys">
+                <kbd>Ctrl</kbd> + <kbd>Q</kbd>
+                <span className="shortcut-divider">/</span>
+                <kbd>{"\u2318"}</kbd> + <kbd>Q</kbd>
+              </div>
+              <div className="shortcut-copy">
+                <strong>Force quit</strong>
+                <span>Closes sansxel entirely. Required to install pending updates.</span>
+              </div>
+            </div>
+            <div className="shortcut-row">
+              <div className="shortcut-keys">
+                <kbd>Esc</kbd> <kbd>Esc</kbd> <kbd>Esc</kbd>
+              </div>
+              <div className="shortcut-copy">
+                <strong>Revisit splash</strong>
+                <span>Press Esc three times in a row from inside the app to bring back the splash + minigame.</span>
+              </div>
+            </div>
+            <div className="shortcut-row">
+              <div className="shortcut-keys">
+                <kbd>Enter</kbd>
+              </div>
+              <div className="shortcut-copy">
+                <strong>Open the app from splash</strong>
+                <span>From the splash, Enter hands off to the main app the moment it&apos;s ready.</span>
+              </div>
+            </div>
+            <div className="shortcut-row">
+              <div className="shortcut-keys">
+                <kbd>Space</kbd>
+              </div>
+              <div className="shortcut-copy">
+                <strong>Play the minigame</strong>
+                <span>Tap Space on the splash to hop the orb. Doubles as a loader-bar boost.</span>
+              </div>
+            </div>
+          </div>
+        </PrefSection>
+
         <PrefSection
           label="Density"
           help="How much breathing room around messages and panels."

@@ -3162,6 +3162,77 @@ input[type="number"]::-webkit-inner-spin-button {
   flex-shrink: 0;
 }
 
+/* v0.1.13 \u2014 Keyboard shortcuts list on the Settings page */
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.shortcut-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: start;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.shortcut-keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.shortcut-keys kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(232, 224, 255, 0.96);
+}
+
+.shortcut-divider {
+  margin: 0 4px;
+  color: rgba(180, 180, 200, 0.4);
+  font-size: 11px;
+}
+
+.shortcut-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shortcut-copy strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.shortcut-copy span {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(180, 180, 200, 0.65);
+}
+
+@media (max-width: 640px) {
+  .shortcut-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .seg-ctrl {
   display: inline-flex;
   background: rgba(255, 255, 255, 0.04);

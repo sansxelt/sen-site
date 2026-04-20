@@ -256,7 +256,7 @@ function TitleBar() {
           className="titlebar-btn titlebar-btn--close"
           onClick={close}
           aria-label="Close"
-          title="Hide window — sansxel keeps running. Ctrl+Q to fully quit (and to install pending updates)."
+          title="Hide window — sansxel keeps running in the background. To FORCE QUIT (and install pending updates), press Ctrl+Q on Windows or ⌘Q on Mac."
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M0 0 L10 10 M10 0 L0 10" stroke="currentColor" strokeWidth="1" />
