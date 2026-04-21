@@ -42,13 +42,14 @@ export function DesktopMemoryView({ session: _session }: { session: DesktopSessi
           <button
             type="button"
             className="memory-clear-btn"
-            onClick={() => {
-              // TODO: wire to backend memory delete endpoint once it exists
-              console.log("clear memory");
-            }}
+            disabled
+            title="Memory engine launches with v0.2.0"
           >
             Clear all memory
           </button>
+          <p className="memory-clear-note">
+            Nothing to clear yet. The memory engine launches with v0.2.0.
+          </p>
         </div>
       </div>
     </div>

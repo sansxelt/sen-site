@@ -14,7 +14,7 @@ export type DesktopRelease = {
 };
 
 export const desktopProjectStartedLabel = "Apr 12, 2026";
-export const desktopCurrentCodeVersion = "0.1.14";
+export const desktopCurrentCodeVersion = "0.1.15";
 export const desktopLatestShippedVersion = "0.1.14";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
 export const desktopLatestShippedDateIso = "2026-04-20T00:45:00Z";
@@ -22,16 +22,47 @@ export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.14_x64-setup.ex
 export const desktopWindowsInstallerFilename = "sansxel_0.1.14_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
-export const desktopNextVersion = "0.1.15";
+export const desktopNextVersion = "0.2.0";
 export const desktopNextVersionHighlights = [
-  "Polish + bug-fix pass on top of v0.1.14's full Capsule Rail rebuild \u2014 specifics TBD based on what surfaces in real use.",
-  "Per the every-15-patches convention, v0.1.15 is the last 0.1.x; v0.2.0 follows with a major UX milestone.",
+  "v0.2.0 is the major milestone after the 0.1.x line wraps with v0.1.15.",
+  "Headline ask from the user: a full Copilot UX rework (open scope, user-driven), plus the memory engine going GA so the Memory view actually has something to clear.",
+  "Floating copilot picks up first-class vision (images + videos, matching the main chat in v0.1.15).",
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.14 \u2014 the Capsule Rail rebuild. Six-step copilot rework end-to-end: (1) icon-stack rail (\u26a1 \u2318 \ud83d\udcce \ud83e\udde0 \ud83c\udf99\ufe0f) with hover-peek labels, (2) restructured panel with command input on TOP, Quick Actions, Context (MCP) Panel, Output Area, (3) Output Blocks with copy/refine/rerun for code/text/summary cards, (4) MCP attachments \u2014 drag/paste/file picker, removable chips, drop overlay, (5) voice in the rail (mic \u2192 transcription \u2192 auto-send), (6) unified panel for all 4 dock edges + Ctrl+Space global hotkey to summon the copilot from anywhere. PLUS plan-gating on rail icons (\ud83d\udcce + \ud83c\udf99\ufe0f need Apprentice or higher; locked icons show \ud83d\udd12 + redirect to /pricing on second tap). Critical bug fixes: copilot 401 (route now accepts desktop Bearer tokens), Updates page fetch (CORS bypass via tauriFetch), literal escape rendering, splash white-screen on ESC\u00d73, dynamic version label.";
+  "v0.1.15 — polish pass before v0.2.0. Images AND videos are now drag-droppable into the chat: drop a video and sansxel extracts a poster frame so vision still works; the inline chip plays a muted preview. Dedicated image-generate button is back next to the mic (gpt-image-1, plan-gated server-side). Memory view's \"Clear all\" is honestly disabled until the memory engine ships (v0.2.0). Integrations view's placeholder cards now say \"Coming soon\" on the button itself instead of a misleading \"Connect\".";
 
 export const desktopShippedReleases: DesktopRelease[] = [
+  {
+    version: "0.1.15",
+    dateLabel: "Apr 20, 2026",
+    dateIso: "2026-04-20T18:00:00Z",
+    channel: "alpha",
+    summary:
+      "Polish pass before v0.2.0. Videos are now first-class drag-drop into the chat (poster frame auto-extracted for vision). Dedicated image-generate button is back next to the mic. Memory + Integrations buttons no longer lie about being connectable.",
+    changes: [
+      {
+        type: "new",
+        text: "Videos drag-droppable into the chat composer. Dropping a video file creates a blob-URL preview chip (plays muted, loop, with controls), and the app extracts a poster frame to a JPEG via canvas so vision still works — the poster rides through Anthropic's image content blocks plus a note telling the model it's the first frame of a video. 200MB cap on video files; revokes blob URLs on removal.",
+      },
+      {
+        type: "new",
+        text: "Dedicated image-generate button is back next to the mic in the composer. Empty input seeds a \"Create an image of: \" prompt; otherwise fires gpt-image-1 immediately. Server enforces credit/plan-gating. (The v0.1.4 changelog advertised this button but it had been lost in later refactors; the Smart Action Launcher's \"image\" root was the only path to it.)",
+      },
+      {
+        type: "improve",
+        text: "Smart Action Launcher now counts video attachments the same way images count for \"visual context\" — the suggested action + context label react to videos like they always did for images.",
+      },
+      {
+        type: "fix",
+        text: "Memory view's \"Clear all memory\" button was a no-op (console.log only). It now renders disabled with a \"Memory engine launches with v0.2.0\" note below it instead of pretending to be functional.",
+      },
+      {
+        type: "fix",
+        text: "Integrations view's non-GitHub cards showed a disabled \"Connect\" button — misleading because the real answer was \"coming soon\". Label now reads \"Coming soon\" on the button itself (matching the tooltip that already said so).",
+      },
+    ],
+  },
   {
     version: "0.1.14",
     dateLabel: "Apr 19, 2026",

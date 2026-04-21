@@ -96,7 +96,7 @@ export function DesktopIntegrationsView({ session }: { session: DesktopSession }
                   title={isGithub ? "Connect via GitHub OAuth" : "Coming soon"}
                   onClick={isGithub ? () => void handleConnect(it.key) : undefined}
                 >
-                  {isGithub ? "Connect GitHub" : "Connect"}
+                  {isGithub ? "Connect GitHub" : "Coming soon"}
                 </button>
               </div>
             );

@@ -3801,6 +3801,31 @@ input[type="number"]::-webkit-inner-spin-button {
   color: #fff;
 }
 
+/* v0.1.15 — image + video attachment thumbnails. Rounded corners
+   match the pill border-radius minus a hair. Video gets controls so
+   the user can scrub the dropped clip without leaving the composer. */
+.chat-attachment-thumb {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(20, 20, 30, 0.65);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+}
+
+.chat-attachment-thumb--video {
+  width: 64px;
+  height: 36px;
+  background: #000;
+}
+
+.chat-attachment--image,
+.chat-attachment--video {
+  padding-left: 4px;
+  max-width: 360px;
+}
+
 .chat-history-item {
   position: relative;
 }
@@ -5053,6 +5078,21 @@ input[type="number"]::-webkit-inner-spin-button {
 .memory-clear-btn:hover {
   background: rgba(220, 38, 38, 0.12);
   color: #fee2e2;
+}
+
+.memory-clear-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+  color: rgba(254, 202, 202, 0.45);
+  border-color: rgba(220, 38, 38, 0.18);
+}
+
+.memory-clear-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(229, 231, 235, 0.55);
+  text-align: center;
 }
 
 /* ─────────────────────────────────────────────────────────────────────

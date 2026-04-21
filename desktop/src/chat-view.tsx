@@ -80,17 +80,26 @@ type VoiceState = "idle" | "recording" | "transcribing" | "warming" | "speaking"
 // into the next user message; image files become real vision inputs
 // passed to the chat route as base64 (Anthropic image content blocks);
 // other binaries surface as a name+size chip only.
+// v0.1.15 — video kind added. We don't ship video to the model (Claude
+// vision can't watch video), but we DO extract a poster frame as a
+// vision attachment so the model sees one still + the filename, and
+// render an inline <video> preview in the composer so the user gets a
+// real thumbnail instead of a generic file chip.
 type ChatAttachment = {
   id: string;
   name: string;
   size: number;
-  kind: "text" | "image" | "binary";
+  kind: "text" | "image" | "video" | "binary";
   body?: string;
   // Set on image attachments only. dataUrl is the full
   // "data:image/png;base64,..." form for thumbnail display; image
   // holds the parsed pieces we need to send to the chat route.
   dataUrl?: string;
   image?: ChatImageAttachment;
+  // v0.1.15 — video previews use a blob: URL (so we don't bloat React
+  // state with the entire video as base64). Poster frame is reused via
+  // image/dataUrl above so the model + thumbnail share one payload.
+  previewUrl?: string;
 };
 
 // Anthropic vision caps each image at 1MB, and so do we — anything
@@ -199,8 +208,102 @@ function isLikelyTextFile(file: File): boolean {
 
 function attachmentKind(file: File): ChatAttachment["kind"] {
   if (file.type.startsWith("image/")) return "image";
+  if (file.type.startsWith("video/")) return "video";
   if (isLikelyTextFile(file)) return "text";
   return "binary";
+}
+
+// v0.1.15 — Reasonable per-video size cap. We don't transfer the
+// video to the server, but huge files can stall the WebView while it
+// builds a blob URL + decodes the first frame. 200MB is plenty for
+// short clips, screen recordings, and exported reels.
+const MAX_VIDEO_BYTES = 200_000_000;
+
+// v0.1.15 — Pull a single poster frame out of a video file via a
+// hidden <video> + <canvas> pipeline. The result is fed back through
+// resizeImageToBudget-style downscaling so it fits Anthropic's 1MB
+// vision cap. Returns null if the browser can't decode the file.
+async function extractVideoPosterFrame(
+  file: File,
+  blobUrl: string,
+): Promise<{ media_type: ChatImageAttachment["media_type"]; data: string; dataUrl: string } | null> {
+  const video = document.createElement("video");
+  video.preload = "auto";
+  video.muted = true;
+  video.playsInline = true;
+  video.src = blobUrl;
+
+  const ready = await new Promise<boolean>((resolve) => {
+    let settled = false;
+    const finish = (ok: boolean) => {
+      if (settled) return;
+      settled = true;
+      resolve(ok);
+    };
+    video.addEventListener("loadeddata", () => finish(true), { once: true });
+    video.addEventListener("error", () => finish(false), { once: true });
+    // Belt-and-braces timeout — some codecs trip the WebView decoder
+    // and hang forever. 5s is plenty for the metadata + first frame.
+    window.setTimeout(() => finish(video.readyState >= 2), 5000);
+  });
+  if (!ready || video.videoWidth === 0 || video.videoHeight === 0) {
+    return null;
+  }
+
+  // Seek a hair into the clip — frame 0 is often a black frame on
+  // many encoders. Cap the seek so we never overshoot the duration.
+  const seekTarget = Math.min(0.5, Math.max(0, (video.duration || 0) - 0.05));
+  if (Number.isFinite(seekTarget) && seekTarget > 0) {
+    await new Promise<void>((resolve) => {
+      const onSeeked = () => {
+        video.removeEventListener("seeked", onSeeked);
+        resolve();
+      };
+      video.addEventListener("seeked", onSeeked, { once: true });
+      try {
+        video.currentTime = seekTarget;
+      } catch {
+        // Some MIME types reject programmatic seek — fall through and
+        // grab whatever frame is currently decoded.
+        video.removeEventListener("seeked", onSeeked);
+        resolve();
+      }
+      window.setTimeout(() => {
+        video.removeEventListener("seeked", onSeeked);
+        resolve();
+      }, 1500);
+    });
+  }
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  const tryEncode = (scale: number, quality: number): string => {
+    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", quality);
+  };
+
+  const attempts: Array<{ scale: number; quality: number }> = [
+    { scale: 1.0, quality: 0.85 },
+    { scale: 0.8, quality: 0.8 },
+    { scale: 0.6, quality: 0.75 },
+    { scale: 0.45, quality: 0.7 },
+    { scale: 0.3, quality: 0.65 },
+    { scale: 0.2, quality: 0.6 },
+  ];
+  for (const { scale, quality } of attempts) {
+    const dataUrl = tryEncode(scale, quality);
+    const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+    if (base64ByteLength(base64) <= MAX_IMAGE_BYTES) {
+      return { media_type: "image/jpeg", data: base64, dataUrl };
+    }
+  }
+  void file; // keep the parameter live for future format-specific tuning
+  return null;
 }
 
 function formatBytes(bytes: number): string {
@@ -640,13 +743,24 @@ function inferComposerContext(
   const trimmed = input.trim();
   const hasInput = Boolean(trimmed);
   const hasAttachments = attachments.length > 0;
-  const hasImageAttachments = attachments.some((attachment) => attachment.kind === "image");
+  // v0.1.15 — video attachments ride the same vision path as images
+  // (poster frame goes through Anthropic vision), so they count as
+  // "image context" for action routing. Keeps the launcher pointed
+  // at Analyze/Extract instead of generic Files when a video is dropped.
+  const hasImageAttachments = attachments.some(
+    (attachment) => attachment.kind === "image" || attachment.kind === "video",
+  );
   const hasTextAttachments = attachments.some((attachment) => attachment.kind === "text");
   const hasBinaryAttachments = attachments.some((attachment) => attachment.kind === "binary");
   const hasUrls = /https?:\/\//i.test(trimmed);
   const hasCode = looksLikeCode(trimmed, attachments);
 
   if (hasImageAttachments) {
+    const visualCount = attachments.filter(
+      (attachment) => attachment.kind === "image" || attachment.kind === "video",
+    ).length;
+    const onlyVideos = attachments.every((attachment) => attachment.kind === "video");
+    const noun = onlyVideos ? "video" : "image";
     return {
       hasInput,
       hasAttachments,
@@ -659,7 +773,9 @@ function inferComposerContext(
       suggestedRoot: "actions",
       suggestedAction: "scan-files",
       summaryLabel:
-        attachments.length > 1 ? `${attachments.length} images ready` : "Image context ready",
+        visualCount > 1
+          ? `${visualCount} ${noun}s ready`
+          : `${noun.charAt(0).toUpperCase()}${noun.slice(1)} context ready`,
     };
   }
 
@@ -1501,6 +1617,43 @@ export function DesktopChatView({
         } catch {
           next.push({ id, name: file.name, size: file.size, kind: "binary" });
         }
+      } else if (kind === "video") {
+        // v0.1.15 — Drop a video, get an inline preview AND let the
+        // model see the first real frame. We don't upload the bytes;
+        // the poster frame goes through the same vision path images
+        // use, the original file just renders in a <video> chip.
+        if (file.size > MAX_VIDEO_BYTES) {
+          setToast(
+            `${file.name} is too large to preview (${formatBytes(file.size)}). Trim it under ${formatBytes(MAX_VIDEO_BYTES)} and try again.`,
+          );
+          continue;
+        }
+        const previewUrl = URL.createObjectURL(file);
+        try {
+          const poster = await extractVideoPosterFrame(file, previewUrl);
+          next.push({
+            id,
+            name: file.name,
+            size: file.size,
+            kind: "video",
+            previewUrl,
+            dataUrl: poster?.dataUrl,
+            image: poster
+              ? { media_type: poster.media_type, data: poster.data }
+              : undefined,
+          });
+        } catch {
+          // We can still show the inline preview even if frame
+          // extraction failed — the model just won't get a vision
+          // attachment for this turn.
+          next.push({
+            id,
+            name: file.name,
+            size: file.size,
+            kind: "video",
+            previewUrl,
+          });
+        }
       } else {
         next.push({ id, name: file.name, size: file.size, kind });
       }
@@ -1556,7 +1709,19 @@ export function DesktopChatView({
   }, [attachments, input]);
 
   const removeAttachment = useCallback((id: string) => {
-    setAttachments((current) => current.filter((entry) => entry.id !== id));
+    setAttachments((current) => {
+      const target = current.find((entry) => entry.id === id);
+      // v0.1.15 — release the blob: URL we created for video previews
+      // so we don't leak across many drops in one session.
+      if (target?.previewUrl) {
+        try {
+          URL.revokeObjectURL(target.previewUrl);
+        } catch {
+          // ignore — already revoked or never allocated
+        }
+      }
+      return current.filter((entry) => entry.id !== id);
+    });
   }, []);
 
   // v0.1.4 — ChatGPT-style "+" menu dispatcher. Each action either
@@ -2148,6 +2313,21 @@ export function DesktopChatView({
         attachmentNotes.push(`Attached: ${att.name}\n\n${att.body}`);
       } else if (att.kind === "image" && att.image) {
         visionImages.push(att.image);
+      } else if (att.kind === "video") {
+        // v0.1.15 — Claude can't watch the video, but it CAN see the
+        // poster frame we extracted on drop. Pass the still through
+        // vision and tell the model what it's looking at so it doesn't
+        // describe it as a generic photo.
+        if (att.image) {
+          visionImages.push(att.image);
+          attachmentNotes.push(
+            `Attached video: ${att.name} (${formatBytes(att.size)}). The image above is the poster frame from this video — describe / reason about it as a single still from the clip.`,
+          );
+        } else {
+          attachmentNotes.push(
+            `Attached video: ${att.name} (${formatBytes(att.size)}). Couldn't extract a poster frame in the browser, so you only see the filename.`,
+          );
+        }
       } else {
         attachmentNotes.push(`Attached: ${att.name} (${formatBytes(att.size)})`);
       }
@@ -3154,22 +3334,54 @@ export function DesktopChatView({
 
           {attachments.length > 0 && (
             <div className="chat-attachments">
-              {attachments.map((att) => (
-                <div key={att.id} className={`chat-attachment chat-attachment--${att.kind}`}>
-                  <span className="chat-attachment-name">{att.name}</span>
-                  <span className="chat-attachment-meta">
-                    {att.kind === "text" ? "text" : att.kind === "image" ? "image" : "file"} · {formatBytes(att.size)}
-                  </span>
-                  <button
-                    type="button"
-                    className="chat-attachment-remove"
-                    onClick={() => removeAttachment(att.id)}
-                    aria-label={`Remove ${att.name}`}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+              {attachments.map((att) => {
+                const metaLabel =
+                  att.kind === "text"
+                    ? "text"
+                    : att.kind === "image"
+                      ? "image"
+                      : att.kind === "video"
+                        ? att.image
+                          ? "video · poster frame attached"
+                          : "video · preview only"
+                        : "file";
+                return (
+                  <div key={att.id} className={`chat-attachment chat-attachment--${att.kind}`}>
+                    {att.kind === "image" && att.dataUrl && (
+                      <img
+                        src={att.dataUrl}
+                        alt=""
+                        className="chat-attachment-thumb"
+                        aria-hidden="true"
+                      />
+                    )}
+                    {att.kind === "video" && att.previewUrl && (
+                      <video
+                        src={att.previewUrl}
+                        className="chat-attachment-thumb chat-attachment-thumb--video"
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        controls
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span className="chat-attachment-name">{att.name}</span>
+                    <span className="chat-attachment-meta">
+                      {metaLabel} · {formatBytes(att.size)}
+                    </span>
+                    <button
+                      type="button"
+                      className="chat-attachment-remove"
+                      onClick={() => removeAttachment(att.id)}
+                      aria-label={`Remove ${att.name}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
           <div className="chat-input-frame">
@@ -3256,6 +3468,28 @@ export function DesktopChatView({
               </div>
 
               <div className="chat-input-actions">
+                {/* v0.1.15 — dedicated image-generate button. Mirrors the
+                    Smart Action Launcher's "image" root: empty input
+                    seeds a "Create an image of: " prompt; otherwise
+                    fires generation. Server enforces credit/plan
+                    gating so we don't lock the button up front. */}
+                <button
+                  type="button"
+                  onClick={() => void handlePrimaryRootAction("image")}
+                  disabled={generatingImage || streaming}
+                  className="chat-icon-btn"
+                  title={
+                    generatingImage
+                      ? "Generating image..."
+                      : input.trim()
+                        ? "Generate image from prompt"
+                        : "Start an image prompt"
+                  }
+                  aria-label="Generate image"
+                >
+                  <ImageGenIcon />
+                </button>
+
                 {planForGating === "free" ? (
                   <button
                     type="button"
@@ -3967,6 +4201,16 @@ function MicIcon() {
       <path d="M12 15C10.343 15 9 13.657 9 12V7C9 5.343 10.343 4 12 4C13.657 4 15 5.343 15 7V12C15 13.657 13.657 15 12 15Z" stroke="currentColor" strokeWidth="1.5" />
       <path d="M6.5 11.5C6.5 14.538 8.962 17 12 17C15.038 17 17.5 14.538 17.5 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       <path d="M12 17V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ImageGenIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="9" cy="10" r="1.6" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M4 17L9.5 12.5L14 16L17 13L20 16" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
     </svg>
   );
 }
