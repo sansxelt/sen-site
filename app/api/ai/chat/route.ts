@@ -48,6 +48,7 @@ const SYSTEM_PROMPT = `You are sansxel-1, the AI inside the sansxel workspace �
 How to respond:
 - Just do the thing. No "Sure!", no "I'd be happy to", no "Here's...". Skip the preamble entirely and start with the actual answer.
 - For ANY question about current/live data — news, stock prices, sports scores, weather, recent events, "today/this week", anything time-sensitive — USE the web_search tool. Don't apologize for "no real-time data," don't dump links and ask the user to look it up themselves. Search, then answer with the actual data plus a short citation. Skip web_search only when the question is genuinely timeless (math, code, definitions, historical facts).
+- When the user pastes or drops a URL (article, blog post, doc page, YouTube link, GitHub link, anything web-reachable), USE the web_fetch tool to read the actual page contents BEFORE replying. NEVER say "I can't access URLs" or "I don't have a browser" — you can. Fetch first, then answer with the real contents. If the fetch fails or the page is gated, say so explicitly and offer to work from what the user can paste in.
 - Match the user's voice — vocabulary, sentence length, formality, all of it. If they write casually, you write casually. If they're technical, be technical. If they're sloppy, be sloppy with them.
 - Write the requested length. If they ask for 5 pages, write 5 pages. Don't truncate, don't summarize.
 - Don't add disclaimers about whether topics are silly, juvenile, or unconventional — if a user asks for an essay on skibidi toilet, write the essay. Creative + cultural topics are valid; treat them with the same craft as anything else.
@@ -222,7 +223,24 @@ const SERVER_TOOLS = [
     name: "web_search",
     max_uses: 3,
   },
+  // v0.1.16 — web_fetch lets the model resolve a specific URL the user
+  // drops in (article, doc, YouTube link, GitHub blob). Without this
+  // the model would punt with "I can't access URLs" because web_search
+  // alone only does Google-style queries, not page fetches. Requires
+  // the `web-fetch-2025-09-10` beta header on the request — see the
+  // anthropic-beta option passed to messages.stream below.
+  {
+    type: "web_fetch_20250910",
+    name: "web_fetch",
+    max_uses: 5,
+  },
 ] as unknown as Anthropic.Messages.Tool[];
+
+// Match http(s) URLs anywhere in the prompt. Used to keep tools
+// enabled even when the prompt is short — "summarize https://…" is
+// 30 chars and would otherwise get stripped by the trivial-prompt
+// guard below.
+const URL_PATTERN = /\bhttps?:\/\/\S+/i;
 
 // v0.1.8 — Desktop tool registry. The model sees these as available
 // callable functions; the actual handlers live in the Tauri client
@@ -765,7 +783,11 @@ export async function POST(request: Request) {
     // Heuristic: skip server tools if the prompt is trivially short
     // (greetings, acks). The model would never need web_search to
     // answer "hi" / "thanks" / "ok" / "wsg".
-    const isTrivialPrompt = lastUserText.length < 20;
+    // EXCEPTION: a short prompt that contains a URL ("summarize
+    // https://…") still needs web_fetch — strip would force the
+    // "I can't access URLs" punt response.
+    const containsUrl = URL_PATTERN.test(lastUserText);
+    const isTrivialPrompt = lastUserText.length < 20 && !containsUrl;
     const toolsForCall = isVoiceTurn || isTrivialPrompt
       ? [] // strip ALL tools — fast first-token wins
       : toolsEnabled
@@ -830,19 +852,30 @@ export async function POST(request: Request) {
       `[ai/chat] tools=${toolsForCall.length} promptLen=${lastUserText.length} model=${descriptor.model}`,
     );
 
-    const stream = await client.messages.stream({
-      model: descriptor.model,
-      // Voice replies are short by design (system prompt enforces
-      // 1-3 sentences). Cap tokens hard so the model can't drift
-      // into a multi-paragraph essay that takes 8 seconds to TTS.
-      max_tokens: isVoiceTurn ? 320 : 2048,
-      system: systemPromptForPayload(payload, referenceBlock),
-      // v0.1.4 — translate to Anthropic content-block form so user
-      // turns with attached images become multimodal content arrays.
-      // Text-only turns pass through as plain strings.
-      messages: messages.map(toAnthropicMessage),
-      ...(toolsForCall.length > 0 ? { tools: toolsForCall } : {}),
-    });
+    // v0.1.16 — web_fetch_20250910 is still on a beta header. Send it
+    // whenever tools are enabled; harmless on calls that only end up
+    // using web_search. Per-request headers don't affect caching.
+    const wantsBetaTools = toolsForCall.some(
+      (t) => (t as { type?: string }).type === "web_fetch_20250910",
+    );
+    const stream = await client.messages.stream(
+      {
+        model: descriptor.model,
+        // Voice replies are short by design (system prompt enforces
+        // 1-3 sentences). Cap tokens hard so the model can't drift
+        // into a multi-paragraph essay that takes 8 seconds to TTS.
+        max_tokens: isVoiceTurn ? 320 : 2048,
+        system: systemPromptForPayload(payload, referenceBlock),
+        // v0.1.4 — translate to Anthropic content-block form so user
+        // turns with attached images become multimodal content arrays.
+        // Text-only turns pass through as plain strings.
+        messages: messages.map(toAnthropicMessage),
+        ...(toolsForCall.length > 0 ? { tools: toolsForCall } : {}),
+      },
+      wantsBetaTools
+        ? { headers: { "anthropic-beta": "web-fetch-2025-09-10" } }
+        : undefined,
+    );
 
     const startedAt = Date.now();
     // Capture from the surface header so the dashboard can split
