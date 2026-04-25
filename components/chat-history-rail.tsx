@@ -170,24 +170,13 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
           <button
             type="button"
             onClick={() => {
-              // Optimistic — navigate to a blank state INSTANTLY,
-              // create the thread row in the background. The first
-              // send sets the real thread_id via x-sansxel-thread-id
-              // response header (existing flow). When the background
-              // POST returns, we broadcast threads:changed so the
-              // rail picks up the new entry. Feels instant + still
-              // gets a server-side thread for preservation.
+              // Just clear the canvas — DON'T pre-create a thread.
+              // The eager-create polluted the rail with empty
+              // "New chat" / "Casual greeting" entries every time
+              // the user clicked + New, even if they never sent
+               // anything. The chat route still creates the thread
+              // on first send (fast — sub-100ms Supabase insert).
               router.replace("/app?new=1");
-              void (async () => {
-                try {
-                  const res = await fetch("/api/threads", { method: "POST" });
-                  if (res.ok) {
-                    window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
-                  }
-                } catch {
-                  // ignore — the legacy first-send path still creates a thread
-                }
-              })();
             }}
             className="chat-history-new-pill"
             title="Start a new chat"

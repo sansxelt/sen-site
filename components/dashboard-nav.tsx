@@ -327,21 +327,10 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
   const handleNewChat = () => {
-    // Optimistic — navigate INSTANTLY, create the thread row in the
-    // background. The first send saves user msg + creates thread
-    // server-side anyway; the background POST just gets a row on
-    // the rail sooner. Feels instant.
+    // Clear canvas only — don't pre-create a thread (was polluting
+    // the rail with empty placeholder entries on every click). The
+    // chat route creates the thread server-side on first send.
     router.replace("/app?new=1");
-    void (async () => {
-      try {
-        const res = await fetch("/api/threads", { method: "POST" });
-        if (res.ok) {
-          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
-        }
-      } catch {
-        // ignore — first-send path will still create a thread
-      }
-    })();
   };
 
   function isActive(href: string) {

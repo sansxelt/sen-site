@@ -38,22 +38,46 @@ function deriveTitle(text: string): string {
     : trimmed.slice(0, TITLE_MAX_LEN - 1).trimEnd() + "…";
 }
 
-/** Lists the user's threads, newest first. Returns [] on any failure. */
+/** Lists the user's threads, newest first. Filters out threads
+ * that have zero messages — those are abandoned + look like ghosts
+ * in the sidebar. Returns [] on any failure. */
 export async function listThreads(email: string): Promise<ChatThread[]> {
   if (!email || !isDatabaseConfigured()) return [];
   try {
     const supabase = getSupabaseAdminClient();
+    // Inner join on chat_messages so threads with no messages drop
+    // out automatically. distinct on thread id to avoid dupes per
+    // message row.
     const { data, error } = await supabase
       .from("chat_threads" as never)
-      .select("id, email, title, created_at, updated_at")
+      .select("id, email, title, created_at, updated_at, chat_messages!inner(id)")
       .eq("email", email.toLowerCase())
       .order("updated_at", { ascending: false })
       .limit(100);
     if (error) {
-      console.warn("listThreads failed:", error.message);
-      return [];
+      // Fallback: if the join fails (older schema, etc.), return
+      // all threads — better than nothing.
+      const fallback = await supabase
+        .from("chat_threads" as never)
+        .select("id, email, title, created_at, updated_at")
+        .eq("email", email.toLowerCase())
+        .order("updated_at", { ascending: false })
+        .limit(100);
+      if (fallback.error) {
+        console.warn("listThreads fallback failed:", fallback.error.message);
+        return [];
+      }
+      return (fallback.data ?? []) as unknown as ChatThread[];
     }
-    return (data ?? []) as unknown as ChatThread[];
+    // Deduplicate (the inner join may yield multiple rows per thread).
+    const seen = new Set<string>();
+    const out: ChatThread[] = [];
+    for (const row of (data ?? []) as unknown as ChatThread[]) {
+      if (seen.has(row.id)) continue;
+      seen.add(row.id);
+      out.push(row);
+    }
+    return out;
   } catch (err) {
     console.warn("listThreads threw:", err);
     return [];
