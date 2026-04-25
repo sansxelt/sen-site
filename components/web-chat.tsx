@@ -497,14 +497,26 @@ export function WebChat({
     setInput("");
     setStreaming(true);
     setChatError(null);
-    // v0.1.16 r3 — capture which thread we're sending IN at the moment
-    // of send. If the user navigates to a different thread mid-stream,
-    // the streaming text MUST NOT bleed into the new thread's UI.
-    // Server-side it keeps saving to the original thread regardless
-    // (progressive save handles that). Client just needs to skip
-    // setMessages calls when the active thread changed.
-    const sendingThreadId = threadIdRef.current;
-    const isStillThisThread = () => threadIdRef.current === sendingThreadId;
+    // v0.1.16 r3+ — track the sending-thread context. Tricky case:
+    // first send in a NEW chat captures threadId=null, then the
+    // server returns a thread id which we setThreadId on. That
+    // legitimately changes threadIdRef from null → newId, but it's
+    // NOT a thread switch — it's just "we now know our id". So we
+    // hold a mutable ref for the sending thread and update it once
+    // the server tells us what id was assigned. Real thread switches
+    // (user clicks a different chat in the rail) flip threadIdRef
+    // to a different non-null id, and isStillThisThread returns
+    // false.
+    let sendingThreadId: string | null = threadIdRef.current;
+    const isStillThisThread = () => {
+      const cur = threadIdRef.current;
+      // First-time-id assignment: was null, now set. Adopt it.
+      if (sendingThreadId === null && cur) {
+        sendingThreadId = cur;
+        return true;
+      }
+      return cur === sendingThreadId;
+    };
     // Clear attachments NOW (not in the finally) — they're already
     // captured into payloadMessages, and conceptually they belong to
     // the turn we just sent. Leaving them visible while the AI streams
