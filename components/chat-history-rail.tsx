@@ -62,6 +62,16 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   const router = useRouter();
   const activeThreadId = params?.get("thread") ?? null;
 
+  // ChatGPT pattern: when the user is on a fresh "+ New chat" (URL
+  // has ?new=1 or no thread param yet), prepend a virtual entry at
+  // the top of the rail that reads "New chat" with the active
+  // outline. This way the new chat is VISIBLE before the first
+  // message even gets sent, so the user can see + click off and
+  // back without losing their place.
+  const isOnNewChat =
+    (pathname === "/app" || pathname.startsWith("/app/")) &&
+    !activeThreadId;
+
   const visibleThreads = useMemo(() => {
     if (!threads) return [];
     const q = query.trim().toLowerCase();

@@ -255,6 +255,17 @@
   background: linear-gradient(180deg, #c4b5fd, #d946ef);
   box-shadow: 0 0 8px rgba(196, 181, 253, 0.7);
 }
+
+/* Phantom "New chat" entry — slightly dimmer + dashed outline so
+   the user knows it's not yet a real saved thread. */
+.chat-history-item.is-pending {
+  cursor: default;
+  border-style: dashed;
+}
+.chat-history-item.is-pending .chat-history-item-meta {
+  color: rgba(196, 181, 253, 0.7);
+  font-style: italic;
+}
 .chat-history-item.is-busy { opacity: 0.5; pointer-events: none; }
 .chat-history-item-body {
   flex: 1;
