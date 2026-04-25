@@ -4,7 +4,6 @@ import { AuroraBackground } from "@/components/aurora-background";
 import { AuthFlow } from "@/components/auth-flow";
 import { HeistCard } from "@/components/heist-card";
 import { HeroActivity } from "@/components/hero-activity";
-import { HomeChatTeaser } from "@/components/home-chat-teaser";
 import { SpotlightCard } from "@/components/spotlight-card";
 import { readAccountContext } from "@/lib/account-session";
 import { getSignInPath } from "@/lib/auth-ui";
@@ -86,12 +85,6 @@ export default async function HomePage() {
         className="mx-auto grid max-w-[1600px] gap-6 px-4 pb-12 pt-8 sm:gap-10 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.1fr_.9fr] lg:items-start lg:gap-16 lg:px-8 lg:pb-16 lg:pt-16"
       >
         <HeroActivity isSignedIn={Boolean(initialAccountContext)} />
-      </section>
-
-      {/* Try-it-now chat input — drops the visitor straight into the
-          workshop with their prompt pre-filled (sign-in if needed). */}
-      <section className="mx-auto w-full max-w-3xl px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
-        <HomeChatTeaser signedIn={signedIn} />
       </section>
 
       <section
