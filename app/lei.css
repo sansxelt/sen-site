@@ -611,6 +611,56 @@
   }
 }
 
+/* Thinking indicator — word + dots before the first token streams
+   in. Replaces silent dots so the state is named, not just shown. */
+.webchat-thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.webchat-thinking-label {
+  font-size: 13px;
+  color: rgba(196, 181, 253, 0.85);
+  letter-spacing: 0.01em;
+  animation: webchat-thinking-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes webchat-thinking-shimmer {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+/* Floating "jump to bottom" pill — appears when the user scrolls
+   up while a reply is streaming so they can re-anchor with one
+   click. ChatGPT/Claude pattern. */
+.webchat-jump-bottom {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(15,12,28,0.95);
+  border: 1px solid rgba(167,139,250,0.45);
+  color: #ede9fe;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  animation: webchat-jump-in 200ms ease-out;
+}
+.webchat-jump-bottom:hover {
+  background: rgba(20,16,36,0.98);
+  border-color: rgba(167,139,250,0.7);
+}
+@keyframes webchat-jump-in {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* Live transcript styling — make it visually distinct from typed
    text so the user knows the AI is showing them what it heard,
    not what they typed. Subtle purple tint + cursor pulse. */

@@ -1471,6 +1471,8 @@ div[id] {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* Containing block for the absolute-positioned jump-to-bottom pill. */
+  position: relative;
 }
 
 .webchat-empty {
