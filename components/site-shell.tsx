@@ -48,7 +48,9 @@ const primaryLinks: SiteNavLink[] = [
   { href: "/pricing", label: "Pricing" },
   // Chat removed — signed-in users go through the Workshop button on
   // the right; the chat is the default view there.
-  { href: "/download", label: "Download" },
+  // Download is auth-gated (the page itself redirects), so hide the
+  // nav link for logged-out visitors — they'd just bounce to /signin.
+  { href: "/download", label: "Download", authOnly: true },
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
@@ -118,7 +120,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 href={signedIn ? "/app" : getSignInPath()}
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
-                {signedIn ? "Open Workshop" : "Sign in"}
+                {signedIn ? "Open Workshop" : "Access"}
               </Link>
             </div>
           </div>
