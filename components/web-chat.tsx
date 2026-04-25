@@ -32,14 +32,13 @@ const WHISPER_GHOSTS = new Set([
   "i", "i.", "uh", "um", "uh.", "um.",
   "[music]", "(music)", "[silence]", "(silence)", "[applause]",
 ]);
-function isLikelyWhisperHallucination(text: string, audioBytes: number): boolean {
+function isLikelyWhisperHallucination(text: string, _audioBytes: number): boolean {
   const normalized = text.trim().toLowerCase();
   if (!normalized) return true;
+  // Only drop EXACT known-ghost matches. The earlier audio-bytes
+  // heuristic was rejecting real one-word answers ('yes', 'stop',
+  // 'no'), which is the opposite of what we want.
   if (WHISPER_GHOSTS.has(normalized)) return true;
-  // Defense in depth: if audio was very short AND result is one
-  // tiny word, drop it. Real speech that short almost never produces
-  // a confident transcription anyway.
-  if (audioBytes < 12_000 && normalized.split(/\s+/).length <= 1) return true;
   return false;
 }
 
@@ -259,14 +258,19 @@ export function WebChat({
   const heardSpeechRef = useRef(false);
 
   const VAD_MIN_RECORD_MS = 400;
-  // v0.1.16 — faster turn-taking + easier interruption. The old
-  // 800ms hold + 0.09 interrupt delta felt sluggish; user couldn't
-  // talk over the AI without yelling. Pulled both numbers down.
+  // v0.1.16 r2 — Tightened further. Users on quieter mics had VAD
+  // never trip the speech threshold (floor + 0.06) so the loop
+  // never knew speech happened, never auto-stopped, and the AI
+  // never got a turn. Halved SPEECH_DELTA so quieter voices register.
   const VAD_SILENCE_HOLD_MS = 500;
-  const SPEECH_DELTA = 0.06;
-  const SILENCE_DELTA = 0.025;
-  const INTERRUPT_DELTA = 0.045;
+  const SPEECH_DELTA = 0.03;
+  const SILENCE_DELTA = 0.012;
+  const INTERRUPT_DELTA = 0.04;
   const INTERRUPT_HOLD_MS = 90;
+  // Fallback: if VAD somehow never trips and the user just keeps
+  // talking, force-stop after 30s so we send SOMETHING through
+  // instead of recording forever in silence.
+  const VAD_MAX_RECORD_MS = 30_000;
 
   const stopAnalyser = useCallback(() => {
     if (rafRef.current != null) {
@@ -310,7 +314,13 @@ export function WebChat({
       // Auto-stop on sustained silence — only after we've heard speech
       if (state === "recording" && voiceModeRef.current) {
         const elapsed = now - recordingStartedAtRef.current;
-        if (level > speechCutoff) {
+        // Hard cap: even if VAD never trips, force-stop so we never
+        // record indefinitely in silence.
+        if (elapsed > VAD_MAX_RECORD_MS) {
+          const r = recorderRef.current;
+          if (r && r.state !== "inactive") r.stop();
+          silenceStartRef.current = null;
+        } else if (level > speechCutoff) {
           heardSpeechRef.current = true;
           silenceStartRef.current = null;
         } else if (
@@ -941,13 +951,9 @@ export function WebChat({
         const blob = new Blob(recordedChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
-        // v0.1.16 — Skip the Whisper round-trip entirely for tiny
-        // audio blobs (effectively pure silence). Whisper hallucinates
-        // confidently on near-empty audio — common ghost outputs:
-        // "You.", "Thank you.", ".", "♪", "Thanks for watching!".
-        // Threshold: ~5KB for webm/opus is roughly < 0.5 sec of
-        // sound. Below that, we never had real speech.
-        if (blob.size < 5000) {
+        // v0.1.16 r2 — only skip if blob is REALLY empty. 5000
+        // was rejecting real low-gain speech. 1500 = bare-empty.
+        if (blob.size < 1500) {
           setVoiceState("idle");
           if (voiceModeRef.current) {
             // V→V: re-arm the mic for the next attempt.
@@ -1609,24 +1615,33 @@ function WebVoiceOverlay({
   onMicTap: () => void;
   onExit: () => void;
 }) {
-  // v0.1.16 — Differentiate "mic open, waiting for you" from "you're
-  // actively talking". Same overlay used to say "Listening" for both,
-  // which made the post-reply transition feel weird (same word appears
-  // twice with no signal that the AI had handed the turn back).
-  // SPEAKING_THRESHOLD picked to match the SPEECH_DELTA used by VAD;
-  // when level is above it, we're actually capturing speech, so the
-  // word matches the state.
-  const SPEAKING_THRESHOLD = 0.10;
+  const SPEAKING_THRESHOLD = 0.08;
   let status: string;
-  if (state === "transcribing") status = "Thinking";
-  else if (state === "speaking") status = "Speaking";
-  else if (state === "recording") {
-    status = level > SPEAKING_THRESHOLD ? "Listening" : "Your turn";
+  let subStatus: string;
+  if (state === "transcribing") {
+    status = "Thinking";
+    subStatus = "Working out what you said";
+  } else if (state === "speaking") {
+    status = "Speaking";
+    subStatus = "Talk to interrupt";
+  } else if (state === "recording") {
+    if (level > SPEAKING_THRESHOLD) {
+      status = "Listening";
+      subStatus = "Heard you — keep going";
+    } else {
+      status = "Your turn";
+      subStatus = "Speak when you're ready";
+    }
   } else {
     status = "Tap to talk";
+    subStatus = "Connect your voice";
   }
 
-  const scale = 1 + Math.min(level * 0.55, 0.55);
+  // Reactive scale for the orb based on real audio level. Capped so
+  // it can't push past the viewport on loud peaks.
+  const scale = 1 + Math.min(level * 0.5, 0.5);
+  // Voice level intensity 0..1 used for the outer pulse rings.
+  const intensity = Math.min(level * 1.6, 1);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -1635,6 +1650,11 @@ function WebVoiceOverlay({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onExit]);
+
+  // 12 vertical bars driven by audio level + per-bar phase offset.
+  // Live-reactive in recording state, gentle idle pulse otherwise.
+  const isLive = state === "recording" || state === "speaking";
+  const bars = Array.from({ length: 12 }, (_, i) => i);
 
   return (
     <div className="voice-overlay">
@@ -1653,22 +1673,49 @@ function WebVoiceOverlay({
           type="button"
           onClick={onMicTap}
           className={`voice-orb voice-orb--${state}`}
-          style={{ transform: `scale(${scale})` }}
+          style={{
+            transform: `scale(${scale})`,
+            // Pass intensity to CSS so the rings can react.
+            ["--vo-intensity" as string]: intensity.toFixed(3),
+          }}
           aria-label={status}
         >
           <span className="voice-orb-inner" />
           <span className="voice-orb-ring" />
           <span className="voice-orb-ring voice-orb-ring--lg" />
+          <span className="voice-orb-ring voice-orb-ring--xl" />
         </button>
 
         <div className="voice-overlay-status">
           <span className={`voice-overlay-dot voice-overlay-dot--${state}`} />
-          {status}
+          <span className="voice-overlay-status-text">{status}</span>
+        </div>
+        <div className="voice-overlay-substatus">{subStatus}</div>
+
+        {/* Reactive waveform — bars scale with audio level, with a
+            per-bar phase so they don't all move in lock-step. */}
+        <div className={`voice-overlay-bars${isLive ? " is-live" : ""}`} aria-hidden>
+          {bars.map((i) => {
+            const phase = Math.sin((Date.now() / 240) + i * 0.55);
+            const reactive = isLive ? 0.35 + intensity * 0.65 + phase * 0.18 : 0.25;
+            const h = Math.max(0.18, Math.min(1, reactive));
+            return (
+              <span
+                key={i}
+                className="voice-overlay-bar"
+                style={{ transform: `scaleY(${h.toFixed(3)})` }}
+              />
+            );
+          })}
         </div>
 
-        <div className="voice-overlay-hint">
-          Hands-free — just talk. Esc to leave.
-        </div>
+        <button
+          type="button"
+          onClick={onExit}
+          className="voice-overlay-end"
+        >
+          End conversation
+        </button>
       </div>
     </div>
   );

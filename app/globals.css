@@ -2114,6 +2114,14 @@ div[id] {
   opacity: 0.25;
 }
 
+.webchat .voice-orb-ring--xl {
+  inset: -28%;
+  animation-delay: 1.4s;
+  opacity: 0.15;
+  /* Outer ring intensity tracks audio level via the CSS var. */
+  border-color: rgba(167, 139, 250, calc(0.25 + var(--vo-intensity, 0) * 0.55));
+}
+
 @keyframes webchat-orb-breathe {
   0%, 100% { filter: brightness(1) saturate(1); }
   50%      { filter: brightness(1.12) saturate(1.15); }
@@ -2151,9 +2159,22 @@ div[id] {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
-  font-weight: 500;
-  color: rgba(245, 245, 250, 0.95);
+  font-size: 22px;
+  font-weight: 600;
+  color: rgba(245, 245, 250, 0.98);
+  letter-spacing: -0.005em;
+}
+.webchat .voice-overlay-status-text {
+  background: linear-gradient(135deg, #ede9fe, #c4b5fd 60%, #f9a8d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.webchat .voice-overlay-substatus {
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(196, 181, 253, 0.65);
+  letter-spacing: 0.01em;
 }
 
 .webchat .voice-overlay-dot {
@@ -2185,6 +2206,52 @@ div[id] {
   font-size: 12px;
   color: rgba(180, 180, 200, 0.5);
   letter-spacing: 0.02em;
+}
+
+/* Reactive waveform bars below the orb. Live mode pulses each bar
+   per a CSS animation; height is driven by inline transform from
+   the React render. */
+.webchat .voice-overlay-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  margin-top: 18px;
+}
+.webchat .voice-overlay-bar {
+  display: inline-block;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #c4b5fd, #a78bfa);
+  border-radius: 999px;
+  transform-origin: center;
+  transition: transform 80ms ease-out;
+  opacity: 0.7;
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.35);
+}
+.webchat .voice-overlay-bars.is-live .voice-overlay-bar {
+  opacity: 1;
+}
+
+/* End-conversation pill button below the bars. */
+.webchat .voice-overlay-end {
+  margin-top: 24px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(245, 245, 250, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.webchat .voice-overlay-end:hover {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fecaca;
 }
 
 .webchat-wave {
