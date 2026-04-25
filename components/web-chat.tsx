@@ -1120,6 +1120,48 @@ export function WebChat({
   const showEmpty = messages.length === 0;
   const allowedTiers = new Set(tiers.map((t) => t.tier));
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // v0.1.16 — Desktop-style "type anywhere to focus the input" +
+  // '/' shortcut. If the user starts pressing keys without focusing
+  // the textarea first, we redirect the keystroke into it. Skip
+  // when an input/textarea/contenteditable is already focused, when
+  // any modifier key is held (don't hijack browser shortcuts), and
+  // when voice mode is active (mic owns the conversation).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (!t) return;
+      const tag = t.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || t.isContentEditable) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (voiceMode) return;
+
+      // '/' is a power-user shortcut: just focus, don't insert.
+      if (e.key === "/") {
+        e.preventDefault();
+        textareaRef.current?.focus();
+        return;
+      }
+
+      // Single printable character → focus + append. Browsers don't
+      // forward the in-flight keystroke after focus() in the same
+      // tick, so we have to insert it ourselves.
+      if (e.key.length === 1) {
+        e.preventDefault();
+        setInput((prev) => prev + e.key);
+        // Defer the focus so React commits the input state first.
+        requestAnimationFrame(() => {
+          textareaRef.current?.focus();
+          // Drop the cursor at the end so further typing appends.
+          const ta = textareaRef.current;
+          if (ta) ta.selectionStart = ta.selectionEnd = ta.value.length;
+        });
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [voiceMode]);
   const [plusMenuOpen, setPlusMenuOpen] = useState(false);
   const plusMenuRef = useRef<HTMLDivElement | null>(null);
   // Close the + menu on outside click / Escape
@@ -1405,6 +1447,7 @@ export function WebChat({
         />
 
         <textarea
+          ref={textareaRef}
           value={
             voiceState === "recording" && liveTranscript
               ? liveTranscript
