@@ -142,7 +142,7 @@ export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
                   href={accessHref}
                   className="sansxel-white-button block rounded-xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
                 >
-                  {signedIn ? "My Account" : "Access"}
+                  {signedIn ? "Open Workshop" : "Access"}
                 </Link>
               </div>
             </motion.nav>
