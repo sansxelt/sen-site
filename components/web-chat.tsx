@@ -1370,14 +1370,22 @@ function WebVoiceOverlay({
   onMicTap: () => void;
   onExit: () => void;
 }) {
-  const status =
-    state === "recording"
-      ? "Listening"
-      : state === "transcribing"
-        ? "Thinking"
-        : state === "speaking"
-          ? "Speaking"
-          : "Listening";
+  // v0.1.16 — Differentiate "mic open, waiting for you" from "you're
+  // actively talking". Same overlay used to say "Listening" for both,
+  // which made the post-reply transition feel weird (same word appears
+  // twice with no signal that the AI had handed the turn back).
+  // SPEAKING_THRESHOLD picked to match the SPEECH_DELTA used by VAD;
+  // when level is above it, we're actually capturing speech, so the
+  // word matches the state.
+  const SPEAKING_THRESHOLD = 0.10;
+  let status: string;
+  if (state === "transcribing") status = "Thinking";
+  else if (state === "speaking") status = "Speaking";
+  else if (state === "recording") {
+    status = level > SPEAKING_THRESHOLD ? "Listening" : "Your turn";
+  } else {
+    status = "Tap to talk";
+  }
 
   const scale = 1 + Math.min(level * 0.55, 0.55);
 
