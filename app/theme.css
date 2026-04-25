@@ -399,12 +399,13 @@ html[data-theme="light"] .webchat-dot { background: #525252; }
 
 /* Status pills (amber/yellow used for "in development", "early
    access", "verify email", etc.) — light text on faint tint
-   completely vanishes on a light page. Force darker amber text +
-   stronger background + border so they read at a glance. */
-html[data-theme="light"] .text-amber-200,
-html[data-theme="light"] .text-amber-200\/90,
-html[data-theme="light"] .text-amber-300,
-html[data-theme="light"] .text-amber-400 { color: #b45309 !important; }
+   completely vanishes on a light page. Catch ALL amber text
+   variants (100, 200, 300, 400, with or without /opacity suffix)
+   via attribute substring match. */
+html[data-theme="light"] [class*="text-amber-1"],
+html[data-theme="light"] [class*="text-amber-2"],
+html[data-theme="light"] [class*="text-amber-3"],
+html[data-theme="light"] [class*="text-amber-4"] { color: #b45309 !important; }
 
 html[data-theme="light"] .bg-amber-300\/\[0\.06\],
 html[data-theme="light"] .bg-amber-300\/\[0\.08\],
@@ -440,9 +441,29 @@ html[data-theme="light"] .bg-rose-400\/10,
 html[data-theme="light"] .bg-red-400\/10,
 html[data-theme="light"] .bg-red-500\/5 { background-color: rgba(254, 202, 202, 0.45) !important; }
 
-/* Violet / brand text — already good contrast on light, but the
-   400/300 variants used for muted accents need a small bump. */
-html[data-theme="light"] .text-violet-200,
-html[data-theme="light"] .text-violet-300 { color: #6d28d9 !important; }
-html[data-theme="light"] .text-violet-300\/70,
-html[data-theme="light"] .text-violet-300\/85 { color: rgba(109, 40, 217, 0.85) !important; }
+/* Violet / brand text — catch ALL numeric variants (100-400) AND
+   /opacity suffixes. Same substring trick as amber. The Workshop
+   CTA card in the sidebar uses text-violet-100 which is basically
+   white — invisible on a light bg without this. */
+html[data-theme="light"] [class*="text-violet-1"],
+html[data-theme="light"] [class*="text-violet-2"],
+html[data-theme="light"] [class*="text-violet-3"],
+html[data-theme="light"] [class*="text-violet-4"] { color: #6d28d9 !important; }
+
+/* Same for fuchsia / pink accents (some addon labels, brand
+   accents) — light variants vanish on light. */
+html[data-theme="light"] [class*="text-fuchsia-1"],
+html[data-theme="light"] [class*="text-fuchsia-2"],
+html[data-theme="light"] [class*="text-fuchsia-3"],
+html[data-theme="light"] [class*="text-pink-2"],
+html[data-theme="light"] [class*="text-pink-3"] { color: #a21caf !important; }
+
+/* Workshop on desktop CTA card body text was text-neutral-300
+   which my earlier override flips dark — but the colored title +
+   link inside need their own treatment (handled by violet sweep
+   above). The card background gradient may also be too pale on
+   light, so beef it up a touch. */
+html[data-theme="light"] aside a[href="/download"] {
+  background: linear-gradient(135deg, rgba(139,92,246,0.14), rgba(217,70,239,0.10)) !important;
+  border-color: rgba(139,92,246,0.5) !important;
+}
