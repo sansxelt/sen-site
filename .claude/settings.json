@@ -31,7 +31,12 @@
       "Bash(vercel deploy *)",
       "Bash(vercel logs *)",
       "Bash(vercel inspect *)",
-      "Bash(git commit -m 'fix: lazy-tolerant OpenAI client construction so Vercel build doesn'\\\\''t crash on missing OPENAI_API_KEY *)"
+      "Bash(git commit -m 'fix: lazy-tolerant OpenAI client construction so Vercel build doesn'\\\\''t crash on missing OPENAI_API_KEY *)",
+      "Bash(rm -rf .vercel)",
+      "Bash(vercel link *)",
+      "Bash(vercel project *)",
+      "Bash(vercel env *)",
+      "Bash(git commit -m 'fix: white-on-white invisible button text + clearer addon UX *)"
     ]
   }
 }

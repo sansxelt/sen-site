@@ -394,13 +394,15 @@ a {
 }
 
 /* v0.1.13 — Global white-on-white safeguard.
-   Any element with a white (or near-white) background gets dark
-   default text. :where() means specificity is 0, so explicit
-   text-* utilities (text-purple-300, text-emerald-400, etc.) still
-   win — this only fills the gap when no explicit text color is set
-   AND the parent's color is light (which the dark site default
-   triggers everywhere). Stops the recurring "white pill with
-   invisible text" bug we kept patching button-by-button. */
+   Originally used :where() for zero specificity so text-* utilities
+   would always win. PROBLEM: tailwind preflight has
+   `button, input, select, textarea { color: inherit }` (specificity
+   0,0,1) which beat the :where() rule, so <button class="bg-white">
+   inherited the body's text-neutral-100 → invisible white-on-white.
+   Fix: keep the :where() rule for plain elements (still loses to
+   utilities), AND add a higher-specificity rule for form/link
+   elements that also lives BELOW the preflight reset (see further
+   down in this file) so the form-element inherit doesn't clobber it. */
 :where(.bg-white, .bg-neutral-50, .bg-zinc-50, .bg-neutral-100) {
   color: #0a0a0c;
 }
@@ -661,6 +663,30 @@ select,
 textarea {
   color: inherit;
   font: inherit;
+}
+
+/* Element-level safeguard for form controls and links — must live
+   BELOW the `button { color: inherit }` preflight so source order
+   wins on the specificity tie. Covers the white-pill-invisible-text
+   bug on Stripe/PayPal Add buttons, "Update card", "Choose a plan",
+   pricing CTAs, etc. Explicit text-* utilities still win because
+   tailwind utility classes load in @layer utilities (highest layer). */
+button.bg-white, a.bg-white, input.bg-white,
+button.bg-neutral-50, a.bg-neutral-50, input.bg-neutral-50,
+button.bg-neutral-100, a.bg-neutral-100, input.bg-neutral-100,
+button.bg-zinc-50, a.bg-zinc-50, input.bg-zinc-50 {
+  color: #0a0a0c;
+}
+
+/* Inverse safeguard — dark-bg buttons / links explicitly get light
+   text. The body default already provides this everywhere, but if a
+   parent rule (like the white safeguard above) cascades dark text
+   into a dark-bg child, this corrects it. */
+button.bg-black, a.bg-black, input.bg-black,
+button.bg-neutral-900, a.bg-neutral-900, input.bg-neutral-900,
+button.bg-neutral-950, a.bg-neutral-950, input.bg-neutral-950,
+button.bg-zinc-900, a.bg-zinc-900, input.bg-zinc-900 {
+  color: #f5f5f5;
 }
 
 section[id],

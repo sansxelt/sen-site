@@ -239,32 +239,40 @@ export function BillingPanel({ state, publishableKey }: Props) {
             ) : (
               <>
                 {state.activeAddons.map(({ addon }) => (
-                  <div key={addon.key} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <div>
-                      <div className="text-sm font-medium text-white">{addon.name}</div>
-                      <div className="mt-0.5 text-xs text-neutral-400">{addon.monthlyLabel} — active</div>
+                  <div key={addon.key} className="flex items-start justify-between gap-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.04] p-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-medium text-white">{addon.name}</div>
+                        <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-300">
+                          Active
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-neutral-400">{addon.description}</div>
+                      <div className="mt-1 text-xs font-medium text-neutral-300">{addon.monthlyLabel}</div>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveAddon(addon.key)}
                       disabled={busy === `remove-${addon.key}`}
-                      className="rounded-xl border border-white/10 px-3 py-1.5 text-xs font-medium text-neutral-300 transition hover:bg-white/10 disabled:opacity-60"
+                      className="shrink-0 rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-200 transition hover:border-red-400/40 hover:bg-red-400/10 hover:text-red-200 disabled:opacity-60"
                     >
                       {busy === `remove-${addon.key}` ? "Removing…" : "Remove"}
                     </button>
                   </div>
                 ))}
                 {availableAddons.map((addon) => (
-                  <div key={addon.key} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <div>
+                  <div key={addon.key} className="flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-white/20">
+                    <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-white">{addon.name}</div>
-                      <div className="mt-0.5 text-xs text-neutral-400">{addon.monthlyLabel}</div>
+                      <div className="mt-1 text-xs text-neutral-400">{addon.description}</div>
+                      <div className="mt-1 text-xs font-medium text-neutral-300">{addon.monthlyLabel}</div>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleAddAddon(addon.key)}
                       disabled={busy === `add-${addon.key}`}
-                      className="rounded-xl bg-white px-3 py-1.5 text-xs font-medium text-black transition hover:opacity-90 disabled:opacity-60"
+                      className="shrink-0 rounded-xl bg-white px-4 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-60"
+                      style={{ color: "#0a0a0c" }}
                     >
                       {busy === `add-${addon.key}` ? "Adding…" : "Add"}
                     </button>
