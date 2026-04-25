@@ -17,6 +17,32 @@ type Tier = { tier: ModelTier; display_name: string; blurb: string };
 // 'Plus' — confusing. Single source of truth here for the chat
 // header + cost chip until we refactor to pass display name from
 // the server.
+// Whisper's well-documented "ghost" outputs when the audio is
+// effectively silence, music, hold-music, breathing, or wind. We
+// drop these instead of sending them to the model as if they were
+// real prompts. Pattern: short text matching a known phrase, ON
+// audio that was also short. Real one-word answers ("yes", "no",
+// "stop") don't trip the filter because the audio is normal length.
+const WHISPER_GHOSTS = new Set([
+  "you", "you.", "thank you", "thank you.", "thanks", "thanks.",
+  "thanks for watching", "thanks for watching.", "thanks for watching!",
+  "thank you for watching", "thank you for watching.",
+  "bye", "bye.", "bye!", "hi", "hi.",
+  ".", "...", "♪", "♪♪", "♪♪♪",
+  "i", "i.", "uh", "um", "uh.", "um.",
+  "[music]", "(music)", "[silence]", "(silence)", "[applause]",
+]);
+function isLikelyWhisperHallucination(text: string, audioBytes: number): boolean {
+  const normalized = text.trim().toLowerCase();
+  if (!normalized) return true;
+  if (WHISPER_GHOSTS.has(normalized)) return true;
+  // Defense in depth: if audio was very short AND result is one
+  // tiny word, drop it. Real speech that short almost never produces
+  // a confident transcription anyway.
+  if (audioBytes < 12_000 && normalized.split(/\s+/).length <= 1) return true;
+  return false;
+}
+
 function planDisplayName(key: string): string {
   const k = (key ?? "").toLowerCase();
   if (k === "apprentice") return "Core";
@@ -915,6 +941,20 @@ export function WebChat({
         const blob = new Blob(recordedChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
+        // v0.1.16 — Skip the Whisper round-trip entirely for tiny
+        // audio blobs (effectively pure silence). Whisper hallucinates
+        // confidently on near-empty audio — common ghost outputs:
+        // "You.", "Thank you.", ".", "♪", "Thanks for watching!".
+        // Threshold: ~5KB for webm/opus is roughly < 0.5 sec of
+        // sound. Below that, we never had real speech.
+        if (blob.size < 5000) {
+          setVoiceState("idle");
+          if (voiceModeRef.current) {
+            // V→V: re-arm the mic for the next attempt.
+            void startRecordingRef.current();
+          }
+          return;
+        }
         setVoiceState("transcribing");
         try {
           const form = new FormData();
@@ -926,11 +966,26 @@ export function WebChat({
           if (!res.ok) throw new Error(`transcribe ${res.status}`);
           const data = (await res.json()) as { text: string };
           const transcribed = data.text.trim();
+          // v0.1.16 — Hallucination filter. Whisper often returns
+          // these short canned strings when the audio is silence,
+          // music, or noise. If we get one of those AND the audio
+          // was short, treat it as silence and re-arm without
+          // sending a ghost message to the model.
+          if (isLikelyWhisperHallucination(transcribed, blob.size)) {
+            setVoiceState("idle");
+            if (voiceModeRef.current) {
+              void startRecordingRef.current();
+            }
+            return;
+          }
           if (transcribed) {
             setVoiceState("idle");
             await send(transcribed, true);
           } else {
             setVoiceState("idle");
+            if (voiceModeRef.current) {
+              void startRecordingRef.current();
+            }
           }
         } catch (err) {
           setChatError(err instanceof Error ? err.message : "Transcribe failed.");
