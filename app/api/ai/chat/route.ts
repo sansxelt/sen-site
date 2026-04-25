@@ -449,10 +449,11 @@ function recentUserContext(
 }
 
 function matchesVoiceHumanizationIntent(payload: ChatBody): boolean {
-  if (payload.input_mode !== "voice") {
-    return false;
-  }
-
+  // v0.1.16 — Removed the input_mode === "voice" gate. The user
+  // wants humanization to fire whenever they ASK for it (humanize,
+  // make this human, rewrite naturally, less AI), regardless of
+  // whether the prompt came from typing, dictation, or full voice
+  // mode. The detector-evasion guard still prevents abuse.
   const latestMessage = latestUserMessage(payload.messages);
   const context = recentUserContext(payload.messages);
   if (!latestMessage || !context) {
