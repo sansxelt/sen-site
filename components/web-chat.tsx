@@ -838,6 +838,26 @@ export function WebChat({
   const showEmpty = messages.length === 0;
   const allowedTiers = new Set(tiers.map((t) => t.tier));
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false);
+  const plusMenuRef = useRef<HTMLDivElement | null>(null);
+  // Close the + menu on outside click / Escape
+  useEffect(() => {
+    if (!plusMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (plusMenuRef.current && !plusMenuRef.current.contains(e.target as Node)) {
+        setPlusMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPlusMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [plusMenuOpen]);
   const hasImageAttached = lei.attachments.some((a) => a.kind === "image");
   const hasVideoAttached = lei.attachments.some((a) => a.kind === "video");
   const costPreview = previewCreditCost({
@@ -1079,14 +1099,71 @@ export function WebChat({
           className={voiceState === "recording" && liveTranscript ? "is-live-transcript" : undefined}
         />
         <div className="webchat-input-actions">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="webchat-voice-btn"
-            title="Attach files (or drag-and-drop anywhere)"
-          >
-            📎 Attach
-          </button>
+          <div className="webchat-plus-wrap" ref={plusMenuRef}>
+            <button
+              type="button"
+              onClick={() => setPlusMenuOpen((o) => !o)}
+              className={`webchat-voice-btn webchat-plus-btn${plusMenuOpen ? " is-open" : ""}`}
+              title="Add (attach files, generate image, more)"
+              aria-haspopup="menu"
+              aria-expanded={plusMenuOpen}
+            >
+              <span className="webchat-plus-glyph">＋</span>
+              <span className="webchat-plus-label">Add</span>
+            </button>
+            {plusMenuOpen && (
+              <div className="webchat-plus-menu" role="menu">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                    setPlusMenuOpen(false);
+                  }}
+                  className="webchat-plus-item"
+                >
+                  <span className="webchat-plus-item-glyph">📎</span>
+                  <span className="webchat-plus-item-body">
+                    <span className="webchat-plus-item-name">Upload from device</span>
+                    <span className="webchat-plus-item-sub">Image · video · file · code — or just drag onto the page</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled={generatingImage || !input.trim() || streaming}
+                  onClick={() => {
+                    setPlusMenuOpen(false);
+                    void generateImageFromInput();
+                  }}
+                  className="webchat-plus-item"
+                >
+                  <span className="webchat-plus-item-glyph">🎨</span>
+                  <span className="webchat-plus-item-body">
+                    <span className="webchat-plus-item-name">
+                      {generatingImage ? "Generating image…" : "Generate image"}
+                    </span>
+                    <span className="webchat-plus-item-sub">
+                      {input.trim() ? "From your current prompt" : "Type a prompt first"}
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  disabled
+                  className="webchat-plus-item"
+                  title="Coming in v0.2.0"
+                >
+                  <span className="webchat-plus-item-glyph">🎬</span>
+                  <span className="webchat-plus-item-body">
+                    <span className="webchat-plus-item-name">Generate video</span>
+                    <span className="webchat-plus-item-sub">Coming soon</span>
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
 
           <span
             className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
@@ -1098,16 +1175,6 @@ export function WebChat({
           >
             {costPreview.planCovers ? "✓ Plan" : `≈ ${costPreview.credits} cr`}
           </span>
-
-          <button
-            type="button"
-            onClick={() => void generateImageFromInput()}
-            disabled={generatingImage || !input.trim() || streaming}
-            className="webchat-voice-btn"
-            title="Generate image from prompt"
-          >
-            {generatingImage ? "Drawing…" : "🖼 Image"}
-          </button>
 
           <VoiceButton
             voiceState={voiceState}
