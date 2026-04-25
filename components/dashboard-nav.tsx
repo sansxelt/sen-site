@@ -220,6 +220,55 @@ function _RecentChats({ compact = false }: { compact?: boolean }) {
   );
 }
 
+function MobileThreadList({ onNavigate }: { onNavigate: () => void }) {
+  const [threads, setThreads] = useState<Array<{ id: string; title: string }> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/threads", { cache: "no-store" });
+        if (!res.ok) { if (!cancelled) { setThreads([]); setLoading(false); } return; }
+        const data = (await res.json()) as { threads?: Array<{ id: string; title: string }> };
+        if (!cancelled) { setThreads(data.threads ?? []); setLoading(false); }
+      } catch {
+        if (!cancelled) { setThreads([]); setLoading(false); }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (loading) return <div className="px-3 py-2 text-xs text-neutral-500">Loading…</div>;
+  if (!threads || threads.length === 0) {
+    return <div className="px-3 py-2 text-xs text-neutral-500">No chats yet — start one below.</div>;
+  }
+  return (
+    <div className="flex flex-col gap-0.5">
+      {threads.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          onClick={() => { router.replace(`/app?thread=${t.id}`); onNavigate(); }}
+          className="truncate rounded-lg px-3 py-2 text-left text-sm text-neutral-300 transition hover:bg-white/5 hover:text-white"
+          title={t.title}
+        >
+          {t.title}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function HamburgerIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function ChatIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
@@ -272,6 +321,10 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const inWorkshop = pathname === "/app" || pathname.startsWith("/app/");
+  // ChatGPT-style mobile drawer for chat history.
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Close the drawer whenever the route changes (user navigated).
+  useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
   const handleNewChat = () => {
     // Soft nav so WebChat clears state instead of full reload.
@@ -409,17 +462,31 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
         </div>
       </aside>
 
-      {/* ── Mobile: sticky top bar (workshop brand + home + sign out) */}
+      {/* ── Mobile: sticky top bar (hamburger + brand + home + sign out) */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/[0.08] bg-neutral-950/95 px-4 py-3 backdrop-blur-xl lg:hidden">
-        <Link href="/app" className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1">
-            <Image src="/icon.png" alt="sansxel" width={18} height={18} className="h-full w-full object-contain" priority />
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-white">sansxel</span>
-            <span className="text-[8.5px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
-          </div>
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Hamburger only matters on /app where chats live —
+              elsewhere there's no chat history to surface. */}
+          {inWorkshop && (
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-neutral-200 transition hover:bg-white/10"
+              aria-label="Open chat history"
+            >
+              <HamburgerIcon />
+            </button>
+          )}
+          <Link href="/app" className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1">
+              <Image src="/icon.png" alt="sansxel" width={18} height={18} className="h-full w-full object-contain" priority />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold text-white">sansxel</span>
+              <span className="text-[8.5px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
+            </div>
+          </Link>
+        </div>
 
         <div className="flex items-center gap-1.5">
           {userEmail && (
@@ -444,6 +511,44 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           </button>
         </div>
       </header>
+
+      {/* ── Mobile: chat history drawer (slides in from left) ───── */}
+      {drawerOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Close chat history"
+            onClick={() => setDrawerOpen(false)}
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
+          />
+          <aside className="fixed inset-y-0 left-0 z-[55] flex w-[82vw] max-w-[320px] flex-col border-r border-white/[0.08] bg-neutral-950/98 lg:hidden chat-drawer-in">
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-300/85">
+                Chat history
+              </span>
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(false)}
+                className="rounded-md px-2 py-1 text-sm text-neutral-400 hover:bg-white/5 hover:text-white"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => { handleNewChat(); setDrawerOpen(false); }}
+              className="m-3 flex items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-400/[0.08] px-3 py-2.5 text-sm font-semibold text-violet-200 transition hover:border-violet-400/60 hover:bg-violet-400/[0.16]"
+            >
+              <span aria-hidden className="text-base leading-none">＋</span>
+              <span>New chat</span>
+            </button>
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-2 pb-4">
+              <MobileThreadList onNavigate={() => setDrawerOpen(false)} />
+            </div>
+          </aside>
+        </>
+      )}
 
       {/* ── Mobile: fixed bottom nav bar ─────────────────────────────── */}
       <nav
