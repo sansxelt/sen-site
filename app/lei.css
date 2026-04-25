@@ -258,6 +258,68 @@
   color: rgba(229,231,235,0.45);
   letter-spacing: 0.01em;
 }
+
+/* In-flight (generating) indicator on a thread row. */
+.chat-history-flight-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  margin-right: 6px;
+  background: #c4b5fd;
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.85);
+  animation: chat-history-flight-pulse 1.1s ease-in-out infinite;
+  vertical-align: middle;
+}
+@keyframes chat-history-flight-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.85); }
+  50%      { opacity: 1; transform: scale(1.1); }
+}
+
+/* Floating "Back to chat" pill — shown on non-/app pages when a
+   thread is generating. Lives bottom-left so it doesn't clash with
+   the bottom-right copilot launcher. */
+.inflight-back-pill {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 75;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.95), rgba(217,70,239,0.85));
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid rgba(167,139,250,0.7);
+  box-shadow: 0 8px 24px rgba(139,92,246,0.42);
+  transition: filter 140ms ease, transform 140ms ease;
+}
+.inflight-back-pill:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+.inflight-back-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+  animation: chat-history-flight-pulse 1.1s ease-in-out infinite;
+}
+.inflight-back-text { letter-spacing: 0.01em; }
+@media (max-width: 640px) {
+  .inflight-back-pill {
+    left: 12px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
+    padding: 7px 12px;
+    font-size: 11.5px;
+  }
+}
 .chat-history-item-actions {
   display: flex;
   align-items: center;

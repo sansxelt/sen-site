@@ -7,6 +7,7 @@ import { CommandPalette } from "../components/command-palette";
 import { CopilotBar } from "../components/copilot-bar";
 import { RevealOnScroll } from "../components/reveal-on-scroll";
 import { ThemeProvider } from "../components/theme-provider";
+import { InflightBackToChat } from "../components/inflight-back-to-chat";
 
 const BASE = "https://www.sansxel.ai";
 
@@ -107,6 +108,7 @@ export default async function RootLayout({
         />
         <ThemeProvider />
         {children}
+        <InflightBackToChat />
         <CommandPalette />
         <CopilotBar signedIn={signedIn} />
         <RevealOnScroll />

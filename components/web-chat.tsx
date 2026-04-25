@@ -8,6 +8,34 @@ import { useLei } from "./lei-shell";
 import { previewCreditCost } from "@/lib/lei";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
+
+// Cross-component "thread is generating" tracker. WebChat writes;
+// chat-history rail + the floating back-to-chat pill read. Lives in
+// localStorage so a page reload doesn't lose state, and a
+// 'sansxel:flight:changed' event fires on every write so listeners
+// re-render without polling.
+const FLIGHT_KEY = "sansxel.inflight.threads";
+type FlightMap = Record<string, { startedAt: number }>;
+function readFlight(): FlightMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(FLIGHT_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as FlightMap;
+    // Auto-expire entries older than 5 minutes — stale flag from a
+    // crashed tab shouldn't pulse forever.
+    const now = Date.now();
+    const cleaned: FlightMap = {};
+    for (const [id, v] of Object.entries(parsed)) {
+      if (v && typeof v.startedAt === "number" && now - v.startedAt < 5 * 60_000) {
+        cleaned[id] = v;
+      }
+    }
+    return cleaned;
+  } catch {
+    return {};
+  }
+}
 type ModelTier = "fast" | "balanced" | "smart";
 
 type Tier = { tier: ModelTier; display_name: string; blurb: string };
@@ -582,6 +610,18 @@ export function WebChat({
         }
       }
 
+      // v0.1.16 r7 — Mark this thread as "generating" in localStorage.
+      // The chat-history rail + a floating "Back to chat" pill watch
+      // this so the user knows generation is happening even when
+      // they're on a different page.
+      const flightThreadId = echoedThreadId || threadIdRef.current;
+      if (flightThreadId && typeof window !== "undefined") {
+        const flight = readFlight();
+        flight[flightThreadId] = { startedAt: Date.now() };
+        window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
+        window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+      }
+
       // Surface plan downgrade if the server picked a lower tier
       const requested = res.headers.get("x-sansxel-tier-requested");
       const resolved = res.headers.get("x-sansxel-tier");
@@ -862,21 +902,22 @@ export function WebChat({
         });
       }
     } finally {
-      // Always clear ac if it's ours, regardless of thread context.
-      // This makes sure the user can SEND AGAIN after switching
-      // threads (was getting stuck because abortRef stayed set
-      // pointing at the old thread's controller).
       if (abortRef.current === ac) {
         abortRef.current = null;
       }
-      // Only flip the visible streaming flag if we're still on the
-      // thread we sent in — otherwise we'd disable the new thread's
-      // input prematurely.
       if (isStillThisThread()) {
         setStreaming(false);
       }
       void lei.refreshBalance();
+      // Clear in-flight flag for this thread.
       if (typeof window !== "undefined") {
+        const flightId = sendingThreadId || threadIdRef.current;
+        if (flightId) {
+          const flight = readFlight();
+          delete flight[flightId];
+          window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
+          window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+        }
         window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
       }
     }

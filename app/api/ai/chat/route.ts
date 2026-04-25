@@ -812,12 +812,16 @@ export async function POST(request: Request) {
       console.warn("ai/chat thread persist (user turn) failed:", err);
     }
 
-    // v0.1.16 r6 — Progressive-save placeholder DISABLED while we
-    // diagnose chat hang reports. Reverting to the simple "save
-    // assistant message at end of stream" pattern. If chat works
-    // again with this off, we know the placeholder/throttled-update
-    // flow is the blocker and we can rebuild it more carefully.
-    const assistantMessageIdPromise: Promise<string | null> = Promise.resolve(null);
+    // v0.1.16 r7 — Progressive save re-enabled. The hang was a
+    // CLIENT-SIDE thread-id capture bug, not the persistence layer.
+    // Now generation truly survives client disconnect: throttled
+    // 900ms updates to the placeholder + final UPDATE on stream end.
+    const assistantMessageIdPromise: Promise<string | null> = resolvedThreadId
+      ? createAssistantPlaceholder(email, resolvedThreadId).catch((err) => {
+          console.warn("ai/chat placeholder create failed:", err);
+          return null;
+        })
+      : Promise.resolve(null);
 
     // v0.1.16 r5 — Quick timing markers so the Vercel function logs
     // show where time goes when chats feel slow.
@@ -854,9 +858,28 @@ export async function POST(request: Request) {
     // client disconnect.
     let assistantBuffer = "";
     let firstTokenLogged = false;
-    // Throttled persist disabled (see r6 note above).
-    const persistPartial = async () => { /* noop */ };
-    void persistPartial;
+    // Throttled progressive save — partial output survives client
+    // disconnect. UPDATE the placeholder with the latest buffer
+    // every ~900ms so a navigation/closure doesn't lose state.
+    let lastPersist = 0;
+    const PERSIST_INTERVAL_MS = 900;
+    const persistPartial = async () => {
+      if (!resolvedThreadId || !assistantBuffer) return;
+      const aid = await assistantMessageIdPromise;
+      if (!aid) return;
+      try {
+        await updateMessageContent(email, resolvedThreadId, aid, assistantBuffer);
+      } catch {
+        // best-effort
+      }
+    };
+    const maybePersist = () => {
+      const now = Date.now();
+      if (now - lastPersist > PERSIST_INTERVAL_MS) {
+        lastPersist = now;
+        void persistPartial();
+      }
+    };
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
         let inputTokens = 0;
@@ -937,6 +960,7 @@ export async function POST(request: Request) {
                 }
                 assistantBuffer += event.delta.text;
                 writeLine({ type: "text", text: event.delta.text });
+                maybePersist();
               }
               if (event.type === "message_delta") {
                 const stop = event.delta?.stop_reason;
@@ -957,6 +981,7 @@ export async function POST(request: Request) {
               // Legacy plain-text path.
               assistantBuffer += event.delta.text;
               controller.enqueue(encoder.encode(event.delta.text));
+              maybePersist();
             }
           }
         } catch (err) {
@@ -982,12 +1007,21 @@ export async function POST(request: Request) {
           if (resolvedThreadId && assistantBuffer.trim()) {
             const tid = resolvedThreadId;
             void (async () => {
-              await saveMessage({
-                email,
-                threadId: tid,
-                role: "assistant",
-                content: assistantBuffer,
-              });
+              const aid = await assistantMessageIdPromise;
+              if (aid) {
+                // UPDATE the placeholder with the final full buffer
+                // (overwrites the throttled partials).
+                await updateMessageContent(email, tid, aid, assistantBuffer);
+              } else {
+                // Fallback: placeholder didn't get created (DB hiccup),
+                // INSERT a fresh row.
+                await saveMessage({
+                  email,
+                  threadId: tid,
+                  role: "assistant",
+                  content: assistantBuffer,
+                });
+              }
               // After the assistant turn lands, fire AI title gen
               // for threads that still have the auto-snippet title
               // (the first user message). Cheap Haiku call. Fails

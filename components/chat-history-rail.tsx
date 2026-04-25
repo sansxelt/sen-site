@@ -5,6 +5,29 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Thread = { id: string; title: string; updated_at?: string };
 
+// Mirror of the FLIGHT_KEY in web-chat.tsx — cross-component shared
+// signal for "this thread is currently being generated". WebChat
+// writes; the rail reads to show a pulsing dot.
+const FLIGHT_KEY = "sansxel.inflight.threads";
+function readFlightIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.localStorage.getItem(FLIGHT_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as Record<string, { startedAt: number }>;
+    const now = Date.now();
+    const live = new Set<string>();
+    for (const [id, v] of Object.entries(parsed)) {
+      if (v && typeof v.startedAt === "number" && now - v.startedAt < 5 * 60_000) {
+        live.add(id);
+      }
+    }
+    return live;
+  } catch {
+    return new Set();
+  }
+}
+
 function relativeTime(iso?: string): string {
   if (!iso) return "";
   const t = new Date(iso).getTime();
@@ -45,6 +68,23 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     if (!q) return threads;
     return threads.filter((t) => t.title.toLowerCase().includes(q));
   }, [threads, query]);
+
+  // Live in-flight thread set, refreshed on every flight:changed
+  // event from WebChat (write side).
+  const [flightIds, setFlightIds] = useState<Set<string>>(() => readFlightIds());
+  useEffect(() => {
+    const onChanged = () => setFlightIds(readFlightIds());
+    if (typeof window !== "undefined") {
+      window.addEventListener("sansxel:flight:changed", onChanged);
+      window.addEventListener("focus", onChanged);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("sansxel:flight:changed", onChanged);
+        window.removeEventListener("focus", onChanged);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -219,6 +259,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             editValue={editValue}
             setEditValue={setEditValue}
             busy={busyId === t.id}
+            inFlight={flightIds.has(t.id)}
             onClick={() => router.replace(`/app?thread=${t.id}`)}
             onStartRename={() => startRename(t)}
             onSubmitRename={() => submitRename(t.id)}
@@ -238,6 +279,7 @@ function ThreadRow({
   editValue,
   setEditValue,
   busy,
+  inFlight,
   onClick,
   onStartRename,
   onSubmitRename,
@@ -250,6 +292,7 @@ function ThreadRow({
   editValue: string;
   setEditValue: (s: string) => void;
   busy: boolean;
+  inFlight: boolean;
   onClick: () => void;
   onStartRename: () => void;
   onSubmitRename: () => void;
@@ -292,8 +335,13 @@ function ThreadRow({
       title={thread.title}
     >
       <div className="chat-history-item-body">
-        <div className="chat-history-item-title">{thread.title}</div>
-        <div className="chat-history-item-meta">{relativeTime(thread.updated_at)}</div>
+        <div className="chat-history-item-title">
+          {inFlight && <span className="chat-history-flight-dot" aria-label="Generating" />}
+          {thread.title}
+        </div>
+        <div className="chat-history-item-meta">
+          {inFlight ? "Generating…" : relativeTime(thread.updated_at)}
+        </div>
       </div>
       <span className="chat-history-item-actions" onClick={(e) => e.stopPropagation()}>
         <button
