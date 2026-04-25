@@ -544,13 +544,17 @@ textarea.is-live-transcript::after {
 .webchat--v2v .webchat-scroll { opacity: 0.18; pointer-events: none; transition: opacity 220ms ease; }
 .webchat--v2v .webchat-scroll * { user-select: none; }
 
-/* On /app the default bottom-right launcher overlapped the chat
-   input bar. Lift it up out of the way so it sits clear of the
-   send/voice/add controls. */
-.copilot-launcher--app {
-  bottom: auto !important;
-  top: 90px !important;
-  right: 20px !important;
+/* Copilot launcher — always bottom-right of the viewport. On
+   mobile the dashboard's fixed bottom nav lives at bottom: 0, so
+   lift the launcher above it (plus the iOS safe-area inset).
+   Slightly smaller on mobile so it doesn't dominate the screen. */
+@media (max-width: 1023px) {
+  .copilot-launcher {
+    width: 42px !important;
+    height: 42px !important;
+    right: 14px !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 80px) !important;
+  }
 }
 
 .copilot-bar--float {

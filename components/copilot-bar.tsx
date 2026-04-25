@@ -242,19 +242,14 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   if (hide) return null;
 
   // ── Closed state: floating launcher button ─────────────────────
+  // v0.1.16 — Always bottom-right. Mobile clearance (above the
+  // dashboard bottom nav) handled in CSS via a media query.
   if (!open) {
-    // On /app the chat input bar lives at the bottom of the viewport,
-    // so the default bottom-right bubble visually bled into the Send
-    // button area. Tag the launcher so CSS can lift it up out of the
-    // input row's path on this route specifically.
-    const launcherClass =
-      "copilot-launcher hx-press" +
-      (pathname === "/app" ? " copilot-launcher--app" : "");
     return (
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={launcherClass}
+        className="copilot-launcher hx-press"
         title="Open copilot (⌘J)"
         aria-label="Open copilot"
       >

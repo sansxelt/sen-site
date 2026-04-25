@@ -1633,20 +1633,23 @@ function VoiceStyleToggle({
   value: "v2v" | "v2t";
   onChange: (v: "v2v" | "v2t") => void;
 }) {
+  // v0.1.16 — Replaced cryptic 'V→T' / 'V→V' labels with words real
+  // users actually understand. 'Dictate' = you talk, AI types back.
+  // 'Talk' = full hands-free voice conversation.
   return (
-    <div className="webchat-vstyle" role="group" aria-label="Voice mode style">
+    <div className="webchat-vstyle" role="group" aria-label="Voice reply style">
       <button
         type="button"
         onClick={() => onChange("v2t")}
         className={value === "v2t" ? "is-active" : ""}
-        title="Voice in, text shown"
-      >V→T</button>
+        title="Dictate — you speak, AI replies in text"
+      >Dictate</button>
       <button
         type="button"
         onClick={() => onChange("v2v")}
         className={value === "v2v" ? "is-active" : ""}
-        title="Hands-free voice — transcript hidden"
-      >V→V</button>
+        title="Talk — full hands-free voice, AI speaks back"
+      >Talk</button>
     </div>
   );
 }
