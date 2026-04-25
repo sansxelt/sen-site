@@ -61,12 +61,12 @@ const ALL_TIERS: ReadonlyArray<{
   {
     tier: "fast",
     display_name: "sansxel-1 fast",
-    blurb: "Quick replies. Free.",
+    blurb: "Quick replies. Free for everyone.",
   },
   {
     tier: "balanced",
     display_name: "sansxel-1",
-    blurb: "Default. Apprentice and up.",
+    blurb: "Default. Core and up.",
   },
   {
     tier: "smart",
