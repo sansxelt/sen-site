@@ -386,12 +386,15 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           </div>
         </Link>
 
-        {/* Chat link always visible regardless of route. + New chat
-            button sits right below it — primary action for starting
-            fresh, easy to spot under the Chat link no matter which
-            workshop page the user is on. */}
+        {/* Chat link always visible regardless of route. Clicking it
+            while ALREADY on /app would otherwise drop the ?thread=
+            param and dump the user back into a phantom New chat —
+            block that. Real "+ New chat" lives in the right rail. */}
         <Link
           href="/app"
+          onClick={(e) => {
+            if (inWorkshop) e.preventDefault();
+          }}
           className={`mb-3 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
             isActive("/app")
               ? "bg-white/10 text-white"
@@ -559,6 +562,12 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={(e) => {
+                // Same guard as the desktop sidebar: tapping Chat
+                // while already in /app should NOT drop ?thread=
+                // and start a phantom new chat.
+                if (item.href === "/app" && inWorkshop) e.preventDefault();
+              }}
               className={`flex min-w-[68px] flex-1 flex-col items-center justify-center gap-1 py-2.5 text-center transition-colors ${
                 isActive(item.href)
                   ? "text-white"

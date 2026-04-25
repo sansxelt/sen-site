@@ -966,6 +966,13 @@ export function WebChat({
           window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
         }
         window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+        // The server-side AI title regen runs AFTER the stream ends
+        // (cheap Haiku call). Fire a second refetch a few seconds
+        // later so the rail picks up the new title without the user
+        // having to reload or refocus the tab.
+        window.setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+        }, 3500);
       }
     }
   }, [input, messages, tier, lei]);

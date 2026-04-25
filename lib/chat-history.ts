@@ -30,9 +30,24 @@ export type StoredMessage = {
 const TITLE_FALLBACK = "New chat";
 const TITLE_MAX_LEN = 60;
 
+// URL-only / URL-leading first messages make terrible sidebar titles
+// ("https://www.youtube.com/watch?v=…"). Detect them and leave the
+// fallback in place so the Haiku regen at end-of-stream produces a
+// real title from the assistant's response. Same for files, code
+// fences, and "look at this image" trivia.
+const URL_ONLY_PATTERN = /^\s*https?:\/\/\S+\s*$/i;
+const URL_LEADING_PATTERN = /^\s*https?:\/\/\S+/i;
+
 function deriveTitle(text: string): string {
   const trimmed = text.replace(/\s+/g, " ").trim();
   if (!trimmed) return TITLE_FALLBACK;
+  // Pure URL → no useful snippet possible; let Haiku regen own it.
+  if (URL_ONLY_PATTERN.test(trimmed)) return TITLE_FALLBACK;
+  // URL + a tiny prefix ("check this https://…") is also useless;
+  // anything <12 chars before the URL doesn't describe the request.
+  if (URL_LEADING_PATTERN.test(trimmed) && trimmed.length < 80) {
+    return TITLE_FALLBACK;
+  }
   return trimmed.length <= TITLE_MAX_LEN
     ? trimmed
     : trimmed.slice(0, TITLE_MAX_LEN - 1).trimEnd() + "…";

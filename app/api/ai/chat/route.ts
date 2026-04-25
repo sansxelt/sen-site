@@ -1072,11 +1072,13 @@ export async function POST(request: Request) {
                   const t = await getChatThread(email, tid);
                   const currentTitle = (t?.title ?? "").trim();
                   const firstText = firstUser.content.replace(/\s+/g, " ").trim();
+                  const looksLikeUrlTitle = /^https?:\/\//i.test(currentTitle);
                   const looksLikeSnippet =
                     !currentTitle ||
                     currentTitle === "New chat" ||
                     currentTitle === firstText ||
                     currentTitle === firstText.slice(0, 59).trimEnd() + "…" ||
+                    looksLikeUrlTitle ||
                     (currentTitle.length < 30 &&
                       firstText.toLowerCase().startsWith(currentTitle.toLowerCase()));
                   if (looksLikeSnippet) {
