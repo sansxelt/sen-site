@@ -189,6 +189,67 @@ export async function appendMessage(args: {
   }
 }
 
+/**
+ * Inserts an empty assistant placeholder message + returns its id.
+ * Used by the chat route at stream start so we can progressively
+ * UPDATE the message body as deltas arrive — even if the client
+ * disconnects, the latest saved chunk survives.
+ */
+export async function createAssistantPlaceholder(
+  email: string,
+  threadId: string,
+): Promise<string | null> {
+  if (!email || !threadId || !isDatabaseConfigured()) return null;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("chat_messages" as never)
+      .insert([{ thread_id: threadId, role: "assistant", content: "" }] as never)
+      .select("id")
+      .single();
+    if (error || !data) {
+      console.warn("createAssistantPlaceholder failed:", error?.message);
+      return null;
+    }
+    return (data as { id: string }).id;
+  } catch (err) {
+    console.warn("createAssistantPlaceholder threw:", err);
+    return null;
+  }
+}
+
+/**
+ * Updates an existing message's content (and bumps thread updated_at).
+ * Called from the chat route on a throttle so partial assistant
+ * output is always saved if the client disconnects mid-stream.
+ */
+export async function updateMessageContent(
+  email: string,
+  threadId: string,
+  messageId: string,
+  content: string,
+): Promise<void> {
+  if (!email || !threadId || !messageId || !isDatabaseConfigured()) return;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from("chat_messages" as never)
+      .update({ content } as never)
+      .eq("id", messageId);
+    if (error) {
+      console.warn("updateMessageContent failed:", error.message);
+      return;
+    }
+    await supabase
+      .from("chat_threads" as never)
+      .update({ updated_at: new Date().toISOString() } as never)
+      .eq("id", threadId)
+      .eq("email", email.toLowerCase());
+  } catch (err) {
+    console.warn("updateMessageContent threw:", err);
+  }
+}
+
 /** Renames a thread (no-op if it doesn't belong to the user). */
 export async function renameThread(email: string, threadId: string, title: string): Promise<boolean> {
   if (!email || !threadId || !isDatabaseConfigured()) return false;

@@ -31,9 +31,11 @@ import {
 import { detectLanguage, langLabel } from "../../../../lib/i18n";
 import {
   appendMessage as saveMessage,
+  createAssistantPlaceholder,
   createThread as createChatThread,
   getThread as getChatThread,
   listMessages as listChatMessages,
+  updateMessageContent,
 } from "../../../../lib/chat-history";
 import { generateAndSetThreadTitle } from "../../../../lib/thread-title";
 
@@ -798,6 +800,21 @@ export async function POST(request: Request) {
       console.warn("ai/chat thread persist (user turn) failed:", err);
     }
 
+    // v0.1.16 r2 — Create the assistant placeholder message UP FRONT
+    // (before the LLM starts streaming) and progressively UPDATE it
+    // as deltas arrive. This way, even if the client disconnects
+    // mid-stream (user navigates away, closes tab, network drops),
+    // whatever was generated up to the most recent throttle tick is
+    // already saved to chat_messages. ChatGPT/Claude pattern.
+    let assistantMessageId: string | null = null;
+    if (resolvedThreadId) {
+      try {
+        assistantMessageId = await createAssistantPlaceholder(email, resolvedThreadId);
+      } catch (err) {
+        console.warn("ai/chat placeholder create failed:", err);
+      }
+    }
+
     const stream = await client.messages.stream({
       model: descriptor.model,
       // Voice replies are short by design (system prompt enforces
@@ -821,9 +838,21 @@ export async function POST(request: Request) {
         : "web";
     const encoder = new TextEncoder();
     // Buffer the assistant's text deltas so we can persist the full
-    // reply once streaming finishes. Doesn't change what the client
-    // sees — just collects in parallel.
+    // reply once streaming finishes. Also throttle-save to the
+    // placeholder message every ~900ms so partial output survives a
+    // client disconnect.
     let assistantBuffer = "";
+    let lastPersist = 0;
+    const PERSIST_INTERVAL_MS = 900;
+    const persistPartial = async () => {
+      if (!assistantMessageId || !resolvedThreadId) return;
+      if (!assistantBuffer) return;
+      try {
+        await updateMessageContent(email, resolvedThreadId, assistantMessageId, assistantBuffer);
+      } catch {
+        // ignore — best-effort
+      }
+    };
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
         let inputTokens = 0;
@@ -894,6 +923,13 @@ export async function POST(request: Request) {
               ) {
                 assistantBuffer += event.delta.text;
                 writeLine({ type: "text", text: event.delta.text });
+                // Throttled progressive save — partial output
+                // survives client disconnect.
+                const now = Date.now();
+                if (now - lastPersist > PERSIST_INTERVAL_MS) {
+                  lastPersist = now;
+                  void persistPartial();
+                }
               }
               if (event.type === "message_delta") {
                 const stop = event.delta?.stop_reason;
@@ -905,9 +941,14 @@ export async function POST(request: Request) {
               event.type === "content_block_delta" &&
               event.delta.type === "text_delta"
             ) {
-              // Legacy plain-text path — unchanged.
+              // Legacy plain-text path.
               assistantBuffer += event.delta.text;
               controller.enqueue(encoder.encode(event.delta.text));
+              const now = Date.now();
+              if (now - lastPersist > PERSIST_INTERVAL_MS) {
+                lastPersist = now;
+                void persistPartial();
+              }
             }
           }
         } catch (err) {
@@ -925,18 +966,25 @@ export async function POST(request: Request) {
             total_tokens: inputTokens + outputTokens,
             duration_ms: Date.now() - startedAt,
           });
-          // v0.1.16 — Persist the assistant turn so the next device
-          // sees the full conversation. Skip on empty buffer (model
-          // returned only tool calls / nothing useful).
+          // v0.1.16 r2 — Final save: update the placeholder with the
+          // full buffer (overwrites the throttled partials). Use UPDATE
+          // not INSERT so we don't double-create the assistant
+          // message. If somehow no placeholder exists (DB hiccup),
+          // fall back to creating a fresh row.
           if (resolvedThreadId && assistantBuffer.trim()) {
             const tid = resolvedThreadId;
+            const aid = assistantMessageId;
             void (async () => {
-              await saveMessage({
-                email,
-                threadId: tid,
-                role: "assistant",
-                content: assistantBuffer,
-              });
+              if (aid) {
+                await updateMessageContent(email, tid, aid, assistantBuffer);
+              } else {
+                await saveMessage({
+                  email,
+                  threadId: tid,
+                  role: "assistant",
+                  content: assistantBuffer,
+                });
+              }
               // After the assistant turn lands, fire AI title gen
               // for threads that still have the auto-snippet title
               // (the first user message). Cheap Haiku call. Fails
