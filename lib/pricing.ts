@@ -308,14 +308,22 @@ export const billingAddons: BillingAddon[] = [
 // v0.1.16 — Plans that already INCLUDE the value of recurring addons.
 // Pro / Teams / Enterprise have unlimited weekly chat + image, so the
 // Copilot Pro Pack and Power Pack don't add anything they don't
-// already get. Billing UI shows these as "Owned with your plan"
-// instead of payment buttons. One-time boosts (session_boost,
-// weekly_boost) are always purchasable since they grant cap-busting
-// credits that pair well with any plan when the user wants more.
+// already get.
+//
+// Plus ($20/mo) includes Copilot Pro Pack ($12/mo standalone) — the
+// math leaves $8 for the base Plus value which lines up with the
+// step up from Core ($12/mo). Power Pack ($25/mo) is NOT included
+// in Plus because it costs more than Plus does — bundling it would
+// make Plus a strict pricing arbitrage over Power Pack alone.
+//
+// Billing UI shows included addons as "Owned with [Plan]" instead of
+// payment buttons. One-time boosts (session_boost, weekly_boost) are
+// always purchasable since they grant cap-busting credits that pair
+// well with any plan when the user wants more.
 export const ADDONS_INCLUDED_BY_PLAN: Record<string, BillingAddonKey[]> = {
   free: [],
   apprentice: [],
-  studio: [],
+  studio: ["copilot_pro_pack"],
   pro: ["copilot_pro_pack", "power_pack"],
   teams: ["copilot_pro_pack", "power_pack"],
   enterprise: ["copilot_pro_pack", "power_pack"],
