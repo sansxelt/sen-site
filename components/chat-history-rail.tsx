@@ -56,8 +56,9 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
 
   const handleNew = () => {
     // Soft nav — WebChat watches searchParams and clears messages
-    // when ?new=1 is present.
-    router.push("/app?new=1");
+    // when ?new=1 is present. Use replace so the back button
+    // doesn't fill up with new-chat hops.
+    router.replace("/app?new=1");
   };
 
   const startRename = (t: Thread) => {
@@ -103,7 +104,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
       window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
       // If we deleted the currently-open thread, bounce to a new chat.
       if (activeThreadId === id) {
-        router.push("/app?new=1");
+        router.replace("/app?new=1");
       }
     } catch {
       setThreads(previous);
@@ -142,7 +143,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             editValue={editValue}
             setEditValue={setEditValue}
             busy={busyId === t.id}
-            onClick={() => router.push(`/app?thread=${t.id}`)}
+            onClick={() => router.replace(`/app?thread=${t.id}`)}
             onStartRename={() => startRename(t)}
             onSubmitRename={() => submitRename(t.id)}
             onCancelRename={() => setEditingId(null)}

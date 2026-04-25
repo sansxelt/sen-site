@@ -50,6 +50,47 @@ export function WebChat({
   const lei = useLei();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+
+  // v0.1.16 — Ctrl+V / Cmd+V paste support for images and videos.
+  // Captures clipboard FILES (copying from file explorer) AND
+  // ITEMS (screenshot copies, image copies from a browser tab,
+  // etc.). Routes them to the LEI attachment system same as drag-
+  // drop. preventDefault only when we actually consumed files so
+  // pasting plain text into the textarea still works.
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const dt = e.clipboardData;
+      if (!dt) return;
+      const collected: File[] = [];
+      // Files-list path: covers copy-from-OS-file-manager.
+      if (dt.files && dt.files.length > 0) {
+        for (let i = 0; i < dt.files.length; i++) {
+          const f = dt.files.item(i);
+          if (f) collected.push(f);
+        }
+      }
+      // Items path: screenshot tools and "copy image" from browser
+      // pages put data here, not in .files.
+      if (dt.items && dt.items.length > 0) {
+        for (let i = 0; i < dt.items.length; i++) {
+          const item = dt.items[i];
+          if (item.kind === "file") {
+            const f = item.getAsFile();
+            // De-dupe — Chrome sometimes lists the same blob in
+            // both .files and .items.
+            if (f && !collected.some((c) => c.size === f.size && c.name === f.name)) {
+              collected.push(f);
+            }
+          }
+        }
+      }
+      if (collected.length === 0) return;
+      e.preventDefault();
+      void lei.addFiles(collected);
+    };
+    document.addEventListener("paste", onPaste);
+    return () => document.removeEventListener("paste", onPaste);
+  }, [lei]);
   // v0.1.16 — server-persisted thread id. Null until first send (or
   // until /api/threads/[id] loads an existing one). Same account →
   // same threads from any device.
@@ -463,7 +504,11 @@ export function WebChat({
       let renderedLen = 0;
       let smoothRaf: number | null = null;
       let smoothActive = true;
-      const CHARS_PER_FRAME = 5;
+      // v0.1.16 — was 5 (≈300 chars/sec, ~50 wpm — felt slow even
+       // when the network was fast). Bumped to 14 (≈840 chars/sec,
+       // ~150 wpm). Still smooth enough to feel deliberate, fast
+       // enough that long answers don't feel like they're crawling.
+       const CHARS_PER_FRAME = 14;
       const tickRender = () => {
         if (renderedLen < assistant.length) {
           renderedLen = Math.min(assistant.length, renderedLen + CHARS_PER_FRAME);
