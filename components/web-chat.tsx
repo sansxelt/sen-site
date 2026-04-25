@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLei } from "./lei-shell";
@@ -56,36 +57,50 @@ export function WebChat({
   const threadIdRef = useRef<string | null>(null);
   useEffect(() => { threadIdRef.current = threadId; }, [threadId]);
 
-  // On mount: respect URL hints first.
-  //   ?new=1            → start blank, don't restore anything
-  //   ?thread=<uuid>    → load that specific thread
-  //   (otherwise)       → hydrate from the user's most recent thread
+  // v0.1.16 — Re-fetch the active thread whenever the URL changes
+  // (soft nav from the chat history rail clicking a different chat).
+  // Previous version only fired on mount, so switching threads
+  // looked broken — same in-memory chat stayed mounted.
+  //
+  // URL contract:
+  //   ?new=1            → blank chat, drop threadId
+  //   ?thread=<uuid>    → load that thread's messages
+  //   (no params)       → on first mount only, restore most recent;
+  //                       after that, leave the active chat alone
+  const searchParams = useSearchParams();
+  const wantsNew = searchParams?.get("new") === "1";
+  const requestedThreadParam = searchParams?.get("thread") ?? null;
+  const hasHydratedRef = useRef(false);
+
   useEffect(() => {
     let cancelled = false;
-    const params = typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search)
-      : null;
-    const wantsNew = params?.get("new") === "1";
-    const requested = params?.get("thread");
 
     if (wantsNew) {
-      // Strip the param so refreshes don't keep blanking the chat.
-      if (typeof window !== "undefined") {
-        window.history.replaceState({}, "", "/app");
-      }
+      setThreadId(null);
+      setMessages([]);
+      setInput("");
+      hasHydratedRef.current = true;
       return;
     }
 
     (async () => {
       try {
-        let targetId = requested ?? null;
+        let targetId = requestedThreadParam;
         if (!targetId) {
+          // No URL hint: only auto-restore the most-recent thread on
+          // the very first mount. Avoid clobbering an in-progress
+          // chat on subsequent renders.
+          if (hasHydratedRef.current) return;
           const res = await fetch("/api/threads", { cache: "no-store" });
-          if (!res.ok) return;
+          if (!res.ok) { hasHydratedRef.current = true; return; }
           const data = (await res.json()) as { threads?: Array<{ id: string }> };
           targetId = data.threads?.[0]?.id ?? null;
         }
+        hasHydratedRef.current = true;
         if (!targetId || cancelled) return;
+        // Don't re-load the same thread we're already showing.
+        if (targetId === threadIdRef.current) return;
+
         const detailRes = await fetch(`/api/threads/${targetId}`, { cache: "no-store" });
         if (!detailRes.ok || cancelled) return;
         const detail = (await detailRes.json()) as {
@@ -96,18 +111,13 @@ export function WebChat({
         const restored = (detail.messages ?? [])
           .filter((m) => m.role === "user" || m.role === "assistant")
           .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
-        if (restored.length > 0) setMessages(restored);
-        // Clean up the ?thread= param so the URL isn't sticky on
-        // browser-back / refresh.
-        if (requested && typeof window !== "undefined") {
-          window.history.replaceState({}, "", "/app");
-        }
+        setMessages(restored);
       } catch {
         // ignore — blank chat is fine
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [wantsNew, requestedThreadParam]);
   const [streaming, setStreaming] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [tier, setTier] = useState<ModelTier>(
