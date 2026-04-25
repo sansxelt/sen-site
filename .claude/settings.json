@@ -47,7 +47,8 @@
       "Bash(git commit -m 'feat: live transcript preview via Web Speech API while recording *)",
       "Bash(git commit -m 'ux: consolidate Attach + Image into single + dropdown *)",
       "Bash(git commit -m 'fix: image gen rendering + auto-route gen intent so no extra button needed *)",
-      "Bash(git commit -m 'ux: plan chip on left + show expiry/cancellation in chat header *)"
+      "Bash(git commit -m 'ux: plan chip on left + show expiry/cancellation in chat header *)",
+      "Bash(git commit *)"
     ]
   }
 }

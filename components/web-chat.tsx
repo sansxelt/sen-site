@@ -37,10 +37,14 @@ export function WebChat({
   email,
   plan,
   tiers,
+  planExpiresAt,
+  planCanceling,
 }: {
   email: string;
   plan: string;
   tiers: Tier[];
+  planExpiresAt?: string | null;
+  planCanceling?: boolean;
 }) {
   const lei = useLei();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -1113,6 +1117,20 @@ export function WebChat({
           className={voiceState === "recording" && liveTranscript ? "is-live-transcript" : undefined}
         />
         <div className="webchat-input-actions">
+          <div className="webchat-input-actions-left">
+            <span
+              className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
+              title={
+                costPreview.planCovers
+                  ? `Included in your ${plan} plan — no credits used unless you exceed your weekly cap`
+                  : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
+              }
+            >
+              {costPreview.planCovers ? `✓ ${plan}` : `≈ ${costPreview.credits} cr`}
+            </span>
+            <PlanExpiryNote expiresAt={planExpiresAt} canceling={planCanceling} />
+          </div>
+          <div className="webchat-input-actions-right">
           <div className="webchat-plus-wrap" ref={plusMenuRef}>
             <button
               type="button"
@@ -1150,17 +1168,6 @@ export function WebChat({
             )}
           </div>
 
-          <span
-            className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
-            title={
-              costPreview.planCovers
-                ? `Included in your ${plan} plan — no credits used unless you exceed your weekly cap`
-                : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
-            }
-          >
-            {costPreview.planCovers ? "✓ Plan" : `≈ ${costPreview.credits} cr`}
-          </span>
-
           <VoiceButton
             voiceState={voiceState}
             isFreePlan={isFreePlan}
@@ -1185,9 +1192,55 @@ export function WebChat({
               Send
             </button>
           )}
+          </div>
         </div>
       </form>
     </section>
+  );
+}
+
+function PlanExpiryNote({
+  expiresAt,
+  canceling,
+}: {
+  expiresAt?: string | null;
+  canceling?: boolean;
+}) {
+  if (!expiresAt) return null;
+  const end = new Date(expiresAt).getTime();
+  if (Number.isNaN(end)) return null;
+  const now = Date.now();
+  const days = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+
+  // Show only when relevant: canceling soon OR within 14 days of period end.
+  const shouldShow = canceling || days <= 14;
+  if (!shouldShow || days < 0) return null;
+
+  const dateLabel = new Date(expiresAt).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+
+  let label: string;
+  let urgency: "warn" | "soft" = "soft";
+  if (canceling) {
+    if (days <= 0) label = "Plan ends today";
+    else if (days === 1) label = "Plan ends tomorrow";
+    else label = `Plan ends in ${days} days · ${dateLabel}`;
+    urgency = days <= 7 ? "warn" : "soft";
+  } else {
+    if (days <= 3) label = `Renews in ${days}d`;
+    else label = `Renews ${dateLabel}`;
+  }
+
+  return (
+    <a
+      href="/account/billing"
+      className={`webchat-plan-expiry webchat-plan-expiry--${urgency}`}
+      title={canceling ? "Subscription is set to cancel — click to reactivate" : "Next renewal date"}
+    >
+      {canceling && <span aria-hidden>⚠</span>} {label}
+    </a>
   );
 }
 
