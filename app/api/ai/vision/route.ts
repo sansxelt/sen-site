@@ -2,8 +2,15 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
-import { consumeCredits, CREDIT_COSTS } from "../../../../lib/credits";
 import { recordUsage } from "../../../../lib/usage";
+import { getPlanForEmail } from "../../../../lib/account-billing";
+import {
+  consumeBoostForKind,
+  consumeCreditFor,
+  decideImageRequest,
+  getWeeklyUsage,
+  hasUnconsumedBoost,
+} from "../../../../lib/plan-limits";
 
 export const runtime = "nodejs";
 
@@ -57,13 +64,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Image too large (10 MB max)." }, { status: 413 });
   }
 
-  const ref = `vision:${email}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
-  const charged = await consumeCredits(email, CREDIT_COSTS.image, "consume", ref);
-  if (!charged.ok) {
-    return NextResponse.json(
-      { error: "Not enough credits. Top up to analyze images.", remaining: charged.remaining },
-      { status: 402 },
-    );
+  // Mirror /api/ai/image gating: plan first (unlimited tiers pass for
+  // free), then weekly cap, then boost, then credits. Pro / Teams /
+  // Enterprise never see a 402 because their plan covers it.
+  const plan = await getPlanForEmail(email);
+  const weekly = await getWeeklyUsage(email);
+  const decision = decideImageRequest({ plan, weekly });
+  if (decision.kind === "blocked") {
+    let allowed = false;
+    if (await hasUnconsumedBoost(email, "image")) {
+      const burnt = await consumeBoostForKind(email, "image");
+      if (burnt) allowed = true;
+    }
+    if (!allowed && (await consumeCreditFor(email, "image"))) {
+      allowed = true;
+    }
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: "You're out of image credits this week. Top up or upgrade to keep analyzing.",
+          limit: decision.limit,
+          used: decision.used,
+          reset: decision.reset,
+        },
+        { status: 402 },
+      );
+    }
   }
 
   const startedAt = Date.now();

@@ -81,7 +81,26 @@ function ImagePanelBody({ attachment }: { attachment: LeiAttachment }) {
           prompt: "Describe what you see and call out anything notable.",
         }),
       });
-      if (!res.ok) throw new Error(`vision ${res.status}`);
+      if (!res.ok) {
+        // Friendly 402: the route returns a usable error message; show
+        // it with a top-up CTA instead of the raw "vision 402" string.
+        if (res.status === 402) {
+          let msg = "Out of image credits this week.";
+          try {
+            const data = (await res.json()) as { error?: string };
+            if (data.error) msg = data.error;
+          } catch {
+            // ignore
+          }
+          setErr(`${msg} Top up at /account/billing to keep analyzing.`);
+          return;
+        }
+        if (res.status === 401) {
+          setErr("You need to be signed in to analyze images.");
+          return;
+        }
+        throw new Error(`Couldn't analyze (HTTP ${res.status}).`);
+      }
       const data = (await res.json()) as { text?: string };
       setAnalysis(data.text ?? "");
     } catch (e) {

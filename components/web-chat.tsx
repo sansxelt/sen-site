@@ -192,11 +192,17 @@ export function WebChat({
 
   const send = useCallback(async (overrideText?: string, fromVoice = false) => {
     const baseText = (overrideText ?? input).trim();
-    // Inject any text-based attachments (file/code) into the user
-    // message so the model has the content. Image/video attachments are
-    // mentioned by name + handled by the LEI panel (Analyze button uses
-    // the dedicated /api/ai/vision route).
+
+    // File / code attachments inline into the prompt (text). Image
+    // attachments are converted to base64 + sent via the chat API's
+    // `images` field on the user message — the route already supports
+    // this (lib/ai-models multimodal). Video attachments are mentioned
+    // by name (no video model wired up yet).
     const attachmentBlocks: string[] = [];
+    const imageBlocks: Array<{
+      media_type: "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+      data: string;
+    }> = [];
     for (const att of lei.attachments) {
       if (att.kind === "file" || att.kind === "code") {
         if (att.text) {
@@ -204,12 +210,34 @@ export function WebChat({
             `\n\n--- Attached: ${att.name} (${att.mime}) ---\n${att.text}\n--- end ---`,
           );
         }
+      } else if (att.kind === "image" && att.previewUrl) {
+        try {
+          const blob = await fetch(att.previewUrl).then((r) => r.blob());
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = () => resolve(String(r.result));
+            r.onerror = () => reject(new Error("read failed"));
+            r.readAsDataURL(blob);
+          });
+          const m = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
+          if (m) {
+            const mt = (att.mime || m[1] || "image/png").toLowerCase();
+            const accepted = ["image/png", "image/jpeg", "image/gif", "image/webp"] as const;
+            const safe = (accepted as readonly string[]).includes(mt) ? mt : "image/png";
+            imageBlocks.push({
+              media_type: safe as (typeof accepted)[number],
+              data: m[2],
+            });
+          }
+        } catch {
+          attachmentBlocks.push(`\n\n[Could not attach image: ${att.name}]`);
+        }
       } else {
         attachmentBlocks.push(`\n\n[Attached ${att.kind}: ${att.name}]`);
       }
     }
     const text = baseText + attachmentBlocks.join("");
-    if (!text) return;
+    if (!text && imageBlocks.length === 0) return;
     lastTurnWasVoice.current = fromVoice;
     lei.noteIntentFromText(baseText);
 
@@ -219,6 +247,15 @@ export function WebChat({
     }
 
     const userMsg: ChatMessage = { role: "user", content: text };
+    // Build the network payload separately so the in-UI message stays
+    // text-only (we already render the image previews via the LEI
+    // attachment chips above the input).
+    const payloadMessages = [
+      ...messages.map((m) => ({ role: m.role, content: m.content })),
+      imageBlocks.length > 0
+        ? { role: "user" as const, content: text || "Here's an image — what do you see?", images: imageBlocks }
+        : { role: "user" as const, content: text },
+    ];
     const next = [...messages, userMsg];
     setMessages([...next, { role: "assistant", content: "" }]);
     setInput("");
@@ -259,7 +296,7 @@ export function WebChat({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: next,
+          messages: payloadMessages,
           tier,
           input_mode: fromVoice ? "voice" : "text",
           client_time_iso: new Date().toISOString(),
@@ -730,6 +767,7 @@ export function WebChat({
     hasImage: hasImageAttached,
     hasVideo: hasVideoAttached,
     voiceMode,
+    plan,
   });
   const hideTranscript = voiceMode && lei.voiceStyle === "v2v";
 
@@ -809,7 +847,7 @@ export function WebChat({
             value={lei.voiceStyle}
             onChange={lei.setVoiceStyle}
           />
-          <CreditChip balance={lei.creditBalance} />
+          <CreditChip balance={lei.creditBalance} plan={plan} />
           <span className="webchat-plan">Plan: {plan}</span>
         </div>
       </div>
@@ -967,8 +1005,15 @@ export function WebChat({
             📎 Attach
           </button>
 
-          <span className="webchat-cost" title={`This action costs ${costPreview.credits} credits (${costPreview.usd})`}>
-            ≈ {costPreview.credits} cr
+          <span
+            className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
+            title={
+              costPreview.planCovers
+                ? `Included in your ${plan} plan — no credits used unless you exceed your weekly cap`
+                : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
+            }
+          >
+            {costPreview.planCovers ? "✓ Plan" : `≈ ${costPreview.credits} cr`}
           </span>
 
           <button
@@ -1242,16 +1287,25 @@ function WebStreamingFadeText({ text }: { text: string }) {
   );
 }
 
-function CreditChip({ balance }: { balance: number | null }) {
+function CreditChip({ balance, plan }: { balance: number | null; plan: string }) {
+  const planCovers = ["pro", "teams", "enterprise"].includes(plan.toLowerCase());
   if (balance === null) {
     return <span className="webchat-credit-chip webchat-credit-chip--idle" title="Credit balance">— cr</span>;
   }
-  const low = balance < 20;
+  // For unlimited plans, low balance isn't urgent — they only burn
+  // credits if they blow past the weekly cap, which most users won't.
+  const low = balance < 20 && !planCovers;
   return (
     <a
       href="/account/billing"
       className={`webchat-credit-chip${low ? " webchat-credit-chip--low" : ""}`}
-      title={low ? "Low balance — top up" : "Credit balance"}
+      title={
+        planCovers
+          ? `Your ${plan} plan covers normal use. Credits only burn if you exceed weekly caps.`
+          : low
+            ? "Low balance — top up to keep going past your plan cap"
+            : "Credit balance"
+      }
     >
       {balance.toLocaleString()} cr
     </a>

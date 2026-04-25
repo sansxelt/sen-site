@@ -227,6 +227,12 @@
   color: rgba(229,231,235,0.65);
   font-variant-numeric: tabular-nums;
 }
+.webchat-cost--covered {
+  background: rgba(34,197,94,0.10);
+  border-color: rgba(34,197,94,0.30);
+  color: #86efac;
+  font-weight: 600;
+}
 
 .webchat-credit-chip {
   display: inline-flex; align-items: center;

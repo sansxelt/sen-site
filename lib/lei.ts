@@ -42,29 +42,47 @@ export function classifyFile(file: File): AttachmentKind {
   return "file";
 }
 
+// Plans whose weekly caps are unlimited — these never burn credits
+// for the gated kinds (chat/image/voice) under normal usage. Mirrors
+// PLAN_LIMITS in lib/plan-limits.ts; kept as a static set here so the
+// LEI cost preview stays a pure client-side helper.
+const PLAN_BYPASSES_CREDITS = new Set(["pro", "teams", "enterprise"]);
+
+export type CostPreview = {
+  kind: CreditKind;
+  credits: number;
+  usd: string;
+  // True when the user's plan covers this kind without burning credits.
+  // The chip should still show the credit cost (so they understand the
+  // pricing model) but with a "Free with your plan" framing.
+  planCovers: boolean;
+};
+
 export function previewCreditCost(args: {
   inputText: string;
   hasImage?: boolean;
   hasVideo?: boolean;
   voiceMode?: boolean;
-}): { kind: CreditKind; credits: number; usd: string } {
+  plan?: string;
+}): CostPreview {
+  const planCovers = PLAN_BYPASSES_CREDITS.has((args.plan ?? "").toLowerCase());
   if (args.hasImage) {
-    return fmt("image");
+    return fmt("image", planCovers);
   }
   if (args.hasVideo) {
     // Video gen mock cost — bigger than image. Reflects "if this were
     // real" pricing so the UI doesn't lie.
-    return { kind: "image", credits: 30, usd: "$0.30" };
+    return { kind: "image", credits: 30, usd: "$0.30", planCovers };
   }
   if (args.voiceMode) {
-    return fmt("voice_minute");
+    return fmt("voice_minute", planCovers);
   }
-  return fmt("chat");
+  return fmt("chat", planCovers);
 }
 
-function fmt(kind: CreditKind) {
+function fmt(kind: CreditKind, planCovers: boolean): CostPreview {
   const credits = CREDIT_COSTS[kind];
-  return { kind, credits, usd: `$${(credits / 100).toFixed(2)}` };
+  return { kind, credits, usd: `$${(credits / 100).toFixed(2)}`, planCovers };
 }
 
 // Cheap intent detector: scans text for keywords that should morph the

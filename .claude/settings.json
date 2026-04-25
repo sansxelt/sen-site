@@ -41,7 +41,8 @@
       "Bash(curl -sI \"https://sansxel.ai/\")",
       "Bash(curl -s -o /tmp/served-icon.png https://sansxel.ai/icon.png)",
       "Read(//tmp/**)",
-      "Bash(git commit -m 'fix: let Next.js auto-hash favicon URLs to bust browser cache *)"
+      "Bash(git commit -m 'fix: let Next.js auto-hash favicon URLs to bust browser cache *)",
+      "Bash(git commit -m 'fix: real multimodal chat + plan-aware credit clarity + friendly 402 *)"
     ]
   }
 }
