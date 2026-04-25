@@ -11,12 +11,32 @@ html[data-theme="light"] {
   --background: #fafaf9;
   --foreground: #0a0a0c;
   color-scheme: light;
+  background-color: #fafaf9 !important;
 }
 
 html[data-theme="light"] body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: #fafaf9 !important;
+  color: #0a0a0c !important;
 }
+
+/* Nuclear override — target every common dark-bg surface that wraps
+   page content. site-shell's outer wrapper, the marketing header,
+   and any direct body child carrying a dark Tailwind bg class get
+   force-flipped. Without this the user sees a black canvas with a
+   light header band on top. */
+html[data-theme="light"] body > div,
+html[data-theme="light"] body > div > div,
+html[data-theme="light"] header {
+  background-color: transparent !important;
+}
+html[data-theme="light"] body > .bg-neutral-950,
+html[data-theme="light"] body > div.bg-neutral-950,
+html[data-theme="light"] header.bg-neutral-950,
+html[data-theme="light"] .bg-neutral-950,
+html[data-theme="light"] .bg-neutral-900 {
+  background-color: #fafaf9 !important;
+}
+html[data-theme="light"] header { backdrop-filter: blur(12px); }
 
 /* Marketing site shell — invert chrome */
 html[data-theme="light"] .bg-neutral-950 { background-color: #fafaf9 !important; }
