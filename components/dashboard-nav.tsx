@@ -126,7 +126,7 @@ function RecentChats() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const load = async () => {
       try {
         const res = await fetch("/api/threads", { cache: "no-store" });
         if (!res.ok) {
@@ -138,10 +138,26 @@ function RecentChats() {
       } catch {
         if (!cancelled) { setThreads([]); setLoading(false); }
       }
-    })();
-    return () => { cancelled = true; };
-    // Re-fetch when the route changes back to /app — picks up new
-    // threads that were created in the chat workspace.
+    };
+    void load();
+
+    // Listen for the chat broadcasting "I just created or updated a
+    // thread" so the sidebar refreshes the list without needing a
+    // navigation. Also re-fetch on tab focus — picks up threads
+    // created on another device while this tab was idle.
+    const onChanged = () => { void load(); };
+    const onFocus = () => { void load(); };
+    if (typeof window !== "undefined") {
+      window.addEventListener("sansxel:threads:changed", onChanged);
+      window.addEventListener("focus", onFocus);
+    }
+    return () => {
+      cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("sansxel:threads:changed", onChanged);
+        window.removeEventListener("focus", onFocus);
+      }
+    };
   }, [pathname]);
 
   // Only show recent chats when the user is in the workspace, not on

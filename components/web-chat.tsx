@@ -414,6 +414,11 @@ export function WebChat({
       const echoedThreadId = res.headers.get("x-sansxel-thread-id");
       if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
         setThreadId(echoedThreadId);
+        // Broadcast so the workshop sidebar's RecentChats list
+        // re-fetches and shows the new thread without a page reload.
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+        }
       }
 
       // Surface plan downgrade if the server picked a lower tier
@@ -688,6 +693,13 @@ export function WebChat({
       // Refresh balance so the chip reflects the credit burn.
       // (Attachments were already cleared up-top, before the await.)
       void lei.refreshBalance();
+      // After the assistant turn lands, the thread's title was just
+      // auto-renamed server-side (first user turn) and updated_at
+      // was bumped. Tell the sidebar so the title in the Recent list
+      // updates from "New chat" to the message snippet.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+      }
     }
   }, [input, messages, tier, lei]);
 
