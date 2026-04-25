@@ -396,3 +396,53 @@ html[data-theme="light"] .webchat-word-fade { color: inherit; }
 
 /* Bounce dots — make visible on light. */
 html[data-theme="light"] .webchat-dot { background: #525252; }
+
+/* Status pills (amber/yellow used for "in development", "early
+   access", "verify email", etc.) — light text on faint tint
+   completely vanishes on a light page. Force darker amber text +
+   stronger background + border so they read at a glance. */
+html[data-theme="light"] .text-amber-200,
+html[data-theme="light"] .text-amber-200\/90,
+html[data-theme="light"] .text-amber-300,
+html[data-theme="light"] .text-amber-400 { color: #b45309 !important; }
+
+html[data-theme="light"] .bg-amber-300\/\[0\.06\],
+html[data-theme="light"] .bg-amber-300\/\[0\.08\],
+html[data-theme="light"] .bg-amber-400\/\[0\.06\],
+html[data-theme="light"] .bg-amber-400\/10 { background-color: rgba(252, 211, 77, 0.30) !important; }
+
+html[data-theme="light"] .border-amber-300\/20,
+html[data-theme="light"] .border-amber-300\/30,
+html[data-theme="light"] .border-amber-400\/20,
+html[data-theme="light"] .border-amber-400\/30 { border-color: rgba(217, 119, 6, 0.55) !important; }
+
+/* Amber dot indicators in the same pills */
+html[data-theme="light"] .bg-amber-300,
+html[data-theme="light"] .bg-amber-300\/80,
+html[data-theme="light"] .bg-amber-400,
+html[data-theme="light"] .bg-amber-400\/60 { background-color: #d97706 !important; }
+
+/* Emerald (active addon, success states) — light text invisible too */
+html[data-theme="light"] .text-emerald-200,
+html[data-theme="light"] .text-emerald-300,
+html[data-theme="light"] .text-emerald-400 { color: #047857 !important; }
+html[data-theme="light"] .bg-emerald-400\/10,
+html[data-theme="light"] .bg-emerald-400\/\[0\.04\],
+html[data-theme="light"] .bg-emerald-400\/\[0\.08\] { background-color: rgba(110, 231, 183, 0.30) !important; }
+html[data-theme="light"] .border-emerald-400\/20,
+html[data-theme="light"] .border-emerald-400\/30 { border-color: rgba(5, 150, 105, 0.55) !important; }
+
+/* Rose / red (delete, errors) — keep saturated on light */
+html[data-theme="light"] .text-rose-200,
+html[data-theme="light"] .text-red-200,
+html[data-theme="light"] .text-red-300 { color: #b91c1c !important; }
+html[data-theme="light"] .bg-rose-400\/10,
+html[data-theme="light"] .bg-red-400\/10,
+html[data-theme="light"] .bg-red-500\/5 { background-color: rgba(254, 202, 202, 0.45) !important; }
+
+/* Violet / brand text — already good contrast on light, but the
+   400/300 variants used for muted accents need a small bump. */
+html[data-theme="light"] .text-violet-200,
+html[data-theme="light"] .text-violet-300 { color: #6d28d9 !important; }
+html[data-theme="light"] .text-violet-300\/70,
+html[data-theme="light"] .text-violet-300\/85 { color: rgba(109, 40, 217, 0.85) !important; }
