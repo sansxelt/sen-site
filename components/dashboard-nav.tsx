@@ -327,9 +327,12 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
   const handleNewChat = () => {
-    // Clear canvas only — don't pre-create a thread (was polluting
-    // the rail with empty placeholder entries on every click). The
-    // chat route creates the thread server-side on first send.
+    // Hard-abort any in-flight chat stream + clear canvas instantly.
+    // Mirrors ChatGPT's '+ New chat' behavior — feels snappy,
+    // doesn't get stuck on a Stop button from a previous turn.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
+    }
     router.replace("/app?new=1");
   };
 

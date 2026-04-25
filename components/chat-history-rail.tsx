@@ -210,12 +210,12 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
           <button
             type="button"
             onClick={() => {
-              // Just clear the canvas — DON'T pre-create a thread.
-              // The eager-create polluted the rail with empty
-              // "New chat" / "Casual greeting" entries every time
-              // the user clicked + New, even if they never sent
-               // anything. The chat route still creates the thread
-              // on first send (fast — sub-100ms Supabase insert).
+              // ChatGPT pattern: hard-cancel any in-flight stream so
+              // the workspace flips to fresh state instantly. WebChat
+              // listens for this and aborts + clears.
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
+              }
               router.replace("/app?new=1");
             }}
             className="chat-history-new-pill"

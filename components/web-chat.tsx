@@ -198,6 +198,28 @@ export function WebChat({
     }
   }, [promptParam]);
 
+  // v0.1.16 r8 — Listen for '+ New chat' clicks from anywhere in the
+  // workspace shell. Hard-abort any in-flight stream + reset client
+  // state INSTANTLY so the textarea isn't stuck behind a stale Stop
+  // button (the cross-thread guard previously skipped setStreaming
+  // (false) on thread switch, leaving the UI in a half-state).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onNewChat = () => {
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+      setStreaming(false);
+      setThreadId(null);
+      setMessages([]);
+      setInput("");
+      setChatError(null);
+    };
+    window.addEventListener("sansxel:new-chat", onNewChat);
+    return () => window.removeEventListener("sansxel:new-chat", onNewChat);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
