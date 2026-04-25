@@ -36,25 +36,15 @@
   overflow: hidden;
 }
 .chat-history-head {
-  padding: 12px 12px 8px;
+  padding: 14px 14px 10px;
   border-bottom: 1px solid rgba(255,255,255,0.04);
 }
-.chat-history-new {
-  display: flex; align-items: center; gap: 6px;
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(139,92,246,0.20), rgba(217,70,239,0.14));
-  border: 1px solid rgba(167,139,250,0.40);
-  color: #ede9fe;
-  font-size: 12.5px;
+.chat-history-title {
+  font-size: 11px;
   font-weight: 600;
-  cursor: pointer;
-  transition: background 140ms ease, border-color 140ms ease;
-}
-.chat-history-new:hover {
-  background: linear-gradient(135deg, rgba(139,92,246,0.30), rgba(217,70,239,0.20));
-  border-color: rgba(167,139,250,0.65);
+  color: rgba(196,181,253,0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
 }
 .chat-history-list {
   flex: 1;

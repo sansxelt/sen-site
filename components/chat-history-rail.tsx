@@ -54,13 +54,6 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
 
   if (panelOpen) return null;
 
-  const handleNew = () => {
-    // Soft nav — WebChat watches searchParams and clears messages
-    // when ?new=1 is present. Use replace so the back button
-    // doesn't fill up with new-chat hops.
-    router.replace("/app?new=1");
-  };
-
   const startRename = (t: Thread) => {
     setEditingId(t.id);
     setEditValue(t.title);
@@ -116,14 +109,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   return (
     <aside className="chat-history-rail">
       <div className="chat-history-head">
-        <button
-          type="button"
-          onClick={handleNew}
-          className="chat-history-new"
-        >
-          <span aria-hidden>＋</span>
-          <span>New chat</span>
-        </button>
+        <div className="chat-history-title">Chat history</div>
       </div>
       <div className="chat-history-list">
         {loading && (
