@@ -92,11 +92,14 @@ export function WebChat({
   const heardSpeechRef = useRef(false);
 
   const VAD_MIN_RECORD_MS = 400;
-  const VAD_SILENCE_HOLD_MS = 800;
+  // v0.1.16 — faster turn-taking + easier interruption. The old
+  // 800ms hold + 0.09 interrupt delta felt sluggish; user couldn't
+  // talk over the AI without yelling. Pulled both numbers down.
+  const VAD_SILENCE_HOLD_MS = 500;
   const SPEECH_DELTA = 0.06;
   const SILENCE_DELTA = 0.025;
-  const INTERRUPT_DELTA = 0.09;
-  const INTERRUPT_HOLD_MS = 140;
+  const INTERRUPT_DELTA = 0.045;
+  const INTERRUPT_HOLD_MS = 90;
 
   const stopAnalyser = useCallback(() => {
     if (rafRef.current != null) {
@@ -360,13 +363,10 @@ export function WebChat({
       };
       smoothRaf = requestAnimationFrame(tickRender);
 
-      // Sentence-streaming TTS: as text streams in, slice off
-      // complete sentences and fire TTS for each one in parallel.
-      // Audio plays back in order so the voice reply starts well
-      // before the full response has finished generating. Off when
-      // the turn isn't voice-driven (no point synthesizing audio
-      // nobody asked for).
-      const willSpeak = lastTurnWasVoice.current;
+      // Sentence-streaming TTS — only in V→V mode. V→T is dictation:
+      // we transcribe, the AI replies in text, end of turn (no audio
+      // reply, no auto-restart of the mic).
+      const willSpeak = lastTurnWasVoice.current && lei.voiceStyle === "v2v";
       const ttsBuf = { text: "" };
       const ttsQueue: Array<{ blob: Blob | null; done: boolean }> = [];
       let ttsNextPlay = 0;
@@ -545,6 +545,23 @@ export function WebChat({
             }
           }
         }, 200);
+      } else if (lastTurnWasVoice.current) {
+        // V→T turn ended — don't TTS, don't auto-restart mic.
+        // Drop voice mode so the user gets back to a normal text view.
+        lastTurnWasVoice.current = false;
+        setVoiceState("idle");
+        // Fully exit voice mode (closes overlay) — V→T is one-shot.
+        if (voiceModeRef.current) {
+          if (recorderRef.current && recorderRef.current.state !== "inactive") {
+            recorderRef.current.stop();
+          }
+          if (micStreamRef.current) {
+            micStreamRef.current.getTracks().forEach((t) => t.stop());
+            micStreamRef.current = null;
+          }
+          stopAnalyser();
+          setVoiceMode(false);
+        }
       }
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
@@ -722,9 +739,14 @@ export function WebChat({
   }, [startRecording]);
 
   const enterVoiceMode = useCallback(async () => {
-    setVoiceMode(true);
+    // V→V style: enter the full-screen orb overlay + continuous loop.
+    // V→T style: one-shot dictation — no overlay, no TTS, no auto-loop.
+    // The two modes need to look and feel obviously different.
+    if (lei.voiceStyle === "v2v") {
+      setVoiceMode(true);
+    }
     await startRecording();
-  }, [startRecording]);
+  }, [startRecording, lei.voiceStyle]);
 
   const exitVoiceMode = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state !== "inactive") {

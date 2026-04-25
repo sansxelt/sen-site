@@ -51,6 +51,15 @@ Identity:
 
 ${SANSXEL_PRODUCT_BRIEF}`;
 
+// Appended to the system prompt when the user is in voice mode.
+// Voice replies that ramble or use markdown sound terrible through
+// TTS — the user wants conversational, brief, plain-text answers.
+const VOICE_TURN_DIRECTIVE = `You're in voice mode. The user's question came from a microphone and your reply will be spoken back through TTS. Constraints:
+- Keep replies SHORT — 1 to 3 sentences unless the user explicitly asks for depth.
+- Plain prose only — no markdown, no headers, no bullets, no code fences.
+- Conversational and direct. Read aloud, your reply should sound like a person, not a paragraph being read.
+- Skip preamble ("Sure!", "Great question!"). Open with the answer.`;
+
 const VOICE_HUMANIZATION_PROMPT = `Voice-only humanization mode:
 - Only follow this mode when the latest request came through voice-to-text and the user is explicitly asking you to humanize, de-AI, or rewrite text so it sounds more natural.
 
@@ -512,6 +521,13 @@ function systemPromptForPayload(
 
   if (matchesVoiceHumanizationIntent(payload)) {
     prompt = `${prompt}\n\n${VOICE_HUMANIZATION_PROMPT}`;
+  }
+
+  // v0.1.16 — when the user is talking, replies must be brief and TTS-
+  // friendly (no markdown, short sentences). Without this the model
+  // happily ships 4-paragraph answers that sound terrible read aloud.
+  if (payload.input_mode === "voice") {
+    prompt = `${prompt}\n\n${VOICE_TURN_DIRECTIVE}`;
   }
 
   // v0.1.4 — Agent mode directive. Toggled from the "+" menu in the
