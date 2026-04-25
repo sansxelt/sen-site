@@ -138,6 +138,60 @@
   color-scheme: normal;
 }
 
+/* Home page try-it-now chat teaser. */
+.home-teaser {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(167,139,250,0.06), rgba(217,70,239,0.04));
+  border: 1px solid rgba(167,139,250,0.30);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.4), 0 0 0 1px rgba(167,139,250,0.10) inset;
+}
+.home-teaser-input {
+  width: 100%;
+  resize: none;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: #f5f3ff;
+  font-size: 15px;
+  line-height: 1.5;
+  font-family: inherit;
+  padding: 4px 0;
+}
+.home-teaser-input::placeholder { color: rgba(229,231,235,0.5); }
+.home-teaser-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.home-teaser-hint {
+  font-size: 11.5px;
+  color: rgba(196,181,253,0.65);
+  letter-spacing: 0.01em;
+}
+.home-teaser-send {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #8b5cf6, #d946ef);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(139,92,246,0.35);
+  transition: filter 140ms ease, transform 140ms ease, opacity 140ms ease;
+}
+.home-teaser-send:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+.home-teaser-send:disabled { opacity: 0.45; cursor: not-allowed; }
+
 /* Mobile chat-history drawer slide-in (ChatGPT style). */
 @keyframes chat-drawer-slide {
   from { transform: translateX(-100%); }

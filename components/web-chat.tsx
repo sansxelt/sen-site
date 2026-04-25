@@ -152,7 +152,23 @@ export function WebChat({
   const searchParams = useSearchParams();
   const wantsNew = searchParams?.get("new") === "1";
   const requestedThreadParam = searchParams?.get("thread") ?? null;
+  const promptParam = searchParams?.get("prompt") ?? null;
   const hasHydratedRef = useRef(false);
+  const promptHandledRef = useRef(false);
+
+  // v0.1.16 — Pre-fill input from ?prompt= so the home page teaser
+  // can ship a question into the workshop. We pre-fill (not auto-
+  // send) so the user retains agency + can edit.
+  useEffect(() => {
+    if (!promptParam || promptHandledRef.current) return;
+    promptHandledRef.current = true;
+    setInput(promptParam);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("prompt");
+      window.history.replaceState({}, "", url.pathname + url.search);
+    }
+  }, [promptParam]);
 
   useEffect(() => {
     let cancelled = false;
