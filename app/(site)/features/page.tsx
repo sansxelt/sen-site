@@ -9,7 +9,7 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Sansxel is an adaptive AI platform. The interface reshapes itself around who you are and what you're working on — not a generic chat box for everyone.",
+    "Talk, type, drop files, generate images, search live. The AI workshop for makers — built for indie devs, designers, students, and creators who actually ship.",
 };
 
 type Pillar = {
@@ -20,62 +20,74 @@ type Pillar = {
 
 const pillars: Pillar[] = [
   {
-    title: "Contextual UI",
+    title: "Talk and type, no mode switch",
     status: "live",
     description:
-      "The interface adapts to you. Students, developers, writers, researchers, and creators each get an experience shaped around their workflow — not a generic chat window with their name on top. As you work, Sansxel learns the shape of what you're doing and reshapes itself in real time.",
+      "Two voice modes that actually work. Dictate when you want a text reply you can edit; Talk for full hands-free conversation with interruption mid-sentence. No clunky push-to-talk — VAD detects when you stop, the AI starts.",
   },
   {
-    title: "Real-time tool execution",
-    status: "future",
+    title: "Drop anything, the UI morphs",
+    status: "live",
     description:
-      "In the future, Sansxel won't just talk about your tools — it will use them. Through an MCP-style tool layer, the platform takes action across your workflow as it reasons. No waiting for batched responses. No copy-pasting between windows.",
+      "Drag an image and an analysis panel slides in. Drop a video and you get a timeline. Drop a PDF or code file and the right tool appears. Paste images straight from screenshots. The workshop reacts to what you're working on instead of making you find the right button.",
   },
   {
-    title: "Open extension ecosystem",
-    status: "future",
+    title: "Live data, not stale knowledge",
+    status: "live",
     description:
-      "In the future, anyone will be able to build extensions that plug into Sansxel — new tools, new integrations, new contextual modes. The ecosystem is designed to evolve with the people who use it, not gate-kept around a single team's roadmap.",
+      "Web search is built into chat. Ask about today's market, last night's game, the latest release — sansxel-1 searches and answers with real numbers + citations. No 'I don't have access to current data' punts.",
   },
   {
-    title: "Our own infrastructure",
-    status: "future",
+    title: "Memory that follows you",
+    status: "live",
     description:
-      "In the future, Sansxel will run on our own backend — efficient inference, model flexibility, and the freedom to evolve on our own terms. That means broad access, sustainable costs, and features that aren't possible when you're renting someone else's stack.",
+      "Every chat saves server-side, keyed to your account. Open the workshop on your phone at 2am and pick up exactly where you left off on your laptop. AI-generated thread titles so the sidebar isn't a wall of 'yo' and 'hi'.",
+  },
+  {
+    title: "MCP + file edits on desktop",
+    status: "live",
+    description:
+      "The desktop app touches your files, runs MCP servers, and connects to your tools (GitHub, Notion, etc.). Web is the trial — desktop is where you actually ship.",
+  },
+  {
+    title: "Image gen + multimodal in chat",
+    status: "live",
+    description:
+      "Type 'gen an image of X' and you get one inline — no separate button. Drop an image and the model can see it (Claude vision). All in the same conversation, all charged from the same credit balance.",
   },
 ];
 
 const inputs = [
-  "Questions",
-  "Links",
-  "Screenshots",
-  "Files",
-  "Raw notes",
-  "Spreadsheets",
-  "Product ideas",
-  "Research dumps",
+  "Voice (talk or dictate)",
+  "Drag-and-drop files",
+  "Pasted screenshots",
+  "Code snippets",
+  "PDFs",
+  "Live web search",
+  "GitHub + integrations",
+  "MCP tools (desktop)",
 ];
 
 const principles = [
   {
-    title: "Access matters",
+    title: "For people who make things",
     description:
-      "AI shouldn't be a luxury good. Sansxel is designed so that powerful AI is available broadly — not gated behind enterprise pricing or hidden behind feature walls.",
+      "Indie devs shipping side projects, designers iterating on Figma, students turning notes into apps, content creators sketching ideas. Not knowledge workers writing emails — makers building.",
   },
   {
-    title: "The interface is the product",
+    title: "Web is taste, desktop is shipping",
     description:
-      "A great model wrapped in a bad interface is a bad product. We obsess over the interface because that's where the value actually lands.",
+      "Web sansxel is a real workshop in your browser — voice, drop, generate, search. Desktop is the same workshop with file edits, MCP, and the always-on voice loop. Same brain, two surfaces.",
   },
   {
-    title: "Safety isn't an afterthought",
+    title: "Pay for what you use",
     description:
-      "Broad access only works with thoughtful safeguards. Protection is designed into the backend, not bolted on after the fact.",
+      "1 USD = 100 credits. Chat costs 1, image costs 5, voice 2/min, copilot 1. Same balance covers everything. Pro tiers bypass credits for normal use; only burn credits past your weekly cap. No surprise bills.",
   },
   {
-    title: "Independence matters",
+    title: "It looks the way it should",
     description:
-      "Building on our own infrastructure means controlling the roadmap — not at the mercy of upstream pricing changes, deprecations, or policy shifts.",
+      "Heist-style 3D cards, neon gradient marks, drop-to-react UI, voice orb that breathes with your speech. Built so makers actually want to share it on X. Not enterprise grey.",
   },
 ];
 
@@ -95,19 +107,19 @@ export default async function FeaturesPage() {
               Features
             </div>
             <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-              One AI. Infinite shapes.
+              Talk to it. Drop into it. Ship from it.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-200">
-              Most AI tools give everyone the same blank chat box. Sansxel doesn&apos;t.
-              The interface is contextual — it reshapes based on who you are, what
-              you&apos;re working on, and what the moment calls for.
+              Most AI is a blank chat box that pretends to be everything. Sansxel is a workshop:
+              chat, voice, drag-drop, image gen, web search, persistent memory, MCP — all in one
+              workspace that adapts to what you&apos;re building right now.
             </p>
           </div>
         </div>
 
         <div className="mt-16">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-            Four pillars
+            What&apos;s in the workshop
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {pillars.map((pillar) => (
@@ -141,15 +153,15 @@ export default async function FeaturesPage() {
         <div className="mt-20 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-              What you can bring
+              Inputs that actually work
             </div>
             <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
               Anything in. Not just prompts.
             </h2>
             <p className="mt-4 text-base leading-7 text-neutral-200">
-              You shouldn&apos;t have to translate your work into the perfect AI
-              command. Questions, screenshots, links, notes, files, and datasets
-              all belong here.
+              Drop screenshots, paste from clipboard, talk through a problem, drag a
+              file, search the live web. The workshop accepts the input you actually have
+              — no &ldquo;please format your prompt as JSON&rdquo; gymnastics.
             </p>
           </div>
 
@@ -167,7 +179,7 @@ export default async function FeaturesPage() {
 
         <div className="mt-20">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-            Built for the people who actually use it
+            Why it exists
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {principles.map((item) => (
@@ -195,10 +207,10 @@ export default async function FeaturesPage() {
             See pricing
           </Link>
         <Link
-          href={signedIn ? "/account" : getSignInPath("/account/download")}
+          href={signedIn ? "/app" : getSignInPath("/app")}
           className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
         >
-          {signedIn ? "Open workspace" : "Check your access"}
+          {signedIn ? "Open Workshop" : "Open the Workshop"}
           </Link>
         </div>
       </section>

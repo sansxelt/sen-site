@@ -8,56 +8,56 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "The interface should adapt to you, not force you to adapt to it. Here's how the same Sansxel becomes a different experience for every kind of work.",
+    "Open the workshop. Talk, drop, type. Generate, search, ship. How a maker actually uses sansxel from idea to output.",
 };
 
 const personas = [
   {
-    title: "Student",
+    title: "Indie dev at 2am",
     description:
-      "A focused workspace surfaces research, citations, an outline view, and a writing area that grows with the draft.",
+      "Drops a screenshot of a broken React state, voice-talks through the bug, gets a fix in markdown they can paste into their IDE. Live web search pulls the latest StackOverflow context.",
   },
   {
-    title: "Developer",
+    title: "Designer iterating",
     description:
-      "A code canvas with file tree, live terminal, and contextual documentation tucked into the right margins.",
+      "Pastes Figma screenshots, asks for color tweaks or layout critique, generates supporting imagery inline. The image panel slides in next to the chat — no app switching.",
   },
   {
-    title: "Writer",
+    title: "Student turning notes into a project",
     description:
-      "A clean prose interface with character notes and chapter structure pushed into the edges, so the words stay centered.",
+      "Drops PDFs and lecture notes, drafts a project plan, generates code scaffolds, talks through revisions hands-free while sketching.",
   },
   {
-    title: "Researcher",
+    title: "Content creator brainstorming",
     description:
-      "Linked source snippets, side-by-side comparisons, and a ranked takeaways panel that updates as the question evolves.",
+      "Voice-dumps the loose idea, gets it humanized into a script, generates thumbnails, drops reference images for style guidance — all in one session that saves to their account.",
   },
 ];
 
 const whatShifts = [
   {
     step: "01",
-    title: "Panels",
+    title: "Talk",
     description:
-      "What lives on screen, and where. Research, terminals, outlines, canvases — surfaced only when they help.",
+      "Hit Voice. Two modes: Dictate (speak, AI types) for quick captures; Talk (full hands-free) for working through problems out loud. VAD detects when you're done — no push-to-talk.",
   },
   {
     step: "02",
-    title: "Priority",
+    title: "Drop",
     description:
-      "What Sansxel leads with: a quick answer, a visual, a plan, or a build-ready outline — based on the shape of the request.",
+      "Drag a file or paste a screenshot. The right panel morphs to fit it: image analysis, video timeline, file breakdown, code preview. The chat stays in the center; the tool comes to you.",
   },
   {
     step: "03",
-    title: "Memory",
+    title: "Generate",
     description:
-      "What it carries forward. Previous drafts, file context, and the direction you seem to be going.",
+      "Type 'gen an image of X' and you get one inline. No separate button. Same for documents, code blocks, structured plans — sansxel-1 detects intent and ships the right output.",
   },
   {
     step: "04",
-    title: "Actions",
+    title: "Ship",
     description:
-      "In the future, the platform will execute tools in real time — so the next step isn't copy-pasting between windows.",
+      "Conversations save server-side, AI-titled for the sidebar, synced across devices. Switch from phone to laptop — same threads, same memory. Desktop unlocks file edits + MCP for the full pipeline.",
   },
 ];
 
@@ -74,19 +74,19 @@ export default async function FunctionPage() {
           How it works
         </div>
         <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-          The interface becomes what each person needs.
+          Talk. Drop. Generate. Ship.
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
-          The same Sansxel that helps a high schooler outline an essay also
-          helps a senior engineer architect a system. Not because it&apos;s
-          pretending to be two products — because the interface itself
-          responds to what you&apos;re working on.
+          A workshop, not a chat box. Open it on your laptop or your phone, throw whatever
+          you&apos;re working on at it — voice, files, screenshots, code, half-formed ideas —
+          and the workspace rearranges itself to fit. Same brain on web and desktop, same
+          memory across every device you sign in on.
         </p>
       </div>
 
       <div className="mt-14">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-          Example shapes
+          Who actually uses it
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {personas.map((p) => (
@@ -102,23 +102,22 @@ export default async function FunctionPage() {
           ))}
         </div>
         <p className="mt-6 max-w-2xl text-sm leading-6 text-neutral-400">
-          The platform isn&apos;t switching between templates. It&apos;s
-          responding — to what you&apos;re working on, what you&apos;ve worked
-          on before, and where you seem to be going next.
+          Different makers, same workshop. Sansxel doesn&apos;t pretend to be a
+          different product for each one — it just gives you the right tool for what
+          you&apos;re doing in the moment.
         </p>
       </div>
 
       <div className="mt-20">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-          What actually shifts
+          The four moves
         </div>
         <h2 className="hx-gradient-text mt-3 max-w-2xl text-2xl font-semibold tracking-tight sm:text-4xl">
-          Not a settings menu with a few themes.
+          Every session is a loop of these.
         </h2>
         <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
-          &quot;Adaptive&quot; doesn&apos;t mean a color toggle. It means an
-          interface that thinks alongside you — and four specific things change
-          as you work.
+          Not a settings menu with themes. An actual workflow: talk through it,
+          drop the inputs, generate the output, ship the result. Repeat as needed.
         </p>
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
           {whatShifts.map((item) => (
@@ -145,26 +144,27 @@ export default async function FunctionPage() {
       <div className="mt-20 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
         <div className="max-w-2xl">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-            Why this matters
+            Why a workshop
           </div>
           <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
-            The interface is the product.
+            Because makers don&apos;t work in chat boxes.
           </h2>
           <p className="mt-4 text-base leading-7 text-neutral-200">
-            A great model wrapped in a bad interface is a bad product. The
-            chat box isn&apos;t neutral — it&apos;s a constraint. It assumes
-            you&apos;ll type, wait, read, and repeat, and that one mode fits
-            everyone. Sansxel is built around the opposite assumption.
+            A chat box assumes one rhythm — you type, it replies, repeat. That works for
+            answering email. It doesn&apos;t work for shipping a thing. Building looks
+            like a sketch on the side, a voice memo, a paste from another window, a quick
+            search, a file dropped in, a generated mockup — all in 10 minutes. Sansxel is
+            the workshop where all of that happens in one place.
           </p>
         </div>
       </div>
 
       <div className="mt-16 flex flex-col gap-3 sm:flex-row">
         <Link
-          href={signedIn ? "/account" : getSignInPath("/account/download")}
+          href={signedIn ? "/app" : getSignInPath("/app")}
           className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
         >
-          {signedIn ? "Open workspace" : "Check your access"}
+          {signedIn ? "Open Workshop" : "Open the Workshop"}
         </Link>
         <Link
           href="/features"
