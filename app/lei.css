@@ -218,6 +218,35 @@
 }
 .webchat-att-clear:hover { color: #fff; border-color: rgba(255,255,255,0.35); }
 
+/* Input actions row split: cost chip + expiry on the left, action
+   buttons on the right. Wraps gracefully on narrow screens. */
+.webchat-input-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.webchat-input-actions-left,
+.webchat-input-actions-right {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+
+.webchat-plan-expiry {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(229,231,235,0.65);
+  text-decoration: none;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.webchat-plan-expiry:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); }
+.webchat-plan-expiry--warn {
+  background: rgba(251,146,60,0.10);
+  border-color: rgba(251,146,60,0.40);
+  color: #fdba74;
+}
+.webchat-plan-expiry--warn:hover {
+  background: rgba(251,146,60,0.18);
+}
+
 .webchat-cost {
   font-size: 11px;
   padding: 4px 8px;

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getPlanForEmail } from "@/lib/account-billing";
+import { getPlanForEmail, getSubscriptionForEmail } from "@/lib/account-billing";
+import { getBillingState } from "@/lib/billing-state";
 import { tiersForPlan } from "@/lib/ai-models";
 import { WebChat } from "@/components/web-chat";
 import { LeiShell } from "@/components/lei-shell";
@@ -26,12 +27,36 @@ export default async function WebAppPage() {
     blurb: t.blurb,
   }));
 
+  // Pull lightweight subscription info so the chat header can show
+  // "expires in N days" if the plan is on its way out. We try Stripe
+  // (authoritative on cancel_at_period_end) but fall back to the
+  // local subscription row if Stripe isn't reachable — never block
+  // the workspace render on this.
+  let planExpiresAt: string | null = null;
+  let planCanceling = false;
+  try {
+    const billing = await getBillingState(email);
+    planExpiresAt = billing.currentPeriodEnd;
+    planCanceling = billing.cancelAtPeriodEnd;
+  } catch {
+    try {
+      const sub = await getSubscriptionForEmail(email);
+      planExpiresAt = sub?.current_period_end ?? null;
+      // Heuristic: if status is canceled/past_due, treat as canceling.
+      planCanceling = sub?.status === "canceled" || sub?.status === "past_due";
+    } catch {
+      // ignore — header just won't show expiry
+    }
+  }
+
   return (
     <LeiShell>
       <WebChat
         email={email}
         plan={plan}
         tiers={tiers}
+        planExpiresAt={planExpiresAt}
+        planCanceling={planCanceling}
       />
     </LeiShell>
   );

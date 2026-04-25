@@ -1143,7 +1143,7 @@ export function WebChat({
                   </span>
                 </button>
                 <div className="webchat-plus-hint">
-                  <strong>Tip:</strong> just type what you want — &ldquo;gen an image of a cat&rdquo;,
+                  <strong>Tip: </strong> Just type what you want — &ldquo;gen an image of a cat&rdquo;,
                   &ldquo;draw me a logo&rdquo;, etc. — and Send. sansxel-1 routes it automatically.
                 </div>
               </div>
