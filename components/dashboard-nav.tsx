@@ -320,22 +320,22 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           </div>
         </Link>
 
-        {/* Stations only on the left. Chat history lives on the
-            right rail (see ChatHistoryRail / LeiShell) so the left
-            sidebar stays clean and predictable across routes. */}
-        {inWorkshop && (
-          <Link
-            href="/app"
-            className={`mb-2 flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-              isActive("/app")
-                ? "bg-white/10 text-white"
-                : "text-neutral-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <ChatIcon />
-            Chat
-          </Link>
-        )}
+        {/* Chat link always visible on the left, regardless of route.
+            Otherwise users on /account/billing have no way back to
+            the chat without using the browser. The chat history list
+            still lives on the right rail (only mounted in /app via
+            LeiShell), so the left side stays predictable. */}
+        <Link
+          href="/app"
+          className={`mb-3 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            isActive("/app")
+              ? "bg-white/10 text-white"
+              : "text-neutral-200 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <ChatIcon />
+          Chat
+        </Link>
 
         <nav className="flex flex-col gap-3">
           {navGroups.map((group) => (
