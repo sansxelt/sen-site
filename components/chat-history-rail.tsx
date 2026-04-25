@@ -249,10 +249,26 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
         )}
       </div>
       <div className="chat-history-list">
+        {/* Phantom 'New chat' entry at the very top when the user is
+            on a fresh + New chat that hasn't been sent yet. Vanishes
+            once the URL gets a real ?thread=<id> after first send. */}
+        {isOnNewChat && (
+          <div
+            className="chat-history-item is-active is-pending"
+            aria-label="New chat (not yet saved)"
+          >
+            <div className="chat-history-item-body">
+              <div className="chat-history-item-title">New chat</div>
+              <div className="chat-history-item-meta">
+                Start typing — saves on first message
+              </div>
+            </div>
+          </div>
+        )}
         {loading && (
           <div className="chat-history-empty">Loading…</div>
         )}
-        {!loading && (!threads || threads.length === 0) && (
+        {!loading && (!threads || threads.length === 0) && !isOnNewChat && (
           <div className="chat-history-empty">
             No chats yet — start one below.
           </div>
