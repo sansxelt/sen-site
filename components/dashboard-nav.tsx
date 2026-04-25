@@ -117,10 +117,12 @@ function UpdatesIcon() {
   );
 }
 
-// Big chat-history list — the dominant element of the sidebar, like
-// ChatGPT/Claude/the desktop workshop. Scrollable, shows all threads.
-// Hydrates client-side so the sidebar renders instantly on cold load.
-function RecentChats({ compact = false }: { compact?: boolean }) {
+// Note: chat history moved to <ChatHistoryRail /> on the right side
+// of the workshop. The function below is now unused inside the left
+// sidebar but kept for the file's exports staying stable; deletion
+// can happen in the cleanup pass.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _RecentChats({ compact = false }: { compact?: boolean }) {
   const [threads, setThreads] = useState<Array<{ id: string; title: string }> | null>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
@@ -236,15 +238,10 @@ function BillingIcon() {
   );
 }
 
-// Workshop station groups. The chat is the main bench (Make);
-// everything else is a station you visit to set up the shop.
+// Workshop stations. Chat moved out — it lives in the dedicated
+// right-side history rail next to the canvas. Make group dropped
+// because it had only one item that no longer belongs here.
 const navGroups: NavGroup[] = [
-  {
-    label: "Make",
-    items: [
-      { href: "/app",                  label: "Chat",         icon: <ChatIcon /> },
-    ],
-  },
   {
     label: "Brain",
     items: [
@@ -281,13 +278,13 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
     return pathname.startsWith(href);
   }
 
-  // Flat list for the mobile bottom bar — picks the most-used items.
+  // Mobile bottom bar — most-used stations + a Chat shortcut at top.
   const mobileBarItems: NavItem[] = [
-    navGroups[0].items[0],          // Chat
-    navGroups[2].items[0],          // Overview
-    navGroups[2].items[1],          // Billing
-    navGroups[1].items[0],          // Memory
-    navGroups[3].items[2],          // Desktop
+    { href: "/app",                  label: "Chat",     icon: <ChatIcon /> },
+    navGroups[1].items[0],          // Overview
+    navGroups[1].items[1],          // Billing
+    navGroups[0].items[0],          // Memory
+    navGroups[2].items[2],          // Desktop
   ];
 
   const navLink = (item: NavItem) => (
@@ -323,32 +320,30 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           </div>
         </Link>
 
-        {/* In the chat workspace, history dominates the sidebar like
-            ChatGPT/Claude — chats first, navigation collapses
-            beneath. On account pages the chat history would be noise,
-            so we just show a compact "+ New chat" link instead. */}
-        {inWorkshop ? (
-          <RecentChats />
-        ) : (
-          <RecentChats compact />
+        {/* Stations only on the left. Chat history lives on the
+            right rail (see ChatHistoryRail / LeiShell) so the left
+            sidebar stays clean and predictable across routes. */}
+        {inWorkshop && (
+          <Link
+            href="/app"
+            className={`mb-2 flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+              isActive("/app")
+                ? "bg-white/10 text-white"
+                : "text-neutral-300 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <ChatIcon />
+            Chat
+          </Link>
         )}
 
-        {/* Other workshop stations live below the chat history. On
-            workshop pages the chat list owns the scroll, so these
-            sit at the bottom but never get squeezed off. On account
-            pages, this is the primary nav. */}
-        <nav className={`flex flex-col gap-2 ${inWorkshop ? "mt-3 border-t border-white/[0.06] pt-3" : "mt-3"}`}>
+        <nav className="flex flex-col gap-3">
           {navGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-0.5">
               <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
                 {group.label}
               </div>
-              {group.items
-                // In workshop mode, hide the duplicate Chat link
-                // (the user is IN chat — the New chat + history
-                // above is the entry point).
-                .filter((item) => !inWorkshop || item.href !== "/app")
-                .map(navLink)}
+              {group.items.map(navLink)}
             </div>
           ))}
         </nav>

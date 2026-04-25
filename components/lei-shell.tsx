@@ -20,6 +20,7 @@ import {
   type VoiceModeStyle,
 } from "@/lib/lei";
 import { LeiPanelStage } from "./lei-panels";
+import { ChatHistoryRail } from "./chat-history-rail";
 
 type LeiCtx = {
   attachments: LeiAttachment[];
@@ -205,18 +206,24 @@ export function LeiShell({ children }: { children: ReactNode }) {
 
   return (
     <LeiContext.Provider value={value}>
+      {/* lei-shell--split keeps the LEI panel slot reserved when an
+          attachment panel is active. lei-shell--with-history keeps
+          the chat history rail slot reserved otherwise. They share
+          the same right-side column — never both at once. */}
       <div
-        className={`lei-shell${panel.kind !== "none" ? " lei-shell--split" : ""}`}
+        className={`lei-shell${panel.kind !== "none" ? " lei-shell--split" : " lei-shell--with-history"}`}
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
         onDragOver={onDragOver}
         onDrop={onDrop}
       >
         <div className="lei-shell-main">{children}</div>
-        {panel.kind !== "none" && (
+        {panel.kind !== "none" ? (
           <aside className="lei-shell-panel">
             <LeiPanelStage panel={panel} attachments={attachments} onClose={() => setPanelState({ kind: "none" })} />
           </aside>
+        ) : (
+          <ChatHistoryRail panelOpen={false} />
         )}
 
         {dragging && <DropOverlay />}
