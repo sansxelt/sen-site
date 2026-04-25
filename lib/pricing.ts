@@ -305,6 +305,31 @@ export const billingAddons: BillingAddon[] = [
   // CREDIT_COSTS[kind] (see lib/credits.ts).
 ];
 
+// v0.1.16 — Plans that already INCLUDE the value of recurring addons.
+// Pro / Teams / Enterprise have unlimited weekly chat + image, so the
+// Copilot Pro Pack and Power Pack don't add anything they don't
+// already get. Billing UI shows these as "Owned with your plan"
+// instead of payment buttons. One-time boosts (session_boost,
+// weekly_boost) are always purchasable since they grant cap-busting
+// credits that pair well with any plan when the user wants more.
+export const ADDONS_INCLUDED_BY_PLAN: Record<string, BillingAddonKey[]> = {
+  free: [],
+  apprentice: [],
+  studio: [],
+  pro: ["copilot_pro_pack", "power_pack"],
+  teams: ["copilot_pro_pack", "power_pack"],
+  enterprise: ["copilot_pro_pack", "power_pack"],
+};
+
+export function planIncludesAddon(
+  planKey: string | null | undefined,
+  addonKey: BillingAddonKey,
+): boolean {
+  if (!planKey) return false;
+  const list = ADDONS_INCLUDED_BY_PLAN[planKey.toLowerCase()] ?? [];
+  return list.includes(addonKey);
+}
+
 export const pricingPlanMap = Object.fromEntries(
   pricingPlans.map((plan) => [plan.key, plan]),
 ) as Record<PricingPlanKey, PricingPlan>;

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { billingAddons, pricingPlans } from "../lib/pricing";
+import { billingAddons, planIncludesAddon, pricingPlans } from "../lib/pricing";
 import type { BillingState } from "../lib/billing-state";
 import { UpdatePaymentMethodModal } from "./update-payment-method-modal";
 import { PayPalAddonButton, PayPalAddonsProvider } from "./paypal-addon-button";
@@ -254,35 +254,60 @@ export function BillingPanel({ state, publishableKey }: Props) {
                     </button>
                   </div>
                 ))}
-                {availableAddons.map((addon) => (
-                  <div key={addon.key} className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-white/20 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-white">{addon.name}</div>
-                      <div className="mt-1 text-xs text-neutral-400">{addon.description}</div>
-                      <div className="mt-1 text-xs font-medium text-neutral-300">{addon.monthlyLabel}</div>
+                {availableAddons.map((addon) => {
+                  const ownedViaPlan = planIncludesAddon(state.plan?.key, addon.key);
+                  return (
+                    <div
+                      key={addon.key}
+                      className={`flex flex-col gap-3 rounded-2xl border p-4 transition sm:flex-row sm:items-start sm:justify-between sm:gap-4 ${
+                        ownedViaPlan
+                          ? "border-emerald-400/25 bg-emerald-400/[0.04]"
+                          : "border-white/10 bg-black/20 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="text-sm font-medium text-white">{addon.name}</div>
+                          {ownedViaPlan && (
+                            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-300">
+                              Owned with {state.plan?.name ?? "your plan"}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 text-xs text-neutral-400">{addon.description}</div>
+                        <div className="mt-1 text-xs font-medium text-neutral-300">{addon.monthlyLabel}</div>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-2">
+                        {ownedViaPlan ? (
+                          <span className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-semibold text-emerald-300">
+                            ✓ Included
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleAddAddon(addon.key)}
+                              disabled={busy === `add-${addon.key}`}
+                              className="w-full rounded-xl bg-white px-4 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-60 sm:w-auto"
+                              style={{ color: "#0a0a0c" }}
+                              title="Add via card (modifies your existing subscription)"
+                            >
+                              {busy === `add-${addon.key}` ? "Adding…" : "Add with card"}
+                            </button>
+                            {paypalClientId && addon.monthlyValue > 0 && (
+                              <PayPalAddonButton
+                                addonKey={addon.key}
+                                addonName={addon.name}
+                                amountUsd={addon.monthlyValue}
+                                onActivated={() => router.refresh()}
+                              />
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleAddAddon(addon.key)}
-                        disabled={busy === `add-${addon.key}`}
-                        className="w-full rounded-xl bg-white px-4 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-60 sm:w-auto"
-                        style={{ color: "#0a0a0c" }}
-                        title="Add via card (modifies your existing subscription)"
-                      >
-                        {busy === `add-${addon.key}` ? "Adding…" : "Add with card"}
-                      </button>
-                      {paypalClientId && addon.monthlyValue > 0 && (
-                        <PayPalAddonButton
-                          addonKey={addon.key}
-                          addonName={addon.name}
-                          amountUsd={addon.monthlyValue}
-                          onActivated={() => router.refresh()}
-                        />
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </PayPalAddonsProvider>
             )}
           </div>
