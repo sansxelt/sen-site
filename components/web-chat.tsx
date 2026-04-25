@@ -497,6 +497,14 @@ export function WebChat({
     setInput("");
     setStreaming(true);
     setChatError(null);
+    // v0.1.16 r3 — capture which thread we're sending IN at the moment
+    // of send. If the user navigates to a different thread mid-stream,
+    // the streaming text MUST NOT bleed into the new thread's UI.
+    // Server-side it keeps saving to the original thread regardless
+    // (progressive save handles that). Client just needs to skip
+    // setMessages calls when the active thread changed.
+    const sendingThreadId = threadIdRef.current;
+    const isStillThisThread = () => threadIdRef.current === sendingThreadId;
     // Clear attachments NOW (not in the finally) — they're already
     // captured into payloadMessages, and conceptually they belong to
     // the turn we just sent. Leaving them visible while the AI streams
@@ -603,14 +611,21 @@ export function WebChat({
         if (renderedLen < assistant.length) {
           renderedLen = Math.min(assistant.length, renderedLen + CHARS_PER_FRAME);
           const visible = assistant.slice(0, renderedLen);
-          setMessages((prev) => {
-            const copy = [...prev];
-            const last = copy[copy.length - 1];
-            if (last && last.role === "assistant") {
-              copy[copy.length - 1] = { ...last, content: visible };
-            }
-            return copy;
-          });
+          // Cross-thread guard: if the user has switched threads since
+          // this send started, DON'T touch the visible messages —
+          // they belong to a different thread now. The server keeps
+          // saving to the original thread via progressive save, so
+          // nothing is lost.
+          if (isStillThisThread()) {
+            setMessages((prev) => {
+              const copy = [...prev];
+              const last = copy[copy.length - 1];
+              if (last && last.role === "assistant") {
+                copy[copy.length - 1] = { ...last, content: visible };
+              }
+              return copy;
+            });
+          }
         }
         if (smoothActive || renderedLen < assistant.length) {
           smoothRaf = requestAnimationFrame(tickRender);
@@ -823,25 +838,32 @@ export function WebChat({
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
       setChatError(err instanceof Error ? err.message : "Chat failed.");
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last && last.role === "assistant" && !last.content) {
-          return prev.slice(0, -1);
-        }
-        return prev;
-      });
+      // Same cross-thread guard — don't pop a message off the new
+      // thread's list because the OLD thread's send errored.
+      if (isStillThisThread()) {
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last && last.role === "assistant" && !last.content) {
+            return prev.slice(0, -1);
+          }
+          return prev;
+        });
+      }
     } finally {
+      // Always clear ac if it's ours, regardless of thread context.
+      // This makes sure the user can SEND AGAIN after switching
+      // threads (was getting stuck because abortRef stayed set
+      // pointing at the old thread's controller).
       if (abortRef.current === ac) {
         abortRef.current = null;
+      }
+      // Only flip the visible streaming flag if we're still on the
+      // thread we sent in — otherwise we'd disable the new thread's
+      // input prematurely.
+      if (isStillThisThread()) {
         setStreaming(false);
       }
-      // Refresh balance so the chip reflects the credit burn.
-      // (Attachments were already cleared up-top, before the await.)
       void lei.refreshBalance();
-      // After the assistant turn lands, the thread's title was just
-      // auto-renamed server-side (first user turn) and updated_at
-      // was bumped. Tell the sidebar so the title in the Recent list
-      // updates from "New chat" to the message snippet.
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
       }

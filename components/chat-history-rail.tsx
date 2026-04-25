@@ -169,25 +169,25 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
           </div>
           <button
             type="button"
-            onClick={async () => {
-              // Eager create — POST /api/threads gives us a real id,
-              // navigate to its dedicated URL. So if the user types
-              // and then navigates away before sending, the thread
-              // still exists and they can resume from the rail.
-              try {
-                const res = await fetch("/api/threads", { method: "POST" });
-                if (res.ok) {
-                  const data = (await res.json()) as { thread?: { id: string } };
-                  if (data.thread?.id) {
-                    router.push(`/app?thread=${data.thread.id}`);
-                    window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
-                    return;
-                  }
-                }
-              } catch {
-                // fall through to the legacy ?new=1 path
-              }
+            onClick={() => {
+              // Optimistic — navigate to a blank state INSTANTLY,
+              // create the thread row in the background. The first
+              // send sets the real thread_id via x-sansxel-thread-id
+              // response header (existing flow). When the background
+              // POST returns, we broadcast threads:changed so the
+              // rail picks up the new entry. Feels instant + still
+              // gets a server-side thread for preservation.
               router.replace("/app?new=1");
+              void (async () => {
+                try {
+                  const res = await fetch("/api/threads", { method: "POST" });
+                  if (res.ok) {
+                    window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+                  }
+                } catch {
+                  // ignore — the legacy first-send path still creates a thread
+                }
+              })();
             }}
             className="chat-history-new-pill"
             title="Start a new chat"

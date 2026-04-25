@@ -326,25 +326,22 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
   // Close the drawer whenever the route changes (user navigated).
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
-  const handleNewChat = async () => {
-    // Eager create — POST /api/threads first so the new thread has
-    // a real id (and shows in the sidebar) before the user types.
-    // If they navigate away mid-draft they can still resume from
-    // the sidebar.
-    try {
-      const res = await fetch("/api/threads", { method: "POST" });
-      if (res.ok) {
-        const data = (await res.json()) as { thread?: { id: string } };
-        if (data.thread?.id) {
-          router.push(`/app?thread=${data.thread.id}`);
-          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
-          return;
-        }
-      }
-    } catch {
-      // network hiccup — fall back to the legacy ?new=1 client-state-only path
-    }
+  const handleNewChat = () => {
+    // Optimistic — navigate INSTANTLY, create the thread row in the
+    // background. The first send saves user msg + creates thread
+    // server-side anyway; the background POST just gets a row on
+    // the rail sooner. Feels instant.
     router.replace("/app?new=1");
+    void (async () => {
+      try {
+        const res = await fetch("/api/threads", { method: "POST" });
+        if (res.ok) {
+          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+        }
+      } catch {
+        // ignore — first-send path will still create a thread
+      }
+    })();
   };
 
   function isActive(href: string) {
