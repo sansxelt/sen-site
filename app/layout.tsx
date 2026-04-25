@@ -13,22 +13,23 @@ const BASE = "https://www.sansxel.ai";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
-    default: "sansxel - Build something REAL.",
+    default: "sansxel — the AI workshop for makers",
     template: "%s | sansxel",
   },
   description:
-    "sansxel is an adaptive AI platform with a contextual interface that reshapes itself around how you actually work. Build something REAL.",
+    "Talk, type, drop files, generate images, search live. One AI workshop for indie devs, designers, students, and creators who actually ship. Web in your browser, real shop on desktop.",
   keywords: [
     "sansxel",
     "sansxel ai",
-    "adaptive ai",
-    "contextual ui",
-    "ai platform",
-    "ai interface",
-    "ai for developers",
-    "ai for writers",
+    "ai workshop",
+    "ai for makers",
+    "ai for indie devs",
+    "ai for creators",
     "ai for students",
-    "AI productivity",
+    "ai chat with voice",
+    "ai with web search",
+    "multimodal ai",
+    "ai with mcp",
   ],
   authors: [{ name: "sansxel", url: BASE }],
   creator: "sansxel",
@@ -39,16 +40,16 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE,
     siteName: "sansxel",
-    title: "sansxel - Build something REAL.",
+    title: "sansxel — the AI workshop for makers",
     description:
-      "The adaptive AI platform. One AI, infinite shapes — a contextual interface that reshapes itself around how you actually work.",
+      "Talk, type, drop files, generate images, search live. One workshop for indie devs, designers, students, and creators who ship.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "sansxel - Build something REAL.",
+    title: "sansxel — the AI workshop for makers",
     description:
-      "The adaptive AI platform. One AI, infinite shapes — a contextual interface that reshapes itself around how you actually work.",
+      "Talk, type, drop files, generate images, search live. One workshop for indie devs, designers, students, and creators who ship.",
     images: ["/og-image.png"],
     creator: "@sansxel",
   },
@@ -88,7 +89,7 @@ export default async function RootLayout({
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "sansxel is an adaptive AI platform with a contextual interface that reshapes itself around how you actually work.",
+                "The AI workshop for makers. Chat, voice, drag-drop, image generation, live web search, persistent memory — all in one workspace. Web for taste, desktop for shipping.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",

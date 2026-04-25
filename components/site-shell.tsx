@@ -81,7 +81,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                     sansxel
                   </div>
                   <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
-                    Build something REAL.
+                    The AI workshop for makers
                   </div>
                 </div>
               </Link>

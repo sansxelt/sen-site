@@ -29,6 +29,9 @@ export type DesktopPreferences = {
   // v0.1.8 — let sansxel-1 invoke client-side tools (navigate,
   // create_api_key, search_threads, …). Off = text-only responses.
   tools_enabled: boolean;
+  // v0.1.16 — Theme preference, synced cross-device. "system" follows
+  // the OS via prefers-color-scheme; "light" / "dark" pin the choice.
+  theme: "light" | "dark" | "system";
 };
 
 export const DEFAULT_PREFERENCES: DesktopPreferences = {
@@ -45,6 +48,7 @@ export const DEFAULT_PREFERENCES: DesktopPreferences = {
   bubble_shape: "rounded",
   system_language: "en",
   tools_enabled: true,
+  theme: "dark",
 };
 
 const BG_PATTERN_VALUES = ["none", "dots", "grid", "gradient"] as const;
@@ -128,6 +132,10 @@ function normalize(raw: unknown): DesktopPreferences {
       typeof r.tools_enabled === "boolean"
         ? r.tools_enabled
         : DEFAULT_PREFERENCES.tools_enabled,
+    theme:
+      r.theme === "light" || r.theme === "dark" || r.theme === "system"
+        ? r.theme
+        : DEFAULT_PREFERENCES.theme,
   };
 }
 
