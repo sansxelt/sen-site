@@ -653,12 +653,17 @@ export async function POST(request: Request) {
   // would force the client to handle yet another error path. The
   // resolved tier is sent back via headers so the UI can surface it.
   const requestedTier: ModelTier = payload.tier ?? "balanced";
-  const plan = await getPlanForEmail(email);
+  // v0.1.16 r4 — parallelize plan + weekly fetches. They're independent
+  // Supabase round-trips (~120ms each); awaiting them sequentially
+  // doubled the pre-stream latency for nothing.
+  const [plan, weekly] = await Promise.all([
+    getPlanForEmail(email),
+    getWeeklyUsage(email),
+  ]);
   let resolvedTier = resolveTier(plan, requestedTier);
 
   // Plan limits: hard weekly cap on free/apprentice/studio,
   // silent tier-throttle on pro, no cap on teams/enterprise.
-  const weekly = await getWeeklyUsage(email);
   const decision = decideChatRequest({
     plan,
     requestedTier: resolvedTier,
