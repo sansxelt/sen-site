@@ -250,6 +250,20 @@ export function WebChat({
     }
     const text = baseText + attachmentBlocks.join("");
     if (!text && imageBlocks.length === 0) return;
+
+    // Auto-route image-gen intent so users don't have to click a
+    // separate button. "gen an image of X", "draw me a Y", "make a
+    // picture of Z" → route to /api/ai/image instead of a chat turn.
+    // Skipped when there's an attached image (probably means
+    // "analyze this", not "make a new one").
+    const IMAGE_GEN_INTENT = /^\s*(?:gen(?:erate)?|make|create|draw|paint|imagine|illustrate|render|design|sketch)\s+(?:me\s+)?(?:an?\s+|the\s+|some\s+)?(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|logo|graphic|render)\b/i;
+    if (IMAGE_GEN_INTENT.test(baseText) && imageBlocks.length === 0) {
+      lei.clearAttachments();
+      void generateImageFromInput(baseText);
+      setInput("");
+      return;
+    }
+
     lastTurnWasVoice.current = fromVoice;
     lei.noteIntentFromText(baseText);
 
@@ -607,8 +621,8 @@ export function WebChat({
   // a user turn + an assistant turn with the image embedded as
   // markdown (`![](url)`), and clears the input. Streaming is for
   // text — image gen is one POST + one render.
-  const generateImageFromInput = useCallback(async () => {
-    const prompt = input.trim();
+  const generateImageFromInput = useCallback(async (overridePrompt?: string) => {
+    const prompt = (overridePrompt ?? input).trim();
     if (!prompt || generatingImage) return;
 
     const userMsg: ChatMessage = { role: "user", content: prompt };
@@ -1128,39 +1142,10 @@ export function WebChat({
                     <span className="webchat-plus-item-sub">Image · video · file · code — or just drag onto the page</span>
                   </span>
                 </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  disabled={generatingImage || !input.trim() || streaming}
-                  onClick={() => {
-                    setPlusMenuOpen(false);
-                    void generateImageFromInput();
-                  }}
-                  className="webchat-plus-item"
-                >
-                  <span className="webchat-plus-item-glyph">🎨</span>
-                  <span className="webchat-plus-item-body">
-                    <span className="webchat-plus-item-name">
-                      {generatingImage ? "Generating image…" : "Generate image"}
-                    </span>
-                    <span className="webchat-plus-item-sub">
-                      {input.trim() ? "From your current prompt" : "Type a prompt first"}
-                    </span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  disabled
-                  className="webchat-plus-item"
-                  title="Coming in v0.2.0"
-                >
-                  <span className="webchat-plus-item-glyph">🎬</span>
-                  <span className="webchat-plus-item-body">
-                    <span className="webchat-plus-item-name">Generate video</span>
-                    <span className="webchat-plus-item-sub">Coming soon</span>
-                  </span>
-                </button>
+                <div className="webchat-plus-hint">
+                  <strong>Tip:</strong> just type what you want — &ldquo;gen an image of a cat&rdquo;,
+                  &ldquo;draw me a logo&rdquo;, etc. — and Send. sansxel-1 routes it automatically.
+                </div>
               </div>
             )}
           </div>
@@ -1409,7 +1394,16 @@ function WebAssistantBubble({
         }
         return (
           <div key={i} className="md">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{s.text}</ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              // Allow data: URIs so generated images render. Default
+              // urlTransform strips them as a security measure, but
+              // we only ever inject data URIs we generated server-
+              // side via /api/ai/image, so it's safe.
+              urlTransform={(url) => url}
+            >
+              {s.text}
+            </ReactMarkdown>
           </div>
         );
       })}
