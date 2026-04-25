@@ -2024,9 +2024,12 @@ div[id] {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(5, 5, 8, 0.78);
-  backdrop-filter: blur(18px) saturate(120%);
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  /* v0.1.16 — was 0.78 alpha, chat bled through and looked broken.
+     V→V is supposed to feel "screen goes away, just talk" — making
+     it nearly opaque. Heavier blur for the same reason. */
+  background: rgba(5, 5, 8, 0.97);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -733,22 +733,30 @@ export async function POST(request: Request) {
     // tools_enabled: true explicitly, so this is safe.
     const toolsEnabled = payload.tools_enabled === true;
 
-    // v0.1.16 — Always expose web_search as a server tool. Desktop
-    // also gets the local DESKTOP_TOOLS (navigate, etc.) when the
-    // client opts in via tools_enabled.
-    const toolsForCall = toolsEnabled
-      ? [...SERVER_TOOLS, ...(DESKTOP_TOOLS as unknown as Anthropic.Messages.Tool[])]
-      : SERVER_TOOLS;
+    // v0.1.16 — Voice mode runs LEAN: no web_search (adds 2-3s of
+    // latency before any text streams, which kills the voice loop
+    // feel), tighter max_tokens cap (replies are 1-3 sentences, no
+    // need for 2048-token room). Desktop tools also off in voice
+    // since the user can't see the screen anyway.
+    const isVoiceTurn = payload.input_mode === "voice";
+    const toolsForCall = isVoiceTurn
+      ? [] // strip ALL tools in voice mode for fast first-token
+      : toolsEnabled
+        ? [...SERVER_TOOLS, ...(DESKTOP_TOOLS as unknown as Anthropic.Messages.Tool[])]
+        : SERVER_TOOLS;
 
     const stream = await client.messages.stream({
       model: descriptor.model,
-      max_tokens: 2048,
+      // Voice replies are short by design (system prompt enforces
+      // 1-3 sentences). Cap tokens hard so the model can't drift
+      // into a multi-paragraph essay that takes 8 seconds to TTS.
+      max_tokens: isVoiceTurn ? 320 : 2048,
       system: systemPromptForPayload(payload, referenceBlock),
       // v0.1.4 — translate to Anthropic content-block form so user
       // turns with attached images become multimodal content arrays.
       // Text-only turns pass through as plain strings.
       messages: messages.map(toAnthropicMessage),
-      tools: toolsForCall,
+      ...(toolsForCall.length > 0 ? { tools: toolsForCall } : {}),
     });
 
     const startedAt = Date.now();
