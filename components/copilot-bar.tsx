@@ -243,6 +243,11 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
 
   // ── Closed state: floating launcher button ─────────────────────
   if (!open) {
+    // On /app the chat workspace already has its own input + voice +
+    // attach affordances; a second floating bubble fights for space
+    // (was visually bleeding into the input bar). The keyboard
+    // shortcut ⌘J / Ctrl+J still opens the panel when wanted.
+    if (pathname === "/app") return null;
     return (
       <button
         type="button"
