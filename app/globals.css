@@ -1600,6 +1600,24 @@ div[id] {
 .webchat-msg .md strong { color: #fafafa; font-weight: 600; }
 .webchat-msg .md em     { font-style: italic; color: rgba(245, 245, 250, 0.95); }
 
+/* Bubble entrance: each chat message gently fades + lifts in instead
+   of popping. User bubbles slide from the right, assistant from the
+   left — small but it makes the conversation feel alive. */
+.webchat-msg {
+  animation: webchat-bubble-in 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.webchat-msg--user {
+  animation-name: webchat-bubble-in-right;
+}
+@keyframes webchat-bubble-in {
+  from { opacity: 0; transform: translateY(6px) translateX(-4px); }
+  to   { opacity: 1; transform: translateY(0) translateX(0); }
+}
+@keyframes webchat-bubble-in-right {
+  from { opacity: 0; transform: translateY(6px) translateX(4px); }
+  to   { opacity: 1; transform: translateY(0) translateX(0); }
+}
+
 .webchat-stream-text {
   white-space: pre-wrap;
   word-wrap: break-word;

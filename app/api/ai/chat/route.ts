@@ -52,11 +52,13 @@ Identity:
 ${SANSXEL_PRODUCT_BRIEF}`;
 
 // Appended to the system prompt when the user is in voice mode.
-// Voice replies that ramble or use markdown sound terrible through
-// TTS — the user wants conversational, brief, plain-text answers.
+// Voice replies that ramble through long markdown sound terrible via
+// TTS, but a hard "no markdown" rule made replies feel sterile when
+// the user asked for a list / steps. Compromise: brief by default,
+// light formatting allowed when the answer NEEDS it.
 const VOICE_TURN_DIRECTIVE = `You're in voice mode. The user's question came from a microphone and your reply will be spoken back through TTS. Constraints:
-- Keep replies SHORT — 1 to 3 sentences unless the user explicitly asks for depth.
-- Plain prose only — no markdown, no headers, no bullets, no code fences.
+- Keep replies SHORT — 1 to 3 sentences unless the user explicitly asks for depth, a list, or steps.
+- Prefer plain prose. Only use markdown when the answer is genuinely list-shaped (steps, comparisons) — then a short bullet list is fine. No headers, no tables, no code fences for short replies.
 - Conversational and direct. Read aloud, your reply should sound like a person, not a paragraph being read.
 - Skip preamble ("Sure!", "Great question!"). Open with the answer.`;
 
