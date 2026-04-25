@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { EarlyAccessForm } from "@/components/early-access-form";
 import { readAccountContext } from "@/lib/account-session";
-import { getSignInPath } from "@/lib/auth-ui";
 import { getUserProfileByEmail } from "@/lib/user-profile";
 
 export const metadata: Metadata = {
@@ -15,6 +15,14 @@ export const metadata: Metadata = {
 export default async function DownloadPage() {
   const session = await auth();
   const signedIn = Boolean(session?.user?.email);
+
+  // v0.1.16 — Download (and the early-access invite request inside)
+  // require an account so we have an email to attach the invite to.
+  // Anonymous visitors hit /signin first and bounce back here.
+  if (!signedIn) {
+    redirect(`/signin?callbackUrl=${encodeURIComponent("/download")}`);
+  }
+
   const profile = await getUserProfileByEmail(session?.user?.email);
   const initialAccountContext = readAccountContext(session, profile);
 
