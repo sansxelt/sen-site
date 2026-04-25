@@ -1,0 +1,113 @@
+/* Light-mode overrides. Triggered by data-theme="light" on <html>
+   from components/theme-provider.tsx. Default (no attribute or
+   data-theme="dark") keeps the existing dark palette intact.
+
+   This is a pragmatic first pass: hits the high-traffic surfaces
+   (background, body text, primary surface tints) so light mode looks
+   recognizable without a full token-system refactor. Fine-tuning of
+   individual components can land later. */
+
+html[data-theme="light"] {
+  --background: #fafaf9;
+  --foreground: #0a0a0c;
+  color-scheme: light;
+}
+
+html[data-theme="light"] body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Marketing site shell — invert chrome */
+html[data-theme="light"] .bg-neutral-950 { background-color: #fafaf9 !important; }
+html[data-theme="light"] .bg-neutral-900 { background-color: #f5f5f4 !important; }
+html[data-theme="light"] .text-neutral-100,
+html[data-theme="light"] .text-neutral-200,
+html[data-theme="light"] .text-white { color: #0a0a0c !important; }
+html[data-theme="light"] .text-neutral-300 { color: #525252 !important; }
+html[data-theme="light"] .text-neutral-400 { color: #737373 !important; }
+html[data-theme="light"] .text-neutral-500 { color: #8a8a8a !important; }
+
+/* Soft white-on-dark surfaces become soft dark-on-white */
+html[data-theme="light"] .bg-white\/5    { background-color: rgba(0, 0, 0, 0.04) !important; }
+html[data-theme="light"] .bg-white\/\[0\.04\] { background-color: rgba(0, 0, 0, 0.035) !important; }
+html[data-theme="light"] .bg-white\/10   { background-color: rgba(0, 0, 0, 0.07) !important; }
+html[data-theme="light"] .bg-black\/20   { background-color: rgba(0, 0, 0, 0.03) !important; }
+html[data-theme="light"] .border-white\/10 { border-color: rgba(0, 0, 0, 0.10) !important; }
+html[data-theme="light"] .border-white\/\[0\.08\] { border-color: rgba(0, 0, 0, 0.08) !important; }
+
+/* Workshop sidebar + chat surfaces — invert tints */
+html[data-theme="light"] .webchat,
+html[data-theme="light"] .webchat-msg--assistant {
+  color: #0a0a0c;
+}
+html[data-theme="light"] .webchat-msg--assistant {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .webchat-msg--user {
+  background: rgba(139, 92, 246, 0.18);
+  color: #0a0a0c;
+  border-color: rgba(139, 92, 246, 0.35);
+}
+html[data-theme="light"] .webchat-empty h2 { color: #0a0a0c; }
+html[data-theme="light"] .webchat-empty p { color: #525252; }
+html[data-theme="light"] .webchat-empty-suggestion {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.10);
+  color: #1f1f1f;
+}
+html[data-theme="light"] .webchat-empty-suggestion:hover {
+  background: rgba(139, 92, 246, 0.10);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #0a0a0c;
+}
+
+/* Account/dashboard sidebar */
+html[data-theme="light"] aside.lg\:flex { background: rgba(0, 0, 0, 0.02); border-color: rgba(0, 0, 0, 0.10); }
+
+/* Chat history rail */
+html[data-theme="light"] .chat-history-rail {
+  background: rgba(0, 0, 0, 0.025);
+  border-left-color: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .chat-history-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html[data-theme="light"] .chat-history-item-title { color: #0a0a0c; }
+html[data-theme="light"] .chat-history-item-meta { color: #737373; }
+html[data-theme="light"] .chat-history-search-input {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.10);
+  color: #0a0a0c;
+}
+
+/* LEI panels */
+html[data-theme="light"] .lei-panel-title { color: #0a0a0c; }
+html[data-theme="light"] .lei-panel-body { color: #1f1f1f; }
+html[data-theme="light"] .lei-shell-panel {
+  background: rgba(0, 0, 0, 0.02);
+  border-left-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Inputs */
+html[data-theme="light"] .webchat-input textarea,
+html[data-theme="light"] textarea,
+html[data-theme="light"] input[type="text"],
+html[data-theme="light"] input[type="email"],
+html[data-theme="light"] input[type="password"] {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.10);
+  color: #0a0a0c;
+}
+
+/* Scrollbar — light variant */
+html[data-theme="light"] *::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.30);
+  background-clip: content-box;
+}
+html[data-theme="light"] *::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.55);
+  background-clip: content-box;
+}

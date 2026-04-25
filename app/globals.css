@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./lei.css";
+@import "./theme.css";
 
 :root {
   --background: #050505;
