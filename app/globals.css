@@ -1299,8 +1299,14 @@ div[id] {
   position: relative;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--site-header-height));
-  max-width: 920px;
+  /* /app no longer lives under the marketing header (it has its own
+     workshop layout), so subtract 0 not the marketing header height. */
+  height: 100vh;
+  /* Tighter ChatGPT-style column. 920 felt cavernous on wide screens
+     once the workshop sidebar + chat history rail were added — bubbles
+     wound up at opposite edges with a desert in between. 720 keeps
+     them in a comfortable conversation column. */
+  max-width: 760px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -1518,7 +1524,9 @@ div[id] {
   border-radius: 16px;
   white-space: pre-wrap;
   word-wrap: break-word;
-  max-width: 88%;
+  /* Tighter than 88% so user/assistant bubbles can never sit at
+     opposite edges with a chasm between them. */
+  max-width: 92%;
   animation: webchat-msg-in 220ms ease-out;
 }
 
