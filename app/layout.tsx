@@ -56,11 +56,11 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large" },
   },
-  icons: {
-    apple: "/icon.png",
-    icon: "/icon.png",
-    shortcut: "/icon.png",
-  },
+  // Note: app/icon.png and app/apple-icon.png are auto-detected by
+  // Next.js 16 and served at hashed URLs (e.g. /icon?abc123) so the
+  // browser cache busts on every change. Manually overriding `icons`
+  // here forces a non-hashed /icon.png path and breaks that — leave
+  // it unset and let the file convention do its job.
 };
 
 export default async function RootLayout({

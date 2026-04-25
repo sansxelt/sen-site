@@ -36,7 +36,12 @@
       "Bash(vercel link *)",
       "Bash(vercel project *)",
       "Bash(vercel env *)",
-      "Bash(git commit -m 'fix: white-on-white invisible button text + clearer addon UX *)"
+      "Bash(git commit -m 'fix: white-on-white invisible button text + clearer addon UX *)",
+      "Bash(curl -sI https://sansxel.ai/icon.png)",
+      "Bash(curl -sI \"https://sansxel.ai/\")",
+      "Bash(curl -s -o /tmp/served-icon.png https://sansxel.ai/icon.png)",
+      "Read(//tmp/**)",
+      "Bash(git commit -m 'fix: let Next.js auto-hash favicon URLs to bust browser cache *)"
     ]
   }
 }
