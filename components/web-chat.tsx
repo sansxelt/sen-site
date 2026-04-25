@@ -928,6 +928,59 @@ export function WebChat({
       abortRef.current.abort();
       abortRef.current = null;
       setStreaming(false);
+      // Mark the visible last assistant message as cancelled and
+      // tell the server to persist it as such, so the saved
+      // conversation reflects the user's choice instead of just
+      // ending mid-sentence.
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last && last.role === "assistant") {
+          const tail = last.content && !last.content.endsWith("\n")
+            ? "\n\n_(Cancelled by you.)_"
+            : "_(Cancelled by you.)_";
+          const newContent = (last.content || "") + tail;
+          // Server-side persist via PATCH to the latest message in
+          // this thread. Find it in the list returned by /api/threads/[id].
+          const tid = threadIdRef.current;
+          if (tid) {
+            void (async () => {
+              try {
+                const detailRes = await fetch(`/api/threads/${tid}`, { cache: "no-store" });
+                if (!detailRes.ok) return;
+                const detail = (await detailRes.json()) as {
+                  messages?: Array<{ id: string; role: string }>;
+                };
+                const lastAsst = [...(detail.messages ?? [])]
+                  .reverse()
+                  .find((m) => m.role === "assistant");
+                if (!lastAsst?.id) return;
+                await fetch(`/api/threads/${tid}/messages/${lastAsst.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ content: newContent }),
+                });
+              } catch {
+                // best-effort
+              }
+            })();
+          }
+          const copy = [...prev];
+          copy[copy.length - 1] = { ...last, content: newContent };
+          return copy;
+        }
+        return prev;
+      });
+      // Clear the in-flight flag immediately so the rail dot stops
+      // pulsing and the floating pill disappears.
+      if (typeof window !== "undefined") {
+        const tid = threadIdRef.current;
+        if (tid) {
+          const flight = readFlight();
+          delete flight[tid];
+          window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
+          window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+        }
+      }
     }
   }, []);
 
