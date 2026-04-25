@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { LeiAttachment, LeiPanel } from "@/lib/lei";
 
 export function LeiPanelStage({
@@ -141,9 +143,16 @@ function ImagePanelBody({ attachment }: { attachment: LeiAttachment }) {
       </div>
       {err && <div className="lei-error">{err}</div>}
       {analysis && (
-        <div className="lei-analysis">
+        <div className="lei-analysis lei-analysis--reveal">
           <div className="lei-analysis-label">Analysis</div>
-          <div className="lei-analysis-body">{analysis}</div>
+          <div className="lei-analysis-body md">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              urlTransform={(url) => url}
+            >
+              {analysis}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
     </>

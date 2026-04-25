@@ -1058,23 +1058,43 @@ export function WebChat({
       {lei.attachments.length > 0 && (
         <div className="webchat-attachments">
           {lei.attachments.map((a) => (
-            <span key={a.id} className={`webchat-att webchat-att--${a.kind}`}>
-              <span className="webchat-att-name">{kindGlyph(a.kind)} {a.name}</span>
+            <div key={a.id} className={`webchat-att-card webchat-att-card--${a.kind}`}>
+              <div className="webchat-att-thumb">
+                {a.kind === "image" && a.previewUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={a.previewUrl} alt={a.name} />
+                ) : a.kind === "video" && a.previewUrl ? (
+                  <video src={a.previewUrl} muted playsInline preload="metadata" />
+                ) : a.kind === "code" ? (
+                  <span className="webchat-att-icon">{"</>"}</span>
+                ) : (
+                  <span className="webchat-att-icon">📄</span>
+                )}
+              </div>
+              <div className="webchat-att-info">
+                <div className="webchat-att-info-name">{a.name}</div>
+                <div className="webchat-att-info-sub">
+                  {prettyAttSize(a.size)} · {a.kind}
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => lei.removeAttachment(a.id)}
                 className="webchat-att-x"
                 aria-label={`Remove ${a.name}`}
+                title="Remove"
               >×</button>
-            </span>
+            </div>
           ))}
-          <button
-            type="button"
-            onClick={lei.clearAttachments}
-            className="webchat-att-clear"
-          >
-            Clear all
-          </button>
+          {lei.attachments.length > 1 && (
+            <button
+              type="button"
+              onClick={lei.clearAttachments}
+              className="webchat-att-clear"
+            >
+              Clear all
+            </button>
+          )}
         </div>
       )}
 
@@ -1544,11 +1564,10 @@ function VoiceStyleToggle({
   );
 }
 
-function kindGlyph(kind: string): string {
-  if (kind === "image") return "🖼";
-  if (kind === "video") return "🎬";
-  if (kind === "code") return "</>";
-  return "📄";
+function prettyAttSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function WebBounceDots() {
