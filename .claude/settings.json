@@ -43,7 +43,8 @@
       "Read(//tmp/**)",
       "Bash(git commit -m 'fix: let Next.js auto-hash favicon URLs to bust browser cache *)",
       "Bash(git commit -m 'fix: real multimodal chat + plan-aware credit clarity + friendly 402 *)",
-      "Bash(git commit -m 'fix: voice mode V2T vs V2V differentiation + faster turn-taking + brief voice replies *)"
+      "Bash(git commit -m 'fix: voice mode V2T vs V2V differentiation + faster turn-taking + brief voice replies *)",
+      "Bash(git commit -m 'feat: live transcript preview via Web Speech API while recording *)"
     ]
   }
 }

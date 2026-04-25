@@ -234,6 +234,22 @@
   font-weight: 600;
 }
 
+/* Live transcript styling — make it visually distinct from typed
+   text so the user knows the AI is showing them what it heard,
+   not what they typed. Subtle purple tint + cursor pulse. */
+textarea.is-live-transcript {
+  color: #c4b5fd !important;
+  font-style: italic;
+}
+textarea.is-live-transcript::after {
+  content: "▍";
+  animation: lei-cursor-blink 1s steps(2) infinite;
+}
+@keyframes lei-cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
 .webchat-credit-chip {
   display: inline-flex; align-items: center;
   font-size: 12px; padding: 4px 10px;
