@@ -201,25 +201,38 @@ export function WebChat({
   useEffect(() => {
     let cancelled = false;
 
-    // v0.1.16 — /app defaults to a BLANK new chat. Old behavior
-    // auto-restored the most recent thread, which made cross-device
-    // sync feel broken (you opened /app on phone and got dropped
-    // into yesterday's chat instead of a clean canvas). Now: only
-    // load when the URL explicitly asks for a thread (?thread=<id>),
-    // otherwise stay blank. The history rail still lists every
-    // thread from any device — click one to resume.
-    if (wantsNew || !requestedThreadParam) {
+    // ChatGPT-style hydrate:
+    //   ?new=1            → start blank, drop threadId
+    //   ?thread=<uuid>    → load that thread
+    //   (no params)       → on FIRST mount only, restore the most
+    //                       recent thread; on subsequent renders
+    //                       leave the active chat alone so we don't
+    //                       clobber an in-progress reply.
+    if (wantsNew) {
       setThreadId(null);
       setMessages([]);
+      setInput("");
       hasHydratedRef.current = true;
       return;
     }
 
     (async () => {
       try {
-        const targetId = requestedThreadParam;
+        let targetId = requestedThreadParam;
+        if (!targetId) {
+          // No URL hint — only auto-restore on first mount.
+          if (hasHydratedRef.current) return;
+          const res = await fetch("/api/threads", { cache: "no-store" });
+          if (!res.ok) {
+            hasHydratedRef.current = true;
+            return;
+          }
+          const data = (await res.json()) as { threads?: Array<{ id: string }> };
+          targetId = data.threads?.[0]?.id ?? null;
+        }
         hasHydratedRef.current = true;
         if (cancelled) return;
+        if (!targetId) return; // brand new account, no threads yet
         // Don't re-load the same thread we're already showing.
         if (targetId === threadIdRef.current) return;
 
