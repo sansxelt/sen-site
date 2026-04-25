@@ -12,6 +12,22 @@ type ModelTier = "fast" | "balanced" | "smart";
 
 type Tier = { tier: ModelTier; display_name: string; blurb: string };
 
+// Plan key (DB) → display name (what users actually see on billing).
+// Was showing 'Plan: studio' in the chat header while billing said
+// 'Plus' — confusing. Single source of truth here for the chat
+// header + cost chip until we refactor to pass display name from
+// the server.
+function planDisplayName(key: string): string {
+  const k = (key ?? "").toLowerCase();
+  if (k === "apprentice") return "Core";
+  if (k === "studio") return "Plus";
+  if (k === "pro") return "Pro";
+  if (k === "teams") return "Teams";
+  if (k === "enterprise") return "Enterprise";
+  if (k === "free") return "Free";
+  return key || "Free";
+}
+
 const ALL_TIERS: ReadonlyArray<{
   tier: ModelTier;
   display_name: string;
@@ -1135,7 +1151,7 @@ export function WebChat({
             onChange={lei.setVoiceStyle}
           />
           <CreditChip balance={lei.creditBalance} plan={plan} />
-          <span className="webchat-plan">Plan: {plan}</span>
+          <span className="webchat-plan">Plan: {planDisplayName(plan)}</span>
         </div>
       </div>
 
@@ -1324,11 +1340,11 @@ export function WebChat({
               className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
               title={
                 costPreview.planCovers
-                  ? `Included in your ${plan} plan — no credits used unless you exceed your weekly cap`
+                  ? `Included in your ${planDisplayName(plan)} plan — no credits used unless you exceed your weekly cap`
                   : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
               }
             >
-              {costPreview.planCovers ? `✓ ${plan}` : `≈ ${costPreview.credits} cr`}
+              {costPreview.planCovers ? `✓ ${planDisplayName(plan)}` : `≈ ${costPreview.credits} cr`}
             </span>
             <PlanExpiryNote expiresAt={planExpiresAt} canceling={planCanceling} />
           </div>
@@ -1704,7 +1720,7 @@ function CreditChip({ balance, plan }: { balance: number | null; plan: string })
       className={`webchat-credit-chip${empty ? " webchat-credit-chip--empty" : low ? " webchat-credit-chip--low" : ""}`}
       title={
         planCovers
-          ? `Your ${plan} plan covers normal use. Credits only burn if you exceed weekly caps.`
+          ? `Your ${planDisplayName(plan)} plan covers normal use. Credits only burn if you exceed weekly caps.`
           : empty
             ? "Out of credits — click to top up"
             : low
