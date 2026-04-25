@@ -11,6 +11,7 @@ import {
 import type { BillingCycle } from "../../../../lib/stripe";
 import { upsertSubscriptionSelection } from "../../../../lib/subscriptions";
 import type { PricingPlanKey } from "../../../../lib/pricing";
+import { isOneTimeBoost } from "../../../../lib/pricing";
 
 /**
  * Extract a human-readable error message from anything Stripe/Supabase/native
@@ -112,6 +113,59 @@ export async function POST(request: Request) {
 
     // ── Addon on top of existing subscription ────────────────────────
     if (addonKey) {
+      // v0.1.16 r9 — Two distinct addon flows:
+      //   ONE-TIME boosts (session_boost, weekly_boost): the Stripe
+      //     price is type=one_time. Cannot be added as a subscription
+      //     item — has to be a separate PaymentIntent. Webhook then
+      //     credits boost_credits via the existing one_time_boost
+      //     branch in /api/stripe/webhook.
+      //   RECURRING addons (copilot_pro_pack, power_pack): Stripe
+      //     price is type=recurring. Add to the existing subscription.
+      const oneTime = isOneTimeBoost(addonKey);
+
+      if (oneTime) {
+        // Look up the price to get its amount + currency.
+        const price = await stripe.prices.retrieve(priceId);
+        if (!price.unit_amount || !price.currency) {
+          return NextResponse.json(
+            { error: "Stripe price is missing amount or currency." },
+            { status: 500 },
+          );
+        }
+        // Need a default payment method on file to charge off-session.
+        const customerObj = await stripe.customers.retrieve(customer.id);
+        const defaultPm =
+          (customerObj as Stripe.Customer).invoice_settings?.default_payment_method;
+        if (!defaultPm) {
+          return NextResponse.json(
+            { error: "Add a payment method first, then try this addon again." },
+            { status: 400 },
+          );
+        }
+        const intent = await stripe.paymentIntents.create({
+          amount: price.unit_amount,
+          currency: price.currency,
+          customer: customer.id,
+          payment_method: typeof defaultPm === "string" ? defaultPm : defaultPm.id,
+          off_session: true,
+          confirm: true,
+          metadata: {
+            purchaseKind: "one_time_boost",
+            addonKey,
+            userEmail: email,
+          },
+          description: `sansxel one-time boost: ${addonKey}`,
+        });
+        if (intent.status === "succeeded") {
+          return NextResponse.json({ status: "boost_charged", intentId: intent.id });
+        }
+        return NextResponse.json(
+          { error: `Payment ${intent.status}. Check your card and try again.` },
+          { status: 402 },
+        );
+      }
+
+      // Recurring addon — add to the existing subscription.
       const existing = await findUsableSubscription(customer.id);
       if (existing) {
         const alreadyHas = existing.items.data.some((item) => item.price.id === priceId);
