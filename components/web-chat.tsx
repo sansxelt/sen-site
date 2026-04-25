@@ -1471,26 +1471,21 @@ function WebAssistantBubble({
     <>
       {sections.map((s, i) => {
         const isLast = i === sections.length - 1;
-        if (streaming && isLast) {
-          return (
-            <span key={i}>
-              <WebStreamingFadeText text={s.text} />
-              <span className="webchat-cursor" />
-            </span>
-          );
-        }
+        // v0.1.16 — Always render markdown, even during streaming.
+        // The previous "plain text during stream, markdown after"
+        // pattern made users see raw `**bold**` and `- list items`
+        // until the stream ended. ReactMarkdown handles partial
+        // markdown gracefully (incomplete `**bold` renders as text,
+        // then snaps to bold once the closing `**` arrives).
         return (
           <div key={i} className="md">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              // Allow data: URIs so generated images render. Default
-              // urlTransform strips them as a security measure, but
-              // we only ever inject data URIs we generated server-
-              // side via /api/ai/image, so it's safe.
               urlTransform={(url) => url}
             >
               {s.text}
             </ReactMarkdown>
+            {streaming && isLast && <span className="webchat-cursor" />}
           </div>
         );
       })}
