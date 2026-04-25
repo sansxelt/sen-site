@@ -49,6 +49,65 @@ export function WebChat({
   const lei = useLei();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  // v0.1.16 — server-persisted thread id. Null until first send (or
+  // until /api/threads/[id] loads an existing one). Same account →
+  // same threads from any device.
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const threadIdRef = useRef<string | null>(null);
+  useEffect(() => { threadIdRef.current = threadId; }, [threadId]);
+
+  // On mount: respect URL hints first.
+  //   ?new=1            → start blank, don't restore anything
+  //   ?thread=<uuid>    → load that specific thread
+  //   (otherwise)       → hydrate from the user's most recent thread
+  useEffect(() => {
+    let cancelled = false;
+    const params = typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : null;
+    const wantsNew = params?.get("new") === "1";
+    const requested = params?.get("thread");
+
+    if (wantsNew) {
+      // Strip the param so refreshes don't keep blanking the chat.
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", "/app");
+      }
+      return;
+    }
+
+    (async () => {
+      try {
+        let targetId = requested ?? null;
+        if (!targetId) {
+          const res = await fetch("/api/threads", { cache: "no-store" });
+          if (!res.ok) return;
+          const data = (await res.json()) as { threads?: Array<{ id: string }> };
+          targetId = data.threads?.[0]?.id ?? null;
+        }
+        if (!targetId || cancelled) return;
+        const detailRes = await fetch(`/api/threads/${targetId}`, { cache: "no-store" });
+        if (!detailRes.ok || cancelled) return;
+        const detail = (await detailRes.json()) as {
+          messages?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+        };
+        if (cancelled) return;
+        setThreadId(targetId);
+        const restored = (detail.messages ?? [])
+          .filter((m) => m.role === "user" || m.role === "assistant")
+          .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+        if (restored.length > 0) setMessages(restored);
+        // Clean up the ?thread= param so the URL isn't sticky on
+        // browser-back / refresh.
+        if (requested && typeof window !== "undefined") {
+          window.history.replaceState({}, "", "/app");
+        }
+      } catch {
+        // ignore — blank chat is fine
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
   const [streaming, setStreaming] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [tier, setTier] = useState<ModelTier>(
@@ -344,9 +403,18 @@ export function WebChat({
           client_time_iso: new Date().toISOString(),
           client_timezone: clientTimezone,
           client_time_label: clientTimeLabel,
+          thread_id: threadIdRef.current ?? undefined,
         }),
         signal: ac.signal,
       });
+
+      // v0.1.16 — Capture the resolved server-side thread id so
+      // follow-up turns continue the same conversation (and show in
+      // the sidebar).
+      const echoedThreadId = res.headers.get("x-sansxel-thread-id");
+      if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
+        setThreadId(echoedThreadId);
+      }
 
       // Surface plan downgrade if the server picked a lower tier
       const requested = res.headers.get("x-sansxel-tier-requested");

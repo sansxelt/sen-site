@@ -57,7 +57,8 @@
       "Bash(curl -s -o /dev/null -w \"GET https://sansxel.ai/home: %{http_code}\\\\nGET https://sansxel.ai/api/status: \" https://sansxel.ai/home)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://sansxel.ai/api/status)",
       "Bash(xargs -I {} basename {})",
-      "Read(//c/Users/SenFR/Downloads/sen-site-main/**)"
+      "Read(//c/Users/SenFR/Downloads/sen-site-main/**)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://sansxel.ai__TRACKED_VAR__)"
     ]
   }
 }

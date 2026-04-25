@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type NavItem = {
   href: string;
@@ -116,6 +117,80 @@ function UpdatesIcon() {
   );
 }
 
+// Renders the user's most recent chat threads under the Make group.
+// Hydrates client-side so the sidebar renders instantly on cold load.
+function RecentChats() {
+  const [threads, setThreads] = useState<Array<{ id: string; title: string }> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/threads", { cache: "no-store" });
+        if (!res.ok) {
+          if (!cancelled) { setThreads([]); setLoading(false); }
+          return;
+        }
+        const data = (await res.json()) as { threads?: Array<{ id: string; title: string }> };
+        if (!cancelled) { setThreads(data.threads ?? []); setLoading(false); }
+      } catch {
+        if (!cancelled) { setThreads([]); setLoading(false); }
+      }
+    })();
+    return () => { cancelled = true; };
+    // Re-fetch when the route changes back to /app — picks up new
+    // threads that were created in the chat workspace.
+  }, [pathname]);
+
+  // Only show recent chats when the user is in the workspace, not on
+  // /account/* — there it'd be noise.
+  if (pathname !== "/app" && !pathname.startsWith("/app/")) return null;
+
+  if (loading) return null;
+  if (!threads || threads.length === 0) return null;
+
+  // Cap at 8 visible — full thread list belongs to a future "All chats"
+  // sub-page (out of scope for the first ship).
+  const visible = threads.slice(0, 8);
+
+  const handleNew = async () => {
+    try {
+      // Just navigate to /app with a query param — WebChat reads it
+      // and starts blank instead of restoring the most-recent thread.
+      window.location.href = "/app?new=1";
+    } catch {
+      // ignore
+    }
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={handleNew}
+        className="mt-1 flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium text-violet-300 transition hover:bg-violet-400/10 hover:text-violet-100"
+      >
+        <span aria-hidden>＋</span>
+        <span>New chat</span>
+      </button>
+      <div className="mt-1 flex flex-col gap-0.5">
+        {visible.map((t) => (
+          <Link
+            key={t.id}
+            href={`/app?thread=${t.id}`}
+            className="truncate rounded-lg px-3 py-1 text-xs text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+            title={t.title}
+          >
+            {t.title}
+          </Link>
+        ))}
+      </div>
+    </>
+  );
+}
+
 function ChatIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
@@ -217,12 +292,16 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
         </Link>
 
         <nav className="flex flex-col gap-3">
-          {navGroups.map((group) => (
+          {navGroups.map((group, groupIdx) => (
             <div key={group.label} className="flex flex-col gap-0.5">
               <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
                 {group.label}
               </div>
               {group.items.map(navLink)}
+              {/* Recent chats list lives directly under "Make" so it's
+                  the first thing the eye lands on. Loaded async so it
+                  never blocks initial sidebar render. */}
+              {groupIdx === 0 && <RecentChats />}
             </div>
           ))}
         </nav>

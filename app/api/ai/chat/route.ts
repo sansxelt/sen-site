@@ -29,6 +29,11 @@ import {
   PLAN_LIMITS,
 } from "../../../../lib/plan-limits";
 import { detectLanguage, langLabel } from "../../../../lib/i18n";
+import {
+  appendMessage as saveMessage,
+  createThread as createChatThread,
+  getThread as getChatThread,
+} from "../../../../lib/chat-history";
 
 export const runtime = "nodejs";
 
@@ -181,6 +186,11 @@ type ChatBody = {
   // model and the response is streamed as JSON-Lines so the client
   // can dispatch tool_use blocks and feed tool_result back in.
   tools_enabled?: boolean;
+  // v0.1.16 — thread persistence. If omitted, server creates a new
+  // thread and returns its id in the x-sansxel-thread-id response
+  // header so the client can stash it for follow-up turns. Same
+  // account → same threads from any device.
+  thread_id?: string;
   // v0.1.12 — client-supplied local time so the model can answer
   // "what time is it for me" without claiming it has no access to
   // the system clock. Client passes IANA timezone + a pre-formatted
@@ -745,6 +755,46 @@ export async function POST(request: Request) {
         ? [...SERVER_TOOLS, ...(DESKTOP_TOOLS as unknown as Anthropic.Messages.Tool[])]
         : SERVER_TOOLS;
 
+    // v0.1.16 — Thread persistence. Resolve or create the thread so
+    // the conversation lives server-side and follows the user across
+    // devices. Save the latest user turn before the model starts so
+    // it's persisted even if the stream errors.
+    let resolvedThreadId: string | null = null;
+    try {
+      const requestedThreadId =
+        typeof payload.thread_id === "string" && payload.thread_id.trim()
+          ? payload.thread_id.trim()
+          : null;
+      if (requestedThreadId) {
+        const owned = await getChatThread(email, requestedThreadId);
+        resolvedThreadId = owned ? owned.id : null;
+      }
+      if (!resolvedThreadId) {
+        const created = await createChatThread(email);
+        if (created) resolvedThreadId = created.id;
+      }
+      if (resolvedThreadId) {
+        const lastUserTurn = [...payload.messages].reverse().find((m) => m.role === "user");
+        if (lastUserTurn) {
+          const text = chatContentToText(lastUserTurn.content);
+          if (text) {
+            void saveMessage({
+              email,
+              threadId: resolvedThreadId,
+              role: "user",
+              content: text,
+              images: lastUserTurn.images?.map((i) => ({
+                media_type: i.media_type,
+                data: i.data,
+              })),
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("ai/chat thread persist (user turn) failed:", err);
+    }
+
     const stream = await client.messages.stream({
       model: descriptor.model,
       // Voice replies are short by design (system prompt enforces
@@ -767,6 +817,10 @@ export async function POST(request: Request) {
         ? "desktop"
         : "web";
     const encoder = new TextEncoder();
+    // Buffer the assistant's text deltas so we can persist the full
+    // reply once streaming finishes. Doesn't change what the client
+    // sees — just collects in parallel.
+    let assistantBuffer = "";
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
         let inputTokens = 0;
@@ -835,6 +889,7 @@ export async function POST(request: Request) {
                 event.type === "content_block_delta" &&
                 event.delta.type === "text_delta"
               ) {
+                assistantBuffer += event.delta.text;
                 writeLine({ type: "text", text: event.delta.text });
               }
               if (event.type === "message_delta") {
@@ -848,6 +903,7 @@ export async function POST(request: Request) {
               event.delta.type === "text_delta"
             ) {
               // Legacy plain-text path — unchanged.
+              assistantBuffer += event.delta.text;
               controller.enqueue(encoder.encode(event.delta.text));
             }
           }
@@ -866,6 +922,17 @@ export async function POST(request: Request) {
             total_tokens: inputTokens + outputTokens,
             duration_ms: Date.now() - startedAt,
           });
+          // v0.1.16 — Persist the assistant turn so the next device
+          // sees the full conversation. Skip on empty buffer (model
+          // returned only tool calls / nothing useful).
+          if (resolvedThreadId && assistantBuffer.trim()) {
+            void saveMessage({
+              email,
+              threadId: resolvedThreadId,
+              role: "assistant",
+              content: assistantBuffer,
+            });
+          }
         }
       },
     });
@@ -897,6 +964,9 @@ export async function POST(request: Request) {
         "x-sansxel-weekly-limit": String(
           planLimit.weekly_chat_requests ?? "",
         ),
+        // v0.1.16 — Echo the resolved thread id so the client can
+        // stash it for follow-up turns + show it in the URL/sidebar.
+        "x-sansxel-thread-id": resolvedThreadId ?? "",
       },
     });
   } catch (err) {
