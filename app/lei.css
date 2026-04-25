@@ -611,24 +611,6 @@
   }
 }
 
-/* Thinking indicator — word + dots before the first token streams
-   in. Replaces silent dots so the state is named, not just shown. */
-.webchat-thinking {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.webchat-thinking-label {
-  font-size: 13px;
-  color: rgba(196, 181, 253, 0.85);
-  letter-spacing: 0.01em;
-  animation: webchat-thinking-shimmer 1.6s ease-in-out infinite;
-}
-@keyframes webchat-thinking-shimmer {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
-}
-
 /* Floating "jump to bottom" pill — appears when the user scrolls
    up while a reply is streaming so they can re-anchor with one
    click. ChatGPT/Claude pattern. */

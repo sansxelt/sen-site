@@ -59,7 +59,10 @@
       "Bash(xargs -I {} basename {})",
       "Read(//c/Users/SenFR/Downloads/sen-site-main/**)",
       "Bash(curl -s -o /dev/null -w '%{http_code}' --max-time 10 https://sansxel.ai__TRACKED_VAR__)",
-      "Bash(grep -n 'Plan: \\\\|✓ \\\\${plan}\\\\|{plan}' c:/Users/SenFR/Downloads/sen-site-main/components/web-chat.tsx)"
+      "Bash(grep -n 'Plan: \\\\|✓ \\\\${plan}\\\\|{plan}' c:/Users/SenFR/Downloads/sen-site-main/components/web-chat.tsx)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -L --max-time 10 https://sansxel.ai__TRACKED_VAR__)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST --max-time 10 https://sansxel.ai__TRACKED_VAR__ -H 'Content-Type: application/json' -d '{}')",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST --max-time 10 https://sansxel.ai__TRACKED_VAR__ -d '{}')"
     ]
   }
 }

@@ -1775,20 +1775,16 @@ function prettyAttSize(bytes: number): string {
 }
 
 function WebBounceDots() {
-  // v0.1.16 — Used while the assistant turn is in-flight but no
-  // tokens have streamed yet. Word + dots so the state is named
-  // ('Thinking') instead of just animated puff. Disappears the
-  // moment the first text delta lands. We do NOT reveal the
-  // model's internal reasoning content; <think>...</think> blocks
-  // are stripped before rendering (see parseSections).
+  // Pre-first-token indicator. Three bouncing dots, no word —
+  // the previous "Thinking" + shimmer label visually collided
+  // with the streaming cursor (purple bar) and looked broken.
+  // Internal reasoning is never rendered; <think>...</think>
+  // blocks are stripped server-of-render in parseSections().
   return (
-    <span className="webchat-thinking">
-      <span className="webchat-thinking-label">Thinking</span>
-      <span className="webchat-dots">
-        <span className="webchat-dot" />
-        <span className="webchat-dot" />
-        <span className="webchat-dot" />
-      </span>
+    <span className="webchat-dots" aria-label="Thinking">
+      <span className="webchat-dot" />
+      <span className="webchat-dot" />
+      <span className="webchat-dot" />
     </span>
   );
 }
