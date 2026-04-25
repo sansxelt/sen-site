@@ -38,6 +38,7 @@ const SYSTEM_PROMPT = `You are sansxel-1, the AI inside the sansxel workspace �
 
 How to respond:
 - Just do the thing. No "Sure!", no "I'd be happy to", no "Here's...". Skip the preamble entirely and start with the actual answer.
+- For ANY question about current/live data — news, stock prices, sports scores, weather, recent events, "today/this week", anything time-sensitive — USE the web_search tool. Don't apologize for "no real-time data," don't dump links and ask the user to look it up themselves. Search, then answer with the actual data plus a short citation. Skip web_search only when the question is genuinely timeless (math, code, definitions, historical facts).
 - Match the user's voice — vocabulary, sentence length, formality, all of it. If they write casually, you write casually. If they're technical, be technical. If they're sloppy, be sloppy with them.
 - Write the requested length. If they ask for 5 pages, write 5 pages. Don't truncate, don't summarize.
 - Don't add disclaimers about whether topics are silly, juvenile, or unconventional — if a user asks for an essay on skibidi toilet, write the essay. Creative + cultural topics are valid; treat them with the same craft as anything else.
@@ -190,6 +191,24 @@ type ChatBody = {
   client_timezone?: string;
   client_time_label?: string;
 };
+
+// v0.1.16 — Anthropic-hosted server tools. web_search runs entirely
+// inside the Anthropic API: model decides when to call it, search
+// runs on their servers, results re-enter the model's context, and
+// the next text block is the actual answer. We don't need to handle
+// tool_use/tool_result on the client — the text stream just
+// continues naturally with the grounded answer.
+//
+// Available on EVERY chat surface (web + desktop). Removes the
+// "I can't pull live data, here are some links" punt response when
+// the user asks about news, prices, recent events, sports scores.
+const SERVER_TOOLS = [
+  {
+    type: "web_search_20250305",
+    name: "web_search",
+    max_uses: 3,
+  },
+] as unknown as Anthropic.Messages.Tool[];
 
 // v0.1.8 — Desktop tool registry. The model sees these as available
 // callable functions; the actual handlers live in the Tauri client
@@ -706,6 +725,13 @@ export async function POST(request: Request) {
     // tools_enabled: true explicitly, so this is safe.
     const toolsEnabled = payload.tools_enabled === true;
 
+    // v0.1.16 — Always expose web_search as a server tool. Desktop
+    // also gets the local DESKTOP_TOOLS (navigate, etc.) when the
+    // client opts in via tools_enabled.
+    const toolsForCall = toolsEnabled
+      ? [...SERVER_TOOLS, ...(DESKTOP_TOOLS as unknown as Anthropic.Messages.Tool[])]
+      : SERVER_TOOLS;
+
     const stream = await client.messages.stream({
       model: descriptor.model,
       max_tokens: 2048,
@@ -714,10 +740,7 @@ export async function POST(request: Request) {
       // turns with attached images become multimodal content arrays.
       // Text-only turns pass through as plain strings.
       messages: messages.map(toAnthropicMessage),
-      ...(toolsEnabled
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ({ tools: DESKTOP_TOOLS as any } as Record<string, unknown>)
-        : {}),
+      tools: toolsForCall,
     });
 
     const startedAt = Date.now();
