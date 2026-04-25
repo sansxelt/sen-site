@@ -243,6 +243,14 @@ export function WebChat({
         };
         if (cancelled) return;
         setThreadId(targetId);
+        // Reflect the active thread in the URL so the chat history
+        // rail's active-state outline picks it up. ReplaceState (no
+        // history entry) so the back button still feels normal.
+        if (typeof window !== "undefined" && !requestedThreadParam) {
+          const url = new URL(window.location.href);
+          url.searchParams.set("thread", targetId);
+          window.history.replaceState({}, "", url.pathname + url.search);
+        }
         const restored = (detail.messages ?? [])
           .filter((m) => m.role === "user" || m.role === "assistant")
           .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
@@ -616,9 +624,13 @@ export function WebChat({
       const echoedThreadId = res.headers.get("x-sansxel-thread-id");
       if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
         setThreadId(echoedThreadId);
-        // Broadcast so the workshop sidebar's RecentChats list
-        // re-fetches and shows the new thread without a page reload.
+        // Reflect the new active thread in the URL so the rail's
+        // active outline picks up immediately.
         if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          url.searchParams.set("thread", echoedThreadId);
+          url.searchParams.delete("new");
+          window.history.replaceState({}, "", url.pathname + url.search);
           window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
         }
       }

@@ -233,8 +233,27 @@
   outline: none;
 }
 .chat-history-item.is-active {
-  background: rgba(167,139,250,0.14);
-  border-color: rgba(167,139,250,0.55);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.20), rgba(217, 70, 239, 0.12));
+  border-color: rgba(167, 139, 250, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(167, 139, 250, 0.45),
+    0 4px 14px rgba(139, 92, 246, 0.20);
+}
+.chat-history-item.is-active .chat-history-item-title {
+  color: #faf5ff;
+  font-weight: 700;
+}
+.chat-history-item.is-active::before {
+  /* Left accent bar — definitive 'this is the open thread' tell. */
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #c4b5fd, #d946ef);
+  box-shadow: 0 0 8px rgba(196, 181, 253, 0.7);
 }
 .chat-history-item.is-busy { opacity: 0.5; pointer-events: none; }
 .chat-history-item-body {
