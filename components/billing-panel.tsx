@@ -6,7 +6,7 @@ import { useState } from "react";
 import { billingAddons, pricingPlans } from "../lib/pricing";
 import type { BillingState } from "../lib/billing-state";
 import { UpdatePaymentMethodModal } from "./update-payment-method-modal";
-import { PayPalAddonButton } from "./paypal-addon-button";
+import { PayPalAddonButton, PayPalAddonsProvider } from "./paypal-addon-button";
 // 3D tilt removed — billing/payment surfaces shouldn't feel "playful";
 // users want them to read as steady and trustworthy.
 
@@ -231,7 +231,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
             {state.activeAddons.length === 0 && availableAddons.length === 0 ? (
               <div className="text-sm text-neutral-500">No addons available.</div>
             ) : (
-              <>
+              <PayPalAddonsProvider clientId={paypalClientId || ""}>
                 {state.activeAddons.map(({ addon }) => (
                   <div key={addon.key} className="flex items-start justify-between gap-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.04] p-4">
                     <div className="min-w-0 flex-1">
@@ -274,7 +274,6 @@ export function BillingPanel({ state, publishableKey }: Props) {
                       </button>
                       {paypalClientId && addon.monthlyValue > 0 && (
                         <PayPalAddonButton
-                          clientId={paypalClientId}
                           addonKey={addon.key}
                           addonName={addon.name}
                           amountUsd={addon.monthlyValue}
@@ -284,7 +283,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
                     </div>
                   </div>
                 ))}
-              </>
+              </PayPalAddonsProvider>
             )}
           </div>
         </section>
