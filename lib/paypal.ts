@@ -237,6 +237,58 @@ export async function getPaypalSubscription(id: string): Promise<PaypalSubscript
   return await paypalFetch<PaypalSubscription>(`/v1/billing/subscriptions/${id}`);
 }
 
+// ── One-time orders (used for addons) ────────────────────────────────────
+//
+// PayPal Orders v2 API — `intent: CAPTURE` means the funds are pulled
+// in a single confirmed step after the user approves. This is the
+// right fit for addons (one-time top-ups + 1-month addon activations
+// without requiring a pre-created subscription plan in the PayPal
+// dashboard).
+
+export type PaypalOrder = { id: string; status: string };
+
+export async function createPaypalOrder(args: {
+  amountUsd: number;
+  description: string;
+  customId: string;
+}): Promise<PaypalOrder> {
+  return await paypalFetch<PaypalOrder>("/v2/checkout/orders", {
+    method: "POST",
+    jsonBody: {
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: {
+            currency_code: "USD",
+            value: args.amountUsd.toFixed(2),
+          },
+          description: args.description.slice(0, 127),
+          custom_id: args.customId.slice(0, 127),
+        },
+      ],
+      // We render a "Pay" button inside our own UI; no PayPal-hosted
+      // landing page is needed.
+      application_context: {
+        shipping_preference: "NO_SHIPPING",
+        user_action: "PAY_NOW",
+      },
+    },
+  });
+}
+
+export async function capturePaypalOrder(orderId: string): Promise<{
+  id: string;
+  status: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  raw: any;
+}> {
+  const result = await paypalFetch<{ id: string; status: string }>(
+    `/v2/checkout/orders/${orderId}/capture`,
+    { method: "POST" },
+  );
+  return { id: result.id, status: result.status, raw: result };
+}
+
 export async function cancelPaypalSubscription(id: string, reason = "user requested"): Promise<void> {
   await paypalFetch(`/v1/billing/subscriptions/${id}/cancel`, {
     method: "POST",

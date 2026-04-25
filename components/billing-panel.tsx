@@ -6,6 +6,7 @@ import { useState } from "react";
 import { billingAddons, pricingPlans } from "../lib/pricing";
 import type { BillingState } from "../lib/billing-state";
 import { UpdatePaymentMethodModal } from "./update-payment-method-modal";
+import { PayPalAddonButton } from "./paypal-addon-button";
 // 3D tilt removed — billing/payment surfaces shouldn't feel "playful";
 // users want them to read as steady and trustworthy.
 
@@ -36,6 +37,8 @@ export function BillingPanel({ state, publishableKey }: Props) {
   const [busy, setBusy]   = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pmOpen, setPmOpen] = useState(false);
+  // NEXT_PUBLIC_* vars are inlined at build time, safe to read on client.
+  const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
 
   async function post(path: string, body?: unknown) {
     const res = await fetch(path, {
@@ -252,21 +255,33 @@ export function BillingPanel({ state, publishableKey }: Props) {
                   </div>
                 ))}
                 {availableAddons.map((addon) => (
-                  <div key={addon.key} className="flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-white/20">
+                  <div key={addon.key} className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 transition hover:border-white/20 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-white">{addon.name}</div>
                       <div className="mt-1 text-xs text-neutral-400">{addon.description}</div>
                       <div className="mt-1 text-xs font-medium text-neutral-300">{addon.monthlyLabel}</div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleAddAddon(addon.key)}
-                      disabled={busy === `add-${addon.key}`}
-                      className="shrink-0 rounded-xl bg-white px-4 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-60"
-                      style={{ color: "#0a0a0c" }}
-                    >
-                      {busy === `add-${addon.key}` ? "Adding…" : "Add"}
-                    </button>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleAddAddon(addon.key)}
+                        disabled={busy === `add-${addon.key}`}
+                        className="w-full rounded-xl bg-white px-4 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-60 sm:w-auto"
+                        style={{ color: "#0a0a0c" }}
+                        title="Add via card (modifies your existing subscription)"
+                      >
+                        {busy === `add-${addon.key}` ? "Adding…" : "Add with card"}
+                      </button>
+                      {paypalClientId && addon.monthlyValue > 0 && (
+                        <PayPalAddonButton
+                          clientId={paypalClientId}
+                          addonKey={addon.key}
+                          addonName={addon.name}
+                          amountUsd={addon.monthlyValue}
+                          onActivated={() => router.refresh()}
+                        />
+                      )}
+                    </div>
                   </div>
                 ))}
               </>
