@@ -119,13 +119,20 @@ export function WebChat({
   const lei = useLei();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
+  // v0.1.16 — Hoisted up so the document-level paste handler below
+  // can focus the textarea after routing a text paste through it.
+  // Same ref is reused by the textarea element itself further down.
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // v0.1.16 — Ctrl+V / Cmd+V paste support for images and videos.
-  // Captures clipboard FILES (copying from file explorer) AND
-  // ITEMS (screenshot copies, image copies from a browser tab,
-  // etc.). Routes them to the LEI attachment system same as drag-
-  // drop. preventDefault only when we actually consumed files so
-  // pasting plain text into the textarea still works.
+  // v0.1.16 — Ctrl+V / Cmd+V paste support, three modes:
+  //   1. Clipboard has FILES (image, video, doc): route to LEI
+  //      attachments same as drag-drop, preventDefault.
+  //   2. Clipboard has TEXT and the user is NOT focused in any
+  //      input/textarea/contenteditable: append the text to the chat
+  //      input + focus the textarea. Mirrors the "type anywhere to
+  //      focus" behavior so paste has the same property.
+  //   3. Clipboard has TEXT and the user IS in an input already:
+  //      let the default browser paste happen (do nothing).
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
       const dt = e.clipboardData;
@@ -153,9 +160,29 @@ export function WebChat({
           }
         }
       }
-      if (collected.length === 0) return;
+      if (collected.length > 0) {
+        e.preventDefault();
+        void lei.addFiles(collected);
+        return;
+      }
+
+      // Text-paste fallback: only kicks in when the user pasted
+      // somewhere OTHER than an input. Otherwise the default browser
+      // paste handles it natively.
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      const inField =
+        tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable;
+      if (inField) return;
+      const text = dt.getData("text/plain");
+      if (!text) return;
       e.preventDefault();
-      void lei.addFiles(collected);
+      setInput((prev) => prev + text);
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus();
+        const ta = textareaRef.current;
+        if (ta) ta.selectionStart = ta.selectionEnd = ta.value.length;
+      });
     };
     document.addEventListener("paste", onPaste);
     return () => document.removeEventListener("paste", onPaste);
@@ -1302,7 +1329,8 @@ export function WebChat({
   const showEmpty = messages.length === 0;
   const allowedTiers = new Set(tiers.map((t) => t.tier));
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  // textareaRef is declared at the top of the component so the
+  // document-level paste handler can use it. Reused here.
 
   // v0.1.16 — Desktop-style "type anywhere to focus the input" +
   // '/' shortcut. If the user starts pressing keys without focusing
