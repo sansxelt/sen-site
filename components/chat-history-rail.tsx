@@ -169,7 +169,26 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
           </div>
           <button
             type="button"
-            onClick={() => router.replace("/app?new=1")}
+            onClick={async () => {
+              // Eager create — POST /api/threads gives us a real id,
+              // navigate to its dedicated URL. So if the user types
+              // and then navigates away before sending, the thread
+              // still exists and they can resume from the rail.
+              try {
+                const res = await fetch("/api/threads", { method: "POST" });
+                if (res.ok) {
+                  const data = (await res.json()) as { thread?: { id: string } };
+                  if (data.thread?.id) {
+                    router.push(`/app?thread=${data.thread.id}`);
+                    window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+                    return;
+                  }
+                }
+              } catch {
+                // fall through to the legacy ?new=1 path
+              }
+              router.replace("/app?new=1");
+            }}
             className="chat-history-new-pill"
             title="Start a new chat"
           >

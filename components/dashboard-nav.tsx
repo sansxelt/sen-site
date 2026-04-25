@@ -326,8 +326,24 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
   // Close the drawer whenever the route changes (user navigated).
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
-  const handleNewChat = () => {
-    // Soft nav so WebChat clears state instead of full reload.
+  const handleNewChat = async () => {
+    // Eager create — POST /api/threads first so the new thread has
+    // a real id (and shows in the sidebar) before the user types.
+    // If they navigate away mid-draft they can still resume from
+    // the sidebar.
+    try {
+      const res = await fetch("/api/threads", { method: "POST" });
+      if (res.ok) {
+        const data = (await res.json()) as { thread?: { id: string } };
+        if (data.thread?.id) {
+          router.push(`/app?thread=${data.thread.id}`);
+          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+          return;
+        }
+      }
+    } catch {
+      // network hiccup — fall back to the legacy ?new=1 client-state-only path
+    }
     router.replace("/app?new=1");
   };
 
