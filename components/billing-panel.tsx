@@ -6,7 +6,8 @@ import { useState } from "react";
 import { billingAddons, pricingPlans } from "../lib/pricing";
 import type { BillingState } from "../lib/billing-state";
 import { UpdatePaymentMethodModal } from "./update-payment-method-modal";
-import { useTilt } from "./use-tilt";
+// 3D tilt removed — billing/payment surfaces shouldn't feel "playful";
+// users want them to read as steady and trustworthy.
 
 type Props = {
   state: BillingState;
@@ -95,10 +96,6 @@ export function BillingPanel({ state, publishableKey }: Props) {
   // v0.1.13 \u2014 3D tilt on each billing section so the "main changing UI"
   // matches the heist-style 3D affordance the rest of the marketing
   // surfaces have. Mouse-only; touch falls through.
-  const planTilt = useTilt();
-  const addonsTilt = useTilt();
-  const paymentTilt = useTilt();
-  const invoicesTilt = useTilt();
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -110,10 +107,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
 
       {/* ── Current plan ────────────────────────────────────────────── */}
       <section
-        ref={planTilt.ref}
-        onPointerMove={planTilt.onPointerMove}
-        onPointerLeave={planTilt.onPointerLeave}
-        className={`rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6 ${planTilt.tiltClass}`}
+        className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -225,10 +219,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
       {/* ── Addons ─────────────────────────────────────────────────── */}
       {hasPlan && (
         <section
-          ref={addonsTilt.ref}
-          onPointerMove={addonsTilt.onPointerMove}
-          onPointerLeave={addonsTilt.onPointerLeave}
-          className={`rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6 ${addonsTilt.tiltClass}`}
+          className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
         >
           <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
             Addons
@@ -286,10 +277,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
 
       {/* ── Payment method ─────────────────────────────────────────── */}
       <section
-        ref={paymentTilt.ref}
-        onPointerMove={paymentTilt.onPointerMove}
-        onPointerLeave={paymentTilt.onPointerLeave}
-        className={`rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6 ${paymentTilt.tiltClass}`}
+        className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -323,10 +311,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
       {/* ── Invoices ───────────────────────────────────────────────── */}
       {state.invoices.length > 0 && (
         <section
-          ref={invoicesTilt.ref}
-          onPointerMove={invoicesTilt.onPointerMove}
-          onPointerLeave={invoicesTilt.onPointerLeave}
-          className={`rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6 ${invoicesTilt.tiltClass}`}
+          className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
         >
           <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
             Recent invoices

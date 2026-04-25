@@ -200,18 +200,26 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           <span className="text-sm font-semibold text-white">sansxel</span>
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {userEmail && (
-            <span className="hidden max-w-[160px] truncate text-xs text-neutral-500 sm:block">
+            <span className="hidden max-w-[140px] truncate text-xs text-neutral-500 sm:block">
               {userEmail}
             </span>
           )}
+          <Link
+            href="/home"
+            className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"
+            title="Return to home"
+          >
+            <HomeIcon />
+            <span className="hidden xs:inline sm:inline">Home</span>
+          </Link>
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-neutral-400 transition hover:bg-white/10 hover:text-white"
+            className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-neutral-400 transition hover:bg-white/10 hover:text-white"
           >
             <SignOutIcon />
-            Sign out
+            <span className="hidden xs:inline sm:inline">Sign out</span>
           </button>
         </div>
       </header>
