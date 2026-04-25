@@ -458,6 +458,40 @@ html[data-theme="light"] [class*="text-fuchsia-3"],
 html[data-theme="light"] [class*="text-pink-2"],
 html[data-theme="light"] [class*="text-pink-3"] { color: #a21caf !important; }
 
+/* Heist preview shell + inner — these draw a 3D-style outer
+   gradient/glow + an inner blurred backdrop tuned for dark bg.
+   On light bg the white-ish shadows + the heavy black drop-shadow
+   below paint a visible "halo" around every hero card. Tone the
+   layers down so the card sits clean on the light page. */
+html[data-theme="light"] .sansxel-preview-shell {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.10) 0%,
+      rgba(0, 0, 0, 0.05) 28%,
+      rgba(0, 0, 0, 0.02) 100%
+    ) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 12px 26px -16px rgba(0, 0, 0, 0.18),
+    0 6px 14px -10px rgba(0, 0, 0, 0.10) !important;
+}
+html[data-theme="light"] .sansxel-preview-shell::before {
+  /* Kill the outer glow halo on light — it reads as a dirty grey
+     rectangle around the card. */
+  opacity: 0 !important;
+}
+html[data-theme="light"] .sansxel-preview-inner {
+  backdrop-filter: blur(0) !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.04) inset !important;
+}
+html[data-theme="light"] .sansxel-preview-inner::before {
+  background: transparent !important;
+}
+
 /* Workshop on desktop CTA card body text was text-neutral-300
    which my earlier override flips dark — but the colored title +
    link inside need their own treatment (handled by violet sweep
