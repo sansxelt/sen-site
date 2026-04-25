@@ -243,16 +243,18 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
 
   // ── Closed state: floating launcher button ─────────────────────
   if (!open) {
-    // On /app the chat workspace already has its own input + voice +
-    // attach affordances; a second floating bubble fights for space
-    // (was visually bleeding into the input bar). The keyboard
-    // shortcut ⌘J / Ctrl+J still opens the panel when wanted.
-    if (pathname === "/app") return null;
+    // On /app the chat input bar lives at the bottom of the viewport,
+    // so the default bottom-right bubble visually bled into the Send
+    // button area. Tag the launcher so CSS can lift it up out of the
+    // input row's path on this route specifically.
+    const launcherClass =
+      "copilot-launcher hx-press" +
+      (pathname === "/app" ? " copilot-launcher--app" : "");
     return (
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="copilot-launcher hx-press"
+        className={launcherClass}
         title="Open copilot (⌘J)"
         aria-label="Open copilot"
       >
