@@ -1374,7 +1374,12 @@ export function WebChat({
         <WebVoiceOverlay
           state={voiceState}
           level={audioLevel}
+          error={chatError}
           onMicTap={() => {
+            // Tapping the orb when there's an error clears it +
+            // retries (most common case: mic permission was denied
+            // but user wants another try).
+            if (chatError) setChatError(null);
             if (voiceState === "recording") {
               const r = recorderRef.current;
               if (r && r.state !== "inactive") r.stop();
@@ -1860,18 +1865,23 @@ function WebVoiceWave({ mode }: { mode: "listening" | "speaking" }) {
 function WebVoiceOverlay({
   state,
   level,
+  error,
   onMicTap,
   onExit,
 }: {
   state: "idle" | "recording" | "transcribing" | "speaking";
   level: number;
+  error: string | null;
   onMicTap: () => void;
   onExit: () => void;
 }) {
   const SPEAKING_THRESHOLD = 0.08;
   let status: string;
   let subStatus: string;
-  if (state === "transcribing") {
+  if (error) {
+    status = "Mic blocked";
+    subStatus = "Allow microphone access in your browser, then tap the orb to retry";
+  } else if (state === "transcribing") {
     status = "Thinking";
     subStatus = "Working out what you said";
   } else if (state === "speaking") {
@@ -1886,8 +1896,8 @@ function WebVoiceOverlay({
       subStatus = "Speak when you're ready";
     }
   } else {
-    status = "Tap to talk";
-    subStatus = "Connect your voice";
+    status = "Tap the orb to start";
+    subStatus = "Sansxel will listen, then talk back. Tap again to interrupt.";
   }
 
   // Reactive scale for the orb based on real audio level. Capped so
