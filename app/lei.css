@@ -13,9 +13,77 @@
 .lei-shell--split {
   grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
 }
+.lei-shell--with-history {
+  grid-template-columns: minmax(0, 1fr) 240px;
+}
 @media (max-width: 900px) {
-  .lei-shell--split { grid-template-columns: 1fr; }
+  .lei-shell--split,
+  .lei-shell--with-history { grid-template-columns: 1fr; }
   .lei-shell-panel { border-left: 0; border-top: 1px solid rgba(255,255,255,0.06); }
+  /* Chat history rail hidden on small screens — left sidebar +
+     bottom nav already give thread access. */
+  .chat-history-rail { display: none !important; }
+}
+
+/* ── Chat history rail (right side of /app workspace) ─────────── */
+.chat-history-rail {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  background: rgba(15,12,28,0.4);
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+.chat-history-head {
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.chat-history-new {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.20), rgba(217,70,239,0.14));
+  border: 1px solid rgba(167,139,250,0.40);
+  color: #ede9fe;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.chat-history-new:hover {
+  background: linear-gradient(135deg, rgba(139,92,246,0.30), rgba(217,70,239,0.20));
+  border-color: rgba(167,139,250,0.65);
+}
+.chat-history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 6px 12px;
+  display: flex; flex-direction: column;
+  gap: 1px;
+}
+.chat-history-empty {
+  padding: 14px 10px;
+  font-size: 11.5px;
+  color: rgba(229,231,235,0.45);
+  text-align: center;
+}
+.chat-history-item {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: rgba(229,231,235,0.75);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 120ms ease, color 120ms ease;
+}
+.chat-history-item:hover {
+  background: rgba(167,139,250,0.10);
+  color: #f5f3ff;
 }
 .lei-shell-main { min-width: 0; min-height: 0; }
 .lei-shell-panel {
