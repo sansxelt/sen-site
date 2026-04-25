@@ -63,6 +63,31 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     };
     void load();
 
+    // One-shot per-session backfill: re-run AI title generation for
+    // any threads still showing snippet/placeholder titles. Silent —
+    // success just broadcasts threads:changed which retriggers load.
+    // sessionStorage key prevents the request from firing on every
+    // route change in the same tab session.
+    if (typeof window !== "undefined") {
+      const key = "sansxel.titles.backfilled";
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        void (async () => {
+          try {
+            const res = await fetch("/api/threads/backfill-titles", { method: "POST" });
+            if (res.ok) {
+              const data = (await res.json()) as { updated?: number };
+              if ((data.updated ?? 0) > 0) {
+                window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+              }
+            }
+          } catch {
+            // ignore — backfill is best-effort
+          }
+        })();
+      }
+    }
+
     const onChanged = () => { void load(); };
     const onFocus = () => { void load(); };
     if (typeof window !== "undefined") {
