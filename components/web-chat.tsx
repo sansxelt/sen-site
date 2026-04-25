@@ -77,6 +77,12 @@ export function WebChat({
   // that actually gets sent — Web Speech is display-only because its
   // accuracy is uneven across browsers and accents.
   const [liveTranscript, setLiveTranscript] = useState("");
+  // Accumulator for the FINAL portion of the transcript across events.
+  // Web Speech returns cumulative interim results each event (each
+  // event's interim REPLACES the last); only when a result becomes
+  // final does it move into the canonical text. Mixing the two
+  // without this ref produced "eyeyebroweyebrow" duplication.
+  const finalTranscriptRef = useRef("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const speechRecognitionRef = useRef<any>(null);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
@@ -722,6 +728,7 @@ export function WebChat({
           try { speechRecognitionRef.current.stop(); } catch { /* ignore */ }
           speechRecognitionRef.current = null;
         }
+        finalTranscriptRef.current = "";
         setLiveTranscript("");
         if (!voiceModeRef.current && micStreamRef.current) {
           micStreamRef.current.getTracks().forEach((t) => t.stop());
@@ -776,18 +783,20 @@ export function WebChat({
           rec.lang = navigator.language || "en-US";
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           rec.onresult = (event: any) => {
+            // Walk only the new results since last event. Final pieces
+            // get committed to the ref accumulator (persistent across
+            // events); interim is always the latest replacement, never
+            // appended — that's the source of the duplication bug.
             let interim = "";
-            let finalText = "";
             for (let i = event.resultIndex; i < event.results.length; i++) {
               const t = event.results[i][0].transcript;
-              if (event.results[i].isFinal) finalText += t;
-              else interim += t;
+              if (event.results[i].isFinal) {
+                finalTranscriptRef.current += t;
+              } else {
+                interim += t;
+              }
             }
-            setLiveTranscript((prev) => {
-              // Final pieces accumulate; interim replaces the tail.
-              const base = finalText ? prev + finalText : prev;
-              return (base + interim).trimStart();
-            });
+            setLiveTranscript((finalTranscriptRef.current + interim).trimStart());
           };
           rec.onerror = () => {
             // Permission denied / network — leave preview empty,
@@ -795,6 +804,7 @@ export function WebChat({
           };
           rec.start();
           speechRecognitionRef.current = rec;
+          finalTranscriptRef.current = "";
           setLiveTranscript("");
         }
       } catch {
