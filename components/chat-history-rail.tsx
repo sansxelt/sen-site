@@ -1,9 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-type Thread = { id: string; title: string };
+type Thread = { id: string; title: string; updated_at?: string };
+
+function relativeTime(iso?: string): string {
+  if (!iso) return "";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "";
+  const diff = Date.now() - t;
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d ago`;
+  const w = Math.floor(d / 7);
+  if (w < 5) return `${w}w ago`;
+  const mo = Math.floor(d / 30);
+  return `${mo}mo ago`;
+}
 
 // Right-side rail: chat history + new-chat + per-row rename/delete.
 // All navigation goes through router.push so the WebChat's
@@ -15,10 +33,18 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [query, setQuery] = useState("");
   const pathname = usePathname();
   const params = useSearchParams();
   const router = useRouter();
   const activeThreadId = params?.get("thread") ?? null;
+
+  const visibleThreads = useMemo(() => {
+    if (!threads) return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return threads;
+    return threads.filter((t) => t.title.toLowerCase().includes(q));
+  }, [threads, query]);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,7 +135,34 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   return (
     <aside className="chat-history-rail">
       <div className="chat-history-head">
-        <div className="chat-history-title">Chat history</div>
+        <div className="chat-history-head-row">
+          <div>
+            <div className="chat-history-title">Chat history</div>
+            <div className="chat-history-count">
+              {threads ? `${threads.length} saved` : "—"}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.replace("/app?new=1")}
+            className="chat-history-new-pill"
+            title="Start a new chat"
+          >
+            New
+          </button>
+        </div>
+        {threads && threads.length > 0 && (
+          <div className="chat-history-search">
+            <span aria-hidden className="chat-history-search-icon">🔍</span>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search threads…"
+              className="chat-history-search-input"
+            />
+          </div>
+        )}
       </div>
       <div className="chat-history-list">
         {loading && (
@@ -120,7 +173,10 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             No chats yet — start one below.
           </div>
         )}
-        {!loading && threads && threads.map((t) => (
+        {!loading && threads && threads.length > 0 && visibleThreads.length === 0 && (
+          <div className="chat-history-empty">No matches.</div>
+        )}
+        {!loading && visibleThreads.map((t) => (
           <ThreadRow
             key={t.id}
             thread={t}
@@ -201,7 +257,10 @@ function ThreadRow({
       onKeyDown={(e) => { if (e.key === "Enter") onClick(); }}
       title={thread.title}
     >
-      <span className="chat-history-item-title">{thread.title}</span>
+      <div className="chat-history-item-body">
+        <div className="chat-history-item-title">{thread.title}</div>
+        <div className="chat-history-item-meta">{relativeTime(thread.updated_at)}</div>
+      </div>
       <span className="chat-history-item-actions" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
