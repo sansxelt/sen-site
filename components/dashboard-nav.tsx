@@ -117,9 +117,10 @@ function UpdatesIcon() {
   );
 }
 
-// Renders the user's most recent chat threads under the Make group.
+// Big chat-history list — the dominant element of the sidebar, like
+// ChatGPT/Claude/the desktop workshop. Scrollable, shows all threads.
 // Hydrates client-side so the sidebar renders instantly on cold load.
-function RecentChats() {
+function RecentChats({ compact = false }: { compact?: boolean }) {
   const [threads, setThreads] = useState<Array<{ id: string; title: string }> | null>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
@@ -141,10 +142,8 @@ function RecentChats() {
     };
     void load();
 
-    // Listen for the chat broadcasting "I just created or updated a
-    // thread" so the sidebar refreshes the list without needing a
-    // navigation. Also re-fetch on tab focus — picks up threads
-    // created on another device while this tab was idle.
+    // Refresh signals: chat sends fire 'sansxel:threads:changed';
+    // tab focus picks up threads created on another device.
     const onChanged = () => { void load(); };
     const onFocus = () => { void load(); };
     if (typeof window !== "undefined") {
@@ -160,50 +159,62 @@ function RecentChats() {
     };
   }, [pathname]);
 
-  // Only show recent chats when the user is in the workspace, not on
-  // /account/* — there it'd be noise.
-  if (pathname !== "/app" && !pathname.startsWith("/app/")) return null;
-
-  if (loading) return null;
-  if (!threads || threads.length === 0) return null;
-
-  // Cap at 8 visible — full thread list belongs to a future "All chats"
-  // sub-page (out of scope for the first ship).
-  const visible = threads.slice(0, 8);
-
-  const handleNew = async () => {
-    try {
-      // Just navigate to /app with a query param — WebChat reads it
-      // and starts blank instead of restoring the most-recent thread.
+  const handleNew = () => {
+    if (typeof window !== "undefined") {
       window.location.href = "/app?new=1";
-    } catch {
-      // ignore
     }
   };
 
-  return (
-    <>
+  // In the compact (account routes) mode, just render a small + New
+  // chat button — the big history list is reserved for /app where
+  // it's actually useful.
+  if (compact) {
+    return (
       <button
         type="button"
         onClick={handleNew}
-        className="mt-1 flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] font-medium text-violet-300 transition hover:bg-violet-400/10 hover:text-violet-100"
+        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+      >
+        <span aria-hidden className="text-base">＋</span>
+        <span>New chat</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <button
+        type="button"
+        onClick={handleNew}
+        className="mb-2 flex items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-400/5 px-3 py-2 text-xs font-semibold text-violet-200 transition hover:border-violet-400/60 hover:bg-violet-400/10"
       >
         <span aria-hidden>＋</span>
         <span>New chat</span>
       </button>
-      <div className="mt-1 flex flex-col gap-0.5">
-        {visible.map((t) => (
+      <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+        History
+      </div>
+      <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-1">
+        {loading && (
+          <div className="px-3 py-1 text-[11px] text-neutral-600">Loading…</div>
+        )}
+        {!loading && (!threads || threads.length === 0) && (
+          <div className="px-3 py-1 text-[11px] text-neutral-600">
+            Nothing yet — start a chat below.
+          </div>
+        )}
+        {!loading && threads && threads.map((t) => (
           <Link
             key={t.id}
             href={`/app?thread=${t.id}`}
-            className="truncate rounded-lg px-3 py-1 text-xs text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+            className="truncate rounded-lg px-3 py-1.5 text-xs text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
             title={t.title}
           >
             {t.title}
           </Link>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -262,6 +273,7 @@ const navGroups: NavGroup[] = [
 
 export function DashboardNav({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
+  const inWorkshop = pathname === "/app" || pathname.startsWith("/app/");
 
   function isActive(href: string) {
     if (href === "/account") return pathname === "/account";
@@ -296,7 +308,11 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
   return (
     <>
       {/* ── Desktop sidebar (Workshop shell) ─────────────────────── */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-white/10 px-4 lg:flex">
+      {/* No outer overflow on the aside — child .flex-1 chat-history
+          column owns its own scroll so the brand + new-chat stay
+          pinned at top and the desktop CTA + footer stay pinned at
+          bottom, ChatGPT-style. */}
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
         <Link href="/app" className="flex items-center gap-2.5 py-6">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
             <Image src="/icon.png" alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
@@ -307,17 +323,32 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           </div>
         </Link>
 
-        <nav className="flex flex-col gap-3">
-          {navGroups.map((group, groupIdx) => (
+        {/* In the chat workspace, history dominates the sidebar like
+            ChatGPT/Claude — chats first, navigation collapses
+            beneath. On account pages the chat history would be noise,
+            so we just show a compact "+ New chat" link instead. */}
+        {inWorkshop ? (
+          <RecentChats />
+        ) : (
+          <RecentChats compact />
+        )}
+
+        {/* Other workshop stations live below the chat history. On
+            workshop pages the chat list owns the scroll, so these
+            sit at the bottom but never get squeezed off. On account
+            pages, this is the primary nav. */}
+        <nav className={`flex flex-col gap-2 ${inWorkshop ? "mt-3 border-t border-white/[0.06] pt-3" : "mt-3"}`}>
+          {navGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-0.5">
               <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
                 {group.label}
               </div>
-              {group.items.map(navLink)}
-              {/* Recent chats list lives directly under "Make" so it's
-                  the first thing the eye lands on. Loaded async so it
-                  never blocks initial sidebar render. */}
-              {groupIdx === 0 && <RecentChats />}
+              {group.items
+                // In workshop mode, hide the duplicate Chat link
+                // (the user is IN chat — the New chat + history
+                // above is the entry point).
+                .filter((item) => !inWorkshop || item.href !== "/app")
+                .map(navLink)}
             </div>
           ))}
         </nav>
