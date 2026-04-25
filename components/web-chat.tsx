@@ -1277,6 +1277,25 @@ export function WebChat({
               Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
               working on — code, design, research, a half-baked idea at 2am.
             </p>
+            <div className="webchat-empty-suggestions">
+              {[
+                "Help me debug this React state issue",
+                "Summarize what's in this PDF",
+                "Brainstorm 5 names for my side project",
+                "Humanize this essay so it doesn't sound AI",
+                "Plan my day from these 6 tasks",
+                "Generate an image of a neon sansxel logo",
+              ].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  className="webchat-empty-suggestion"
+                  onClick={() => setInput(suggestion)}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="webchat-list">
