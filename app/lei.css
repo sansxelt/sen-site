@@ -508,28 +508,6 @@
   font-weight: 600;
 }
 
-/* Header "+ New" button — primary action to start a fresh chat.
-   Sits at the far left of the chat header, always visible. */
-.webchat-new-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(139,92,246,0.85), rgba(217,70,239,0.75));
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  text-decoration: none;
-  border: 1px solid rgba(167,139,250,0.55);
-  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
-  white-space: nowrap;
-}
-.webchat-new-btn:hover {
-  filter: brightness(1.12);
-  box-shadow: 0 6px 16px rgba(167,139,250,0.35);
-  transform: translateY(-1px);
-}
-.webchat-new-btn:active { transform: translateY(0); }
-
 /* "+" / Add dropdown — replaces the separate Attach + Image buttons
    so the input bar isn't a row of competing CTAs. Same component
    works on desktop (anchored above the button) and mobile (full

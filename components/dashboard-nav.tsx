@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type NavItem = {
@@ -270,7 +270,13 @@ const navGroups: NavGroup[] = [
 
 export function DashboardNav({ userEmail }: { userEmail: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const inWorkshop = pathname === "/app" || pathname.startsWith("/app/");
+
+  const handleNewChat = () => {
+    // Soft nav so WebChat clears state instead of full reload.
+    router.replace("/app?new=1");
+  };
 
   function isActive(href: string) {
     if (href === "/account") return pathname === "/account";
@@ -320,14 +326,13 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           </div>
         </Link>
 
-        {/* Chat link always visible on the left, regardless of route.
-            Otherwise users on /account/billing have no way back to
-            the chat without using the browser. The chat history list
-            still lives on the right rail (only mounted in /app via
-            LeiShell), so the left side stays predictable. */}
+        {/* Chat link always visible regardless of route. + New chat
+            button sits right below it — primary action for starting
+            fresh, easy to spot under the Chat link no matter which
+            workshop page the user is on. */}
         <Link
           href="/app"
-          className={`mb-3 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
             isActive("/app")
               ? "bg-white/10 text-white"
               : "text-neutral-200 hover:bg-white/5 hover:text-white"
@@ -336,6 +341,14 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           <ChatIcon />
           Chat
         </Link>
+        <button
+          type="button"
+          onClick={handleNewChat}
+          className="mb-3 mt-1 flex items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-400/[0.06] px-3 py-2 text-xs font-semibold text-violet-200 transition hover:border-violet-400/60 hover:bg-violet-400/[0.14]"
+        >
+          <span aria-hidden className="text-base leading-none">＋</span>
+          <span>New chat</span>
+        </button>
 
         <nav className="flex flex-col gap-3">
           {navGroups.map((group) => (

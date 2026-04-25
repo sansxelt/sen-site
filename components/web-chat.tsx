@@ -1157,18 +1157,6 @@ export function WebChat({
 
       <div className="webchat-bar">
         <div className="webchat-bar-left">
-          {/* Primary action: start a fresh chat. Lives in the header
-              so it's always visible — the rail's New chat button
-              was getting missed entirely (right rail hidden on
-              mobile, behind LEI panel when active, etc.). */}
-          <a
-            href="/app?new=1"
-            className="webchat-new-btn"
-            title="Start a new chat"
-          >
-            <span aria-hidden>＋</span>
-            <span>New</span>
-          </a>
           <span className="webchat-eyebrow">sansxel-1</span>
           <span className="webchat-account">{email}</span>
         </div>
