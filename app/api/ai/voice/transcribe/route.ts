@@ -6,7 +6,7 @@ import { recordUsage } from "../../../../../lib/usage";
 
 export const runtime = "nodejs";
 
-const client = new OpenAI();
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "missing" });
 
 // POST /api/ai/voice/transcribe
 // multipart/form-data with field "audio" (any audio file the browser

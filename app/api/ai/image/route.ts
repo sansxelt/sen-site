@@ -14,7 +14,11 @@ import {
 
 export const runtime = "nodejs";
 
-const client = new OpenAI();
+// Pass an explicit fallback so module-eval at build time on Vercel
+// doesn't crash when OPENAI_API_KEY is unset. Runtime calls without a
+// real key still fail with a 401 from OpenAI — that's the right
+// behavior for an unconfigured deploy.
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "missing" });
 
 type ImageSize = "1024x1024" | "1024x1792" | "1792x1024";
 

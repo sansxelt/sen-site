@@ -23,7 +23,15 @@
       "Bash(git init *)",
       "Bash(xargs -I{} stat --printf=\"%s\\\\n\" \"{}\")",
       "Bash(awk '{s+=$1} END {printf \"%.1f MB\\\\n\", s/1024/1024}')",
-      "Bash(grep -iE \"\\\\.env$|\\\\.env\\\\.|secret|password|\\\\.pem$|\\\\.key$\")"
+      "Bash(grep -iE \"\\\\.env$|\\\\.env\\\\.|secret|password|\\\\.pem$|\\\\.key$\")",
+      "Bash(git commit -m ' *)",
+      "Bash(vercel --version)",
+      "Bash(vercel whoami *)",
+      "Bash(npm install *)",
+      "Bash(vercel deploy *)",
+      "Bash(vercel logs *)",
+      "Bash(vercel inspect *)",
+      "Bash(git commit -m 'fix: lazy-tolerant OpenAI client construction so Vercel build doesn'\\\\''t crash on missing OPENAI_API_KEY *)"
     ]
   }
 }

@@ -14,7 +14,7 @@ import {
 
 export const runtime = "nodejs";
 
-const client = new OpenAI();
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "missing" });
 
 // POST /api/ai/voice/speak  → returns audio/mpeg
 // Body: { text: string }
