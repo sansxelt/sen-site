@@ -558,17 +558,25 @@ function systemPromptForPayload(
     prompt = `${prompt}\n\n${AGENT_MODE_PROMPT}`;
   }
 
-  // v0.1.4 i18n response-language hook. Cheap detection on the latest
-  // user turn — if they're writing in something other than English,
-  // tell the model to respond in the same language. The detector is
-  // a heuristic; the model itself usually matches the user's language
-  // already, so this is a nudge, not a hard switch.
+  // v0.1.16 — Language lock. Previously: only nudged when the
+  // detector flagged a non-English language. PROBLEM: when the model
+  // calls web_search and gets back results in another language
+  // (common for region-specific searches — stocks pulled Portuguese
+  // results from a Brazilian source, for example), it would silently
+  // SWITCH languages to match the search results. User asked in
+  // English, got a reply in Portuguese.
+  //
+  // Fix: ALWAYS state the user's language explicitly, plus a hard
+  // rule that the reply language is determined by the user's text,
+  // never by the source language of any tool output / file / search
+  // result. Detector only switches off English when there's a real
+  // signal (≥2 stop-word hits in another lang); otherwise we lock
+  // English. Same backend serves web + desktop, so this fixes both.
   const lastUserMessage = latestUserMessage(payload.messages);
   if (lastUserMessage) {
     const detectedLang = detectLanguage(lastUserMessage);
-    if (detectedLang !== "en") {
-      prompt += `\n\nThe user is writing in ${langLabel(detectedLang)}. Respond in the same language.`;
-    }
+    const lang = langLabel(detectedLang);
+    prompt += `\n\nLanguage lock: the user is writing in ${lang}. Reply ONLY in ${lang}. If web_search, attached files, or any other tool returns content in a different language, translate or paraphrase what's relevant into ${lang} — NEVER switch to the source language. The user's language is determined by their typed message, not by any external content.`;
   }
 
   // v0.1.12 — Client-supplied local time so the model can answer
