@@ -800,20 +800,18 @@ export async function POST(request: Request) {
       console.warn("ai/chat thread persist (user turn) failed:", err);
     }
 
-    // v0.1.16 r2 — Create the assistant placeholder message UP FRONT
-    // (before the LLM starts streaming) and progressively UPDATE it
-    // as deltas arrive. This way, even if the client disconnects
-    // mid-stream (user navigates away, closes tab, network drops),
-    // whatever was generated up to the most recent throttle tick is
-    // already saved to chat_messages. ChatGPT/Claude pattern.
-    let assistantMessageId: string | null = null;
-    if (resolvedThreadId) {
-      try {
-        assistantMessageId = await createAssistantPlaceholder(email, resolvedThreadId);
-      } catch (err) {
-        console.warn("ai/chat placeholder create failed:", err);
-      }
-    }
+    // v0.1.16 r3 — Placeholder create runs IN PARALLEL with the LLM
+    // stream start. Awaiting it before stream() added 200-400ms of
+    // dead air before the model even started thinking. Now we kick
+    // both off concurrently and await the placeholder id only when
+    // we actually need it (first throttled save, ~900ms in — plenty
+    // of time for a Supabase round-trip to complete).
+    const assistantMessageIdPromise: Promise<string | null> = resolvedThreadId
+      ? createAssistantPlaceholder(email, resolvedThreadId).catch((err) => {
+          console.warn("ai/chat placeholder create failed:", err);
+          return null;
+        })
+      : Promise.resolve(null);
 
     const stream = await client.messages.stream({
       model: descriptor.model,
@@ -845,10 +843,11 @@ export async function POST(request: Request) {
     let lastPersist = 0;
     const PERSIST_INTERVAL_MS = 900;
     const persistPartial = async () => {
-      if (!assistantMessageId || !resolvedThreadId) return;
-      if (!assistantBuffer) return;
+      if (!resolvedThreadId || !assistantBuffer) return;
+      const aid = await assistantMessageIdPromise;
+      if (!aid) return;
       try {
-        await updateMessageContent(email, resolvedThreadId, assistantMessageId, assistantBuffer);
+        await updateMessageContent(email, resolvedThreadId, aid, assistantBuffer);
       } catch {
         // ignore — best-effort
       }
@@ -973,8 +972,8 @@ export async function POST(request: Request) {
           // fall back to creating a fresh row.
           if (resolvedThreadId && assistantBuffer.trim()) {
             const tid = resolvedThreadId;
-            const aid = assistantMessageId;
             void (async () => {
+              const aid = await assistantMessageIdPromise;
               if (aid) {
                 await updateMessageContent(email, tid, aid, assistantBuffer);
               } else {
