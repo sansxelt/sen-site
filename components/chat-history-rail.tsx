@@ -173,7 +173,8 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             className="chat-history-new-pill"
             title="Start a new chat"
           >
-            New
+            <span aria-hidden>＋</span>
+            <span>New chat</span>
           </button>
         </div>
         {threads && threads.length > 0 && (

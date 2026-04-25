@@ -943,12 +943,27 @@ export async function POST(request: Request) {
               // open — bad titles just stay snippets if it errors.
               try {
                 const after = await listChatMessages(email, tid);
-                const userTurns = after.filter((m) => m.role === "user").length;
-                const assistantTurns = after.filter((m) => m.role === "assistant").length;
-                // Only on first complete round — avoid retitling
-                // every turn (waste + jarring sidebar churn).
-                if (userTurns === 1 && assistantTurns === 1) {
-                  await generateAndSetThreadTitle(email, tid);
+                const firstUser = after.find((m) => m.role === "user");
+                const firstAssistant = after.find((m) => m.role === "assistant");
+                if (firstUser && firstAssistant) {
+                  // Snippet-detection regen: fire whenever the title
+                  // looks like the auto-derived first-message snippet
+                  // OR the placeholder. Covers fresh threads (first
+                  // round) AND old crap-titled ones the user is now
+                  // continuing — both auto-upgrade.
+                  const t = await getChatThread(email, tid);
+                  const currentTitle = (t?.title ?? "").trim();
+                  const firstText = firstUser.content.replace(/\s+/g, " ").trim();
+                  const looksLikeSnippet =
+                    !currentTitle ||
+                    currentTitle === "New chat" ||
+                    currentTitle === firstText ||
+                    currentTitle === firstText.slice(0, 59).trimEnd() + "…" ||
+                    (currentTitle.length < 30 &&
+                      firstText.toLowerCase().startsWith(currentTitle.toLowerCase()));
+                  if (looksLikeSnippet) {
+                    await generateAndSetThreadTitle(email, tid);
+                  }
                 }
               } catch (err) {
                 console.warn("ai/chat title-gen check failed:", err);

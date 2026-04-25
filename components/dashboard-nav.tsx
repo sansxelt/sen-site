@@ -385,7 +385,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
             workshop page the user is on. */}
         <Link
           href="/app"
-          className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+          className={`mb-3 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
             isActive("/app")
               ? "bg-white/10 text-white"
               : "text-neutral-200 hover:bg-white/5 hover:text-white"
@@ -394,14 +394,6 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           <ChatIcon />
           Chat
         </Link>
-        <button
-          type="button"
-          onClick={handleNewChat}
-          className="mb-3 mt-1 flex items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-400/[0.06] px-3 py-2 text-xs font-semibold text-violet-200 transition hover:border-violet-400/60 hover:bg-violet-400/[0.14]"
-        >
-          <span aria-hidden className="text-base leading-none">＋</span>
-          <span>New chat</span>
-        </button>
 
         <nav className="flex flex-col gap-3">
           {navGroups.map((group) => (
