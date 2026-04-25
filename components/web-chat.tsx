@@ -297,6 +297,12 @@ export function WebChat({
     setInput("");
     setStreaming(true);
     setChatError(null);
+    // Clear attachments NOW (not in the finally) — they're already
+    // captured into payloadMessages, and conceptually they belong to
+    // the turn we just sent. Leaving them visible while the AI streams
+    // its reply made it look like they were going to ride along on
+    // the next turn too.
+    lei.clearAttachments();
 
     const ac = new AbortController();
     abortRef.current = ac;
@@ -611,10 +617,8 @@ export function WebChat({
         abortRef.current = null;
         setStreaming(false);
       }
-      // Clear attachments after a successful send so they don't ride
-      // along on the next turn unintentionally. Refresh balance so the
-      // chip reflects the credit burn.
-      lei.clearAttachments();
+      // Refresh balance so the chip reflects the credit burn.
+      // (Attachments were already cleared up-top, before the await.)
       void lei.refreshBalance();
     }
   }, [input, messages, tier, lei]);
