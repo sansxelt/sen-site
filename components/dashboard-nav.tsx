@@ -11,6 +11,11 @@ type NavItem = {
   icon: React.ReactNode;
 };
 
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
 function OverviewIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
@@ -111,15 +116,57 @@ function UpdatesIcon() {
   );
 }
 
-const navItems: NavItem[] = [
-  { href: "/account",              label: "Overview",     icon: <OverviewIcon /> },
-  { href: "/account/memory",       label: "Library",      icon: <MemoryIcon /> },
-  { href: "/account/keys",         label: "API Keys",     icon: <KeyIcon /> },
-  { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
-  { href: "/account/download",     label: "Download",     icon: <DownloadIcon /> },
-  { href: "/account/updates",      label: "Updates",      icon: <UpdatesIcon /> },
-  { href: "/account/usage",        label: "Usage",        icon: <UsageIcon /> },
-  { href: "/account/settings",     label: "Settings",     icon: <SettingsIcon /> },
+function ChatIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M2.5 3.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6L3 14V11.5H2.5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BillingIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M1.5 6.5h13" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M4 9.5h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// Workshop station groups. The chat is the main bench (Make);
+// everything else is a station you visit to set up the shop.
+const navGroups: NavGroup[] = [
+  {
+    label: "Make",
+    items: [
+      { href: "/app",                  label: "Chat",         icon: <ChatIcon /> },
+    ],
+  },
+  {
+    label: "Brain",
+    items: [
+      { href: "/account/memory",       label: "Memory",       icon: <MemoryIcon /> },
+      { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
+      { href: "/account/keys",         label: "API Keys",     icon: <KeyIcon /> },
+    ],
+  },
+  {
+    label: "Shop",
+    items: [
+      { href: "/account",              label: "Overview",     icon: <OverviewIcon /> },
+      { href: "/account/billing",      label: "Billing",      icon: <BillingIcon /> },
+      { href: "/account/usage",        label: "Usage",        icon: <UsageIcon /> },
+    ],
+  },
+  {
+    label: "Bench",
+    items: [
+      { href: "/account/settings",     label: "Settings",     icon: <SettingsIcon /> },
+      { href: "/account/updates",      label: "Updates",      icon: <UpdatesIcon /> },
+      { href: "/account/download",     label: "Desktop",      icon: <DownloadIcon /> },
+    ],
+  },
 ];
 
 export function DashboardNav({ userEmail }: { userEmail: string }) {
@@ -127,8 +174,18 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
 
   function isActive(href: string) {
     if (href === "/account") return pathname === "/account";
+    if (href === "/app") return pathname === "/app";
     return pathname.startsWith(href);
   }
+
+  // Flat list for the mobile bottom bar — picks the most-used items.
+  const mobileBarItems: NavItem[] = [
+    navGroups[0].items[0],          // Chat
+    navGroups[2].items[0],          // Overview
+    navGroups[2].items[1],          // Billing
+    navGroups[1].items[0],          // Memory
+    navGroups[3].items[2],          // Desktop
+  ];
 
   const navLink = (item: NavItem) => (
     <Link
@@ -147,18 +204,45 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
 
   return (
     <>
-      {/* ── Desktop sidebar ──────────────────────────────────────── */}
-      <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
-        <Link href="/home" className="flex items-center gap-2.5 py-6">
+      {/* ── Desktop sidebar (Workshop shell) ─────────────────────── */}
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-y-auto border-r border-white/10 px-4 lg:flex">
+        <Link href="/app" className="flex items-center gap-2.5 py-6">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
             <Image src="/icon.png" alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
           </div>
-          <span className="text-sm font-semibold text-white">sansxel</span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-semibold text-white">sansxel</span>
+            <span className="text-[10px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
+          </div>
         </Link>
 
-        <nav className="flex flex-col gap-0.5">
-          {navItems.map(navLink)}
+        <nav className="flex flex-col gap-3">
+          {navGroups.map((group) => (
+            <div key={group.label} className="flex flex-col gap-0.5">
+              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                {group.label}
+              </div>
+              {group.items.map(navLink)}
+            </div>
+          ))}
         </nav>
+
+        {/* Get-Desktop CTA — pinned, always visible, the workshop's
+            primary upgrade path. Web is the trial, desktop is the
+            real shop. */}
+        <Link
+          href="/download"
+          className="mt-4 rounded-xl border border-violet-400/30 bg-gradient-to-br from-violet-500/[0.12] to-fuchsia-500/[0.08] p-3 text-xs transition hover:border-violet-400/60 hover:from-violet-500/[0.18] hover:to-fuchsia-500/[0.12]"
+        >
+          <div className="mb-1 flex items-center gap-1.5 font-semibold text-violet-100">
+            <span aria-hidden>🖥</span>
+            <span>Workshop on desktop</span>
+          </div>
+          <div className="text-[11px] leading-snug text-neutral-300">
+            Files, MCP, full voice loop. The real shop lives outside the browser.
+          </div>
+          <div className="mt-1.5 text-[11px] font-medium text-violet-300">Get desktop →</div>
+        </Link>
 
         <div className="mt-auto pb-6 pt-4">
           <div className="mb-2 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
@@ -168,7 +252,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
           >
             <HomeIcon />
-            Return to home
+            Marketing site
           </Link>
 
           <button
@@ -191,13 +275,16 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
         </div>
       </aside>
 
-      {/* ── Mobile: sticky top bar (logo + sign out only) ────────────── */}
+      {/* ── Mobile: sticky top bar (workshop brand + home + sign out) */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/[0.08] bg-neutral-950/95 px-4 py-3 backdrop-blur-xl lg:hidden">
-        <Link href="/home" className="flex items-center gap-2">
+        <Link href="/app" className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1">
             <Image src="/icon.png" alt="sansxel" width={18} height={18} className="h-full w-full object-contain" priority />
           </div>
-          <span className="text-sm font-semibold text-white">sansxel</span>
+          <div className="flex flex-col leading-tight">
+            <span className="text-sm font-semibold text-white">sansxel</span>
+            <span className="text-[8.5px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
+          </div>
         </Link>
 
         <div className="flex items-center gap-1.5">
@@ -230,11 +317,11 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <div className="flex min-w-full items-stretch">
-          {navItems.map((item) => (
+          {mobileBarItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex min-w-[76px] flex-1 flex-col items-center justify-center gap-1 py-2.5 text-center transition-colors ${
+              className={`flex min-w-[68px] flex-1 flex-col items-center justify-center gap-1 py-2.5 text-center transition-colors ${
                 isActive(item.href)
                   ? "text-white"
                   : "text-neutral-600 hover:text-neutral-300"

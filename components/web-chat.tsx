@@ -995,22 +995,22 @@ export function WebChat({
         </div>
       )}
 
-      {/* Subtle reminder that the desktop is the bigger surface */}
+      {/* Web is the trial. Desktop is where the real workshop lives. */}
       <div className="webchat-desktop-cta">
         <div className="webchat-desktop-cta-copy">
           <span className="webchat-desktop-cta-kicker">
-            Desktop feels more like your assistant
+            The real workshop runs on desktop
           </span>
           <p>
-            Better memory, a custom UI around how you work, MCP tools, file
-            edits, toolbar modes, and the full voice loop.
+            File edits, MCP tools, the full voice loop without browser permissions.
+            Web is great for a taste — desktop is where you ship.
           </p>
         </div>
         <div className="webchat-desktop-cta-actions">
           <div className="webchat-desktop-cta-badges" aria-hidden="true">
-            <span className="webchat-desktop-chip">Better memory</span>
-            <span className="webchat-desktop-chip">Custom UI/UX</span>
-            <span className="webchat-desktop-chip">MCP + file edits</span>
+            <span className="webchat-desktop-chip">Touches your files</span>
+            <span className="webchat-desktop-chip">MCP servers</span>
+            <span className="webchat-desktop-chip">Always-on voice</span>
           </div>
           <a href="/download" className="webchat-desktop-cta-link">
             Get sansxel desktop →
@@ -1022,10 +1022,10 @@ export function WebChat({
         {showEmpty ? (
           <div className="webchat-empty">
             <div className="webchat-empty-mark">sansxel-1</div>
-            <h2>Ask anything.</h2>
+            <h2>What are you making?</h2>
             <p>
-              Same brain as the desktop, in your browser. Voice and image input
-              roll in next.
+              Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
+              working on — code, design, research, a half-baked idea at 2am.
             </p>
           </div>
         ) : (

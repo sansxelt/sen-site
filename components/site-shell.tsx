@@ -46,10 +46,9 @@ const primaryLinks: SiteNavLink[] = [
   { href: "/features", label: "Features" },
   { href: "/function", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
-  // Signed-in only — sansxel-1 chat in the browser
-  { href: "/app", label: "Chat", authOnly: true },
-  // Signed-in only — install button, status, and release notes
-  { href: "/account/download", label: "Download", authOnly: true },
+  // Chat removed — signed-in users go through the Workshop button on
+  // the right; the chat is the default view there.
+  { href: "/download", label: "Download" },
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
@@ -112,14 +111,14 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                   { href: "/contact", label: "Contact" },
                 ]}
                 signedIn={signedIn}
-                accessHref={signedIn ? "/account" : getSignInPath()}
+                accessHref={signedIn ? "/app" : getSignInPath()}
               />
 
               <Link
-                href={signedIn ? "/account" : getSignInPath()}
+                href={signedIn ? "/app" : getSignInPath()}
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
-                {signedIn ? "My Account" : "Access"}
+                {signedIn ? "Open Workshop" : "Sign in"}
               </Link>
             </div>
           </div>

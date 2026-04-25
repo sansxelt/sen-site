@@ -56,7 +56,8 @@
       "Bash(vercel ls *)",
       "Bash(curl -s -o /dev/null -w \"GET https://sansxel.ai/home: %{http_code}\\\\nGET https://sansxel.ai/api/status: \" https://sansxel.ai/home)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://sansxel.ai/api/status)",
-      "Bash(xargs -I {} basename {})"
+      "Bash(xargs -I {} basename {})",
+      "Read(//c/Users/SenFR/Downloads/sen-site-main/**)"
     ]
   }
 }
