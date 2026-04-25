@@ -753,14 +753,21 @@ export async function POST(request: Request) {
     // tools_enabled: true explicitly, so this is safe.
     const toolsEnabled = payload.tools_enabled === true;
 
-    // v0.1.16 — Voice mode runs LEAN: no web_search (adds 2-3s of
-    // latency before any text streams, which kills the voice loop
-    // feel), tighter max_tokens cap (replies are 1-3 sentences, no
-    // need for 2048-token room). Desktop tools also off in voice
-    // since the user can't see the screen anyway.
+    // v0.1.16 r5 — Tools are LATENCY-EXPENSIVE. Anthropic's hosted
+    // web_search adds 2-5s of TTFT even when the model decides NOT to
+    // use it (the option's existence triggers extra processing).
+    // For short / clearly-conversational prompts, strip tools so the
+    // first token comes back fast.
     const isVoiceTurn = payload.input_mode === "voice";
-    const toolsForCall = isVoiceTurn
-      ? [] // strip ALL tools in voice mode for fast first-token
+    const lastUserText = chatContentToText(
+      [...payload.messages].reverse().find((m) => m.role === "user")?.content ?? "",
+    ).trim();
+    // Heuristic: skip server tools if the prompt is trivially short
+    // (greetings, acks). The model would never need web_search to
+    // answer "hi" / "thanks" / "ok" / "wsg".
+    const isTrivialPrompt = lastUserText.length < 20;
+    const toolsForCall = isVoiceTurn || isTrivialPrompt
+      ? [] // strip ALL tools — fast first-token wins
       : toolsEnabled
         ? [...SERVER_TOOLS, ...(DESKTOP_TOOLS as unknown as Anthropic.Messages.Tool[])]
         : SERVER_TOOLS;
@@ -818,6 +825,13 @@ export async function POST(request: Request) {
         })
       : Promise.resolve(null);
 
+    // v0.1.16 r5 — Quick timing markers so the Vercel function logs
+    // show where time goes when chats feel slow.
+    const tStreamCall = Date.now();
+    console.log(
+      `[ai/chat] tools=${toolsForCall.length} promptLen=${lastUserText.length} model=${descriptor.model}`,
+    );
+
     const stream = await client.messages.stream({
       model: descriptor.model,
       // Voice replies are short by design (system prompt enforces
@@ -846,6 +860,7 @@ export async function POST(request: Request) {
     // client disconnect.
     let assistantBuffer = "";
     let lastPersist = 0;
+    let firstTokenLogged = false;
     const PERSIST_INTERVAL_MS = 900;
     const persistPartial = async () => {
       if (!resolvedThreadId || !assistantBuffer) return;
@@ -925,6 +940,12 @@ export async function POST(request: Request) {
                 event.type === "content_block_delta" &&
                 event.delta.type === "text_delta"
               ) {
+                if (!firstTokenLogged) {
+                  firstTokenLogged = true;
+                  console.log(
+                    `[ai/chat] first-token in ${Date.now() - tStreamCall}ms`,
+                  );
+                }
                 assistantBuffer += event.delta.text;
                 writeLine({ type: "text", text: event.delta.text });
                 // Throttled progressive save — partial output
@@ -945,6 +966,12 @@ export async function POST(request: Request) {
               event.type === "content_block_delta" &&
               event.delta.type === "text_delta"
             ) {
+              if (!firstTokenLogged) {
+                firstTokenLogged = true;
+                console.log(
+                  `[ai/chat] first-token (text path) in ${Date.now() - tStreamCall}ms`,
+                );
+              }
               // Legacy plain-text path.
               assistantBuffer += event.delta.text;
               controller.enqueue(encoder.encode(event.delta.text));
