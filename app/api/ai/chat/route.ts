@@ -33,7 +33,9 @@ import {
   appendMessage as saveMessage,
   createThread as createChatThread,
   getThread as getChatThread,
+  listMessages as listChatMessages,
 } from "../../../../lib/chat-history";
+import { generateAndSetThreadTitle } from "../../../../lib/thread-title";
 
 export const runtime = "nodejs";
 
@@ -926,12 +928,31 @@ export async function POST(request: Request) {
           // sees the full conversation. Skip on empty buffer (model
           // returned only tool calls / nothing useful).
           if (resolvedThreadId && assistantBuffer.trim()) {
-            void saveMessage({
-              email,
-              threadId: resolvedThreadId,
-              role: "assistant",
-              content: assistantBuffer,
-            });
+            const tid = resolvedThreadId;
+            void (async () => {
+              await saveMessage({
+                email,
+                threadId: tid,
+                role: "assistant",
+                content: assistantBuffer,
+              });
+              // After the assistant turn lands, fire AI title gen
+              // for threads that still have the auto-snippet title
+              // (the first user message). Cheap Haiku call. Fails
+              // open — bad titles just stay snippets if it errors.
+              try {
+                const after = await listChatMessages(email, tid);
+                const userTurns = after.filter((m) => m.role === "user").length;
+                const assistantTurns = after.filter((m) => m.role === "assistant").length;
+                // Only on first complete round — avoid retitling
+                // every turn (waste + jarring sidebar churn).
+                if (userTurns === 1 && assistantTurns === 1) {
+                  await generateAndSetThreadTitle(email, tid);
+                }
+              } catch (err) {
+                console.warn("ai/chat title-gen check failed:", err);
+              }
+            })();
           }
         }
       },
