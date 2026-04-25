@@ -799,6 +799,15 @@ export async function POST(request: Request) {
     // devices. Save the latest user turn before the model starts so
     // it's persisted even if the stream errors.
     let resolvedThreadId: string | null = null;
+    // v0.1.16 — Explicit timestamps for the user turn + assistant
+    // placeholder. Both inserts race against each other; without
+    // explicit created_at values, Supabase's default `now()` can
+    // assign identical timestamps and the assistant placeholder
+    // sometimes lands FIRST in chronological order, which renders
+    // the assistant reply ABOVE the user prompt after a reload.
+    // 2 seconds of margin is plenty for any plausible insert race.
+    const userTurnAt = new Date();
+    const placeholderAt = new Date(userTurnAt.getTime() + 2000);
     try {
       const requestedThreadId =
         typeof payload.thread_id === "string" && payload.thread_id.trim()
@@ -826,6 +835,7 @@ export async function POST(request: Request) {
                 media_type: i.media_type,
                 data: i.data,
               })),
+              createdAt: userTurnAt.toISOString(),
             });
           }
         }
@@ -839,7 +849,11 @@ export async function POST(request: Request) {
     // Now generation truly survives client disconnect: throttled
     // 900ms updates to the placeholder + final UPDATE on stream end.
     const assistantMessageIdPromise: Promise<string | null> = resolvedThreadId
-      ? createAssistantPlaceholder(email, resolvedThreadId).catch((err) => {
+      ? createAssistantPlaceholder(
+          email,
+          resolvedThreadId,
+          placeholderAt.toISOString(),
+        ).catch((err) => {
           console.warn("ai/chat placeholder create failed:", err);
           return null;
         })
@@ -858,6 +872,20 @@ export async function POST(request: Request) {
     const wantsBetaTools = toolsForCall.some(
       (t) => (t as { type?: string }).type === "web_fetch_20250910",
     );
+    // v0.1.16 — Wire client cancel → upstream Anthropic abort. Without
+    // this, a client Stop button just closes the response stream while
+    // we keep paying tokens upstream until Anthropic finishes; worse,
+    // the eventual finally block then OVERWRITES whatever the client
+    // PATCHed (e.g. "(Cancelled by you.)") with the full server-side
+    // buffer. By forwarding the abort, the upstream stream errors out
+    // immediately and the finally block sees `clientAborted=true` so
+    // it persists the cancellation tail itself.
+    const upstreamAbort = new AbortController();
+    let clientAborted = false;
+    request.signal.addEventListener("abort", () => {
+      clientAborted = true;
+      upstreamAbort.abort();
+    });
     const stream = await client.messages.stream(
       {
         model: descriptor.model,
@@ -872,9 +900,12 @@ export async function POST(request: Request) {
         messages: messages.map(toAnthropicMessage),
         ...(toolsForCall.length > 0 ? { tools: toolsForCall } : {}),
       },
-      wantsBetaTools
-        ? { headers: { "anthropic-beta": "web-fetch-2025-09-10" } }
-        : undefined,
+      {
+        signal: upstreamAbort.signal,
+        ...(wantsBetaTools
+          ? { headers: { "anthropic-beta": "web-fetch-2025-09-10" } }
+          : {}),
+      },
     );
 
     const startedAt = Date.now();
@@ -1037,14 +1068,24 @@ export async function POST(request: Request) {
           // not INSERT so we don't double-create the assistant
           // message. If somehow no placeholder exists (DB hiccup),
           // fall back to creating a fresh row.
+          //
+          // If the client aborted mid-stream (Stop button), append the
+          // cancellation tail server-side so the saved conversation
+          // reflects the user's choice instead of just trailing off.
+          // The client also PATCHes this tail in for instant UI, but
+          // the server save races with that PATCH and would otherwise
+          // overwrite it with the raw buffer.
           if (resolvedThreadId && assistantBuffer.trim()) {
             const tid = resolvedThreadId;
+            const finalContent = clientAborted
+              ? `${assistantBuffer.trimEnd()}\n\n_(Cancelled by you.)_`
+              : assistantBuffer;
             void (async () => {
               const aid = await assistantMessageIdPromise;
               if (aid) {
                 // UPDATE the placeholder with the final full buffer
                 // (overwrites the throttled partials).
-                await updateMessageContent(email, tid, aid, assistantBuffer);
+                await updateMessageContent(email, tid, aid, finalContent);
               } else {
                 // Fallback: placeholder didn't get created (DB hiccup),
                 // INSERT a fresh row.
@@ -1052,7 +1093,7 @@ export async function POST(request: Request) {
                   email,
                   threadId: tid,
                   role: "assistant",
-                  content: assistantBuffer,
+                  content: finalContent,
                 });
               }
               // After the assistant turn lands, fire AI title gen

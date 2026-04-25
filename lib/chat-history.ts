@@ -182,8 +182,12 @@ export async function appendMessage(args: {
   role: "user" | "assistant" | "system";
   content: string;
   images?: Array<{ media_type: string; data: string }>;
+  /** Explicit timestamp for the row. Used by the chat route to make
+   * sure the user message always sorts BEFORE the assistant placeholder
+   * even though both inserts race against each other. Default = now. */
+  createdAt?: string;
 }): Promise<void> {
-  const { email, threadId, role, content } = args;
+  const { email, threadId, role, content, createdAt } = args;
   if (!email || !threadId || !content || !isDatabaseConfigured()) return;
   try {
     const supabase = getSupabaseAdminClient();
@@ -196,6 +200,7 @@ export async function appendMessage(args: {
           role,
           content,
           images: args.images && args.images.length ? args.images : null,
+          ...(createdAt ? { created_at: createdAt } : {}),
         },
       ] as never);
     if (insertErr) {
@@ -237,13 +242,24 @@ export async function appendMessage(args: {
 export async function createAssistantPlaceholder(
   email: string,
   threadId: string,
+  /** Explicit timestamp — pass a value strictly LATER than the user
+   * message's timestamp to guarantee the placeholder sorts after it
+   * even when both inserts race. Default = now. */
+  createdAt?: string,
 ): Promise<string | null> {
   if (!email || !threadId || !isDatabaseConfigured()) return null;
   try {
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("chat_messages" as never)
-      .insert([{ thread_id: threadId, role: "assistant", content: "" }] as never)
+      .insert([
+        {
+          thread_id: threadId,
+          role: "assistant",
+          content: "",
+          ...(createdAt ? { created_at: createdAt } : {}),
+        },
+      ] as never)
       .select("id")
       .single();
     if (error || !data) {
