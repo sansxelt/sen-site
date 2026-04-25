@@ -337,13 +337,15 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
     return pathname.startsWith(href);
   }
 
-  // Mobile bottom bar — most-used stations + a Chat shortcut at top.
+  // Mobile bottom bar — one item per conceptual area so the slots
+  // don't waste space on redundant pages (Overview + Billing both
+  // being Shop items felt like duplicates on portrait phones).
   const mobileBarItems: NavItem[] = [
     { href: "/app",                  label: "Chat",     icon: <ChatIcon /> },
-    navGroups[1].items[0],          // Overview
-    navGroups[1].items[1],          // Billing
-    navGroups[0].items[0],          // Memory
-    navGroups[2].items[2],          // Desktop
+    navGroups[0].items[0],          // Brain  → Memory
+    navGroups[1].items[1],          // Shop   → Billing
+    navGroups[2].items[0],          // Bench  → Settings
+    navGroups[2].items[2],          // Bench  → Desktop (primary CTA)
   ];
 
   const navLink = (item: NavItem) => (
