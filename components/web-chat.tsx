@@ -1655,24 +1655,34 @@ function WebStreamingFadeText({ text }: { text: string }) {
 function CreditChip({ balance, plan }: { balance: number | null; plan: string }) {
   const planCovers = ["pro", "teams", "enterprise"].includes(plan.toLowerCase());
   if (balance === null) {
-    return <span className="webchat-credit-chip webchat-credit-chip--idle" title="Credit balance">— cr</span>;
+    return <span className="webchat-credit-chip webchat-credit-chip--idle" title="Loading credits…">— cr</span>;
   }
   // For unlimited plans, low balance isn't urgent — they only burn
   // credits if they blow past the weekly cap, which most users won't.
-  const low = balance < 20 && !planCovers;
+  const empty = balance === 0 && !planCovers;
+  const low = balance > 0 && balance < 20 && !planCovers;
   return (
     <a
       href="/account/billing"
-      className={`webchat-credit-chip${low ? " webchat-credit-chip--low" : ""}`}
+      className={`webchat-credit-chip${empty ? " webchat-credit-chip--empty" : low ? " webchat-credit-chip--low" : ""}`}
       title={
         planCovers
           ? `Your ${plan} plan covers normal use. Credits only burn if you exceed weekly caps.`
-          : low
-            ? "Low balance — top up to keep going past your plan cap"
-            : "Credit balance"
+          : empty
+            ? "Out of credits — click to top up"
+            : low
+              ? "Low balance — top up to keep going past your plan cap"
+              : "Credit balance"
       }
     >
-      {balance.toLocaleString()} cr
+      {empty ? (
+        <>
+          <span aria-hidden>⚡</span>
+          <span>Top up</span>
+        </>
+      ) : (
+        <span>{balance.toLocaleString()} cr</span>
+      )}
     </a>
   );
 }

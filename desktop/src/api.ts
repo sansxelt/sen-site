@@ -610,6 +610,11 @@ export type StreamMeta = {
   plan: string | null;
   persona: Persona | null;
   persona_delay_multiplier: number;
+  // v0.1.16 — Server-resolved thread id. The chat route auto-creates
+  // a thread on the first turn if the client didn't pass one and
+  // echoes the id here so the desktop can stash it for follow-ups
+  // and persist threads across devices.
+  thread_id: string | null;
 };
 
 // v0.1.12 \u2014 Captures the user's local time + IANA timezone + a
@@ -674,6 +679,10 @@ export async function* streamChat(
     // chat; legacy callers like the floating copilot pass false to
     // keep their straight-text streaming behavior unchanged).
     toolsEnabled?: boolean;
+    // v0.1.16 — Pass an existing thread id to continue a conversation,
+    // or omit to let the server create one. The new id is surfaced via
+    // onMeta.thread_id so the caller can stash it for follow-up turns.
+    threadId?: string | null;
     signal?: AbortSignal;
     onMeta?: (meta: StreamMeta) => void;
   } = {},
@@ -691,6 +700,7 @@ export async function* streamChat(
       agent_mode: options.agentMode ?? false,
       source_ids: options.sourceIds ?? [],
       tools_enabled: toolsEnabled,
+      thread_id: options.threadId ?? undefined,
       ...buildClientTimePayload(),
     }),
     signal: options.signal,
@@ -709,6 +719,7 @@ export async function* streamChat(
         : null,
       persona_delay_multiplier: delayHeader ? Number(delayHeader) : 1,
       plan: res.headers.get("x-sansxel-plan"),
+      thread_id: res.headers.get("x-sansxel-thread-id") || null,
     });
   }
 
@@ -753,6 +764,7 @@ export async function* streamChatWithTools(
     persona?: Persona;
     agentMode?: boolean;
     sourceIds?: string[];
+    threadId?: string | null;
     signal?: AbortSignal;
     onMeta?: (meta: StreamMeta) => void;
   } = {},
@@ -769,6 +781,7 @@ export async function* streamChatWithTools(
       agent_mode: options.agentMode ?? false,
       source_ids: options.sourceIds ?? [],
       tools_enabled: true,
+      thread_id: options.threadId ?? undefined,
       ...buildClientTimePayload(),
     }),
     signal: options.signal,
@@ -785,6 +798,7 @@ export async function* streamChatWithTools(
       persona: personaHeader ? (personaHeader as Persona | null) : null,
       persona_delay_multiplier: delayHeader ? Number(delayHeader) : 1,
       plan: res.headers.get("x-sansxel-plan"),
+      thread_id: res.headers.get("x-sansxel-thread-id") || null,
     });
   }
 
