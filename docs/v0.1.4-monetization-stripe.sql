@@ -1,0 +1,91 @@
+-- v0.1.4 monetization: Stripe top-up cards + recurring boost packs.
+--
+-- DO NOT RUN this file. It documents the dashboard + env work needed to
+-- wire the new Boost Your Account section to real Stripe charges.
+--
+-- ────────────────────────────────────────────────────────────────────
+-- 1. Stripe dashboard products
+-- ────────────────────────────────────────────────────────────────────
+--
+-- Recurring add-on packs (mode: subscription, monthly + yearly each):
+--   • voice_pack          — $8/mo   / $80/yr
+--   • image_pack          — $10/mo  / $100/yr
+--   • copilot_pro_pack    — $12/mo  / $120/yr
+--   • power_pack          — $25/mo  / $240/yr (bundle of all three)
+--
+-- One-time top-ups (mode: payment, single price each):
+--   • session_boost       — $2
+--   • weekly_boost        — $5
+--   • voice_minute_pack   — $3
+--   • image_credit_pack   — $4
+--   • copilot_time_pack   — $5
+--
+-- Steps in dashboard (per product):
+--   1. Products → "+ Add product"
+--   2. Name + description (match the names above so invoices read clean)
+--   3. Pricing model: Standard pricing
+--      - For recurring: Recurring → Monthly OR Yearly (create both)
+--      - For one-time:  One-time
+--   4. Save → copy the price ID (price_xxx)
+--   5. Paste price ID into the matching env var below.
+--
+-- ────────────────────────────────────────────────────────────────────
+-- 2. Env vars (add to .env.local + production env)
+-- ────────────────────────────────────────────────────────────────────
+--
+--   # Recurring packs
+--   STRIPE_PRICE_VOICE_PACK_MONTHLY=price_...
+--   STRIPE_PRICE_VOICE_PACK_YEARLY=price_...
+--   STRIPE_PRICE_IMAGE_PACK_MONTHLY=price_...
+--   STRIPE_PRICE_IMAGE_PACK_YEARLY=price_...
+--   STRIPE_PRICE_COPILOT_PRO_PACK_MONTHLY=price_...
+--   STRIPE_PRICE_COPILOT_PRO_PACK_YEARLY=price_...
+--   STRIPE_PRICE_POWER_PACK_MONTHLY=price_...
+--   STRIPE_PRICE_POWER_PACK_YEARLY=price_...
+--
+--   # One-time top-ups
+--   STRIPE_PRICE_SESSION_BOOST=price_...
+--   STRIPE_PRICE_WEEKLY_BOOST=price_...
+--   STRIPE_PRICE_VOICE_MINUTE_PACK=price_...
+--   STRIPE_PRICE_IMAGE_CREDIT_PACK=price_...
+--   STRIPE_PRICE_COPILOT_TIME_PACK=price_...
+--
+-- ────────────────────────────────────────────────────────────────────
+-- 3. Code path (already wired in v0.1.4)
+-- ────────────────────────────────────────────────────────────────────
+--
+--   • Front: desktop/src/billing-panel.tsx → handleBoostClick()
+--     calls createDesktopBillingIntent(token, { addonKey: boost.key }).
+--   • API:   app/api/desktop/billing/payment-intent/route.ts checks
+--     isOneTimeBoost(addonKey):
+--       - true  → stripe.paymentIntents.create({...}) → return clientSecret
+--       - false → stripe.subscriptionItems.create({ subscription, price })
+--                 attaches the recurring pack to the user's existing
+--                 subscription (proration_behavior: create_prorations).
+--   • Front: one-time clientSecret opens <OneTimeBoostModal/> wrapping
+--     Stripe <Elements> + <CheckoutForm/> for confirmPayment.
+--
+-- ────────────────────────────────────────────────────────────────────
+-- 4. Future: usage credit ledger
+-- ────────────────────────────────────────────────────────────────────
+--
+-- The actual "+50 chats / +60 voice minutes / +25 images" credits are
+-- not yet redeemed against usage. When that lands, expect a new table:
+--
+--   create table public.boost_credits (
+--     id            uuid primary key default gen_random_uuid(),
+--     email         text not null,
+--     boost_key     text not null,
+--     amount        integer not null,         -- units depend on boost_key
+--     unit          text not null,            -- 'chats' | 'voice_seconds' | 'images' | 'copilot_seconds'
+--     remaining     integer not null,
+--     stripe_payment_intent text,             -- idempotency key
+--     created_at    timestamptz not null default now(),
+--     expires_at    timestamptz                -- weekly_boost expires at week reset
+--   );
+--   create index boost_credits_email_idx on public.boost_credits (email);
+--
+-- Webhook: payment_intent.succeeded with metadata.purchaseKind =
+-- 'one_time_boost' → insert a row using metadata.addonKey + email.
+-- recordUsage() then decrements remaining before counting against the
+-- plan's weekly_chat_requests cap.

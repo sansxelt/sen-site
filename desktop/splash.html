@@ -1,0 +1,987 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sansxel — launcher</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        background: #050505;
+        color: #fafafa;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue",
+          Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        user-select: none;
+        cursor: default;
+      }
+
+      .launcher {
+        position: relative;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        opacity: 1;
+        transition: opacity 460ms ease-in;
+      }
+
+      .launcher.fading {
+        opacity: 0;
+      }
+
+      /* Big soft purple halo behind the wordmark */
+      .launcher::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 55% 55% at 50% 50%, rgba(140, 92, 246, 0.55), transparent 60%),
+          radial-gradient(ellipse 80% 70% at 50% 50%, rgba(60, 40, 120, 0.22), transparent 75%);
+        pointer-events: none;
+      }
+
+      /* Subtle inner border so the borderless window has a defined edge */
+      .launcher-frame {
+        position: absolute;
+        inset: 0;
+        border: 1px solid rgba(140, 92, 246, 0.18);
+        pointer-events: none;
+        z-index: 5;
+      }
+
+      /* ── Main brand block, centered ─────────────────────────────── */
+      .brand {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand-wordmark {
+        font-size: 92px;
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        line-height: 1;
+        margin: 0;
+        color: #fcfcff;
+        text-shadow:
+          0 0 30px rgba(196, 168, 252, 0.35),
+          0 4px 36px rgba(140, 92, 246, 0.35);
+      }
+
+      .brand-tagline {
+        font-size: 17px;
+        font-weight: 400;
+        letter-spacing: 0.005em;
+        color: rgba(200, 200, 220, 0.55);
+        margin: 0;
+      }
+
+      /* Sharp horizontal "spotlight" band right under the wordmark —
+         the bright purple shelf in the reference image */
+      .brand-spotlight {
+        position: absolute;
+        left: 50%;
+        bottom: 28%;
+        transform: translateX(-50%);
+        width: 58%;
+        height: 60px;
+        background: radial-gradient(
+          ellipse 50% 100% at 50% 50%,
+          rgba(196, 168, 252, 0.6),
+          transparent 70%
+        );
+        filter: blur(10px);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ── Bottom row: status left, build info right ──────────────── */
+      .footer {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 22px 16px;
+        gap: 16px;
+      }
+
+      .footer-status {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 12px;
+        letter-spacing: 0.02em;
+        color: rgba(220, 220, 235, 0.85);
+        font-variant-numeric: tabular-nums;
+        min-height: 16px;
+      }
+
+      .footer-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #a78bfa;
+        box-shadow: 0 0 10px rgba(167, 139, 250, 0.7);
+        animation: dot-pulse 1.4s ease-in-out infinite;
+      }
+
+      .footer-status-label {
+        display: inline-block;
+        animation: label-swap 360ms ease-out;
+      }
+
+      .footer-build {
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(180, 180, 200, 0.42);
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      /* v0.1.13 \u2014 Bottom-corner shortcut hints. ALWAYS visible
+         regardless of minigame state so users know what to do.
+         Lives next to the footer-build on the right. */
+      .footer-shortcuts {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+      }
+
+      .footer-shortcut-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 9px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(180, 180, 200, 0.55);
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      .footer-shortcut-row.is-ready {
+        color: rgba(165, 243, 252, 0.92);
+      }
+
+      .footer-shortcut-row kbd {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        background: rgba(167, 139, 250, 0.12);
+        border: 1px solid rgba(167, 139, 250, 0.28);
+        color: rgba(220, 210, 255, 0.9);
+        font-family: inherit;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+      }
+
+      .footer-shortcut-row.is-ready kbd {
+        background: rgba(165, 243, 252, 0.16);
+        border-color: rgba(165, 243, 252, 0.42);
+        color: rgba(220, 250, 255, 0.96);
+      }
+
+      /* ── Progress bar pinned to the very bottom edge ─────────────── */
+      .progress {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.04);
+        overflow: hidden;
+        z-index: 3;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(
+          90deg,
+          rgba(167, 139, 250, 0.35),
+          #a78bfa 65%,
+          #c4b5fd
+        );
+        box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
+        /* Width is JS-driven so [Space] can boost it. transition keeps
+           the boost smooth instead of jumpy. */
+        transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      /* "[ space to skip ]" hint above the progress bar */
+      .skip-hint {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        transform: translateX(-50%);
+        z-index: 4;
+        font-size: 9px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+        color: rgba(200, 200, 220, 0.4);
+        opacity: 0;
+        animation: hint-fade-in 480ms ease-out 800ms forwards;
+        pointer-events: none;
+        user-select: none;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .skip-divider {
+        color: rgba(200, 200, 220, 0.25);
+      }
+
+      .skip-hint .skip-key {
+        display: inline-block;
+        padding: 2px 8px;
+        margin: 0 4px;
+        border-radius: 4px;
+        background: rgba(167, 139, 250, 0.12);
+        border: 1px solid rgba(167, 139, 250, 0.28);
+        color: rgba(220, 210, 255, 0.85);
+        letter-spacing: 0.12em;
+      }
+
+      .skip-hint.flash .skip-key {
+        background: rgba(167, 139, 250, 0.32);
+        border-color: rgba(196, 168, 252, 0.6);
+        color: #fff;
+        transition:
+          background 80ms ease-out,
+          border-color 80ms ease-out,
+          color 80ms ease-out;
+      }
+
+      /* v0.1.12 \u2014 the hint switches to a brighter cyan tone the moment
+         the app reports ready, so the user sees at a glance that pressing
+         ENTER will instantly hand off (no more guessing if the app is
+         loaded yet). */
+      .skip-hint.ready {
+        color: rgba(165, 243, 252, 0.92);
+        animation: hint-ready-pulse 1800ms ease-in-out infinite;
+      }
+      @keyframes hint-ready-pulse {
+        0%, 100% { text-shadow: 0 0 0 rgba(165, 243, 252, 0); }
+        50%      { text-shadow: 0 0 12px rgba(165, 243, 252, 0.4); }
+      }
+
+      /* v0.1.13 \u2014 secondary line under the main keys hint that
+         mentions the in-app ESC\u00d73 shortcut so users can discover
+         the splash-revisit trick. Wraps to its own row inside the
+         hint container. */
+      .skip-hint {
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: calc(100vw - 32px);
+      }
+      .skip-meta {
+        flex-basis: 100%;
+        margin-top: 6px;
+        font-size: 8px;
+        letter-spacing: 0.14em;
+        color: rgba(180, 180, 200, 0.42);
+      }
+      .skip-meta .skip-key {
+        margin: 0 2px;
+        padding: 1px 5px;
+        font-size: 8px;
+      }
+
+      @keyframes hint-fade-in {
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* ── Mini-game: one-key Space hopper ─────────────────────────── */
+      .mini-game {
+        position: absolute;
+        left: 50%;
+        bottom: 56px;
+        transform: translateX(-50%);
+        width: 420px;
+        z-index: 4;
+        opacity: 0;
+        animation: hint-fade-in 480ms ease-out 1100ms forwards;
+        user-select: none;
+      }
+
+      .mini-game-stage {
+        position: relative;
+        width: 100%;
+        height: 60px;
+        background: rgba(167, 139, 250, 0.04);
+        border: 1px solid rgba(167, 139, 250, 0.14);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      .mini-game-floor {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 8px;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(167, 139, 250, 0.32),
+          transparent
+        );
+      }
+
+      .mini-game-orb {
+        position: absolute;
+        left: 28px;
+        bottom: 9px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 35% 35%,
+          #e9defe 0%,
+          #a78bfa 60%,
+          #7c5cf0 100%
+        );
+        box-shadow: 0 0 12px rgba(167, 139, 250, 0.7);
+        transition: transform 18ms linear;
+        z-index: 2;
+      }
+
+      .mini-game-obstacles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .mg-obstacle {
+        position: absolute;
+        bottom: 9px;
+        width: 8px;
+        background: rgba(196, 168, 252, 0.65);
+        border-radius: 2px;
+        box-shadow: 0 0 6px rgba(196, 168, 252, 0.4);
+      }
+
+      .mini-game-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(180, 180, 200, 0.45);
+        font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+
+      .mini-game-score {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .mini-game-score #mg-score {
+        color: rgba(220, 210, 255, 0.95);
+        font-weight: 600;
+      }
+
+      .mini-game-best {
+        margin-left: 10px;
+        opacity: 0.65;
+      }
+
+      /* Scanning shimmer over the progress bar */
+      .progress::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.18),
+          transparent
+        );
+        transform: translateX(-100%);
+        animation: scan 2.4s linear infinite;
+      }
+
+      @keyframes dot-pulse {
+        0%, 100% {
+          opacity: 0.45;
+          transform: scale(0.85);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes label-swap {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+          filter: blur(2px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+          filter: blur(0);
+        }
+      }
+
+      @keyframes scan {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="launcher" id="launcher">
+      <div class="launcher-frame"></div>
+
+      <div class="brand">
+        <h1 class="brand-wordmark">sansxel</h1>
+        <p class="brand-tagline">Build something real.</p>
+        <div class="brand-spotlight"></div>
+      </div>
+
+      <!-- v0.1.13 \u2014 Clean bottom corners: status (boot step) on the
+           left, version on the right. Keyboard shortcuts moved to the
+           Settings > Keyboard shortcuts panel so users can discover
+           them once and the splash stays uncluttered. The id stubs for
+           shortcut-row-primary + skip-hint stay (display:none) so the
+           existing JS that toggles their state classes doesn't crash. -->
+      <div class="footer">
+        <div class="footer-status">
+          <span class="footer-status-dot"></span>
+          <span class="footer-status-label" id="status-label">Initializing sansxel core</span>
+        </div>
+        <div class="footer-build">v0.1.13</div>
+      </div>
+
+      <!-- Hidden stubs kept for legacy JS callers. -->
+      <div id="shortcut-row-primary" style="display:none" aria-hidden="true"></div>
+      <div class="skip-hint" id="skip-hint" style="display:none" aria-hidden="true"></div>
+
+      <!-- v0.1.6 — tiny one-key mini-game while the splash holds.
+           Tap Space to hop the sansxel orb over scrolling obstacles.
+           Doubles as the boost key for the progress bar; doubles as
+           jump for the game. Score persists across launches. -->
+      <div class="mini-game" id="mini-game">
+        <div class="mini-game-stage" id="mg-stage">
+          <div class="mini-game-orb" id="mg-orb"></div>
+          <div class="mini-game-obstacles" id="mg-obstacles"></div>
+          <div class="mini-game-floor"></div>
+        </div>
+        <div class="mini-game-meta">
+          <span class="mini-game-label">Mini‑hop</span>
+          <span class="mini-game-score">
+            <span id="mg-score">0</span>
+            <span class="mini-game-best">best <span id="mg-best">0</span></span>
+          </span>
+        </div>
+      </div>
+
+      <div class="progress">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        // Helper: safely call a Tauri command. Returns silently if the
+        // Tauri runtime isn't available (e.g. plain-browser preview).
+        function tauriInvoke(cmd) {
+          try {
+            var invoke =
+              window.__TAURI__ &&
+              window.__TAURI__.core &&
+              window.__TAURI__.core.invoke;
+            if (invoke) return invoke(cmd);
+          } catch (err) {
+            console.error("invoke(" + cmd + ") failed:", err);
+          }
+        }
+
+        // Force splash on top + grab keyboard focus so [Space]
+        // works without the user having to click the splash first.
+        tauriInvoke("lock_splash_focus");
+
+        // Minimize every other top-level window so only the splash is
+        // visible during boot. User can restore via taskbar after.
+        tauriInvoke("minimize_other_windows");
+
+        // Re-grab focus once more after the minimize-others sweep,
+        // since some apps fight back briefly.
+        setTimeout(function () {
+          tauriInvoke("lock_splash_focus");
+        }, 250);
+
+        // Auto-focus body so keyboard events route here even if the
+        // window manager doesn't grab focus cleanly.
+        try { window.focus(); document.body.focus(); } catch (_) {}
+
+        // ── Progress + label scheduling ─────────────────────────────
+        // Steps describe the label order while progress advances.
+        // Progress itself is JS-driven via
+        // setInterval so [Space] can boost it. Labels swap when
+        // progress crosses each step's cumulative threshold.
+        var steps = [
+          { label: "Initializing sansxel core", weight: 1 },
+          { label: "Loading workspace memory", weight: 1.2 },
+          { label: "Connecting sansxel-1", weight: 1.4 },
+          { label: "Preparing your space", weight: 0.8 },
+        ];
+        // v0.1.12 splash overhaul — patient by default.
+        // - Loader bar fills as a visual indicator of real boot progress
+        //   but NEVER triggers handover on its own.
+        // - The minigame stays interactive indefinitely so the user
+        //   can play as long as they want.
+        // - Handover ONLY happens when the user presses ENTER, AND only
+        //   after the main app has reported ready (so we never hand off
+        //   into a black gap).
+        // - Hard safety cap at 5 minutes so a true crash can't strand
+        //   the user staring at a splash forever (defensive, not normal).
+        var MIN_SPLASH_MS = 2800;     // visual fill duration for the loader bar
+        var TICK_MS = 40;
+        var PRE_HANDOFF_CAP = 0.94;   // bar caps here until main reports ready
+        var SAFETY_CAP_MS = 5 * 60 * 1000;
+        var splashStartedAt = Date.now();
+
+        // Cumulative progress thresholds where the label swaps
+        var totalWeight = 0;
+        for (var s = 0; s < steps.length; s++) totalWeight += steps[s].weight;
+        var thresholds = [];
+        var acc = 0;
+        for (var k = 0; k < steps.length; k++) {
+          acc += steps[k].weight / totalWeight;
+          thresholds.push(acc);
+        }
+
+        var fillEl = document.getElementById("progress-fill");
+        var labelEl = document.getElementById("status-label");
+        var hintEl = document.getElementById("skip-hint");
+
+        var progress = 0; // 0..1
+        var currentStep = -1;
+        var handedOver = false;
+        var mainReady = false;
+        var continueRequested = false;
+
+        // Anti-spam decay for [Space] boosts:
+        //   - Each press normally adds BOOST_MAX progress (~7%).
+        //   - If the user spams, the multiplier decays toward
+        //     BOOST_MIN (~1%). Every "calm" press refills it.
+        // The decay represents recent boost-energy used; it bleeds
+        // off at REFILL_PER_MS so steady-but-not-spammed presses
+        // stay near full strength.
+        var BOOST_MAX = 0.07;
+        var BOOST_MIN = 0.01;
+        var SPAM_DECAY_PER_PRESS = 0.45; // how much energy each press consumes
+        var REFILL_PER_MS = 0.0018;       // energy refill rate
+        var spamLoad = 0;                 // 0..1 — higher = more recent spam
+        var lastBoostAt = 0;
+
+        function setLabelFor(stepIdx) {
+          if (!labelEl || stepIdx >= steps.length) return;
+          if (stepIdx === currentStep) return;
+          currentStep = stepIdx;
+          labelEl.textContent = steps[stepIdx].label;
+          labelEl.style.animation = "none";
+          void labelEl.offsetHeight;
+          labelEl.style.animation = "";
+        }
+
+        function paint() {
+          var pct = Math.max(0, Math.min(1, progress)) * 100;
+          fillEl.style.width = pct.toFixed(2) + "%";
+          // Move the label to whichever step our progress falls into
+          for (var idx = 0; idx < thresholds.length; idx++) {
+            if (progress < thresholds[idx]) {
+              setLabelFor(idx);
+              break;
+            }
+            if (idx === thresholds.length - 1) setLabelFor(idx);
+          }
+        }
+
+        function finishBootSequence() {
+          if (handedOver) return;
+          handedOver = true;
+          clearInterval(ticker);
+          clearInterval(readyPoll);
+          progress = 1;
+          paint();
+          handover();
+        }
+
+        // v0.1.12 — ENTER is the ONLY way to advance from splash.
+        // - If main is ready, hand over immediately.
+        // - If main isn't ready yet, mark continueRequested + show
+        //   "Waiting for app..." so the user knows we'll go the
+        //   moment it's ready. No need to press ENTER again.
+        function requestContinue() {
+          continueRequested = true;
+          if (mainReady) {
+            finishBootSequence();
+            return;
+          }
+          if (MG.metaLabel) {
+            MG.metaLabel.textContent = "Waiting for app\u2026";
+          }
+          if (primaryRowEl) {
+            primaryRowEl.innerHTML =
+              "waiting for app\u2026 we'll continue the moment it's ready";
+          }
+        }
+
+        function flashHint() {
+          if (!hintEl) return;
+          hintEl.classList.add("flash");
+          setTimeout(function () {
+            hintEl.classList.remove("flash");
+          }, 110);
+        }
+
+        // v0.1.12 \u2014 boost is now PURELY visual. Pressing Space nudges
+        // the loader bar but never auto-advances the splash. The user
+        // controls when to leave (ENTER).
+        function boost() {
+          var now = Date.now();
+          if (lastBoostAt) {
+            spamLoad = Math.max(0, spamLoad - (now - lastBoostAt) * REFILL_PER_MS);
+          }
+          lastBoostAt = now;
+
+          var headroom = 1 - spamLoad;
+          var amount = BOOST_MIN + (BOOST_MAX - BOOST_MIN) * headroom;
+          // Bar caps at PRE_HANDOFF_CAP until the app reports ready,
+          // at which point it can finish to 100%. Either way: visual
+          // feedback only, no handover.
+          var maxProgress = mainReady ? 1 : PRE_HANDOFF_CAP;
+          progress = Math.min(maxProgress, progress + amount);
+
+          spamLoad = Math.min(1, spamLoad + SPAM_DECAY_PER_PRESS);
+
+          paint();
+          flashHint();
+        }
+
+        // v0.1.12 splash flow:
+        //   - Loader bar fills smoothly to PRE_HANDOFF_CAP over MIN_SPLASH_MS
+        //     as a visual indicator that boot is in progress.
+        //   - In parallel we poll Rust for is_main_ready every 80ms.
+        //   - The MOMENT main signals ready, the bar releases to 100%,
+        //     the hint switches to "READY \u00b7 Press ENTER to continue",
+        //     and IF the user has already pressed ENTER (continueRequested)
+        //     we hand over immediately. Otherwise we wait \u2014 the user
+        //     controls when to leave so they can keep playing the minigame.
+        //   - Hard SAFETY_CAP_MS (5 min) prevents a true crash from
+        //     stranding the user staring at a splash forever.
+        var FORCE_HANDOVER_AT = splashStartedAt + SAFETY_CAP_MS;
+
+        // v0.1.13 \u2014 the bottom-right footer-shortcut row now owns the
+        // active hint copy. Goes cyan + reorders when the app reports
+        // ready so users see at a glance that ENTER will hand off
+        // instantly. The legacy centered .skip-hint is kept as a
+        // hidden stub so any existing callers still have an element
+        // to poke without crashing.
+        var primaryRowEl = document.getElementById("shortcut-row-primary");
+        function refreshHintForReady() {
+          if (primaryRowEl) {
+            if (mainReady) {
+              primaryRowEl.innerHTML =
+                'ready! &nbsp;<kbd>enter</kbd> open app' +
+                ' <span style="margin: 0 4px; opacity: 0.5;">&middot;</span>' +
+                ' <kbd>space</kbd> keep playing';
+              primaryRowEl.classList.add("is-ready");
+            } else {
+              primaryRowEl.innerHTML =
+                '<kbd>space</kbd> play' +
+                ' <span style="margin: 0 4px; opacity: 0.4;">&middot;</span>' +
+                ' <kbd>enter</kbd> open app';
+              primaryRowEl.classList.remove("is-ready");
+            }
+          }
+          if (hintEl) {
+            // Legacy stub stays in sync for any external caller.
+            hintEl.classList.toggle("ready", mainReady);
+          }
+        }
+        refreshHintForReady();
+
+        var ticker = setInterval(function () {
+          if (handedOver) {
+            clearInterval(ticker);
+            return;
+          }
+          var elapsed = Date.now() - splashStartedAt;
+          var cap = mainReady ? 1 : PRE_HANDOFF_CAP;
+          var target = Math.min(
+            cap,
+            (elapsed / MIN_SPLASH_MS) * cap
+          );
+          progress = Math.min(cap, Math.max(progress, target));
+          paint();
+        }, TICK_MS);
+
+        var readyPoll = setInterval(function () {
+          if (handedOver) {
+            clearInterval(readyPoll);
+            return;
+          }
+          var readyRequest = tauriInvoke("is_main_ready");
+          if (!readyRequest || typeof readyRequest.then !== "function") {
+            // Non-Tauri host (dev preview): mark ready so ENTER works.
+            if (!mainReady) {
+              mainReady = true;
+              refreshHintForReady();
+              if (continueRequested) finishBootSequence();
+            }
+            return;
+          }
+          readyRequest.then(function (ready) {
+            if (ready === true && !mainReady) {
+              mainReady = true;
+              refreshHintForReady();
+              if (MG.metaLabel) {
+                MG.metaLabel.textContent = continueRequested
+                  ? "Finishing launch\u2026"
+                  : "Mini\u2011hop \u00b7 ready when you are";
+              }
+              if (continueRequested) finishBootSequence();
+              return;
+            }
+            // Safety net: if main truly never reports ready, eventually
+            // bail so the user isn't trapped. 5 min is generous; real
+            // boot is sub-second.
+            if (Date.now() > FORCE_HANDOVER_AT) {
+              finishBootSequence();
+            }
+          }).catch(function () {
+            // tauriInvoke threw \u2014 dev preview / no Tauri host.
+            if (!mainReady) {
+              mainReady = true;
+              refreshHintForReady();
+              if (continueRequested) finishBootSequence();
+            }
+          });
+        }, 80);
+
+        // ── Mini-game: one-key Space hopper (v0.1.7 rewrite) ───────────
+        // Game stays interactive even AFTER the loader bar is full \u2014
+        // it keeps running while we wait on main_ready. Game does NOT
+        // start until the user actually presses Space (no zero-input
+        // auto-progress). ENTER triggers handover when the user is done.
+        // The loader bar fills on its own time \u2014 it's the boot timer,
+        // not the game score.
+        var MG = {
+          stage: document.getElementById("mg-stage"),
+          orb: document.getElementById("mg-orb"),
+          obs: document.getElementById("mg-obstacles"),
+          scoreEl: document.getElementById("mg-score"),
+          bestEl: document.getElementById("mg-best"),
+          metaLabel: document.querySelector(".mini-game-label"),
+          y: 0, vy: 0, jumping: false,
+          GRAVITY: 0.7, JUMP_VY: 9.5,
+          usedDouble: false,
+          speed: 2.15,
+          obstacles: [],
+          spawnEvery: 80, sinceSpawn: 0,
+          respawnTimer: null,
+          score: 0,
+          best: parseInt(window.localStorage.getItem("sansxel.mg.best") || "0", 10) || 0,
+          // Game starts in "idle" state \u2014 first Space starts it.
+          started: false,
+          alive: true,
+        };
+        MG.bestEl.textContent = MG.best;
+        if (MG.metaLabel) MG.metaLabel.textContent = "Press Space to play";
+
+        function mgJump() {
+          if (!MG.alive) {
+            // Crash recovery \u2014 restart AND immediately jump in one
+            // press (not two). Single Space brings the game back.
+            mgRestart(true);
+            MG.vy = MG.JUMP_VY;
+            MG.jumping = true;
+            if (MG.metaLabel) MG.metaLabel.textContent = "Mini\u2011hop";
+            return;
+          }
+          if (!MG.started) {
+            MG.started = true;
+            if (MG.metaLabel) MG.metaLabel.textContent = "Mini\u2011hop";
+          }
+          if (!MG.jumping) {
+            MG.vy = MG.JUMP_VY;
+            MG.jumping = true;
+          } else if (!MG.usedDouble && MG.vy < 2) {
+            MG.vy = MG.JUMP_VY * 0.7;
+            MG.usedDouble = true;
+          }
+        }
+
+        function mgRestart(autoResume) {
+          if (MG.respawnTimer) {
+            clearTimeout(MG.respawnTimer);
+            MG.respawnTimer = null;
+          }
+          MG.score = 0; MG.scoreEl.textContent = "0";
+          MG.y = 0; MG.vy = 0; MG.jumping = false; MG.usedDouble = false;
+          for (var i = 0; i < MG.obstacles.length; i++) MG.obstacles[i].el.remove();
+          MG.obstacles = [];
+          MG.sinceSpawn = 0; MG.spawnEvery = 88;
+          MG.alive = true;
+          MG.started = !!autoResume;
+          if (MG.metaLabel) {
+            MG.metaLabel.textContent = autoResume ? "Mini\u2011hop" : "Press Space to play";
+          }
+        }
+
+        function mgCrash() {
+          if (!MG.alive) return;
+          MG.alive = false;
+          if (MG.metaLabel) MG.metaLabel.textContent = "Crashed \u2014 relaunching";
+          MG.respawnTimer = setTimeout(function () {
+            MG.respawnTimer = null;
+            if (!handedOver) {
+              mgRestart(true);
+            }
+          }, 900);
+        }
+
+        function mgSpawn() {
+          var el = document.createElement("div");
+          el.className = "mg-obstacle";
+          var h = 10 + Math.floor(Math.random() * 13);
+          el.style.height = h + "px";
+          el.style.left = "100%";
+          MG.obs.appendChild(el);
+          MG.obstacles.push({ el: el, x: MG.stage.offsetWidth, h: h, scored: false });
+        }
+
+        function mgTick() {
+          // Game keeps running until the splash window actually closes,
+          // even after the loader bar is full. Don't gate on handedOver.
+          if (MG.started && MG.alive) {
+            MG.vy -= MG.GRAVITY;
+            MG.y += MG.vy;
+            if (MG.y <= 0) {
+              MG.y = 0; MG.vy = 0; MG.jumping = false; MG.usedDouble = false;
+            }
+
+            MG.sinceSpawn++;
+            if (MG.sinceSpawn >= MG.spawnEvery) {
+              MG.sinceSpawn = 0;
+              MG.spawnEvery = 72 + Math.floor(Math.random() * 48);
+              mgSpawn();
+            }
+
+            var keep = [];
+            for (var i = 0; i < MG.obstacles.length; i++) {
+              var o = MG.obstacles[i];
+              o.x -= MG.speed;
+              o.el.style.left = o.x + "px";
+
+              // Collision: orb sits at x=28, width=14, height=14. Obstacle
+              // is at o.x with width 8 + height o.h. Orb bottom is at
+              // 9 + MG.y. Orb top is 9 + MG.y + 14.
+              var orbX1 = 28, orbX2 = 28 + 14;
+              var obX1 = o.x, obX2 = o.x + 8;
+              var orbBottom = 9 + MG.y;
+              var orbTop = orbBottom + 14;
+              var obTop = 9 + o.h;
+              if (obX1 < orbX2 && obX2 > orbX1 && orbBottom < obTop) {
+                mgCrash();
+              }
+
+              if (!o.scored && o.x < 24) {
+                o.scored = true;
+                MG.score++;
+                MG.scoreEl.textContent = MG.score;
+                if (MG.score > MG.best) {
+                  MG.best = MG.score;
+                  MG.bestEl.textContent = MG.best;
+                  try { window.localStorage.setItem("sansxel.mg.best", String(MG.best)); } catch (_) {}
+                }
+              }
+
+              if (o.x > -20) keep.push(o);
+              else o.el.remove();
+            }
+            MG.obstacles = keep;
+          }
+          MG.orb.style.transform = "translateY(" + (-MG.y) + "px)";
+          requestAnimationFrame(mgTick);
+        }
+        requestAnimationFrame(mgTick);
+
+        // Keys:
+        //   Space \u2192 start game / hop / restart-after-crash + boost loader
+        //   Enter \u2192 continue as soon as the app is actually ready
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            if (!handedOver) requestContinue();
+            return;
+          }
+          if (e.code === "Space" || e.key === " " || e.key === "Spacebar") {
+            e.preventDefault();
+            if (!handedOver) {
+              mgJump();
+              boost();
+            }
+          }
+        });
+
+        function handover() {
+          var launcher = document.getElementById("launcher");
+          if (launcher) launcher.classList.add("fading");
+
+          // Tell Rust to close the splash and (after its 2.4s blackout
+          // gap) reveal the main window. Wait for the fade transition
+          // (~460ms) so the handover is smooth.
+          setTimeout(function () {
+            tauriInvoke("boot_complete");
+          }, 460);
+        }
+      })();
+    </script>
+  </body>
+</html>

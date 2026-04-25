@@ -1,0 +1,6544 @@
+/* Boot overlay styles live inline in index.html so they paint instantly,
+   before this CSS file is even fetched. Anything below here applies to
+   the React-rendered main shell only. */
+
+/* ── Accent palette (driven by data-accent on <html>) ─────────────── */
+:root {
+  --accent: #a78bfa;
+  --accent-strong: #c4b5fd;
+  --accent-glow: rgba(167, 139, 250, 0.55);
+  --accent-soft: rgba(167, 139, 250, 0.16);
+  --accent-border: rgba(167, 139, 250, 0.35);
+}
+:root[data-accent="blue"] {
+  --accent: #60a5fa;
+  --accent-strong: #93c5fd;
+  --accent-glow: rgba(96, 165, 250, 0.55);
+  --accent-soft: rgba(96, 165, 250, 0.16);
+  --accent-border: rgba(96, 165, 250, 0.35);
+}
+:root[data-accent="green"] {
+  --accent: #34d399;
+  --accent-strong: #6ee7b7;
+  --accent-glow: rgba(52, 211, 153, 0.55);
+  --accent-soft: rgba(52, 211, 153, 0.16);
+  --accent-border: rgba(52, 211, 153, 0.35);
+}
+:root[data-accent="amber"] {
+  --accent: #fbbf24;
+  --accent-strong: #fcd34d;
+  --accent-glow: rgba(251, 191, 36, 0.55);
+  --accent-soft: rgba(251, 191, 36, 0.16);
+  --accent-border: rgba(251, 191, 36, 0.35);
+}
+:root[data-accent="rose"] {
+  --accent: #fb7185;
+  --accent-strong: #fda4af;
+  --accent-glow: rgba(251, 113, 133, 0.55);
+  --accent-soft: rgba(251, 113, 133, 0.16);
+  --accent-border: rgba(251, 113, 133, 0.35);
+}
+
+/* ── Bubble shape (driven by data-bubble-shape on <html>, v0.1.4) ──
+   Per-account chat bubble silhouette. The chat-msg radius below uses
+   var(--bubble-radius), which falls back to var(--density-msg-radius)
+   so existing density behavior still works when no bubble shape is
+   set. */
+:root {
+  --bubble-radius: var(--density-msg-radius);
+}
+:root[data-bubble-shape="rounded"] {
+  --bubble-radius: 20px;
+}
+:root[data-bubble-shape="square"] {
+  --bubble-radius: 6px;
+}
+:root[data-bubble-shape="pill"] {
+  --bubble-radius: 999px;
+}
+
+/* ── Density (driven by data-density on <html>) ──────────────────── */
+:root {
+  --density-pad-x: 64px;
+  --density-pad-y: 24px;
+  --density-msg-pad-y: 12px;
+  --density-msg-gap: 14px;
+  --density-msg-radius: 16px;
+}
+:root[data-density="compact"] {
+  --density-pad-x: 32px;
+  --density-pad-y: 14px;
+  --density-msg-pad-y: 8px;
+  --density-msg-gap: 8px;
+  --density-msg-radius: 12px;
+}
+:root[data-density="spacious"] {
+  --density-pad-x: 88px;
+  --density-pad-y: 36px;
+  --density-msg-pad-y: 16px;
+  --density-msg-gap: 20px;
+  --density-msg-radius: 20px;
+}
+
+.stage {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #050505;
+  animation: stage-fade-in 520ms ease-out;
+}
+
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(140, 92, 246, 0.18), transparent 55%),
+    radial-gradient(circle at 50% 50%, rgba(60, 40, 120, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.stage--workspace::before {
+  /* Tone the radial glow way down for the workspace. */
+  background:
+    radial-gradient(circle at 50% 0%, rgba(140, 92, 246, 0.08), transparent 50%);
+}
+
+/* ── Background patterns (driven by data-bg-pattern on <html>, v0.1.4)
+   Painted onto .stage::after so they sit above the radial glow but
+   below all UI. Subtle by design — these are textures, not features.
+   Default (data-bg-pattern="none") leaves ::after empty. */
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: none;
+}
+
+:root[data-bg-pattern="dots"] .stage::after {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  background-position: 0 0;
+}
+
+:root[data-bg-pattern="grid"] .stage::after {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+:root[data-bg-pattern="gradient"] .stage::after {
+  background-image: linear-gradient(
+    135deg,
+    rgba(140, 92, 246, 0.05),
+    rgba(60, 40, 120, 0.04) 40%,
+    rgba(140, 92, 246, 0.05) 80%
+  );
+  background-size: 200% 200%;
+  animation: stage-bg-gradient 18s ease-in-out infinite;
+}
+
+@keyframes stage-bg-gradient {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* "Comped" pill shown on the plan card when a paid tier was granted
+   without a Stripe subscription — replaces the dangling Add card +
+   Cancel at period end CTAs. */
+.billing-comped-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  background: rgba(167, 139, 250, 0.1);
+  color: rgba(220, 210, 255, 0.92);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Custom scrollbars (Chromium WebView2) ──────────────────────────
+   Replace the OS default scrollbars with thin purple-tinted ones.
+   Applies app-wide by default; everything inherits this. */
+* {
+  scrollbar-color: rgba(167, 139, 250, 0.25) transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.18);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background 160ms ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.42);
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* v0.1.13 \u2014 strip the native +/- spinner buttons from <input type=
+   "number"> across the app. They render as ugly OS-tinted arrow blocks
+   that ignore the rest of the dark UI (Buy Credits modal screenshot
+   was showing this). User can still type any value and the slider /
+   keyboard arrows still adjust the number. */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* ── Custom borderless title bar ────────────────────────────────────
+   Native window decorations are off (decorations: false). This
+   strip provides the drag region + window controls + brand mark.
+   Sits above everything else in the stage. */
+.titlebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  z-index: 20;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 8, 12, 0.85),
+    rgba(8, 8, 12, 0.55) 70%,
+    transparent
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  user-select: none;
+  -webkit-user-select: none;
+  /* Backdrop blur for that glassy native feel */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.titlebar-spacer {
+  flex: 1;
+  height: 100%;
+}
+
+.titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  height: 100%;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  color: rgba(220, 220, 235, 0.75);
+  font-weight: 500;
+}
+
+.titlebar-brand-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  object-fit: contain;
+  opacity: 0.9;
+}
+
+.titlebar-brand-name {
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.titlebar-controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.titlebar-btn {
+  width: 46px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  color: rgba(220, 220, 235, 0.7);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.titlebar-btn--close:hover {
+  background: #e81123;
+  color: #fff;
+}
+
+.titlebar-btn:focus-visible {
+  outline: 1px solid rgba(167, 139, 250, 0.6);
+  outline-offset: -2px;
+}
+
+/* Push the workspace + signed-out shell down so they don't render
+   underneath the floating title bar. */
+.stage--workspace .ws,
+.stage .main {
+  top: 36px;
+}
+
+/* ── Signed-out shell ────────────────────────────────────────────── */
+
+.main {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.main-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.main-brand-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+}
+
+.main-brand-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.main-brand-name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.main-brand-sub {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.5);
+  margin-left: 4px;
+}
+
+.main-signin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(230, 230, 240, 0.85);
+  padding: 6px 14px 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.main-signin-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(167, 139, 250, 0.45);
+  color: #fafafa;
+}
+
+.main-signin-btn:focus-visible {
+  outline: 2px solid rgba(167, 139, 250, 0.7);
+  outline-offset: 2px;
+}
+
+.main-signin-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.55);
+}
+
+.main-auth-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.main-auth-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.main-auth-pill--muted {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(180, 180, 200, 0.6);
+}
+
+.main-auth-link {
+  background: transparent;
+  border: 0;
+  color: rgba(180, 180, 200, 0.55);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: color 180ms ease;
+}
+
+.main-auth-link:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.main-auth-error {
+  font-size: 11px;
+  color: rgba(254, 202, 202, 0.85);
+  max-width: 220px;
+  text-align: right;
+  line-height: 1.4;
+}
+
+.main-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.main-empty {
+  text-align: center;
+  max-width: 480px;
+}
+
+.main-empty h1 {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px 0;
+  color: #fafafa;
+}
+
+.main-empty p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(180, 180, 200, 0.7);
+  margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Workspace — nav rail + view content
+   ───────────────────────────────────────────────────────────────────── */
+
+.ws {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  /* v0.1.7: nav rail is now ALWAYS expanded at 220px. The hover-to-
+     expand was making people think the app was broken. */
+  grid-template-columns: 220px 1fr;
+  z-index: 1;
+}
+
+.ws-main {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+/* ── Nav rail (always 220px wide) ────────────────────────────────
+   v0.1.7: dropped the hover-to-expand. Always expanded so users
+   can read labels without discovering the hover trick. */
+/* ── v0.1.12 \u2014 Capsule Rail launcher CTA in the nav rail ────────────
+   Replaces the old tiny ws-nav-status row that was easy to miss.
+   This is now a real CTA: violet-accented card, pulsing dot, name +
+   subtitle. Sits at the top of the nav so the floating copilot has
+   a discoverable entry point. */
+.ws-nav-copilot-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 12px 8px 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.18), transparent 60%),
+    rgba(167, 139, 250, 0.06);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  color: rgba(245, 245, 250, 0.96);
+  transition:
+    transform 160ms ease,
+    border-color 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.ws-nav-copilot-cta:hover {
+  border-color: rgba(196, 168, 252, 0.55);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.26), transparent 60%),
+    rgba(167, 139, 250, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(167, 139, 250, 0.18);
+}
+
+.ws-nav-copilot-cta:active {
+  transform: translateY(0);
+}
+
+.ws-nav-copilot-cta-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 168, 252, 0.55);
+  background: rgba(167, 139, 250, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-nav-copilot-cta-pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #c4b5fd;
+  box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.5);
+  animation: ws-nav-copilot-pulse 2200ms ease-in-out infinite;
+}
+
+@keyframes ws-nav-copilot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(167, 139, 250, 0);
+    opacity: 0.85;
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(167, 139, 250, 0.18);
+    opacity: 1;
+  }
+}
+
+.ws-nav-copilot-cta-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.ws-nav-copilot-cta-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: #fafafa;
+}
+
+.ws-nav-copilot-cta-sub {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(196, 168, 252, 0.78);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ws-nav-copilot-cta-pulse {
+    animation: none;
+  }
+}
+
+.ws-nav {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 8, 10, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 14px 0 12px 0;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.ws-nav-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px 0 26px;
+  height: 28px;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+.ws-nav-status--button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  border-radius: 6px;
+  transition: background 140ms ease;
+}
+
+.ws-nav-status--button:hover {
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.ws-nav-status-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: status-pulse 2.6s ease-in-out infinite;
+}
+
+.ws-nav-status-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(220, 220, 235, 0.7);
+}
+
+/* v0.1.7: nav rail is always expanded so labels are always visible. */
+.ws-nav-label {
+  font-size: 13px;
+  letter-spacing: 0.005em;
+  color: inherit;
+}
+
+.ws-nav-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 12px 0 12px;
+  flex: 1;
+}
+
+.ws-nav-btn {
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  background: transparent;
+  border: 0;
+  color: rgba(180, 180, 200, 0.65);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 8px;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.ws-nav-btn-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(230, 230, 240, 0.95);
+}
+
+.ws-nav-btn.active {
+  background: var(--accent-soft);
+  color: #fafafa;
+}
+
+.ws-nav-foot {
+  padding: 8px 12px 0 12px;
+}
+
+/* Account card — collapsed shows just the avatar circle, expanded
+   shows name + email + plan + version. Whole thing is a button. */
+.ws-nav-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.ws-nav-account:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.ws-nav-account.active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.ws-nav-avatar-circle {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: #fafafa;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-nav-account-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ws-nav-account-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ws-nav-account-email {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ws-nav-account-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.ws-nav-account-plan {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+.ws-nav-account-version {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  color: rgba(180, 180, 200, 0.45);
+}
+
+.ws-nav-avatar:hover {
+  background: rgba(167, 139, 250, 0.35);
+}
+.ws-nav-avatar.active {
+  border-color: var(--accent-strong);
+  background: var(--accent);
+  color: #0a0a0a;
+}
+
+/* Account view extras: jump grid + sign-out row */
+.account-jump-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+.account-jump {
+  text-align: left;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.account-jump:hover {
+  background: rgba(167, 139, 250, 0.08);
+  border-color: var(--accent-border);
+}
+.account-jump-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+  margin-bottom: 3px;
+}
+.account-jump-sub {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.6);
+  line-height: 1.4;
+}
+.account-signout-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.account-signout {
+  background: transparent;
+  border: 1px solid rgba(254, 202, 202, 0.25);
+  color: rgba(254, 202, 202, 0.85);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 160ms ease;
+}
+.account-signout:hover {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(254, 202, 202, 0.45);
+  color: #fff;
+}
+
+/* Usage view */
+.usage-card {
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  border-radius: 14px;
+}
+.usage-card-head {
+  display: flex;
+  justify-content: space-between;
+}
+.usage-card-tag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+}
+.usage-card-num {
+  margin-top: 6px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #fafafa;
+  font-variant-numeric: tabular-nums;
+}
+.usage-card-of {
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(180, 180, 200, 0.6);
+}
+.usage-bar {
+  margin-top: 14px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.usage-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 360ms ease;
+}
+.usage-throttle {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(254, 215, 170, 0.9);
+}
+.usage-throttle-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(254, 191, 36, 0.95);
+  margin-right: 8px;
+}
+.usage-throttle-tier {
+  color: #fff;
+  font-weight: 500;
+}
+.usage-list {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.usage-row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.usage-row:last-child {
+  border-bottom: 0;
+}
+.usage-row-kind {
+  font-weight: 500;
+  color: rgba(220, 220, 235, 0.95);
+}
+.usage-row-meta {
+  color: rgba(180, 180, 200, 0.6);
+  truncate: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.usage-row-mono {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+}
+.usage-row-tokens {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  color: rgba(220, 220, 235, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+.usage-row-time {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.45);
+}
+/* 7-day chart */
+.usage-chart {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  align-items: end;
+  height: 110px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+.usage-chart-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 4px;
+}
+.usage-chart-count {
+  font-size: 10px;
+  color: rgba(180, 180, 200, 0.6);
+  font-variant-numeric: tabular-nums;
+  height: 12px;
+}
+.usage-chart-bar {
+  width: 100%;
+  height: 65px;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 4px 4px 2px 2px;
+  overflow: hidden;
+}
+.usage-chart-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--accent), var(--accent-soft));
+  border-radius: 4px 4px 2px 2px;
+  min-height: 2px;
+  transition: height 280ms var(--ease, ease);
+}
+.usage-chart-label {
+  font-size: 10px;
+  color: rgba(180, 180, 200, 0.55);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.usage-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(180, 180, 200, 0.55);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.usage-empty-note {
+  max-width: 420px;
+  margin: 0 auto 12px auto;
+  line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Update banner + What's new overlay
+   ───────────────────────────────────────────────────────────────────── */
+
+.upd-banner {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 70;
+  width: min(360px, calc(100vw - 36px));
+  background: #0d0d10;
+  border: 1px solid var(--accent-border);
+  border-radius: 14px;
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px var(--accent-soft);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: upd-banner-in 280ms var(--ease, ease-out);
+}
+
+@keyframes upd-banner-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.upd-banner--downloading {
+  border-color: var(--accent-border);
+}
+.upd-banner--ready {
+  border-color: rgba(34, 197, 94, 0.45);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(34, 197, 94, 0.18);
+}
+.upd-banner--error {
+  border-color: rgba(254, 202, 202, 0.45);
+}
+
+.upd-banner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: rgba(245, 245, 250, 0.95);
+}
+.upd-banner-body strong {
+  font-weight: 600;
+}
+.upd-banner-version {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.65);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.upd-banner-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(180, 180, 200, 0.62);
+}
+
+.upd-banner-hint kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  margin: 0 1px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 10px;
+  color: rgba(232, 224, 255, 0.94);
+}
+
+.upd-banner-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.upd-banner-btn {
+  background: var(--accent);
+  border: 0;
+  color: #0a0a0a;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.upd-banner-btn:hover {
+  background: var(--accent-strong);
+}
+
+.upd-banner-x {
+  background: transparent;
+  border: 0;
+  color: rgba(180, 180, 200, 0.55);
+  padding: 4px 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 6px;
+}
+.upd-banner-x:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.upd-banner-bar {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.upd-banner-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 999px;
+  transition: width 220ms ease;
+}
+
+/* What's new — centered overlay shown once per new version */
+.whats-new-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 75;
+  background: rgba(5, 5, 8, 0.78);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: upd-banner-in 220ms var(--ease, ease-out);
+}
+
+.whats-new {
+  width: min(540px, 100%);
+  background: #0d0d10;
+  border: 1px solid var(--accent-border);
+  border-radius: 18px;
+  padding: 28px 28px 22px 28px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+}
+
+.whats-new-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+.whats-new-title {
+  margin: 0 0 6px 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #fafafa;
+}
+
+.whats-new-sub {
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: rgba(180, 180, 200, 0.7);
+  line-height: 1.5;
+}
+
+.whats-new-notes {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: rgba(220, 220, 235, 0.92);
+  line-height: 1.55;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.whats-new-notes pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 13px;
+}
+.whats-new-notes p {
+  margin: 0;
+}
+
+.whats-new-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.whats-new-btn {
+  background: var(--accent);
+  border: 0;
+  color: #0a0a0a;
+  padding: 9px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.whats-new-btn:hover {
+  background: var(--accent-strong);
+}
+
+/* Keyboard shortcut display */
+.kbd-list {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.kbd-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 12px;
+}
+.kbd-row:last-child {
+  border-bottom: 0;
+}
+.kbd-keys {
+  display: flex;
+  gap: 4px;
+  min-width: 110px;
+}
+.kbd-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 10.5px;
+  color: rgba(220, 220, 235, 0.92);
+}
+.kbd-label {
+  color: rgba(200, 200, 220, 0.78);
+}
+
+/* About card */
+.about-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.about-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.about-row:last-child {
+  border-bottom: 0;
+}
+.about-label {
+  color: rgba(180, 180, 200, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+  font-weight: 600;
+}
+.about-value {
+  color: rgba(230, 230, 240, 0.92);
+}
+
+/* ── Chat view ───────────────────────────────────────────────────── */
+
+.chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* v0.1.4 fix: when .chat is a grid child of .chat-shell, the
+     default min-content size makes the column collapse if any child
+     (e.g. a long markdown line) wants more room. Force min-width: 0
+     so the 1fr column can actually be 1fr. */
+  min-width: 0;
+  width: 100%;
+}
+
+.chat-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 14px 24px 0 24px;
+  flex-shrink: 0;
+}
+
+.chat-plan-notice {
+  margin: 12px 24px 0 24px;
+  padding: 10px 14px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 10px;
+  color: rgba(254, 215, 170, 0.95);
+  font-size: 12px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chat-plan-notice-x {
+  background: transparent;
+  border: 0;
+  color: rgba(254, 215, 170, 0.7);
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.chat-plan-notice-x:hover {
+  color: #fff;
+}
+
+.chat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--density-pad-y) var(--density-pad-x);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Model picker */
+.model-picker {
+  position: relative;
+}
+
+.model-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 10px 6px 12px;
+  color: rgba(230, 230, 240, 0.92);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.model-picker-trigger:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.model-picker-name {
+  font-weight: 500;
+}
+
+.model-picker-caret {
+  color: rgba(180, 180, 200, 0.6);
+  font-size: 10px;
+}
+
+.model-picker-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  /* v0.1.13 \u2014 anchor to the right edge instead of the left so the
+     dropdown opens leftward from the trigger. The picker lives in
+     the chat header's far-right cluster; opening rightward (left: 0)
+     ran the menu off the right side of the chat area. */
+  right: 0;
+  left: auto;
+  z-index: 20;
+  width: 280px;
+  padding: 4px;
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.model-picker-item {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transition: background 140ms ease;
+}
+
+.model-picker-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.model-picker-item.active {
+  background: rgba(167, 139, 250, 0.14);
+}
+
+.model-picker-item.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.model-picker-lock {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(251, 191, 36, 0.95);
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.model-picker-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fafafa;
+}
+
+.model-picker-item-blurb {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.6);
+  line-height: 1.4;
+}
+
+.chat-empty {
+  margin: auto;
+  width: min(860px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  text-align: center;
+}
+
+.chat-empty-stage {
+  max-width: 620px;
+}
+
+.chat-empty-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+  margin-bottom: 12px;
+}
+
+.chat-empty h2 {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px 0;
+  color: #fafafa;
+}
+
+.chat-empty p {
+  font-size: 14px;
+  color: rgba(180, 180, 200, 0.65);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.chat-empty-capabilities {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.chat-empty-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(224, 224, 238, 0.86);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.chat-empty-actions {
+  width: min(760px, 100%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.chat-empty-action {
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 18px;
+  padding: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.chat-empty-action:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+}
+
+.chat-empty-action-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.chat-empty-action-copy {
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(180, 180, 200, 0.66);
+}
+
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-msg-gap);
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.chat-msg {
+  font-size: 14px;
+  line-height: 1.65;
+  padding: var(--density-msg-pad-y) 16px;
+  /* v0.1.4: --bubble-radius is set per-account by data-bubble-shape;
+     it falls back to the density radius when no shape is selected. */
+  border-radius: var(--bubble-radius);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-width: 88%;
+  animation: chat-msg-in 220ms ease-out;
+}
+
+.chat-msg--user {
+  align-self: flex-end;
+  background: var(--accent-soft);
+  color: #fafafa;
+  border: 1px solid var(--accent-border);
+}
+
+.chat-msg--assistant {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(235, 235, 245, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 50px;
+  min-height: 18px;
+}
+
+/* v0.1.4 vision input — thumbnails for images attached to a user
+   bubble. Sit in a small horizontal strip above the text. */
+.chat-msg-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px 0;
+}
+.chat-msg-image {
+  max-width: 220px;
+  max-height: 220px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  object-fit: cover;
+  display: block;
+}
+
+/* Markdown rendering — assistant messages render through react-markdown */
+.md {
+  display: block;
+}
+
+.md > *:first-child { margin-top: 0; }
+.md > *:last-child  { margin-bottom: 0; }
+
+.md h1, .md h2, .md h3, .md h4 {
+  color: #fafafa;
+  letter-spacing: -0.01em;
+  margin: 1.1em 0 0.4em 0;
+  line-height: 1.25;
+}
+.md h1 { font-size: 1.45em; font-weight: 700; }
+.md h2 { font-size: 1.2em;  font-weight: 600; }
+.md h3 { font-size: 1.05em; font-weight: 600; }
+.md h4 { font-size: 1em;    font-weight: 600; color: rgba(220, 220, 235, 0.9); }
+
+.md p { margin: 0.55em 0; }
+.md p:first-child { margin-top: 0; }
+.md p:last-child  { margin-bottom: 0; }
+
+.md ul, .md ol {
+  margin: 0.55em 0;
+  padding-left: 1.4em;
+}
+.md li { margin: 0.18em 0; }
+.md li > p { margin: 0.2em 0; }
+
+.md a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-decoration-color: rgba(196, 168, 252, 0.4);
+  text-underline-offset: 2px;
+}
+.md a:hover { text-decoration-color: var(--accent-strong); }
+
+.md code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.92em;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.md pre {
+  background: #0a0a0d;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0.6em 0;
+  font-size: 12.5px;
+}
+.md pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+.md blockquote {
+  margin: 0.6em 0;
+  padding: 4px 0 4px 12px;
+  border-left: 2px solid var(--accent-border);
+  color: rgba(220, 220, 235, 0.85);
+}
+
+.md hr {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 1em 0;
+}
+
+.md table {
+  border-collapse: collapse;
+  margin: 0.6em 0;
+  font-size: 0.95em;
+}
+.md th, .md td {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 10px;
+  text-align: left;
+}
+.md th {
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 600;
+}
+
+.md strong { color: #fafafa; font-weight: 600; }
+.md em     { font-style: italic; color: rgba(245, 245, 250, 0.95); }
+
+/* Plain-text mid-stream — keeps newlines + spacing without re-parsing
+   the markdown tree on every chunk */
+.chat-stream-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ChatGPT-style word fade-in for streaming text. Each new <span> only
+   plays this animation once on mount; chars added inside an existing
+   word grow without re-animating. */
+.chat-word-fade {
+  display: inline-block;
+  animation: chat-word-fade-in 240ms ease-out;
+  animation-fill-mode: backwards;
+}
+
+@keyframes chat-word-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* <think> sections — dim, italic, separate from the main answer */
+.chat-thinking {
+  display: block;
+  margin: 4px 0 10px 0;
+  padding: 8px 12px;
+  border-left: 2px solid rgba(167, 139, 250, 0.35);
+  background: rgba(167, 139, 250, 0.04);
+  border-radius: 0 8px 8px 0;
+  font-size: 12px;
+  font-style: italic;
+  color: rgba(180, 180, 200, 0.7);
+  line-height: 1.55;
+  animation: chat-thinking-in 280ms var(--ease, ease-out);
+}
+
+.chat-thinking-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.9);
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.chat-thinking-text {
+  vertical-align: middle;
+  white-space: pre-wrap;
+}
+
+@keyframes chat-thinking-in {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Blinking cursor at the end of in-progress streaming text */
+.chat-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--accent);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  animation: cursor-blink 1s steps(2, end) infinite;
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+@keyframes cursor-blink {
+  0%, 50%   { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+.chat-error {
+  font-size: 12px;
+  color: rgba(254, 202, 202, 0.9);
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  padding: 10px 14px;
+  border-radius: 10px;
+  align-self: flex-start;
+  max-width: 88%;
+}
+
+@keyframes chat-msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Bouncing dots while waiting for the first token */
+.chat-dots {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 16px;
+}
+
+.chat-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+  animation: chat-dot-bounce 1.05s ease-in-out infinite;
+}
+
+.chat-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.chat-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes chat-dot-bounce {
+  0%, 70%, 100% {
+    transform: translateY(0) scale(0.92);
+    opacity: 0.55;
+  }
+  35% {
+    transform: translateY(-7px) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Chat input */
+.chat-input {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 14px 24px 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  max-width: 820px;
+  width: 100%;
+  margin: 0 auto;
+  align-self: stretch;
+}
+
+.chat-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chat-quick-action {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  flex-direction: column;
+  text-align: left;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fafafa;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+.chat-quick-action:hover,
+.chat-quick-action.is-active {
+  transform: translateY(-1px);
+  border-color: rgba(167, 139, 250, 0.34);
+  background: rgba(167, 139, 250, 0.11);
+  box-shadow: 0 10px 24px rgba(10, 10, 16, 0.28);
+}
+
+.chat-quick-action.is-suggested {
+  border-color: rgba(167, 139, 250, 0.45);
+}
+
+.chat-quick-action.is-locked {
+  opacity: 0.78;
+  filter: saturate(0.72);
+}
+
+.chat-quick-action-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.chat-quick-action-hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(190, 190, 210, 0.74);
+  max-width: 230px;
+}
+
+.chat-quick-action-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.24);
+  color: rgba(254, 215, 170, 0.94);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chat-input-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 14px 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.chat-input-frame:focus-within {
+  border-color: rgba(167, 139, 250, 0.42);
+  background:
+    linear-gradient(180deg, rgba(167, 139, 250, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+
+.chat-input textarea {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-size: 14px;
+  font-family: inherit;
+  color: #fafafa;
+  resize: none;
+  outline: 0;
+  min-height: 52px;
+  max-height: 200px;
+  transition: color 160ms ease;
+  line-height: 1.55;
+}
+
+.chat-input textarea:focus {
+  border-color: transparent;
+}
+
+.chat-input textarea::placeholder {
+  color: rgba(180, 180, 200, 0.42);
+}
+
+.chat-input-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chat-launcher {
+  position: relative;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.chat-launcher-trigger {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  flex-direction: column;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fafafa;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.chat-launcher-trigger:hover,
+.chat-launcher-trigger.is-open {
+  border-color: rgba(167, 139, 250, 0.38);
+  background: rgba(167, 139, 250, 0.11);
+}
+
+.chat-launcher-trigger:hover {
+  transform: translateY(-1px);
+}
+
+.chat-launcher-trigger-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chat-launcher-trigger-copy {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(190, 190, 210, 0.72);
+}
+
+.chat-launcher-panel {
+  /* v0.1.12 — switched from absolute (parent-relative) to fixed
+     (viewport-relative). The previous absolute + left:0 positioning
+     anchored the panel to the trigger; when the trigger sat anywhere
+     except the far left, the 980px panel ran off the right side of
+     the screen. Fixed positioning + viewport-clamped width + viewport-
+     anchored left guarantees the panel always fits regardless of
+     trigger location. Bottom clears the input bar. */
+  position: fixed;
+  left: max(16px, calc(50vw - 490px));
+  bottom: 96px;
+  width: min(980px, calc(100vw - 32px));
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) 250px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 12, 16, 0.98);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  z-index: 45;
+}
+
+.chat-launcher-roots {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.chat-launcher-root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #fafafa;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, opacity 160ms ease;
+}
+
+.chat-launcher-root:hover,
+.chat-launcher-root.is-selected {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.chat-launcher-root.is-suggested {
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+
+.chat-launcher-root.is-locked {
+  opacity: 0.8;
+  filter: saturate(0.75);
+}
+
+.chat-launcher-root-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chat-launcher-root-copy {
+  font-size: 11px;
+  color: rgba(190, 190, 210, 0.65);
+}
+
+.chat-launcher-root-badge {
+  margin-top: 2px;
+  align-self: flex-start;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: rgba(254, 215, 170, 0.94);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.chat-launcher-pane {
+  min-width: 0;
+  max-height: 430px;
+  overflow: auto;
+  padding: 16px;
+}
+
+.chat-launcher-pane-stack,
+.chat-launcher-pane-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-launcher-empty {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  color: rgba(190, 190, 210, 0.62);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.chat-launcher-primary,
+.chat-launcher-action,
+.chat-launcher-recent {
+  width: 100%;
+  text-align: left;
+  padding: 14px 15px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fafafa;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+}
+
+.chat-launcher-primary:hover,
+.chat-launcher-action:hover,
+.chat-launcher-recent:hover,
+.chat-launcher-action.is-hovered,
+.chat-launcher-recent.is-hovered {
+  transform: translateY(-1px);
+  border-color: rgba(167, 139, 250, 0.3);
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.chat-launcher-primary.is-locked,
+.chat-launcher-action.is-locked {
+  opacity: 0.8;
+  filter: saturate(0.72);
+}
+
+.chat-launcher-action.is-active {
+  border-color: rgba(167, 139, 250, 0.42);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+
+.chat-launcher-action.is-suggested {
+  border-color: rgba(167, 139, 250, 0.26);
+}
+
+.chat-launcher-primary-title,
+.chat-launcher-action-name,
+.chat-launcher-recent-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chat-launcher-primary-copy,
+.chat-launcher-action-copy,
+.chat-launcher-recent-meta,
+.chat-launcher-preview-copy,
+.chat-launcher-preview-status,
+.chat-launcher-preview-item {
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(190, 190, 210, 0.72);
+}
+
+.chat-launcher-primary-title,
+.chat-launcher-primary-copy {
+  display: block;
+}
+
+.chat-launcher-primary-badge,
+.chat-launcher-action-badge,
+.chat-launcher-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(167, 139, 250, 0.24);
+  background: rgba(167, 139, 250, 0.12);
+  color: rgba(232, 224, 255, 0.94);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.chat-launcher-action-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.chat-launcher-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-launcher-section-title,
+.chat-launcher-preview-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.82);
+}
+
+.chat-launcher-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.chat-launcher-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.12), transparent 46%),
+    rgba(255, 255, 255, 0.02);
+}
+
+.chat-launcher-preview-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.chat-launcher-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-launcher-preview-item {
+  position: relative;
+  padding-left: 14px;
+}
+
+.chat-launcher-preview-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.82);
+}
+
+@media (max-width: 1120px) {
+  .chat-launcher-panel {
+    width: min(900px, calc(100vw - 32px));
+    min-width: 560px;
+    grid-template-columns: 184px minmax(0, 1fr);
+  }
+
+  .chat-launcher-preview {
+    grid-column: 1 / -1;
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+@media (max-width: 860px) {
+  .chat-input-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .chat-launcher {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .chat-launcher-trigger {
+    max-width: none;
+  }
+
+  .chat-input-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+
+  .chat-launcher-panel {
+    width: min(720px, calc(100vw - 24px));
+    min-width: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .chat-launcher-roots {
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .chat-launcher-section-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chat-input-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.chat-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(220, 220, 235, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 160ms ease;
+  font-family: inherit;
+}
+
+.chat-icon-btn:hover:not(:disabled) {
+  background: rgba(167, 139, 250, 0.14);
+  border-color: rgba(167, 139, 250, 0.4);
+  color: #fff;
+}
+
+.chat-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.chat-icon-btn--locked {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: rgba(254, 215, 170, 0.85);
+  cursor: pointer;
+}
+.chat-icon-btn--locked:hover {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fff;
+}
+
+.chat-icon-btn--recording {
+  background: var(--accent);
+  border-color: var(--accent-border);
+  color: #0a0a0a;
+  animation: mic-pulse 1.2s ease-in-out infinite;
+}
+
+.chat-icon-btn--active {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: #fafafa;
+}
+
+@keyframes mic-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--accent-glow);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px transparent;
+    transform: scale(1.05);
+  }
+}
+
+/* ── Voice mode overlay — orb takeover ───────────────────────────── */
+
+.voice-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(5, 5, 8, 0.78);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: voice-overlay-in 220ms ease-out;
+}
+
+@keyframes voice-overlay-in {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to   { opacity: 1; backdrop-filter: blur(18px) saturate(120%); }
+}
+
+.voice-overlay-close {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(220, 220, 235, 0.85);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.voice-overlay-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.voice-overlay-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Orb — clickable, scales by audio volume from JS */
+.voice-orb {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transform-origin: center;
+  transition: transform 110ms ease-out;
+  outline: none;
+}
+
+.voice-orb-inner {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.25), transparent 60%),
+    radial-gradient(circle at 50% 50%, var(--accent), var(--accent-soft) 70%, transparent 90%);
+  box-shadow:
+    0 0 60px var(--accent-glow),
+    0 0 140px var(--accent-glow),
+    inset 0 0 40px rgba(255, 255, 255, 0.12);
+  animation: voice-orb-breathe 3.4s ease-in-out infinite;
+}
+
+.voice-orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--accent-border);
+  opacity: 0.45;
+  animation: voice-orb-ring 2.8s ease-out infinite;
+}
+
+.voice-orb-ring--lg {
+  inset: -14%;
+  animation-delay: 0.7s;
+  opacity: 0.25;
+}
+
+@keyframes voice-orb-breathe {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50%      { filter: brightness(1.12) saturate(1.15); }
+}
+
+@keyframes voice-orb-ring {
+  0%   { transform: scale(0.9); opacity: 0.55; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+/* State variants */
+.voice-orb--recording .voice-orb-inner {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.3), transparent 60%),
+    radial-gradient(circle at 50% 50%, var(--accent-strong), var(--accent) 60%, transparent 90%);
+  animation-duration: 1.4s;
+}
+
+.voice-orb--speaking .voice-orb-inner {
+  background:
+    radial-gradient(circle at 60% 40%, rgba(255, 255, 255, 0.32), transparent 60%),
+    radial-gradient(circle at 50% 50%, #f9a8d4, var(--accent-strong) 50%, var(--accent) 80%, transparent 95%);
+  animation-duration: 1.1s;
+}
+
+.voice-orb--transcribing .voice-orb-inner {
+  background:
+    conic-gradient(from 0deg, var(--accent), var(--accent-strong), var(--accent), var(--accent-strong), var(--accent));
+  animation: voice-orb-spin 1.6s linear infinite;
+}
+
+@keyframes voice-orb-spin {
+  to { transform: rotate(360deg); }
+}
+
+.voice-overlay-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(245, 245, 250, 0.95);
+}
+
+.voice-overlay-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(180, 180, 200, 0.5);
+}
+
+.voice-overlay-dot--recording {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+
+.voice-overlay-dot--speaking {
+  background: #f9a8d4;
+  box-shadow: 0 0 10px rgba(249, 168, 212, 0.6);
+  animation: dot-pulse 1.0s ease-in-out infinite;
+}
+
+.voice-overlay-dot--transcribing {
+  background: var(--accent-strong);
+  box-shadow: 0 0 10px var(--accent-glow);
+  animation: dot-pulse 0.9s ease-in-out infinite;
+}
+
+.voice-overlay-hint {
+  font-size: 12px;
+  color: rgba(180, 180, 200, 0.5);
+  letter-spacing: 0.02em;
+}
+
+/* Voice waveform — pulsing bars while listening / speaking */
+.voice-wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 0 4px 0;
+  height: 28px;
+}
+
+.voice-wave span {
+  display: block;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--accent);
+  height: 6px;
+  transform-origin: center;
+  animation: wave-bar 0.9s ease-in-out infinite;
+}
+
+.voice-wave span:nth-child(1) { animation-delay: 0s; }
+.voice-wave span:nth-child(2) { animation-delay: 0.08s; }
+.voice-wave span:nth-child(3) { animation-delay: 0.16s; }
+.voice-wave span:nth-child(4) { animation-delay: 0.24s; }
+.voice-wave span:nth-child(5) { animation-delay: 0.32s; }
+.voice-wave span:nth-child(6) { animation-delay: 0.4s; }
+.voice-wave span:nth-child(7) { animation-delay: 0.48s; }
+.voice-wave span:nth-child(8) { animation-delay: 0.56s; }
+
+.voice-wave--speaking span {
+  background: var(--accent-strong);
+  animation-duration: 0.7s;
+}
+
+.voice-wave-label {
+  margin-left: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: transparent !important;
+  height: auto !important;
+  width: auto !important;
+  border-radius: 0 !important;
+  animation: none !important;
+}
+
+@keyframes wave-bar {
+  0%, 100% {
+    height: 6px;
+  }
+  50% {
+    height: 22px;
+  }
+}
+
+.chat-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent);
+  border: 0;
+  color: #0a0a0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 160ms ease;
+  font-family: inherit;
+}
+
+.chat-send:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.chat-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.chat-send--stop {
+  background: rgba(254, 202, 202, 0.95);
+  color: #1a0a0a;
+}
+
+.chat-send--stop:hover {
+  background: #fff;
+}
+
+/* ── Generic view (Account / Plan / Preferences) ────────────────── */
+
+.view {
+  flex: 1;
+  overflow-y: auto;
+  padding: 40px 64px 64px 64px;
+}
+
+.view-head {
+  max-width: 720px;
+  margin: 0 auto 32px auto;
+}
+
+.view-head h1 {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px 0;
+  color: #fafafa;
+}
+
+.view-head p {
+  font-size: 14px;
+  color: rgba(180, 180, 200, 0.65);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.view-body {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  align-items: center;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(180, 180, 200, 0.6);
+  letter-spacing: 0.02em;
+}
+
+.field-value {
+  font-size: 14px;
+  color: #fafafa;
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.coming-soon {
+  margin-top: 12px;
+  padding: 18px 20px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px dashed rgba(167, 139, 250, 0.25);
+  border-radius: 14px;
+}
+
+.coming-soon-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+  margin-bottom: 8px;
+}
+
+.coming-soon p {
+  font-size: 13px;
+  color: rgba(220, 220, 235, 0.75);
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Editable account fields */
+.view-loading {
+  font-size: 13px;
+  color: rgba(180, 180, 200, 0.6);
+  text-align: center;
+  padding: 24px;
+}
+
+.field-row--edit {
+  align-items: flex-start;
+}
+
+.field-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #fafafa;
+  font-family: inherit;
+  outline: 0;
+  transition: border-color 160ms ease;
+  resize: vertical;
+}
+
+.field-input:focus {
+  border-color: rgba(167, 139, 250, 0.45);
+}
+
+.field-input::placeholder {
+  color: rgba(180, 180, 200, 0.35);
+}
+
+.view-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.view-saved-tag {
+  font-size: 12px;
+  color: rgba(34, 197, 94, 0.95);
+}
+
+.view-save-btn {
+  background: #a78bfa;
+  border: 0;
+  color: #0a0a0a;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.view-save-btn:hover:not(:disabled) {
+  background: #c4b5fd;
+}
+
+.view-save-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.view-error {
+  font-size: 12px;
+  color: rgba(254, 202, 202, 0.95);
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+/* ─── API keys view (native CRUD) ─────────────────────────────────── */
+
+.keys-create-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.keys-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+}
+
+.keys-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.keys-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.keys-row:last-child {
+  border-bottom: 0;
+}
+
+.keys-revoke-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(254, 202, 202, 0.95);
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 140ms ease;
+}
+
+.keys-revoke-btn:hover {
+  background: rgba(220, 38, 38, 0.18);
+}
+
+.keys-revoke-confirm {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.keys-revoke-confirm-btn {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0a0a0a;
+  background: #f87171;
+  border: 0;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.keys-revoke-confirm-btn:hover:not(:disabled) {
+  background: #fca5a5;
+}
+
+.keys-revoke-confirm-btn:disabled,
+.keys-revoke-cancel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.keys-revoke-cancel-btn {
+  font-size: 11px;
+  color: rgba(220, 220, 235, 0.85);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.keys-reveal {
+  padding: 16px 18px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.keys-reveal-head {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.keys-reveal-note {
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.8);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.keys-reveal-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.keys-reveal-key {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  color: #fafafa;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 12px;
+  border-radius: 8px;
+  user-select: all;
+  word-break: break-all;
+}
+
+.keys-reveal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.view-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(180, 180, 200, 0.55);
+  margin: 16px 0 4px 0;
+}
+
+/* Plan tier cards */
+.plan-tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-tier-card {
+  padding: 14px 16px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+}
+
+.plan-tier-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+  margin-bottom: 4px;
+}
+
+.plan-tier-blurb {
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.75);
+  line-height: 1.5;
+}
+
+/* Upgrade CTA */
+.upgrade-cta {
+  margin-top: 16px;
+  padding: 18px 20px;
+  background: rgba(167, 139, 250, 0.08);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+}
+
+.upgrade-cta-head {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+  margin-bottom: 6px;
+}
+
+.upgrade-cta p {
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.75);
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+
+.upgrade-cta-btn {
+  display: inline-block;
+  background: #a78bfa;
+  color: #0a0a0a;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 160ms ease;
+}
+
+.upgrade-cta-btn:hover {
+  background: #c4b5fd;
+}
+
+/* Preferences */
+.pref-section {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.pref-section-head {
+  min-width: 0;
+}
+
+.pref-section-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #fafafa;
+  margin-bottom: 4px;
+}
+
+.pref-section-help {
+  font-size: 12px;
+  color: rgba(180, 180, 200, 0.6);
+  line-height: 1.5;
+}
+
+.pref-section-control {
+  flex-shrink: 0;
+}
+
+/* v0.1.13 \u2014 Keyboard shortcuts list on the Settings page */
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 560px;
+}
+
+.shortcut-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: start;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.shortcut-keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.shortcut-keys kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(232, 224, 255, 0.96);
+}
+
+.shortcut-divider {
+  margin: 0 4px;
+  color: rgba(180, 180, 200, 0.4);
+  font-size: 11px;
+}
+
+.shortcut-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.shortcut-copy strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.shortcut-copy span {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(180, 180, 200, 0.65);
+}
+
+@media (max-width: 640px) {
+  .shortcut-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.seg-ctrl {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.seg-ctrl-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(180, 180, 200, 0.7);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.seg-ctrl-btn:hover {
+  color: #fff;
+}
+
+.seg-ctrl-btn.active {
+  background: var(--accent-soft);
+  color: #fff;
+}
+
+/* v0.1.8 Capsule Rail — Copilot position picker in Settings.
+   Wraps the segmented control + the "Advanced" expander that lets
+   the user opt into the (discouraged) bottom edge. */
+.copilot-pos-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.copilot-advanced-toggle {
+  background: transparent;
+  border: 0;
+  color: rgba(220, 220, 235, 0.65);
+  cursor: pointer;
+  font-size: 11px;
+  font-family: inherit;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 140ms ease, background 140ms ease;
+}
+
+.copilot-advanced-toggle:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.copilot-advanced {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.copilot-advanced-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.9);
+  cursor: pointer;
+}
+
+.copilot-advanced-warn {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255, 200, 100, 0.85);
+  line-height: 1.4;
+}
+
+.accent-row {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.accent-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease;
+  padding: 0;
+}
+
+.accent-swatch:hover {
+  transform: scale(1.08);
+}
+
+.accent-swatch.active {
+  border-color: rgba(255, 255, 255, 0.95);
+}
+
+.accent-swatch--purple {
+  background: #a78bfa;
+}
+.accent-swatch--blue {
+  background: #60a5fa;
+}
+.accent-swatch--green {
+  background: #34d399;
+}
+.accent-swatch--amber {
+  background: #fbbf24;
+}
+.accent-swatch--rose {
+  background: #fb7185;
+}
+
+/* Preference groups & toggles */
+.pref-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pref-group + .pref-group {
+  margin-top: 18px;
+}
+
+.pref-group-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+  padding: 0 4px 2px 4px;
+}
+
+.pref-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toggle {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  padding: 0;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.toggle.on {
+  background: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  transition: transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.toggle.on .toggle-thumb {
+  transform: translateX(16px);
+}
+
+.pref-select {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fafafa;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: 0;
+  min-width: 220px;
+}
+.pref-select:focus {
+  border-color: var(--accent-border);
+}
+.pref-select option {
+  background: #0d0d10;
+  color: #fafafa;
+}
+
+.chat-shell {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  /* v0.1.5+ chat history is ALWAYS visible. The hover-to-reveal
+     slide-out from v0.1.4 squished the chat content because the
+     1fr column collided with the absolute strip + the page felt
+     like nothing was readable. Going back to a fixed 280px sidebar. */
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.chat-history {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(16, 16, 21, 0.98), rgba(8, 8, 11, 0.94));
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-shell--copilot {
+  grid-template-columns: 1fr;
+}
+
+.chat-shell--copilot .chat-history,
+:root[data-window-mode="toolbar-top"] .chat-history,
+:root[data-window-mode="toolbar-left"] .chat-history,
+:root[data-window-mode="toolbar-right"] .chat-history {
+  display: none;
+}
+
+.chat-history-head,
+.chat-history-foot {
+  padding: 20px 20px 18px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-history-foot {
+  border-bottom: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-history-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.84);
+}
+
+.chat-history-sub,
+.chat-history-foot-copy,
+.chat-title-sub,
+.billing-note,
+.usage-panel-copy {
+  font-size: 12px;
+  line-height: 1.6;
+  color: rgba(180, 180, 200, 0.62);
+}
+
+.chat-history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chat-history-new,
+.billing-secondary-btn,
+.chat-copilot-btn {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(240, 240, 246, 0.92);
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.chat-history-new:hover,
+.billing-secondary-btn:hover:not(:disabled),
+.chat-copilot-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-border);
+}
+
+.chat-history-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 16px 8px 16px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.chat-history-search:focus-within {
+  border-color: rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.06);
+}
+
+.chat-history-search-icon {
+  flex-shrink: 0;
+  color: rgba(180, 180, 200, 0.45);
+}
+
+.chat-history-search-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: #fafafa;
+  font-size: 12px;
+  font-family: inherit;
+  padding: 0;
+}
+
+.chat-history-search-input::placeholder {
+  color: rgba(180, 180, 200, 0.42);
+}
+
+.chat-history-search-clear {
+  flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  color: rgba(180, 180, 200, 0.55);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.chat-history-search-clear:hover {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.chat-history-empty {
+  padding: 14px 16px;
+  font-size: 12px;
+  color: rgba(180, 180, 200, 0.5);
+  font-style: italic;
+}
+
+.chat-history-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-history-item {
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.chat-history-item:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.chat-history-item.active {
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+
+.chat-history-item.is-updating,
+.chat-title.is-updating {
+  animation: title-shift 420ms ease;
+}
+
+.chat-history-item-title,
+.chat-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+  letter-spacing: -0.01em;
+}
+
+.chat-history-item-preview {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(180, 180, 200, 0.6);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chat-history-item-time {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.42);
+}
+
+.chat-title-wrap {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-title-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+}
+
+.chat-title {
+  font-size: 18px;
+}
+
+.chat-topbar {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.chat-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-copilot-btn.active {
+  background: rgba(167, 139, 250, 0.15);
+  border-color: rgba(167, 139, 250, 0.45);
+}
+
+/* v0.1.4 — power features */
+
+.chat-export-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(220, 220, 235, 0.78);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.chat-export-btn:hover {
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.35);
+  color: #fafafa;
+}
+
+.chat-shell {
+  position: relative;
+}
+
+.chat-shell--drag::after {
+  content: "Drop files to attach";
+  position: absolute;
+  inset: 8px;
+  border: 2px dashed rgba(167, 139, 250, 0.65);
+  border-radius: 18px;
+  background: rgba(167, 139, 250, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(220, 210, 255, 0.85);
+  pointer-events: none;
+  z-index: 50;
+}
+
+.chat-toast {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 26, 0.92);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  color: #fafafa;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 60;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.chat-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 0 4px 0;
+}
+
+.chat-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 10px;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 999px;
+  font-size: 11px;
+  color: #fafafa;
+  max-width: 280px;
+}
+
+.chat-attachment-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.chat-attachment-meta {
+  color: rgba(180, 180, 200, 0.7);
+  font-size: 10px;
+}
+
+.chat-attachment-remove {
+  background: transparent;
+  border: 0;
+  color: rgba(220, 220, 235, 0.7);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  font-family: inherit;
+}
+
+.chat-attachment-remove:hover {
+  color: #fff;
+}
+
+/* v0.1.15 — image + video attachment thumbnails. Rounded corners
+   match the pill border-radius minus a hair. Video gets controls so
+   the user can scrub the dropped clip without leaving the composer. */
+.chat-attachment-thumb {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: rgba(20, 20, 30, 0.65);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+}
+
+.chat-attachment-thumb--video {
+  width: 64px;
+  height: 36px;
+  background: #000;
+}
+
+.chat-attachment--image,
+.chat-attachment--video {
+  padding-left: 4px;
+  max-width: 360px;
+}
+
+.chat-history-item {
+  position: relative;
+}
+
+.chat-history-item.folded {
+  opacity: 0.55;
+}
+
+.chat-history-pin-tag {
+  margin-right: 6px;
+  font-size: 11px;
+}
+
+.chat-history-item-actions {
+  display: none;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  gap: 4px;
+}
+
+.chat-history-item:hover .chat-history-item-actions,
+.chat-history-item:focus-within .chat-history-item-actions {
+  display: flex;
+}
+
+.chat-history-action {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(220, 220, 235, 0.85);
+  border-radius: 8px;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  line-height: 1.1;
+}
+
+.chat-history-action:hover {
+  background: rgba(167, 139, 250, 0.25);
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #fff;
+}
+
+.chat-history-foot-toggle {
+  background: transparent;
+  border: 0;
+  color: rgba(167, 139, 250, 0.85);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: left;
+}
+
+.chat-history-foot-toggle:hover {
+  color: #fff;
+}
+
+.chat-shell .chat {
+  min-width: 0;
+}
+
+.chat-shell--copilot .chat,
+:root[data-window-mode="toolbar-top"] .chat,
+:root[data-window-mode="toolbar-left"] .chat,
+:root[data-window-mode="toolbar-right"] .chat {
+  background:
+    radial-gradient(circle at top, rgba(167, 139, 250, 0.09), transparent 42%);
+}
+
+.chat-shell--model-fast .chat {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(96, 165, 250, 0.11), transparent 38%);
+}
+
+.chat-shell--model-fast .chat-empty-mark,
+.chat-shell--model-fast .chat-title-kicker {
+  color: rgba(147, 197, 253, 0.92);
+}
+
+.chat-shell--model-fast .chat-empty-action:hover,
+.chat-shell--model-fast .chat-empty-chip {
+  border-color: rgba(96, 165, 250, 0.18);
+}
+
+.chat-shell--model-balanced .chat {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(167, 139, 250, 0.11), transparent 40%);
+}
+
+.chat-shell--model-smart .chat {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(244, 114, 182, 0.12), transparent 40%),
+    radial-gradient(circle at 75% 20%, rgba(167, 139, 250, 0.09), transparent 32%);
+}
+
+.chat-shell--model-smart .chat-empty-mark,
+.chat-shell--model-smart .chat-title-kicker {
+  color: rgba(244, 184, 214, 0.94);
+}
+
+.chat-shell--model-smart .chat-empty-action:hover,
+.chat-shell--model-smart .chat-empty-chip {
+  border-color: rgba(244, 114, 182, 0.18);
+}
+
+:root[data-window-mode="toolbar-top"] .ws,
+:root[data-window-mode="toolbar-left"] .ws,
+:root[data-window-mode="toolbar-right"] .ws {
+  grid-template-columns: 54px 1fr;
+}
+
+:root[data-window-mode="toolbar-top"] .chat-topbar,
+:root[data-window-mode="toolbar-left"] .chat-topbar,
+:root[data-window-mode="toolbar-right"] .chat-topbar {
+  padding-top: 10px;
+}
+
+:root[data-window-mode="toolbar-top"] .chat-input,
+:root[data-window-mode="toolbar-left"] .chat-input,
+:root[data-window-mode="toolbar-right"] .chat-input {
+  padding: 12px 16px 16px 16px;
+  max-width: none;
+}
+
+:root[data-window-mode="toolbar-top"] .chat-empty h2,
+:root[data-window-mode="toolbar-left"] .chat-empty h2,
+:root[data-window-mode="toolbar-right"] .chat-empty h2 {
+  font-size: 24px;
+}
+
+.usage-view-body {
+  gap: 18px;
+}
+
+.usage-hero-grid,
+.usage-insight-grid,
+.billing-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.usage-hero-grid,
+.usage-insight-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.billing-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.usage-panel,
+.billing-panel {
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+}
+
+.usage-panel--accent,
+.billing-panel--hero {
+  background:
+    linear-gradient(180deg, rgba(167, 139, 250, 0.14), rgba(12, 12, 16, 0.9));
+  border-color: rgba(167, 139, 250, 0.24);
+}
+
+.usage-panel-title,
+.billing-modal-title {
+  margin-top: 8px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #fafafa;
+  letter-spacing: -0.02em;
+}
+
+.usage-mini-grid,
+.billing-chip-row,
+.billing-plan-list,
+.billing-point-list {
+  display: grid;
+  gap: 10px;
+}
+
+.usage-mini-grid,
+.billing-chip-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
+.usage-mini-grid--stack {
+  grid-template-columns: 1fr;
+  margin-top: 0;
+}
+
+.usage-mini-stat,
+.billing-chip,
+.billing-mini-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.usage-mini-label,
+.billing-chip-label,
+.billing-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(180, 180, 200, 0.6);
+}
+
+.billing-actions,
+.billing-plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.billing-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.14);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(236, 230, 255, 0.95);
+}
+
+.billing-badge--warn {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.26);
+  color: rgba(254, 215, 170, 0.95);
+}
+
+.billing-cycle-toggle {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.billing-cycle-pill {
+  border: 0;
+  background: transparent;
+  color: rgba(180, 180, 200, 0.6);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.billing-cycle-pill.active {
+  background: #fafafa;
+  color: #09090b;
+}
+
+.billing-plan-list,
+.billing-addon-list,
+.billing-invoice-list {
+  margin-top: 16px;
+}
+
+.billing-plan-card {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.billing-plan-card.active {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.billing-plan-head,
+.billing-hero-row,
+.billing-addon-row,
+.billing-invoice-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.billing-plan-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.billing-plan-price {
+  margin-top: 6px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.billing-plan-note,
+.billing-addon-meta,
+.billing-modal-subtitle {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(180, 180, 200, 0.58);
+}
+
+.billing-plan-copy {
+  margin: 14px 0 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(220, 220, 235, 0.8);
+}
+
+.billing-mini-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.billing-mini-chip {
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: rgba(220, 220, 235, 0.88);
+}
+
+.billing-point-list {
+  margin: 14px 0 0 0;
+  padding-left: 18px;
+}
+
+.billing-point-list li {
+  color: rgba(210, 210, 225, 0.8);
+  margin: 6px 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.billing-addon-list,
+.billing-invoice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.billing-addon-row,
+.billing-invoice-row {
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: inherit;
+  text-decoration: none;
+}
+
+.billing-addon-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.billing-invoice-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+
+.billing-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 4, 8, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 24px;
+}
+
+.billing-modal {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  position: relative;
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+}
+
+.billing-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(235, 235, 245, 0.8);
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.billing-form {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.billing-submit {
+  width: 100%;
+  justify-content: center;
+}
+
+.upgrade-cta-btn {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── v0.1.4 dense plan view ─────────────────────────────────────────
+   The hero card now spans the full width and packs plan info, chips,
+   addons micro-grid, and actions into a single row. Subsequent
+   sections stack full-width. */
+.billing-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.billing-panel--dense {
+  padding: 14px 16px;
+}
+
+.billing-hero-dense {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  padding: 16px 18px;
+  align-items: stretch;
+}
+
+.billing-hero-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.2fr);
+  gap: 18px;
+  min-width: 0;
+}
+
+.billing-hero-headline > h2 {
+  margin: 6px 0 4px 0;
+}
+
+.billing-hero-headline > .billing-hero-row p {
+  margin: 0;
+}
+
+.billing-chip-row--dense {
+  margin-top: 10px;
+}
+
+.billing-hero-addons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.billing-addon-microgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.billing-addon-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 0;
+}
+
+.billing-addon-tile--active {
+  border-color: rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.billing-tile-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.billing-hero-side {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.billing-actions--column {
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 0;
+  min-width: 150px;
+}
+
+.billing-actions--column > button,
+.billing-actions--column > .billing-comped-pill {
+  white-space: nowrap;
+  text-align: center;
+  justify-content: center;
+}
+
+.billing-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.billing-section-head--spaced {
+  margin-top: 16px;
+}
+
+.billing-note--inline {
+  margin: 0;
+}
+
+/* Plans-in-app: 4-up at full scale, gracefully wraps to 2-up then
+   1-up on narrower windows. v0.1.13 \u2014 the previous version switched
+   to horizontal-scroll at <1180px which silently hid the rightmost
+   plan offscreen; users couldn't tell anything was scrollable so the
+   Pro card just looked clipped. Auto-fit grid is honest: cards wrap. */
+.billing-plan-list--horizontal {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+/* At very narrow widths force 1 column so the cards don't squeeze
+   into 200px with text overflowing internally. */
+@media (max-width: 560px) {
+  .billing-plan-list--horizontal {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Compact invoices */
+.billing-invoice-list--compact {
+  margin-top: 10px;
+  gap: 6px;
+}
+
+.billing-invoice-list--compact .billing-invoice-row {
+  padding: 10px 14px;
+}
+
+/* ── Boost cards (monetization) ────────────────────────────────────
+   v0.1.9 — pared down to 2 one-time + 2 recurring boosts after the
+   credit ledger replaced the per-feature SKUs. The row uses an
+   auto-fit grid so it stays balanced regardless of card count. */
+.boost-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.boost-row--four {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+@media (max-width: 1180px) {
+  .boost-row,
+  .boost-row--four {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(180px, 1fr);
+    grid-template-columns: none;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+}
+
+.boost-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 0;
+}
+
+.boost-card--recurring {
+  background:
+    linear-gradient(180deg, rgba(167, 139, 250, 0.06), rgba(255, 255, 255, 0.02));
+}
+
+.boost-card--featured {
+  border-color: rgba(167, 139, 250, 0.55);
+  background:
+    linear-gradient(180deg, rgba(167, 139, 250, 0.18), rgba(20, 16, 32, 0.9));
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.25) inset;
+}
+
+.boost-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.boost-card-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+  min-width: 0;
+}
+
+.boost-card-badge {
+  font-size: 9px;
+  padding: 3px 7px;
+}
+
+.boost-card-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fafafa;
+  white-space: nowrap;
+}
+
+.boost-card-meta {
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(200, 200, 220, 0.72);
+  flex: 1;
+}
+
+.boost-card-btn {
+  padding: 7px 12px;
+  font-size: 12px;
+  border-radius: 9px;
+  align-self: stretch;
+  text-align: center;
+}
+
+.boost-annual-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, rgba(167, 139, 250, 0.12), rgba(167, 139, 250, 0.04));
+  border: 1px solid rgba(167, 139, 250, 0.22);
+}
+
+.boost-annual-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.boost-annual-copy {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(210, 210, 230, 0.72);
+}
+
+@media (max-width: 1100px) {
+  .billing-hero-dense {
+    grid-template-columns: 1fr;
+  }
+  .billing-hero-main {
+    grid-template-columns: 1fr;
+  }
+  .billing-hero-side {
+    justify-content: stretch;
+  }
+  .billing-actions--column {
+    flex-direction: row;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .boost-annual-notice {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@keyframes title-shift {
+  0% {
+    opacity: 0.5;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1100px) {
+  .chat-shell {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .chat-empty-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .usage-hero-grid,
+  .usage-insight-grid,
+  .billing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 820px) {
+  .chat-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-history {
+    display: none;
+  }
+
+  .chat-topbar {
+    padding: 14px 16px 0 16px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .chat-plan-notice,
+  .chat-scroll,
+  .chat-input {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .view {
+    padding: 28px 18px 40px 18px;
+  }
+}
+
+@keyframes stage-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Update splash takeover ─────────────────────────────────────────
+   Full-screen modal that mirrors the launcher splash visually so
+   updates feel like a native OS event, not an in-app modal. No
+   close button — focus is forced until the install completes and
+   the app relaunches itself. */
+.upd-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background:
+    radial-gradient(ellipse 55% 55% at 50% 50%, rgba(140, 92, 246, 0.5), transparent 60%),
+    radial-gradient(ellipse 80% 70% at 50% 50%, rgba(60, 40, 120, 0.2), transparent 75%),
+    #050505;
+  color: #fafafa;
+  display: flex;
+  flex-direction: column;
+  animation: upd-splash-in 320ms ease-out;
+}
+
+@keyframes upd-splash-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.upd-splash-frame {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(140, 92, 246, 0.18);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.upd-splash-brand {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.upd-splash-wordmark {
+  font-size: 92px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  margin: 0;
+  color: #fcfcff;
+  text-shadow:
+    0 0 30px rgba(196, 168, 252, 0.35),
+    0 4px 36px rgba(140, 92, 246, 0.35);
+}
+
+.upd-splash-tagline {
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  color: rgba(200, 200, 220, 0.6);
+  margin: 0;
+}
+
+.upd-splash-spotlight {
+  position: absolute;
+  left: 50%;
+  bottom: 28%;
+  transform: translateX(-50%);
+  width: 58%;
+  height: 60px;
+  background: radial-gradient(
+    ellipse 50% 100% at 50% 50%,
+    rgba(196, 168, 252, 0.55),
+    transparent 70%
+  );
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.upd-splash-footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px 16px;
+  gap: 16px;
+}
+
+.upd-splash-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: rgba(220, 220, 235, 0.85);
+  font-variant-numeric: tabular-nums;
+}
+
+.upd-splash-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a78bfa;
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.7);
+  animation: upd-dot-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes upd-dot-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+
+.upd-splash-build {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(180, 180, 200, 0.42);
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+}
+
+.upd-splash-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  z-index: 3;
+}
+
+.upd-splash-progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(167, 139, 250, 0.35),
+    #a78bfa 65%,
+    #c4b5fd
+  );
+  box-shadow: 0 0 14px rgba(167, 139, 250, 0.6);
+  transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Memory view — empty state + sample placeholder rows
+   ───────────────────────────────────────────────────────────────────── */
+
+.memory-empty {
+  padding: 28px 24px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.memory-empty-head {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+  margin-bottom: 6px;
+}
+
+.memory-empty p {
+  font-size: 13px;
+  color: rgba(180, 180, 200, 0.65);
+  line-height: 1.6;
+  margin: 0 auto 18px auto;
+  max-width: 440px;
+}
+
+.memory-sample-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 auto;
+  max-width: 480px;
+  text-align: left;
+}
+
+.memory-sample-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.55);
+}
+
+/* ── v0.1.4 — "+" menu (chat input left side) ────────────────────────
+   Anchors to the left of the input action row. Menu opens UPWARD
+   because the input sits at the bottom of the chat shell, so listing
+   downward would clip below the window. Mirrors the model picker's
+   visual language so the two popovers feel like one family. */
+.chat-plus {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: auto;
+}
+
+.chat-plus-btn {
+  width: 36px;
+  height: 36px;
+}
+
+.chat-plus-btn.is-open {
+  background: rgba(167, 139, 250, 0.18);
+  border-color: rgba(167, 139, 250, 0.45);
+  color: #fff;
+}
+
+.chat-plus-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 30;
+  width: 320px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 6px;
+  background: #0d0d10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: chat-plus-fade-in 140ms ease-out;
+}
+
+@keyframes chat-plus-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-plus-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  padding: 9px 10px;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 140ms ease;
+}
+
+.chat-plus-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.chat-plus-item.is-on {
+  background: rgba(167, 139, 250, 0.12);
+}
+
+.chat-plus-item.is-on:hover {
+  background: rgba(167, 139, 250, 0.18);
+}
+
+.chat-plus-item--submenu {
+  position: relative;
+}
+
+.chat-plus-item--submenu.is-open {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.chat-plus-item-icon {
+  font-size: 16px;
+  line-height: 1;
+  width: 22px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.chat-plus-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-plus-item-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fafafa;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-plus-item-blurb {
+  font-size: 11.5px;
+  color: rgba(180, 180, 200, 0.62);
+  line-height: 1.35;
+}
+
+.chat-plus-on {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.95);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(167, 139, 250, 0.16);
+}
+
+.chat-plus-caret {
+  color: rgba(180, 180, 200, 0.55);
+  font-size: 10px;
+  margin-left: auto;
+  align-self: center;
+}
+
+.chat-plus-recent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 4px 8px 6px 30px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-plus-recent-empty {
+  font-size: 11.5px;
+  color: rgba(180, 180, 200, 0.5);
+  padding: 6px 4px;
+}
+
+.chat-plus-recent-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease;
+}
+
+.chat-plus-recent-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.chat-plus-recent-name {
+  font-size: 12.5px;
+  color: #f1f1f5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-plus-recent-meta {
+  font-size: 10.5px;
+  color: rgba(180, 180, 200, 0.5);
+}
+
+/* v0.1.4 — Agent ON pill. Sits in the topbar to the LEFT of the
+   model picker so the user always knows when their chat turns are
+   being framed as multi-step plans. Pulses gently to draw the eye
+   without feeling alarming. */
+.chat-agent-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.95);
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.32);
+}
+
+.chat-agent-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(167, 139, 250);
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.7);
+  animation: chat-agent-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes chat-agent-pulse {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.memory-sample-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(167, 139, 250, 0.6);
+  flex-shrink: 0;
+}
+
+.memory-sample-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.memory-sample-when {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.55);
+}
+
+.memory-clear-btn {
+  background: transparent;
+  color: rgba(254, 202, 202, 0.85);
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.memory-clear-btn:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #fee2e2;
+}
+
+.memory-clear-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+  color: rgba(254, 202, 202, 0.45);
+  border-color: rgba(220, 38, 38, 0.18);
+}
+
+.memory-clear-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(229, 231, 235, 0.55);
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Integrations view — connector cards
+   ───────────────────────────────────────────────────────────────────── */
+
+.integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.integration-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.integration-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.integration-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  color: #c4b5fd;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.integration-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.integration-card-blurb {
+  font-size: 12px;
+  color: rgba(180, 180, 200, 0.65);
+  line-height: 1.55;
+  margin: 0;
+  flex: 1;
+}
+
+.integration-card-btn {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(180, 180, 200, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: not-allowed;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Updates view — changelog cards
+   ───────────────────────────────────────────────────────────────────── */
+
+.updates-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.update-card {
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+}
+
+.update-card--highlight {
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.1);
+}
+
+.update-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.update-card-version {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fafafa;
+  background: rgba(167, 139, 250, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.update-card-date {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.55);
+  letter-spacing: 0.04em;
+}
+
+.update-card-tag {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  background: #c4b5fd;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.update-card-changes {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.update-card-changes li {
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.78);
+  line-height: 1.55;
+}
+
+.update-card--highlight .update-card-changes li {
+  color: rgba(232, 232, 240, 0.92);
+}
+
+/* v0.1.13 \u2014 next-version "in progress" card sits above the shipped
+   list with a softer, work-in-progress accent. */
+.update-card--next {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(167, 139, 250, 0.32);
+  margin-bottom: 12px;
+}
+.update-card--next .update-card-tag {
+  background: rgba(167, 139, 250, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(167, 139, 250, 0.4);
+}
+.update-card--next .update-card-changes li {
+  color: rgba(210, 210, 230, 0.7);
+  font-style: italic;
+}
+
+/* v0.1.13 \u2014 short summary line under the version badge. Each release
+   now leads with one sentence instead of dumping straight into bullets. */
+.update-card-summary {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(220, 220, 235, 0.86);
+}
+.update-card--highlight .update-card-summary {
+  color: rgba(240, 240, 246, 0.95);
+}
+
+/* v0.1.13 \u2014 inline change-type tag (NEW / FIX / IMPROVE) prefixed
+   to each bullet so users can scan the changelog by category. */
+.update-card-tag-inline {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+.update-card-tag-inline--new {
+  background: rgba(167, 139, 250, 0.18);
+  color: rgba(232, 224, 255, 0.95);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+}
+.update-card-tag-inline--fix {
+  background: rgba(248, 113, 113, 0.14);
+  color: rgba(255, 220, 220, 0.94);
+  border: 1px solid rgba(248, 113, 113, 0.36);
+}
+.update-card-tag-inline--improve {
+  background: rgba(52, 211, 153, 0.14);
+  color: rgba(220, 255, 235, 0.95);
+  border: 1px solid rgba(52, 211, 153, 0.36);
+}
+
+/* v0.1.13 \u2014 Teams + Enterprise CTA cards in the desktop BillingPanel.
+   Sit below the personal plans grid; both redirect to the website
+   (Stripe checkout for Teams, /contact for Enterprise) because per-seat
+   and custom contracts can't be handled inline. */
+.billing-team-card {
+  flex: 1 1 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.025);
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.billing-team-card:hover {
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.35);
+  transform: translateY(-1px);
+}
+
+.billing-team-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.billing-team-card-copy {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(180, 180, 200, 0.7);
+}
+
+.billing-team-card-cta {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(196, 168, 252, 0.9);
+}
+
+/* v0.1.15 \u2014 External plan card (Teams / Enterprise). Same shape as
+   the regular billing-plan-card but with a softer dashed border so
+   users register them as "leaves the app" cards rather than inline
+   subscription targets. */
+.billing-plan-card--external {
+  border-style: dashed;
+  border-color: rgba(167, 139, 250, 0.3);
+  background:
+    radial-gradient(circle at top right, rgba(167, 139, 250, 0.08), transparent 60%),
+    rgba(255, 255, 255, 0.02);
+}
+.billing-plan-card--external:hover {
+  border-color: rgba(196, 168, 252, 0.5);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   v0.1.4 — Sources view (RAG scaffold)
+   ───────────────────────────────────────────────────────────────────── */
+
+.sources-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 20px;
+  background: rgba(167, 139, 250, 0.04);
+  border: 1px dashed rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.sources-drop:hover,
+.sources-drop.is-over {
+  background: rgba(167, 139, 250, 0.09);
+  border-color: rgba(167, 139, 250, 0.55);
+}
+
+.sources-drop-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.sources-drop-sub {
+  font-size: 12px;
+  color: rgba(180, 180, 200, 0.6);
+  line-height: 1.55;
+  max-width: 480px;
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sources-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.sources-row-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sources-row-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #fafafa;
+  word-break: break-all;
+}
+
+.sources-row-sub {
+  font-size: 11px;
+  color: rgba(180, 180, 200, 0.55);
+}
+
+.sources-row-del {
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: rgba(248, 113, 113, 0.85);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.sources-row-del:hover {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   v0.1.4 — Canvas pane (collaborative editing surface)
+   ───────────────────────────────────────────────────────────────────── */
+
+.chat-shell:has(.canvas-pane) {
+  grid-template-columns: 280px minmax(0, 1.5fr) minmax(0, 1fr);
+}
+
+.canvas-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: rgba(10, 10, 14, 0.92);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  animation: canvas-slide-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes canvas-slide-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.canvas-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.canvas-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.canvas-head-kicker {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+}
+
+.canvas-head-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fafafa;
+  word-break: break-all;
+}
+
+.canvas-head-close {
+  background: transparent;
+  border: none;
+  color: rgba(180, 180, 200, 0.7);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: inherit;
+}
+
+.canvas-head-close:hover {
+  color: #fafafa;
+}
+
+.canvas-body {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 18px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #f4f4f8;
+}
+
+.canvas-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.canvas-save {
+  background: rgba(167, 139, 250, 0.16);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  color: #ddd6fe;
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.canvas-save:hover {
+  background: rgba(167, 139, 250, 0.24);
+}
+
+/* v0.1.4 — Live HTML/JS preview side panel. Shares the chat-shell
+   right-column slot with .canvas-pane (only one open at a time) so
+   the layout rule that widens the right column for canvas applies
+   here too. */
+.chat-shell:has(.code-preview-pane) {
+  grid-template-columns: 280px minmax(0, 1.5fr) minmax(0, 1fr);
+}
+
+.code-preview-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: rgba(10, 10, 14, 0.92);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  animation: canvas-slide-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.code-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.code-preview-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.code-preview-head-kicker {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+}
+
+.code-preview-head-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fafafa;
+}
+
+.code-preview-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-preview-tab {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(220, 220, 235, 0.85);
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.code-preview-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.code-preview-tab.active {
+  background: rgba(167, 139, 250, 0.16);
+  border-color: rgba(167, 139, 250, 0.4);
+  color: #ddd6fe;
+}
+
+.code-preview-close {
+  background: transparent;
+  border: none;
+  color: rgba(180, 180, 200, 0.75);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  font-family: inherit;
+}
+
+.code-preview-close:hover {
+  color: #fafafa;
+}
+
+.code-preview-frame {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border: none;
+  background: #ffffff;
+}
+
+.code-preview-code {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #f4f4f8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  overflow: auto;
+  white-space: pre;
+}
+
+/* "Run preview" buttons that appear under an assistant bubble when
+   it contains a runnable code artifact. */
+.chat-artifact-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chat-artifact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  color: #ddd6fe;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.chat-artifact-btn:hover {
+  background: rgba(167, 139, 250, 0.2);
+}
+
+.chat-artifact-btn.active {
+  background: rgba(167, 139, 250, 0.28);
+  border-color: rgba(167, 139, 250, 0.6);
+}
+
+.chat-artifact-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.85);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.18);
+}
+
+.chat-artifact-tag {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+
+/* v0.1.8 — Tool execution chips. One row per assistant turn that
+   invoked the local tool registry. Status colours match the
+   running / ok / error states emitted by dispatchTool. */
+.chat-tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chat-tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 1px solid transparent;
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5f5;
+}
+
+.chat-tool-chip--ok {
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.32);
+  color: #bbf7d0;
+}
+
+.chat-tool-chip--running {
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.32);
+  color: #ddd6fe;
+}
+
+.chat-tool-chip--error {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.32);
+  color: #fecaca;
+}
+
+.chat-tool-chip-mark {
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.chat-tool-chip-label {
+  letter-spacing: 0.01em;
+}
+
+/* === v0.1.9 polish: shared view layout =============================
+   The desktop window can be 900px (min) → 2000px+ wide. Older view
+   styles capped everything at 720px which made the chat-shell look
+   "squished" on wide windows for grid-heavy views (Plan, Usage,
+   Integrations, Updates, Sources). The block below introduces a
+   shared wrapper system on top of the existing `.view` / `.view-head`
+   / `.view-body` markup so we don't have to refactor every view's
+   JSX. Anything new gets `.view-shell` + variant modifiers; old views
+   get nicer breathing room via overriding `.view` rules with the
+   correct cascade.
+
+   Key principles, all matching the website's pricing/features pages:
+   - Generous side padding on wide windows (40px), tight on narrow (20px).
+   - Long body text + headings cap at ~720-880px so they don't sprawl.
+   - Grid-heavy views ("wide" mode) cap at ~1440px and switch
+     1 → 2 → 3 cols at 900 / 1200 / 1600.
+   - Cards: 16px radius, 1px inset highlight, soft heist-style outline.
+   - Typography hierarchy: 28-32 / 18-20 / 14-16 / 14 / 11-12.
+   ================================================================ */
+
+/* Re-pad the generic view wrapper so wide windows breathe. The
+   existing .view rule sets 40/64 padding which is fine for mid-width
+   but feels chunky on narrow windows. Override with responsive pad. */
+.view {
+  padding: 32px 40px 56px 40px;
+}
+
+/* Heading + lead paragraph row. Slightly tighter letter-spacing,
+   roomier max-width than the body so the hero copy reads cleanly. */
+.view-head {
+  max-width: 880px;
+  margin: 0 auto 28px auto;
+}
+
+.view-head h1 {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px 0;
+  color: #fafafa;
+  line-height: 1.15;
+}
+
+.view-head p {
+  font-size: 14.5px;
+  color: rgba(180, 180, 200, 0.72);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 640px;
+}
+
+/* Default body is for "narrow" content (form-style: Account, Keys,
+   Preferences, Settings, Memory). Caps at 880 so long text reads
+   nicely. Overridden by .view-body--wide for grid views below. */
+.view-body {
+  max-width: 880px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  /* Ensure children can scroll inside flex parents without expanding. */
+  min-height: 0;
+}
+
+/* Wide variant — for views packed with grids (Plan, Usage, Updates,
+   Integrations, Sources). Uses a roomier cap and lets the inner
+   grids breathe at higher widths. */
+.view-body--wide {
+  max-width: 1440px;
+}
+
+/* Wide variant for the head row too, so the lead paragraph aligns
+   over a wide-mode body (Plan / Usage / etc.) instead of shifting. */
+.view-head--wide {
+  max-width: 1440px;
+}
+
+/* Section grouping inside a view. Already used in some places;
+   formalize as the shared rhythm token. */
+.view-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.view-section + .view-section {
+  margin-top: 12px;
+}
+
+/* Small label / kicker text used above sections, on cards, etc. */
+.view-meta {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(180, 180, 200, 0.55);
+}
+
+/* The heist-style outlined card used as the new shared building
+   block. Matches the website's HeistCard visual rhythm so the desktop
+   feels like the site. Existing card classes (.usage-panel,
+   .billing-panel, .integration-card, .update-card, .boost-card,
+   .account-jump, .plan-tier-card, .pref-section) are unified to the
+   same base look further down. */
+.view-card {
+  padding: 22px;
+  background:
+    linear-gradient(180deg, rgba(20, 20, 28, 0.6), rgba(10, 10, 16, 0.4));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Responsive grid variants. Cards never squish below ~280px wide. */
+.view-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.view-grid--2 {
+  grid-template-columns: 1fr;
+}
+
+.view-grid--3 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .view-grid--2,
+  .view-grid--3 {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .view-grid--3 {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+  }
+}
+
+/* === Per-view tweaks — wider canvases + responsive grids ========== */
+
+/* Plan view. The existing markup uses `.view` + `.view-body` with the
+   billing panel (already wide). Pull the body cap up so the boost row
+   + plan-list don't get jammed into 720px. */
+.view--plan .view-head,
+.view--plan .view-body {
+  max-width: 1440px;
+}
+
+/* Usage view — wide layout for the 3-up hero + insights grids. */
+.view--usage .view-head,
+.view--usage .view-body {
+  max-width: 1440px;
+}
+
+/* Integrations grid view. */
+.view--integrations .view-head,
+.view--integrations .view-body {
+  max-width: 1440px;
+}
+
+/* Updates changelog — keep mid-width so the changelog cards read
+   like a feed instead of stretching across a wide window. */
+.view--updates .view-head,
+.view--updates .view-body {
+  max-width: 980px;
+}
+
+/* Sources view — list + drop area. Mid-width feels right. */
+.view--sources .view-head,
+.view--sources .view-body {
+  max-width: 980px;
+}
+
+/* Memory view — short empty-state, keep narrow + center. */
+.view--memory .view-body {
+  align-items: stretch;
+}
+
+/* Settings + Preferences + Keys + Account stay at 880 (default). */
+
+/* Make the existing usage / billing / integration grids responsive to
+   the actual window width instead of jumping straight from 3-col to
+   1-col at 1100. The new breakpoints align with the v0.1.9 system. */
+.usage-hero-grid,
+.usage-insight-grid {
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .usage-hero-grid,
+  .usage-insight-grid {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .usage-hero-grid,
+  .usage-insight-grid {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+  }
+}
+
+.integrations-grid {
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .integrations-grid {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
+}
+
+@media (min-width: 1300px) {
+  .integrations-grid {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+  }
+}
+
+/* Account jump tiles — go 1→2 cols at 700, 4-up at 1200 for symmetry
+   with the four destinations (Plan / Usage / Keys / Preferences). */
+.account-jump-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 700px) {
+  .account-jump-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .account-jump-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Update card spacing — give the changelog a touch more breathing
+   room so it stops feeling cramped on wide windows. */
+.updates-list {
+  gap: 14px;
+}
+
+.update-card {
+  padding: 20px 22px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(20, 20, 28, 0.6), rgba(10, 10, 16, 0.4));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+/* Memory empty-state — center within wider body, give it max-width. */
+.memory-empty {
+  padding: 36px 28px;
+  border-radius: 18px;
+  max-width: 720px;
+  margin: 8px auto 0 auto;
+  background:
+    linear-gradient(180deg, rgba(20, 20, 28, 0.6), rgba(10, 10, 16, 0.4));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+/* Pull the "Clear all memory" action under the empty-state into a
+   centered row that doesn't float to the right of nothing. */
+.view-actions--center {
+  justify-content: center;
+}
+
+/* Sources drop area — taller + lifted on wide windows so it feels
+   like a real upload target rather than a thin band. */
+.sources-drop {
+  padding: 40px 24px;
+  border-radius: 18px;
+}
+
+/* Integration cards — match the heist-card surface treatment. */
+.integration-card {
+  padding: 20px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(20, 20, 28, 0.6), rgba(10, 10, 16, 0.4));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  min-height: 168px;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.integration-card:hover {
+  border-color: rgba(167, 139, 250, 0.22);
+}
+
+.integration-card-blurb {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Pref section — softened to match the heist surface, slightly more
+   padding so toggles + segmented controls don't crowd labels. */
+.pref-section {
+  padding: 18px 20px;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(20, 20, 28, 0.6), rgba(10, 10, 16, 0.4));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+.pref-section-label {
+  font-size: 14px;
+}
+
+.pref-section-help {
+  font-size: 12.5px;
+  line-height: 1.55;
+  max-width: 480px;
+}
+
+/* Field row tile (used in Account / Plan field listings). */
+.field-row {
+  padding: 14px 18px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(20, 20, 28, 0.6), rgba(10, 10, 16, 0.4));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+/* Plan tier mini-card. */
+.plan-tier-card {
+  padding: 16px 18px;
+  border-radius: 14px;
+}
+
+/* Account jump card — match shared card surface. */
+.account-jump {
+  padding: 16px 18px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(20, 20, 28, 0.6), rgba(10, 10, 16, 0.4));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+}
+
+/* Chat empty-state polish: cap the action grid at 3 cols only on
+   wide windows, then 2 at mid, 1 at narrow — instead of always 3
+   collapsing to 1. Action cards never squish below ~240px. */
+.chat-empty-actions {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 760px) {
+  .chat-empty-actions {
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+  }
+}
+
+@media (min-width: 1180px) {
+  .chat-empty-actions {
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
+  }
+}
+
+/* Chat empty-state hero text — give it room on wide windows so the
+   intro paragraph doesn't wrap on every other word. */
+.chat-empty-stage {
+  max-width: 680px;
+}
+
+.chat-empty p {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* Chat topbar — tighter padding on narrow, roomier on wide so the
+   model picker doesn't crowd the title. */
+.chat-topbar {
+  padding: 18px 28px 0 28px;
+  gap: 16px;
+}
+
+@media (max-width: 1080px) {
+  .chat-topbar {
+    padding: 14px 20px 0 20px;
+  }
+}
+
+.chat-title {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  line-height: 1.2;
+}
+
+.chat-title-sub {
+  font-size: 12.5px;
+  line-height: 1.5;
+  max-width: 560px;
+}
+
+/* === Narrow-window overrides ====================================== */
+
+/* Tighten side-padding on narrow windows so cards don't lose half
+   their width to the wrapper. Matches website's narrow-screen rules. */
+@media (max-width: 1080px) {
+  .view {
+    padding: 28px 28px 48px 28px;
+  }
+}
+
+@media (max-width: 820px) {
+  .view {
+    padding: 24px 18px 40px 18px;
+  }
+  .view-head {
+    margin-bottom: 20px;
+  }
+  .view-head h1 {
+    font-size: 26px;
+  }
+}
+
+/* Make sure scroll works correctly inside the .ws-main flex column —
+   .view already sets overflow-y: auto, but the chain needs min-height: 0
+   to actually clip. ws-main already has min-height: 0; here we ensure
+   the .view itself participates. */
+.view {
+  min-height: 0;
+}
+
+/* =====================================================================
+   v0.1.10 — heist.lol-style premium polish
+   =====================================================================
+   Layered on top of the existing v0.1.9 layout pass. The earlier pass got
+   structure right; this pass adds the "alive" feel:
+   - Smooth 180–220ms transitions on cards / buttons / inputs / links
+   - Soft hover lift (translateY(-1px)) + violet-tinted glow shadow
+   - Inner top-highlight for "lit from above" cards
+   - Violet-tinted focus-visible rings (global)
+   - Press-down feel on buttons (translateY(1px) + slight darken)
+   - Pulse animations for status dots
+   - Letter-spacing rhythm aligned across heads + uppercase labels
+   - Text-overflow guards on long content (emails, keys, paths)
+   ===================================================================== */
+
+/* ── 1. Smooth scroll inside views ─────────────────────────────────── */
+.view {
+  scroll-behavior: smooth;
+}
+
+/* ── 2. Global focus-visible — violet-tinted rings ─────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(167, 139, 250, 0.5);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Inputs that already get violet borders on focus shouldn't double up. */
+.field-input:focus-visible,
+.chat-history-search-input:focus-visible,
+.chat-input-textarea:focus-visible,
+textarea:focus-visible,
+input[type="text"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="password"]:focus-visible,
+input[type="search"]:focus-visible,
+input[type="number"]:focus-visible,
+input[type="url"]:focus-visible {
+  outline: none;
+}
+
+/* ── 3. Card hover/lift system ──────────────────────────────────────
+   Apply the heist surface treatment uniformly: subtle lift, violet
+   border tint, soft glow, slight background brighten.
+   Inner top-highlight gives the "lit from above" feel. */
+.view-card,
+.usage-panel,
+.billing-panel,
+.update-card,
+.integration-card,
+.pref-section,
+.account-jump,
+.boost-card,
+.field-row,
+.plan-tier-card {
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    background 200ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.view-card:hover,
+.usage-panel:hover,
+.billing-panel:hover,
+.update-card:hover,
+.integration-card:hover,
+.pref-section:hover,
+.account-jump:hover,
+.boost-card:hover,
+.field-row:hover,
+.plan-tier-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(167, 139, 250, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+
+/* Hero / accent variants keep their gradient backgrounds on hover —
+   only adjust the lift + glow shadow, not the underlying paint. */
+.usage-panel--accent:hover,
+.billing-panel--hero:hover,
+.boost-card--featured:hover,
+.update-card--highlight:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(167, 139, 250, 0.18),
+    rgba(12, 12, 16, 0.92)
+  );
+}
+
+/* ── 4. Account card in nav rail — lift + violet glow on hover ────── */
+.ws-nav-account {
+  transition:
+    transform 200ms ease,
+    background 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+.ws-nav-account:hover {
+  transform: translateY(-1px);
+  border-color: rgba(167, 139, 250, 0.22);
+  background: rgba(167, 139, 250, 0.06);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(167, 139, 250, 0.08);
+}
+.ws-nav-account:active {
+  transform: translateY(0);
+}
+
+/* ── 5. Button polish — smooth transitions + press-down feel ───────── */
+.upgrade-cta-btn,
+.billing-secondary-btn,
+.chat-history-new,
+.chat-copilot-btn,
+.keys-revoke-btn,
+.upd-banner-btn,
+.upd-banner-x,
+.whats-new-btn,
+.boost-card-btn,
+.boost-btn,
+.titlebar-btn,
+.ws-nav-btn,
+.chat-icon-btn,
+.chat-send,
+.view-save-btn,
+.account-signout,
+.integration-card-btn,
+.main-signin-btn,
+.chat-history-search-clear {
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+/* Press-down: translateY(1px) + slight darken via filter so we don't
+   need to override every button's hover background. */
+.upgrade-cta-btn:active:not(:disabled),
+.billing-secondary-btn:active:not(:disabled),
+.chat-history-new:active:not(:disabled),
+.chat-copilot-btn:active:not(:disabled),
+.keys-revoke-btn:active:not(:disabled),
+.upd-banner-btn:active:not(:disabled),
+.upd-banner-x:active:not(:disabled),
+.whats-new-btn:active:not(:disabled),
+.boost-card-btn:active:not(:disabled),
+.boost-btn:active:not(:disabled),
+.ws-nav-btn:active:not(:disabled),
+.chat-icon-btn:active:not(:disabled),
+.chat-send:active:not(:disabled),
+.view-save-btn:active:not(:disabled),
+.account-signout:active:not(:disabled),
+.integration-card-btn:not([disabled]):active,
+.main-signin-btn:active:not(:disabled),
+.account-jump:active,
+.ws-nav-account:active {
+  transform: translateY(1px);
+  filter: brightness(0.94);
+}
+
+/* Titlebar buttons sit in a compressed strip — keep the press but skip
+   the lift so they don't visually leave the bar. */
+.titlebar-btn:active {
+  filter: brightness(0.9);
+}
+
+/* Solid violet buttons get a subtle brighten on hover (already true for
+   most), with a soft violet glow that mirrors card hover. */
+.upgrade-cta-btn:hover,
+.whats-new-btn:hover,
+.upd-banner-btn:hover,
+.view-save-btn:hover:not(:disabled),
+.chat-send:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.28);
+}
+
+/* ── 6. Input polish — smooth focus, violet border, gentle brighten ─ */
+.field-input,
+.chat-history-search-input,
+.chat-history-search,
+.keys-create-form input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+input[type="url"],
+textarea {
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.field-input:focus {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.14);
+}
+
+/* ── 7. Letter-spacing rhythm ───────────────────────────────────────
+   Headings tighten slightly, uppercase labels open up. */
+.view-head h1,
+.account-name,
+.billing-panel h2,
+.usage-panel-title,
+.billing-modal-title,
+.chat-title,
+.whats-new-title {
+  letter-spacing: -0.01em;
+}
+
+.view-meta,
+.billing-kicker,
+.usage-mini-label,
+.billing-chip-label,
+.chat-history-kicker,
+.ws-nav-account-plan,
+.ws-nav-account-version,
+.usage-card-tag,
+.update-card-tag,
+.upd-splash-build {
+  letter-spacing: 0.16em;
+}
+
+/* ── 8. Text-shadow on bold headings sitting on dark gradients ───── */
+.view-head h1,
+.billing-panel h2,
+.usage-panel-title,
+.whats-new-title {
+  text-shadow: 0 2px 24px rgba(167, 139, 250, 0.12);
+}
+
+/* ── 9. Pulse for status indicators ─────────────────────────────────
+   The nav-rail dot already has status-pulse 2.6s; broaden the family
+   so any other "live" dot breathes the same way. */
+@keyframes heist-soft-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+
+/* ── 10. Toast / pill animations ────────────────────────────────────
+   Gentle slide-down entry; the existing .chat-toast had no animation. */
+@keyframes heist-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.chat-toast {
+  animation: heist-toast-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
+
+@keyframes heist-pill-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.billing-comped-pill,
+.billing-badge {
+  animation: heist-pill-in 240ms ease-out;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+/* ── 11. Backdrop blur on overlay surfaces ─────────────────────────── */
+.whats-new {
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+
+/* ── 12. Text overflow guards ───────────────────────────────────────
+   Long emails / keys / paths should break instead of overflowing. */
+.ws-nav-account-email,
+.account-jump-sub {
+  word-break: break-word;
+}
+
+.field-value,
+.keys-row code,
+.keys-row span[title] {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Buttons with potentially long labels — never let them squish. */
+.upgrade-cta-btn,
+.billing-secondary-btn,
+.boost-card-btn,
+.boost-btn,
+.whats-new-btn,
+.upd-banner-btn,
+.view-save-btn,
+.account-signout,
+.keys-revoke-btn,
+.integration-card-btn,
+.chat-history-new {
+  flex-shrink: 0;
+}
+
+/* Single-line ellipsis for elements that musn't wrap — billing/account
+   meta lines, integration card titles. */
+.integration-card-name,
+.update-card-version,
+.boost-card-price {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ── 13. Link polish ───────────────────────────────────────────────── */
+a {
+  transition: color 180ms ease, opacity 180ms ease;
+}
+

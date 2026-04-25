@@ -1,0 +1,462 @@
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import type Stripe from "stripe";
+import { getStripe, isStripeConfigured, STRIPE_PRICES } from "../../../../lib/stripe";
+import { upsertActiveSubscription } from "../../../../lib/subscriptions";
+import {
+  sendPaymentFailedEmail,
+  sendRenewalSucceededEmail,
+  sendRenewalUpcomingEmail,
+  sendSubscriptionActivatedEmail,
+  sendSubscriptionCancellationScheduledEmail,
+  sendSubscriptionEndedEmail,
+} from "../../../../lib/email";
+import {
+  type BillingAddonKey,
+  getPricingPlan,
+  isOneTimeBoost,
+  type PricingPlanKey,
+  pricingPlanMap,
+} from "../../../../lib/pricing";
+import { getUserProfileByEmail } from "../../../../lib/user-profile";
+import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
+import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
+
+/**
+ * Look up the customer's display name so every billing email greets
+ * them by name.  Missing profiles (deleted / guest customers) fall
+ * back to "" which renders as a plain "Hi," in the templates.
+ */
+async function displayNameFor(email: string): Promise<string> {
+  try {
+    const profile = await getUserProfileByEmail(email);
+    return profile?.display_name ?? "";
+  } catch {
+    return "";
+  }
+}
+
+// Reverse-lookup a Stripe price ID to its plan key / cycle.
+function resolvePlanFromPriceId(priceId: string | null): { planKey: string; cycle: "monthly" | "yearly" } | null {
+  if (!priceId) return null;
+  for (const [key, cycles] of Object.entries(STRIPE_PRICES)) {
+    if (cycles.monthly === priceId) return { planKey: key, cycle: "monthly" };
+    if (cycles.yearly  === priceId) return { planKey: key, cycle: "yearly"  };
+  }
+  return null;
+}
+
+function pickPlanItem(subscription: Stripe.Subscription): Stripe.SubscriptionItem | null {
+  const items = subscription.items.data;
+  if (items.length === 0) return null;
+  // v0.1.12 \u2014 memory_boost / api_boost / key_pack removed (no Stripe
+  // products were ever created). Empty set kept so the structure is
+  // ready if real addon SKUs land later.
+  const addonKeys = new Set<string>();
+  for (const item of items) {
+    const resolved = resolvePlanFromPriceId(item.price.id);
+    if (resolved && !addonKeys.has(resolved.planKey)) return item;
+  }
+  return items[0] ?? null;
+}
+
+function formatDate(unix: number | null): string {
+  if (!unix) return "your next billing date";
+  try {
+    return new Date(unix * 1000).toLocaleDateString("en-US", {
+      month: "long", day: "numeric", year: "numeric",
+    });
+  } catch { return "your next billing date"; }
+}
+
+// ── Resolve email + plan context from a subscription ──────────────────────
+async function resolveContext(subscription: Stripe.Subscription): Promise<{
+  email:    string;
+  planKey:  string;
+  planName: string;
+  cycle:    "monthly" | "yearly";
+  periodEndUnix: number | null;
+} | null> {
+  let email = subscription.metadata?.userEmail ?? "";
+  if (!email) {
+    const customerId = typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer?.id;
+    if (!customerId) return null;
+    const customer = await getStripe().customers.retrieve(customerId);
+    if (customer.deleted || !customer.email) return null;
+    email = customer.email;
+  }
+
+  const planItem = pickPlanItem(subscription);
+  const resolved = planItem ? resolvePlanFromPriceId(planItem.price.id) : null;
+  const planKey  = resolved?.planKey ?? subscription.metadata?.planKey ?? "free";
+  const cycle    = (resolved?.cycle ?? subscription.metadata?.cycle ?? "monthly") as "monthly" | "yearly";
+
+  const planName = planKey in pricingPlanMap
+    ? getPricingPlan(planKey as PricingPlanKey).name
+    : planKey;
+
+  const periodEndRaw = (subscription as unknown as Record<string, unknown>)["current_period_end"];
+  const periodEndUnix = typeof periodEndRaw === "number" ? periodEndRaw : null;
+
+  return { email, planKey, planName, cycle, periodEndUnix };
+}
+
+async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
+  const ctx = await resolveContext(subscription);
+  if (!ctx) {
+    console.warn("[stripe webhook] missing email context — skipping");
+    return;
+  }
+
+  // Keep the Supabase snapshot in sync.
+  await upsertActiveSubscription({
+    email:            ctx.email,
+    planKey:          ctx.planKey,
+    billingCycle:     ctx.cycle,
+    currentPeriodEnd: ctx.periodEndUnix,
+    stripeStatus:     subscription.status,
+  });
+
+  // ── Email side effects ─────────────────────────────────────────
+  // Only send for events where a user-facing state changed.  Event
+  // data.previous_attributes lets us detect specific transitions
+  // (e.g. just-scheduled cancellation) without misfiring on every update.
+  const prev = (event.data as unknown as { previous_attributes?: Record<string, unknown> })
+    .previous_attributes ?? {};
+  const plan = ctx.planKey in pricingPlanMap
+    ? getPricingPlan(ctx.planKey as PricingPlanKey)
+    : null;
+
+  const name = await displayNameFor(ctx.email);
+
+  switch (event.type) {
+    case "customer.subscription.created": {
+      if (subscription.status === "active" || subscription.status === "trialing") {
+        const amountLabel = plan
+          ? (ctx.cycle === "yearly" ? plan.yearlyLabel ?? plan.monthlyLabel : plan.monthlyLabel)
+          : "";
+        await sendSubscriptionActivatedEmail({
+          email:       ctx.email,
+          name,
+          planName:    ctx.planName,
+          cycle:       ctx.cycle,
+          amountLabel,
+        });
+      }
+      break;
+    }
+
+    case "customer.subscription.updated": {
+      const prevCancel = Boolean(prev.cancel_at_period_end);
+      const currCancel = Boolean((subscription as unknown as { cancel_at_period_end?: boolean }).cancel_at_period_end);
+
+      // Transition: cancellation was JUST scheduled (was false, now true).
+      if (currCancel && !prevCancel) {
+        await sendSubscriptionCancellationScheduledEmail({
+          email:    ctx.email,
+          name,
+          planName: ctx.planName,
+          endsOn:   formatDate(ctx.periodEndUnix),
+        });
+      }
+
+      // Transition: previously-active sub became inactive via update
+      // (e.g. status moved to "unpaid" after retries exhausted).
+      const prevStatus = typeof prev.status === "string" ? prev.status : null;
+      if (
+        prevStatus && prevStatus !== subscription.status &&
+        ["unpaid", "canceled", "incomplete_expired"].includes(subscription.status)
+      ) {
+        await sendSubscriptionEndedEmail({
+          email:    ctx.email,
+          name,
+          planName: ctx.planName,
+        });
+      }
+      break;
+    }
+
+    case "customer.subscription.deleted": {
+      // Period ended on a scheduled cancel, or admin hard-canceled.
+      await sendSubscriptionEndedEmail({
+        email:    ctx.email,
+        name,
+        planName: ctx.planName,
+      });
+      break;
+    }
+  }
+}
+
+/**
+ * Dig the price id out of an invoice line item.  Stripe deprecated
+ * `line.price` at the type level in the API version we pin (moved under
+ * `pricing`) but still returns it in the wire response — narrow cast
+ * keeps runtime correct while satisfying TS.
+ */
+function priceIdFromInvoice(invoice: Stripe.Invoice): string | null {
+  const lineItem = invoice.lines?.data?.[0];
+  return (lineItem as unknown as { price?: { id?: string } | null } | undefined)
+    ?.price?.id ?? null;
+}
+
+/**
+ * Best-effort plan name lookup for invoice-triggered emails.  Falls back
+ * to a generic label so the subject line never reads "$12 — undefined".
+ */
+function planNameFromInvoice(invoice: Stripe.Invoice): string {
+  const resolved = resolvePlanFromPriceId(priceIdFromInvoice(invoice));
+  if (resolved && resolved.planKey in pricingPlanMap) {
+    return getPricingPlan(resolved.planKey as PricingPlanKey).name;
+  }
+  return "your";
+}
+
+function formatInvoiceAmount(invoice: Stripe.Invoice): string {
+  const amount = invoice.amount_paid || invoice.amount_due || invoice.total;
+  const currency = (invoice.currency || "usd").toUpperCase();
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency", currency,
+    }).format(amount / 100);
+  } catch {
+    return `${(amount / 100).toFixed(2)} ${currency}`;
+  }
+}
+
+async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  const email = invoice.customer_email ?? null;
+  if (!email) return;
+  await sendPaymentFailedEmail({
+    email,
+    name:     await displayNameFor(email),
+    planName: planNameFromInvoice(invoice),
+  });
+}
+
+/**
+ * invoice.paid — fires on successful renewal charges AND on the initial
+ * subscription charge.  We dedupe against the initial case by only
+ * emailing when billing_reason === "subscription_cycle" (scheduled
+ * renewal).  Initial checkouts are already covered by the welcome email
+ * from customer.subscription.created.
+ */
+async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  const email = invoice.customer_email ?? null;
+  if (!email) return;
+  const reason = (invoice as unknown as { billing_reason?: string }).billing_reason;
+  if (reason !== "subscription_cycle") return;
+
+  const periodEndUnix = (invoice as unknown as { period_end?: number }).period_end;
+  const nextPeriod = typeof periodEndUnix === "number"
+    ? new Date(periodEndUnix * 1000).toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric",
+      })
+    : "your next billing date";
+
+  await sendRenewalSucceededEmail({
+    email,
+    name:        await displayNameFor(email),
+    planName:    planNameFromInvoice(invoice),
+    amountLabel: formatInvoiceAmount(invoice),
+    periodEnd:   nextPeriod,
+    invoiceUrl:  invoice.hosted_invoice_url ?? null,
+  });
+}
+
+/**
+ * invoice.upcoming — Stripe sends this roughly 7 days before a renewal.
+ * Pure heads-up: gives the user a window to cancel / downgrade / swap
+ * cards before money moves.
+ */
+async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
+  const email = invoice.customer_email ?? null;
+  if (!email) return;
+
+  // Stripe sends this with `next_payment_attempt` or `period_end` as
+  // the target date depending on configuration.
+  const anyInvoice = invoice as unknown as {
+    next_payment_attempt?: number | null;
+    period_end?: number;
+  };
+  const chargeAt = anyInvoice.next_payment_attempt ?? anyInvoice.period_end ?? null;
+  const chargeDate = chargeAt
+    ? new Date(chargeAt * 1000).toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric",
+      })
+    : "your next billing date";
+
+  await sendRenewalUpcomingEmail({
+    email,
+    name:        await displayNameFor(email),
+    planName:    planNameFromInvoice(invoice),
+    amountLabel: formatInvoiceAmount(invoice),
+    chargeDate,
+  });
+}
+
+// ───────────────────────────────────────────────────────────────────
+// v0.1.8 — payment_intent.succeeded → boost_credits ledger
+// ───────────────────────────────────────────────────────────────────
+//
+// One-time boost top-ups (session_boost, weekly_boost, voice_minute_pack,
+// image_credit_pack, copilot_time_pack) are charged via PaymentIntent
+// in app/api/desktop/billing/payment-intent/route.ts. The intent's
+// metadata carries { addonKey, purchaseKind: "one_time_boost",
+// userEmail }. This handler turns a successful charge into a row in
+// boost_credits so the gating layer in lib/plan-limits.ts can let the
+// user past the plan cap.
+//
+// Idempotent: the table's stripe_payment_intent column is unique, so a
+// retried webhook is a no-op (we swallow the unique-violation error).
+async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
+  const meta = intent.metadata ?? {};
+
+  // ── v0.1.9 — credits top-up ────────────────────────────────────────
+  // metadata.kind === "credits" means the desktop billing panel asked
+  // /api/desktop/billing/credits to mint a PaymentIntent for $N. On
+  // success we credit the user's running balance (1 USD = 100 credits)
+  // via the addCredits journal — idempotent on the payment_intent id.
+  const kind = meta.kind ?? "";
+  if (kind === "credits") {
+    const userEmail = (meta.email ?? meta.userEmail ?? meta.user_email) as string | undefined;
+    const dollarsRaw = meta.dollars ?? "";
+    const dollars = Math.floor(Number(dollarsRaw));
+    if (!userEmail || !Number.isFinite(dollars) || dollars <= 0) {
+      console.warn("[stripe webhook] credits intent missing metadata:", intent.id);
+      return;
+    }
+    try {
+      await addCredits(
+        userEmail,
+        dollars * CREDITS_PER_DOLLAR,
+        "purchase",
+        intent.id,
+      );
+    } catch (err) {
+      console.error("[stripe webhook] addCredits failed:", err);
+    }
+    return;
+  }
+
+  // ── v0.1.8 legacy one-time boost top-ups ───────────────────────────
+  // session_boost / weekly_boost still flow through boost_credits so
+  // the existing gating layer keeps working. The other v0.1.8 keys
+  // (voice_minute_pack, image_credit_pack, copilot_time_pack) were
+  // dropped in v0.1.9 — credits cover those features now.
+  const purchaseKind = meta.purchaseKind ?? meta.purchase_kind;
+  if (purchaseKind !== "one_time_boost") return; // Not a boost charge.
+
+  const addonKey = (meta.addonKey ?? meta.addon_key) as string | undefined;
+  const userEmail = (meta.userEmail ?? meta.user_email) as string | undefined;
+  if (!addonKey || !userEmail) {
+    console.warn("[stripe webhook] one_time_boost intent missing metadata:", intent.id);
+    return;
+  }
+  if (!isOneTimeBoost(addonKey)) {
+    console.warn("[stripe webhook] one_time_boost intent has unknown addonKey:", addonKey);
+    return;
+  }
+  if (!isDatabaseConfigured()) {
+    console.warn("[stripe webhook] boost credit dropped — Supabase not configured.");
+    return;
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("boost_credits" as never)
+    .insert([
+      {
+        email: userEmail.toLowerCase(),
+        addon_key: addonKey as BillingAddonKey,
+        stripe_payment_intent: intent.id,
+        consumed: false,
+      },
+    ] as never);
+  if (error) {
+    // Postgres unique_violation = "23505". Treat as success: the
+    // credit was already inserted by an earlier delivery of the same
+    // event. Anything else, log and swallow — we still want to 200.
+    if ((error as { code?: string }).code === "23505") return;
+    console.error("[stripe webhook] boost_credits insert failed:", error.message);
+  }
+}
+
+// ── Route handler ──────────────────────────────────────────────────────────
+//
+// Behaviour:
+//   • Missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET → 503 with a
+//     clear error. Lets dev environments breathe — the dashboard test
+//     button surfaces the misconfiguration instead of crashing.
+//   • Bad signature → 400 (the only case where we want Stripe to give
+//     up retrying — the secret is wrong, retries won't fix it).
+//   • Anything else (handler errors, DB hiccups) → still 200 so we
+//     don't earn ourselves a Stripe retry storm against our own bugs.
+export async function POST(request: Request) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!isStripeConfigured() || !webhookSecret) {
+    return NextResponse.json(
+      {
+        error:
+          "Stripe webhook is not configured on this server. Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET.",
+      },
+      { status: 503 },
+    );
+  }
+
+  const body = await request.text();
+  const headersList = await headers();
+  const sig = headersList.get("stripe-signature");
+  if (!sig) {
+    return NextResponse.json({ error: "Missing stripe-signature header." }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
+  try {
+    event = getStripe().webhooks.constructEvent(body, sig, webhookSecret);
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err);
+    return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
+  }
+
+  try {
+    switch (event.type) {
+      case "customer.subscription.created":
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted":
+        await handleSubscriptionChange(event, event.data.object as Stripe.Subscription);
+        break;
+
+      case "payment_intent.succeeded":
+        await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        break;
+
+      case "invoice.payment_failed":
+        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
+
+      // Stripe sends both `invoice.paid` (newer) and
+      // `invoice.payment_succeeded` (legacy alias) for the same
+      // success — treat them identically so dashboard configs that
+      // selected either name still work.
+      case "invoice.paid":
+      case "invoice.payment_succeeded":
+        await handleInvoicePaid(event.data.object as Stripe.Invoice);
+        break;
+
+      case "invoice.upcoming":
+        await handleInvoiceUpcoming(event.data.object as Stripe.Invoice);
+        break;
+
+      default:
+        break;
+    }
+  } catch (err) {
+    console.error(`[stripe webhook] handler failed for ${event.type}:`, err);
+    // Still return 200 so Stripe doesn't retry on our application bugs.
+  }
+
+  return NextResponse.json({ received: true });
+}

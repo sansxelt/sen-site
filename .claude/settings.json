@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/SenFR/Downloads/**)",
+      "Bash(diff -r sen-site-git/desktop/src/chat-view.tsx sen-site-main/desktop/src/chat-view.tsx)",
+      "Bash(echo \"chat-view.tsx differs: $?\")",
+      "Bash(diff -r sen-site-git/desktop/package.json sen-site-main/desktop/package.json)",
+      "Bash(echo \"package.json differs: $?\")",
+      "Bash(cp sen-site-main/desktop/src/chat-view.tsx sen-site-git/desktop/src/chat-view.tsx)",
+      "Bash(cp sen-site-main/desktop/src/App.css sen-site-git/desktop/src/App.css)",
+      "Bash(cp sen-site-main/desktop/src/memory-view.tsx sen-site-git/desktop/src/memory-view.tsx)",
+      "Bash(cp sen-site-main/desktop/src/integrations-view.tsx sen-site-git/desktop/src/integrations-view.tsx)",
+      "Bash(cp sen-site-main/desktop/package.json sen-site-git/desktop/package.json)",
+      "Bash(grep -E \"\\\\.ts$\")",
+      "Bash(npx --no-install tsc --noEmit)",
+      "PowerShell(Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName System.Drawing; $img = [System.Windows.Forms.Clipboard]::GetImage\\(\\); if \\($null -eq $img\\) { Write-Output \"NO_IMAGE_ON_CLIPBOARD\" } else { $iconPath = \"c:\\\\Users\\\\SenFR\\\\Downloads\\\\sen-site-main\\\\app\\\\icon.png\"; $ogPath = \"c:\\\\Users\\\\SenFR\\\\Downloads\\\\sen-site-main\\\\public\\\\og-image.png\"; $img.Save\\($iconPath, [System.Drawing.Imaging.ImageFormat]::Png\\); $img.Save\\($ogPath, [System.Drawing.Imaging.ImageFormat]::Png\\); Write-Output \"SAVED $\\($img.Width\\)x$\\($img.Height\\)\"; Write-Output \"  -> $iconPath\"; Write-Output \"  -> $ogPath\" })",
+      "PowerShell($src = \"C:\\\\Users\\\\SenFR\\\\Downloads\\\\195e432a-4686-4346-90f5-a5d64b5a77f4.png\"; Add-Type -AssemblyName System.Drawing; $img = [System.Drawing.Image]::FromFile\\($src\\); Write-Output \"Source: $\\($img.Width\\)x$\\($img.Height\\) px\"; $img.Dispose\\(\\); $iconDest = \"c:\\\\Users\\\\SenFR\\\\Downloads\\\\sen-site-main\\\\app\\\\icon.png\"; $ogDest = \"c:\\\\Users\\\\SenFR\\\\Downloads\\\\sen-site-main\\\\public\\\\og-image.png\"; Copy-Item -Path $src -Destination $iconDest -Force; Copy-Item -Path $src -Destination $ogDest -Force; Write-Output \"Copied to:\"; Write-Output \"  $iconDest\"; Write-Output \"  $ogDest\"; Get-Item $iconDest, $ogDest | Select-Object FullName, @{Name=\"SizeKB\";Expression={[math]::Round\\($_.Length/1KB,1\\)}} | Format-Table -AutoSize)",
+      "Bash(du -sh public/desktop)",
+      "Bash(du -sh node_modules)",
+      "Bash(du -sh .next)",
+      "Bash(du -sh desktop)",
+      "Bash(gh auth *)",
+      "Bash(git init *)",
+      "Bash(xargs -I{} stat --printf=\"%s\\\\n\" \"{}\")",
+      "Bash(awk '{s+=$1} END {printf \"%.1f MB\\\\n\", s/1024/1024}')",
+      "Bash(grep -iE \"\\\\.env$|\\\\.env\\\\.|secret|password|\\\\.pem$|\\\\.key$\")"
+    ]
+  }
+}
