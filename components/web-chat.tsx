@@ -1573,7 +1573,7 @@ export function WebChat({
                 </div>
               );
             })}
-            {chatError && <div className="webchat-error">{chatError}</div>}
+            {chatError && <ChatErrorPill message={chatError} />}
           </div>
         )}
         {showJumpToBottom && (
@@ -2095,6 +2095,35 @@ function WebStreamingFadeText({ text }: { text: string }) {
         ),
       )}
     </span>
+  );
+}
+
+// Cap-block errors carry "Buy a Weekly Boost..." or "upgrade to Pro..."
+// CTAs as plain text. We surface them as actual clickable buttons
+// below the message so the user doesn't have to mentally parse where
+// to go. Generic errors render as the plain pill they always did.
+function ChatErrorPill({ message }: { message: string }) {
+  const lower = message.toLowerCase();
+  const isCapBlock =
+    lower.includes("weekly") ||
+    lower.includes("resets") ||
+    lower.includes("boost") ||
+    lower.includes("upgrade");
+  if (!isCapBlock) {
+    return <div className="webchat-error">{message}</div>;
+  }
+  return (
+    <div className="webchat-error">
+      <div>{message}</div>
+      <div className="webchat-error-actions">
+        <a href="/account/billing" className="webchat-error-cta">
+          Open billing
+        </a>
+        <a href="/pricing" className="webchat-error-cta webchat-error-cta--ghost">
+          See plans
+        </a>
+      </div>
+    </div>
   );
 }
 
