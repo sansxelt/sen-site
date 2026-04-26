@@ -193,6 +193,22 @@ export async function POST(request: Request) {
       }
 
       // Recurring addon — add to the existing subscription.
+      // v0.1.16 — Require a default payment method on file BEFORE
+      // attaching the subscription item. Without this, Stripe happily
+      // adds the item to the subscription even with no card; the
+      // user sees the addon flip to "Active" and gets the cap-lift
+      // benefits, but the proration charge fails on the next renewal.
+      // This was inconsistent with the one-time boost branch which
+      // already enforced the same check.
+      const customerForPm = await stripe.customers.retrieve(customer.id);
+      const defaultPmRecurring =
+        (customerForPm as Stripe.Customer).invoice_settings?.default_payment_method;
+      if (!defaultPmRecurring) {
+        return NextResponse.json(
+          { error: "Add a payment method first, then try this addon again." },
+          { status: 400 },
+        );
+      }
       const existing = await findUsableSubscription(customer.id);
       if (existing) {
         const alreadyHas = existing.items.data.some((item) => item.price.id === priceId);

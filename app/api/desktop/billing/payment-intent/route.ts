@@ -124,6 +124,20 @@ export async function POST(request: Request) {
         });
       }
 
+      // v0.1.16 — Require a default payment method before attaching
+      // a recurring addon. Mirrors the web payment-intent route fix.
+      // Without this the addon flips to Active on a card-less
+      // subscription and the next renewal fails to charge.
+      const customerForPm = await stripe.customers.retrieve(customer.id);
+      const defaultPmRecurring =
+        (customerForPm as { invoice_settings?: { default_payment_method?: unknown } })
+          .invoice_settings?.default_payment_method;
+      if (!defaultPmRecurring) {
+        return NextResponse.json(
+          { error: "Add a payment method first, then try this addon again." },
+          { status: 400 },
+        );
+      }
       const existing = await findUsableSubscription(customer.id);
       if (existing) {
         const alreadyHas = existing.items.data.some((item) => item.price.id === priceId);
