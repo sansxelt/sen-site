@@ -40,23 +40,27 @@ export default async function SignInPage({
         : "Email, Google, and GitHub all sign in to the same sansxel account.";
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="text-center">
+    <div className="mx-auto max-w-4xl py-6 sm:py-10">
+      {/* Hero header — generous breathing room above the form. */}
+      <div className="mx-auto max-w-2xl text-center">
         <div className={`text-xs font-medium uppercase tracking-[0.22em] ${t.accent}`}>
           {t.signInLabel}
         </div>
         <h1
-          className={`mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl ${zone === "platform" ? "font-mono" : ""}`}
+          className={`mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl ${zone === "platform" ? "font-mono" : ""}`}
         >
           {headline}
         </h1>
-        <p className="mt-4 text-sm leading-6 text-neutral-300 sm:text-base sm:leading-7">
+        <p className="mt-5 text-sm leading-7 text-neutral-300 sm:text-base sm:leading-8">
           {subline}
         </p>
       </div>
 
-      <div className="mx-auto mt-10 max-w-4xl sm:mt-12">
-        <div className="grid gap-6 xl:grid-cols-[1.08fr_.92fr] xl:items-start">
+      {/* More space between header and form panels — was mt-10, now
+          mt-16 so the page reads as 'header section' + 'form section'
+          instead of one wall of text. */}
+      <div className="mx-auto mt-16 max-w-4xl sm:mt-20">
+        <div className="grid gap-8 xl:grid-cols-[1.08fr_.92fr] xl:gap-10 xl:items-start">
           <AuthPanel
             callbackUrl={getSafeRedirectPath(callbackUrl)}
             initialSessionEmail={session?.user?.email ?? null}

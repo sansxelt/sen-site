@@ -9,12 +9,18 @@ import { signOAuthSignupToken } from "./lib/oauth-signup-token";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
-// v0.1.16 — Tried to span the session cookie across .sansxel.ai for
-// cross-subdomain SSO; that triggered NextAuth Configuration errors
-// on signin. Reverted to default single-host cookies. Cross-subdomain
-// SSO will need a different mechanism (token exchange endpoint or
-// AUTH_URL pointing at a single canonical host that all subdomains
-// redirect to for sign-in).
+// v0.1.16 — AUTH_URL env var forces NextAuth to generate provider
+// signinUrl / callbackUrl strings against the configured hostname
+// (https://www.sansxel.ai), even when the request comes in on
+// chat.sansxel.ai or platform.sansxel.ai. The signin form ends up
+// posting cross-origin → browser blocks it → 'Configuration' error
+// page. Stripping AUTH_URL at module load forces NextAuth to fall
+// back to its trustHost-based per-request URL detection.
+//
+// Side effect: cookies stay single-host (no .sansxel.ai spanning).
+// Cross-subdomain SSO is a separate problem to solve later.
+delete process.env.AUTH_URL;
+delete process.env.NEXTAUTH_URL;
 
 const authResult = NextAuth({
   trustHost: true,
