@@ -77,16 +77,14 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between gap-4">
             <div className="flex lg:flex-1 lg:justify-start">
               <Link href="/home" className="inline-flex shrink-0 items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-2">
-                  <Image
-                    src={logoSrc}
-                    alt="sansxel"
-                    width={22}
-                    height={22}
-                    className="h-full w-full object-contain"
-                    priority
-                  />
-                </div>
+                <Image
+                  src={logoSrc}
+                  alt="sansxel"
+                  width={36}
+                  height={36}
+                  className="h-9 w-9 rounded-xl"
+                  priority
+                />
                 <div>
                   <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
                     sansxel
@@ -151,15 +149,13 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <div className="grid gap-10 sm:grid-cols-[1fr_auto] lg:grid-cols-[1.4fr_repeat(3,auto)] lg:gap-16">
             <div className="flex flex-col gap-4">
               <Link href="/home" className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
-                  <Image
-                    src={logoSrc}
-                    alt="sansxel"
-                    width={18}
-                    height={18}
-                    className="h-full w-full object-contain"
-                  />
-                </div>
+                <Image
+                  src={logoSrc}
+                  alt="sansxel"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 rounded-lg"
+                />
                 <span className="text-sm font-semibold text-white">sansxel</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">

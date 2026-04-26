@@ -387,9 +387,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
           bottom, ChatGPT-style. */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
         <Link href="/app" className="flex items-center gap-2.5 py-6">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
-            <Image src={logoSrc} alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
-          </div>
+          <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" priority />
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold text-white">sansxel</span>
             <span className="text-[10px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
@@ -490,9 +488,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
             </button>
           )}
           <Link href="/app" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1">
-              <Image src={logoSrc} alt="sansxel" width={18} height={18} className="h-full w-full object-contain" priority />
-            </div>
+            <Image src={logoSrc} alt="sansxel" width={28} height={28} className="h-7 w-7 rounded-lg" priority />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-white">sansxel</span>
               <span className="text-[8.5px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
