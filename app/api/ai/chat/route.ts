@@ -1051,18 +1051,49 @@ export async function POST(request: Request) {
                   writeLine({ type: "message_stop", stop_reason: stop });
                 }
               }
-            } else if (
-              event.type === "content_block_delta" &&
-              event.delta.type === "text_delta"
-            ) {
-              if (!firstTokenLogged) {
-                firstTokenLogged = true;
-                tFirstToken = Date.now();
+            } else {
+              // Legacy plain-text path (web chat). Emits raw text plus
+              // out-of-band phase markers so the client can show
+              // "Searching the web..." / "Reading source..." labels
+              // while server tools run, the way ChatGPT/Claude do.
+              //
+              // Marker format: \x1F{"type":"phase",...}\x1F
+              // \x1F is the ASCII Unit Separator control char — never
+              // appears in real model output, so a simple .split('\x1F')
+              // on the client recovers text vs events cleanly.
+              const writePhase = (payload: Record<string, unknown>) => {
+                const body = `\x1F${JSON.stringify({ type: "phase", ...payload })}\x1F`;
+                controller.enqueue(encoder.encode(body));
+              };
+              if (event.type === "content_block_start") {
+                const block = event.content_block as { type?: string; name?: string } | undefined;
+                if (block?.type === "server_tool_use") {
+                  const name = block.name ?? "";
+                  const label =
+                    name === "web_search" ? "Searching the web…" :
+                    name === "web_fetch"  ? "Reading the page…"  :
+                    `Running ${name}…`;
+                  writePhase({ kind: "tool_start", tool: name, label });
+                } else if (block?.type === "web_search_tool_result") {
+                  writePhase({ kind: "tool_done", tool: "web_search", label: "Read the results" });
+                } else if (block?.type === "web_fetch_tool_result") {
+                  writePhase({ kind: "tool_done", tool: "web_fetch", label: "Read the page" });
+                } else if (block?.type === "text") {
+                  writePhase({ kind: "writing", label: "Writing answer…" });
+                }
               }
-              // Legacy plain-text path.
-              assistantBuffer += event.delta.text;
-              controller.enqueue(encoder.encode(event.delta.text));
-              maybePersist();
+              if (
+                event.type === "content_block_delta" &&
+                event.delta.type === "text_delta"
+              ) {
+                if (!firstTokenLogged) {
+                  firstTokenLogged = true;
+                  tFirstToken = Date.now();
+                }
+                assistantBuffer += event.delta.text;
+                controller.enqueue(encoder.encode(event.delta.text));
+                maybePersist();
+              }
             }
           }
         } catch (err) {

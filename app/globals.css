@@ -1782,6 +1782,49 @@ div[id] {
   height: 16px;
 }
 
+/* Phase pill — "Searching the web…" / "Reading the page…" / etc.
+   Sits above the bouncing dots while the model is using a server
+   tool. Matches the ChatGPT/Claude pattern of telling the user
+   what's actually happening instead of a generic spinner. */
+.webchat-inflight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.webchat-phase-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.10);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  color: rgba(196, 181, 253, 0.95);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  animation: webchat-phase-fade-in 220ms ease-out;
+}
+.webchat-phase-pill::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(196, 181, 253, 0.95);
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.7);
+  animation: webchat-phase-pulse 1.1s ease-in-out infinite;
+}
+@keyframes webchat-phase-fade-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes webchat-phase-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50%      { opacity: 1; transform: scale(1.1); }
+}
+
 .webchat-dot {
   width: 7px;
   height: 7px;

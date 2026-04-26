@@ -304,6 +304,10 @@ export function WebChat({
     return () => { cancelled = true; };
   }, [wantsNew, requestedThreadParam]);
   const [streaming, setStreaming] = useState(false);
+  // ChatGPT/Claude-style live phase label during generation —
+  // "Searching the web…" / "Reading the page…" / "Writing answer…"
+  // Cleared when the stream ends or the answer text starts flowing.
+  const [phaseLabel, setPhaseLabel] = useState<string | null>(null);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [tier, setTier] = useState<ModelTier>(
     tiers.find((t) => t.tier === "balanced")?.tier ??
@@ -878,13 +882,65 @@ export function WebChat({
         }
       };
 
+      // Phase-marker parser. Server emits \x1F{json}\x1F when tools
+      // fire so we can show "Searching the web…" / "Reading the
+      // page…" / "Writing answer…" above the bouncing dots. Markers
+      // are stripped before the text gets into the assistant buffer.
+      // pendingPhaseBuf holds a half-marker that spans two chunks.
+      let pendingPhaseBuf = "";
+      const handlePhaseEvent = (raw: string) => {
+        try {
+          const evt = JSON.parse(raw) as { type?: string; label?: string; kind?: string };
+          if (evt.type === "phase" && typeof evt.label === "string") {
+            // "writing" phase clears the label so the pill goes away
+            // once real text starts flowing — bouncing dots visually
+            // hand off to the answer.
+            if (evt.kind === "writing") {
+              setPhaseLabel(null);
+            } else {
+              setPhaseLabel(evt.label);
+            }
+          }
+        } catch {
+          // malformed marker — ignore
+        }
+      };
+      const stripPhaseMarkers = (incoming: string): string => {
+        const combined = pendingPhaseBuf + incoming;
+        const parts = combined.split("\x1F");
+        // Even indices = text. Odd indices = JSON event payload.
+        // If the last piece is "open" (no trailing \x1F), buffer it
+        // for the next chunk so we don't fire half a marker.
+        let textOut = "";
+        const lastIdx = parts.length - 1;
+        for (let i = 0; i < parts.length; i++) {
+          const piece = parts[i];
+          const isText = i % 2 === 0;
+          if (isText) {
+            // Last text piece is always "complete" — passes through.
+            textOut += piece;
+          } else if (i === lastIdx) {
+            // Odd-indexed AND last → no closing \x1F yet → buffer.
+            pendingPhaseBuf = "\x1F" + piece;
+            return textOut;
+          } else {
+            handlePhaseEvent(piece);
+          }
+        }
+        pendingPhaseBuf = "";
+        return textOut;
+      };
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         if (value) {
-          const chunk = decoder.decode(value, { stream: true });
-          assistant += chunk;
-          if (willSpeak) ttsBuf.text += chunk;
+          const chunkRaw = decoder.decode(value, { stream: true });
+          const chunk = stripPhaseMarkers(chunkRaw);
+          if (chunk) {
+            assistant += chunk;
+            if (willSpeak) ttsBuf.text += chunk;
+          }
           // Note: NOT calling setMessages here — the rAF tick handles
           // visual updates so the reveal stays evenly paced. The
           // assistant buffer is what tickRender walks toward.
@@ -984,6 +1040,7 @@ export function WebChat({
       }
       if (isStillThisThread()) {
         setStreaming(false);
+        setPhaseLabel(null);
       }
       void lei.refreshBalance();
       // Clear in-flight flag for this thread.
@@ -1012,6 +1069,7 @@ export function WebChat({
       abortRef.current.abort();
       abortRef.current = null;
       setStreaming(false);
+      setPhaseLabel(null);
       // Mark the visible last assistant message as cancelled and
       // tell the server to persist it as such, so the saved
       // conversation reflects the user's choice instead of just
@@ -1613,7 +1671,14 @@ export function WebChat({
                   className={`webchat-msg webchat-msg--${m.role}`}
                 >
                   {isInflight ? (
-                    <WebBounceDots />
+                    <div className="webchat-inflight">
+                      {phaseLabel && (
+                        <div className="webchat-phase-pill" aria-live="polite">
+                          {phaseLabel}
+                        </div>
+                      )}
+                      <WebBounceDots />
+                    </div>
                   ) : m.role === "assistant" ? (
                     <WebAssistantBubble
                       content={m.content}
