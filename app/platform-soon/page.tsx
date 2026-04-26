@@ -15,9 +15,12 @@ export const metadata: Metadata = {
 export default function PlatformSoonPage() {
   return (
     <main className="min-h-screen bg-[#070a10] text-neutral-200">
-      {/* Top zone bar, signals 'this is the dev zone' instantly. */}
+      {/* Top zone bar, signals 'this is the dev zone' instantly.
+          Wordmark hugs the left edge, back link hugs the right edge.
+          Scaling padding matches site-shell + ZoneShell so every
+          surface across the site has the same edge rhythm. */}
       <header className="border-b border-white/[0.06]">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 sm:px-8">
+        <div className="flex items-center justify-between px-4 py-4 sm:px-6 sm:py-5 lg:px-10 xl:px-14 2xl:px-20">
           <div className="flex items-center gap-3">
             <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
             <span className="font-mono text-xs uppercase tracking-[0.22em] text-cyan-300">
