@@ -26,7 +26,7 @@ export default async function SignInPage({
     : params.callbackUrl;
 
   // If they're already signed in, don't make them sit on a signin
-  // page with a 'Open workspace' button — just take them where they
+  // page with a 'Open workspace' button, just take them where they
   // were going. Default to /app since the chat host is signin's
   // home zone.
   if (session?.user?.email) {
@@ -51,7 +51,7 @@ export default async function SignInPage({
 
   return (
     <div className="mx-auto max-w-4xl py-6 sm:py-10">
-      {/* Hero header — generous breathing room above the form. */}
+      {/* Hero header, generous breathing room above the form. */}
       <div className="mx-auto max-w-2xl text-center">
         <div className={`text-xs font-medium uppercase tracking-[0.22em] ${t.accent}`}>
           {t.signInLabel}
@@ -66,7 +66,7 @@ export default async function SignInPage({
         </p>
       </div>
 
-      {/* More space between header and form panels — was mt-10, now
+      {/* More space between header and form panels, was mt-10, now
           mt-16 so the page reads as 'header section' + 'form section'
           instead of one wall of text. */}
       <div className="mx-auto mt-16 max-w-4xl sm:mt-20">

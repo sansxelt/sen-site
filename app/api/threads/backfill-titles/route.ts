@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 // Re-runs AI title generation for any of the user's threads whose
 // current title still looks like a placeholder ("New chat") or a
 // raw snippet of the first user message. Cheap (Haiku per thread)
-// and idempotent — once a thread has a real title, it stays.
+// and idempotent, once a thread has a real title, it stays.
 //
 // Called silently from the chat history rail on mount so users who
 // have old crap-titled threads ("jo", "hi", "yo") see their sidebar
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   }
 
   let updated = 0;
-  // Process serially — Haiku is fast and we don't want to burst
+  // Process serially, Haiku is fast and we don't want to burst
   // against rate limits if the user has 50+ snippet-titled threads.
   for (const thread of threads) {
     const messages = await listMessages(email, thread.id);
@@ -68,7 +68,7 @@ function isSnippetTitle(title: string, firstUserContent: string): boolean {
   // Truncated form (matches lib/chat-history.ts deriveTitle).
   if (t === first.slice(0, 59).trimEnd() + "…") return true;
   // Heuristic: the title is a strict prefix of the first message AND
-  // very short (< 30 chars) — also looks like the auto-snippet.
+  // very short (< 30 chars), also looks like the auto-snippet.
   if (t.length < 30 && first.toLowerCase().startsWith(t.toLowerCase())) return true;
   return false;
 }

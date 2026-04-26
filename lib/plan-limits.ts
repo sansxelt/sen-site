@@ -13,17 +13,17 @@ import {
   type CreditKind,
 } from "./credits";
 
-// v0.1.8 — kinds the gating layer asks about. Map to the boost addons
+// v0.1.8, kinds the gating layer asks about. Map to the boost addons
 // that satisfy them. A user with an unconsumed credit for any of these
 // keys is allowed past the cap (and the credit gets burnt by the call).
 export type BoostKind = "chat" | "image" | "voice" | "copilot";
 
 const BOOST_KIND_TO_ADDONS: Record<BoostKind, BillingAddonKey[]> = {
   // session_boost = +50 chats this session, weekly_boost = +500 weekly.
-  // We treat both as chat-eligible — gating consumes whichever the user
+  // We treat both as chat-eligible, gating consumes whichever the user
   // bought first (cheapest first so weekly_boost outlives the cheaper one).
   chat: ["session_boost", "weekly_boost"],
-  // v0.1.9 — image / voice / copilot one-time SKUs were dropped in
+  // v0.1.9, image / voice / copilot one-time SKUs were dropped in
   // favour of the credit ledger. Empty arrays here mean
   // hasUnconsumedBoost / consumeBoostForKind no-op for those kinds and
   // the gating layer falls through to consumeCreditFor instead.
@@ -32,7 +32,7 @@ const BOOST_KIND_TO_ADDONS: Record<BoostKind, BillingAddonKey[]> = {
   copilot: [],
 };
 
-// Sansxel limit model — our take, not a copy of anyone else's.
+// Sansxel limit model, our take, not a copy of anyone else's.
 //
 //   - Free / Apprentice / Studio: hard weekly cap on chat requests +
 //     hard weekly cap on voice seconds. Hit it → blocked until the
@@ -114,7 +114,7 @@ export function startOfWeekUtc(now = new Date()): Date {
   return d;
 }
 
-// Next Monday 00:00 UTC — shown to users as the reset moment.
+// Next Monday 00:00 UTC, shown to users as the reset moment.
 export function nextWeekResetUtc(now = new Date()): Date {
   const start = startOfWeekUtc(now);
   start.setUTCDate(start.getUTCDate() + 7);
@@ -130,7 +130,7 @@ export type WeeklyUsage = {
 
 // Sum the user's usage_events since the start of the current UTC
 // week. Returns zeros on any failure (table missing, transient DB
-// hiccup, etc.) — limits should fail open, not block paying users.
+// hiccup, etc.), limits should fail open, not block paying users.
 export async function getWeeklyUsage(email: string): Promise<WeeklyUsage> {
   const weekStart = startOfWeekUtc();
   const result: WeeklyUsage = {
@@ -214,10 +214,10 @@ function isCapLifted(
 // what the user asked for) or { blocked } with the human-readable
 // reason + reset time.
 //
-// activeAddons (optional) — when present, copilot_pro_pack or
+// activeAddons (optional), when present, copilot_pro_pack or
 // power_pack make the chat cap unlimited (matches "Unlimited copilot
 // for any plan" copy on the addon). Pro tier throttling also relaxes
-// — paying for unlimited shouldn't silently get you a worse model.
+//, paying for unlimited shouldn't silently get you a worse model.
 // Plans that BUNDLE the same addon (Plus → copilot_pro_pack, Pro →
 // both) lift via the same path.
 export function decideChatRequest(args: {
@@ -229,7 +229,7 @@ export function decideChatRequest(args: {
   const limits = PLAN_LIMITS[args.plan];
   const liftedByAddon = isCapLifted("chat", args.plan, args.activeAddons);
 
-  // 1. Hard cap (free / apprentice / studio) — bypassed if the user
+  // 1. Hard cap (free / apprentice / studio), bypassed if the user
   // has Copilot Pro Pack or Power Pack.
   if (
     !liftedByAddon &&
@@ -246,7 +246,7 @@ export function decideChatRequest(args: {
     };
   }
 
-  // 2. Pro throttle — also bypassed when an unlimited addon is on
+  // 2. Pro throttle, also bypassed when an unlimited addon is on
   // file. Otherwise unchanged.
   if (limits.pro_throttle && !liftedByAddon) {
     let tier = args.requestedTier;
@@ -275,10 +275,10 @@ export function decideChatRequest(args: {
 // means "image gen is not in this plan" → blocked with an upgrade
 // nudge instead of a "you've used your N" message.
 //
-// activeAddons (optional) — Power Pack lifts the cap to unlimited
+// activeAddons (optional), Power Pack lifts the cap to unlimited
 // (it bundles "Bonus credit allowance for voice + image"). Plans
 // that are completely blocked (cap=0, e.g. potential future free
-// tier with no image gen) are NOT unblocked by an addon — the addon
+// tier with no image gen) are NOT unblocked by an addon, the addon
 // adds VOLUME, not entitlement.
 export function decideImageRequest(args: {
   plan: PlanKey;
@@ -293,7 +293,7 @@ export function decideImageRequest(args: {
   if (cap === 0) {
     return {
       kind: "blocked",
-      reason: `Image generation isn't on the Free plan — upgrade to Core or higher to draw with sansxel-1.`,
+      reason: `Image generation isn't on the Free plan, upgrade to Core or higher to draw with sansxel-1.`,
       reset: resetIso,
       limit: 0,
       used: args.weekly.image_requests,
@@ -314,7 +314,7 @@ export function decideImageRequest(args: {
 // Deep research is only on Plus / Pro / Teams / Enterprise. The free
 // tiers (free / apprentice / studio) get a friendly upgrade nudge.
 // Internally we treat "plus" as an alias of pro for the purposes of
-// this gate — the existing PlanKey set already covers the higher
+// this gate, the existing PlanKey set already covers the higher
 // tiers, and "plus" is currently surfaced as `pro` in plan-limits.
 export function decideDeepResearchRequest(args: {
   plan: PlanKey;
@@ -332,12 +332,12 @@ export function decideDeepResearchRequest(args: {
   };
 }
 
-// Voice limit check — separate so the speak/transcribe routes can
+// Voice limit check, separate so the speak/transcribe routes can
 // gate without going through the chat decision tree.
 //
-// activeAddons (optional) — Power Pack lifts the voice cap to
+// activeAddons (optional), Power Pack lifts the voice cap to
 // unlimited. Plans that explicitly disallow voice (cap=0, e.g. free)
-// still cannot use it via addon — it has to be a paid plan first.
+// still cannot use it via addon, it has to be a paid plan first.
 export function decideVoiceRequest(args: {
   plan: PlanKey;
   weekly: WeeklyUsage;
@@ -348,7 +348,7 @@ export function decideVoiceRequest(args: {
   if (limits.weekly_voice_seconds === null) {
     return { kind: "ok" };
   }
-  // cap=0 means voice isn't on this plan at all — addon doesn't unlock.
+  // cap=0 means voice isn't on this plan at all, addon doesn't unlock.
   const liftedByAddon =
     limits.weekly_voice_seconds > 0 &&
     isCapLifted("voice", args.plan, args.activeAddons);
@@ -361,7 +361,7 @@ export function decideVoiceRequest(args: {
       kind: "blocked",
       reason:
         limits.weekly_voice_seconds === 0
-          ? `Voice isn't on the Free plan — upgrade to Core or higher to talk with sansxel-1.`
+          ? `Voice isn't on the Free plan, upgrade to Core or higher to talk with sansxel-1.`
           : `You've used your ${planDisplayName(args.plan)} weekly voice budget (${Math.round(limits.weekly_voice_seconds / 60)} min). Resets ${formatResetTime(resetIso)}. Top up credits or add Power Pack for unlimited.`,
       reset: resetIso,
       limit: limits.weekly_voice_seconds,
@@ -372,7 +372,7 @@ export function decideVoiceRequest(args: {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// v0.1.8 — boost credit ledger
+// v0.1.8, boost credit ledger
 // ───────────────────────────────────────────────────────────────────
 //
 // One-time boosts (session_boost, weekly_boost, voice_minute_pack,
@@ -384,7 +384,7 @@ export function decideVoiceRequest(args: {
 //
 // Both helpers fail open: any DB error returns false / no-op so a
 // flaky Supabase never blocks a paying user. Worst case we don't
-// honour a credit — that's a refund ticket, not a hung product.
+// honour a credit, that's a refund ticket, not a hung product.
 
 /**
  * Returns true if the user has at least one unconsumed boost credit
@@ -480,7 +480,7 @@ export async function consumeBoostForKind(
 }
 
 // ───────────────────────────────────────────────────────────────────
-// v0.1.9 — credit ledger fallback
+// v0.1.9, credit ledger fallback
 // ───────────────────────────────────────────────────────────────────
 //
 // When a plan limit blocks a request and no boost credit is available,

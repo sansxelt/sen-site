@@ -23,7 +23,7 @@ const client = new Anthropic();
 //
 // Multimodal one-shot: takes a base64 image + a question and returns a
 // short analysis. Used by the LEI image panel "Analyze" button. Burns
-// `image` credits (5 per call) — same cost surface as image gen so
+// `image` credits (5 per call), same cost surface as image gen so
 // users have a single mental model.
 export async function POST(request: Request) {
   let email = await getDesktopUserEmailFromRequest(request);
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unsupported image type." }, { status: 415 });
   }
 
-  // Budget guard — base64 length × 0.75 ≈ bytes; cap at ~10 MB raw.
+  // Budget guard, base64 length × 0.75 ≈ bytes; cap at ~10 MB raw.
   if (b64.length > 14_000_000) {
     return NextResponse.json({ error: "Image too large (10 MB max)." }, { status: 413 });
   }

@@ -1,9 +1,9 @@
-// v0.1.16 — Persistent chat threads + messages.
+// v0.1.16, Persistent chat threads + messages.
 //
 // Server-side store keyed by user email. Same account → same threads
 // from any device (web mobile, web desktop, Tauri). All helpers fail
 // open (return empty / null) on transient DB errors so a flaky
-// Supabase never breaks the chat — worst case the user gets an
+// Supabase never breaks the chat, worst case the user gets an
 // in-memory-only conversation that turn.
 //
 // Run sql/chat_threads.sql once in Supabase before this works.
@@ -54,7 +54,7 @@ function deriveTitle(text: string): string {
 }
 
 /** Lists the user's threads, newest first. Filters out threads
- * that have zero messages — those are abandoned + look like ghosts
+ * that have zero messages, those are abandoned + look like ghosts
  * in the sidebar. Returns [] on any failure. */
 export async function listThreads(email: string): Promise<ChatThread[]> {
   if (!email || !isDatabaseConfigured()) return [];
@@ -71,7 +71,7 @@ export async function listThreads(email: string): Promise<ChatThread[]> {
       .limit(100);
     if (error) {
       // Fallback: if the join fails (older schema, etc.), return
-      // all threads — better than nothing.
+      // all threads, better than nothing.
       const fallback = await supabase
         .from("chat_threads" as never)
         .select("id, email, title, created_at, updated_at")
@@ -145,7 +145,7 @@ export async function listMessages(email: string, threadId: string): Promise<Sto
 
 /**
  * Creates a new thread for this user and returns it. Title defaults
- * to "New chat" — the first appendMessage will rename it to a snippet
+ * to "New chat", the first appendMessage will rename it to a snippet
  * of the first user turn.
  */
 export async function createThread(email: string, title?: string): Promise<ChatThread | null> {
@@ -208,7 +208,7 @@ export async function appendMessage(args: {
       return;
     }
 
-    // Title rename on first user turn — only if still the fallback.
+    // Title rename on first user turn, only if still the fallback.
     if (role === "user") {
       const thread = await getThread(email, threadId);
       if (thread && thread.title === TITLE_FALLBACK) {
@@ -236,13 +236,13 @@ export async function appendMessage(args: {
 /**
  * Inserts an empty assistant placeholder message + returns its id.
  * Used by the chat route at stream start so we can progressively
- * UPDATE the message body as deltas arrive — even if the client
+ * UPDATE the message body as deltas arrive, even if the client
  * disconnects, the latest saved chunk survives.
  */
 export async function createAssistantPlaceholder(
   email: string,
   threadId: string,
-  /** Explicit timestamp — pass a value strictly LATER than the user
+  /** Explicit timestamp, pass a value strictly LATER than the user
    * message's timestamp to guarantee the placeholder sorts after it
    * even when both inserts race. Default = now. */
   createdAt?: string,

@@ -25,7 +25,7 @@ export type UsageEvent = {
   duration_ms?: number | null;
 };
 
-// Fire-and-forget — usage logging should never block a request, and a
+// Fire-and-forget, usage logging should never block a request, and a
 // failed insert should never bubble back to the user. Caller can
 // optionally `await` if they care.
 export async function recordUsage(event: UsageEvent): Promise<void> {

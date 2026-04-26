@@ -9,7 +9,7 @@ import {
 
 // Called by the desktop app once it receives the deep-link callback.
 // Trades the approved request_id for a long-lived session token. We
-// only ever return the raw token at this single moment — after this,
+// only ever return the raw token at this single moment, after this,
 // the desktop must keep it safe (Windows Credential Manager / store
 // plugin). The request can only be redeemed once.
 export async function POST(request: Request) {

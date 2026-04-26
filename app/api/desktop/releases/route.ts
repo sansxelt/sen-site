@@ -7,7 +7,7 @@ import {
   desktopShippedReleases,
 } from "@/lib/desktop-release";
 
-// v0.1.13 — Desktop Updates view used to ship a hardcoded changelog
+// v0.1.13, Desktop Updates view used to ship a hardcoded changelog
 // in updates-view.tsx that stayed at v0.1.4 forever. Now it fetches
 // from this endpoint so both web and desktop read from the single
 // source of truth in lib/desktop-release.ts. Unauthenticated;

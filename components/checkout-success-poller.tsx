@@ -21,7 +21,7 @@ type State = "confirming" | "active" | "still-pending";
  * Owns the headline on the success page.  We only show the celebratory
  * "Welcome to {plan}" copy once the webhook has updated Supabase to
  * status = "active" with a matching plan.  Until then we show "Confirming
- * payment" — because that is literally what is happening.
+ * payment", because that is literally what is happening.
  */
 export function CheckoutSuccessPoller({ expectedPlanKey, planName, cycle }: Props) {
   const [state, setState] = useState<State>(expectedPlanKey === "free" ? "active" : "confirming");
@@ -92,7 +92,7 @@ export function CheckoutSuccessPoller({ expectedPlanKey, planName, cycle }: Prop
         <p className="mt-2 text-sm leading-6 text-neutral-300">
           Your payment went through, but Stripe hasn&apos;t finished notifying
           us that the subscription is active yet. This usually resolves in
-          under a minute — refresh the billing page shortly.
+          under a minute, refresh the billing page shortly.
         </p>
       </>
     );
@@ -111,7 +111,7 @@ export function CheckoutSuccessPoller({ expectedPlanKey, planName, cycle }: Prop
       <p className="mt-2 text-sm leading-6 text-neutral-300">
         Waiting for Stripe to confirm the payment and activate your{" "}
         {planName} ({cycle === "yearly" ? "annual" : "monthly"}) plan.
-        Usually takes a few seconds — don&apos;t close the tab.
+        Usually takes a few seconds, don&apos;t close the tab.
       </p>
     </>
   );

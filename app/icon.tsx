@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { headers } from "next/headers";
 
-// Per-host favicon. Pinwheel mark inside a circular mask — the
+// Per-host favicon. Pinwheel mark inside a circular mask, the
 // rounded-square version was used in the headers but looked wrong
 // on the browser tab next to the round close-X / loading spinner,
 // so the favicon gets a circle instead. Source SVGs in
@@ -12,7 +12,7 @@ import { headers } from "next/headers";
 //   platform.sansxel.ai → amber  pinwheel (developer console)
 //
 // Inlined as a data URI <img> so Satori (next/og) rasterizes it
-// reliably — direct <svg> JSX inside ImageResponse is finicky.
+// reliably, direct <svg> JSX inside ImageResponse is finicky.
 
 export const size = { width: 64, height: 64 };
 export const contentType = "image/png";

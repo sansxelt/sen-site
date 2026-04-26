@@ -3,14 +3,14 @@ import { createDesktopAuthRequest } from "../../../../../lib/desktop-auth";
 
 // Called by the desktop app when the user clicks "Sign in".
 // Returns a request_id + the URL the desktop should open in the
-// browser. No auth needed — anyone can start a request, but the
+// browser. No auth needed, anyone can start a request, but the
 // approval step requires a real signed-in browser session.
 export async function POST(request: Request) {
   let payload: { device_label?: string } = {};
   try {
     payload = (await request.json()) as { device_label?: string };
   } catch {
-    // Body is optional — desktop may post empty.
+    // Body is optional, desktop may post empty.
   }
 
   try {

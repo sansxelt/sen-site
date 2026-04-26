@@ -17,7 +17,7 @@ async function emailFromRequest(request: Request): Promise<string | null> {
   return session?.user?.email ?? null;
 }
 
-// GET /api/threads/[id] — fetch thread metadata + all messages.
+// GET /api/threads/[id], fetch thread metadata + all messages.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -36,7 +36,7 @@ export async function GET(
   );
 }
 
-// PATCH /api/threads/[id] — body: { title }
+// PATCH /api/threads/[id], body: { title }
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -56,7 +56,7 @@ export async function PATCH(
   return NextResponse.json({ ok: true });
 }
 
-// DELETE /api/threads/[id] — removes the thread + cascades messages.
+// DELETE /api/threads/[id], removes the thread + cascades messages.
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },

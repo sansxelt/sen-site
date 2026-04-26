@@ -20,7 +20,7 @@ export default async function AutoSigninPage({
   const email  = (params.email ?? "").trim().toLowerCase();
   const token  = params.token ?? "";
 
-  // If the URL is missing either half, the client still renders — it
+  // If the URL is missing either half, the client still renders, it
   // just falls straight through to the manual /signin link.  Server
   // doesn't verify the token itself (that's the credentials provider's
   // job); this page just hands both values to NextAuth.

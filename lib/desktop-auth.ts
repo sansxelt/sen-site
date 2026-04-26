@@ -31,7 +31,7 @@ export type DesktopSession = {
 };
 
 // Tokens are 32 random bytes, base64url-encoded (43 chars). We never
-// store the raw token — only sha256(token) — so a database leak alone
+// store the raw token, only sha256(token), so a database leak alone
 // can't sign anyone in.
 export function generateSessionToken(): { token: string; hash: string } {
   const raw = randomBytes(32);

@@ -9,7 +9,7 @@ import { getSignInPath } from "@/lib/auth-ui";
 export const metadata: Metadata = {
   title: "Features",
   description:
-    "Talk, type, drop files, generate images, search live. The AI workshop for makers — built for indie devs, designers, students, and creators who actually ship.",
+    "Talk, type, drop files, generate images, search live. The AI workshop for makers, built for indie devs, designers, students, and creators who actually ship.",
 };
 
 type Pillar = {
@@ -23,7 +23,7 @@ const pillars: Pillar[] = [
     title: "Talk and type, no mode switch",
     status: "live",
     description:
-      "Two voice modes that actually work. Dictate when you want a text reply you can edit; Talk for full hands-free conversation with interruption mid-sentence. No clunky push-to-talk — VAD detects when you stop, the AI starts.",
+      "Two voice modes that actually work. Dictate when you want a text reply you can edit; Talk for full hands-free conversation with interruption mid-sentence. No clunky push-to-talk, VAD detects when you stop, the AI starts.",
   },
   {
     title: "Drop anything, the UI morphs",
@@ -35,7 +35,7 @@ const pillars: Pillar[] = [
     title: "Live data, not stale knowledge",
     status: "live",
     description:
-      "Web search is built into chat. Ask about today's market, last night's game, the latest release — sansxel-1 searches and answers with real numbers + citations. No 'I don't have access to current data' punts.",
+      "Web search is built into chat. Ask about today's market, last night's game, the latest release, sansxel-1 searches and answers with real numbers + citations. No 'I don't have access to current data' punts.",
   },
   {
     title: "Memory that follows you",
@@ -47,13 +47,13 @@ const pillars: Pillar[] = [
     title: "MCP + file edits on desktop",
     status: "live",
     description:
-      "The desktop app touches your files, runs MCP servers, and connects to your tools (GitHub, Notion, etc.). Web is the trial — desktop is where you actually ship.",
+      "The desktop app touches your files, runs MCP servers, and connects to your tools (GitHub, Notion, etc.). Web is the trial, desktop is where you actually ship.",
   },
   {
     title: "Image gen + multimodal in chat",
     status: "live",
     description:
-      "Type 'gen an image of X' and you get one inline — no separate button. Drop an image and the model can see it (Claude vision). All in the same conversation, all charged from the same credit balance.",
+      "Type 'gen an image of X' and you get one inline, no separate button. Drop an image and the model can see it (Claude vision). All in the same conversation, all charged from the same credit balance.",
   },
 ];
 
@@ -72,17 +72,17 @@ const principles = [
   {
     title: "For people who make things",
     description:
-      "Indie devs shipping side projects, designers iterating on Figma, students turning notes into apps, content creators sketching ideas. Not knowledge workers writing emails — makers building.",
+      "Indie devs shipping side projects, designers iterating on Figma, students turning notes into apps, content creators sketching ideas. Not knowledge workers writing emails, makers building.",
   },
   {
     title: "Web is taste, desktop is shipping",
     description:
-      "Web sansxel is a real workshop in your browser — voice, drop, generate, search. Desktop adds direct file edits and MCP server connections. Same brain, two surfaces.",
+      "Web sansxel is a real workshop in your browser, voice, drop, generate, search. Desktop adds direct file edits and MCP server connections. Same brain, two surfaces.",
   },
   {
     title: "Pay for what you use",
     description:
-      "Every plan ships with a generous weekly base — 50 chats on Free, 1500 on Plus. When you push past, top up credits ($1 = 100 credits, 1¢ per chat) or add Power Pack to lift every cap to unlimited. No surprise bills.",
+      "Every plan ships with a generous weekly base, 50 chats on Free, 1500 on Plus. When you push past, top up credits ($1 = 100 credits, 1¢ per chat) or add Power Pack to lift every cap to unlimited. No surprise bills.",
   },
   {
     title: "It looks the way it should",
@@ -99,7 +99,7 @@ export default async function FeaturesPage() {
     <>
       <AuroraBackground />
       <section className="mx-auto max-w-[1600px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
-        {/* ── Hero — DotGrid sits behind the headline copy ─────────── */}
+        {/* ── Hero, DotGrid sits behind the headline copy ─────────── */}
         <div className="relative isolate overflow-hidden rounded-[28px] px-6 py-10 sm:px-10 sm:py-14">
           <DotGrid opacity={0.07} />
           <div className="relative max-w-3xl">
@@ -111,7 +111,7 @@ export default async function FeaturesPage() {
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-neutral-200">
               Most AI is a blank chat box that pretends to be everything. Sansxel is a workshop:
-              chat, voice, drag-drop, image gen, web search, persistent memory, MCP — all in one
+              chat, voice, drag-drop, image gen, web search, persistent memory, MCP, all in one
               workspace that adapts to what you&apos;re building right now.
             </p>
           </div>
@@ -160,8 +160,8 @@ export default async function FeaturesPage() {
             </h2>
             <p className="mt-4 text-base leading-7 text-neutral-200">
               Drop screenshots, paste from clipboard, talk through a problem, drag a
-              file, search the live web. The workshop accepts the input you actually have
-              — no &ldquo;please format your prompt as JSON&rdquo; gymnastics.
+              file, search the live web. The workshop accepts the input you actually
+              have. No &ldquo;please format your prompt as JSON&rdquo; gymnastics.
             </p>
           </div>
 

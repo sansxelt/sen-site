@@ -161,7 +161,7 @@ export function SettingsPanel({
             ))}
           </div>
           <p className="mt-1.5 text-xs text-neutral-500">
-            {summaryStyle === "concise" && "Short recaps — signal only."}
+            {summaryStyle === "concise" && "Short recaps, signal only."}
             {summaryStyle === "balanced" && "Middle ground for daily use."}
             {summaryStyle === "detailed" && "More context for deeper recall."}
           </p>
@@ -183,7 +183,7 @@ export function SettingsPanel({
             ))}
           </div>
           <p className="mt-1.5 text-xs text-neutral-500">
-            {releaseChannel === "stable" ? "Stable builds — predictable updates." : "New releases sooner as access expands."}
+            {releaseChannel === "stable" ? "Stable builds, predictable updates." : "New releases sooner as access expands."}
           </p>
         </Field>
       </Section>

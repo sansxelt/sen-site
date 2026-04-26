@@ -82,7 +82,7 @@ export function KeysPanel({ initialKeys }: { initialKeys: ApiKeyRecord[] }) {
         if (newlyCreated?.id === id) setNewlyCreated(null);
       }
     } catch {
-      // Silently ignore — user can retry
+      // Silently ignore, user can retry
     } finally {
       setRevoking(null);
     }
@@ -104,7 +104,7 @@ export function KeysPanel({ initialKeys }: { initialKeys: ApiKeyRecord[] }) {
       {newlyCreated?.rawKey && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
           <p className="text-sm font-medium text-amber-300">
-            Save this key — it won&apos;t be shown again.
+            Save this key, it won&apos;t be shown again.
           </p>
           <div className="mt-3 flex items-center gap-3">
             <code className="min-w-0 flex-1 break-all rounded-lg border border-white/10 bg-neutral-900 px-3 py-2 text-xs text-neutral-100">

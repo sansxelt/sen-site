@@ -42,7 +42,7 @@ export function classifyFile(file: File): AttachmentKind {
   return "file";
 }
 
-// Plans whose weekly caps are unlimited — these never burn credits
+// Plans whose weekly caps are unlimited, these never burn credits
 // for the gated kinds (chat/image/voice) under normal usage. Mirrors
 // PLAN_LIMITS in lib/plan-limits.ts; kept as a static set here so the
 // LEI cost preview stays a pure client-side helper.
@@ -70,7 +70,7 @@ export function previewCreditCost(args: {
     return fmt("image", planCovers);
   }
   if (args.hasVideo) {
-    // Video gen mock cost — bigger than image. Reflects "if this were
+    // Video gen mock cost, bigger than image. Reflects "if this were
     // real" pricing so the UI doesn't lie.
     return { kind: "image", credits: 30, usd: "$0.30", planCovers };
   }
@@ -87,7 +87,7 @@ function fmt(kind: CreditKind, planCovers: boolean): CostPreview {
 
 // Cheap intent detector: scans text for keywords that should morph the
 // UI to a different panel even before a dropped file or AI response.
-// Conservative — only fires when the signal is unambiguous.
+// Conservative, only fires when the signal is unambiguous.
 export function detectIntent(text: string): LeiPanel | null {
   const t = text.toLowerCase();
   if (/\b(video|timeline|edit clip|trim|mp4|footage)\b/.test(t)) {

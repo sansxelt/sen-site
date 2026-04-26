@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { getOrCreateCustomer, getStripe, isStripeConfigured } from "../../../../../lib/stripe";
 
-// v0.1.16 — Web equivalent of the desktop credits-purchase route.
+// v0.1.16, Web equivalent of the desktop credits-purchase route.
 // Accepts { amount_dollars: number } in [MIN, MAX], creates a Stripe
 // PaymentIntent for that amount in cents, and returns the client
 // secret so the billing panel can confirm via Stripe Elements.
@@ -54,11 +54,11 @@ export async function POST(request: Request) {
       amount: dollars * 100, // dollars → cents
       currency: "usd",
       customer: customer.id,
-      // Explicit allow-list — same set the recurring subscription
+      // Explicit allow-list, same set the recurring subscription
       // route uses. Without this, automatic_payment_methods would
       // surface every method enabled in the Stripe dashboard
       // (Amazon Pay, Klarna, Affirm, etc.) which isn't what we
-      // want — those need separate setup we haven't done.
+      // want, those need separate setup we haven't done.
       payment_method_types: ["card", "link", "cashapp"],
       metadata: {
         kind: "credits",
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         dollars: String(dollars),
         surface: "web",
       },
-      description: `sansxel credits — $${dollars}`,
+      description: `sansxel credits, $${dollars}`,
     });
 
     if (!intent.client_secret) {

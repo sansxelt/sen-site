@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDesktopUserEmailFromRequest } from "../../../../../lib/desktop-auth";
 import { CREDITS_PER_DOLLAR, getCreditBalance } from "../../../../../lib/credits";
 
-// v0.1.9 — credit balance lookup.
+// v0.1.9, credit balance lookup.
 // Returns { balance, balance_dollars } where balance is the raw credit
 // count (1 USD = 100 credits). Used by the desktop billing panel to
 // show "$X.XX worth of credits remaining".

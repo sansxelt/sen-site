@@ -16,7 +16,7 @@ import { isPaypalConfigured, setupPaypalPlans } from "../../../../lib/paypal";
  * After redeploying the site picks the ids up and the PayPal button on
  * /checkout starts working for that tier/cycle.
  *
- * Gated behind simple auth — only logged-in users can call it.  Safe
+ * Gated behind simple auth, only logged-in users can call it.  Safe
  * because PayPal itself charges nothing just to create plans.
  */
 export async function POST() {

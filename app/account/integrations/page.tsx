@@ -24,7 +24,7 @@ const integrations: Integration[] = [
   { name: "Browser extension", status: "coming_soon", cta: "Coming soon",
     description: "Send pages, articles, and research directly into Sansxel for structured summaries and analysis." },
   { name: "VS Code extension", status: "coming_soon", cta: "Coming soon",
-    description: "Use Sansxel inside your editor — generate plans, explain code, and build structured outputs without switching context." },
+    description: "Use Sansxel inside your editor, generate plans, explain code, and build structured outputs without switching context." },
   { name: "Slack", status: "coming_soon", cta: "Coming soon",
     description: "Send messages and threads to Sansxel for summaries, action items, and structured follow-ups." },
   { name: "Notion", status: "coming_soon", cta: "Coming soon",
@@ -86,7 +86,7 @@ function callbackBanner(github: string | undefined, reason: string | undefined) 
         ? "GitHub OAuth isn't set up on this deploy yet (missing GITHUB_CLIENT_ID). An admin needs to add the env vars."
         : reason === "access_denied"
           ? "You declined the GitHub authorization. Try again any time."
-          : "GitHub connection failed — try again, or contact support.";
+          : "GitHub connection failed, try again, or contact support.";
     return (
       <div className="mt-4 rounded-xl border border-red-400/25 bg-red-400/[0.06] px-4 py-3 text-sm text-red-200">
         {message}
@@ -113,7 +113,7 @@ export default async function IntegrationsPage({
     try {
       githubIntegration = await getGithubIntegration(session.user.email.toLowerCase());
     } catch {
-      // Table might not exist yet on a fresh deploy — render as not-connected.
+      // Table might not exist yet on a fresh deploy, render as not-connected.
     }
   }
 

@@ -17,7 +17,7 @@ type Props = {
   color?: string;
   /**
    * `fixed` pins the grid to the viewport (parallaxes as the user
-   * scrolls); `absolute` ties it to the parent — useful when a hero
+   * scrolls); `absolute` ties it to the parent, useful when a hero
    * section wants the grid only behind itself.
    */
   position?: "fixed" | "absolute";
@@ -25,7 +25,7 @@ type Props = {
 };
 
 /**
- * DotGrid — pure-CSS radial-gradient pattern that renders a dot grid
+ * DotGrid, pure-CSS radial-gradient pattern that renders a dot grid
  * background behind a section.  No SVG, no extra DOM cost beyond a
  * single positioned div.
  *
@@ -51,7 +51,7 @@ export function DotGrid({
     backgroundImage: `radial-gradient(circle, ${dotColor} ${dotSize}px, transparent ${dotSize}px)`,
     backgroundSize: `${size}px ${size}px`,
     // Fade the grid out at the edges so it doesn't visibly tile against
-    // the section boundary — gives a heist-style "fog" feel where the
+    // the section boundary, gives a heist-style "fog" feel where the
     // pattern dissolves into the page background.
     maskImage:
       "radial-gradient(ellipse at center, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0) 90%)",

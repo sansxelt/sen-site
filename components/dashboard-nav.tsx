@@ -177,7 +177,7 @@ function _RecentChats({ compact = false }: { compact?: boolean }) {
   };
 
   // In the compact (account routes) mode, just render a small + New
-  // chat button — the big history list is reserved for /app where
+  // chat button, the big history list is reserved for /app where
   // it's actually useful.
   if (compact) {
     return (
@@ -211,7 +211,7 @@ function _RecentChats({ compact = false }: { compact?: boolean }) {
         )}
         {!loading && (!threads || threads.length === 0) && (
           <div className="px-3 py-1 text-[11px] text-neutral-600">
-            Nothing yet — start a chat below.
+            Nothing yet, start a chat below.
           </div>
         )}
         {!loading && threads && threads.map((t) => (
@@ -251,7 +251,7 @@ function MobileThreadList({ onNavigate }: { onNavigate: () => void }) {
 
   if (loading) return <div className="px-3 py-2 text-xs text-neutral-500">Loading…</div>;
   if (!threads || threads.length === 0) {
-    return <div className="px-3 py-2 text-xs text-neutral-500">No chats yet — start one below.</div>;
+    return <div className="px-3 py-2 text-xs text-neutral-500">No chats yet, start one below.</div>;
   }
   return (
     <div className="flex flex-col gap-0.5">
@@ -296,7 +296,7 @@ function BillingIcon() {
   );
 }
 
-// Workshop stations. Chat moved out — it lives in the dedicated
+// Workshop stations. Chat moved out, it lives in the dedicated
 // right-side history rail next to the canvas. Make group dropped
 // because it had only one item that no longer belongs here.
 const navGroups: NavGroup[] = [
@@ -338,7 +338,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
 
   const handleNewChat = () => {
     // Hard-abort any in-flight chat stream + clear canvas instantly.
-    // Mirrors ChatGPT's '+ New chat' behavior — feels snappy,
+    // Mirrors ChatGPT's '+ New chat' behavior, feels snappy,
     // doesn't get stuck on a Stop button from a previous turn.
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
@@ -352,7 +352,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
     return pathname.startsWith(href);
   }
 
-  // Mobile bottom bar — one item per conceptual area so the slots
+  // Mobile bottom bar, one item per conceptual area so the slots
   // don't waste space on redundant pages (Overview + Billing both
   // being Shop items felt like duplicates on portrait phones).
   const mobileBarItems: NavItem[] = [
@@ -381,7 +381,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
   return (
     <>
       {/* ── Desktop sidebar (Workshop shell) ─────────────────────── */}
-      {/* No outer overflow on the aside — child .flex-1 chat-history
+      {/* No outer overflow on the aside, child .flex-1 chat-history
           column owns its own scroll so the brand + new-chat stay
           pinned at top and the desktop CTA + footer stay pinned at
           bottom, ChatGPT-style. */}
@@ -396,7 +396,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
 
         {/* Chat link always visible regardless of route. Clicking it
             while ALREADY on /app would otherwise drop the ?thread=
-            param and dump the user back into a phantom New chat —
+            param and dump the user back into a phantom New chat
             block that. Real "+ New chat" lives in the right rail. */}
         <Link
           href="/app"
@@ -424,7 +424,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
           ))}
         </nav>
 
-        {/* Get-Desktop CTA — pinned, always visible, the workshop's
+        {/* Get-Desktop CTA, pinned, always visible, the workshop's
             primary upgrade path. Web is the trial, desktop is the
             real shop. */}
         <Link
@@ -475,7 +475,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
       {/* ── Mobile: sticky top bar (hamburger + brand + home + sign out) */}
       <header className="sticky top-0 z-40 flex items-center justify-between border-b border-white/[0.08] bg-neutral-950/95 px-4 py-3 backdrop-blur-xl lg:hidden">
         <div className="flex items-center gap-2">
-          {/* Hamburger only matters on /app where chats live —
+          {/* Hamburger only matters on /app where chats live
               elsewhere there's no chat history to surface. */}
           {inWorkshop && (
             <button

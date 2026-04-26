@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
 import { createApiKey, listApiKeys } from "../../../../lib/api-keys";
 
-// GET /api/desktop/keys — list active API keys for the desktop user.
+// GET /api/desktop/keys, list active API keys for the desktop user.
 export async function GET(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -33,7 +33,7 @@ type CreateKeyPayload = {
   name?: string;
 };
 
-// POST /api/desktop/keys — create a new key. Returns the plaintext
+// POST /api/desktop/keys, create a new key. Returns the plaintext
 // `rawKey` ONCE (only chance to copy it). Mirrors /api/account/keys
 // POST so the same lib/api-keys helper handles hashing + storage.
 export async function POST(request: Request) {

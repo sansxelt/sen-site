@@ -4,7 +4,7 @@ import { getNoteById, softDeleteNote, updateNote } from "../../../../lib/notes";
 
 type Params = Promise<{ id: string }>;
 
-// GET /api/notes/:id — fetch a single note (handy for detail views)
+// GET /api/notes/:id, fetch a single note (handy for detail views)
 export async function GET(request: Request, { params }: { params: Params }) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -27,7 +27,7 @@ export async function GET(request: Request, { params }: { params: Params }) {
   }
 }
 
-// PATCH /api/notes/:id — update title and/or body
+// PATCH /api/notes/:id, update title and/or body
 export async function PATCH(request: Request, { params }: { params: Params }) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -58,7 +58,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
   }
 }
 
-// DELETE /api/notes/:id — soft delete (sets deleted_at)
+// DELETE /api/notes/:id, soft delete (sets deleted_at)
 export async function DELETE(request: Request, { params }: { params: Params }) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {

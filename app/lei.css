@@ -1,4 +1,4 @@
-/* Live Execution Interface (LEI) styles — drop overlay, morphing
+/* Live Execution Interface (LEI) styles, drop overlay, morphing
    panel stage, attachment chips, voice mode toggle, credit chip,
    and the float-mode for the copilot. Imported by globals.css. */
 
@@ -20,7 +20,7 @@
   .lei-shell--split,
   .lei-shell--with-history { grid-template-columns: 1fr; }
   .lei-shell-panel { border-left: 0; border-top: 1px solid rgba(255,255,255,0.06); }
-  /* Chat history rail hidden on small screens — left sidebar +
+  /* Chat history rail hidden on small screens, left sidebar +
      bottom nav already give thread access. */
   .chat-history-rail { display: none !important; }
 }
@@ -110,7 +110,7 @@
 }
 .chat-history-search-input::placeholder { color: rgba(229,231,235,0.4); }
 
-/* PayPal addon button — strip the white-edged container the SDK
+/* PayPal addon button, strip the white-edged container the SDK
    wraps around the smart button + force flush right-aligned width
    matching the 'Add with card' button above it. */
 .paypal-addon-wrap {
@@ -244,7 +244,7 @@
   font-weight: 700;
 }
 .chat-history-item.is-active::before {
-  /* Left accent bar — definitive 'this is the open thread' tell. */
+  /* Left accent bar, definitive 'this is the open thread' tell. */
   content: "";
   position: absolute;
   left: 0;
@@ -256,7 +256,7 @@
   box-shadow: 0 0 8px rgba(196, 181, 253, 0.7);
 }
 
-/* Phantom "New chat" entry — slightly dimmer + dashed outline so
+/* Phantom "New chat" entry, slightly dimmer + dashed outline so
    the user knows it's not yet a real saved thread. */
 .chat-history-item.is-pending {
   cursor: default;
@@ -292,7 +292,7 @@
 /* Density toggle. Default rail is compact (above values); comfy
    bumps things up for users who prefer the larger size. Toggling
    sticks via localStorage. Both modes inherit the same colors,
-   borders, in-flight dot — only sizing changes. */
+   borders, in-flight dot, only sizing changes. */
 .chat-history-rail--comfy .chat-history-item {
   padding: 12px 12px 12px 14px;
   gap: 8px;
@@ -307,14 +307,14 @@
   font-size: 12px;
 }
 
-/* Tighten the compact mode below the default — the user explicitly
+/* Tighten the compact mode below the default, the user explicitly
    said titles were too big in the screenshot. */
 .chat-history-rail--compact .chat-history-item {
   padding: 7px 9px 7px 11px;
   gap: 5px;
 }
 
-/* Density toggle button in the rail header — sits next to "+ New". */
+/* Density toggle button in the rail header, sits next to "+ New". */
 .chat-history-head-actions {
   display: flex;
   align-items: center;
@@ -356,7 +356,7 @@
   50%      { opacity: 1; transform: scale(1.1); }
 }
 
-/* Floating "Back to chat" pill — shown on non-/app pages when a
+/* Floating "Back to chat" pill, shown on non-/app pages when a
    thread is generating. Lives bottom-left so it doesn't clash with
    the bottom-right copilot launcher. */
 .inflight-back-pill {
@@ -570,7 +570,7 @@
   color: rgba(196,181,253,0.85); margin-bottom: 4px;
 }
 .lei-analysis-body { line-height: 1.5; color: #e5e7eb; font-size: 13px; }
-/* Markdown rendering inside analysis panel — match the chat .md
+/* Markdown rendering inside analysis panel, match the chat .md
    styles so headings/bold/lists/tables look right, not raw asterisks. */
 .lei-analysis-body h1, .lei-analysis-body h2, .lei-analysis-body h3, .lei-analysis-body h4 {
   font-weight: 600;
@@ -685,7 +685,7 @@
   border-top: 1px solid rgba(255,255,255,0.04);
 }
 
-/* Real preview cards above the input — shows the actual image/video
+/* Real preview cards above the input, shows the actual image/video
    thumbnail or a file icon, plus the name + size + kind. Replaces the
    filename-only chips that gave no visual confirmation of what was
    attached. */
@@ -808,7 +808,7 @@
   font-weight: 600;
 }
 
-/* "+" / Add dropdown — replaces the separate Attach + Image buttons
+/* "+" / Add dropdown, replaces the separate Attach + Image buttons
    so the input bar isn't a row of competing CTAs. Same component
    works on desktop (anchored above the button) and mobile (full
    width near the input). */
@@ -889,7 +889,7 @@
 }
 .webchat-plus-hint strong { color: #c4b5fd; font-weight: 600; }
 
-/* Generated image inside chat — keep them sized so a giant render
+/* Generated image inside chat, keep them sized so a giant render
    doesn't push the rest of the conversation off-screen. */
 .md img {
   max-width: 100%;
@@ -904,14 +904,14 @@
 @media (max-width: 640px) {
   .webchat-plus-menu {
     /* On mobile the menu drops UP from the button but goes wide so
-       it's tappable — caps at viewport edges. */
+       it's tappable, caps at viewport edges. */
     min-width: min(320px, calc(100vw - 24px));
     max-width: calc(100vw - 24px);
     left: 0;
   }
 }
 
-/* Floating "jump to bottom" pill — appears when the user scrolls
+/* Floating "jump to bottom" pill, appears when the user scrolls
    up while a reply is streaming so they can re-anchor with one
    click. ChatGPT/Claude pattern. */
 .webchat-jump-bottom {
@@ -943,7 +943,7 @@
   to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* Live transcript styling — make it visually distinct from typed
+/* Live transcript styling, make it visually distinct from typed
    text so the user knows the AI is showing them what it heard,
    not what they typed. Subtle purple tint + cursor pulse. */
 textarea.is-live-transcript {
@@ -1025,7 +1025,7 @@ textarea.is-live-transcript::after {
 .webchat--v2v .webchat-scroll { opacity: 0.18; pointer-events: none; transition: opacity 220ms ease; }
 .webchat--v2v .webchat-scroll * { user-select: none; }
 
-/* Copilot launcher — always bottom-right of the viewport. On
+/* Copilot launcher, always bottom-right of the viewport. On
    mobile the dashboard's fixed bottom nav lives at bottom: 0, so
    lift the launcher above it (plus the iOS safe-area inset).
    Slightly smaller on mobile so it doesn't dominate the screen. */

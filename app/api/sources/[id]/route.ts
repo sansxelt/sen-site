@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 type Params = Promise<{ id: string }>;
 
-// DELETE /api/sources/:id — remove an uploaded source.
+// DELETE /api/sources/:id, remove an uploaded source.
 export async function DELETE(
   request: Request,
   { params }: { params: Params },

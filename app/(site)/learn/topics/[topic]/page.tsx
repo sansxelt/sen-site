@@ -33,7 +33,7 @@ export default async function TopicPage({ params }: Props) {
 
   const articles = articlesInTopic(t.key);
   // Group articles by their subtopic so the page reads as
-  // "Concepts (3) — How it works (2) — ..." instead of one long list.
+  // "Concepts (3), How it works (2), ..." instead of one long list.
   const bySubtopic = t.subtopics.map((sub) => ({
     sub,
     items: articles.filter((a) => a.subtopic === sub.key),
@@ -63,7 +63,7 @@ export default async function TopicPage({ params }: Props) {
           {articles.length === 0 ? (
             <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
               <p className="text-sm text-neutral-400">
-                No articles in {t.label} yet — coming soon.
+                No articles in {t.label} yet, coming soon.
               </p>
               <Link
                 href="/learn"

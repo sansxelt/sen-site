@@ -16,7 +16,7 @@ type Props = {
 
 /**
  * Mobile-only nav drawer for viewports below `lg`.  The desktop nav in
- * SiteShell already has `lg:flex` so it disappears below 1024px — this
+ * SiteShell already has `lg:flex` so it disappears below 1024px, this
  * component fills that gap: a hamburger button in the header that opens
  * a right-hand drawer with all primary + contact links and the
  * account / access CTA.
@@ -49,7 +49,7 @@ export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
 
   return (
     <>
-      {/* Hamburger — only visible below lg, sits before the Access button */}
+      {/* Hamburger, only visible below lg, sits before the Access button */}
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -76,7 +76,7 @@ export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
               aria-hidden
             />
 
-            {/* Drawer — slides from the right */}
+            {/* Drawer, slides from the right */}
             <motion.nav
               key="drawer"
               className="fixed inset-y-0 right-0 z-[9996] flex w-[84vw] max-w-sm flex-col border-l border-white/10 bg-neutral-950 lg:hidden"
@@ -86,7 +86,7 @@ export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
               aria-label="Mobile menu"
             >
-              {/* Drawer header — close button + label */}
+              {/* Drawer header, close button + label */}
               <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4">
                 <span className="text-sm font-semibold text-white">Menu</span>
                 <button

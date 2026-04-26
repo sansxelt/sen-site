@@ -57,7 +57,7 @@ async function handleSubscriptionEvent(event: WebhookEvent) {
   const subscription = await getPaypalSubscription(subscriptionId);
   const custom = parseCustomId((resource?.custom_id as string | undefined) ?? undefined);
   if (!custom) {
-    console.warn("[paypal webhook] no custom_id on subscription — cannot map to user");
+    console.warn("[paypal webhook] no custom_id on subscription, cannot map to user");
     return;
   }
 
@@ -73,7 +73,7 @@ async function handleSubscriptionEvent(event: WebhookEvent) {
     provider:               "paypal",
     providerSubscriptionId: subscription.id,
   });
-  // Plan change can flip what's "Owned with [Plan]" — drop the cached
+  // Plan change can flip what's "Owned with [Plan]", drop the cached
   // addon set so the cap-lift logic re-resolves immediately. Mirrors
   // the same call in the Stripe webhook.
   invalidateAddonsCache(custom.email);
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON." }, { status: 400 });
   }
 
-  // Signature check — if PAYPAL_WEBHOOK_ID isn't set we refuse rather than
+  // Signature check, if PAYPAL_WEBHOOK_ID isn't set we refuse rather than
   // silently accepting anything.  Set it after you create the webhook in
   // PayPal Developer.
   const verified = await verifyPaypalWebhook({ headers: headerMap, body: event });
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       await handleSubscriptionEvent(event);
       break;
     default:
-      // unknown — log and ignore
+      // unknown, log and ignore
       break;
   }
 

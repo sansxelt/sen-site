@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 // Apple touch icon. Same circular per-host pinwheel as
 // app/icon.tsx, scaled up to 180x180 for the iOS home screen /
 // iPadOS dock. iOS applies its own corner mask on top, so the
-// circle ends up inscribed inside iOS's squircle — visually clean
+// circle ends up inscribed inside iOS's squircle, visually clean
 // and matches the browser tab.
 
 export const size = { width: 180, height: 180 };

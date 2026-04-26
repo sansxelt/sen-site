@@ -107,7 +107,7 @@ export async function getBillingState(email: string): Promise<BillingState> {
     }
   }
 
-  // Default payment method — prefer subscription's, then customer's.
+  // Default payment method, prefer subscription's, then customer's.
   let pmId: string | null = null;
   if (subscription) {
     const sub = subscription as unknown as { default_payment_method?: string | Stripe.PaymentMethod | null };
@@ -131,7 +131,7 @@ export async function getBillingState(email: string): Promise<BillingState> {
         };
       }
     } catch {
-      // swallow — missing/invalid payment method is fine for rendering
+      // swallow, missing/invalid payment method is fine for rendering
     }
   }
 

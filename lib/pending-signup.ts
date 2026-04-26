@@ -39,7 +39,7 @@ export type PendingSignupRecord = {
 
 /**
  * Create or replace a pending signup for the given email.  Using upsert
- * here means the user can "re-register" if they lose the first email —
+ * here means the user can "re-register" if they lose the first email
  * the newer row overwrites, invalidating the older token.
  */
 export async function upsertPendingSignup(args: {
@@ -79,7 +79,7 @@ export async function upsertPendingSignup(args: {
 }
 
 /**
- * Regenerate the token + expiry on an existing pending signup — used
+ * Regenerate the token + expiry on an existing pending signup, used
  * by the Resend verification flow.  Returns null if no row exists.
  */
 export async function rotatePendingToken(email: string): Promise<{

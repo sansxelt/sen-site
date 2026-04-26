@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
     const currentPlan = pricingPlanMap[planKey] ?? pricingPlanMap.free;
 
-    // v0.1.10 — list addon keys whose Stripe price env var is set
+    // v0.1.10, list addon keys whose Stripe price env var is set
     // and non-empty. The desktop billing panel uses this to hide
     // boost cards for products the operator hasn't created in
     // Stripe yet (otherwise clicking the card fails with "No

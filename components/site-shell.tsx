@@ -117,7 +117,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               />
 
               {/* Log in ghost link (only when signed out) sits next
-                  to the dropdown trigger — same secondary/primary
+                  to the dropdown trigger, same secondary/primary
                   rhythm as enterprise SaaS headers. */}
               {!signedIn && (
                 <Link
@@ -156,7 +156,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 <span className="text-sm font-semibold text-white">sansxel</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
-                The adaptive AI platform. One AI, infinite shapes — a contextual
+                The adaptive AI platform. One AI, infinite shapes, a contextual
                 interface that reshapes itself around how you actually work.
               </p>
             </div>

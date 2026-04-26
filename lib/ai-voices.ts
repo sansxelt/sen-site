@@ -1,4 +1,4 @@
-// Persona presets — separate from the TTS *voice* (which is the
+// Persona presets, separate from the TTS *voice* (which is the
 // audio voice). A persona overlays the system prompt with a style
 // directive and a chunk-render speed multiplier. Same model under
 // every persona; what changes is how it answers.
@@ -9,7 +9,7 @@ export type PersonaDescriptor = {
   key: Persona;
   display_name: string;
   blurb: string;
-  // Appended to the base system prompt. Keep it short — the model
+  // Appended to the base system prompt. Keep it short, the model
   // weighs longer instructions less consistently.
   style_directive: string;
   // Frontend hint: multiplier on the natural per-chunk render delay.
@@ -48,7 +48,7 @@ export const PERSONA_REGISTRY: ReadonlyArray<PersonaDescriptor> = [
     display_name: "Playful",
     blurb: "Witty, light asides. Dry humor. Never mean.",
     style_directive:
-      "Persona: playful. Witty, occasionally dry. Light asides are fine. Never mean, never at the user's expense. Keep the substance honest — humor is seasoning, not the whole dish.",
+      "Persona: playful. Witty, occasionally dry. Light asides are fine. Never mean, never at the user's expense. Keep the substance honest, humor is seasoning, not the whole dish.",
     delay_multiplier: 1.1,
   },
 ];

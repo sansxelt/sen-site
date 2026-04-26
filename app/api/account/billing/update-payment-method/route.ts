@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     try {
       await stripe.paymentMethods.attach(paymentMethodId, { customer: customer.id });
     } catch (err) {
-      // Likely already attached to this customer — Stripe throws if so.
+      // Likely already attached to this customer, Stripe throws if so.
       const code = (err as { code?: string }).code;
       if (code !== "resource_already_exists") throw err;
     }
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Confirmation email — read back the card brand + last4 from the
+    // Confirmation email, read back the card brand + last4 from the
     // payment method we just attached so the copy is accurate.
     try {
       const pm = await stripe.paymentMethods.retrieve(paymentMethodId);

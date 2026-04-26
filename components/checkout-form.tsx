@@ -178,13 +178,13 @@ function PaymentForm({ cycle, plan, seats, userEmail }: {
     }
 
     // If confirmPayment redirected away, the browser is already navigating
-    // and paymentIntent is undefined — don't do anything here.
+    // and paymentIntent is undefined, don't do anything here.
     if (!paymentIntent) return;
 
     // Only "succeeded" (card cleared) and "processing" (async settlement
-    // like bank debit) count as real success.  Everything else — including
+    // like bank debit) count as real success.  Everything else, including
     // requires_payment_method (user cancelled Cash App QR, card was declined
-    // post-auth, etc.) — must NOT send the user to the success page.
+    // post-auth, etc.), must NOT send the user to the success page.
     switch (paymentIntent.status) {
       case "succeeded":
       case "processing":
@@ -232,7 +232,7 @@ function PaymentForm({ cycle, plan, seats, userEmail }: {
         className="sansxel-white-button w-full rounded-2xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5"
       >
         <span className="block truncate">
-          {submitting ? "Processing…" : `Subscribe to ${plan.name} — ${amount}`}
+          {submitting ? "Processing…" : `Subscribe to ${plan.name}, ${amount}`}
         </span>
       </button>
 
@@ -250,7 +250,7 @@ function PaymentForm({ cycle, plan, seats, userEmail }: {
 }
 
 /**
- * Stripe wordmark SVG — the official brand mark, rendered in currentColor
+ * Stripe wordmark SVG, the official brand mark, rendered in currentColor
  * so it picks up our neutral text tone instead of screaming purple.
  */
 function StripeWordmark({ className }: { className?: string }) {

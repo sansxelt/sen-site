@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type Thread = { id: string; title: string; updated_at?: string };
 
-// Mirror of the FLIGHT_KEY in web-chat.tsx — cross-component shared
+// Mirror of the FLIGHT_KEY in web-chat.tsx, cross-component shared
 // signal for "this thread is currently being generated". WebChat
 // writes; the rail reads to show a pulsing dot.
 const FLIGHT_KEY = "sansxel.inflight.threads";
@@ -79,7 +79,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     return threads.filter((t) => t.title.toLowerCase().includes(q));
   }, [threads, query]);
 
-  // Density toggle — persists to localStorage so the user's choice
+  // Density toggle, persists to localStorage so the user's choice
   // sticks across reloads. Default is "compact" because the original
   // size felt overweight for a sidebar of titles ("the titles are
   // too big" feedback). Click the icon in the rail header to flip.
@@ -134,7 +134,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     void load();
 
     // One-shot per-session backfill: re-run AI title generation for
-    // any threads still showing snippet/placeholder titles. Silent —
+    // any threads still showing snippet/placeholder titles. Silent
     // success just broadcasts threads:changed which retriggers load.
     // sessionStorage key prevents the request from firing on every
     // route change in the same tab session.
@@ -152,7 +152,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
               }
             }
           } catch {
-            // ignore — backfill is best-effort
+            // ignore, backfill is best-effort
           }
         })();
       }
@@ -291,7 +291,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             <div className="chat-history-item-body">
               <div className="chat-history-item-title">New chat</div>
               <div className="chat-history-item-meta">
-                Start typing — saves on first message
+                Start typing, saves on first message
               </div>
             </div>
           </div>
@@ -301,7 +301,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
         )}
         {!loading && (!threads || threads.length === 0) && !isOnNewChat && (
           <div className="chat-history-empty">
-            No chats yet — start one below.
+            No chats yet, start one below.
           </div>
         )}
         {!loading && threads && threads.length > 0 && visibleThreads.length === 0 && (

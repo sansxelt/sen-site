@@ -32,7 +32,7 @@ export default function LearnIndexPage() {
               Learn
             </div>
             <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-              AI, coding, and shipping — explained simply.
+              AI, coding, and shipping, explained simply.
             </h1>
             <p className="mt-4 text-base leading-7 text-neutral-200 sm:text-lg sm:leading-8">
               A structured platform for going from zero to building real
@@ -40,7 +40,7 @@ export default function LearnIndexPage() {
             </p>
           </div>
 
-          {/* Topic grid — text-first, no big emojis */}
+          {/* Topic grid, text-first, no big emojis */}
           <section className="mt-12">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
               Topics
@@ -116,7 +116,7 @@ export default function LearnIndexPage() {
               Try what you just learned in the workshop.
             </h3>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
-              Free plan ships with 50 chats a week — enough to get a real feel
+              Free plan ships with 50 chats a week, enough to get a real feel
               for how sansxel works without committing to anything.
             </p>
             <Link

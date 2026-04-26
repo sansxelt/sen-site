@@ -5,7 +5,7 @@ const TTL_MS = 10 * 60 * 1000;
 function getSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
-    throw new Error("AUTH_SECRET is not set — cannot sign OAuth signup tokens.");
+    throw new Error("AUTH_SECRET is not set, cannot sign OAuth signup tokens.");
   }
   return secret;
 }

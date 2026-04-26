@@ -11,7 +11,7 @@ function getResend() {
 }
 
 /**
- * Account-flavored sender — welcome, password reset, account-lifecycle
+ * Account-flavored sender, welcome, password reset, account-lifecycle
  * confirmations.  Matches the "Sansxel AI" identity the user set up in
  * Gmail's Send-mail-as aliases so replies look visually consistent with
  * what they'd see going the other way.
@@ -19,7 +19,7 @@ function getResend() {
 const fromAccount = "Sansxel AI <hello@sansxel.ai>";
 
 /**
- * Automated system sender — billing events today, newsletters in Phase 2.
+ * Automated system sender, billing events today, newsletters in Phase 2.
  * Kept as plain "Sansxel AI" since noreply@ handles multiple kinds of
  * automated mail and a narrower "Billing" label would be wrong for
  * newsletters / product updates.
@@ -29,13 +29,13 @@ const fromBilling = "Sansxel AI <noreply@sansxel.ai>";
 /**
  * Sender/reply-to policy:
  *   - hello@ and noreply@ are auto-only senders. Neither routes replies
- *     to a human — hello@ is for account mail, noreply@ is for billing
+ *     to a human, hello@ is for account mail, noreply@ is for billing
  *     and (future) product updates. Replies are expected to die there.
  *   - help@, sales@, privacy@ are *real inboxes* for inbound support.
  *     They're used as the `from` only on contact-form threads that
  *     started on the user's side, so the conversation stays on-channel.
  *
- * Automated sends therefore don't set `replyTo` at all — Resend
+ * Automated sends therefore don't set `replyTo` at all, Resend
  * defaults it to the `from` address, which is the correct "no reply
  * expected" behavior for hello@ and noreply@. Setting replyTo to help@
  * on billing mail (the old behavior) bled customer billing questions
@@ -47,7 +47,7 @@ const fromBilling = "Sansxel AI <noreply@sansxel.ai>";
  * Departmental sender.  For contact-form traffic the `from` address should
  * match the inbox the message was routed to, so both sides of the thread
  * (the support email and the confirmation to the user) read as coming
- * from that department — sales@ writes to the user about sales inquiries,
+ * from that department, sales@ writes to the user about sales inquiries,
  * privacy@ writes about privacy, help@ for everything else.
  */
 function fromForInbox(inbox: SupportInbox): string {
@@ -68,7 +68,7 @@ export function isEmailConfigured() {
 // ---------------------------------------------------------------------------
 
 /**
- * baseHtml — standard email chrome for every transactional message.
+ * baseHtml, standard email chrome for every transactional message.
  * Header: small sansxel wordmark + tagline.
  * Body: the template's own content, rendered inside a white card.
  * Footer: dense contact block (all 3 departmental inboxes), legal
@@ -84,7 +84,7 @@ function baseHtml(content: string) {
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
   <!--
-    Mobile tuning — the main transactional email clients that respect
+    Mobile tuning, the main transactional email clients that respect
     <style> + @media are Apple Mail, Gmail iOS/Android (native apps),
     Outlook iOS. Gmail Web strips the head-level style block on some
     templates, so inline styles stay the baseline; this block just
@@ -175,7 +175,7 @@ const NOTE_WARN    = "margin:20px 0 0;padding:14px 16px;background:#fff1f2;borde
 /**
  * HTML-escape a string for safe interpolation into our inline email
  * templates.  The templates intentionally do not use a rendering
- * library — so anywhere user-supplied text (subjects, names, messages,
+ * library, so anywhere user-supplied text (subjects, names, messages,
  * channel labels) lands in an `${...}` hole, run it through this first.
  *
  * Escapes the five HTML-sensitive characters.  `&` must be first so we
@@ -209,18 +209,18 @@ export function welcomeHtml(name?: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Welcome to sansxel</p>
     <h1 class="sx-h1" style="${H1_STYLE}">Your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} your sansxel account is set up and ready. Sansxel is a layered response engine — start with a simple prompt and let the output grow into something you can actually use: a plan, a deliverable, a product shape.</p>
+    <p style="${BODY_STYLE}">${greeting} your sansxel account is set up and ready. Sansxel is a layered response engine, start with a simple prompt and let the output grow into something you can actually use: a plan, a deliverable, a product shape.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">What to try first:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Ask something complex — a question that would normally need research + structure.</li>
-      <li>Drop in messy input — a screenshot, rough notes, or a link.</li>
+      <li>Ask something complex, a question that would normally need research + structure.</li>
+      <li>Drop in messy input, a screenshot, rough notes, or a link.</li>
       <li>Push the same thread forward instead of starting over. Keep refining what already works.</li>
     </ul>
     <a href="https://sansxel.ai/account" class="sx-btn" style="${BTN_STYLE}">Open workspace</a>
     <span class="sx-btn-spacer">&nbsp;</span>
     <a href="https://sansxel.ai/features" class="sx-btn" style="${BTN_LIGHT}">Tour the features</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email — the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+      <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email, the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
     </div>
   `);
 }
@@ -233,13 +233,13 @@ export function earlyAccessHtml(name: string) {
     <p style="${BODY_STYLE}">${greeting} thanks for requesting early access. We review access requests carefully and roll out in waves so we can actually support everyone who comes in. You&apos;ll get a personal email from the team once your seat is ready.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">While you wait, a few things worth knowing:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Your sansxel account exists now — you can sign in any time to manage preferences.</li>
+      <li>Your sansxel account exists now, you can sign in any time to manage preferences.</li>
       <li>Rollout order prioritizes focus-area match, not signup date, so feel free to update your profile.</li>
-      <li>If access is urgent (team rollout, deadline, specific integration), reach out — we occasionally expedite.</li>
+      <li>If access is urgent (team rollout, deadline, specific integration), reach out, we occasionally expedite.</li>
     </ul>
     <a href="https://sansxel.ai/account" class="sx-btn" style="${BTN_STYLE}">View your account</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Need a different path?</strong> Teams/sales conversations get fast-tracked — email <a href="mailto:sales@sansxel.ai" style="color:#0a0a0a;">sales@sansxel.ai</a>. General questions go to <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+      <strong style="color:#0a0a0a;">Need a different path?</strong> Teams/sales conversations get fast-tracked, email <a href="mailto:sales@sansxel.ai" style="color:#0a0a0a;">sales@sansxel.ai</a>. General questions go to <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
     </div>
   `);
 }
@@ -256,7 +256,7 @@ export function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: 
     <p style="${META_STYLE}" style="margin-top:14px;">Link not working? Copy and paste this URL into your browser:</p>
     <p style="margin:4px 0 0;font-size:12px;color:#0a0a0a;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${verifyUrl}</p>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t sign up for sansxel?</strong> Ignore this email — without clicking the link, your account never gets created and we won&apos;t message you again. If you&apos;re seeing signup confirmations you didn&apos;t request, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+      <strong style="color:#0a0a0a;">Didn&apos;t sign up for sansxel?</strong> Ignore this email, without clicking the link, your account never gets created and we won&apos;t message you again. If you&apos;re seeing signup confirmations you didn&apos;t request, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
     </div>
   `);
 }
@@ -265,13 +265,13 @@ export function passwordResetHtml(resetUrl: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Password Reset</p>
     <h1 class="sx-h1" style="${H1_STYLE}">Choose a new password.</h1>
-    <p style="${BODY_STYLE}">Someone — hopefully you — asked to reset the password on your sansxel account. Click the button below to pick a new one. The link is <strong style="color:#0a0a0a;">single-use</strong> and expires in <strong style="color:#0a0a0a;">one hour</strong>.</p>
+    <p style="${BODY_STYLE}">Someone, hopefully you, asked to reset the password on your sansxel account. Click the button below to pick a new one. The link is <strong style="color:#0a0a0a;">single-use</strong> and expires in <strong style="color:#0a0a0a;">one hour</strong>.</p>
     <a href="${resetUrl}" class="sx-btn" style="${BTN_STYLE}">Reset password</a>
     <div style="${HR_STYLE}"></div>
     <p style="${META_STYLE}">Link not working? Copy and paste this URL into your browser:</p>
     <p style="margin:4px 0 0;font-size:12px;color:#0a0a0a;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${resetUrl}</p>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t ask for this?</strong> You can safely ignore this email — your password won&apos;t change without someone clicking the link. If you&apos;re seeing repeated reset requests, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a> and we&apos;ll lock the account while we investigate.
+      <strong style="color:#0a0a0a;">Didn&apos;t ask for this?</strong> You can safely ignore this email, your password won&apos;t change without someone clicking the link. If you&apos;re seeing repeated reset requests, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a> and we&apos;ll lock the account while we investigate.
     </div>
   `);
 }
@@ -283,11 +283,11 @@ export function contactConfirmHtml(name: string, subject: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Message Received</p>
     <h1 class="sx-h1" style="${H1_STYLE}">We got your note.</h1>
-    <p style="${BODY_STYLE}">${greeting} thanks for reaching out. We received your message about <strong style="color:#0a0a0a;">${safeSubject}</strong> and someone on the team will follow up to your email address directly — usually within one business day.</p>
+    <p style="${BODY_STYLE}">${greeting} thanks for reaching out. We received your message about <strong style="color:#0a0a0a;">${safeSubject}</strong> and someone on the team will follow up to your email address directly, usually within one business day.</p>
     <p style="${BODY_STYLE}">If you have more to add, just reply to this email. Your reply lands in the right queue automatically.</p>
     <a href="https://sansxel.ai/contact" class="sx-btn" style="${BTN_LIGHT}">Back to contact</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t submit this form?</strong> You can safely ignore this email — we&apos;ll process it as a mistake if we don&apos;t hear back. No further messages will be sent unless you reach out again.
+      <strong style="color:#0a0a0a;">Didn&apos;t submit this form?</strong> You can safely ignore this email, we&apos;ll process it as a mistake if we don&apos;t hear back. No further messages will be sent unless you reach out again.
     </div>
   `);
 }
@@ -325,7 +325,7 @@ export function supportHtml(opts: {
 }
 
 // ---------------------------------------------------------------------------
-// Send helpers — all fire-and-forget safe (never throw to callers)
+// Send helpers, all fire-and-forget safe (never throw to callers)
 // ---------------------------------------------------------------------------
 
 export async function sendWelcomeEmail(email: string, name?: string) {
@@ -401,7 +401,7 @@ export async function sendContactConfirmEmail(
   email:   string,
   name:    string,
   subject: string,
-  /** Inbox the message was routed to — controls the `from` so the
+  /** Inbox the message was routed to, controls the `from` so the
       confirmation comes from the same department the user contacted. */
   inbox:   SupportInbox = "help@sansxel.ai",
 ) {
@@ -412,7 +412,7 @@ export async function sendContactConfirmEmail(
     await resend.emails.send({
       from: fromForInbox(inbox),
       to: email,
-      subject: `We received your message — ${subject}`,
+      subject: `We received your message, ${subject}`,
       html: contactConfirmHtml(name, subject),
     });
   } catch (error) {
@@ -422,7 +422,7 @@ export async function sendContactConfirmEmail(
 
 /**
  * Allowlist of inboxes the contact form may route to.  Any value coming
- * from the client must match one of these — otherwise we silently fall
+ * from the client must match one of these, otherwise we silently fall
  * back to help@ so a stray/malicious payload can't be used to spam a
  * third-party address.
  */
@@ -442,7 +442,7 @@ export function resolveSupportInbox(candidate: string | null | undefined): Suppo
  * Send the actual support email.  Routes to one of the three support
  * inboxes (defaults to help@ if no routing supplied).
  *
- * Throws on Resend failure — the caller (the API route) surfaces the
+ * Throws on Resend failure, the caller (the API route) surfaces the
  * error back to the client so the UI doesn't lie about having sent.
  */
 export async function sendSupportEmail(opts: {
@@ -461,7 +461,7 @@ export async function sendSupportEmail(opts: {
   }
 
   const toAddress = resolveSupportInbox(opts.to);
-  // Subject is the user's raw subject — no "[Support]" prefix (the
+  // Subject is the user's raw subject, no "[Support]" prefix (the
   // destination inbox is already a support inbox) and no "[Channel]"
   // prefix (that lives in the body now).  `from` matches the target
   // inbox's department (sales→sales, privacy→privacy, help→help).
@@ -473,7 +473,7 @@ export async function sendSupportEmail(opts: {
     html: supportHtml(opts),
   });
 
-  // Resend returns { data, error } instead of throwing on 4xx — turn it
+  // Resend returns { data, error } instead of throwing on 4xx, turn it
   // into a throw so the API route can surface the real reason (unverified
   // sender domain, wrong key, etc.).
   if (result.error) {
@@ -497,10 +497,10 @@ export function pwResetConfirmHtml(name: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Password Updated</p>
     <h1 class="sx-h1" style="${H1_STYLE}">Your password was reset.</h1>
-    <p style="${BODY_STYLE}">${greeting} your sansxel password was just changed. If that was you, you&apos;re all set — this email is just confirmation. Your active sessions on other devices will need to sign in again the next time you use them.</p>
+    <p style="${BODY_STYLE}">${greeting} your sansxel password was just changed. If that was you, you&apos;re all set, this email is just confirmation. Your active sessions on other devices will need to sign in again the next time you use them.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">While you&apos;re thinking about security:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Use a password manager if you don&apos;t already — we strongly recommend it.</li>
+      <li>Use a password manager if you don&apos;t already, we strongly recommend it.</li>
       <li>If you reused this password elsewhere, change it there too.</li>
       <li>Turn on two-factor auth on the email tied to your sansxel account; that email is the key to everything.</li>
     </ul>
@@ -517,15 +517,15 @@ export function accountDeletedHtml(name: string) {
     <h1 class="sx-h1" style="${H1_STYLE}">Your account has been removed.</h1>
     <p style="${BODY_STYLE}">${greeting} your sansxel account and associated data have been deleted. Confirming exactly what was removed, so there&apos;s no ambiguity:</p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li><strong style="color:#0a0a0a;">Profile and credentials</strong> — your email, password hash, and preferences.</li>
-      <li><strong style="color:#0a0a0a;">API keys</strong> — all keys revoked. Any integrations using them will immediately stop working.</li>
-      <li><strong style="color:#0a0a0a;">Saved outputs and history</strong> — gone from our systems (may persist in backups for up to 30 days, purged per our data policy).</li>
-      <li><strong style="color:#0a0a0a;">Active subscriptions</strong> — cancelled. No further charges will hit your card.</li>
+      <li><strong style="color:#0a0a0a;">Profile and credentials</strong>, your email, password hash, and preferences.</li>
+      <li><strong style="color:#0a0a0a;">API keys</strong>, all keys revoked. Any integrations using them will immediately stop working.</li>
+      <li><strong style="color:#0a0a0a;">Saved outputs and history</strong>, gone from our systems (may persist in backups for up to 30 days, purged per our data policy).</li>
+      <li><strong style="color:#0a0a0a;">Active subscriptions</strong>, cancelled. No further charges will hit your card.</li>
     </ul>
-    <p style="${BODY_STYLE}">You won&apos;t receive further account or billing emails. Changed your mind? You&apos;re welcome back any time — nothing&apos;s permanent on our side.</p>
+    <p style="${BODY_STYLE}">You won&apos;t receive further account or billing emails. Changed your mind? You&apos;re welcome back any time, nothing&apos;s permanent on our side.</p>
     <a href="https://sansxel.ai" class="sx-btn" style="${BTN_LIGHT}">Visit sansxel.ai</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Questions about data or privacy?</strong> For anything involving your data — what was stored, what&apos;s in backups, export requests — email <a href="mailto:privacy@sansxel.ai" style="color:#0a0a0a;">privacy@sansxel.ai</a>. We respond to privacy requests within 72 hours.
+      <strong style="color:#0a0a0a;">Questions about data or privacy?</strong> For anything involving your data, what was stored, what&apos;s in backups, export requests, email <a href="mailto:privacy@sansxel.ai" style="color:#0a0a0a;">privacy@sansxel.ai</a>. We respond to privacy requests within 72 hours.
     </div>
   `);
 }
@@ -536,7 +536,7 @@ export function subscriptionActivatedHtml(name: string, planName: string, cycle:
   return baseHtml(`
     <p style="${KICKER_STYLE}">Subscription Active</p>
     <h1 class="sx-h1" style="${H1_STYLE}">Welcome to sansxel ${planName}.</h1>
-    <p style="${BODY_STYLE}">${greeting} your ${periodLabel} subscription is live. Paid features are available immediately — no waiting, no activation step.</p>
+    <p style="${BODY_STYLE}">${greeting} your ${periodLabel} subscription is live. Paid features are available immediately, no waiting, no activation step.</p>
 
     ${detailsTable([
       ["Plan",          planName],
@@ -549,7 +549,7 @@ export function subscriptionActivatedHtml(name: string, planName: string, cycle:
     <span class="sx-btn-spacer">&nbsp;</span>
     <a href="https://sansxel.ai/account/billing" class="sx-btn" style="${BTN_LIGHT}">Manage billing</a>
     <div style="${NOTE_STYLE}">
-      A Stripe receipt with the full invoice is on its way separately. For plan changes, cancellations, or downgrades, head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> — all changes are self-serve and take effect immediately. For help, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+      A Stripe receipt with the full invoice is on its way separately. For plan changes, cancellations, or downgrades, head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a>, all changes are self-serve and take effect immediately. For help, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
     </div>
   `);
 }
@@ -559,7 +559,7 @@ export function subscriptionCancellationScheduledHtml(name: string, planName: st
   return baseHtml(`
     <p style="${KICKER_STYLE}">Cancellation Scheduled</p>
     <h1 class="sx-h1" style="${H1_STYLE}">Your ${planName} plan ends on ${endsOn}.</h1>
-    <p style="${BODY_STYLE}">${greeting} we&apos;ve scheduled your cancellation. This is just a confirmation — no action needed from you.</p>
+    <p style="${BODY_STYLE}">${greeting} we&apos;ve scheduled your cancellation. This is just a confirmation, no action needed from you.</p>
 
     ${detailsTable([
       ["Plan",        planName],
@@ -571,13 +571,13 @@ export function subscriptionCancellationScheduledHtml(name: string, planName: st
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">What happens next:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>You keep every paid feature until <strong style="color:#0a0a0a;">${endsOn}</strong>.</li>
-      <li>On that date, your account drops to the Free plan automatically. Nothing is deleted — just the paid features pause.</li>
+      <li>On that date, your account drops to the Free plan automatically. Nothing is deleted, just the paid features pause.</li>
       <li>All your saved outputs, history, and API keys stay exactly where they are.</li>
     </ul>
 
     <a href="https://sansxel.ai/account/billing" class="sx-btn" style="${BTN_STYLE}">Resume subscription</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t schedule this cancellation?</strong> Head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> and tap Resume subscription — it&apos;s one click and fully reverses this email. If you suspect your account is compromised, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a> immediately.
+      <strong style="color:#0a0a0a;">Didn&apos;t schedule this cancellation?</strong> Head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> and tap Resume subscription, it&apos;s one click and fully reverses this email. If you suspect your account is compromised, email <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a> immediately.
     </div>
   `);
 }
@@ -590,7 +590,7 @@ export function subscriptionEndedHtml(name: string, planName: string) {
     <p style="${BODY_STYLE}">${greeting} your paid period is over and your account is now on the Free plan. This could be because you scheduled a cancellation that just hit, or because payment retries ran out after a failed charge.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Here&apos;s what changes:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li><strong style="color:#0a0a0a;">Kept:</strong> your account, saved outputs, history, and profile settings — all intact.</li>
+      <li><strong style="color:#0a0a0a;">Kept:</strong> your account, saved outputs, history, and profile settings, all intact.</li>
       <li><strong style="color:#0a0a0a;">Paused:</strong> paid features (higher API limits, deeper memory, priority generation).</li>
       <li><strong style="color:#0a0a0a;">Charges:</strong> nothing further will be charged unless you pick a plan again.</li>
     </ul>
@@ -613,9 +613,9 @@ export function paymentFailedHtml(name: string, planName: string) {
     <a href="https://sansxel.ai/account/billing" class="sx-btn" style="${BTN_STYLE}">Update payment method</a>
     <p style="${BODY_STYLE}" style="margin-top:22px;"><strong style="color:#0a0a0a;">What happens if retries keep failing:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>After all retries exhaust, your plan drops to Free — paid features pause but nothing is deleted.</li>
+      <li>After all retries exhaust, your plan drops to Free, paid features pause but nothing is deleted.</li>
       <li>You can re-subscribe at any time; your data and history stay.</li>
-      <li>No credit goes unused — Stripe prorates any partial period cleanly.</li>
+      <li>No credit goes unused, Stripe prorates any partial period cleanly.</li>
     </ul>
     <div style="${NOTE_WARN}">
       <strong style="color:#9f1239;">Common causes to check:</strong> expired card, recent fraud block from your bank, international transaction limit, or an insufficient-funds alert from your bank app. If you need help reading the decline reason, email <a href="mailto:help@sansxel.ai" style="color:#9f1239;font-weight:600;">help@sansxel.ai</a>.
@@ -638,12 +638,12 @@ export function paymentMethodUpdatedHtml(name: string, brand: string, last4: str
 
     <a href="https://sansxel.ai/account/billing" class="sx-btn" style="${BTN_LIGHT}">Review billing</a>
     <div style="${NOTE_WARN}">
-      <strong style="color:#9f1239;">If you didn&apos;t make this change</strong>, email <a href="mailto:help@sansxel.ai" style="color:#9f1239;font-weight:600;">help@sansxel.ai</a> immediately. Someone else may have access to your account — we can lock it and revert the card while we investigate.
+      <strong style="color:#9f1239;">If you didn&apos;t make this change</strong>, email <a href="mailto:help@sansxel.ai" style="color:#9f1239;font-weight:600;">help@sansxel.ai</a> immediately. Someone else may have access to your account, we can lock it and revert the card while we investigate.
     </div>
   `);
 }
 
-// ── Renewal templates (NEW — tied to invoice.paid / invoice.upcoming) ──────
+// ── Renewal templates (NEW, tied to invoice.paid / invoice.upcoming) ──────
 
 export function renewalSucceededHtml(name: string, planName: string, amountLabel: string, periodEnd: string, invoiceUrl: string | null) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
@@ -663,7 +663,7 @@ export function renewalSucceededHtml(name: string, planName: string, amountLabel
       : `<a href="https://sansxel.ai/account/billing" class="sx-btn" style="${BTN_STYLE}">Manage billing</a>`
     }
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Want to cancel or downgrade?</strong> No hassle — head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a>. Cancellation stops future charges immediately; downgrades take effect at the next renewal so you keep paid features until then. Questions: <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
+      <strong style="color:#0a0a0a;">Want to cancel or downgrade?</strong> No hassle, head to <a href="https://sansxel.ai/account/billing" style="color:#0a0a0a;">/account/billing</a>. Cancellation stops future charges immediately; downgrades take effect at the next renewal so you keep paid features until then. Questions: <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
     </div>
   `);
 }
@@ -672,7 +672,7 @@ export function renewalUpcomingHtml(name: string, planName: string, amountLabel:
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Renewal in 7 Days</p>
-    <h1 class="sx-h1" style="${H1_STYLE}">Heads up — your ${planName} plan renews next week.</h1>
+    <h1 class="sx-h1" style="${H1_STYLE}">Heads up, your ${planName} plan renews next week.</h1>
     <p style="${BODY_STYLE}">${greeting} this is an automated heads-up so there are no surprises. In a week we&apos;ll charge the card on file to renew your subscription.</p>
 
     ${detailsTable([
@@ -683,9 +683,9 @@ export function renewalUpcomingHtml(name: string, planName: string, amountLabel:
 
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Want to make a change before the charge?</strong> You have a few options:</p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li><strong style="color:#0a0a0a;">Nothing to do</strong> if the plan&apos;s still working for you — just ignore this email.</li>
-      <li><strong style="color:#0a0a0a;">Downgrade or switch plans</strong> — takes effect at renewal, no proration surprise.</li>
-      <li><strong style="color:#0a0a0a;">Cancel</strong> — you keep full access until the renewal date, then drop to Free.</li>
+      <li><strong style="color:#0a0a0a;">Nothing to do</strong> if the plan&apos;s still working for you, just ignore this email.</li>
+      <li><strong style="color:#0a0a0a;">Downgrade or switch plans</strong>, takes effect at renewal, no proration surprise.</li>
+      <li><strong style="color:#0a0a0a;">Cancel</strong>, you keep full access until the renewal date, then drop to Free.</li>
       <li><strong style="color:#0a0a0a;">Update the card</strong> if the one on file is about to expire.</li>
     </ul>
 
@@ -801,7 +801,7 @@ export async function sendRenewalSucceededEmail(opts: {
   try {
     await resend.emails.send({
       from: fromBilling, to: opts.email,
-      subject: `Renewal successful — ${opts.planName} (${opts.amountLabel})`,
+      subject: `Renewal successful, ${opts.planName} (${opts.amountLabel})`,
       html: renewalSucceededHtml(opts.name, opts.planName, opts.amountLabel, opts.periodEnd, opts.invoiceUrl ?? null),
     });
   } catch (err) { console.error("sendRenewalSucceededEmail failed:", err); }
@@ -815,7 +815,7 @@ export async function sendRenewalUpcomingEmail(opts: {
   try {
     await resend.emails.send({
       from: fromBilling, to: opts.email,
-      subject: `Heads up — your ${opts.planName} plan renews on ${opts.chargeDate}`,
+      subject: `Heads up, your ${opts.planName} plan renews on ${opts.chargeDate}`,
       html: renewalUpcomingHtml(opts.name, opts.planName, opts.amountLabel, opts.chargeDate),
     });
   } catch (err) { console.error("sendRenewalUpcomingEmail failed:", err); }
@@ -824,7 +824,7 @@ export async function sendRenewalUpcomingEmail(opts: {
 // ═══════════════════════════════════════════════════════════════════════════
 // NEWSLETTER / PRODUCT UPDATES
 //
-// Newsletter sends share the billing sender (noreply@sansxel.ai) — both
+// Newsletter sends share the billing sender (noreply@sansxel.ai), both
 // are automated broadcasts from the company, neither expects replies.
 // `subject` and `bodyHtml` come pre-rendered from the caller (the
 // newsletter composer will live in its own module once it exists).
@@ -833,7 +833,7 @@ export async function sendRenewalUpcomingEmail(opts: {
 export async function sendNewsletterEmail(opts: {
   to:       string;
   subject:  string;
-  /** Full rendered inner content — will be wrapped in the standard
+  /** Full rendered inner content, will be wrapped in the standard
       baseHtml chrome (header, contact block, legal footer) so every
       newsletter matches the transactional look. */
   bodyHtml: string;

@@ -20,7 +20,7 @@ const personas = [
   {
     title: "Designer iterating",
     description:
-      "Pastes Figma screenshots, asks for color tweaks or layout critique, generates supporting imagery inline. The image panel slides in next to the chat — no app switching.",
+      "Pastes Figma screenshots, asks for color tweaks or layout critique, generates supporting imagery inline. The image panel slides in next to the chat, no app switching.",
   },
   {
     title: "Student turning notes into a project",
@@ -30,7 +30,7 @@ const personas = [
   {
     title: "Content creator brainstorming",
     description:
-      "Voice-dumps the loose idea, gets it humanized into a script, generates thumbnails, drops reference images for style guidance — all in one session that saves to their account.",
+      "Voice-dumps the loose idea, gets it humanized into a script, generates thumbnails, drops reference images for style guidance, all in one session that saves to their account.",
   },
 ];
 
@@ -39,7 +39,7 @@ const whatShifts = [
     step: "01",
     title: "Talk",
     description:
-      "Hit Voice. Two modes: Dictate (speak, AI types) for quick captures; Talk (full hands-free) for working through problems out loud. VAD detects when you're done — no push-to-talk.",
+      "Hit Voice. Two modes: Dictate (speak, AI types) for quick captures; Talk (full hands-free) for working through problems out loud. VAD detects when you're done, no push-to-talk.",
   },
   {
     step: "02",
@@ -51,13 +51,13 @@ const whatShifts = [
     step: "03",
     title: "Generate",
     description:
-      "Type 'gen an image of X' and you get one inline. No separate button. Same for documents, code blocks, structured plans — sansxel-1 detects intent and ships the right output.",
+      "Type 'gen an image of X' and you get one inline. No separate button. Same for documents, code blocks, structured plans, sansxel-1 detects intent and ships the right output.",
   },
   {
     step: "04",
     title: "Ship",
     description:
-      "Conversations save server-side, AI-titled for the sidebar, synced across devices. Switch from phone to laptop — same threads, same memory. Desktop unlocks file edits + MCP for the full pipeline.",
+      "Conversations save server-side, AI-titled for the sidebar, synced across devices. Switch from phone to laptop, same threads, same memory. Desktop unlocks file edits + MCP for the full pipeline.",
   },
 ];
 
@@ -78,7 +78,7 @@ export default async function FunctionPage() {
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
           A workshop, not a chat box. Open it on your laptop or your phone, throw whatever
-          you&apos;re working on at it — voice, files, screenshots, code, half-formed ideas —
+          you&apos;re working on at it, voice, files, screenshots, code, half-formed ideas
           and the workspace rearranges itself to fit. Same brain on web and desktop, same
           memory across every device you sign in on.
         </p>
@@ -103,7 +103,7 @@ export default async function FunctionPage() {
         </div>
         <p className="mt-6 max-w-2xl text-sm leading-6 text-neutral-400">
           Different makers, same workshop. Sansxel doesn&apos;t pretend to be a
-          different product for each one — it just gives you the right tool for what
+          different product for each one, it just gives you the right tool for what
           you&apos;re doing in the moment.
         </p>
       </div>
@@ -150,10 +150,10 @@ export default async function FunctionPage() {
             Because makers don&apos;t work in chat boxes.
           </h2>
           <p className="mt-4 text-base leading-7 text-neutral-200">
-            A chat box assumes one rhythm — you type, it replies, repeat. That works for
+            A chat box assumes one rhythm, you type, it replies, repeat. That works for
             answering email. It doesn&apos;t work for shipping a thing. Building looks
             like a sketch on the side, a voice memo, a paste from another window, a quick
-            search, a file dropped in, a generated mockup — all in 10 minutes. Sansxel is
+            search, a file dropped in, a generated mockup, all in 10 minutes. Sansxel is
             the workshop where all of that happens in one place.
           </p>
         </div>

@@ -16,7 +16,7 @@ import { APP_URL } from "../../../../lib/stripe";
  * opens its own approval flow.  Returns { subscriptionId } which the
  * PayPal JS SDK takes and uses to resolve the popup.
  *
- * The subscription starts in APPROVAL_PENDING — it only becomes ACTIVE
+ * The subscription starts in APPROVAL_PENDING, it only becomes ACTIVE
  * after the user approves and our webhook (BILLING.SUBSCRIPTION.ACTIVATED)
  * fires.  Nothing is charged before approval.
  */

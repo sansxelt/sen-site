@@ -4,7 +4,7 @@ import { createHmac, timingSafeEqual } from "crypto";
  * Signed HTTP-only cookie that marks the browser that *initiated* the
  * credentials signup.  Set at register time, it's what /api/auth/check-
  * signup-status trusts when deciding whether to hand a caller an
- * auto-signin token — only a device that can present a valid claim
+ * auto-signin token, only a device that can present a valid claim
  * cookie gets to skip the sign-in screen after verification completes
  * elsewhere.
  *
@@ -19,7 +19,7 @@ const TTL_SEC = TTL_MS / 1000;
 function secret(): string {
   const s = process.env.AUTH_SECRET;
   if (!s) {
-    throw new Error("AUTH_SECRET is not set — cannot sign signup claim cookies.");
+    throw new Error("AUTH_SECRET is not set, cannot sign signup claim cookies.");
   }
   return s;
 }

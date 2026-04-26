@@ -107,7 +107,7 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
   const ctx = await resolveContext(subscription);
   if (!ctx) {
-    console.warn("[stripe webhook] missing email context — skipping");
+    console.warn("[stripe webhook] missing email context, skipping");
     return;
   }
 
@@ -120,7 +120,7 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
     stripeStatus:     subscription.status,
   });
 
-  // Drop the cached addon set for this user — the subscription changed
+  // Drop the cached addon set for this user, the subscription changed
   // (item added / removed / cancelled), so the cap-lift logic needs to
   // re-resolve from Stripe on the next request rather than serving a
   // stale cached set. Covers admin actions in the Stripe dashboard,
@@ -201,7 +201,7 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
 /**
  * Dig the price id out of an invoice line item.  Stripe deprecated
  * `line.price` at the type level in the API version we pin (moved under
- * `pricing`) but still returns it in the wire response — narrow cast
+ * `pricing`) but still returns it in the wire response, narrow cast
  * keeps runtime correct while satisfying TS.
  */
 function priceIdFromInvoice(invoice: Stripe.Invoice): string | null {
@@ -212,7 +212,7 @@ function priceIdFromInvoice(invoice: Stripe.Invoice): string | null {
 
 /**
  * Best-effort plan name lookup for invoice-triggered emails.  Falls back
- * to a generic label so the subject line never reads "$12 — undefined".
+ * to a generic label so the subject line never reads "$12, undefined".
  */
 function planNameFromInvoice(invoice: Stripe.Invoice): string {
   const resolved = resolvePlanFromPriceId(priceIdFromInvoice(invoice));
@@ -245,7 +245,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 }
 
 /**
- * invoice.paid — fires on successful renewal charges AND on the initial
+ * invoice.paid, fires on successful renewal charges AND on the initial
  * subscription charge.  We dedupe against the initial case by only
  * emailing when billing_reason === "subscription_cycle" (scheduled
  * renewal).  Initial checkouts are already covered by the welcome email
@@ -275,7 +275,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 }
 
 /**
- * invoice.upcoming — Stripe sends this roughly 7 days before a renewal.
+ * invoice.upcoming, Stripe sends this roughly 7 days before a renewal.
  * Pure heads-up: gives the user a window to cancel / downgrade / swap
  * cards before money moves.
  */
@@ -306,7 +306,7 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// v0.1.8 — payment_intent.succeeded → boost_credits ledger
+// v0.1.8, payment_intent.succeeded → boost_credits ledger
 // ───────────────────────────────────────────────────────────────────
 //
 // One-time boost top-ups (session_boost, weekly_boost, voice_minute_pack,
@@ -322,11 +322,11 @@ async function handleInvoiceUpcoming(invoice: Stripe.Invoice) {
 async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
   const meta = intent.metadata ?? {};
 
-  // ── v0.1.9 — credits top-up ────────────────────────────────────────
+  // ── v0.1.9, credits top-up ────────────────────────────────────────
   // metadata.kind === "credits" means the desktop billing panel asked
   // /api/desktop/billing/credits to mint a PaymentIntent for $N. On
   // success we credit the user's running balance (1 USD = 100 credits)
-  // via the addCredits journal — idempotent on the payment_intent id.
+  // via the addCredits journal, idempotent on the payment_intent id.
   const kind = meta.kind ?? "";
   if (kind === "credits") {
     const userEmail = (meta.email ?? meta.userEmail ?? meta.user_email) as string | undefined;
@@ -353,7 +353,7 @@ async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
   // session_boost / weekly_boost still flow through boost_credits so
   // the existing gating layer keeps working. The other v0.1.8 keys
   // (voice_minute_pack, image_credit_pack, copilot_time_pack) were
-  // dropped in v0.1.9 — credits cover those features now.
+  // dropped in v0.1.9, credits cover those features now.
   const purchaseKind = meta.purchaseKind ?? meta.purchase_kind;
   if (purchaseKind !== "one_time_boost") return; // Not a boost charge.
 
@@ -368,7 +368,7 @@ async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
     return;
   }
   if (!isDatabaseConfigured()) {
-    console.warn("[stripe webhook] boost credit dropped — Supabase not configured.");
+    console.warn("[stripe webhook] boost credit dropped, Supabase not configured.");
     return;
   }
 
@@ -386,7 +386,7 @@ async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
   if (error) {
     // Postgres unique_violation = "23505". Treat as success: the
     // credit was already inserted by an earlier delivery of the same
-    // event. Anything else, log and swallow — we still want to 200.
+    // event. Anything else, log and swallow, we still want to 200.
     if ((error as { code?: string }).code === "23505") return;
     console.error("[stripe webhook] boost_credits insert failed:", error.message);
     return;
@@ -401,10 +401,10 @@ async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
 //
 // Behaviour:
 //   • Missing STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET → 503 with a
-//     clear error. Lets dev environments breathe — the dashboard test
+//     clear error. Lets dev environments breathe, the dashboard test
 //     button surfaces the misconfiguration instead of crashing.
 //   • Bad signature → 400 (the only case where we want Stripe to give
-//     up retrying — the secret is wrong, retries won't fix it).
+//     up retrying, the secret is wrong, retries won't fix it).
 //   • Anything else (handler errors, DB hiccups) → still 200 so we
 //     don't earn ourselves a Stripe retry storm against our own bugs.
 export async function POST(request: Request) {
@@ -452,7 +452,7 @@ export async function POST(request: Request) {
 
       // Stripe sends both `invoice.paid` (newer) and
       // `invoice.payment_succeeded` (legacy alias) for the same
-      // success — treat them identically so dashboard configs that
+      // success, treat them identically so dashboard configs that
       // selected either name still work.
       case "invoice.paid":
       case "invoice.payment_succeeded":

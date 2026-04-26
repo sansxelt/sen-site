@@ -51,7 +51,7 @@ export function UpdatePaymentMethodModal({ onClose, onSuccess, publishableKey }:
 
   const stripeP = useMemo(() => stripePromise(publishableKey), [publishableKey]);
 
-  // Portal target guard — document.body only exists client-side.
+  // Portal target guard, document.body only exists client-side.
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 

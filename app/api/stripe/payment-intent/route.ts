@@ -109,7 +109,7 @@ export async function POST(request: Request) {
 
   const email = session.user.email.toLowerCase();
 
-  // v0.1.16 — Server-side guard against buying an addon that the
+  // v0.1.16, Server-side guard against buying an addon that the
   // user's current plan already includes. The billing UI hides the
   // buy button via planIncludesAddon, but a direct API hit would
   // still get processed and silently double-charge. Block here.
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
         );
       }
     } catch (err) {
-      // Plan lookup failure is non-fatal — fall through and let the
+      // Plan lookup failure is non-fatal, fall through and let the
       // existing Stripe path handle it. Worst case the user gets a
       // useful error from Stripe; best case they're a free user with
       // no inclusions to enforce.
@@ -140,10 +140,10 @@ export async function POST(request: Request) {
 
     // ── Addon on top of existing subscription ────────────────────────
     if (addonKey) {
-      // v0.1.16 r9 — Two distinct addon flows:
+      // v0.1.16 r9, Two distinct addon flows:
       //   ONE-TIME boosts (session_boost, weekly_boost): the Stripe
       //     price is type=one_time. Cannot be added as a subscription
-      //     item — has to be a separate PaymentIntent. Webhook then
+      //     item, has to be a separate PaymentIntent. Webhook then
       //     credits boost_credits via the existing one_time_boost
       //     branch in /api/stripe/webhook.
       //   RECURRING addons (copilot_pro_pack, power_pack): Stripe
@@ -192,8 +192,8 @@ export async function POST(request: Request) {
         );
       }
 
-      // Recurring addon — add to the existing subscription.
-      // v0.1.16 — Require a default payment method on file BEFORE
+      // Recurring addon, add to the existing subscription.
+      // v0.1.16, Require a default payment method on file BEFORE
       // attaching the subscription item. Without this, Stripe happily
       // adds the item to the subscription even with no card; the
       // user sees the addon flip to "Active" and gets the cap-lift
@@ -232,7 +232,7 @@ export async function POST(request: Request) {
 
     // ── Plan purchase: create incomplete subscription ───────────────
     // Persist the user's selection in Supabase.  Wrap in try/catch so a
-    // Supabase misconfiguration never blocks the Stripe payment — the
+    // Supabase misconfiguration never blocks the Stripe payment, the
     // webhook will sync the final state anyway.
     try {
       await upsertSubscriptionSelection(email, {
@@ -262,7 +262,7 @@ export async function POST(request: Request) {
     if (!secret) {
       console.error("[payment-intent] no client_secret on subscription", subscription.id);
       return NextResponse.json(
-        { error: "Stripe did not return a client secret. Check the Stripe dashboard — subscription may have been created but requires manual cleanup." },
+        { error: "Stripe did not return a client secret. Check the Stripe dashboard, subscription may have been created but requires manual cleanup." },
         { status: 500 },
       );
     }

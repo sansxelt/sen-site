@@ -28,7 +28,7 @@ function readFlight(): Record<string, FlightEntry> {
 }
 
 /**
- * Floating "Back to chat — generating..." pill, mounted at the root
+ * Floating "Back to chat, generating..." pill, mounted at the root
  * layout level so it shows up on every page including marketing.
  * Only visible when:
  *   1. There's at least one in-flight thread in localStorage, AND
@@ -51,7 +51,7 @@ export function InflightBackToChat() {
         setFlightId(null);
         return;
       }
-      // Pick the most recently started one — that's what the user
+      // Pick the most recently started one, that's what the user
       // most likely wants to jump back to.
       let mostRecent: { id: string; startedAt: number } | null = null;
       for (const [id, v] of Object.entries(flight)) {
@@ -79,7 +79,7 @@ export function InflightBackToChat() {
 
   if (!flightId) return null;
   // On /app the user is already in the workspace and can see the
-  // active generation directly — no need for the floating pill.
+  // active generation directly, no need for the floating pill.
   if (pathname === "/app" || pathname.startsWith("/app/")) return null;
 
   return (
@@ -89,7 +89,7 @@ export function InflightBackToChat() {
       title="Jump back to the chat that's generating"
     >
       <span className="inflight-back-dot" aria-hidden />
-      <span className="inflight-back-text">Generating — back to chat</span>
+      <span className="inflight-back-text">Generating, back to chat</span>
     </Link>
   );
 }

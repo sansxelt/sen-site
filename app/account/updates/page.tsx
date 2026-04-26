@@ -85,7 +85,7 @@ export default function AccountUpdatesPage() {
           <p className="mt-2 text-sm text-neutral-400">
             Published {desktopLatestShippedDateLabel}. This is the build the
             auto-update feed is currently serving to existing installs. Public
-            downloads are paused — no ETA on reopening.
+            downloads are paused, no ETA on reopening.
           </p>
         </div>
 

@@ -19,7 +19,7 @@ export const runtime = "nodejs";
  * by treating each addon purchase as a single PayPal payment that
  * activates the addon for one billing cycle. Works for both one-time
  * boosts (session_boost, weekly_boost) and recurring addons
- * (copilot_pro_pack, power_pack — billed as 1-month activations).
+ * (copilot_pro_pack, power_pack, billed as 1-month activations).
  */
 export async function POST(request: Request) {
   if (!isPaypalConfigured()) {
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
   const email = session.user.email.toLowerCase();
 
-  // v0.1.16 — Same plan-inclusion guard as the Stripe path. Don't
+  // v0.1.16, Same plan-inclusion guard as the Stripe path. Don't
   // let PayPal create an order for an addon the user's plan already
   // bundles. The UI hides this case, but a direct API hit would
   // otherwise charge them for something they already get.

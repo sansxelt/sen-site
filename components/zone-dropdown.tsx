@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-// Header dropdown — primary product CTA that splits into the two
+// Header dropdown, primary product CTA that splits into the two
 // real surfaces (workshop + platform). Click the button to open;
 // click outside or hit Escape to close. Click the link to navigate.
 //
@@ -85,7 +85,7 @@ export function ZoneDropdown({ signedIn }: Props) {
                 chat.sansxel.ai
               </div>
               <div className="mt-1 text-xs leading-5 text-neutral-400">
-                The product itself — chat, voice, files, image gen.
+                The product itself, chat, voice, files, image gen.
               </div>
             </div>
             <span aria-hidden className="mt-1 text-xs text-neutral-600">↗</span>
@@ -106,7 +106,7 @@ export function ZoneDropdown({ signedIn }: Props) {
                 platform.sansxel.ai
               </div>
               <div className="mt-1 text-xs leading-5 text-neutral-400">
-                Developer console — API keys, docs, usage.
+                Developer console, API keys, docs, usage.
               </div>
             </div>
             <span aria-hidden className="mt-1 text-xs text-neutral-600">↗</span>

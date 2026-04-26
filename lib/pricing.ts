@@ -7,21 +7,21 @@ export type PricingPlanKey =
   | "enterprise";
 
 export type BillingAddonKey =
-  // v0.1.12 — memory_boost / api_boost / key_pack removed (no Stripe
+  // v0.1.12, memory_boost / api_boost / key_pack removed (no Stripe
   // products were ever created for them; the buttons rendered as
   // buyable but every click 500'd "no price configured").
-  // v0.1.4 monetization — recurring add-on packs (monthly/yearly).
-  // v0.1.9 dropped voice_pack + image_pack — those features are now
+  // v0.1.4 monetization, recurring add-on packs (monthly/yearly).
+  // v0.1.9 dropped voice_pack + image_pack, those features are now
   // covered by the credit ledger (lib/credits.ts). Copilot Pro Pack
   // and Power Pack stay as real Stripe subscriptions.
   | "copilot_pro_pack"
   | "power_pack"
-  // v0.1.4 monetization — one-time top-ups. These are NOT subscription
-  // items — payment-intent route handles them via Stripe checkout in
+  // v0.1.4 monetization, one-time top-ups. These are NOT subscription
+  // items, payment-intent route handles them via Stripe checkout in
   // mode: "payment" (or a one-shot PaymentIntent). They still get
   // priced through STRIPE_PRICES so the same price-id lookup works.
   // v0.1.9 dropped voice_minute_pack / image_credit_pack /
-  // copilot_time_pack — replaced by buy-credits flow.
+  // copilot_time_pack, replaced by buy-credits flow.
   | "session_boost"
   | "weekly_boost";
 
@@ -150,7 +150,7 @@ export const pricingPlans: PricingPlan[] = [
     note: "Richer create workflows",
     points: [
       "Everything in Core",
-      "Copilot Pro Pack included — unlimited chat",
+      "Copilot Pro Pack included, unlimited chat",
       "Stronger visual output depth",
       "Larger input and file handling",
     ],
@@ -236,20 +236,20 @@ export const pricingPlans: PricingPlan[] = [
 ];
 
 export const billingAddons: BillingAddon[] = [
-  // v0.1.12 — Memory Boost / API Boost / Key Pack removed: never had
+  // v0.1.12, Memory Boost / API Boost / Key Pack removed: never had
   // Stripe products created, so the buttons rendered as buyable but
   // every click 500'd with "no price configured." Cleaner to delete
   // the entries than to env-gate dead UI.
   // ──────────────────────────────────────────────────────────────────
-  // v0.1.4 monetization — recurring add-on packs.
+  // v0.1.4 monetization, recurring add-on packs.
   // Stripe products/prices need to be created in the dashboard and
   // wired through STRIPE_PRICE_<KEY>_MONTHLY / _YEARLY env vars.
-  // v0.1.9 — Voice Pack + Image Pack were dropped. Voice / image usage
+  // v0.1.9, Voice Pack + Image Pack were dropped. Voice / image usage
   // is now covered by the credit ledger (lib/credits.ts).
   // ──────────────────────────────────────────────────────────────────
   {
     ctaLabel: "Add Copilot Pro Pack",
-    description: "Unlimited chat + copilot — no weekly cap.",
+    description: "Unlimited chat + copilot, no weekly cap.",
     key: "copilot_pro_pack",
     monthlyLabel: "$12 / month",
     monthlyValue: 12,
@@ -258,13 +258,13 @@ export const billingAddons: BillingAddon[] = [
     points: [
       "Unlimited chat requests",
       "Unlimited copilot asks",
-      "Same fast tier — no silent throttle",
+      "Same fast tier, no silent throttle",
     ],
     yearlyLabel: "$120 / year",
   },
   {
     ctaLabel: "Add Power Pack",
-    description: "Unlimited chat + image + voice — no weekly cap on anything.",
+    description: "Unlimited chat + image + voice, no weekly cap on anything.",
     key: "power_pack",
     monthlyLabel: "$25 / month",
     monthlyValue: 25,
@@ -273,12 +273,12 @@ export const billingAddons: BillingAddon[] = [
     points: [
       "Includes Copilot Pro Pack",
       "Unlimited image generation",
-      "Unlimited voice — talk + transcribe",
+      "Unlimited voice, talk + transcribe",
     ],
     yearlyLabel: "$240 / year",
   },
   // ──────────────────────────────────────────────────────────────────
-  // v0.1.4 monetization — one-time boost top-ups.
+  // v0.1.4 monetization, one-time boost top-ups.
   // Charged via a single Stripe PaymentIntent (mode: "payment" via
   // checkout.sessions.create in the future, but the desktop app uses
   // an inline PaymentIntent here so the user stays inside the app).
@@ -303,21 +303,21 @@ export const billingAddons: BillingAddon[] = [
     note: "One-time",
     points: ["+500 weekly requests", "Resets at end of week"],
   },
-  // v0.1.9 — Voice Minute Pack / Image Credit Pack / Copilot Time Pack
+  // v0.1.9, Voice Minute Pack / Image Credit Pack / Copilot Time Pack
   // were dropped in favour of the flexible credit ledger. Users buy a
   // dollar balance and each feature burns credits at
   // CREDIT_COSTS[kind] (see lib/credits.ts).
 ];
 
-// v0.1.16 — Plans that already INCLUDE the value of recurring addons.
+// v0.1.16, Plans that already INCLUDE the value of recurring addons.
 // Pro / Teams / Enterprise have unlimited weekly chat + image, so the
 // Copilot Pro Pack and Power Pack don't add anything they don't
 // already get.
 //
-// Plus ($20/mo) includes Copilot Pro Pack ($12/mo standalone) — the
+// Plus ($20/mo) includes Copilot Pro Pack ($12/mo standalone), the
 // math leaves $8 for the base Plus value which lines up with the
 // step up from Core ($12/mo). Power Pack ($25/mo) is NOT included
-// in Plus because it costs more than Plus does — bundling it would
+// in Plus because it costs more than Plus does, bundling it would
 // make Plus a strict pricing arbitrage over Power Pack alone.
 //
 // Billing UI shows included addons as "Owned with [Plan]" instead of
@@ -375,7 +375,7 @@ export function getPlanActionHref(plan: PricingPlan) {
 }
 
 // User-facing plan name. Internal keys ("apprentice", "studio") look
-// confusing in error messages — every other surface shows "Core" /
+// confusing in error messages, every other surface shows "Core" /
 // "Plus" so the cap-blocked errors should match. Single source of
 // truth so client + server agree.
 export function planDisplayName(key: string | null | undefined): string {

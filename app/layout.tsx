@@ -14,7 +14,7 @@ const BASE = "https://www.sansxel.ai";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
-    default: "sansxel — the AI workshop for makers",
+    default: "sansxel, the AI workshop for makers",
     template: "%s | sansxel",
   },
   description:
@@ -41,14 +41,14 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE,
     siteName: "sansxel",
-    title: "sansxel — the AI workshop for makers",
+    title: "sansxel, the AI workshop for makers",
     description:
       "Talk, type, drop files, generate images, search live. One workshop for indie devs, designers, students, and creators who ship.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "sansxel — the AI workshop for makers",
+    title: "sansxel, the AI workshop for makers",
     description:
       "Talk, type, drop files, generate images, search live. One workshop for indie devs, designers, students, and creators who ship.",
     images: ["/og-image.png"],
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   // Note: app/icon.png and app/apple-icon.png are auto-detected by
   // Next.js 16 and served at hashed URLs (e.g. /icon?abc123) so the
   // browser cache busts on every change. Manually overriding `icons`
-  // here forces a non-hashed /icon.png path and breaks that — leave
+  // here forces a non-hashed /icon.png path and breaks that, leave
   // it unset and let the file convention do its job.
 };
 
@@ -90,7 +90,7 @@ export default async function RootLayout({
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "The AI workshop for makers. Chat, voice, drag-drop, image generation, live web search, persistent memory — all in one workspace. Web for taste, desktop for shipping.",
+                "The AI workshop for makers. Chat, voice, drag-drop, image generation, live web search, persistent memory, all in one workspace. Web for taste, desktop for shipping.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",

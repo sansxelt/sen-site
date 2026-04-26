@@ -68,7 +68,7 @@ export default async function SubtopicPage({ params }: Props) {
           {articles.length === 0 ? (
             <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
               <p className="text-sm text-neutral-400">
-                No articles here yet — coming soon.
+                No articles here yet, coming soon.
               </p>
               <Link
                 href={`/learn/topics/${t.key}`}

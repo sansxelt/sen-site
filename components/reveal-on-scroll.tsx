@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 // Watches every [data-reveal] in the DOM, adds .is-revealed when it
-// scrolls into view. One-shot — the class doesn't get removed when
+// scrolls into view. One-shot, the class doesn't get removed when
 // the element scrolls back out, so the reveal only plays once.
 //
 // Resilience pass: any element that's already on-screen at mount

@@ -15,12 +15,12 @@ type Props<T extends ElementType = "div"> = {
 };
 
 /**
- * ScrollReveal — wraps its children in a div that fades + translates
+ * ScrollReveal, wraps its children in a div that fades + translates
  * up on viewport entry.  One-shot (unobserves after reveal) so scrolling
  * back up doesn't re-hide the content.
  *
  * Pair multiple instances with incrementing `delay` props for a
- * staggered cascade — e.g. grid items that appear 80ms apart.
+ * staggered cascade, e.g. grid items that appear 80ms apart.
  *
  * The actual transition is defined in globals.css under
  * [data-hx-reveal] so reduced-motion users get zero animation.

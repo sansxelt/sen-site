@@ -145,7 +145,7 @@ export async function POST(request: Request) {
   }
   const safeTopic = topic.slice(0, 400);
 
-  // Plan gate — Plus / Pro / Teams / Enterprise only.
+  // Plan gate, Plus / Pro / Teams / Enterprise only.
   const plan = await getPlanForEmail(email);
   const decision = decideDeepResearchRequest({ plan });
   if (decision.kind === "blocked") {

@@ -12,7 +12,7 @@ async function emailFromRequest(request: Request): Promise<string | null> {
   return session?.user?.email ?? null;
 }
 
-// GET /api/threads — list the user's saved chat threads (newest first).
+// GET /api/threads, list the user's saved chat threads (newest first).
 export async function GET(request: Request) {
   const email = await emailFromRequest(request);
   if (!email) return NextResponse.json({ threads: [] }, { status: 401 });
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
   );
 }
 
-// POST /api/threads — create a new empty thread. Returns { thread }.
+// POST /api/threads, create a new empty thread. Returns { thread }.
 export async function POST(request: Request) {
   const email = await emailFromRequest(request);
   if (!email) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });

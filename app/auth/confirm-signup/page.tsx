@@ -48,7 +48,7 @@ export default async function ConfirmSignupPage({
           </h1>
           <p className="mt-3 text-sm leading-6 text-neutral-300">
             Links from the sign-in bounce are short-lived for security.
-            Head back to sign in and try again — it takes about ten seconds.
+            Head back to sign in and try again, it takes about ten seconds.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
@@ -88,7 +88,7 @@ export default async function ConfirmSignupPage({
 
         <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4 text-xs leading-6 text-neutral-400">
           If you previously deleted this account, creating it again will start
-          fresh — your old data isn&apos;t restored.
+          fresh, your old data isn&apos;t restored.
         </div>
 
         <ConfirmSignupForm
@@ -99,7 +99,7 @@ export default async function ConfirmSignupPage({
         />
 
         <p className="mt-6 border-t border-white/10 pt-6 text-xs leading-5 text-neutral-500">
-          Didn&apos;t mean to do this? Pick Cancel below — no account is created
+          Didn&apos;t mean to do this? Pick Cancel below, no account is created
           until you confirm.
         </p>
       </div>

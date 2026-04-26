@@ -64,7 +64,7 @@ const scenarios = [
   {
     word: "creating",
     accent: "sky" as AccentKey,
-    body: "sansxel rebuilds the exact creative moment where you were shaping the work — so returning feels like continuing, not reconstructing from scratch.",
+    body: "sansxel rebuilds the exact creative moment where you were shaping the work, so returning feels like continuing, not reconstructing from scratch.",
     layout: "session" as const,
     accentLabel: "Creation recall",
     header: "Workspace",
@@ -80,7 +80,7 @@ const scenarios = [
   {
     word: "debugging",
     accent: "rose" as AccentKey,
-    body: "sansxel traces what you were chasing — the file, the line, the message — so you can pick up the exact thread without rerunning everything.",
+    body: "sansxel traces what you were chasing, the file, the line, the message, so you can pick up the exact thread without rerunning everything.",
     layout: "trace" as const,
     accentLabel: "Debug trace",
     header: "Console",
@@ -90,14 +90,14 @@ const scenarios = [
       { line: "auth.ts:93", status: "pass" as const, msg: "Token validation passed" },
       { line: "lib/user-profile.ts:61", status: "pass" as const, msg: "Profile lookup succeeded" },
       { line: "api/keys/route.ts:29", status: "warn" as const, msg: "Missing env var detected" },
-      { line: "lib/email.ts:104", status: "fail" as const, msg: "Client not initialised — skipping send" },
+      { line: "lib/email.ts:104", status: "fail" as const, msg: "Client not initialised, skipping send" },
     ],
     errorMsg: "RESEND_API_KEY is not defined in the current environment.",
   },
   {
     word: "planning",
     accent: "amber" as AccentKey,
-    body: "sansxel maps where momentum was clear and where it stalled — so the plan stays readable after you step away and come back to it days later.",
+    body: "sansxel maps where momentum was clear and where it stalled, so the plan stays readable after you step away and come back to it days later.",
     layout: "roadmap" as const,
     accentLabel: "Planning signals",
     header: "Roadmap",
@@ -117,7 +117,7 @@ const scenarios = [
   {
     word: "analyzing",
     accent: "cyan" as AccentKey,
-    body: "When work turns analytical, sansxel shifts with it — surfacing the signals, retention, and revenue moves that actually changed while you were looking.",
+    body: "When work turns analytical, sansxel shifts with it, surfacing the signals, retention, and revenue moves that actually changed while you were looking.",
     layout: "metrics" as const,
     accentLabel: "Analysis signals",
     header: "Signals",
@@ -155,7 +155,7 @@ const scenarios = [
   {
     word: "building",
     accent: "blue" as AccentKey,
-    body: "Build sessions stay readable. sansxel shows what files you touched, why you switched contexts, and exactly where to pick back up — no replaying needed.",
+    body: "Build sessions stay readable. sansxel shows what files you touched, why you switched contexts, and exactly where to pick back up, no replaying needed.",
     layout: "codebase" as const,
     accentLabel: "Build recall",
     header: "Workspace",
@@ -195,7 +195,7 @@ const scenarios = [
       { name: "Auth modal", visible: false },
       { name: "Pricing cards", visible: true },
     ],
-    frameTitle: "Homepage — Desktop · 1440px",
+    frameTitle: "Homepage, Desktop · 1440px",
   },
   {
     word: "researching",
@@ -207,10 +207,10 @@ const scenarios = [
     prompt: "What sources was I connecting while researching?",
     promptLabel: "Resume research",
     sources: [
-      { domain: "arxiv.org", title: "Attention Is All You Need — Vaswani et al." },
+      { domain: "arxiv.org", title: "Attention Is All You Need, Vaswani et al." },
       { domain: "openai.com", title: "Memory and new controls for ChatGPT" },
       { domain: "anthropic.com", title: "Claude's approach to context windows" },
-      { domain: "notion.so", title: "Personal notes — AI memory product patterns" },
+      { domain: "notion.so", title: "Personal notes, AI memory product patterns" },
     ],
     highlight: "All three papers converge on retrieval-augmented approaches rather than extended context alone.",
   },
@@ -231,12 +231,12 @@ const scenarios = [
       { name: "Production", status: "waiting" as const },
     ],
     testSummary: "42 passed · 0 failed · 1 skipped",
-    deployTarget: "vercel — main → sansxel.ai",
+    deployTarget: "vercel, main → sansxel.ai",
   },
   {
     word: "managing",
     accent: "orange" as AccentKey,
-    body: "Team work is tracked across people, not just tasks. sansxel surfaces what's blocked, what moved, and who needs context — without another standup.",
+    body: "Team work is tracked across people, not just tasks. sansxel surfaces what's blocked, what moved, and who needs context, without another standup.",
     layout: "kanban" as const,
     accentLabel: "Task snapshot",
     header: "Board",
@@ -262,7 +262,7 @@ const scenarios = [
     changes: "+482  −91",
     comments: [
       { file: "dashboard-nav.tsx", text: "Consider extracting icon components to a separate file for reuse." },
-      { file: "account/layout.tsx", text: "Sticky sidebar is correct — verify h-screen behaviour on Safari." },
+      { file: "account/layout.tsx", text: "Sticky sidebar is correct, verify h-screen behaviour on Safari." },
     ],
     approvalStatus: "1 approval · 2 comments pending",
   },
@@ -285,16 +285,16 @@ const scenarios = [
   {
     word: "studying",
     accent: "cyan" as AccentKey,
-    body: "Study sessions leave a trail. sansxel logs what you read, where you paused, and which concepts were forming — so picking back up takes seconds, not rereading.",
+    body: "Study sessions leave a trail. sansxel logs what you read, where you paused, and which concepts were forming, so picking back up takes seconds, not rereading.",
     layout: "notes" as const,
     accentLabel: "Study session",
     header: "Notes",
     prompt: "Where did I leave off and what was I building toward?",
     promptLabel: "Resume studying",
     sections: [
-      { title: "Ch. 4 — Context windows", progress: 80 },
-      { title: "Ch. 5 — Retrieval strategies", progress: 35 },
-      { title: "Ch. 6 — Memory architectures", progress: 0 },
+      { title: "Ch. 4, Context windows", progress: 80 },
+      { title: "Ch. 5, Retrieval strategies", progress: 35 },
+      { title: "Ch. 6, Memory architectures", progress: 0 },
     ],
     highlight: "Sparse attention patterns reduce quadratic complexity to near-linear for long sequences.",
     cards: ["What is RAG?", "Attention head roles", "KV cache tradeoffs"],
@@ -319,7 +319,7 @@ const scenarios = [
   {
     word: "presenting",
     accent: "blue" as AccentKey,
-    body: "Presentations have live state. sansxel holds the slide you were on, the notes you were pulling from, and the questions that surfaced — so the follow-through stays sharp.",
+    body: "Presentations have live state. sansxel holds the slide you were on, the notes you were pulling from, and the questions that surfaced, so the follow-through stays sharp.",
     layout: "deck" as const,
     accentLabel: "Deck state",
     header: "Presentation",
@@ -332,7 +332,7 @@ const scenarios = [
   {
     word: "interviewing",
     accent: "indigo" as AccentKey,
-    body: "Interview signals fade fast. sansxel captures the answers, the gaps, and the reasoning behind the score — so the decision stays grounded when you loop in the team.",
+    body: "Interview signals fade fast. sansxel captures the answers, the gaps, and the reasoning behind the score, so the decision stays grounded when you loop in the team.",
     layout: "eval" as const,
     accentLabel: "Eval notes",
     header: "Interview",
@@ -340,7 +340,7 @@ const scenarios = [
     promptLabel: "Review eval",
     candidate: "Jordan Lee · Senior Engineer",
     questions: [
-      { q: "System design — distributed cache", score: 4 },
+      { q: "System design, distributed cache", score: 4 },
       { q: "Debugging a live production issue", score: 5 },
       { q: "Cross-team communication example", score: 3 },
     ],
@@ -349,14 +349,14 @@ const scenarios = [
   {
     word: "investing",
     accent: "cyan" as AccentKey,
-    body: "Markets move while you work. sansxel captures the signals, position context, and the thesis you were forming — so conviction doesn't scatter between sessions.",
+    body: "Markets move while you work. sansxel captures the signals, position context, and the thesis you were forming, so conviction doesn't scatter between sessions.",
     layout: "portfolio" as const,
     accentLabel: "Portfolio signals",
     header: "Portfolio",
     prompt: "What signals changed since I last checked in?",
     promptLabel: "Review signals",
     positions: [
-      { ticker: "NVDA", change: "+3.4%", note: "Earnings beat — GPU demand holding" },
+      { ticker: "NVDA", change: "+3.4%", note: "Earnings beat, GPU demand holding" },
       { ticker: "MSFT", change: "+1.1%", note: "Azure growth inline with estimates" },
       { ticker: "BTC",  change: "-2.8%", note: "Macro pressure, still above support" },
     ],
@@ -365,7 +365,7 @@ const scenarios = [
   {
     word: "hiring",
     accent: "orange" as AccentKey,
-    body: "Pipelines move fast and lose signal. sansxel keeps the candidate state, the blocker, and the next step visible — so nothing gets dropped between rounds.",
+    body: "Pipelines move fast and lose signal. sansxel keeps the candidate state, the blocker, and the next step visible, so nothing gets dropped between rounds.",
     layout: "candidates" as const,
     accentLabel: "Hiring pipeline",
     header: "Candidates",
@@ -377,13 +377,13 @@ const scenarios = [
       { label: "Interview", count: 4  },
       { label: "Offer",     count: 1  },
     ],
-    topCandidate: "Jordan Lee — final round pending feedback",
+    topCandidate: "Jordan Lee, final round pending feedback",
     blocker: "Eng panel slot not confirmed for Thursday",
   },
   {
     word: "onboarding",
     accent: "sky" as AccentKey,
-    body: "Onboarding is context-dense. sansxel tracks who's ahead, what's blocked, and what each person needs next — so the first few weeks stay structured without constant check-ins.",
+    body: "Onboarding is context-dense. sansxel tracks who's ahead, what's blocked, and what each person needs next, so the first few weeks stay structured without constant check-ins.",
     layout: "progress" as const,
     accentLabel: "Onboarding state",
     header: "Team progress",
@@ -399,14 +399,14 @@ const scenarios = [
   {
     word: "networking",
     accent: "violet" as AccentKey,
-    body: "Relationship context fades. sansxel remembers who you met where, what you knew when, and what the next move was — so follow-through happens before the window closes.",
+    body: "Relationship context fades. sansxel remembers who you met where, what you knew when, and what the next move was, so follow-through happens before the window closes.",
     layout: "contacts" as const,
     accentLabel: "Contact context",
     header: "Connections",
     prompt: "Who needs a follow-up and what was the context?",
     promptLabel: "Review contacts",
     contacts: [
-      { name: "Jamie Chen",    context: "Met at Config — building ambient tooling at Linear",  last: "3d ago" },
+      { name: "Jamie Chen",    context: "Met at Config, building ambient tooling at Linear",  last: "3d ago" },
       { name: "Morgan Voss",   context: "Intro via Tyler. Interested in early access",          last: "1w ago" },
       { name: "Alex Rivera",   context: "Ex-Notion. Advising AI workspace startups",            last: "2w ago" },
     ],
@@ -415,7 +415,7 @@ const scenarios = [
   {
     word: "reading",
     accent: "rose" as AccentKey,
-    body: "Reading is thinking. sansxel holds the passage, the chapter, and the argument you were building around the text — so returning means continuing, not restarting.",
+    body: "Reading is thinking. sansxel holds the passage, the chapter, and the argument you were building around the text, so returning means continuing, not restarting.",
     layout: "book" as const,
     accentLabel: "Reading trail",
     header: "Reading",
@@ -423,14 +423,14 @@ const scenarios = [
     promptLabel: "Resume reading",
     title: "The Design of Everyday Things",
     author: "Don Norman",
-    chapter: "Ch. 5 — Human Error? No, Bad Design",
+    chapter: "Ch. 5, Human Error? No, Bad Design",
     progress: 64,
     highlight: "\"The mistake is not in the person but in the design that fails to account for human behaviour.\"",
   },
   {
     word: "testing",
     accent: "emerald" as AccentKey,
-    body: "Test failures have context. sansxel captures which suite was running, what failed, and the fix thread — so debugging picks up with full state intact, not from scratch.",
+    body: "Test failures have context. sansxel captures which suite was running, what failed, and the fix thread, so debugging picks up with full state intact, not from scratch.",
     layout: "suite" as const,
     accentLabel: "Test run",
     header: "Test suite",
@@ -442,12 +442,12 @@ const scenarios = [
       { name: "UI components",  passed: 44, failed: 0 },
     ],
     coverage: 78,
-    failingSummary: "api/keys/route.ts — missing header check on DELETE",
+    failingSummary: "api/keys/route.ts, missing header check on DELETE",
   },
   {
     word: "configuring",
     accent: "blue" as AccentKey,
-    body: "Config work is detail-dense. sansxel tracks what's wired, what's missing, and the last error — so environment debugging doesn't restart from scratch every time.",
+    body: "Config work is detail-dense. sansxel tracks what's wired, what's missing, and the last error, so environment debugging doesn't restart from scratch every time.",
     layout: "config" as const,
     accentLabel: "Config state",
     header: "Environment",
@@ -458,20 +458,20 @@ const scenarios = [
       { name: "Database", vars: [{ key: "SUPABASE_URL", ok: true }, { key: "SUPABASE_SERVICE_ROLE_KEY", ok: true }] },
       { name: "Email",    vars: [{ key: "RESEND_API_KEY", ok: false }] },
     ],
-    warning: "RESEND_API_KEY is missing — welcome emails will not send",
+    warning: "RESEND_API_KEY is missing, welcome emails will not send",
   },
   {
     word: "monitoring",
     accent: "rose" as AccentKey,
-    body: "Incidents have timelines. sansxel keeps the alert sequence, the signals you were watching, and the state you were in — so handoffs and post-mortems start with facts.",
+    body: "Incidents have timelines. sansxel keeps the alert sequence, the signals you were watching, and the state you were in, so handoffs and post-mortems start with facts.",
     layout: "alerts" as const,
     accentLabel: "Alert state",
     header: "Monitoring",
     prompt: "What was active and what changed while I was away?",
     promptLabel: "Check alerts",
     alerts: [
-      { severity: "warn" as const, msg: "API p99 latency up 18% — auth endpoints" },
-      { severity: "info" as const, msg: "Deploy completed — v0.4.2 live on production" },
+      { severity: "warn" as const, msg: "API p99 latency up 18%, auth endpoints" },
+      { severity: "info" as const, msg: "Deploy completed, v0.4.2 live on production" },
       { severity: "warn" as const, msg: "3 failed login attempts from the same IP" },
     ],
     uptime: "99.94%",
@@ -480,7 +480,7 @@ const scenarios = [
   {
     word: "finding",
     accent: "sky" as AccentKey,
-    body: "sansxel searches across everything on your machine — files, repos, open windows, settings panels — so 'where was I?' has a sharp answer in under a second.",
+    body: "sansxel searches across everything on your machine, files, repos, open windows, settings panels, so 'where was I?' has a sharp answer in under a second.",
     layout: "spotlight" as const,
     accentLabel: "Ambient search",
     header: "Finder",
@@ -505,7 +505,7 @@ const scenarios = [
       {
         label: "Windows",
         items: [
-          { iconType: "app", iconLabel: "VS",  name: "VS Code",      path: "auth.ts — sen-site",          meta: "active",  highlighted: false },
+          { iconType: "app", iconLabel: "VS",  name: "VS Code",      path: "auth.ts, sen-site",          meta: "active",  highlighted: false },
           { iconType: "sys", iconLabel: "⌘",   name: "Terminal",     path: "~/sen-site · npm run dev",    meta: "2 tabs",  highlighted: false },
         ],
       },
@@ -514,7 +514,7 @@ const scenarios = [
   {
     word: "locating",
     accent: "blue" as AccentKey,
-    body: "sansxel knows which repositories were active, what branch you were on, and which files you last touched — so you pick up exactly where the session ended.",
+    body: "sansxel knows which repositories were active, what branch you were on, and which files you last touched, so you pick up exactly where the session ended.",
     layout: "filetree" as const,
     accentLabel: "Repo finder",
     header: "Repository",
@@ -539,7 +539,7 @@ const scenarios = [
   {
     word: "exploring",
     accent: "violet" as AccentKey,
-    body: "sansxel maps every open app, window, and system panel during your session — so when you come back, the full picture of what was live is already waiting.",
+    body: "sansxel maps every open app, window, and system panel during your session, so when you come back, the full picture of what was live is already waiting.",
     layout: "sysfinder" as const,
     accentLabel: "PC context",
     header: "Session map",
@@ -549,7 +549,7 @@ const scenarios = [
       { name: "VS Code",   subtitle: "sen-site · hero-activity.tsx",  icon: "⬡", bg: "#0066B8", last: "3m ago"  },
       { name: "Chrome",    subtitle: "4 tabs · supabase.com active",  icon: "◉", bg: "#4285F4", last: "12m ago" },
       { name: "Terminal",  subtitle: "~/sen-site · npm run dev",       icon: "▸", bg: "#555",    last: "18m ago" },
-      { name: "Figma",     subtitle: "sansxel — landing page v2",      icon: "◈", bg: "#A259FF", last: "1h ago"  },
+      { name: "Figma",     subtitle: "sansxel, landing page v2",      icon: "◈", bg: "#A259FF", last: "1h ago"  },
     ],
     openFiles: "12 files · 3 apps",
     activeRepo: "sen-site · main",
@@ -741,7 +741,7 @@ function TraceLayout({ s }: { s: Extract<Scenario, { layout: "trace" }> }) {
             <div className="h-2.5 w-2.5 rounded-full bg-amber-400/50" />
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/30" />
           </div>
-          <span className="ml-2 font-mono text-[10px] text-neutral-600">sansxel — debug trace</span>
+          <span className="ml-2 font-mono text-[10px] text-neutral-600">sansxel, debug trace</span>
           <div className="sansxel-preview-pill ml-auto rounded-full border border-rose-400/25 bg-rose-400/10 px-2.5 py-0.5 text-[10px] text-rose-300">
             {s.accentLabel}
           </div>
@@ -1750,7 +1750,7 @@ function SpotlightLayout({ s }: { s: Extract<Scenario, { layout: "spotlight" }> 
         <span className="inline-block h-4 w-[1.5px] animate-pulse rounded-full bg-sky-300/70" />
       </div>
 
-      {/* Results — flat list, Spotlight style */}
+      {/* Results, flat list, Spotlight style */}
       <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-black/30">
         {s.groups.map((group, gi) => (
           <div key={group.label}>
@@ -1965,7 +1965,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   }, [go]);
 
   // Shuffle on mount + drive the interval.
-  // Pause on tab hide, restart on tab show — prevents catch-up burst on return.
+  // Pause on tab hide, restart on tab show, prevents catch-up burst on return.
   useEffect(() => {
     orderRef.current = shuffle(Array.from({ length: scenarios.length }, (_, i) => i));
 
@@ -1997,7 +1997,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
   const prev = prevIdx !== null ? scenarios[prevIdx] : null;
 
   // Incoming fades in immediately (0→1 over 180ms).
-  // Outgoing waits 50ms then fades out — old content stays fully visible
+  // Outgoing waits 50ms then fades out, old content stays fully visible
   // while new content builds up, so there's no dark gap at the midpoint.
   const textIn: React.CSSProperties = {
     animation: `sxTextIn ${ANIM_MS}ms cubic-bezier(0.22, 1, 0.36, 1) both`,
@@ -2016,7 +2016,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
 
   return (
     <>
-      {/* Keyframes injected once — no external CSS file needed */}
+      {/* Keyframes injected once, no external CSS file needed */}
       <style>{`
         @keyframes sxTextIn {
           from { opacity: 0; transform: translate3d(0, 18px, 0); filter: blur(6px); }
@@ -2045,7 +2045,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
 
         {/* Heading: static line + cycling verb. Words are gerunds
             (creating, debugging, designing) so the static line uses
-            "that's" — present continuous — so every rotation is
+            "that's", present continuous, so every rotation is
             grammatically clean: "The AI that's designing." */}
         <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl sm:leading-[1.05] lg:text-7xl">
           <span className="block">The AI that&rsquo;s</span>
@@ -2070,7 +2070,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
         </h1>
 
         {/*
-          Crossfading body — both paragraphs share a single grid cell so
+          Crossfading body, both paragraphs share a single grid cell so
           the container auto-sizes to whichever is taller (outgoing OR
           incoming).  No hardcoded min-height, so empty air never sits
           between the body text and the CTA.
@@ -2111,7 +2111,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           )}
         </div>
 
-        {/* In-development signal — sits under the CTAs on the left column
+        {/* In-development signal, sits under the CTAs on the left column
             so it rides with the hero text/buttons, not the preview panel. */}
         <div className="mt-5 flex">
           <div className="inline-flex max-w-full items-center gap-2 whitespace-nowrap rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-[11px] font-medium text-amber-100/90 sm:text-xs">
@@ -2119,20 +2119,20 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300/60" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
             </span>
-            <span className="truncate">In development — being built in the open</span>
+            <span className="truncate">In development, being built in the open</span>
           </div>
         </div>
 
       </div>
 
-      {/* ── Right side — hidden on mobile, shown lg+ ─────────────── */}
+      {/* ── Right side, hidden on mobile, shown lg+ ─────────────── */}
       <div className="hidden lg:flex lg:flex-col lg:gap-4">
 
-        {/* Callout — context setter above the panel */}
+        {/* Callout, context setter above the panel */}
         <div className="sansxel-preview-pressable flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
           <div className="min-w-0">
             <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Live preview</span>
-            <span className="text-sm text-neutral-400">— A fast sweep through writing, research, coding, and resume states. The full in-app flow goes deeper once you are inside.</span>
+            <span className="text-sm text-neutral-400">A fast sweep through writing, research, coding, and resume states. The full in-app flow goes deeper once you are inside.</span>
           </div>
           <Link
             href="/account"
@@ -2142,7 +2142,7 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           </Link>
         </div>
 
-        {/* Crossfading panel — fixed height so no scenario can shift the page */}
+        {/* Crossfading panel, fixed height so no scenario can shift the page */}
         <div className="relative" style={{ height: "556px" }}>
           {prev && (
             <div

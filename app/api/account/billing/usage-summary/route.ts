@@ -11,11 +11,11 @@ import { getActiveAddonKeys } from "../../../../../lib/active-addons";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../../lib/supabase-admin";
 import { isOneTimeBoost } from "../../../../../lib/pricing";
 
-// v0.1.16 — Single read for the billing-panel Credits section.
+// v0.1.16, Single read for the billing-panel Credits section.
 // Combines balance + weekly usage + any unconsumed one-time boost
 // credits (Session Boost / Weekly Boost) so the panel can show the
 // user's complete usage picture in one place without three separate
-// round-trips. Falls back gracefully on any failure — partial data
+// round-trips. Falls back gracefully on any failure, partial data
 // is fine for a status display.
 
 type Out = {
@@ -102,7 +102,7 @@ async function countUnconsumedBoosts(
     let session = 0;
     let weekly = 0;
     for (const row of data as Array<{ addon_key: string }>) {
-      // Only one-time boosts count as "remaining boosts" — recurring
+      // Only one-time boosts count as "remaining boosts", recurring
       // addon rows (Power Pack via PayPal etc.) shouldn't show up
       // here because they grant ongoing access, not single-use.
       if (!isOneTimeBoost(row.addon_key)) continue;

@@ -20,7 +20,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 /**
  * POST /api/auth/register
  *
- * Creates a **pending** signup — password hash is stashed in
+ * Creates a **pending** signup, password hash is stashed in
  * pending_signups along with a verification token.  An email with
  * that token goes out; the real user_credentials / user_profiles
  * rows only get created when /api/auth/verify consumes the token.
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Upsert the pending row — re-registering replaces any prior pending
+    // Upsert the pending row, re-registering replaces any prior pending
     // attempt + invalidates the old token.
     const { token, expiresAt } = await upsertPendingSignup({ email, password, name });
 
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     const hoursLeft = Math.max(1, Math.round((expiresAt.getTime() - Date.now()) / 3_600_000));
     const expiryLabel = hoursLeft === 1 ? "1 hour" : `${hoursLeft} hours`;
 
-    // Fire-and-forget — we don't want an email hiccup to roll back the
+    // Fire-and-forget, we don't want an email hiccup to roll back the
     // pending row.  User can resend from /auth/verify-email if needed.
     sendVerifyAccountEmail({
       email,

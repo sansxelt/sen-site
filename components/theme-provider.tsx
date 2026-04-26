@@ -53,7 +53,7 @@ export function setThemeChoice(choice: ThemeChoice) {
   window.localStorage.setItem(STORAGE_KEY, choice);
   applyTheme(choice);
   window.dispatchEvent(new CustomEvent("sansxel:theme:changed", { detail: choice }));
-  // v0.1.16 — Cross-device sync. Push to the server so the same
+  // v0.1.16, Cross-device sync. Push to the server so the same
   // preference is applied on the next sign-in from any device.
   // Fire-and-forget; failure just leaves the local copy in place.
   void fetch("/api/account/theme", {
@@ -61,7 +61,7 @@ export function setThemeChoice(choice: ThemeChoice) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ theme: choice }),
   }).catch(() => {
-    // ignore — server sync is best-effort
+    // ignore, server sync is best-effort
   });
 }
 
@@ -70,7 +70,7 @@ export function ThemeProvider() {
     const choice = getThemeChoice();
     applyTheme(choice);
 
-    // v0.1.16 — Pull the server-side preference and reconcile. If the
+    // v0.1.16, Pull the server-side preference and reconcile. If the
     // user picked Light on another device, this brings it across. Only
     // overrides local if they differ + the local one wasn't just set
     // (we use a timestamp guard to avoid clobbering an in-flight
@@ -89,7 +89,7 @@ export function ThemeProvider() {
         window.localStorage.setItem(STORAGE_KEY, data.theme);
         applyTheme(data.theme);
       } catch {
-        // ignore — sync is best-effort
+        // ignore, sync is best-effort
       }
     })();
 

@@ -92,7 +92,7 @@ export function BulletList({ items }: { items: ReactNode[] }) {
   );
 }
 
-// Placeholder "diagram" — a clean caption strip with a left accent
+// Placeholder "diagram", a clean caption strip with a left accent
 // bar. The old version centered a giant emoji which read juvenile.
 // `emoji` arg is now optional and rendered small inline only when
 // it's a clarifying flow notation like "📝 → 🧠 → 📝"; otherwise

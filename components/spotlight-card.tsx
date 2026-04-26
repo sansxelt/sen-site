@@ -9,7 +9,7 @@ type Props = HTMLAttributes<HTMLDivElement> & {
 };
 
 /**
- * SpotlightCard — the single signature effect off heist.lol.
+ * SpotlightCard, the single signature effect off heist.lol.
  *
  * Tracks pointer X/Y as CSS custom properties (--hx-x, --hx-y) on the
  * element.  A ::before pseudo-element (set up in globals.css under
@@ -18,7 +18,7 @@ type Props = HTMLAttributes<HTMLDivElement> & {
  * feeling.  Gated to (hover: hover) + (pointer: fine) so touch devices
  * don't show a permanent glow or dead hover state.
  *
- * Drop-in replacement for a regular card div — pass the same Tailwind
+ * Drop-in replacement for a regular card div, pass the same Tailwind
  * classes you'd use for the border/bg/padding, everything else works
  * the same.
  */

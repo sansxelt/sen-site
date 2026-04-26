@@ -1,9 +1,9 @@
-// v0.1.16 — AI-generated thread titles.
+// v0.1.16, AI-generated thread titles.
 //
 // Replaces the cheap "first user message snippet" heuristic with a
 // proper one-line summary, ChatGPT/Claude-style. Fired after the
 // first assistant turn lands. Uses the fast Haiku tier so it's
-// cheap + nearly free latency-wise. Fails open — if generation
+// cheap + nearly free latency-wise. Fails open, if generation
 // errors, the existing snippet title stays.
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -11,7 +11,7 @@ import { listMessages, renameThread } from "./chat-history";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY ?? "missing" });
 
-const TITLE_PROMPT = `You generate sidebar titles for chat conversations. Given the first exchange below, produce a SHORT title (3-7 words, no punctuation at the end, no quotes, no markdown). The title should describe what the user is actually working on or asking about — like a folder name a human would write. Skip filler words ("about", "regarding"). Capitalize like a heading.
+const TITLE_PROMPT = `You generate sidebar titles for chat conversations. Given the first exchange below, produce a SHORT title (3-7 words, no punctuation at the end, no quotes, no markdown). The title should describe what the user is actually working on or asking about, like a folder name a human would write. Skip filler words ("about", "regarding"). Capitalize like a heading.
 
 Examples:
 - User asks for stock data → "Live market check"

@@ -27,7 +27,7 @@ export function getStripePublishableKey(): string | null {
 // Plan × billing cycle → Stripe price ID
 // Each paid plan needs two products/prices in your Stripe dashboard:
 //   one for monthly, one for yearly.
-// Teams is per-seat — Stripe handles quantity at checkout.
+// Teams is per-seat, Stripe handles quantity at checkout.
 // Enterprise goes to /contact, no Stripe price needed.
 // ---------------------------------------------------------------------------
 
@@ -51,10 +51,10 @@ export const STRIPE_PRICES: Record<StripePricedItemKey, Partial<Record<BillingCy
   },
   teams: {},
   enterprise: {},
-  // v0.1.12 — memory_boost / api_boost / key_pack dropped (no Stripe
+  // v0.1.12, memory_boost / api_boost / key_pack dropped (no Stripe
   // products created; entries removed from billingAddons + BillingAddonKey).
-  // v0.1.4 monetization — recurring add-on packs (subscription items).
-  // v0.1.9 dropped voice_pack + image_pack — replaced by credit ledger.
+  // v0.1.4 monetization, recurring add-on packs (subscription items).
+  // v0.1.9 dropped voice_pack + image_pack, replaced by credit ledger.
   copilot_pro_pack: {
     monthly: process.env.STRIPE_PRICE_COPILOT_PRO_PACK_MONTHLY,
     yearly: process.env.STRIPE_PRICE_COPILOT_PRO_PACK_YEARLY,
@@ -63,12 +63,12 @@ export const STRIPE_PRICES: Record<StripePricedItemKey, Partial<Record<BillingCy
     monthly: process.env.STRIPE_PRICE_POWER_PACK_MONTHLY,
     yearly: process.env.STRIPE_PRICE_POWER_PACK_YEARLY,
   },
-  // v0.1.4 monetization — one-time boost top-ups (charged once).
+  // v0.1.4 monetization, one-time boost top-ups (charged once).
   // The "monthly" slot here holds the one-time price id by convention;
   // the payment-intent route checks isOneTimeBoost() and charges with
   // PaymentIntent instead of attaching as a subscription item.
   // v0.1.9 dropped voice_minute_pack / image_credit_pack /
-  // copilot_time_pack — those features burn credits now.
+  // copilot_time_pack, those features burn credits now.
   session_boost: {
     monthly: process.env.STRIPE_PRICE_SESSION_BOOST,
   },

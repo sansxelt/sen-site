@@ -70,7 +70,7 @@ export default function AccountDownloadPage() {
               </span>
               <span className="text-[11px] text-neutral-600 sm:max-w-[220px] sm:text-right">
                 Public installer is offline while we keep building. Existing installs
-                continue to auto-update. New installs reopen later — no ETA.
+                continue to auto-update. New installs reopen later, no ETA.
               </span>
             </div>
           </div>

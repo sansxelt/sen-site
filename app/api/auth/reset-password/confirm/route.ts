@@ -62,7 +62,7 @@ export async function POST(request: Request) {
 
     await consumeResetToken(token);
 
-    // "Your password was reset" confirmation — fire-and-forget.
+    // "Your password was reset" confirmation, fire-and-forget.
     // Look up the display name so the greeting reads "Hi <name>,"
     // instead of the anonymous "Hi,".
     const profile    = await getUserProfileByEmail(email);

@@ -27,7 +27,7 @@ export function AuthFlow({
         </div>
       </div>
 
-      {/* Trust — full width, centered below */}
+      {/* Trust, full width, centered below */}
       <div className="mt-6 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-10">
         <div className="mx-auto max-w-2xl text-center">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">

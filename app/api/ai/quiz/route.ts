@@ -14,7 +14,7 @@ const client = new Anthropic();
 // Body: { topic: string, count?: number }  (default count = 5)
 // Returns: { questions: Array<{ question, options, correct_index, explanation }> }
 //
-// One-shot quiz generator. Always Haiku — cheap and fast, the structure
+// One-shot quiz generator. Always Haiku, cheap and fast, the structure
 // is what matters here, not deep reasoning. JSON-only system prompt;
 // we strip code fences if the model adds them anyway.
 
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
   const safeTopic = topic.slice(0, 400);
   const count = clampCount(payload.count);
 
-  // Always Haiku — quizzes are structured + cheap, no need for the
+  // Always Haiku, quizzes are structured + cheap, no need for the
   // user's tier resolution beyond making sure they at least have fast.
   const plan = await getPlanForEmail(email);
   const descriptor = descriptorForTier(resolveTier(plan, "fast"));
@@ -107,7 +107,7 @@ Schema:
 }
 
 Rules:
-- Output ONLY the JSON object — no markdown, no fences, no preamble.
+- Output ONLY the JSON object, no markdown, no fences, no preamble.
 - Exactly 4 options per question.
 - correct_index is the 0-based index of the correct option.
 - explanation is one short sentence (under 30 words) explaining why.

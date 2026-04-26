@@ -65,7 +65,7 @@ export function planAllowsTier(plan: PlanKey, tier: ModelTier): boolean {
 // Falls back to the highest allowed tier ≤ preferred.
 export function resolveTier(plan: PlanKey, requested: ModelTier): ModelTier {
   if (planAllowsTier(plan, requested)) return requested;
-  // Walk down the list — registry is ordered fast → smart, so reverse.
+  // Walk down the list, registry is ordered fast → smart, so reverse.
   const allowed = [...MODEL_REGISTRY]
     .reverse()
     .find((m) => PLAN_RANK[plan] >= PLAN_RANK[m.min_plan]);

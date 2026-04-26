@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, useTransition, type ReactNode } from "reac
 
 const HEADER_OFFSET = "var(--site-header-height, 66px)";
 // Blackout composes with the CSS route-enter/route-exit keyframes in
-// globals.css — the keyframes (680ms / 220ms) handle the smooth slide,
+// globals.css, the keyframes (680ms / 220ms) handle the smooth slide,
 // the blackout just masks the DOM swap between pages. Keeping the
 // blackout tight makes route changes feel snappier without touching
 // the actual animation feel. In ≈ cover mount, out ≈ reveal, total

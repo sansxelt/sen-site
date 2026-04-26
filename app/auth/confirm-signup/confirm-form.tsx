@@ -33,7 +33,7 @@ export function ConfirmSignupForm({ email, provider, name, token }: Props) {
         return;
       }
 
-      // Profile exists now. Kick OAuth back off — the provider is still
+      // Profile exists now. Kick OAuth back off, the provider is still
       // logged in upstream, so this round-trip is silent for the user.
       await signIn(provider, { callbackUrl: "/account" });
     } catch (err) {

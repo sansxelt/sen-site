@@ -8,7 +8,7 @@ import { WebChat } from "@/components/web-chat";
 import { LeiShell } from "@/components/lei-shell";
 
 export const metadata: Metadata = {
-  title: "sansxel — workspace",
+  title: "sansxel, workspace",
   description: "Talk to sansxel-1 in your browser. Same brain as the desktop.",
 };
 
@@ -30,7 +30,7 @@ export default async function WebAppPage() {
   // Pull lightweight subscription info so the chat header can show
   // "expires in N days" if the plan is on its way out. We try Stripe
   // (authoritative on cancel_at_period_end) but fall back to the
-  // local subscription row if Stripe isn't reachable — never block
+  // local subscription row if Stripe isn't reachable, never block
   // the workspace render on this.
   let planExpiresAt: string | null = null;
   let planCanceling = false;
@@ -45,7 +45,7 @@ export default async function WebAppPage() {
       // Heuristic: if status is canceled/past_due, treat as canceling.
       planCanceling = sub?.status === "canceled" || sub?.status === "past_due";
     } catch {
-      // ignore — header just won't show expiry
+      // ignore, header just won't show expiry
     }
   }
 

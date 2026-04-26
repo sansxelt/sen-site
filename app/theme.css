@@ -19,7 +19,7 @@ html[data-theme="light"] body {
   color: #0a0a0c !important;
 }
 
-/* Nuclear override — target every common dark-bg surface that wraps
+/* Nuclear override, target every common dark-bg surface that wraps
    page content. site-shell's outer wrapper, the marketing header,
    and any direct body child carrying a dark Tailwind bg class get
    force-flipped. Without this the user sees a black canvas with a
@@ -38,7 +38,7 @@ html[data-theme="light"] .bg-neutral-900 {
 }
 html[data-theme="light"] header { backdrop-filter: blur(12px); }
 
-/* Marketing site shell — invert chrome */
+/* Marketing site shell, invert chrome */
 html[data-theme="light"] .bg-neutral-950 { background-color: #fafaf9 !important; }
 html[data-theme="light"] .bg-neutral-900 { background-color: #f5f5f4 !important; }
 html[data-theme="light"] .text-neutral-100,
@@ -56,7 +56,7 @@ html[data-theme="light"] .bg-black\/20   { background-color: rgba(0, 0, 0, 0.03)
 html[data-theme="light"] .border-white\/10 { border-color: rgba(0, 0, 0, 0.10) !important; }
 html[data-theme="light"] .border-white\/\[0\.08\] { border-color: rgba(0, 0, 0, 0.08) !important; }
 
-/* Workshop sidebar + chat surfaces — invert tints */
+/* Workshop sidebar + chat surfaces, invert tints */
 html[data-theme="light"] .webchat,
 html[data-theme="light"] .webchat-msg--assistant {
   color: #0a0a0c;
@@ -122,7 +122,7 @@ html[data-theme="light"] input[type="password"] {
   color: #0a0a0c;
 }
 
-/* Scrollbar — light variant */
+/* Scrollbar, light variant */
 html[data-theme="light"] *::-webkit-scrollbar-thumb {
   background: rgba(139, 92, 246, 0.30);
   background-clip: content-box;
@@ -134,7 +134,7 @@ html[data-theme="light"] *::-webkit-scrollbar-thumb:hover {
 
 /* ─── Comprehensive light coverage (v0.1.16 r2) ───────────────── */
 
-/* Marketing chrome details — borders/headers/cards we missed */
+/* Marketing chrome details, borders/headers/cards we missed */
 html[data-theme="light"] .border-white\/\[0\.06\] { border-color: rgba(0,0,0,0.06) !important; }
 html[data-theme="light"] .border-white\/\[0\.05\] { border-color: rgba(0,0,0,0.05) !important; }
 html[data-theme="light"] .border-white\/\[0\.04\] { border-color: rgba(0,0,0,0.04) !important; }
@@ -147,7 +147,7 @@ html[data-theme="light"] .bg-white\/\[0\.08\] { background-color: rgba(0,0,0,0.0
 html[data-theme="light"] .bg-black\/20 { background-color: rgba(0,0,0,0.025) !important; }
 html[data-theme="light"] .bg-neutral-950\/95 { background-color: rgba(250,250,249,0.95) !important; }
 
-/* Marketing aurora + dot grid — strong dark-mode visuals.
+/* Marketing aurora + dot grid, strong dark-mode visuals.
    Tone way down on light so they don't ink-bomb the page. */
 html[data-theme="light"] .hx-aurora-blob-1,
 html[data-theme="light"] .hx-aurora-blob-2 {
@@ -155,7 +155,7 @@ html[data-theme="light"] .hx-aurora-blob-2 {
   mix-blend-mode: multiply;
 }
 
-/* Gradient headline text — works on both themes but the soft
+/* Gradient headline text, works on both themes but the soft
    white→transparent fade on the .hx-gradient-text would vanish on
    white. Re-anchor it to a dark gradient in light mode. */
 html[data-theme="light"] .hx-gradient-text {
@@ -171,7 +171,7 @@ html[data-theme="light"] .hx-gradient-text-soft {
   color: transparent;
 }
 
-/* Marketing primary CTAs — invert the dark/white button pair */
+/* Marketing primary CTAs, invert the dark/white button pair */
 html[data-theme="light"] .sansxel-dark-button {
   background: #0a0a0c !important;
   color: #fafafa !important;
@@ -179,7 +179,7 @@ html[data-theme="light"] .sansxel-dark-button {
 html[data-theme="light"] .sansxel-dark-button:hover {
   background: #1f1f1f !important;
 }
-/* .sansxel-white-button stays white-on-dark — high-contrast on either
+/* .sansxel-white-button stays white-on-dark, high-contrast on either
    theme. Just make sure the safeguard text stays correct. */
 
 /* Subtle links → dark text in light */
@@ -187,7 +187,7 @@ html[data-theme="light"] .sansxel-subtle-link { color: rgba(31,31,31,0.85); }
 html[data-theme="light"] .sansxel-subtle-link:hover,
 html[data-theme="light"] .sansxel-subtle-link:focus-visible { color: #0a0a0c; }
 
-/* Code + monospace blocks in chat markdown — dark code on light
+/* Code + monospace blocks in chat markdown, dark code on light
    page reads better with a soft tinted bg, not the near-black we
    use for dark mode. */
 html[data-theme="light"] .webchat-msg .md code {
@@ -349,7 +349,7 @@ html[data-theme="light"] .copilot-input input {
   color: #0a0a0c;
 }
 
-/* Voice overlay — keep DARK even in light mode. It's a focus
+/* Voice overlay, keep DARK even in light mode. It's a focus
    takeover where light theme would feel wrong (it's literally
    "the screen goes away"). Hard-pin the dark palette here. */
 html[data-theme="light"] .voice-overlay {
@@ -367,7 +367,7 @@ html[data-theme="light"] .voice-overlay-end {
 /* Mobile chat-history drawer */
 html[data-theme="light"] aside.chat-drawer-in { background: #ffffff !important; border-color: rgba(0,0,0,0.10) !important; }
 
-/* Modals (UpdatePaymentMethodModal etc) — invert overlay tint */
+/* Modals (UpdatePaymentMethodModal etc), invert overlay tint */
 html[data-theme="light"] .fixed.inset-0.bg-black\/60 { background-color: rgba(0,0,0,0.45) !important; }
 
 /* Form notices and messages */
@@ -390,15 +390,15 @@ html[data-theme="light"] aside.lg\:flex a[href="/download"] { color: #1f1f1f; }
 /* Empty state suggestions */
 html[data-theme="light"] .webchat-empty-mark { color: rgba(124,58,237,0.85); }
 
-/* Streaming text fade animation — text was rgba white originally,
+/* Streaming text fade animation, text was rgba white originally,
    make sure it's visible on light. */
 html[data-theme="light"] .webchat-word-fade { color: inherit; }
 
-/* Bounce dots — make visible on light. */
+/* Bounce dots, make visible on light. */
 html[data-theme="light"] .webchat-dot { background: #525252; }
 
 /* Status pills (amber/yellow used for "in development", "early
-   access", "verify email", etc.) — light text on faint tint
+   access", "verify email", etc.), light text on faint tint
    completely vanishes on a light page. Catch ALL amber text
    variants (100, 200, 300, 400, with or without /opacity suffix)
    via attribute substring match. */
@@ -423,7 +423,7 @@ html[data-theme="light"] .bg-amber-300\/80,
 html[data-theme="light"] .bg-amber-400,
 html[data-theme="light"] .bg-amber-400\/60 { background-color: #d97706 !important; }
 
-/* Emerald (active addon, success states) — light text invisible too */
+/* Emerald (active addon, success states), light text invisible too */
 html[data-theme="light"] .text-emerald-200,
 html[data-theme="light"] .text-emerald-300,
 html[data-theme="light"] .text-emerald-400 { color: #047857 !important; }
@@ -433,7 +433,7 @@ html[data-theme="light"] .bg-emerald-400\/\[0\.08\] { background-color: rgba(110
 html[data-theme="light"] .border-emerald-400\/20,
 html[data-theme="light"] .border-emerald-400\/30 { border-color: rgba(5, 150, 105, 0.55) !important; }
 
-/* Rose / red (delete, errors) — keep saturated on light */
+/* Rose / red (delete, errors), keep saturated on light */
 html[data-theme="light"] .text-rose-200,
 html[data-theme="light"] .text-red-200,
 html[data-theme="light"] .text-red-300 { color: #b91c1c !important; }
@@ -441,24 +441,24 @@ html[data-theme="light"] .bg-rose-400\/10,
 html[data-theme="light"] .bg-red-400\/10,
 html[data-theme="light"] .bg-red-500\/5 { background-color: rgba(254, 202, 202, 0.45) !important; }
 
-/* Violet / brand text — catch ALL numeric variants (100-400) AND
+/* Violet / brand text, catch ALL numeric variants (100-400) AND
    /opacity suffixes. Same substring trick as amber. The Workshop
    CTA card in the sidebar uses text-violet-100 which is basically
-   white — invisible on a light bg without this. */
+   white, invisible on a light bg without this. */
 html[data-theme="light"] [class*="text-violet-1"],
 html[data-theme="light"] [class*="text-violet-2"],
 html[data-theme="light"] [class*="text-violet-3"],
 html[data-theme="light"] [class*="text-violet-4"] { color: #6d28d9 !important; }
 
 /* Same for fuchsia / pink accents (some addon labels, brand
-   accents) — light variants vanish on light. */
+   accents), light variants vanish on light. */
 html[data-theme="light"] [class*="text-fuchsia-1"],
 html[data-theme="light"] [class*="text-fuchsia-2"],
 html[data-theme="light"] [class*="text-fuchsia-3"],
 html[data-theme="light"] [class*="text-pink-2"],
 html[data-theme="light"] [class*="text-pink-3"] { color: #a21caf !important; }
 
-/* Heist preview shell + inner — these draw a 3D-style outer
+/* Heist preview shell + inner, these draw a 3D-style outer
    gradient/glow + an inner blurred backdrop tuned for dark bg.
    On light bg the white-ish shadows + the heavy black drop-shadow
    below paint a visible "halo" around every hero card. Tone the
@@ -477,7 +477,7 @@ html[data-theme="light"] .sansxel-preview-shell {
     0 6px 14px -10px rgba(0, 0, 0, 0.10) !important;
 }
 html[data-theme="light"] .sansxel-preview-shell::before {
-  /* Kill the outer glow halo on light — it reads as a dirty grey
+  /* Kill the outer glow halo on light, it reads as a dirty grey
      rectangle around the card. */
   opacity: 0 !important;
 }
@@ -493,7 +493,7 @@ html[data-theme="light"] .sansxel-preview-inner::before {
 }
 
 /* Workshop on desktop CTA card body text was text-neutral-300
-   which my earlier override flips dark — but the colored title +
+   which my earlier override flips dark, but the colored title +
    link inside need their own treatment (handled by violet sweep
    above). The card background gradient may also be too pale on
    light, so beef it up a touch. */

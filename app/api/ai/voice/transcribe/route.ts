@@ -19,7 +19,7 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "missing" });
 
 // POST /api/ai/voice/transcribe
 // multipart/form-data with field "audio" (any audio file the browser
-// or Tauri can produce — webm, mp4, wav, m4a). Returns { text }.
+// or Tauri can produce, webm, mp4, wav, m4a). Returns { text }.
 export async function POST(request: Request) {
   let email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   const surface =
     request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
 
-  // v0.1.16 — Plan gate. Same model the speak route uses: estimate
+  // v0.1.16, Plan gate. Same model the speak route uses: estimate
   // seconds from audio size (worst case ~24 kbps Opus = 3 KB/s, so
   // bytes/3000 over-estimates which is the safe direction for cap
   // checks). Call decideVoiceRequest with that estimate, fall back

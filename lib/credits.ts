@@ -1,4 +1,4 @@
-// v0.1.9 monetization — flexible credit ledger.
+// v0.1.9 monetization, flexible credit ledger.
 //
 // Replaces the v0.1.8 per-feature one-time SKUs (voice_minute_pack,
 // image_credit_pack, copilot_time_pack, voice_pack, image_pack) with a
@@ -6,15 +6,15 @@
 // credits by kind via CREDIT_COSTS below.
 //
 // Storage model:
-//   user_credits          — running balance per email.
-//   credit_transactions   — append-only journal. `id` is the idempotency
+//   user_credits         , running balance per email.
+//   credit_transactions  , append-only journal. `id` is the idempotency
 //                           key (purchase:<payment_intent>, etc.) so a
 //                           retried Stripe webhook or a double-clicked
 //                           gate cannot double-spend.
 //
 // All helpers fail open on transient DB errors (return 0 / false) so a
 // flaky Supabase never holds the chat hostage. Worst case the user gets
-// a free request — we'd rather refund a one-off than block paying users.
+// a free request, we'd rather refund a one-off than block paying users.
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 
@@ -27,7 +27,7 @@ export const CREDITS_PER_DOLLAR = 100;
 //   - 100 image generations, OR
 //   - 250 minutes of voice, OR
 //   - 500 copilot turns
-// (mix and match — they all draw from the same balance).
+// (mix and match, they all draw from the same balance).
 export type CreditKind = "chat" | "image" | "voice_minute" | "copilot";
 export const CREDIT_COSTS: Record<CreditKind, number> = {
   chat: 1,
@@ -69,7 +69,7 @@ export async function getCreditBalance(email: string): Promise<number> {
  * Adds credits to the user's balance and records a transaction. The
  * transaction id (`<source>:<refId>`) is the primary key on
  * credit_transactions, so a retried Stripe webhook delivery is a
- * no-op — the second insert hits a unique-violation and we bail
+ * no-op, the second insert hits a unique-violation and we bail
  * before double-crediting the running balance.
  */
 export async function addCredits(
@@ -80,7 +80,7 @@ export async function addCredits(
 ): Promise<void> {
   if (!email || amount <= 0) return;
   if (!isDatabaseConfigured()) {
-    console.warn("addCredits dropped — Supabase not configured.");
+    console.warn("addCredits dropped, Supabase not configured.");
     return;
   }
   const normalized = email.toLowerCase();
@@ -132,7 +132,7 @@ export async function addCredits(
 
 /**
  * Burns `amount` credits from the user's balance. Returns ok=false (and
- * the current balance) when the user doesn't have enough — the gating
+ * the current balance) when the user doesn't have enough, the gating
  * layer treats that as "stay blocked." When ok=true the new remaining
  * balance is returned so callers can surface "5 credits left" toasts.
  *
@@ -187,7 +187,7 @@ export async function consumeCredits(
     ] as never);
   if (txnErr) {
     if ((txnErr as { code?: string }).code === "23505") {
-      // Lost a race to ourselves — the duplicate insert means another
+      // Lost a race to ourselves, the duplicate insert means another
       // call already deducted. Return the current balance as ok=true.
       return { ok: true, remaining: await getCreditBalance(normalized) };
     }

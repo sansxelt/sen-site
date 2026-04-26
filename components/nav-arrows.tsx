@@ -7,7 +7,7 @@ export function NavArrows() {
   const router   = useRouter();
   const pathname = usePathname();
 
-  // Our own history stack — router.push() is reliable in App Router,
+  // Our own history stack, router.push() is reliable in App Router,
   // window.history.back/forward is not (popstate doesn't fire for Link nav).
   const histRef   = useRef<string[]>([]);
   const posRef    = useRef(-1);
@@ -18,10 +18,10 @@ export function NavArrows() {
 
   useEffect(() => {
     if (ourNavRef.current) {
-      // We triggered this pathname change — pos already updated in the handler
+      // We triggered this pathname change, pos already updated in the handler
       ourNavRef.current = false;
     } else {
-      // Link or external navigation — push, drop any forward history
+      // Link or external navigation, push, drop any forward history
       const base = histRef.current.slice(0, posRef.current + 1);
       base.push(pathname);
       histRef.current = base;

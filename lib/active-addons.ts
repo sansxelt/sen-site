@@ -1,4 +1,4 @@
-// v0.1.16 — Active addon resolver for the limit/gating layer.
+// v0.1.16, Active addon resolver for the limit/gating layer.
 //
 // Reads the user's active recurring addons (copilot_pro_pack,
 // power_pack) from Stripe so the chat/image/voice routes can lift
@@ -10,7 +10,7 @@
 //   - we explicitly invalidate after a successful purchase so the
 //     unlimited kicks in immediately for the buying user
 //
-// Always fails open (returns empty Set) — a Stripe outage shouldn't
+// Always fails open (returns empty Set), a Stripe outage shouldn't
 // block paying users from chatting. Worst case they hit the cap.
 
 import {
@@ -44,7 +44,7 @@ function resolveAddonKeyFromPrice(priceId: string): BillingAddonKey | null {
 }
 
 // PayPal-purchased recurring addons (Copilot Pro Pack / Power Pack)
-// land in boost_credits with the addon_key — the same table one-time
+// land in boost_credits with the addon_key, the same table one-time
 // boosts use. They never get "consumed" because they grant ongoing
 // access, not a single boost burn. We treat any unconsumed recurring
 // addon row within the last 30 days as active (matches the "one
@@ -101,7 +101,7 @@ export async function getActiveAddonKeys(
   const result = new Set<BillingAddonKey>();
 
   // Fetch Stripe + PayPal sources in parallel. Either source missing
-  // / failing is fine — we just lose visibility into addons from that
+  // / failing is fine, we just lose visibility into addons from that
   // path until next cache cycle.
   const stripePromise: Promise<Set<BillingAddonKey>> = (async () => {
     const out = new Set<BillingAddonKey>();

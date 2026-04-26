@@ -13,7 +13,7 @@ type Status = "waiting" | "signing-in";
  * and returns a one-shot auto-signin token the moment the verification
  * actually happens (whether on this device or another).  We then call
  * NextAuth's credentials sign-in with the token in place of a password
- * and drop the user straight into /account — no "now go sign in"
+ * and drop the user straight into /account, no "now go sign in"
  * interstitial, even for the device that started signup.
  *
  * Stops polling once a signed-in response comes back; the endpoint also
@@ -50,7 +50,7 @@ export function SignupWaitingPoller() {
         });
         window.location.href = "/account";
       } catch {
-        // Network hiccup — try again next tick. Don't surface anything.
+        // Network hiccup, try again next tick. Don't surface anything.
       }
     }
 
@@ -70,7 +70,7 @@ export function SignupWaitingPoller() {
         <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
       </span>
       {status === "waiting"
-        ? "Waiting for you to click the link — you'll be signed in automatically."
+        ? "Waiting for you to click the link, you'll be signed in automatically."
         : "Signing you in…"}
     </div>
   );

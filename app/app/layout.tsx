@@ -3,7 +3,7 @@ import { auth } from "../../auth";
 import { DashboardNav } from "../../components/dashboard-nav";
 import { getZone } from "../../lib/zone";
 
-// /app gets the same Workshop shell as /account/* — single sidebar,
+// /app gets the same Workshop shell as /account/*, single sidebar,
 // chat as the default canvas, every other workshop station accessible
 // without bouncing between routes. Lives outside the (site) layout so
 // the marketing header doesn't sit on top of the chat.

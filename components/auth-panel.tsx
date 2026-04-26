@@ -125,7 +125,7 @@ export function OAuthSection({
     <div className="rounded-[28px] border border-white/10 bg-black/20 p-6 sm:p-8">
       <div className="text-sm font-medium text-white">Continue with a provider</div>
       <p className="mt-2 text-sm leading-6 text-neutral-400">
-        Faster start — picks up in the same workspace flow.
+        Faster start, picks up in the same workspace flow.
       </p>
 
       <div className="mt-6 grid gap-4">
@@ -339,7 +339,7 @@ export function AuthPanel({
     <div>
       {/* ── Header ──────────────────────────────────────────────── */}
       <div>
-        {/* SECURE ACCESS line — always one line */}
+        {/* SECURE ACCESS line, always one line */}
         <div className="flex items-center gap-2 text-sm font-medium">
           <span className="whitespace-nowrap uppercase tracking-[0.2em] text-neutral-300">Secure Access</span>
           {sessionEmail && (

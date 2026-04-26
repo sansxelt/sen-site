@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     const profile = await getUserProfileByEmail(session.email);
 
-    // Fire-and-forget — failure here doesn't block the validate
+    // Fire-and-forget, failure here doesn't block the validate
     touchSession(session.id).catch((err) =>
       console.warn("touchSession failed:", err),
     );

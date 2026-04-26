@@ -73,7 +73,7 @@ export function LeiShell({ children }: { children: ReactNode }) {
       const data = (await res.json()) as { balance?: number };
       if (typeof data.balance === "number") setCreditBalance(data.balance);
     } catch {
-      // network jitter — leave previous value
+      // network jitter, leave previous value
     }
   }, []);
 
@@ -209,7 +209,7 @@ export function LeiShell({ children }: { children: ReactNode }) {
       {/* lei-shell--split keeps the LEI panel slot reserved when an
           attachment panel is active. lei-shell--with-history keeps
           the chat history rail slot reserved otherwise. They share
-          the same right-side column — never both at once. */}
+          the same right-side column, never both at once. */}
       <div
         className={`lei-shell${panel.kind !== "none" ? " lei-shell--split" : " lei-shell--with-history"}`}
         onDragEnter={onDragEnter}
@@ -239,7 +239,7 @@ function DropOverlay() {
         <div className="lei-drop-mark">⤓</div>
         <div className="lei-drop-title">Drop to react</div>
         <div className="lei-drop-sub">
-          Image · Video · File · Code — sansxel-1 morphs the UI to fit
+          Image · Video · File · Code, sansxel-1 morphs the UI to fit
         </div>
         <div className="lei-drop-row">
           <span className="lei-drop-chip">🖼 Image → analysis</span>

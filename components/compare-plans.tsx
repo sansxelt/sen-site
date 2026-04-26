@@ -12,14 +12,14 @@ import {
 } from "../lib/compare-explanations";
 
 /**
- * "Compare" — a guided pick-a-plan flow.
+ * "Compare", a guided pick-a-plan flow.
  *
  * Wizard:
  *   1. Pick plans to compare
  *   2. Answer 3 short questions
  *   3. The result step picks the right plan from the user's answers and
  *      reveals a tailored 2-sentence explanation character-by-character,
- *      so it reads like a model is typing.  All client-side — no API
+ *      so it reads like a model is typing.  All client-side, no API
  *      calls, no credits, no network round-trip.
  */
 
@@ -61,7 +61,7 @@ const QUESTIONS = [
     options: [
       { value: "no",    title: "Not really",      desc: "Just using it inside sansxel" },
       { value: "maybe", title: "Maybe someday",   desc: "I could see wiring it into things later" },
-      { value: "yes",   title: "Yes — essential", desc: "I'm plugging it into my own apps / workflows" },
+      { value: "yes",   title: "Yes, essential", desc: "I'm plugging it into my own apps / workflows" },
     ],
   },
 ] as const;
@@ -106,7 +106,7 @@ export function ComparePlans() {
     };
   }, [open]);
 
-  // Portal target — document.body only exists client-side, and we have
+  // Portal target, document.body only exists client-side, and we have
   // to portal because [data-route-transition] uses will-change:transform
   // which turns any fixed-position descendant into a relative-positioned
   // one (containing block swap).  Without this the modal appears below
@@ -148,7 +148,7 @@ export function ComparePlans() {
 
   return (
     <>
-      {/* ── Trigger link — designed to inline inside body copy ────── */}
+      {/* ── Trigger link, designed to inline inside body copy ────── */}
       <button
         type="button"
         onClick={handleOpen}
@@ -158,7 +158,7 @@ export function ComparePlans() {
       </button>
 
       {/*
-        Modal shell — portalled to document.body so will-change:transform
+        Modal shell, portalled to document.body so will-change:transform
         on [data-route-transition] doesn't turn our fixed position into
         a relative-to-ancestor position.  Always vertically centered;
         height capped at calc(100dvh - 24px) so it never exceeds the
@@ -296,7 +296,7 @@ function Header({
           <motion.div
             className="h-full bg-white"
             // Explicit initial so Framer Motion doesn't briefly render
-            // an auto/default width on mount — without this a ~2px nub
+            // an auto/default width on mount, without this a ~2px nub
             // shows on the "pick plans" step where progress is 0.
             initial={{ width: "0%" }}
             animate={{ width: `${Math.round(progress * 100)}%` }}
@@ -447,7 +447,7 @@ function ResultStep({
   const [status,      setStatus]      = useState<ResultStatus>("loading");
 
   // Reveal the templated explanation character-by-character.  This is what
-  // gives the "AI is typing" feel without any API call — the copy was built
+  // gives the "AI is typing" feel without any API call, the copy was built
   // synchronously in buildExplanation() and is just being unveiled over
   // time.  ~12 ms per char ≈ natural typing speed.
   useEffect(() => {
@@ -455,7 +455,7 @@ function ResultStep({
     let i = 0;
     let intervalId: number | undefined;
 
-    // Short pause first so the "thinking" pill registers visually — it
+    // Short pause first so the "thinking" pill registers visually, it
     // reinforces the sense that something is being reasoned about.
     const startDelay = window.setTimeout(() => {
       setStatus("streaming");

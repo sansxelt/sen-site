@@ -45,14 +45,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${APP_URL}/auth/verify-email?status=invalid`);
   }
 
-  // Expired? — route to the landing page so the user can resend.
+  // Expired?, route to the landing page so the user can resend.
   if (isPendingExpired(pending)) {
     return NextResponse.redirect(
       `${APP_URL}/auth/verify-email?status=expired&email=${encodeURIComponent(pending.email)}`,
     );
   }
 
-  // Race guard — if somehow user_credentials already exists (user double-
+  // Race guard, if somehow user_credentials already exists (user double-
   // clicked the link, or verified in a second tab), just treat it as
   // success and clean up the stale pending row, then auto-sign them in.
   const alreadyVerified = await getUserCredentialByEmail(pending.email);
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(autoSigninRedirect(pending.email));
   }
 
-  // Happy path — promote pending → real user.  Insert the credential row
+  // Happy path, promote pending → real user.  Insert the credential row
   // directly (password is already hashed in the pending row, so we don't
   // call createUserCredential which would double-hash).
   try {

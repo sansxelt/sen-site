@@ -16,7 +16,7 @@ type Status =
  *
  * If NextAuth replies with an error (expired token, database blip,
  * etc.), we fall back to a plain "sign in manually" screen so the
- * user isn't stranded — their account is already live at this point,
+ * user isn't stranded, their account is already live at this point,
  * they just need to type the password they set at signup.
  */
 export function AutoSigninClient({
@@ -50,7 +50,7 @@ export function AutoSigninClient({
         setStatus({
           kind: "error",
           message: res?.error
-            ? "Sign-in link expired — sign in manually to continue."
+            ? "Sign-in link expired, sign in manually to continue."
             : "Couldn't sign you in automatically. Please sign in manually.",
         });
       } catch {
@@ -78,7 +78,7 @@ export function AutoSigninClient({
           Signing you in…
         </h1>
         <p className="mt-3 text-sm leading-6 text-neutral-300">
-          One moment — setting up your session so you land straight in
+          One moment, setting up your session so you land straight in
           your workspace.
         </p>
       </>
@@ -92,7 +92,7 @@ export function AutoSigninClient({
         Email verified
       </div>
       <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-        You&apos;re in — almost.
+        You&apos;re in, almost.
       </h1>
       <p className="mt-3 text-sm leading-6 text-neutral-300">
         Your account is live. {status.message}

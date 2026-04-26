@@ -12,7 +12,7 @@ function normalizeEmail(raw: string): string {
  * Best-effort: cancel any Stripe subscriptions tied to this email so we
  * don't orphan an active paid subscription after the account is gone.
  * Swallows errors so a Stripe hiccup can't block the deletion that
- * otherwise succeeds — the user's intent ("delete my account") wins.
+ * otherwise succeeds, the user's intent ("delete my account") wins.
  */
 async function cancelStripeSubscriptionsForEmail(email: string): Promise<void> {
   if (!isStripeConfigured()) return;
@@ -51,11 +51,11 @@ export async function DELETE() {
   const displayName = session?.user?.name ?? "";
 
   try {
-    // Step 1 — cancel any live Stripe subscriptions for this email.
+    // Step 1, cancel any live Stripe subscriptions for this email.
     // Failures are logged but don't block the deletion.
     await cancelStripeSubscriptionsForEmail(email);
 
-    // Step 2 — wipe every table keyed by email.  Done as a sequence of
+    // Step 2, wipe every table keyed by email.  Done as a sequence of
     // separate DELETEs (no Postgres transaction primitive available via
     // supabase-js); if one fails the rest still attempt, and we surface
     // the first error to the user so they can retry.
@@ -81,14 +81,14 @@ export async function DELETE() {
       }
     }
 
-    // Only reject if the profile delete failed — the other tables
+    // Only reject if the profile delete failed, the other tables
     // either legitimately had no rows or were best-effort cleanup.
     // user_profiles is the authoritative "does this account exist" row.
     if (firstError && firstError.table === "user_profiles") {
       throw firstError.err;
     }
 
-    // Step 3 — kill the session cookie so this browser can't keep
+    // Step 3, kill the session cookie so this browser can't keep
     // hitting /api/account/* with a JWT that no longer maps to a user.
     try {
       await signOut({ redirect: false });
@@ -96,7 +96,7 @@ export async function DELETE() {
       console.error("[account.delete] signOut failed:", err);
     }
 
-    // Step 4 — goodbye email.  Fire-and-forget so a mail hiccup can't
+    // Step 4, goodbye email.  Fire-and-forget so a mail hiccup can't
     // undo the deletion that already succeeded above.
     sendAccountDeletedEmail(email, displayName).catch(() => {});
 

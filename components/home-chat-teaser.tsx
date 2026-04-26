@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 /**
- * Hero chat input on /home — anonymous visitors can type a question
+ * Hero chat input on /home, anonymous visitors can type a question
  * and hit send; we route them through sign-in (if needed) into the
  * workspace with their prompt pre-filled. ChatGPT/Claude pattern.
  *
- * Pre-fills only — we don't auto-send. The user clicks Send in the
+ * Pre-fills only, we don't auto-send. The user clicks Send in the
  * workspace once they see their text loaded, so they retain agency
  * (and can edit if they want).
  */
@@ -41,13 +41,13 @@ export function HomeChatTeaser({ signedIn }: { signedIn: boolean }) {
             submit();
           }
         }}
-        placeholder="Ask sansxel anything — &ldquo;summarize this PDF&rdquo;, &ldquo;build me an app&rdquo;, &ldquo;humanize this essay&rdquo;…"
+        placeholder="Ask sansxel anything, &ldquo;summarize this PDF&rdquo;, &ldquo;build me an app&rdquo;, &ldquo;humanize this essay&rdquo;…"
         rows={2}
         className="home-teaser-input"
       />
       <div className="home-teaser-row">
         <span className="home-teaser-hint">
-          {signedIn ? "Press Enter to open in the workshop" : "Press Enter — sign in is one step"}
+          {signedIn ? "Press Enter to open in the workshop" : "Press Enter, sign in is one step"}
         </span>
         <button
           type="submit"

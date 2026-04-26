@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getDesktopUserEmailFromRequest } from "../../../lib/desktop-auth";
 import { createNote, listNotesForEmail } from "../../../lib/notes";
 
-// GET /api/notes — list the signed-in user's notes (newest first)
+// GET /api/notes, list the signed-in user's notes (newest first)
 export async function GET(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/notes — create a fresh note
+// POST /api/notes, create a fresh note
 export async function POST(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {

@@ -6,7 +6,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-// DELETE /api/desktop/keys/[id] — revoke a key the desktop user owns.
+// DELETE /api/desktop/keys/[id], revoke a key the desktop user owns.
 // Mirrors /api/account/keys/[id] DELETE; ownership is enforced inside
 // revokeApiKey via the email guard.
 export async function DELETE(request: Request, context: RouteContext) {

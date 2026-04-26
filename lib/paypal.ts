@@ -3,7 +3,7 @@
  *
  * PayPal subscriptions flow:
  *   1. Create a Product  (one per pricing-tier "family", reused forever)
- *   2. Create a Billing Plan  (one per tier × cycle — the thing users subscribe to)
+ *   2. Create a Billing Plan  (one per tier × cycle, the thing users subscribe to)
  *   3. Create a Subscription against a plan
  *   4. PayPal redirects the user to an approval URL
  *   5. On return, poll getSubscription until status === "ACTIVE"
@@ -239,7 +239,7 @@ export async function getPaypalSubscription(id: string): Promise<PaypalSubscript
 
 // ── One-time orders (used for addons) ────────────────────────────────────
 //
-// PayPal Orders v2 API — `intent: CAPTURE` means the funds are pulled
+// PayPal Orders v2 API, `intent: CAPTURE` means the funds are pulled
 // in a single confirmed step after the user approves. This is the
 // right fit for addons (one-time top-ups + 1-month addon activations
 // without requiring a pre-created subscription plan in the PayPal
@@ -300,7 +300,7 @@ export async function cancelPaypalSubscription(id: string, reason = "user reques
 
 /**
  * Verifies a webhook signature with PayPal.  PayPal's recommended
- * server-side verification — we POST all the relevant headers back to
+ * server-side verification, we POST all the relevant headers back to
  * them along with the raw body and they confirm authenticity.
  */
 export async function verifyPaypalWebhook(args: {

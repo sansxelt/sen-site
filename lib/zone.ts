@@ -1,5 +1,5 @@
 // Server-side helper that resolves the current request's host into
-// a "zone" — sansxel.ai (apex), chat.sansxel.ai (workshop), or
+// a "zone", sansxel.ai (apex), chat.sansxel.ai (workshop), or
 // platform.sansxel.ai (developer console).
 //
 // Used by ZoneShell + auth pages to render zone-specific chrome,

@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       ] as never);
 
     if (error) {
-      // Already credited (replay) — return ok so the client doesn't
+      // Already credited (replay), return ok so the client doesn't
       // double-confirm or try again.
       if ((error as { code?: string }).code === "23505") {
         return NextResponse.json({ status: "already_active" });
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       orderId,
       addonKey,
       note: recurring
-        ? "Activated for one billing cycle. PayPal-recurring not yet wired — buy again next cycle to renew."
+        ? "Activated for one billing cycle. PayPal-recurring not yet wired, buy again next cycle to renew."
         : "Boost credit added.",
     });
   } catch (err) {

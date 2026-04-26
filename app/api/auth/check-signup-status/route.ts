@@ -11,12 +11,12 @@ import { getUserCredentialByEmail } from "../../../../lib/user-credentials";
  * Polled by the /auth/verify-email "waiting" screen every few seconds.
  *
  * Trusts the signed sx_signup_claim cookie that /api/auth/register set
- * on the initiating browser — so only the device that *started* signup
+ * on the initiating browser, so only the device that *started* signup
  * can ask "did verification happen yet?" and get an auto-signin token
  * back.  Random visitors without the cookie always get `{ verified:
  * false }`.
  *
- * When the credentials row exists (verification completed somewhere —
+ * When the credentials row exists (verification completed somewhere
  * usually the email-link device, possibly this same one), we mint a
  * short-lived auto-signin token, clear the claim cookie so the poll
  * stops, and the client redirects through /auth/auto-signin.
@@ -40,7 +40,7 @@ export async function GET() {
     email:    claim.email,
     autoSigninToken,
   });
-  // Stop future polls from this browser — the token we just minted is
+  // Stop future polls from this browser, the token we just minted is
   // the only thing it needs, and it's short-lived on its own.
   response.cookies.delete(SIGNUP_CLAIM_COOKIE);
   return response;

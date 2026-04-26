@@ -20,16 +20,16 @@ export type DesktopPreferences = {
   window_mode: "normal" | "toolbar-top" | "toolbar-left" | "toolbar-right";
   voice: TtsVoice;
   persona: Persona;
-  // v0.1.4 — account-personalized UI knobs.
+  // v0.1.4, account-personalized UI knobs.
   bg_pattern: BgPattern;
   bubble_shape: BubbleShape;
-  // v0.1.4 — i18n: manual UI language. Response language is detected
+  // v0.1.4, i18n: manual UI language. Response language is detected
   // per-message and never persisted.
   system_language: string;
-  // v0.1.8 — let sansxel-1 invoke client-side tools (navigate,
+  // v0.1.8, let sansxel-1 invoke client-side tools (navigate,
   // create_api_key, search_threads, …). Off = text-only responses.
   tools_enabled: boolean;
-  // v0.1.16 — Theme preference, synced cross-device. "system" follows
+  // v0.1.16, Theme preference, synced cross-device. "system" follows
   // the OS via prefers-color-scheme; "light" / "dark" pin the choice.
   theme: "light" | "dark" | "system";
 };

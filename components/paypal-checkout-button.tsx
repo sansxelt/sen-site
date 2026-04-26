@@ -57,7 +57,7 @@ export function PayPalCheckoutButton({ clientId, cycle, plan }: Props) {
         <PayPalButtons
           style={{
             layout: "vertical",
-            color:  "gold",   // PayPal's official recommended button — higher conversion than muted "black"
+            color:  "gold",   // PayPal's official recommended button, higher conversion than muted "black"
             shape:  "rect",
             label:  "paypal",
             height: 48,

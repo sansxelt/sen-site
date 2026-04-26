@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 /**
- * AuroraBackground — two soft blurred color blobs that slowly drift,
+ * AuroraBackground, two soft blurred color blobs that slowly drift,
  * sitting behind all page content.  Opt-in per page by rendering this
- * once at the top of a server component — no mouse handlers, no
+ * once at the top of a server component, no mouse handlers, no
  * JS bundle cost beyond the portal wrapper.  Animation is pure CSS
  * (transforms) so it stays on the compositor thread and respects
  * prefers-reduced-motion.
@@ -15,7 +15,7 @@ import { createPortal } from "react-dom";
  *   The page-transition wrapper applies `transform: translate3d(...)`
  *   on route changes.  Any `position: fixed` descendant of a
  *   transformed element positions itself relative to that element
- *   instead of the viewport — so without the portal the aurora would
+ *   instead of the viewport, so without the portal the aurora would
  *   ride the page animation (visibly crossing above the header edge
  *   for the duration of every transition).  Rendering into
  *   document.body escapes the transformed ancestor and pins the

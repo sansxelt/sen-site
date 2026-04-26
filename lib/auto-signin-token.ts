@@ -15,7 +15,7 @@ const TTL_MS = 60 * 1000;
 function getSecret(): string {
   const secret = process.env.AUTH_SECRET;
   if (!secret) {
-    throw new Error("AUTH_SECRET is not set — cannot sign auto-signin tokens.");
+    throw new Error("AUTH_SECRET is not set, cannot sign auto-signin tokens.");
   }
   return secret;
 }

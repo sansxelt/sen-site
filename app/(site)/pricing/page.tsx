@@ -16,7 +16,7 @@ export default function PricingPage() {
     <>
       <AuroraBackground />
       <section className="mx-auto max-w-[1600px] px-4 pt-4 pb-12 sm:px-6 sm:pt-6 sm:pb-16 lg:px-8 lg:pt-7 lg:pb-24">
-        {/* ── Hero — DotGrid behind the headline ───────────────────── */}
+        {/* ── Hero, DotGrid behind the headline ───────────────────── */}
         <div className="relative isolate overflow-hidden rounded-[28px] px-6 py-7 sm:px-10 sm:py-9">
           <DotGrid opacity={0.07} />
           <div className="relative max-w-3xl">
@@ -31,7 +31,7 @@ export default function PricingPage() {
               workflows. Every paid tier expands how far Sansxel can go with you.
             </p>
 
-            {/* Guided comparison — sits under the hero copy, tuned to match
+            {/* Guided comparison, sits under the hero copy, tuned to match
                 the surrounding text tone (muted grey, soft underline). */}
             <div className="mt-4 text-sm text-neutral-500">
               Not sure which one? <ComparePlans />
@@ -39,12 +39,12 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* ── Full plan cards — single source of truth (Personal + Team) */}
+        {/* ── Full plan cards, single source of truth (Personal + Team) */}
         <div className="mt-5 sm:mt-6">
           <PricingPacks />
         </div>
 
-        {/* ── Credit explainer — demystify how charges actually work. */}
+        {/* ── Credit explainer, demystify how charges actually work. */}
         <div className="mt-12 sm:mt-16 rounded-[24px] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
           <div className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">
             How credits work
@@ -54,7 +54,7 @@ export default function PricingPage() {
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-neutral-300 sm:text-base">
             Your plan covers a generous weekly base. When you push past it, top up with
-            credits — <strong className="text-white">$1 = 100 credits</strong> — and burn them
+            credits, <strong className="text-white">$1 = 100 credits</strong>, and burn them
             however fits the work. Same balance for chat, image, voice, and copilot.
           </p>
 

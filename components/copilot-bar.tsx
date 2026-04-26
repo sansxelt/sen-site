@@ -54,7 +54,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   }, []);
 
   // Hide while signed-out (copilot needs a session) and on auth bridge
-  // routes. v0.2.0: copilot is now allowed on /app — defaults to float
+  // routes. v0.2.0: copilot is now allowed on /app, defaults to float
   // mode there so it doesn't fight the LEI panel for screen space.
   const hide =
     !signedIn ||
@@ -173,7 +173,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
             });
           }
         }
-        // Stream done — if the model emitted [go:/path], navigate.
+        // Stream done, if the model emitted [go:/path], navigate.
         // v0.1.13 \u2014 the copilot used to auto-close itself after
         // navigating ("setOpen(false)"), but that punished the user
         // for using a feature that's literally about chaining
@@ -242,7 +242,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   if (hide) return null;
 
   // ── Closed state: floating launcher button ─────────────────────
-  // v0.1.16 — Always bottom-right. Mobile clearance (above the
+  // v0.1.16, Always bottom-right. Mobile clearance (above the
   // dashboard bottom nav) handled in CSS via a media query.
   if (!open) {
     return (
@@ -308,7 +308,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
         {messages.length === 0 ? (
           <div className="copilot-empty">
             <p>
-              Ask anything — about sansxel, this page, or wherever your
+              Ask anything, about sansxel, this page, or wherever your
               head's at. I can also take you anywhere on the site.
             </p>
             <div className="copilot-mcp-card">
@@ -321,15 +321,15 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
               </p>
               <ul>
                 <li>
-                  <span className="copilot-mcp-mono">read this folder</span> —
+                  <span className="copilot-mcp-mono">read this folder</span>
                   scan a directory for context
                 </li>
                 <li>
-                  <span className="copilot-mcp-mono">edit my resume.docx</span> —
+                  <span className="copilot-mcp-mono">edit my resume.docx</span>
                   modify a file in place
                 </li>
                 <li>
-                  <span className="copilot-mcp-mono">connect Notion</span> —
+                  <span className="copilot-mcp-mono">connect Notion</span>
                   pull pages into the conversation
                 </li>
               </ul>

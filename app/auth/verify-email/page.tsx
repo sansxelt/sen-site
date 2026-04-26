@@ -13,7 +13,7 @@ type SearchParams = {
 };
 
 /**
- * Landing page after signup — and the bounce page when a verify link
+ * Landing page after signup, and the bounce page when a verify link
  * expires or is invalid.  The status query param tells us which variant
  * to render.
  */
@@ -61,7 +61,7 @@ function PendingState({ email }: { email: string }) {
         {email
           ? <span className="text-white">{email}</span>
           : <span className="text-neutral-400">your email address</span>}
-        . Click the link in that email and your account goes live — takes five seconds.
+        . Click the link in that email and your account goes live, takes five seconds.
       </p>
 
       <SignupWaitingPoller />
@@ -76,7 +76,7 @@ function PendingState({ email }: { email: string }) {
         <li className="flex items-start gap-2">
           <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-neutral-500" />
           <span className="min-w-0 leading-5">
-            Not in your inbox? Check your spam folder — the sender is{" "}
+            Not in your inbox? Check your spam folder, the sender is{" "}
             <span className="text-neutral-300">hello@sansxel.ai</span>.
           </span>
         </li>
@@ -110,7 +110,7 @@ function ExpiredState({ email }: { email: string }) {
         That verification link expired.
       </h1>
       <p className="mt-3 text-sm leading-6 text-neutral-300">
-        Confirmation links last 24 hours. No problem — we&apos;ll send a fresh one to{" "}
+        Confirmation links last 24 hours. No problem, we&apos;ll send a fresh one to{" "}
         {email ? <span className="text-white">{email}</span> : <span className="text-neutral-400">your email</span>}.
       </p>
       <ResendVerification defaultEmail={email} />
@@ -130,7 +130,7 @@ function InvalidState() {
         We couldn&apos;t verify that link.
       </h1>
       <p className="mt-3 text-sm leading-6 text-neutral-300">
-        Maybe it was already used (your account might already be active), or it was edited somewhere along the way. Sign in below — if that doesn&apos;t work, enter your email and we&apos;ll send a fresh confirmation link.
+        Maybe it was already used (your account might already be active), or it was edited somewhere along the way. Sign in below, if that doesn&apos;t work, enter your email and we&apos;ll send a fresh confirmation link.
       </p>
       <Link
         href="/signin"
@@ -158,7 +158,7 @@ function ErrorState({ email }: { email: string }) {
         We hit a snag verifying your email.
       </h1>
       <p className="mt-3 text-sm leading-6 text-neutral-300">
-        Try the link again in a minute — if it keeps failing, resend a fresh link below or email <a href="mailto:help@sansxel.ai" className="text-white underline decoration-neutral-600 underline-offset-4">help@sansxel.ai</a> and we&apos;ll sort it out.
+        Try the link again in a minute, if it keeps failing, resend a fresh link below or email <a href="mailto:help@sansxel.ai" className="text-white underline decoration-neutral-600 underline-offset-4">help@sansxel.ai</a> and we&apos;ll sort it out.
       </p>
       <ResendVerification defaultEmail={email} />
     </>

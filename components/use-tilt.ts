@@ -2,10 +2,10 @@
 
 import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 
-// v0.1.13 — Tiny reusable 3D tilt hook. Drop-in for any card-shaped
+// v0.1.13, Tiny reusable 3D tilt hook. Drop-in for any card-shaped
 // element that wants the same heist-style parallax HeistCard ships
 // with, without having to swap the element type. Returns a ref to
-// attach + pointer handlers. Mouse-only — coarse pointers (touch /
+// attach + pointer handlers. Mouse-only, coarse pointers (touch /
 // pen) fall through so we don't ship dead hover state to mobile.
 export function useTilt(maxDeg = 6) {
   const ref = useRef<HTMLDivElement>(null);

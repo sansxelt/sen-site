@@ -3,7 +3,7 @@ import { getDesktopUserEmailFromRequest } from "../../../../../lib/desktop-auth"
 import { getOrCreateCustomer, getStripe, isStripeConfigured } from "../../../../../lib/stripe";
 import { extractBillingErrorMessage } from "../../../../../lib/desktop-billing";
 
-// v0.1.9 — buy credits.
+// v0.1.9, buy credits.
 // Accepts { amount_dollars: number } in [1, MAX_DOLLARS], creates a
 // Stripe PaymentIntent for that amount in cents, and returns the
 // client secret so the desktop billing panel can confirm via Stripe
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
       amount: dollars * 100, // dollars → cents
       currency: "usd",
       customer: customer.id,
-      // Explicit allow-list — Amazon Pay / Klarna / etc. require
+      // Explicit allow-list, Amazon Pay / Klarna / etc. require
       // separate setup we haven't done. Match the recurring sub set.
       payment_method_types: ["card", "link", "cashapp"],
       metadata: {
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         dollars: String(dollars),
         surface: "desktop",
       },
-      description: `sansxel credits — $${dollars}`,
+      description: `sansxel credits, $${dollars}`,
     });
 
     if (!intent.client_secret) {

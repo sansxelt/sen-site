@@ -92,7 +92,7 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* ─── Spotlight card — cursor-aware border glow ─────────────────────────
+/* ─── Spotlight card, cursor-aware border glow ─────────────────────────
    Card reads --hx-x / --hx-y (set by SpotlightCard via pointer move)
    and paints a soft radial gradient at those coordinates.  Gated to
    fine pointers so touch devices don't get a dead hover state. */
@@ -168,7 +168,7 @@ body {
    Two soft blurred circles of color.  Opt-in per page by rendering the
    <AuroraBackground /> component, which mounts these classes.  All
    movement is transform-only so it composites on the GPU. */
-/* Drift amplitude stays modest on purpose — big Y translations were
+/* Drift amplitude stays modest on purpose, big Y translations were
    causing a visible pulse at the header edge (blob peak sweeping in
    and out of view below the nav). Keeping the vertical range tight
    and scale changes small so the aurora feels like ambient light, not
@@ -181,7 +181,7 @@ body {
   0%, 100% { transform: translate3d(4%, 6%, 0) scale(1); }
   50%      { transform: translate3d(-8%, 2%, 0) scale(1.04); }
 }
-/* Indigo + violet aurora pair — sits in the same cool-blue family as
+/* Indigo + violet aurora pair, sits in the same cool-blue family as
    the body's existing radial gradient so the layers don't fight.  Both
    blobs are in the same hue lane (just different saturation / position)
    to feel like one ambient light source rather than two color splashes. */
@@ -229,7 +229,7 @@ body {
   will-change: auto;
 }
 
-/* ─── Reduced motion — kill every Heist animation ───────────────────── */
+/* ─── Reduced motion, kill every Heist animation ───────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .hx-pill::before,
   .hx-aurora-blob-1,
@@ -394,7 +394,7 @@ a {
   text-decoration: none;
 }
 
-/* v0.1.13 — Global white-on-white safeguard.
+/* v0.1.13, Global white-on-white safeguard.
    Originally used :where() for zero specificity so text-* utilities
    would always win. PROBLEM: tailwind preflight has
    `button, input, select, textarea { color: inherit }` (specificity
@@ -666,7 +666,7 @@ textarea {
   font: inherit;
 }
 
-/* Element-level safeguard for form controls and links — must live
+/* Element-level safeguard for form controls and links, must live
    BELOW the `button { color: inherit }` preflight so source order
    wins on the specificity tie. Covers the white-pill-invisible-text
    bug on Stripe/PayPal Add buttons, "Update card", "Choose a plan",
@@ -679,7 +679,7 @@ button.bg-zinc-50, a.bg-zinc-50, input.bg-zinc-50 {
   color: #0a0a0c;
 }
 
-/* Inverse safeguard — dark-bg buttons / links explicitly get light
+/* Inverse safeguard, dark-bg buttons / links explicitly get light
    text. The body default already provides this everywhere, but if a
    parent rule (like the white safeguard above) cascades dark text
    into a dark-bg child, this corrects it. */
@@ -729,7 +729,7 @@ div[id] {
   transition-duration: 60ms;
 }
 
-/* Card lift — slightly softer than .hx-press */
+/* Card lift, slightly softer than .hx-press */
 .hx-card-lift {
   transition:
     transform var(--motion) var(--ease),
@@ -744,8 +744,8 @@ div[id] {
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* ── Reveal-on-scroll — fires once per element ─────────────────────
-   v0.1.13 — CSS-only safety fallback so the reveal-on-scroll JS
+/* ── Reveal-on-scroll, fires once per element ─────────────────────
+   v0.1.13, CSS-only safety fallback so the reveal-on-scroll JS
    failing to fire CAN'T strand content invisible. After 2.5s without
    .is-revealed being applied, the animation force-reveals the
    element. When .is-revealed IS applied (the happy path), `animation:
@@ -803,7 +803,7 @@ div[id] {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   Command palette — ⌘K / Ctrl+K
+   Command palette, ⌘K / Ctrl+K
    ───────────────────────────────────────────────────────────────────── */
 
 .hx-cp-backdrop {
@@ -926,7 +926,7 @@ div[id] {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   Copilot bar — page-aware AI assistant
+   Copilot bar, page-aware AI assistant
    ───────────────────────────────────────────────────────────────────── */
 
 .copilot-launcher {
@@ -950,7 +950,7 @@ div[id] {
   font-family: inherit;
 }
 
-/* Dockable Copilot panel — top / left / right. Cluely-style but
+/* Dockable Copilot panel, top / left / right. Cluely-style but
    in our visual language: dark surface, soft purple ring on the
    docked edge, slide-in animation from the dock side. */
 .copilot-bar {
@@ -1293,7 +1293,7 @@ div[id] {
 }
 
 /* ─────────────────────────────────────────────────────────────────────
-   /app — web sansxel-1 chat (mirrors the desktop)
+   /app, web sansxel-1 chat (mirrors the desktop)
    ───────────────────────────────────────────────────────────────────── */
 
 .webchat {
@@ -1304,7 +1304,7 @@ div[id] {
      workshop layout), so subtract 0 not the marketing header height. */
   height: 100vh;
   /* Tighter ChatGPT-style column. 920 felt cavernous on wide screens
-     once the workshop sidebar + chat history rail were added — bubbles
+     once the workshop sidebar + chat history rail were added, bubbles
      wound up at opposite edges with a desert in between. 720 keeps
      them in a comfortable conversation column. */
   max-width: 760px;
@@ -1663,7 +1663,7 @@ div[id] {
 
 /* Bubble entrance: each chat message gently fades + lifts in instead
    of popping. User bubbles slide from the right, assistant from the
-   left — small but it makes the conversation feel alive. */
+   left, small but it makes the conversation feel alive. */
 .webchat-msg {
   animation: webchat-bubble-in 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -1804,7 +1804,7 @@ div[id] {
   height: 16px;
 }
 
-/* Phase pill — "Searching the web…" / "Reading the page…" / etc.
+/* Phase pill, "Searching the web…" / "Reading the page…" / etc.
    Sits above the bouncing dots while the model is using a server
    tool. Matches the ChatGPT/Claude pattern of telling the user
    what's actually happening instead of a generic spinner. */
@@ -2152,8 +2152,8 @@ div[id] {
   position: fixed;
   inset: 0;
   z-index: 60;
-  /* v0.1.16 — was 0.78 alpha, chat bled through and looked broken.
-     V→V is supposed to feel "screen goes away, just talk" — making
+  /* v0.1.16, was 0.78 alpha, chat bled through and looked broken.
+     V→V is supposed to feel "screen goes away, just talk", making
      it nearly opaque. Heavier blur for the same reason. */
   background: rgba(5, 5, 8, 0.97);
   backdrop-filter: blur(32px) saturate(140%);
@@ -2423,7 +2423,7 @@ div[id] {
   50%      { height: 22px; }
 }
 
-/* Learn sidebar — sits inside lg-only container in <LearnShell>. */
+/* Learn sidebar, sits inside lg-only container in <LearnShell>. */
 .learn-sidebar {
   font-size: 13px;
 }

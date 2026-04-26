@@ -9,7 +9,7 @@ import {
 
 /**
  * Wrapper around PayPalScriptProvider hoisted to a single instance
- * for the entire addons list. PayPal's SDK is a global singleton —
+ * for the entire addons list. PayPal's SDK is a global singleton
  * mounting multiple <PayPalScriptProvider>s on one page caused only
  * one button row to actually render (the others stayed blank). One
  * provider, many buttons inside.

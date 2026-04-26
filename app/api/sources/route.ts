@@ -17,7 +17,7 @@ function truncate(text: string): string {
   return `${text.slice(0, MAX_EXTRACTED_CHARS)}\u2026 [truncated, original was ${original} chars]`;
 }
 
-// GET /api/sources — list the user's uploaded reference materials.
+// GET /api/sources, list the user's uploaded reference materials.
 export async function GET(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/sources — multipart/form-data with a "file" field.
+// POST /api/sources, multipart/form-data with a "file" field.
 // Accepts PDF / MD / TXT, ≤5MB. PDFs are parsed with `pdf-parse`
 // and the extracted text is capped at MAX_EXTRACTED_CHARS so a
 // hundred-page report can't blow the row size.

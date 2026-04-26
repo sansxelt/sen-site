@@ -3,19 +3,19 @@ import Link from "next/link";
 
 // Placeholder served at platform.sansxel.ai/ until the real
 // developer console + docs land. Distinct visual identity from
-// sansxel.ai (marketing) and chat.sansxel.ai (workshop) — terminal/
+// sansxel.ai (marketing) and chat.sansxel.ai (workshop), terminal/
 // console aesthetic, mono type, cyan accent. Each subdomain feels
 // like its own surface, not the same site three times.
 
 export const metadata: Metadata = {
   title: "sansxel platform",
-  description: "API docs and developer console for sansxel — coming soon.",
+  description: "API docs and developer console for sansxel, coming soon.",
 };
 
 export default function PlatformSoonPage() {
   return (
     <main className="min-h-screen bg-[#070a10] text-neutral-200">
-      {/* Top zone bar — signals 'this is the dev zone' instantly. */}
+      {/* Top zone bar, signals 'this is the dev zone' instantly. */}
       <header className="border-b border-white/[0.06]">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 sm:px-8">
           <div className="flex items-center gap-3">
@@ -102,7 +102,7 @@ export default function PlatformSoonPage() {
           </div>
         </div>
 
-        {/* Quick code preview — sets developer tone */}
+        {/* Quick code preview, sets developer tone */}
         <div className="mt-14">
           <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-600">
             preview · POST /api/v1/chat

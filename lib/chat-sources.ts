@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { getSupabaseAdminClient } from "./supabase-admin";
 
-// v0.1.4 scaffold — uploaded reference materials the user can attach
+// v0.1.4 scaffold, uploaded reference materials the user can attach
 // to a chat turn. PDF parsing is deferred to v0.1.5; for now we only
 // store the raw filename + body for plain-text uploads.
 

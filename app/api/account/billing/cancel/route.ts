@@ -10,7 +10,7 @@ import {
  * POST /api/account/billing/cancel   → schedule cancel at period end
  * POST /api/account/billing/cancel?undo=true → undo a scheduled cancel
  *
- * We never hard-cancel — users keep access until their paid period ends.
+ * We never hard-cancel, users keep access until their paid period ends.
  */
 export async function POST(request: Request) {
   const session = await auth();

@@ -18,7 +18,7 @@ export default async function KeysPage() {
       <h1 className="text-2xl font-semibold text-white">API Keys</h1>
       <p className="mt-1 text-sm text-neutral-400">
         Keys authenticate your desktop client and other integrations. Each key
-        is shown once — store it somewhere safe.
+        is shown once, store it somewhere safe.
       </p>
 
       <div className="mt-8">

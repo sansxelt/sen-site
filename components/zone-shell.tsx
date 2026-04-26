@@ -12,7 +12,7 @@ import { getZone, ZONE_THEME, type Zone } from "@/lib/zone";
 
 export async function ZoneShell({
   children,
-  // Optional override — useful when a page wants to force a specific
+  // Optional override, useful when a page wants to force a specific
   // zone (e.g. testing the platform variant from any host).
   zoneOverride,
 }: {

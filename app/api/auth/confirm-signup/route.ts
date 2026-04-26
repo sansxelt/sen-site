@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   }
 
   // If a profile was already created between the page load and this POST
-  // (e.g. a tab race), don't double-create — just proceed.
+  // (e.g. a tab race), don't double-create, just proceed.
   const existing = await getUserProfileByEmail(email);
   if (existing) {
     return NextResponse.json({ ok: true, alreadyExisted: true });
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // Fire-and-forget welcome — profile is already live, don't block on mail.
+  // Fire-and-forget welcome, profile is already live, don't block on mail.
   sendWelcomeEmail(email, name).catch(() => {});
 
   return NextResponse.json({ ok: true });

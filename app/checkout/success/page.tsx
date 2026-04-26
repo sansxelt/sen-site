@@ -52,7 +52,7 @@ export default async function CheckoutSuccessPage({
   const cycle = params.cycle === "yearly" ? "yearly" : "monthly";
   const failed = !isAcceptable(params.redirect_status);
 
-  // ── Payment did NOT succeed — show failure UI, send user back ──────
+  // ── Payment did NOT succeed, show failure UI, send user back ──────
   if (failed) {
     const retryHref = `/checkout?plan=${plan.key}&cycle=${cycle}`;
     return (
@@ -95,7 +95,7 @@ export default async function CheckoutSuccessPage({
     );
   }
 
-  // ── Payment authorized — verify activation before celebrating ──────
+  // ── Payment authorized, verify activation before celebrating ──────
   // Note the copy is deliberately conditional: "Confirming" until the
   // poller flips to "active".  The poller component handles that swap.
   return (

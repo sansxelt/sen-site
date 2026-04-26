@@ -4,7 +4,7 @@ import { AuroraBackground } from "@/components/aurora-background";
 import { AuthFlow } from "@/components/auth-flow";
 import { DotGrid } from "@/components/dot-grid";
 import { HeistCard } from "@/components/heist-card";
-// HeroActivity removed — replaced by editorial featured-tile hero
+// HeroActivity removed, replaced by editorial featured-tile hero
 // in sansxel's own visual language (DotGrid texture, HeistCard tilt,
 // hx-gradient-text, mono kickers). Not a generic radial gradient.
 import { SpotlightCard } from "@/components/spotlight-card";
@@ -13,7 +13,7 @@ import { getSignInPath } from "@/lib/auth-ui";
 import { pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
 
-// Keep the escalation teaser — it's the single most distinctive concept
+// Keep the escalation teaser, it's the single most distinctive concept
 // of the product.  Everything else (transforms, why-sansxel, product
 // shape) lives on /features and /function where people come for depth.
 const escalation = [
@@ -49,7 +49,7 @@ const escalation = [
 const workshopHighlights = [
   {
     eyebrow: "One workspace",
-    title: "Chat, voice, drop, generate — all here",
+    title: "Chat, voice, drop, generate, all here",
     detail:
       "Talk through a problem, drop a screenshot, paste a YouTube link, generate an image inline. Same surface, no tab juggling.",
   },
@@ -63,7 +63,7 @@ const workshopHighlights = [
     eyebrow: "Built for makers",
     title: "For people shipping things, not writing emails",
     detail:
-      "Indie devs, designers, students, creators — sansxel adapts to whatever you're building right now instead of being one shape for everyone.",
+      "Indie devs, designers, students, creators, sansxel adapts to whatever you're building right now instead of being one shape for everyone.",
   },
 ];
 
@@ -82,7 +82,7 @@ export default async function HomePage() {
     <>
       <AuroraBackground />
 
-      {/* ── Hero — sansxel-native editorial layout. Same structure
+      {/* ── Hero, sansxel-native editorial layout. Same structure
           as the openai/anthropic 'big featured tile + side rail'
           shape but in our own visual language: DotGrid texture,
           HeistCard tilt, hx-gradient-text headline, mono kickers,
@@ -93,7 +93,7 @@ export default async function HomePage() {
         style={{ "--stagger-i": 0 } as React.CSSProperties}
         className="mx-auto grid max-w-[1600px] gap-4 px-4 pb-12 pt-6 sm:gap-5 sm:px-6 sm:pb-16 sm:pt-8 lg:grid-cols-[1.65fr_1fr] lg:gap-5 lg:px-8 lg:pb-20 lg:pt-10"
       >
-        {/* Featured tile — DotGrid texture + aurora ribbon + brand
+        {/* Featured tile, DotGrid texture + aurora ribbon + brand
             wordmark corner badge. */}
         <HeistCard
           tilt
@@ -122,7 +122,7 @@ export default async function HomePage() {
                 </h1>
                 <p className="mt-5 max-w-xl text-base leading-7 text-neutral-200 sm:text-lg sm:leading-8">
                   Voice, drag-drop, image gen, web search, persistent
-                  memory — sansxel-1 is one workspace that adapts to
+                  memory, sansxel-1 is one workspace that adapts to
                   whatever you&apos;re shipping right now.
                 </p>
               </div>
@@ -139,10 +139,10 @@ export default async function HomePage() {
           </Link>
         </HeistCard>
 
-        {/* Right column — two HeistCards with sansxel texture (no
+        {/* Right column, two HeistCards with sansxel texture (no
             generic radial gradients). */}
         <div className="flex flex-col gap-4 sm:gap-5">
-          {/* Workshop card — emerald accent + DotGrid */}
+          {/* Workshop card, emerald accent + DotGrid */}
           <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
             <Link
               href={signedIn ? "https://chat.sansxel.ai" : "/signin"}
@@ -162,7 +162,7 @@ export default async function HomePage() {
                     Open it on<br />chat.sansxel.ai.
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-neutral-300">
-                    The product itself — chat, voice, files, images,
+                    The product itself, chat, voice, files, images,
                     live web. Ready to use.
                   </p>
                 </div>
@@ -174,7 +174,7 @@ export default async function HomePage() {
             </Link>
           </HeistCard>
 
-          {/* Learn card — sky accent + DotGrid */}
+          {/* Learn card, sky accent + DotGrid */}
           <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
             <Link href="/learn" className="block h-full w-full">
               <DotGrid opacity={0.07} />
@@ -191,7 +191,7 @@ export default async function HomePage() {
                     AI, explained<br />in plain English.
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-neutral-300">
-                    Short guides for builders — concepts, code,
+                    Short guides for builders, concepts, code,
                     real examples. No PhD tone.
                   </p>
                 </div>
@@ -221,13 +221,13 @@ export default async function HomePage() {
             </h2>
             <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
               Most AI is a chat box pretending to be everything. Sansxel is a workshop:
-              voice, drag-drop, image gen, web search, persistent memory — all in the same
+              voice, drag-drop, image gen, web search, persistent memory, all in the same
               workspace, all morphing to fit the request.
             </p>
           </div>
           <div className="rounded-3xl border border-emerald-400/10 bg-emerald-400/[0.03] px-5 py-4 text-sm leading-6 text-neutral-200 lg:max-w-sm lg:border-emerald-400/15 lg:bg-emerald-400/[0.05]">
             Open it in your browser, drop whatever you&apos;re working on, and pick up on
-            your phone an hour later — same threads, same memory.
+            your phone an hour later, same threads, same memory.
           </div>
         </div>
 
@@ -408,7 +408,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Final CTA — single section, not 2 ───────────────────── */}
+      {/* ── Final CTA, single section, not 2 ───────────────────── */}
       <section
         id="get-started"
         data-stagger
@@ -445,7 +445,7 @@ export default async function HomePage() {
           <AuthFlow initialSessionEmail={session?.user?.email ?? null} />
         )}
 
-        {/* Compact "what's next" row — one click to each depth page */}
+        {/* Compact "what's next" row, one click to each depth page */}
         <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["/features",  "Features",       "Ask, Explore, Create, Build"],

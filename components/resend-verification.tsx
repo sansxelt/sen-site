@@ -66,7 +66,7 @@ export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: strin
         className="sansxel-white-button w-full rounded-xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {status === "loading" ? "Sending…"
-        : status === "sent"    ? "Sent — check your inbox"
+        : status === "sent"    ? "Sent, check your inbox"
                                : "Send a new link"}
       </button>
     </form>

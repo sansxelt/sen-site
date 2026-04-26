@@ -11,7 +11,7 @@ export type SubscriptionRecord = {
 };
 
 // Returns the user's current plan key. Defaults to "free" when there's
-// no subscription row, the column is missing, or the lookup fails — we
+// no subscription row, the column is missing, or the lookup fails, we
 // never want a transient DB hiccup to grant unintended access.
 export async function getPlanForEmail(email: string): Promise<PlanKey> {
   try {

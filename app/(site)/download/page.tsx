@@ -16,7 +16,7 @@ export default async function DownloadPage() {
   const session = await auth();
   const signedIn = Boolean(session?.user?.email);
 
-  // v0.1.16 — Download (and the early-access invite request inside)
+  // v0.1.16, Download (and the early-access invite request inside)
   // require an account so we have an email to attach the invite to.
   // Anonymous visitors hit /signin first and bounce back here.
   if (!signedIn) {

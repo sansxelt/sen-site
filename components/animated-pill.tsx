@@ -6,13 +6,13 @@ type Props = {
 };
 
 /**
- * AnimatedPill — a pill badge with a rotating conic-gradient border.
+ * AnimatedPill, a pill badge with a rotating conic-gradient border.
  *
  * The gradient rotation is driven by an @property-registered CSS
  * custom property (--hx-angle), animated infinitely.  A mask subtracts
  * the pill's interior so only the ~1px border glows.  Pure CSS, no JS.
  *
- * Use sparingly — reserve for "New", "v2", or similarly high-signal
+ * Use sparingly, reserve for "New", "v2", or similarly high-signal
  * moments.  Overuse dilutes the premium feel.
  */
 export function AnimatedPill({ children, className = "" }: Props) {

@@ -69,7 +69,7 @@ export async function POST(request: Request) {
   // Voice cap: free can't speak at all on web (handled client-side
   // too), apprentice/studio have weekly minute caps. The estimated
   // seconds for THIS request is ~text.length / 14. Power Pack lifts
-  // the weekly cap to unlimited (cap=0 plans still gated though —
+  // the weekly cap to unlimited (cap=0 plans still gated though
   // voice has to be in the plan first).
   const projectedSeconds = Math.max(1, Math.round(text.length / 14));
   const [plan, weekly, activeAddons] = await Promise.all([
@@ -84,9 +84,9 @@ export async function POST(request: Request) {
     activeAddons,
   });
   if (voiceDecision.kind === "blocked") {
-    // v0.1.8 — legacy voice_minute_pack override (the SKU was dropped
+    // v0.1.8, legacy voice_minute_pack override (the SKU was dropped
     // in v0.1.9 but already-purchased boost rows still redeem here).
-    // v0.1.9 — fall through to credits if no boost is available.
+    // v0.1.9, fall through to credits if no boost is available.
     let allowed = false;
     if (await hasUnconsumedBoost(email, "voice")) {
       const burnt = await consumeBoostForKind(email, "voice");

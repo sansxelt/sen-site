@@ -7,7 +7,7 @@ import {
 } from "../../../../../lib/desktop-auth";
 
 // Called from the /desktop-auth page when the signed-in user clicks
-// "Approve". Requires a real browser session — that's the entire
+// "Approve". Requires a real browser session, that's the entire
 // point of this step. The approval binds the desktop request to the
 // user's email so the desktop can redeem it next.
 export async function POST(request: Request) {

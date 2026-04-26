@@ -10,7 +10,7 @@ type Props = HTMLAttributes<HTMLDivElement> & {
    * When true the card responds to pointer position with a subtle
    * perspective-based 3D tilt (~6deg max).  Disabled on touch devices
    * via the `(hover: hover) and (pointer: fine)` guard inside the
-   * handler — coarse pointers leave the transform untouched so we
+   * handler, coarse pointers leave the transform untouched so we
    * don't ship a dead hover state to phones / tablets.
    */
   tilt?: boolean;
@@ -23,7 +23,7 @@ type Props = HTMLAttributes<HTMLDivElement> & {
 };
 
 /**
- * HeistCard — outlined card in the heist.lol visual language.
+ * HeistCard, outlined card in the heist.lol visual language.
  *
  * Shape:
  *   - 1px translucent white border

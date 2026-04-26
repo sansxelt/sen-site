@@ -44,21 +44,21 @@ export const runtime = "nodejs";
 
 const client = new Anthropic();
 
-const SYSTEM_PROMPT = `You are sansxel-1, the AI inside the sansxel workspace — an adaptive product for thinking, writing, and building. You are an assistant for serious creative and professional work.
+const SYSTEM_PROMPT = `You are sansxel-1, the AI inside the sansxel workspace, an adaptive product for thinking, writing, and building. You are an assistant for serious creative and professional work.
 
 How to respond:
 - Just do the thing. No "Sure!", no "I'd be happy to", no "Here's...". Skip the preamble entirely and start with the actual answer.
-- For ANY question about current/live data — news, stock prices, sports scores, weather, recent events, "today/this week", anything time-sensitive — USE the web_search tool. Don't apologize for "no real-time data," don't dump links and ask the user to look it up themselves. Search, then answer with the actual data plus a short citation. Skip web_search only when the question is genuinely timeless (math, code, definitions, historical facts).
-- When the user pastes or drops a URL (article, blog post, doc page, YouTube link, GitHub link, anything web-reachable), USE the web_fetch tool to read the actual page contents BEFORE replying. NEVER say "I can't access URLs" or "I don't have a browser" — you can. Fetch first, then answer with the real contents. If the fetch fails or the page is gated, say so explicitly and offer to work from what the user can paste in.
-- The sansxel workspace HAS image generation. When the user asks to make / generate / draw an image, the workspace runs gpt-image-1 inline — you don't have an image tool yourself, but the surface around you does. NEVER reply "I can't generate images" or "I'm a text assistant." Instead say something like "Tap the image button or just say 'gen an image of X' and I'll fire it off." Video generation is not yet wired (private beta) — for video you can offer to script / storyboard it instead.
-- Match the user's voice — vocabulary, sentence length, formality, all of it. If they write casually, you write casually. If they're technical, be technical. If they're sloppy, be sloppy with them.
+- For ANY question about current/live data, news, stock prices, sports scores, weather, recent events, "today/this week", anything time-sensitive, USE the web_search tool. Don't apologize for "no real-time data," don't dump links and ask the user to look it up themselves. Search, then answer with the actual data plus a short citation. Skip web_search only when the question is genuinely timeless (math, code, definitions, historical facts).
+- When the user pastes or drops a URL (article, blog post, doc page, YouTube link, GitHub link, anything web-reachable), USE the web_fetch tool to read the actual page contents BEFORE replying. NEVER say "I can't access URLs" or "I don't have a browser", you can. Fetch first, then answer with the real contents. If the fetch fails or the page is gated, say so explicitly and offer to work from what the user can paste in.
+- The sansxel workspace HAS image generation. When the user asks to make / generate / draw an image, the workspace runs gpt-image-1 inline, you don't have an image tool yourself, but the surface around you does. NEVER reply "I can't generate images" or "I'm a text assistant." Instead say something like "Tap the image button or just say 'gen an image of X' and I'll fire it off." Video generation is not yet wired (private beta), for video you can offer to script / storyboard it instead.
+- Match the user's voice, vocabulary, sentence length, formality, all of it. If they write casually, you write casually. If they're technical, be technical. If they're sloppy, be sloppy with them.
 - Write the requested length. If they ask for 5 pages, write 5 pages. Don't truncate, don't summarize.
-- Don't add disclaimers about whether topics are silly, juvenile, or unconventional — if a user asks for an essay on skibidi toilet, write the essay. Creative + cultural topics are valid; treat them with the same craft as anything else.
+- Don't add disclaimers about whether topics are silly, juvenile, or unconventional, if a user asks for an essay on skibidi toilet, write the essay. Creative + cultural topics are valid; treat them with the same craft as anything else.
 - No moralizing on legitimate creative or research requests. The user is an adult choosing what they want to write. Your job is to write it well.
-- Engage with ANY topic the user brings — niche subcultures (Pokemon TCG resale, sneaker drops, vinyl, anime, esports), money/markets/trading, public figures and politics (Biden, Trump, anyone), current events, controversies, fan communities, anything. Treat them all as serious work. Skip the "as an AI I can't give financial/medical/legal advice" boilerplate — give the actual answer with the relevant context, then move on. If the topic genuinely needs a professional (specific medication doses, legal filings), say so in one short line and still help with the parts you can.
-- Read the user's REAL intent before answering. "Joe Biden video" probably means they want commentary, summary, talking points, or something they saw — figure out which from context, ask one short question only if you genuinely can't tell. Don't refuse based on keyword alarms when the actual request is ordinary.
+- Engage with ANY topic the user brings, niche subcultures (Pokemon TCG resale, sneaker drops, vinyl, anime, esports), money/markets/trading, public figures and politics (Biden, Trump, anyone), current events, controversies, fan communities, anything. Treat them all as serious work. Skip the "as an AI I can't give financial/medical/legal advice" boilerplate, give the actual answer with the relevant context, then move on. If the topic genuinely needs a professional (specific medication doses, legal filings), say so in one short line and still help with the parts you can.
+- Read the user's REAL intent before answering. "Joe Biden video" probably means they want commentary, summary, talking points, or something they saw, figure out which from context, ask one short question only if you genuinely can't tell. Don't refuse based on keyword alarms when the actual request is ordinary.
 - Use markdown for formatting (headings, lists, bold, code blocks). Never wrap your whole response in a single code block.
-- When the request is ambiguous, ask one targeted question — never a list of clarifying questions.
+- When the request is ambiguous, ask one targeted question, never a list of clarifying questions.
 - For complex requests, you MAY briefly "think out loud" inside <think>...</think> tags before the actual answer. The UI renders this in a dim italic block separate from the answer, so users can see your reasoning without it cluttering the response. Keep it short (1-2 sentences) and skip it entirely on trivial questions. Never use <think> for the final answer itself.
 
 Identity:
@@ -72,8 +72,8 @@ ${SANSXEL_PRODUCT_BRIEF}`;
 // the user asked for a list / steps. Compromise: brief by default,
 // light formatting allowed when the answer NEEDS it.
 const VOICE_TURN_DIRECTIVE = `You're in voice mode. The user's question came from a microphone and your reply will be spoken back through TTS. Constraints:
-- Keep replies SHORT — 1 to 3 sentences unless the user explicitly asks for depth, a list, or steps.
-- Prefer plain prose. Only use markdown when the answer is genuinely list-shaped (steps, comparisons) — then a short bullet list is fine. No headers, no tables, no code fences for short replies.
+- Keep replies SHORT, 1 to 3 sentences unless the user explicitly asks for depth, a list, or steps.
+- Prefer plain prose. Only use markdown when the answer is genuinely list-shaped (steps, comparisons), then a short bullet list is fine. No headers, no tables, no code fences for short replies.
 - Conversational and direct. Read aloud, your reply should sound like a person, not a paragraph being read.
 - Skip preamble ("Sure!", "Great question!"). Open with the answer.`;
 
@@ -139,7 +139,7 @@ const DETECTOR_EVASION_PATTERNS = [
   /\b(?:gptzero|turnitin|originality(?:\.ai)?|copyleaks|writer(?:\s+detector)?)\b/i,
 ];
 
-// v0.1.4 — Optional vision attachments on a user turn. media_type
+// v0.1.4, Optional vision attachments on a user turn. media_type
 // must be one of Anthropic's accepted image MIME types; data is the
 // raw base64 (NO "data:image/png;base64," prefix). Each image is kept
 // per-message so the model can localize references like "the second
@@ -149,7 +149,7 @@ type ChatImageAttachment = {
   data: string;
 };
 
-// v0.1.8 — When tools are enabled, user / assistant messages may
+// v0.1.8, When tools are enabled, user / assistant messages may
 // contain tool_use / tool_result content blocks alongside plain text.
 // We forward whatever the client sends straight to Anthropic so the
 // follow-up "here's the tool_result" turn round-trips correctly.
@@ -183,39 +183,39 @@ type ChatBody = {
   tier?: ModelTier;
   input_mode?: ChatInputMode;
   persona?: Persona;
-  // v0.1.4 — RAG-style attached sources. Server fetches each id from
+  // v0.1.4, RAG-style attached sources. Server fetches each id from
   // chat_sources (owned by the requesting user) and injects the
   // bodies into the system prompt as reference material.
   source_ids?: string[];
-  // v0.1.4 — when true, the system prompt asks the model to respond
+  // v0.1.4, when true, the system prompt asks the model to respond
   // as a numbered multi-step plan with a closing Done/Next line.
   // No real tool-calling yet; that's v0.1.5+.
   agent_mode?: boolean;
-  // v0.1.8 — when true, the desktop tool registry is exposed to the
+  // v0.1.8, when true, the desktop tool registry is exposed to the
   // model and the response is streamed as JSON-Lines so the client
   // can dispatch tool_use blocks and feed tool_result back in.
   tools_enabled?: boolean;
-  // v0.1.16 — thread persistence. If omitted, server creates a new
+  // v0.1.16, thread persistence. If omitted, server creates a new
   // thread and returns its id in the x-sansxel-thread-id response
   // header so the client can stash it for follow-up turns. Same
   // account → same threads from any device.
   thread_id?: string;
-  // v0.1.12 — client-supplied local time so the model can answer
+  // v0.1.12, client-supplied local time so the model can answer
   // "what time is it for me" without claiming it has no access to
   // the system clock. Client passes IANA timezone + a pre-formatted
   // local time string + ISO timestamp; server injects all three into
-  // the system prompt. All optional — falls back to UTC server time
+  // the system prompt. All optional, falls back to UTC server time
   // if the client doesn't send any of them.
   client_time_iso?: string;
   client_timezone?: string;
   client_time_label?: string;
 };
 
-// v0.1.16 — Anthropic-hosted server tools. web_search runs entirely
+// v0.1.16, Anthropic-hosted server tools. web_search runs entirely
 // inside the Anthropic API: model decides when to call it, search
 // runs on their servers, results re-enter the model's context, and
 // the next text block is the actual answer. We don't need to handle
-// tool_use/tool_result on the client — the text stream just
+// tool_use/tool_result on the client, the text stream just
 // continues naturally with the grounded answer.
 //
 // Available on EVERY chat surface (web + desktop). Removes the
@@ -227,11 +227,11 @@ const SERVER_TOOLS = [
     name: "web_search",
     max_uses: 3,
   },
-  // v0.1.16 — web_fetch lets the model resolve a specific URL the user
+  // v0.1.16, web_fetch lets the model resolve a specific URL the user
   // drops in (article, doc, YouTube link, GitHub blob). Without this
   // the model would punt with "I can't access URLs" because web_search
   // alone only does Google-style queries, not page fetches. Requires
-  // the `web-fetch-2025-09-10` beta header on the request — see the
+  // the `web-fetch-2025-09-10` beta header on the request, see the
   // anthropic-beta option passed to messages.stream below.
   {
     type: "web_fetch_20250910",
@@ -241,12 +241,12 @@ const SERVER_TOOLS = [
 ] as unknown as Anthropic.Messages.Tool[];
 
 // Match http(s) URLs anywhere in the prompt. Used to keep tools
-// enabled even when the prompt is short — "summarize https://…" is
+// enabled even when the prompt is short, "summarize https://…" is
 // 30 chars and would otherwise get stripped by the trivial-prompt
 // guard below.
 const URL_PATTERN = /\bhttps?:\/\/\S+/i;
 
-// v0.1.8 — Desktop tool registry. The model sees these as available
+// v0.1.8, Desktop tool registry. The model sees these as available
 // callable functions; the actual handlers live in the Tauri client
 // (see desktop/src/chat-view.tsx). Server only forwards the schema
 // and round-trips tool_use / tool_result blocks.
@@ -372,7 +372,7 @@ const DESKTOP_TOOLS: Array<{
 
 // Hard server-side cap on individual image payloads. The desktop
 // client also enforces this client-side, but a hand-rolled API caller
-// could ignore that — keep this as belt + suspenders against blowing
+// could ignore that, keep this as belt + suspenders against blowing
 // up the upstream model with a 50MB PNG.
 const MAX_IMAGE_BYTES = 1_000_000;
 const ALLOWED_IMAGE_TYPES = new Set<ChatImageAttachment["media_type"]>([
@@ -396,7 +396,7 @@ function approxBase64ByteLength(b64: string): number {
 // always stay text-only since we don't generate images via this route.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toAnthropicMessage(message: ChatMessage): any {
-  // v0.1.8 — structured content (tool_use / tool_result blocks)
+  // v0.1.8, structured content (tool_use / tool_result blocks)
   // passes straight through. The desktop client builds these arrays
   // when continuing a tool-using assistant turn.
   if (Array.isArray(message.content)) {
@@ -473,7 +473,7 @@ function recentUserContext(
 }
 
 function matchesVoiceHumanizationIntent(payload: ChatBody): boolean {
-  // v0.1.16 — Removed the input_mode === "voice" gate. The user
+  // v0.1.16, Removed the input_mode === "voice" gate. The user
   // wants humanization to fire whenever they ASK for it (humanize,
   // make this human, rewrite naturally, less AI), regardless of
   // whether the prompt came from typing, dictation, or full voice
@@ -562,14 +562,14 @@ function systemPromptForPayload(
 ): string {
   let prompt = SYSTEM_PROMPT;
 
-  // v0.1.4 — Source-attached reference block (RAG). Lives BEFORE the
+  // v0.1.4, Source-attached reference block (RAG). Lives BEFORE the
   // persona overlay so persona instructions still take priority on
   // tone, but the model has the materials in scope when it answers.
   if (referenceBlock) {
     prompt = `${prompt}\n\n${referenceBlock}`;
   }
 
-  // Persona overlay (direct/warm/technical/playful) — short style
+  // Persona overlay (direct/warm/technical/playful), short style
   // directive appended to the base prompt. Keep this AFTER the base
   // so persona instructions override hedge-y behavior in the base.
   if (payload.persona && isPersona(payload.persona)) {
@@ -581,24 +581,24 @@ function systemPromptForPayload(
     prompt = `${prompt}\n\n${VOICE_HUMANIZATION_PROMPT}`;
   }
 
-  // v0.1.16 — when the user is talking, replies must be brief and TTS-
+  // v0.1.16, when the user is talking, replies must be brief and TTS-
   // friendly (no markdown, short sentences). Without this the model
   // happily ships 4-paragraph answers that sound terrible read aloud.
   if (payload.input_mode === "voice") {
     prompt = `${prompt}\n\n${VOICE_TURN_DIRECTIVE}`;
   }
 
-  // v0.1.4 — Agent mode directive. Toggled from the "+" menu in the
+  // v0.1.4, Agent mode directive. Toggled from the "+" menu in the
   // desktop chat input. Just a prompt directive for now; real tool-
   // calling lands in v0.1.5+.
   if (payload.agent_mode) {
     prompt = `${prompt}\n\n${AGENT_MODE_PROMPT}`;
   }
 
-  // v0.1.16 — Language lock. Previously: only nudged when the
+  // v0.1.16, Language lock. Previously: only nudged when the
   // detector flagged a non-English language. PROBLEM: when the model
   // calls web_search and gets back results in another language
-  // (common for region-specific searches — stocks pulled Portuguese
+  // (common for region-specific searches, stocks pulled Portuguese
   // results from a Brazilian source, for example), it would silently
   // SWITCH languages to match the search results. User asked in
   // English, got a reply in Portuguese.
@@ -613,10 +613,10 @@ function systemPromptForPayload(
   if (lastUserMessage) {
     const detectedLang = detectLanguage(lastUserMessage);
     const lang = langLabel(detectedLang);
-    prompt += `\n\nLanguage lock: the user is writing in ${lang}. Reply ONLY in ${lang}. If web_search, attached files, or any other tool returns content in a different language, translate or paraphrase what's relevant into ${lang} — NEVER switch to the source language. The user's language is determined by their typed message, not by any external content.`;
+    prompt += `\n\nLanguage lock: the user is writing in ${lang}. Reply ONLY in ${lang}. If web_search, attached files, or any other tool returns content in a different language, translate or paraphrase what's relevant into ${lang}, NEVER switch to the source language. The user's language is determined by their typed message, not by any external content.`;
   }
 
-  // v0.1.12 — Client-supplied local time so the model can answer
+  // v0.1.12, Client-supplied local time so the model can answer
   // time-of-day questions and frame replies appropriately ("good
   // evening" not "good afternoon" at 8pm). Client passes its own
   // IANA timezone + a formatted label; server falls back to UTC
@@ -626,13 +626,13 @@ function systemPromptForPayload(
     payload.client_time_label ??
     payload.client_time_iso ??
     new Date().toISOString();
-  prompt += `\n\nThe user's current local time is ${timeLabel} (timezone: ${tzLabel}). Use this when answering time-of-day questions or framing greetings — never claim you don't have access to the time.`;
+  prompt += `\n\nThe user's current local time is ${timeLabel} (timezone: ${tzLabel}). Use this when answering time-of-day questions or framing greetings, never claim you don't have access to the time.`;
 
   return prompt;
 }
 
 export async function POST(request: Request) {
-  // v0.1.16 — Phase timing markers. Logged at the end as a single
+  // v0.1.16, Phase timing markers. Logged at the end as a single
   // line so we can spot which phase is dominating cold-start TTFT.
   // Cheap (Date.now) and only emit on the slow path; if total <300ms
   // we skip the verbose log to keep noise down.
@@ -683,14 +683,14 @@ export async function POST(request: Request) {
   }
 
   // Resolve the requested tier against the user's plan. If they ask
-  // for a tier their plan can't run, we silently downgrade — rejecting
+  // for a tier their plan can't run, we silently downgrade, rejecting
   // would force the client to handle yet another error path. The
   // resolved tier is sent back via headers so the UI can surface it.
   const requestedTier: ModelTier = payload.tier ?? "balanced";
-  // v0.1.16 r4 — parallelize plan + weekly fetches. They're independent
+  // v0.1.16 r4, parallelize plan + weekly fetches. They're independent
   // Supabase round-trips (~120ms each); awaiting them sequentially
   // doubled the pre-stream latency for nothing.
-  // v0.1.16 — active addons added to the same parallel block. Cached
+  // v0.1.16, active addons added to the same parallel block. Cached
   // (5-min TTL) so 99%+ of requests pay zero latency. Cache miss
   // costs one Stripe roundtrip but parallelism hides it behind the
   // existing fetches.
@@ -711,7 +711,7 @@ export async function POST(request: Request) {
     weekly,
     activeAddons,
   });
-  // v0.1.8 — boost ledger override. If the plan-cap blocked the
+  // v0.1.8, boost ledger override. If the plan-cap blocked the
   // request, check for an unconsumed session_boost / weekly_boost.
   // We BURN the credit before letting the request through so a hung
   // chat never spends a credit twice. Throttle info from `decision`
@@ -725,7 +725,7 @@ export async function POST(request: Request) {
       const burnt = await consumeBoostForKind(email, "chat");
       if (burnt) allowed = true;
     }
-    // v0.1.9 — credit ledger fallback. When no boost is on file, try
+    // v0.1.9, credit ledger fallback. When no boost is on file, try
     // burning credits before returning 429.
     if (!allowed && (await consumeCreditFor(email, "chat"))) {
       allowed = true;
@@ -766,12 +766,12 @@ export async function POST(request: Request) {
     messages.push({ role: "user", content: contextBlock });
     messages.push({
       role: "assistant",
-      content: "Got it — I have the note in mind.",
+      content: "Got it, I have the note in mind.",
     });
   }
   messages.push(...payload.messages);
 
-  // v0.1.4 — fetch any attached source bodies and assemble a single
+  // v0.1.4, fetch any attached source bodies and assemble a single
   // reference block. Failures here are non-fatal (we just skip the
   // injection) so a flaky source lookup never breaks the chat itself.
   let referenceBlock = "";
@@ -785,7 +785,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    // v0.1.8 — when tools_enabled, expose the desktop tool registry
+    // v0.1.8, when tools_enabled, expose the desktop tool registry
     // and stream JSON-Lines events so the client can dispatch
     // tool_use blocks. v0.1.12 fix: default is now FALSE (must be
     // EXPLICITLY enabled). The previous "!== false" default treated
@@ -795,7 +795,7 @@ export async function POST(request: Request) {
     // tools_enabled: true explicitly, so this is safe.
     const toolsEnabled = payload.tools_enabled === true;
 
-    // v0.1.16 r5 — Tools are LATENCY-EXPENSIVE. Anthropic's hosted
+    // v0.1.16 r5, Tools are LATENCY-EXPENSIVE. Anthropic's hosted
     // web_search adds 2-5s of TTFT even when the model decides NOT to
     // use it (the option's existence triggers extra processing).
     // For short / clearly-conversational prompts, strip tools so the
@@ -808,22 +808,22 @@ export async function POST(request: Request) {
     // (greetings, acks). The model would never need web_search to
     // answer "hi" / "thanks" / "ok" / "wsg".
     // EXCEPTION: a short prompt that contains a URL ("summarize
-    // https://…") still needs web_fetch — strip would force the
+    // https://…") still needs web_fetch, strip would force the
     // "I can't access URLs" punt response.
     const containsUrl = URL_PATTERN.test(lastUserText);
     const isTrivialPrompt = lastUserText.length < 20 && !containsUrl;
     const toolsForCall = isVoiceTurn || isTrivialPrompt
-      ? [] // strip ALL tools — fast first-token wins
+      ? [] // strip ALL tools, fast first-token wins
       : toolsEnabled
         ? [...SERVER_TOOLS, ...(DESKTOP_TOOLS as unknown as Anthropic.Messages.Tool[])]
         : SERVER_TOOLS;
 
-    // v0.1.16 — Thread persistence. Resolve or create the thread so
+    // v0.1.16, Thread persistence. Resolve or create the thread so
     // the conversation lives server-side and follows the user across
     // devices. Save the latest user turn before the model starts so
     // it's persisted even if the stream errors.
     let resolvedThreadId: string | null = null;
-    // v0.1.16 — Explicit timestamps for the user turn + assistant
+    // v0.1.16, Explicit timestamps for the user turn + assistant
     // placeholder. Both inserts race against each other; without
     // explicit created_at values, Supabase's default `now()` can
     // assign identical timestamps and the assistant placeholder
@@ -869,7 +869,7 @@ export async function POST(request: Request) {
     }
     tThread = Date.now();
 
-    // v0.1.16 r7 — Progressive save re-enabled. The hang was a
+    // v0.1.16 r7, Progressive save re-enabled. The hang was a
     // CLIENT-SIDE thread-id capture bug, not the persistence layer.
     // Now generation truly survives client disconnect: throttled
     // 900ms updates to the placeholder + final UPDATE on stream end.
@@ -884,20 +884,20 @@ export async function POST(request: Request) {
         })
       : Promise.resolve(null);
 
-    // v0.1.16 r5 — Quick timing markers so the Vercel function logs
+    // v0.1.16 r5, Quick timing markers so the Vercel function logs
     // show where time goes when chats feel slow.
     tStreamCall = Date.now();
     console.log(
       `[ai/chat] tools=${toolsForCall.length} promptLen=${lastUserText.length} model=${descriptor.model}`,
     );
 
-    // v0.1.16 — web_fetch_20250910 is still on a beta header. Send it
+    // v0.1.16, web_fetch_20250910 is still on a beta header. Send it
     // whenever tools are enabled; harmless on calls that only end up
     // using web_search. Per-request headers don't affect caching.
     const wantsBetaTools = toolsForCall.some(
       (t) => (t as { type?: string }).type === "web_fetch_20250910",
     );
-    // v0.1.16 — Wire client cancel → upstream Anthropic abort. Without
+    // v0.1.16, Wire client cancel → upstream Anthropic abort. Without
     // this, a client Stop button just closes the response stream while
     // we keep paying tokens upstream until Anthropic finishes; worse,
     // the eventual finally block then OVERWRITES whatever the client
@@ -919,7 +919,7 @@ export async function POST(request: Request) {
         // into a multi-paragraph essay that takes 8 seconds to TTS.
         max_tokens: isVoiceTurn ? 320 : 2048,
         system: systemPromptForPayload(payload, referenceBlock),
-        // v0.1.4 — translate to Anthropic content-block form so user
+        // v0.1.4, translate to Anthropic content-block form so user
         // turns with attached images become multimodal content arrays.
         // Text-only turns pass through as plain strings.
         messages: messages.map(toAnthropicMessage),
@@ -947,7 +947,7 @@ export async function POST(request: Request) {
     // client disconnect.
     let assistantBuffer = "";
     let firstTokenLogged = false;
-    // Throttled progressive save — partial output survives client
+    // Throttled progressive save, partial output survives client
     // disconnect. UPDATE the placeholder with the latest buffer
     // every ~900ms so a navigation/closure doesn't lose state.
     let lastPersist = 0;
@@ -974,7 +974,7 @@ export async function POST(request: Request) {
         let inputTokens = 0;
         let outputTokens = 0;
 
-        // v0.1.8 — when streaming JSON-Lines, every event is a
+        // v0.1.8, when streaming JSON-Lines, every event is a
         // single-line JSON object terminated by \n. Buffers tool
         // input JSON across multiple input_json_delta events and
         // emits a single tool_use line at content_block_stop.
@@ -1058,7 +1058,7 @@ export async function POST(request: Request) {
               // while server tools run, the way ChatGPT/Claude do.
               //
               // Marker format: \x1F{"type":"phase",...}\x1F
-              // \x1F is the ASCII Unit Separator control char — never
+              // \x1F is the ASCII Unit Separator control char, never
               // appears in real model output, so a simple .split('\x1F')
               // on the client recovers text vs events cleanly.
               const writePhase = (payload: Record<string, unknown>) => {
@@ -1100,7 +1100,7 @@ export async function POST(request: Request) {
           console.error("ai/chat stream error:", err);
         } finally {
           controller.close();
-          // v0.1.16 — Phase summary log. Emits one line per request
+          // v0.1.16, Phase summary log. Emits one line per request
           // with where the time went so we can spot the dominant
           // phase when chats feel slow. Skipped on requests that
           // resolved fast (<500ms total) to keep the log noise down.
@@ -1123,7 +1123,7 @@ export async function POST(request: Request) {
             total_tokens: inputTokens + outputTokens,
             duration_ms: Date.now() - startedAt,
           });
-          // v0.1.16 r2 — Final save: update the placeholder with the
+          // v0.1.16 r2, Final save: update the placeholder with the
           // full buffer (overwrites the throttled partials). Use UPDATE
           // not INSERT so we don't double-create the assistant
           // message. If somehow no placeholder exists (DB hiccup),
@@ -1159,7 +1159,7 @@ export async function POST(request: Request) {
               // After the assistant turn lands, fire AI title gen
               // for threads that still have the auto-snippet title
               // (the first user message). Cheap Haiku call. Fails
-              // open — bad titles just stay snippets if it errors.
+              // open, bad titles just stay snippets if it errors.
               try {
                 const after = await listChatMessages(email, tid);
                 const firstUser = after.find((m) => m.role === "user");
@@ -1169,7 +1169,7 @@ export async function POST(request: Request) {
                   // looks like the auto-derived first-message snippet
                   // OR the placeholder. Covers fresh threads (first
                   // round) AND old crap-titled ones the user is now
-                  // continuing — both auto-upgrade.
+                  // continuing, both auto-upgrade.
                   const t = await getChatThread(email, tid);
                   const currentTitle = (t?.title ?? "").trim();
                   const firstText = firstUser.content.replace(/\s+/g, " ").trim();
@@ -1202,7 +1202,7 @@ export async function POST(request: Request) {
 
     return new Response(body, {
       headers: {
-        // v0.1.8 — JSON-Lines when tools are enabled, plain text
+        // v0.1.8, JSON-Lines when tools are enabled, plain text
         // otherwise. The client checks x-sansxel-stream-format to
         // decide how to parse incoming chunks.
         "Content-Type": toolsEnabled
@@ -1222,7 +1222,7 @@ export async function POST(request: Request) {
         "x-sansxel-weekly-limit": String(
           planLimit.weekly_chat_requests ?? "",
         ),
-        // v0.1.16 — Echo the resolved thread id so the client can
+        // v0.1.16, Echo the resolved thread id so the client can
         // stash it for follow-up turns + show it in the URL/sidebar.
         "x-sansxel-thread-id": resolvedThreadId ?? "",
       },
@@ -1230,7 +1230,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("ai/chat failed:", err);
     // Surface a slightly more useful generic message than the old
-    // "Could not start AI chat." — the cap-block path has its own
+    // "Could not start AI chat.", the cap-block path has its own
     // detailed reason, so this catch only fires on real upstream
     // failures (Anthropic outage, malformed payload, etc.).
     return NextResponse.json(

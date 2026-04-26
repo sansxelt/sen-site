@@ -30,7 +30,7 @@ export const desktopNextVersionHighlights = [
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.15 — polish pass before v0.2.0. Images AND videos are now drag-droppable into the chat: drop a video and sansxel extracts a poster frame so vision still works; the inline chip plays a muted preview. Dedicated image-generate button is back next to the mic (gpt-image-1, plan-gated server-side). Memory view's \"Clear all\" is honestly disabled until the memory engine ships (v0.2.0). Integrations view's placeholder cards now say \"Coming soon\" on the button itself instead of a misleading \"Connect\".";
+  "v0.1.15, polish pass before v0.2.0. Images AND videos are now drag-droppable into the chat: drop a video and sansxel extracts a poster frame so vision still works; the inline chip plays a muted preview. Dedicated image-generate button is back next to the mic (gpt-image-1, plan-gated server-side). Memory view's \"Clear all\" is honestly disabled until the memory engine ships (v0.2.0). Integrations view's placeholder cards now say \"Coming soon\" on the button itself instead of a misleading \"Connect\".";
 
 export const desktopShippedReleases: DesktopRelease[] = [
   {
@@ -43,7 +43,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
     changes: [
       {
         type: "new",
-        text: "Videos drag-droppable into the chat composer. Dropping a video file creates a blob-URL preview chip (plays muted, loop, with controls), and the app extracts a poster frame to a JPEG via canvas so vision still works — the poster rides through Anthropic's image content blocks plus a note telling the model it's the first frame of a video. 200MB cap on video files; revokes blob URLs on removal.",
+        text: "Videos drag-droppable into the chat composer. Dropping a video file creates a blob-URL preview chip (plays muted, loop, with controls), and the app extracts a poster frame to a JPEG via canvas so vision still works, the poster rides through Anthropic's image content blocks plus a note telling the model it's the first frame of a video. 200MB cap on video files; revokes blob URLs on removal.",
       },
       {
         type: "new",
@@ -51,7 +51,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "improve",
-        text: "Smart Action Launcher now counts video attachments the same way images count for \"visual context\" — the suggested action + context label react to videos like they always did for images.",
+        text: "Smart Action Launcher now counts video attachments the same way images count for \"visual context\", the suggested action + context label react to videos like they always did for images.",
       },
       {
         type: "fix",
@@ -59,7 +59,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "fix",
-        text: "Integrations view's non-GitHub cards showed a disabled \"Connect\" button — misleading because the real answer was \"coming soon\". Label now reads \"Coming soon\" on the button itself (matching the tooltip that already said so).",
+        text: "Integrations view's non-GitHub cards showed a disabled \"Connect\" button, misleading because the real answer was \"coming soon\". Label now reads \"Coming soon\" on the button itself (matching the tooltip that already said so).",
       },
     ],
   },

@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
   }
 
-  // Already a real account? — tell the user plainly (doesn't leak info
+  // Already a real account?, tell the user plainly (doesn't leak info
   // because the signup form would've said the same thing on initial
   // register attempt).
   const existing = await getUserCredentialByEmail(email);
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
     }
   } catch (err) {
     console.error("[resend-verification] failed:", err);
-    // Still return ok — don't leak whether the email is pending.
+    // Still return ok, don't leak whether the email is pending.
   }
 
   return NextResponse.json({ ok: true });

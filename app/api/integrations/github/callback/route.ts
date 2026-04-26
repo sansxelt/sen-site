@@ -75,7 +75,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(failureUrl, 302);
   }
 
-  // 2. Resolve the GitHub identity for this token. Best-effort —
+  // 2. Resolve the GitHub identity for this token. Best-effort
   //    if /user fails we still persist the token; downstream calls
   //    will just lack the cached login/id.
   let githubLogin: string | null = null;
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
       githubId = typeof userJson.id === "number" ? userJson.id : null;
     }
   } catch {
-    // Swallow — identity lookup is non-fatal.
+    // Swallow, identity lookup is non-fatal.
   }
 
   // 3. Persist. `state` is the user's email (set by the oauth init route).

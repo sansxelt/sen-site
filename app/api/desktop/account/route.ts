@@ -5,7 +5,7 @@ import {
   upsertUserProfile,
 } from "../../../../lib/user-profile";
 
-// GET /api/desktop/account — returns the signed-in user's profile
+// GET /api/desktop/account, returns the signed-in user's profile
 export async function GET(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -40,7 +40,7 @@ type AccountPatch = {
   work_style?: string | null;
 };
 
-// PATCH /api/desktop/account — update editable profile fields
+// PATCH /api/desktop/account, update editable profile fields
 export async function PATCH(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {

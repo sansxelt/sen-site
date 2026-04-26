@@ -10,7 +10,7 @@ import {
   useStripe,
 } from "@stripe/react-stripe-js";
 
-// Type-only $1–$9,999 input (no slider — Claude's pattern), with a
+// Type-only $1–$9,999 input (no slider, Claude's pattern), with a
 // Stripe PaymentElement modal that confirms the charge inline.
 // On success the webhook credits the user's balance via the
 // kind === "credits" branch of handlePaymentIntentSucceeded.
@@ -38,7 +38,7 @@ export function BuyCreditsModal({ onClose, onSuccess, publishableKey }: Props) {
   // Two-step flow: step 1 = pick amount, step 2 = pay.
   const [step, setStep] = useState<"amount" | "pay">("amount");
   // Stored as a string so the user can clear the field while typing.
-  // Parsed on submit. Default $10 — small enough to not feel pushy,
+  // Parsed on submit. Default $10, small enough to not feel pushy,
   // big enough to be a meaningful top-up.
   const [amountStr, setAmountStr] = useState("10");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -136,7 +136,7 @@ export function BuyCreditsModal({ onClose, onSuccess, publishableKey }: Props) {
                   pattern="[0-9]*"
                   value={amountStr}
                   onChange={(e) => {
-                    // Only digits — strip everything else as the user
+                    // Only digits, strip everything else as the user
                     // types. Empty string allowed so they can clear.
                     const v = e.target.value.replace(/[^0-9]/g, "");
                     setAmountStr(v);
@@ -156,7 +156,7 @@ export function BuyCreditsModal({ onClose, onSuccess, publishableKey }: Props) {
               <div className="mt-2 text-xs text-neutral-500">
                 ${MIN} – ${MAX.toLocaleString()}.
                 {parsedDollars && (
-                  <> Buys {(parsedDollars * 100).toLocaleString()} credits — ~{(parsedDollars * 100).toLocaleString()} chats, {(parsedDollars * 20).toLocaleString()} images, or {(parsedDollars * 50).toLocaleString()} voice minutes.</>
+                  <> Buys {(parsedDollars * 100).toLocaleString()} credits, ~{(parsedDollars * 100).toLocaleString()} chats, {(parsedDollars * 20).toLocaleString()} images, or {(parsedDollars * 50).toLocaleString()} voice minutes.</>
                 )}
               </div>
             </label>
@@ -230,7 +230,7 @@ function PayForm({
       setBusy(false);
       return;
     }
-    // Webhook will credit the balance — onSuccess just closes the
+    // Webhook will credit the balance, onSuccess just closes the
     // modal and refreshes the panel. Balance will update on next load.
     onSuccess();
   }

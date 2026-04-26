@@ -1,7 +1,7 @@
-// v0.1.4 i18n scaffold — server-side language plumbing.
+// v0.1.4 i18n scaffold, server-side language plumbing.
 //
 // Two axes:
-//   1. system language (manual, controls UI text — read from prefs)
+//   1. system language (manual, controls UI text, read from prefs)
 //   2. response language (auto-detected per message, server-side, used
 //      to nudge the model to reply in the same language the user typed)
 //
@@ -48,7 +48,7 @@ export function langLabel(code: string): string {
 }
 
 // Tiny common-word dictionary. Only used as a tiebreaker for
-// Latin-script languages — character-range checks below win first
+// Latin-script languages, character-range checks below win first
 // for any text that contains CJK / Cyrillic / Devanagari / Arabic.
 // Keep these short, lowercase, and surrounded by word boundaries so
 // they don't match inside other words.
@@ -62,7 +62,7 @@ const COMMON_WORDS: Record<Exclude<LanguageCode, "en" | "ja" | "zh" | "ko" | "hi
 // English stop words used to suppress collisions. Without this, a
 // prompt like "can u make a short video of a cat" gets classified
 // as Portuguese because "a" matches Portuguese's definite-article-
-// fem. entry twice — clearing the >=2 hit threshold even though the
+// fem. entry twice, clearing the >=2 hit threshold even though the
 // rest of the prompt is obviously English.
 const ENGLISH_WORDS = new Set([
   "the", "a", "an", "and", "or", "but", "is", "are", "was", "were",
@@ -91,7 +91,7 @@ function countWordHits(tokens: string[], words: string[]): number {
   return hits;
 }
 
-// detectLanguage — best-effort language ID. Returns "en" as fallback.
+// detectLanguage, best-effort language ID. Returns "en" as fallback.
 // Does NOT need to be perfect; a wrong call here means the model gets
 // a slightly off "respond in X" hint. The model itself usually still
 // matches the user's language regardless. This is just a nudge.
@@ -99,14 +99,14 @@ export function detectLanguage(text: string): LanguageCode {
   const trimmed = (text ?? "").trim();
   if (!trimmed) return "en";
 
-  // Script-range checks first — these are cheap and unambiguous.
+  // Script-range checks first, these are cheap and unambiguous.
   // If the text contains characters from these scripts, that script
   // wins immediately. We do NOT require ALL characters to be in the
   // script (mixed text is normal); a single match is enough.
   if (/[\u3040-\u309F\u30A0-\u30FF]/.test(trimmed)) return "ja"; // hiragana/katakana
   if (/[\uAC00-\uD7AF]/.test(trimmed)) return "ko";              // hangul
   if (/[\u4E00-\u9FFF]/.test(trimmed)) {
-    // CJK Unified — could be ja or zh, but if we got here neither
+    // CJK Unified, could be ja or zh, but if we got here neither
     // hiragana nor hangul matched, so call it Chinese.
     return "zh";
   }

@@ -24,7 +24,7 @@ function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle
     if (plan.key === "free")             { window.location.href = "/account"; return; }
     if (plan.ctaVariant === "contact")   { window.location.href = "/contact"; return; }
 
-    // Native checkout — stay on sansxel.ai, no redirect to Stripe.com.
+    // Native checkout, stay on sansxel.ai, no redirect to Stripe.com.
     setLoading(true);
     window.location.href = `/checkout?plan=${plan.key}&cycle=${cycle}`;
   }

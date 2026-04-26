@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     const customer = await getOrCreateCustomer(normalizedEmail);
 
     if (addonKey) {
-      // v0.1.4 — one-time boost top-ups go through a single PaymentIntent
+      // v0.1.4, one-time boost top-ups go through a single PaymentIntent
       // rather than a recurring subscription item. We look up the price's
       // unit_amount + currency from Stripe so we don't have to maintain a
       // duplicate price table on our side; checkout.sessions.create with
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
           amount,
           currency: price.currency,
           customer: customer.id,
-          // Explicit allow-list — Amazon Pay / Klarna / etc. need
+          // Explicit allow-list, Amazon Pay / Klarna / etc. need
           // separate setup we haven't done. Match the recurring set.
           payment_method_types: ["card", "link", "cashapp"],
           metadata: {
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
         });
       }
 
-      // v0.1.16 — Require a default payment method before attaching
+      // v0.1.16, Require a default payment method before attaching
       // a recurring addon. Mirrors the web payment-intent route fix.
       // Without this the addon flips to Active on a card-less
       // subscription and the next renewal fails to charge.

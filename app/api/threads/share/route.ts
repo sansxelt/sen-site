@@ -27,7 +27,7 @@ function isShareMessage(value: unknown): value is ShareMessage {
   );
 }
 
-// POST /api/threads/share — accept a snapshot of a thread, persist it,
+// POST /api/threads/share, accept a snapshot of a thread, persist it,
 // return a stable share URL the desktop can copy to the clipboard.
 // The public viewing page (https://sansxel.ai/s/{id}) ships in v0.1.5.
 export async function POST(request: Request) {

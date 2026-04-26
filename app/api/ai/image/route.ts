@@ -22,7 +22,7 @@ export const runtime = "nodejs";
 
 // Pass an explicit fallback so module-eval at build time on Vercel
 // doesn't crash when OPENAI_API_KEY is unset. Runtime calls without a
-// real key still fail with a 401 from OpenAI — that's the right
+// real key still fail with a 401 from OpenAI, that's the right
 // behavior for an unconfigured deploy.
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY ?? "missing" });
 
@@ -89,11 +89,11 @@ export async function POST(request: Request) {
     getActiveAddonKeys(email),
   ]);
   const decision = decideImageRequest({ plan, weekly, activeAddons });
-  // v0.1.8 — image_credit_pack override (legacy v0.1.8 boost path; the
+  // v0.1.8, image_credit_pack override (legacy v0.1.8 boost path; the
   // image_credit_pack SKU was dropped in v0.1.9 so hasUnconsumedBoost
   // for "image" always returns false now, but the path is kept so any
   // already-purchased boost rows in boost_credits keep redeeming).
-  // v0.1.9 — fall through to consumeCreditFor as the new default.
+  // v0.1.9, fall through to consumeCreditFor as the new default.
   if (decision.kind === "blocked") {
     let allowed = false;
     if (await hasUnconsumedBoost(email, "image")) {
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
   const startedAt = Date.now();
   const model = "gpt-image-1";
 
-  // v0.1.16 — Resolve / create the thread + persist the user prompt
+  // v0.1.16, Resolve / create the thread + persist the user prompt
   // BEFORE we kick off image gen. Without this, when the user clicks
   // off and comes back, the prompt is gone and only the rendered
   // image (still in local state) shows up. Mirrors the chat route's
@@ -196,7 +196,7 @@ export async function POST(request: Request) {
 
     // Persist the assistant turn with image markdown for each
     // generated image. Multi-image renders as a sequence of
-    // ![generated image N](url) blocks separated by newlines —
+    // ![generated image N](url) blocks separated by newlines
     // the client renderer treats consecutive images as a grid.
     const imageMarkdown = urls
       .map((u, i) => `![generated image ${i + 1}](${u})`)

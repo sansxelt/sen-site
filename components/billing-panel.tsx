@@ -8,7 +8,7 @@ import type { BillingState } from "../lib/billing-state";
 import { UpdatePaymentMethodModal } from "./update-payment-method-modal";
 import { BuyCreditsModal } from "./buy-credits-modal";
 import { PayPalAddonButton, PayPalAddonsProvider } from "./paypal-addon-button";
-// 3D tilt removed — billing/payment surfaces shouldn't feel "playful";
+// 3D tilt removed, billing/payment surfaces shouldn't feel "playful";
 // users want them to read as steady and trustworthy.
 
 type Props = {
@@ -76,7 +76,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
       const data = (await res.json()) as UsageSummary;
       setUsage(data);
     } catch {
-      // ignore — display "—"
+      // ignore, display "—"
     }
   };
   useEffect(() => { void loadUsage(); }, []);
@@ -380,7 +380,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
 
         {usage && (
           <>
-            {/* Weekly usage breakdown — chat / image / voice with the
+            {/* Weekly usage breakdown, chat / image / voice with the
                 user's plan caps. "Unlimited" pill replaces the cap
                 when an addon (or the plan) lifts the cap. */}
             <div className="mt-5 grid gap-2 sm:mt-6 sm:grid-cols-3 sm:gap-3">
@@ -504,7 +504,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
           onClose={() => setCreditsOpen(false)}
           onSuccess={() => {
             setCreditsOpen(false);
-            // Webhook lands the balance update — give it a moment,
+            // Webhook lands the balance update, give it a moment,
             // then re-poll. Refresh router too so any other panels
             // that read account state get fresh data.
             window.setTimeout(() => { void loadUsage(); router.refresh(); }, 1500);

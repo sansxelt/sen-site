@@ -23,7 +23,7 @@ function readFlight(): FlightMap {
     const raw = window.localStorage.getItem(FLIGHT_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as FlightMap;
-    // Auto-expire entries older than 5 minutes — stale flag from a
+    // Auto-expire entries older than 5 minutes, stale flag from a
     // crashed tab shouldn't pulse forever.
     const now = Date.now();
     const cleaned: FlightMap = {};
@@ -43,7 +43,7 @@ type Tier = { tier: ModelTier; display_name: string; blurb: string };
 
 // Plan key (DB) → display name (what users actually see on billing).
 // Was showing 'Plan: studio' in the chat header while billing said
-// 'Plus' — confusing. Single source of truth here for the chat
+// 'Plus', confusing. Single source of truth here for the chat
 // header + cost chip until we refactor to pass display name from
 // the server.
 // Whisper's well-documented "ghost" outputs when the audio is
@@ -112,12 +112,12 @@ export function WebChat({
   const lei = useLei();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  // v0.1.16 — Hoisted up so the document-level paste handler below
+  // v0.1.16, Hoisted up so the document-level paste handler below
   // can focus the textarea after routing a text paste through it.
   // Same ref is reused by the textarea element itself further down.
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // v0.1.16 — Ctrl+V / Cmd+V paste support, three modes:
+  // v0.1.16, Ctrl+V / Cmd+V paste support, three modes:
   //   1. Clipboard has FILES (image, video, doc): route to LEI
   //      attachments same as drag-drop, preventDefault.
   //   2. Clipboard has TEXT and the user is NOT focused in any
@@ -145,7 +145,7 @@ export function WebChat({
           const item = dt.items[i];
           if (item.kind === "file") {
             const f = item.getAsFile();
-            // De-dupe — Chrome sometimes lists the same blob in
+            // De-dupe, Chrome sometimes lists the same blob in
             // both .files and .items.
             if (f && !collected.some((c) => c.size === f.size && c.name === f.name)) {
               collected.push(f);
@@ -180,17 +180,17 @@ export function WebChat({
     document.addEventListener("paste", onPaste);
     return () => document.removeEventListener("paste", onPaste);
   }, [lei]);
-  // v0.1.16 — server-persisted thread id. Null until first send (or
+  // v0.1.16, server-persisted thread id. Null until first send (or
   // until /api/threads/[id] loads an existing one). Same account →
   // same threads from any device.
   const [threadId, setThreadId] = useState<string | null>(null);
   const threadIdRef = useRef<string | null>(null);
   useEffect(() => { threadIdRef.current = threadId; }, [threadId]);
 
-  // v0.1.16 — Re-fetch the active thread whenever the URL changes
+  // v0.1.16, Re-fetch the active thread whenever the URL changes
   // (soft nav from the chat history rail clicking a different chat).
   // Previous version only fired on mount, so switching threads
-  // looked broken — same in-memory chat stayed mounted.
+  // looked broken, same in-memory chat stayed mounted.
   //
   // URL contract:
   //   ?new=1            → blank chat, drop threadId
@@ -204,7 +204,7 @@ export function WebChat({
   const hasHydratedRef = useRef(false);
   const promptHandledRef = useRef(false);
 
-  // v0.1.16 — Pre-fill input from ?prompt= so the home page teaser
+  // v0.1.16, Pre-fill input from ?prompt= so the home page teaser
   // can ship a question into the workshop. We pre-fill (not auto-
   // send) so the user retains agency + can edit.
   useEffect(() => {
@@ -218,7 +218,7 @@ export function WebChat({
     }
   }, [promptParam]);
 
-  // v0.1.16 r8 — Listen for '+ New chat' clicks from anywhere in the
+  // v0.1.16 r8, Listen for '+ New chat' clicks from anywhere in the
   // workspace shell. Hard-abort any in-flight stream + reset client
   // state INSTANTLY so the textarea isn't stuck behind a stale Stop
   // button (the cross-thread guard previously skipped setStreaming
@@ -262,12 +262,12 @@ export function WebChat({
       try {
         let targetId = requestedThreadParam;
         if (!targetId) {
-          // No URL hint — only auto-restore on first mount.
+          // No URL hint, only auto-restore on first mount.
           if (hasHydratedRef.current) return;
           // ChatGPT-style idle reset: if the user hasn't done anything
           // in a while, drop them on a fresh chat instead of resuming
           // whatever they were last looking at. Threshold matches the
-          // "I came back the next morning" case — long enough that
+          // "I came back the next morning" case, long enough that
           // mid-task pauses (lunch, meeting) still resume, short
           // enough that a fresh session feels fresh.
           const IDLE_RESET_MS = 30 * 60 * 1000; // 30 minutes
@@ -316,13 +316,13 @@ export function WebChat({
           .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
         setMessages(restored);
       } catch {
-        // ignore — blank chat is fine
+        // ignore, blank chat is fine
       }
     })();
     return () => { cancelled = true; };
   }, [wantsNew, requestedThreadParam]);
   const [streaming, setStreaming] = useState(false);
-  // ChatGPT/Claude-style live phase label during generation —
+  // ChatGPT/Claude-style live phase label during generation
   // "Searching the web…" / "Reading the page…" / "Writing answer…"
   // Cleared when the stream ends or the answer text starts flowing.
   const [phaseLabel, setPhaseLabel] = useState<string | null>(null);
@@ -340,17 +340,17 @@ export function WebChat({
   >("idle");
   const [voiceMode, setVoiceMode] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
-  // True when this turn was started by voice — used to auto-speak the response
+  // True when this turn was started by voice, used to auto-speak the response
   const lastTurnWasVoice = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
-  // v0.1.16 — Live preview transcript via the browser's Web Speech
+  // v0.1.16, Live preview transcript via the browser's Web Speech
   // API (Chrome/Edge: window.webkitSpeechRecognition). Runs alongside
   // MediaRecorder so the user sees their words appearing in real time
   // while they speak. Whisper still produces the canonical transcript
-  // that actually gets sent — Web Speech is display-only because its
+  // that actually gets sent, Web Speech is display-only because its
   // accuracy is uneven across browsers and accents.
   const [liveTranscript, setLiveTranscript] = useState("");
   // Accumulator for the FINAL portion of the transcript across events.
@@ -380,14 +380,14 @@ export function WebChat({
   const speechStartRef = useRef<number | null>(null);
   const recordingStartedAtRef = useRef<number>(0);
   const interruptHandlerRef = useRef<(() => void) | null>(null);
-  // Adaptive noise floor + "did the user actually speak" flag —
+  // Adaptive noise floor + "did the user actually speak" flag
   // see workspace.tsx for the full rationale. Fixed thresholds
   // miss talking in noisy rooms / on quiet mics.
   const noiseFloorRef = useRef(0.04);
   const heardSpeechRef = useRef(false);
 
   const VAD_MIN_RECORD_MS = 400;
-  // v0.1.16 r2 — Tightened further. Users on quieter mics had VAD
+  // v0.1.16 r2, Tightened further. Users on quieter mics had VAD
   // never trip the speech threshold (floor + 0.06) so the loop
   // never knew speech happened, never auto-stopped, and the AI
   // never got a turn. Halved SPEECH_DELTA so quieter voices register.
@@ -440,7 +440,7 @@ export function WebChat({
         );
       }
 
-      // Auto-stop on sustained silence — only after we've heard speech
+      // Auto-stop on sustained silence, only after we've heard speech
       if (state === "recording" && voiceModeRef.current) {
         const elapsed = now - recordingStartedAtRef.current;
         // Hard cap: even if VAD never trips, force-stop so we never
@@ -493,7 +493,7 @@ export function WebChat({
     tick();
   }, []);
 
-  // v0.1.16 — Don't yank the user back to the bottom while the AI
+  // v0.1.16, Don't yank the user back to the bottom while the AI
   // is generating if they've scrolled up to read something. Standard
   // chat UX: only auto-scroll if they were already near the bottom.
   // Track distance from bottom on every scroll; if a user scrolls
@@ -530,7 +530,7 @@ export function WebChat({
 
     // File / code attachments inline into the prompt (text). Image
     // attachments are converted to base64 + sent via the chat API's
-    // `images` field on the user message — the route already supports
+    // `images` field on the user message, the route already supports
     // this (lib/ai-models multimodal). Video attachments are mentioned
     // by name (no video model wired up yet).
     const attachmentBlocks: string[] = [];
@@ -602,7 +602,7 @@ export function WebChat({
     const payloadMessages = [
       ...messages.map((m) => ({ role: m.role, content: m.content })),
       imageBlocks.length > 0
-        ? { role: "user" as const, content: text || "Here's an image — what do you see?", images: imageBlocks }
+        ? { role: "user" as const, content: text || "Here's an image, what do you see?", images: imageBlocks }
         : { role: "user" as const, content: text },
     ];
     const next = [...messages, userMsg];
@@ -616,11 +616,11 @@ export function WebChat({
     if (typeof window !== "undefined") {
       window.localStorage.setItem("sansxel.lastActivity", String(Date.now()));
     }
-    // v0.1.16 r3+ — track the sending-thread context. Tricky case:
+    // v0.1.16 r3+, track the sending-thread context. Tricky case:
     // first send in a NEW chat captures threadId=null, then the
     // server returns a thread id which we setThreadId on. That
     // legitimately changes threadIdRef from null → newId, but it's
-    // NOT a thread switch — it's just "we now know our id". So we
+    // NOT a thread switch, it's just "we now know our id". So we
     // hold a mutable ref for the sending thread and update it once
     // the server tells us what id was assigned. Real thread switches
     // (user clicks a different chat in the rail) flip threadIdRef
@@ -636,7 +636,7 @@ export function WebChat({
       }
       return cur === sendingThreadId;
     };
-    // Clear attachments NOW (not in the finally) — they're already
+    // Clear attachments NOW (not in the finally), they're already
     // captured into payloadMessages, and conceptually they belong to
     // the turn we just sent. Leaving them visible while the AI streams
     // its reply made it look like they were going to ride along on
@@ -688,7 +688,7 @@ export function WebChat({
         signal: ac.signal,
       });
 
-      // v0.1.16 — Capture the resolved server-side thread id so
+      // v0.1.16, Capture the resolved server-side thread id so
       // follow-up turns continue the same conversation (and show in
       // the sidebar).
       const echoedThreadId = res.headers.get("x-sansxel-thread-id");
@@ -705,7 +705,7 @@ export function WebChat({
         }
       }
 
-      // v0.1.16 r7 — Mark this thread as "generating" in localStorage.
+      // v0.1.16 r7, Mark this thread as "generating" in localStorage.
       // The chat-history rail + a floating "Back to chat" pill watch
       // this so the user knows generation is happening even when
       // they're on a different page.
@@ -722,7 +722,7 @@ export function WebChat({
       const resolved = res.headers.get("x-sansxel-tier");
       if (requested && resolved && requested !== resolved) {
         setPlanNotice(
-          `Your plan doesn't include ${requested} — replied with ${resolved} instead.`,
+          `Your plan doesn't include ${requested}, replied with ${resolved} instead.`,
         );
       } else {
         setPlanNotice(null);
@@ -749,7 +749,7 @@ export function WebChat({
       let renderedLen = 0;
       let smoothRaf: number | null = null;
       let smoothActive = true;
-      // v0.1.16 — was 5 (≈300 chars/sec, ~50 wpm — felt slow even
+      // v0.1.16, was 5 (≈300 chars/sec, ~50 wpm, felt slow even
        // when the network was fast). Bumped to 14 (≈840 chars/sec,
        // ~150 wpm). Still smooth enough to feel deliberate, fast
        // enough that long answers don't feel like they're crawling.
@@ -759,7 +759,7 @@ export function WebChat({
           renderedLen = Math.min(assistant.length, renderedLen + CHARS_PER_FRAME);
           const visible = assistant.slice(0, renderedLen);
           // Cross-thread guard: if the user has switched threads since
-          // this send started, DON'T touch the visible messages —
+          // this send started, DON'T touch the visible messages
           // they belong to a different thread now. The server keeps
           // saving to the original thread via progressive save, so
           // nothing is lost.
@@ -782,7 +782,7 @@ export function WebChat({
       };
       smoothRaf = requestAnimationFrame(tickRender);
 
-      // Sentence-streaming TTS — only in V→V mode. V→T is dictation:
+      // Sentence-streaming TTS, only in V→V mode. V→T is dictation:
       // we transcribe, the AI replies in text, end of turn (no audio
       // reply, no auto-restart of the mic).
       const willSpeak = lastTurnWasVoice.current && lei.voiceStyle === "v2v";
@@ -824,7 +824,7 @@ export function WebChat({
           if (ttsNextPlay < ttsQueue.length) {
             playNextChunk();
           } else {
-            // Empty queue — wait for more chunks unless streaming is done
+            // Empty queue, wait for more chunks unless streaming is done
             audioElRef.current = null;
           }
         };
@@ -917,7 +917,7 @@ export function WebChat({
           const evt = JSON.parse(raw) as { type?: string; label?: string; kind?: string };
           if (evt.type === "phase" && typeof evt.label === "string") {
             // "writing" phase clears the label so the pill goes away
-            // once real text starts flowing — bouncing dots visually
+            // once real text starts flowing, bouncing dots visually
             // hand off to the answer.
             if (evt.kind === "writing") {
               setPhaseLabel(null);
@@ -926,7 +926,7 @@ export function WebChat({
             }
           }
         } catch {
-          // malformed marker — ignore
+          // malformed marker, ignore
         }
       };
       const stripPhaseMarkers = (incoming: string): string => {
@@ -941,7 +941,7 @@ export function WebChat({
           const piece = parts[i];
           const isText = i % 2 === 0;
           if (isText) {
-            // Last text piece is always "complete" — passes through.
+            // Last text piece is always "complete", passes through.
             textOut += piece;
           } else if (i === lastIdx) {
             // Odd-indexed AND last → no closing \x1F yet → buffer.
@@ -965,7 +965,7 @@ export function WebChat({
             assistant += chunk;
             if (willSpeak) ttsBuf.text += chunk;
           }
-          // Note: NOT calling setMessages here — the rAF tick handles
+          // Note: NOT calling setMessages here, the rAF tick handles
           // visual updates so the reveal stays evenly paced. The
           // assistant buffer is what tickRender walks toward.
           if (willSpeak) flushSentencesFromBuffer();
@@ -976,7 +976,7 @@ export function WebChat({
         assistant += tail;
         if (willSpeak) ttsBuf.text += tail;
       }
-      // Stream is done — let the smooth render drain the rest.
+      // Stream is done, let the smooth render drain the rest.
       smoothActive = false;
       // Wait for the visual to catch up before any post-stream work
       await new Promise<void>((resolve) => {
@@ -1017,11 +1017,11 @@ export function WebChat({
           }
         }, 200);
       } else if (lastTurnWasVoice.current) {
-        // V→T turn ended — don't TTS, don't auto-restart mic.
+        // V→T turn ended, don't TTS, don't auto-restart mic.
         // Drop voice mode so the user gets back to a normal text view.
         lastTurnWasVoice.current = false;
         setVoiceState("idle");
-        // Fully exit voice mode (closes overlay) — V→T is one-shot.
+        // Fully exit voice mode (closes overlay), V→T is one-shot.
         if (voiceModeRef.current) {
           if (recorderRef.current && recorderRef.current.state !== "inactive") {
             recorderRef.current.stop();
@@ -1037,7 +1037,7 @@ export function WebChat({
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
       // Network-level failures (browser couldn't even reach the
-      // server) come back as TypeError "Failed to fetch" — useless
+      // server) come back as TypeError "Failed to fetch", useless
       // to the user. Translate to something readable.
       const isNetworkErr =
         err instanceof TypeError && /failed to fetch|networkerror/i.test(err.message);
@@ -1047,7 +1047,7 @@ export function WebChat({
         ? err.message
         : "Chat failed.";
       setChatError(msg);
-      // Same cross-thread guard — don't pop a message off the new
+      // Same cross-thread guard, don't pop a message off the new
       // thread's list because the OLD thread's send errored.
       if (isStillThisThread()) {
         setMessages((prev) => {
@@ -1153,7 +1153,7 @@ export function WebChat({
   // One-shot image generation. Reads the input as the prompt, appends
   // a user turn + an assistant turn with the image embedded as
   // markdown (`![](url)`), and clears the input. Streaming is for
-  // text — image gen is one POST + one render.
+  // text, image gen is one POST + one render.
   const generateImageFromInput = useCallback(async (overridePrompt?: string) => {
     const prompt = (overridePrompt ?? input).trim();
     if (!prompt || generatingImage) return;
@@ -1248,7 +1248,7 @@ export function WebChat({
         urls?: string[];
         revised_prompt?: string;
       };
-      // Multi-image: render each as its own ![] block — markdown
+      // Multi-image: render each as its own ![] block, markdown
       // renderer + the new .webchat-image-grid CSS detects two or
       // more consecutive images and lays them out in a grid.
       const allUrls = data.urls && data.urls.length > 0 ? data.urls : [data.url];
@@ -1266,7 +1266,7 @@ export function WebChat({
         }
         return next;
       });
-      // Server already persisted the assistant turn — fire the rail
+      // Server already persisted the assistant turn, fire the rail
       // refresh so the title gen / sidebar count picks it up.
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
@@ -1293,7 +1293,7 @@ export function WebChat({
     }
   }, [generatingImage, input]);
 
-  // Voice flow — single button cycle:
+  // Voice flow, single button cycle:
   //   idle → click → ask mic perm → record (button = Stop)
   //   stop → transcribe → auto-send → AI replies → TTS plays back
   //   playback ends → idle
@@ -1337,7 +1337,7 @@ export function WebChat({
         const blob = new Blob(recordedChunksRef.current, {
           type: recorder.mimeType || "audio/webm",
         });
-        // v0.1.16 r2 — only skip if blob is REALLY empty. 5000
+        // v0.1.16 r2, only skip if blob is REALLY empty. 5000
         // was rejecting real low-gain speech. 1500 = bare-empty.
         if (blob.size < 1500) {
           setVoiceState("idle");
@@ -1358,7 +1358,7 @@ export function WebChat({
           if (!res.ok) throw new Error(`transcribe ${res.status}`);
           const data = (await res.json()) as { text: string };
           const transcribed = data.text.trim();
-          // v0.1.16 — Hallucination filter. Whisper often returns
+          // v0.1.16, Hallucination filter. Whisper often returns
           // these short canned strings when the audio is silence,
           // music, or noise. If we get one of those AND the audio
           // was short, treat it as silence and re-arm without
@@ -1410,7 +1410,7 @@ export function WebChat({
             // Walk only the new results since last event. Final pieces
             // get committed to the ref accumulator (persistent across
             // events); interim is always the latest replacement, never
-            // appended — that's the source of the duplication bug.
+            // appended, that's the source of the duplication bug.
             let interim = "";
             for (let i = event.resultIndex; i < event.results.length; i++) {
               const t = event.results[i][0].transcript;
@@ -1423,7 +1423,7 @@ export function WebChat({
             setLiveTranscript((finalTranscriptRef.current + interim).trimStart());
           };
           rec.onerror = () => {
-            // Permission denied / network — leave preview empty,
+            // Permission denied / network, leave preview empty,
             // Whisper takes over on stop.
           };
           rec.start();
@@ -1432,7 +1432,7 @@ export function WebChat({
           setLiveTranscript("");
         }
       } catch {
-        // ignore — preview is best-effort
+        // ignore, preview is best-effort
       }
     } catch (err) {
       setChatError(err instanceof Error ? err.message : "Mic access denied.");
@@ -1448,7 +1448,7 @@ export function WebChat({
 
   const enterVoiceMode = useCallback(async () => {
     // V→V style: enter the full-screen orb overlay + continuous loop.
-    // V→T style: one-shot dictation — no overlay, no TTS, no auto-loop.
+    // V→T style: one-shot dictation, no overlay, no TTS, no auto-loop.
     // The two modes need to look and feel obviously different.
     if (lei.voiceStyle === "v2v") {
       setVoiceMode(true);
@@ -1474,7 +1474,7 @@ export function WebChat({
   }, [stopAnalyser]);
 
   const stopVoice = useCallback(() => {
-    // Three cases — all routed through the same button:
+    // Three cases, all routed through the same button:
     if (voiceState === "recording") {
       const r = recorderRef.current;
       if (r && r.state !== "inactive") r.stop();
@@ -1493,7 +1493,7 @@ export function WebChat({
   // textareaRef is declared at the top of the component so the
   // document-level paste handler can use it. Reused here.
 
-  // v0.1.16 — Desktop-style "type anywhere to focus the input" +
+  // v0.1.16, Desktop-style "type anywhere to focus the input" +
   // '/' shortcut. If the user starts pressing keys without focusing
   // the textarea first, we redirect the keystroke into it. Skip
   // when an input/textarea/contenteditable is already focused, when
@@ -1671,7 +1671,7 @@ export function WebChat({
           </span>
           <p>
             File edits, MCP tools, the full voice loop without browser permissions.
-            Web is great for a taste — desktop is where you ship.
+            Web is great for a taste, desktop is where you ship.
           </p>
         </div>
         <div className="webchat-desktop-cta-actions">
@@ -1693,7 +1693,7 @@ export function WebChat({
             <h2>What are you making?</h2>
             <p>
               Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
-              working on — code, design, research, a half-baked idea at 2am.
+              working on, code, design, research, a half-baked idea at 2am.
             </p>
             <div className="webchat-empty-suggestions">
               {[
@@ -1862,7 +1862,7 @@ export function WebChat({
               className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
               title={
                 costPreview.planCovers
-                  ? `Included in your ${planDisplayName(plan)} plan — no credits used unless you exceed your weekly cap`
+                  ? `Included in your ${planDisplayName(plan)} plan, no credits used unless you exceed your weekly cap`
                   : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
               }
             >
@@ -1897,12 +1897,12 @@ export function WebChat({
                   <span className="webchat-plus-item-glyph">📎</span>
                   <span className="webchat-plus-item-body">
                     <span className="webchat-plus-item-name">Upload from device</span>
-                    <span className="webchat-plus-item-sub">Image · video · file · code — or just drag onto the page</span>
+                    <span className="webchat-plus-item-sub">Image · video · file · code, or just drag onto the page</span>
                   </span>
                 </button>
                 <div className="webchat-plus-hint">
-                  <strong>Tip: </strong> Just type what you want — &ldquo;gen an image of a cat&rdquo;,
-                  &ldquo;draw me a logo&rdquo;, etc. — and Send. sansxel-1 routes it automatically.
+                  <strong>Tip: </strong> Just type what you want, &ldquo;gen an image of a cat&rdquo;,
+                  &ldquo;draw me a logo&rdquo;, etc., and Send. sansxel-1 routes it automatically.
                 </div>
               </div>
             )}
@@ -1977,7 +1977,7 @@ function PlanExpiryNote({
     <a
       href="/account/billing"
       className={`webchat-plan-expiry webchat-plan-expiry--${urgency}`}
-      title={canceling ? "Subscription is set to cancel — click to reactivate" : "Next renewal date"}
+      title={canceling ? "Subscription is set to cancel, click to reactivate" : "Next renewal date"}
     >
       {canceling && <span aria-hidden>⚠</span>} {label}
     </a>
@@ -2001,7 +2001,7 @@ function VoiceButton({
         type="button"
         disabled
         className="webchat-voice-btn webchat-voice-btn--locked"
-        title="Voice is on paid plans — try the desktop app"
+        title="Voice is on paid plans, try the desktop app"
       >
         🔒 Voice
       </button>
@@ -2093,7 +2093,7 @@ function WebVoiceOverlay({
   } else if (state === "recording") {
     if (level > SPEAKING_THRESHOLD) {
       status = "Listening";
-      subStatus = "Heard you — keep going";
+      subStatus = "Heard you, keep going";
     } else {
       status = "Your turn";
       subStatus = "Speak when you're ready";
@@ -2158,7 +2158,7 @@ function WebVoiceOverlay({
         </div>
         <div className="voice-overlay-substatus">{subStatus}</div>
 
-        {/* Reactive waveform — bars scale with audio level, with a
+        {/* Reactive waveform, bars scale with audio level, with a
             per-bar phase so they don't all move in lock-step. */}
         <div className={`voice-overlay-bars${isLive ? " is-live" : ""}`} aria-hidden>
           {bars.map((i) => {
@@ -2225,13 +2225,13 @@ function WebAssistantBubble({
   content: string;
   streaming: boolean;
 }) {
-  // Strip thinking blocks — internal reasoning isn't shown to the user.
+  // Strip thinking blocks, internal reasoning isn't shown to the user.
   const sections = parseSections(content).filter((s) => s.type !== "thinking");
   return (
     <>
       {sections.map((s, i) => {
         const isLast = i === sections.length - 1;
-        // v0.1.16 — Always render markdown, even during streaming.
+        // v0.1.16, Always render markdown, even during streaming.
         // The previous "plain text during stream, markdown after"
         // pattern made users see raw `**bold**` and `- list items`
         // until the stream ended. ReactMarkdown handles partial
@@ -2305,9 +2305,9 @@ function ChatErrorPill({ message }: { message: string }) {
 function CreditChip({ balance, plan }: { balance: number | null; plan: string }) {
   const planCovers = ["pro", "teams", "enterprise"].includes(plan.toLowerCase());
   if (balance === null) {
-    return <span className="webchat-credit-chip webchat-credit-chip--idle" title="Loading credits…">— credits</span>;
+    return <span className="webchat-credit-chip webchat-credit-chip--idle" title="Loading credits…">credits</span>;
   }
-  // For unlimited plans, low balance isn't urgent — they only burn
+  // For unlimited plans, low balance isn't urgent, they only burn
   // credits if they blow past the weekly cap, which most users won't.
   const empty = balance === 0 && !planCovers;
   const low = balance > 0 && balance < 20 && !planCovers;
@@ -2319,9 +2319,9 @@ function CreditChip({ balance, plan }: { balance: number | null; plan: string })
         planCovers
           ? `Your ${planDisplayName(plan)} plan covers normal use. Credits only burn if you exceed weekly caps.`
           : empty
-            ? "Out of credits — click to top up"
+            ? "Out of credits, click to top up"
             : low
-              ? "Low balance — top up to keep going past your plan cap"
+              ? "Low balance, top up to keep going past your plan cap"
               : "Credit balance"
       }
     >
@@ -2344,7 +2344,7 @@ function VoiceStyleToggle({
   value: "v2v" | "v2t";
   onChange: (v: "v2v" | "v2t") => void;
 }) {
-  // v0.1.16 — Replaced cryptic 'V→T' / 'V→V' labels with words real
+  // v0.1.16, Replaced cryptic 'V→T' / 'V→V' labels with words real
   // users actually understand. 'Dictate' = you talk, AI types back.
   // 'Talk' = full hands-free voice conversation.
   return (
@@ -2353,13 +2353,13 @@ function VoiceStyleToggle({
         type="button"
         onClick={() => onChange("v2t")}
         className={value === "v2t" ? "is-active" : ""}
-        title="Dictate — you speak, AI replies in text"
+        title="Dictate, you speak, AI replies in text"
       >Dictate</button>
       <button
         type="button"
         onClick={() => onChange("v2v")}
         className={value === "v2v" ? "is-active" : ""}
-        title="Talk — full hands-free voice, AI speaks back"
+        title="Talk, full hands-free voice, AI speaks back"
       >Talk</button>
     </div>
   );
@@ -2372,7 +2372,7 @@ function prettyAttSize(bytes: number): string {
 }
 
 function WebBounceDots() {
-  // Pre-first-token indicator. Three bouncing dots, no word —
+  // Pre-first-token indicator. Three bouncing dots, no word
   // the previous "Thinking" + shimmer label visually collided
   // with the streaming cursor (purple bar) and looked broken.
   // Internal reasoning is never rendered; <think>...</think>

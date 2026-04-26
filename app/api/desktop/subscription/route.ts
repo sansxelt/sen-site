@@ -6,7 +6,7 @@ import {
 } from "../../../../lib/account-billing";
 import { tiersForPlan } from "../../../../lib/ai-models";
 
-// GET /api/desktop/subscription — returns the signed-in user's plan,
+// GET /api/desktop/subscription, returns the signed-in user's plan,
 // the tiers their plan unlocks, and (when relevant) the next billing
 // renewal date.
 export async function GET(request: Request) {
