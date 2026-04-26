@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { billingAddons, planIncludesAddon, pricingPlans } from "../lib/pricing";
 import type { BillingState } from "../lib/billing-state";
 import { UpdatePaymentMethodModal } from "./update-payment-method-modal";
+import { BuyCreditsModal } from "./buy-credits-modal";
 import { PayPalAddonButton, PayPalAddonsProvider } from "./paypal-addon-button";
 // 3D tilt removed — billing/payment surfaces shouldn't feel "playful";
 // users want them to read as steady and trustworthy.
@@ -37,8 +38,24 @@ export function BillingPanel({ state, publishableKey }: Props) {
   const [busy, setBusy]   = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pmOpen, setPmOpen] = useState(false);
+  const [creditsOpen, setCreditsOpen] = useState(false);
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
   // NEXT_PUBLIC_* vars are inlined at build time, safe to read on client.
   const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
+
+  // Load the user's current credit balance once + after every top-up.
+  // Falls back to 0 silently per the API's policy.
+  const loadBalance = async () => {
+    try {
+      const res = await fetch("/api/credits/balance", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { balance?: number };
+      setCreditBalance(data.balance ?? 0);
+    } catch {
+      // ignore — display "—" instead
+    }
+  };
+  useEffect(() => { void loadBalance(); }, []);
 
   async function post(path: string, body?: unknown) {
     const res = await fetch(path, {
@@ -314,6 +331,30 @@ export function BillingPanel({ state, publishableKey }: Props) {
         </section>
       )}
 
+      {/* ── Credits ────────────────────────────────────────────────── */}
+      <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
+              Credits
+            </div>
+            <div className="mt-1.5 text-xl font-semibold text-white sm:mt-2 sm:text-2xl">
+              {creditBalance === null ? "—" : `${creditBalance.toLocaleString()} cr`}
+            </div>
+            <div className="mt-0.5 text-xs text-neutral-400 sm:mt-1 sm:text-sm">
+              $1 = 100 credits · 1 cr per chat · 5 cr per image · 2 cr per voice min
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCreditsOpen(true)}
+            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition hover:bg-white/10 sm:rounded-2xl sm:px-4 sm:text-sm"
+          >
+            Top up
+          </button>
+        </div>
+      </section>
+
       {/* ── Payment method ─────────────────────────────────────────── */}
       <section
         className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
@@ -389,6 +430,20 @@ export function BillingPanel({ state, publishableKey }: Props) {
           onSuccess={() => {
             setPmOpen(false);
             router.refresh();
+          }}
+        />
+      )}
+
+      {creditsOpen && publishableKey && (
+        <BuyCreditsModal
+          publishableKey={publishableKey}
+          onClose={() => setCreditsOpen(false)}
+          onSuccess={() => {
+            setCreditsOpen(false);
+            // Webhook lands the balance update — give it a moment,
+            // then re-poll. Refresh router too so any other panels
+            // that read account state get fresh data.
+            window.setTimeout(() => { void loadBalance(); router.refresh(); }, 1500);
           }}
         />
       )}
