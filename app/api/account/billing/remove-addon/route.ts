@@ -7,6 +7,7 @@ import {
   STRIPE_PRICES,
 } from "../../../../../lib/stripe";
 import type { BillingAddonKey } from "../../../../../lib/pricing";
+import { invalidateAddonsCache } from "../../../../../lib/active-addons";
 
 /**
  * POST /api/account/billing/remove-addon
@@ -45,6 +46,9 @@ export async function POST(request: Request) {
     await stripe.subscriptionItems.del(item.id, {
       proration_behavior: "create_prorations",
     });
+    // Drop the cached addon set so the next chat/image/voice request
+    // reflects the removal immediately instead of after the TTL.
+    invalidateAddonsCache(session.user.email.toLowerCase());
 
     return NextResponse.json({ ok: true });
   } catch (err) {

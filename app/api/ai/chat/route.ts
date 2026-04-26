@@ -28,6 +28,7 @@ import {
   hasUnconsumedBoost,
   PLAN_LIMITS,
 } from "../../../../lib/plan-limits";
+import { getActiveAddonKeys } from "../../../../lib/active-addons";
 import { detectLanguage, langLabel } from "../../../../lib/i18n";
 import {
   appendMessage as saveMessage,
@@ -674,18 +675,25 @@ export async function POST(request: Request) {
   // v0.1.16 r4 — parallelize plan + weekly fetches. They're independent
   // Supabase round-trips (~120ms each); awaiting them sequentially
   // doubled the pre-stream latency for nothing.
-  const [plan, weekly] = await Promise.all([
+  // v0.1.16 — active addons added to the same parallel block. Cached
+  // (5-min TTL) so 99%+ of requests pay zero latency. Cache miss
+  // costs one Stripe roundtrip but parallelism hides it behind the
+  // existing fetches.
+  const [plan, weekly, activeAddons] = await Promise.all([
     getPlanForEmail(email),
     getWeeklyUsage(email),
+    getActiveAddonKeys(email),
   ]);
   let resolvedTier = resolveTier(plan, requestedTier);
 
   // Plan limits: hard weekly cap on free/apprentice/studio,
   // silent tier-throttle on pro, no cap on teams/enterprise.
+  // Copilot Pro Pack / Power Pack lift the chat cap to unlimited.
   const decision = decideChatRequest({
     plan,
     requestedTier: resolvedTier,
     weekly,
+    activeAddons,
   });
   // v0.1.8 — boost ledger override. If the plan-cap blocked the
   // request, check for an unconsumed session_boost / weekly_boost.

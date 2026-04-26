@@ -11,6 +11,7 @@ import {
   getWeeklyUsage,
   hasUnconsumedBoost,
 } from "../../../../lib/plan-limits";
+import { getActiveAddonKeys } from "../../../../lib/active-addons";
 
 export const runtime = "nodejs";
 
@@ -66,10 +67,13 @@ export async function POST(request: Request) {
   const surface =
     request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
 
-  // Plan gate
-  const plan = await getPlanForEmail(email);
-  const weekly = await getWeeklyUsage(email);
-  const decision = decideImageRequest({ plan, weekly });
+  // Plan gate. Power Pack lifts the image cap to unlimited.
+  const [plan, weekly, activeAddons] = await Promise.all([
+    getPlanForEmail(email),
+    getWeeklyUsage(email),
+    getActiveAddonKeys(email),
+  ]);
+  const decision = decideImageRequest({ plan, weekly, activeAddons });
   // v0.1.8 — image_credit_pack override (legacy v0.1.8 boost path; the
   // image_credit_pack SKU was dropped in v0.1.9 so hasUnconsumedBoost
   // for "image" always returns false now, but the path is kept so any

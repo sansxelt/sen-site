@@ -13,6 +13,7 @@ import { upsertSubscriptionSelection } from "../../../../lib/subscriptions";
 import type { BillingAddonKey, PricingPlanKey } from "../../../../lib/pricing";
 import { isOneTimeBoost, planIncludesAddon } from "../../../../lib/pricing";
 import { getPlanForEmail } from "../../../../lib/account-billing";
+import { invalidateAddonsCache } from "../../../../lib/active-addons";
 
 /**
  * Extract a human-readable error message from anything Stripe/Supabase/native
@@ -204,6 +205,10 @@ export async function POST(request: Request) {
           quantity: 1,
           proration_behavior: "create_prorations",
         });
+        // Cache miss the next chat/image/voice request so the new
+        // unlimited addon takes effect immediately rather than after
+        // the 5-min TTL expires.
+        invalidateAddonsCache(email);
         return NextResponse.json({ status: "addon_added", subscriptionId: existing.id });
       }
       return NextResponse.json({ error: "Pick a plan before adding addons." }, { status: 400 });

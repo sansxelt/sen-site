@@ -181,15 +181,27 @@ export type LimitDecision =
 // (optionally with a throttled tier the caller should use instead of
 // what the user asked for) or { blocked } with the human-readable
 // reason + reset time.
+//
+// activeAddons (optional) — when present, copilot_pro_pack or
+// power_pack make the chat cap unlimited (matches "Unlimited copilot
+// for any plan" copy on the addon). Pro tier throttling also relaxes
+// — paying for unlimited shouldn't silently get you a worse model.
 export function decideChatRequest(args: {
   plan: PlanKey;
   requestedTier: ModelTier;
   weekly: WeeklyUsage;
+  activeAddons?: Set<BillingAddonKey>;
 }): LimitDecision {
   const limits = PLAN_LIMITS[args.plan];
+  const liftedByAddon =
+    !!args.activeAddons &&
+    (args.activeAddons.has("power_pack") ||
+      args.activeAddons.has("copilot_pro_pack"));
 
-  // 1. Hard cap (free / apprentice / studio)
+  // 1. Hard cap (free / apprentice / studio) — bypassed if the user
+  // has Copilot Pro Pack or Power Pack.
   if (
+    !liftedByAddon &&
     limits.weekly_chat_requests !== null &&
     args.weekly.chat_requests >= limits.weekly_chat_requests
   ) {
@@ -202,8 +214,9 @@ export function decideChatRequest(args: {
     };
   }
 
-  // 2. Pro throttle — never block, just degrade tier
-  if (limits.pro_throttle) {
+  // 2. Pro throttle — also bypassed when an unlimited addon is on
+  // file. Otherwise unchanged.
+  if (limits.pro_throttle && !liftedByAddon) {
     let tier = args.requestedTier;
     if (
       tier === "smart" &&
@@ -229,12 +242,20 @@ export function decideChatRequest(args: {
 // hard weekly cap; pro / teams / enterprise have none. A limit of 0
 // means "image gen is not in this plan" → blocked with an upgrade
 // nudge instead of a "you've used your N" message.
+//
+// activeAddons (optional) — Power Pack lifts the cap to unlimited
+// (it bundles "Bonus credit allowance for voice + image"). Plans
+// that are completely blocked (cap=0, e.g. potential future free
+// tier with no image gen) are NOT unblocked by an addon — the addon
+// adds VOLUME, not entitlement.
 export function decideImageRequest(args: {
   plan: PlanKey;
   weekly: WeeklyUsage;
+  activeAddons?: Set<BillingAddonKey>;
 }): LimitDecision {
   const limits = PLAN_LIMITS[args.plan];
   const cap = limits.weekly_image_requests;
+  const liftedByAddon = !!args.activeAddons?.has("power_pack");
   if (cap === null) return { kind: "ok" };
   if (cap === 0) {
     return {
@@ -245,7 +266,7 @@ export function decideImageRequest(args: {
       used: args.weekly.image_requests,
     };
   }
-  if (args.weekly.image_requests >= cap) {
+  if (!liftedByAddon && args.weekly.image_requests >= cap) {
     return {
       kind: "blocked",
       reason: `You've used your ${args.plan} weekly image limit (${cap}). Resets ${nextWeekResetUtc().toISOString()}.`,
@@ -280,15 +301,25 @@ export function decideDeepResearchRequest(args: {
 
 // Voice limit check — separate so the speak/transcribe routes can
 // gate without going through the chat decision tree.
+//
+// activeAddons (optional) — Power Pack lifts the voice cap to
+// unlimited. Plans that explicitly disallow voice (cap=0, e.g. free)
+// still cannot use it via addon — it has to be a paid plan first.
 export function decideVoiceRequest(args: {
   plan: PlanKey;
   weekly: WeeklyUsage;
   added_seconds?: number;
+  activeAddons?: Set<BillingAddonKey>;
 }): LimitDecision {
   const limits = PLAN_LIMITS[args.plan];
   if (limits.weekly_voice_seconds === null) {
     return { kind: "ok" };
   }
+  // cap=0 means voice isn't on this plan at all — addon doesn't unlock.
+  const liftedByAddon =
+    !!args.activeAddons?.has("power_pack") &&
+    limits.weekly_voice_seconds > 0;
+  if (liftedByAddon) return { kind: "ok" };
   const projected =
     args.weekly.voice_seconds + (args.added_seconds ?? 0);
   if (projected > limits.weekly_voice_seconds) {

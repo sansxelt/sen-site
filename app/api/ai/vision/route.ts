@@ -11,6 +11,7 @@ import {
   getWeeklyUsage,
   hasUnconsumedBoost,
 } from "../../../../lib/plan-limits";
+import { getActiveAddonKeys } from "../../../../lib/active-addons";
 
 export const runtime = "nodejs";
 
@@ -67,9 +68,13 @@ export async function POST(request: Request) {
   // Mirror /api/ai/image gating: plan first (unlimited tiers pass for
   // free), then weekly cap, then boost, then credits. Pro / Teams /
   // Enterprise never see a 402 because their plan covers it.
-  const plan = await getPlanForEmail(email);
-  const weekly = await getWeeklyUsage(email);
-  const decision = decideImageRequest({ plan, weekly });
+  // Power Pack lifts the weekly image cap to unlimited.
+  const [plan, weekly, activeAddons] = await Promise.all([
+    getPlanForEmail(email),
+    getWeeklyUsage(email),
+    getActiveAddonKeys(email),
+  ]);
+  const decision = decideImageRequest({ plan, weekly, activeAddons });
   if (decision.kind === "blocked") {
     let allowed = false;
     if (await hasUnconsumedBoost(email, "image")) {

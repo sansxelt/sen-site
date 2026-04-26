@@ -11,6 +11,7 @@ import {
   getWeeklyUsage,
   hasUnconsumedBoost,
 } from "../../../../../lib/plan-limits";
+import { getActiveAddonKeys } from "../../../../../lib/active-addons";
 
 export const runtime = "nodejs";
 
@@ -67,14 +68,20 @@ export async function POST(request: Request) {
 
   // Voice cap: free can't speak at all on web (handled client-side
   // too), apprentice/studio have weekly minute caps. The estimated
-  // seconds for THIS request is ~text.length / 14.
+  // seconds for THIS request is ~text.length / 14. Power Pack lifts
+  // the weekly cap to unlimited (cap=0 plans still gated though —
+  // voice has to be in the plan first).
   const projectedSeconds = Math.max(1, Math.round(text.length / 14));
-  const plan = await getPlanForEmail(email);
-  const weekly = await getWeeklyUsage(email);
+  const [plan, weekly, activeAddons] = await Promise.all([
+    getPlanForEmail(email),
+    getWeeklyUsage(email),
+    getActiveAddonKeys(email),
+  ]);
   const voiceDecision = decideVoiceRequest({
     plan,
     weekly,
     added_seconds: projectedSeconds,
+    activeAddons,
   });
   if (voiceDecision.kind === "blocked") {
     // v0.1.8 — legacy voice_minute_pack override (the SKU was dropped
