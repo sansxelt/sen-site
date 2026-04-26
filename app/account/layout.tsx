@@ -1,11 +1,20 @@
 import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { auth } from "../../auth";
 import { DashboardNav } from "../../components/dashboard-nav";
 import { getZone } from "../../lib/zone";
 
+// /account moved off the proxy auth gate (proxy.ts now only gates
+// /api/account). The page-tree auth check lives here so any new
+// /account/* page inherits it without thinking. Same /app pattern,
+// avoids the getToken-vs-auth() cookie disagreement loop that hit
+// users right after OAuth signin.
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const [session, zone] = await Promise.all([auth(), getZone()]);
   const userEmail = session?.user?.email ?? "";
+  if (!userEmail) {
+    redirect("/signin?callbackUrl=%2Faccount");
+  }
 
   return (
     <div className="relative min-h-screen bg-neutral-950 text-neutral-100">

@@ -118,20 +118,16 @@ export default async function proxy(req: NextRequest) {
   const hostResp = hostRoute(req);
   if (hostResp) return hostResp;
 
-  // 2. Auth gate for /account + /api/account only. /app is gated at
-  //    the page level via auth() in app/app/page.tsx since the
-  //    proxy's getToken() sometimes misses cookies that auth() sees
-  //    (different cookie-name resolution between the two), causing
-  //    an infinite redirect loop between /signin and /app.
-  //
-  //    /account/content is excluded for the same reason: it ran
-  //    into the same loop in production. Page-level auth() in
-  //    app/account/content/page.tsx + [id]/page.tsx handles the
-  //    gate, plus the admin role check on top.
+  // 2. Auth gate for /api/account only now. /account (the page tree)
+  //    moved to a layout-level auth() check in
+  //    app/account/layout.tsx for the same reason /app and
+  //    /account/content already did: proxy getToken() sometimes
+  //    misses cookies that auth() sees, which produced an infinite
+  //    /signin <-> /account redirect loop right after OAuth set
+  //    the cookie. /api/account stays here because API routes
+  //    don't have a layout to host the check.
   const { pathname, search } = req.nextUrl;
-  const requiresAuth =
-    (pathname.startsWith("/account") && !pathname.startsWith("/account/content")) ||
-    pathname.startsWith("/api/account");
+  const requiresAuth = pathname.startsWith("/api/account");
   if (requiresAuth) {
     const token = await getToken({
       req,
