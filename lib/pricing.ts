@@ -373,3 +373,34 @@ export function getPlanActionHref(plan: PricingPlan) {
   if (plan.key === "free") return "/account";
   return `/checkout?plan=${plan.key}`;
 }
+
+// User-facing plan name. Internal keys ("apprentice", "studio") look
+// confusing in error messages — every other surface shows "Core" /
+// "Plus" so the cap-blocked errors should match. Single source of
+// truth so client + server agree.
+export function planDisplayName(key: string | null | undefined): string {
+  const k = (key ?? "").toLowerCase();
+  if (k === "apprentice") return "Core";
+  if (k === "studio") return "Plus";
+  if (k === "pro") return "Pro";
+  if (k === "teams") return "Teams";
+  if (k === "enterprise") return "Enterprise";
+  if (k === "free") return "Free";
+  return key || "Free";
+}
+
+// "Monday at 12:00 AM UTC" instead of an ISO string. The ISO timestamp
+// in cap-blocked messages reads like a stack trace to a non-technical
+// user. Returns a short human-friendly label that still conveys the
+// reset moment unambiguously.
+export function formatResetTime(iso: string | Date): string {
+  const d = iso instanceof Date ? iso : new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Monday at 12:00 AM UTC";
+  return d.toLocaleString("en-US", {
+    weekday: "long",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+    timeZoneName: "short",
+  });
+}

@@ -1,5 +1,10 @@
 import type { ModelTier, PlanKey } from "./ai-models";
-import { type BillingAddonKey, planIncludesAddon } from "./pricing";
+import {
+  type BillingAddonKey,
+  formatResetTime,
+  planDisplayName,
+  planIncludesAddon,
+} from "./pricing";
 import { getSupabaseAdminClient } from "./supabase-admin";
 import {
   consumeCredits,
@@ -231,10 +236,11 @@ export function decideChatRequest(args: {
     limits.weekly_chat_requests !== null &&
     args.weekly.chat_requests >= limits.weekly_chat_requests
   ) {
+    const resetIso = nextWeekResetUtc().toISOString();
     return {
       kind: "blocked",
-      reason: `You've used your ${args.plan} weekly chat limit (${limits.weekly_chat_requests}). Resets ${nextWeekResetUtc().toISOString()}.`,
-      reset: nextWeekResetUtc().toISOString(),
+      reason: `You've used all ${limits.weekly_chat_requests} weekly chats on ${planDisplayName(args.plan)}. Resets ${formatResetTime(resetIso)}. Buy a Weekly Boost (+500 chats, $5) or upgrade to Pro for unlimited.`,
+      reset: resetIso,
       limit: limits.weekly_chat_requests,
       used: args.weekly.chat_requests,
     };
@@ -283,11 +289,12 @@ export function decideImageRequest(args: {
   const cap = limits.weekly_image_requests;
   const liftedByAddon = isCapLifted("image", args.plan, args.activeAddons);
   if (cap === null) return { kind: "ok" };
+  const resetIso = nextWeekResetUtc().toISOString();
   if (cap === 0) {
     return {
       kind: "blocked",
-      reason: `Image generation is on paid plans. Upgrade to draw with sansxel-1.`,
-      reset: nextWeekResetUtc().toISOString(),
+      reason: `Image generation isn't on the Free plan — upgrade to Core or higher to draw with sansxel-1.`,
+      reset: resetIso,
       limit: 0,
       used: args.weekly.image_requests,
     };
@@ -295,8 +302,8 @@ export function decideImageRequest(args: {
   if (!liftedByAddon && args.weekly.image_requests >= cap) {
     return {
       kind: "blocked",
-      reason: `You've used your ${args.plan} weekly image limit (${cap}). Resets ${nextWeekResetUtc().toISOString()}.`,
-      reset: nextWeekResetUtc().toISOString(),
+      reason: `You've used all ${cap} weekly images on ${planDisplayName(args.plan)}. Resets ${formatResetTime(resetIso)}. Top up credits or add Power Pack for unlimited.`,
+      reset: resetIso,
       limit: cap,
       used: args.weekly.image_requests,
     };
@@ -349,13 +356,14 @@ export function decideVoiceRequest(args: {
   const projected =
     args.weekly.voice_seconds + (args.added_seconds ?? 0);
   if (projected > limits.weekly_voice_seconds) {
+    const resetIso = nextWeekResetUtc().toISOString();
     return {
       kind: "blocked",
       reason:
         limits.weekly_voice_seconds === 0
-          ? `Voice is on paid plans. Upgrade to use sansxel-1's voice.`
-          : `You've used your ${args.plan} weekly voice budget (${Math.round(limits.weekly_voice_seconds / 60)} minutes).`,
-      reset: nextWeekResetUtc().toISOString(),
+          ? `Voice isn't on the Free plan — upgrade to Core or higher to talk with sansxel-1.`
+          : `You've used your ${planDisplayName(args.plan)} weekly voice budget (${Math.round(limits.weekly_voice_seconds / 60)} min). Resets ${formatResetTime(resetIso)}. Top up credits or add Power Pack for unlimited.`,
+      reset: resetIso,
       limit: limits.weekly_voice_seconds,
       used: args.weekly.voice_seconds,
     };

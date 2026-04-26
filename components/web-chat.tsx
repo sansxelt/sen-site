@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLei } from "./lei-shell";
 import { previewCreditCost } from "@/lib/lei";
+import { planDisplayName } from "@/lib/pricing";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -70,16 +71,8 @@ function isLikelyWhisperHallucination(text: string, _audioBytes: number): boolea
   return false;
 }
 
-function planDisplayName(key: string): string {
-  const k = (key ?? "").toLowerCase();
-  if (k === "apprentice") return "Core";
-  if (k === "studio") return "Plus";
-  if (k === "pro") return "Pro";
-  if (k === "teams") return "Teams";
-  if (k === "enterprise") return "Enterprise";
-  if (k === "free") return "Free";
-  return key || "Free";
-}
+// planDisplayName moved to lib/pricing.ts so server-side error
+// messages (cap-blocked reasons) speak the same language as the UI.
 
 const ALL_TIERS: ReadonlyArray<{
   tier: ModelTier;
