@@ -12,6 +12,11 @@ import {
   hasUnconsumedBoost,
 } from "../../../../lib/plan-limits";
 import { getActiveAddonKeys } from "../../../../lib/active-addons";
+import {
+  appendMessage as saveMessage,
+  createThread as createChatThread,
+  getThread as getChatThread,
+} from "../../../../lib/chat-history";
 
 export const runtime = "nodejs";
 
@@ -44,9 +49,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  let payload: { prompt?: unknown; size?: unknown };
+  let payload: { prompt?: unknown; size?: unknown; thread_id?: unknown };
   try {
-    payload = (await request.json()) as { prompt?: unknown; size?: unknown };
+    payload = (await request.json()) as { prompt?: unknown; size?: unknown; thread_id?: unknown };
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -58,6 +63,10 @@ export async function POST(request: Request) {
   }
   // Cap prompt length so a runaway message can't drain credit.
   const safePrompt = prompt.slice(0, 4000);
+  const requestedThreadId =
+    typeof payload.thread_id === "string" && payload.thread_id.trim()
+      ? payload.thread_id.trim()
+      : null;
 
   const requestedSize =
     typeof payload.size === "string" && (ALLOWED_SIZES as string[]).includes(payload.size)
@@ -104,6 +113,36 @@ export async function POST(request: Request) {
   const startedAt = Date.now();
   const model = "gpt-image-1";
 
+  // v0.1.16 — Resolve / create the thread + persist the user prompt
+  // BEFORE we kick off image gen. Without this, when the user clicks
+  // off and comes back, the prompt is gone and only the rendered
+  // image (still in local state) shows up. Mirrors the chat route's
+  // pattern: user turn lands first, assistant follows.
+  let resolvedThreadId: string | null = null;
+  const userTurnAt = new Date();
+  const assistantTurnAt = new Date(userTurnAt.getTime() + 2000);
+  try {
+    if (requestedThreadId) {
+      const owned = await getChatThread(email, requestedThreadId);
+      resolvedThreadId = owned ? owned.id : null;
+    }
+    if (!resolvedThreadId) {
+      const created = await createChatThread(email);
+      if (created) resolvedThreadId = created.id;
+    }
+    if (resolvedThreadId) {
+      void saveMessage({
+        email,
+        threadId: resolvedThreadId,
+        role: "user",
+        content: prompt,
+        createdAt: userTurnAt.toISOString(),
+      });
+    }
+  } catch (err) {
+    console.warn("ai/image thread persist (user turn) failed:", err);
+  }
+
   try {
     const result = await client.images.generate({
       model,
@@ -147,9 +186,31 @@ export async function POST(request: Request) {
     const revised =
       typeof first.revised_prompt === "string" ? first.revised_prompt : null;
 
+    // Persist the assistant turn with the image markdown so the
+    // generated image survives a thread switch / reload. The data URL
+    // can be 500KB-2MB base64; we accept the storage cost rather than
+    // standing up a separate Supabase Storage upload pipeline.
+    const caption = revised
+      ? `*${revised}*\n\n![generated image](${url})`
+      : `![generated image](${url})`;
+    if (resolvedThreadId) {
+      void saveMessage({
+        email,
+        threadId: resolvedThreadId,
+        role: "assistant",
+        content: caption,
+        createdAt: assistantTurnAt.toISOString(),
+      });
+    }
+
     return NextResponse.json(
       revised ? { url, revised_prompt: revised } : { url },
-      { status: 200 },
+      {
+        status: 200,
+        headers: {
+          "x-sansxel-thread-id": resolvedThreadId ?? "",
+        },
+      },
     );
   } catch (err) {
     console.error("ai/image failed:", err);

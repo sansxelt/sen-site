@@ -1086,12 +1086,48 @@ export function WebChat({
     setGeneratingImage(true);
     setChatError(null);
 
+    // Mark the thread (or the to-be-created one) as in-flight so the
+    // rail's pulsing dot + the floating Back-to-chat pill work for
+    // image gen the same way they do for text chat.
+    const tidAtStart = threadIdRef.current;
+    const writeFlight = (id: string) => {
+      if (typeof window === "undefined") return;
+      const flight = readFlight();
+      flight[id] = { startedAt: Date.now() };
+      window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
+      window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+    };
+    const clearFlight = (id: string | null) => {
+      if (typeof window === "undefined" || !id) return;
+      const flight = readFlight();
+      delete flight[id];
+      window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
+      window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+    };
+    if (tidAtStart) writeFlight(tidAtStart);
+
     try {
       const res = await fetch("/api/ai/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, thread_id: tidAtStart ?? undefined }),
       });
+      // Server resolves / creates the thread + persists user prompt
+      // immediately. Capture the echoed id so follow-up chat turns
+      // continue the same conversation, and so the rail picks it up.
+      const echoedThreadId = res.headers.get("x-sansxel-thread-id");
+      if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
+        setThreadId(echoedThreadId);
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          url.searchParams.set("thread", echoedThreadId);
+          url.searchParams.delete("new");
+          window.history.replaceState({}, "", url.pathname + url.search);
+          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+          // Hop the in-flight flag onto the now-known id.
+          writeFlight(echoedThreadId);
+        }
+      }
       if (!res.ok) {
         let detail = `image ${res.status}`;
         try {
@@ -1114,6 +1150,11 @@ export function WebChat({
         }
         return next;
       });
+      // Server already persisted the assistant turn — fire the rail
+      // refresh so the title gen / sidebar count picks it up.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Image generation failed.";
@@ -1132,6 +1173,7 @@ export function WebChat({
       });
     } finally {
       setGeneratingImage(false);
+      clearFlight(threadIdRef.current);
     }
   }, [generatingImage, input]);
 
