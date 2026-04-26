@@ -71,7 +71,9 @@
       "Bash(awk 'NR>=889 && NR<=1100 && /^function [A-Z]/' components/hero-activity.tsx)",
       "Bash(awk 'NR>=889 && /^function [A-Z]/{c++; print NR\": \"$0; if\\(c==2\\) exit}' components/hero-activity.tsx)",
       "Bash(grep -E \"^d.*/\\(home|download\\)$\")",
-      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && head -20 \"{}\"')"
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && head -20 \"{}\"')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 10 \"https://sansxel.ai/.well-known/discord\")",
+      "Bash(curl -s --max-time 10 \"https://sansxel.ai/.well-known/discord\")"
     ]
   }
 }

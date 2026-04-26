@@ -16,6 +16,30 @@ type Props = {
   publishableKey: string;
 };
 
+type UsageSummary = {
+  balance: number;
+  weekly: {
+    chat: { used: number; cap: number | null; lifted: boolean };
+    image: { used: number; cap: number | null; lifted: boolean };
+    voice_seconds: { used: number; cap: number | null; lifted: boolean };
+    reset_iso: string;
+  };
+  boosts: { session: number; weekly: number };
+};
+
+function formatCap(used: number, cap: number | null, lifted: boolean): string {
+  if (lifted) return `${used.toLocaleString()} · unlimited`;
+  if (cap === null) return `${used.toLocaleString()} · unlimited`;
+  return `${used.toLocaleString()} / ${cap.toLocaleString()}`;
+}
+
+function formatVoiceCap(used: number, cap: number | null, lifted: boolean): string {
+  const usedMin = Math.round(used / 60);
+  if (lifted) return `${usedMin} min · unlimited`;
+  if (cap === null) return `${usedMin} min · unlimited`;
+  return `${usedMin} / ${Math.round(cap / 60)} min`;
+}
+
 function formatMoney(amount: number, currency: string) {
   try {
     return new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() }).format(amount / 100);
@@ -39,23 +63,23 @@ export function BillingPanel({ state, publishableKey }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [pmOpen, setPmOpen] = useState(false);
   const [creditsOpen, setCreditsOpen] = useState(false);
-  const [creditBalance, setCreditBalance] = useState<number | null>(null);
+  // Combined balance + weekly usage + boost counts so the Credits
+  // section can show the user's whole usage picture in one place.
+  const [usage, setUsage] = useState<UsageSummary | null>(null);
   // NEXT_PUBLIC_* vars are inlined at build time, safe to read on client.
   const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? "";
 
-  // Load the user's current credit balance once + after every top-up.
-  // Falls back to 0 silently per the API's policy.
-  const loadBalance = async () => {
+  const loadUsage = async () => {
     try {
-      const res = await fetch("/api/credits/balance", { cache: "no-store" });
+      const res = await fetch("/api/account/billing/usage-summary", { cache: "no-store" });
       if (!res.ok) return;
-      const data = (await res.json()) as { balance?: number };
-      setCreditBalance(data.balance ?? 0);
+      const data = (await res.json()) as UsageSummary;
+      setUsage(data);
     } catch {
-      // ignore — display "—" instead
+      // ignore — display "—"
     }
   };
-  useEffect(() => { void loadBalance(); }, []);
+  useEffect(() => { void loadUsage(); }, []);
 
   async function post(path: string, body?: unknown) {
     const res = await fetch(path, {
@@ -331,18 +355,18 @@ export function BillingPanel({ state, publishableKey }: Props) {
         </section>
       )}
 
-      {/* ── Credits ────────────────────────────────────────────────── */}
+      {/* ── Credits + usage ────────────────────────────────────────── */}
       <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
-              Credits
+              Credits & usage
             </div>
             <div className="mt-1.5 text-xl font-semibold text-white sm:mt-2 sm:text-2xl">
-              {creditBalance === null ? "—" : `${creditBalance.toLocaleString()} cr`}
+              {usage === null ? "—" : `${usage.balance.toLocaleString()} cr`}
             </div>
             <div className="mt-0.5 text-xs text-neutral-400 sm:mt-1 sm:text-sm">
-              $1 = 100 credits · 1 cr per chat · 5 cr per image · 2 cr per voice min
+              $1 = 100 credits · burns when you exceed your weekly cap
             </div>
           </div>
           <button
@@ -353,6 +377,46 @@ export function BillingPanel({ state, publishableKey }: Props) {
             Top up
           </button>
         </div>
+
+        {usage && (
+          <>
+            {/* Weekly usage breakdown — chat / image / voice with the
+                user's plan caps. "Unlimited" pill replaces the cap
+                when an addon (or the plan) lifts the cap. */}
+            <div className="mt-5 grid gap-2 sm:mt-6 sm:grid-cols-3 sm:gap-3">
+              <UsageCell
+                label="Chat this week"
+                value={formatCap(usage.weekly.chat.used, usage.weekly.chat.cap, usage.weekly.chat.lifted)}
+                lifted={usage.weekly.chat.lifted || usage.weekly.chat.cap === null}
+              />
+              <UsageCell
+                label="Images this week"
+                value={formatCap(usage.weekly.image.used, usage.weekly.image.cap, usage.weekly.image.lifted)}
+                lifted={usage.weekly.image.lifted || usage.weekly.image.cap === null}
+              />
+              <UsageCell
+                label="Voice this week"
+                value={formatVoiceCap(usage.weekly.voice_seconds.used, usage.weekly.voice_seconds.cap, usage.weekly.voice_seconds.lifted)}
+                lifted={usage.weekly.voice_seconds.lifted || usage.weekly.voice_seconds.cap === null}
+              />
+            </div>
+            {(usage.boosts.session > 0 || usage.boosts.weekly > 0) && (
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+                <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Boosts ready</span>
+                {usage.boosts.session > 0 && (
+                  <span className="rounded-full border border-amber-300/25 bg-amber-300/[0.06] px-2.5 py-0.5 text-amber-200/90">
+                    {usage.boosts.session}× Session Boost
+                  </span>
+                )}
+                {usage.boosts.weekly > 0 && (
+                  <span className="rounded-full border border-amber-300/25 bg-amber-300/[0.06] px-2.5 py-0.5 text-amber-200/90">
+                    {usage.boosts.weekly}× Weekly Boost
+                  </span>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </section>
 
       {/* ── Payment method ─────────────────────────────────────────── */}
@@ -443,10 +507,23 @@ export function BillingPanel({ state, publishableKey }: Props) {
             // Webhook lands the balance update — give it a moment,
             // then re-poll. Refresh router too so any other panels
             // that read account state get fresh data.
-            window.setTimeout(() => { void loadBalance(); router.refresh(); }, 1500);
+            window.setTimeout(() => { void loadUsage(); router.refresh(); }, 1500);
           }}
         />
       )}
+    </div>
+  );
+}
+
+function UsageCell({ label, value, lifted }: { label: string; value: string; lifted: boolean }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
+      <div className="text-[10px] font-medium uppercase tracking-[0.16em] text-neutral-500">
+        {label}
+      </div>
+      <div className={`mt-1 text-sm font-medium ${lifted ? "text-emerald-300" : "text-white"}`}>
+        {value}
+      </div>
     </div>
   );
 }
