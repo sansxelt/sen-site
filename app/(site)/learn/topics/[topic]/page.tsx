@@ -52,12 +52,9 @@ export default async function TopicPage({ params }: Props) {
           </nav>
 
           <header className="mt-4">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl" aria-hidden>{t.emoji}</span>
-              <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                {t.label}
-              </h1>
-            </div>
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              {t.label}
+            </h1>
             <p className="mt-3 text-base leading-7 text-neutral-300 sm:text-lg">
               {t.description}
             </p>
@@ -65,8 +62,7 @@ export default async function TopicPage({ params }: Props) {
 
           {articles.length === 0 ? (
             <div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
-              <div className="text-4xl">📝</div>
-              <p className="mt-3 text-sm text-neutral-400">
+              <p className="text-sm text-neutral-400">
                 No articles in {t.label} yet — coming soon.
               </p>
               <Link
@@ -134,8 +130,7 @@ function ArticleCard({
         </span>
         <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
       </div>
-      <div className="mt-3 text-2xl" aria-hidden>{article.coverEmoji}</div>
-      <h3 className="mt-2 text-base font-semibold text-white transition group-hover:text-violet-200">
+      <h3 className="mt-3 text-base font-semibold text-white transition group-hover:text-violet-200">
         {article.title}
       </h3>
       <p className="mt-1 line-clamp-2 text-xs leading-5 text-neutral-400">

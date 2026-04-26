@@ -67,8 +67,7 @@ export default async function ArticlePage({ params }: Props) {
                         </span>
                         <span className="text-neutral-500">{r.readMinutes} min</span>
                       </div>
-                      <div className="mt-3 text-2xl" aria-hidden>{r.coverEmoji}</div>
-                      <div className="mt-2 text-sm font-semibold text-white transition group-hover:text-violet-200">
+                      <div className="mt-3 text-sm font-semibold text-white transition group-hover:text-violet-200">
                         {r.title}
                       </div>
                       <p className="mt-1 line-clamp-2 text-xs leading-5 text-neutral-400">

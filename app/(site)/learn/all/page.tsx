@@ -44,7 +44,6 @@ export default function AllArticlesPage() {
                   </span>
                   <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
                 </div>
-                <div className="mt-4 text-3xl" aria-hidden>{article.coverEmoji}</div>
                 <h3 className="mt-3 text-lg font-semibold text-white transition group-hover:text-violet-200">
                   {article.title}
                 </h3>

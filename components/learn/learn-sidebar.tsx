@@ -88,7 +88,6 @@ export function LearnSidebar({ activeTopic, activeSubtopic }: Props) {
                       : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100"
                   }`}
                 >
-                  <span aria-hidden className="text-base leading-none">{topic.emoji}</span>
                   <span className="flex-1 truncate">{topic.label}</span>
                   <span className="text-[10px] text-neutral-600">{count}</span>
                 </Link>

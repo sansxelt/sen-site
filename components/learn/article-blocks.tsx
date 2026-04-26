@@ -92,25 +92,32 @@ export function BulletList({ items }: { items: ReactNode[] }) {
   );
 }
 
-// Placeholder "diagram" — a visually-distinct card with an emoji, a
-// caption, and an alt label. Real diagrams / screenshots can replace
-// these later by swapping the emoji for an <Image>. Keeps articles
-// looking visual from day one without waiting on art.
+// Placeholder "diagram" — a clean caption strip with a left accent
+// bar. The old version centered a giant emoji which read juvenile.
+// `emoji` arg is now optional and rendered small inline only when
+// it's a clarifying flow notation like "📝 → 🧠 → 📝"; otherwise
+// just text. Real diagrams / screenshots replace these later by
+// swapping in an <Image>.
 export function Diagram({
   emoji,
   caption,
   alt,
 }: {
-  emoji: string;
+  emoji?: string;
   caption: string;
   alt?: string;
 }) {
   return (
-    <figure className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/[0.06] to-fuchsia-500/[0.04] px-6 py-10 text-center">
-      <div className="text-5xl" aria-label={alt ?? caption}>
-        {emoji}
-      </div>
-      <figcaption className="mt-3 text-xs text-neutral-400">{caption}</figcaption>
+    <figure
+      className="mt-6 flex items-start gap-4 rounded-xl border-l-2 border-violet-400/40 bg-white/[0.02] px-5 py-4"
+      aria-label={alt ?? caption}
+    >
+      {emoji && (
+        <div className="text-sm font-mono text-violet-200/90">{emoji}</div>
+      )}
+      <figcaption className="text-sm leading-6 text-neutral-300">
+        {caption}
+      </figcaption>
     </figure>
   );
 }

@@ -40,7 +40,7 @@ export default function LearnIndexPage() {
             </p>
           </div>
 
-          {/* Topic grid */}
+          {/* Topic grid — text-first, no big emojis */}
           <section className="mt-12">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
               Topics
@@ -54,16 +54,15 @@ export default function LearnIndexPage() {
                     href={`/learn/topics/${topic.key}`}
                     className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:border-white/20 hover:bg-white/[0.04]"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="text-2xl" aria-hidden>{topic.emoji}</div>
-                      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-500">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="text-base font-semibold text-white transition group-hover:text-violet-200">
+                        {topic.label}
+                      </h3>
+                      <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-500">
                         {count > 0 ? `${count} article${count === 1 ? "" : "s"}` : "Coming soon"}
                       </span>
                     </div>
-                    <h3 className="mt-3 text-base font-semibold text-white transition group-hover:text-violet-200">
-                      {topic.label}
-                    </h3>
-                    <p className="mt-1 text-xs leading-5 text-neutral-400">
+                    <p className="mt-2 text-xs leading-5 text-neutral-400">
                       {topic.description}
                     </p>
                   </Link>
@@ -97,7 +96,6 @@ export default function LearnIndexPage() {
                     </span>
                     <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
                   </div>
-                  <div className="mt-4 text-3xl" aria-hidden>{article.coverEmoji}</div>
                   <h3 className="mt-3 text-lg font-semibold text-white transition group-hover:text-violet-200">
                     {article.title}
                   </h3>
