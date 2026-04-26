@@ -1835,7 +1835,7 @@ export function WebChat({
                   : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
               }
             >
-              {costPreview.planCovers ? `✓ ${planDisplayName(plan)}` : `≈ ${costPreview.credits} cr`}
+              {costPreview.planCovers ? `✓ ${planDisplayName(plan)}` : `≈ ${costPreview.credits} credits`}
             </span>
             <PlanExpiryNote expiresAt={planExpiresAt} canceling={planCanceling} />
           </div>
@@ -2274,7 +2274,7 @@ function ChatErrorPill({ message }: { message: string }) {
 function CreditChip({ balance, plan }: { balance: number | null; plan: string }) {
   const planCovers = ["pro", "teams", "enterprise"].includes(plan.toLowerCase());
   if (balance === null) {
-    return <span className="webchat-credit-chip webchat-credit-chip--idle" title="Loading credits…">— cr</span>;
+    return <span className="webchat-credit-chip webchat-credit-chip--idle" title="Loading credits…">— credits</span>;
   }
   // For unlimited plans, low balance isn't urgent — they only burn
   // credits if they blow past the weekly cap, which most users won't.
@@ -2300,7 +2300,7 @@ function CreditChip({ balance, plan }: { balance: number | null; plan: string })
           <span>Top up</span>
         </>
       ) : (
-        <span>{balance.toLocaleString()} cr</span>
+        <span>{balance.toLocaleString()} credits</span>
       )}
     </a>
   );

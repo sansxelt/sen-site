@@ -60,10 +60,10 @@ export default function PricingPage() {
 
           <div className="mt-6 grid gap-3 sm:grid-cols-4">
             {[
-              { glyph: "💬", name: "Chat", cost: "1 cr", note: "1¢ per reply" },
-              { glyph: "🖼", name: "Image", cost: "5 cr", note: "5¢ per image" },
-              { glyph: "🎙", name: "Voice", cost: "2 cr", note: "2¢ per minute" },
-              { glyph: "✨", name: "Copilot", cost: "1 cr", note: "1¢ per ask" },
+              { glyph: "💬", name: "Chat", cost: "1 credit", note: "1¢ per reply" },
+              { glyph: "🖼", name: "Image", cost: "5 credits", note: "5¢ per image" },
+              { glyph: "🎙", name: "Voice", cost: "2 credits", note: "2¢ per minute" },
+              { glyph: "✨", name: "Copilot", cost: "1 credit", note: "1¢ per ask" },
             ].map((row) => (
               <div
                 key={row.name}

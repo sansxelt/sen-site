@@ -73,7 +73,9 @@
       "Bash(grep -E \"^d.*/\\(home|download\\)$\")",
       "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && head -20 \"{}\"')",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" --max-time 10 \"https://sansxel.ai/.well-known/discord\")",
-      "Bash(curl -s --max-time 10 \"https://sansxel.ai/.well-known/discord\")"
+      "Bash(curl -s --max-time 10 \"https://sansxel.ai/.well-known/discord\")",
+      "Bash(grep -n \"cr<\\\\|cr }\\\\|cr,\\\\|cr}\\\\|'cr'\\\\|\\\\\"cr\\\\\"\\\\| cr \\\\| cr$\\\\|}cr\\\\|≈ \\\\|cr·\\\\|cr ·\\\\|· cr\" components/web-chat.tsx components/billing-panel.tsx components/buy-credits-modal.tsx)",
+      "Bash(grep -n '\"cr\"\\\\|cr<\\\\|cr \"\\\\|cr -\\\\|cr$\\\\|`\\\\${.*}cr`\\\\| cr\"\\\\|cr\"]\\\\|cr\",' desktop/src/billing-panel.tsx app/globals.css)"
     ]
   }
 }

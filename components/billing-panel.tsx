@@ -363,7 +363,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
               Credits & usage
             </div>
             <div className="mt-1.5 text-xl font-semibold text-white sm:mt-2 sm:text-2xl">
-              {usage === null ? "—" : `${usage.balance.toLocaleString()} cr`}
+              {usage === null ? "—" : `${usage.balance.toLocaleString()} credits`}
             </div>
             <div className="mt-0.5 text-xs text-neutral-400 sm:mt-1 sm:text-sm">
               $1 = 100 credits · burns when you exceed your weekly cap
