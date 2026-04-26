@@ -264,6 +264,24 @@ export function WebChat({
         if (!targetId) {
           // No URL hint — only auto-restore on first mount.
           if (hasHydratedRef.current) return;
+          // ChatGPT-style idle reset: if the user hasn't done anything
+          // in a while, drop them on a fresh chat instead of resuming
+          // whatever they were last looking at. Threshold matches the
+          // "I came back the next morning" case — long enough that
+          // mid-task pauses (lunch, meeting) still resume, short
+          // enough that a fresh session feels fresh.
+          const IDLE_RESET_MS = 30 * 60 * 1000; // 30 minutes
+          if (typeof window !== "undefined") {
+            const raw = window.localStorage.getItem("sansxel.lastActivity");
+            const lastAt = raw ? Number(raw) : NaN;
+            if (Number.isFinite(lastAt) && Date.now() - lastAt > IDLE_RESET_MS) {
+              hasHydratedRef.current = true;
+              setThreadId(null);
+              setMessages([]);
+              setInput("");
+              return;
+            }
+          }
           const res = await fetch("/api/threads", { cache: "no-store" });
           if (!res.ok) {
             hasHydratedRef.current = true;
@@ -592,6 +610,12 @@ export function WebChat({
     setInput("");
     setStreaming(true);
     setChatError(null);
+    // Touch the activity timestamp so the next-mount idle check
+    // knows the user was active recently and shouldn't get auto-
+    // bumped to a new chat.
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sansxel.lastActivity", String(Date.now()));
+    }
     // v0.1.16 r3+ — track the sending-thread context. Tricky case:
     // first send in a NEW chat captures threadId=null, then the
     // server returns a thread id which we setThreadId on. That
@@ -1143,6 +1167,9 @@ export function WebChat({
     setInput("");
     setGeneratingImage(true);
     setChatError(null);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sansxel.lastActivity", String(Date.now()));
+    }
 
     // Mark the thread (or the to-be-created one) as in-flight so the
     // rail's pulsing dot + the floating Back-to-chat pill work for
