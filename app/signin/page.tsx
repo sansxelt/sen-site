@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AuthPanel, OAuthSection } from "@/components/auth-panel";
 import { getSafeRedirectPath } from "@/lib/auth-ui";
@@ -23,6 +24,15 @@ export default async function SignInPage({
   const callbackUrl = Array.isArray(params.callbackUrl)
     ? params.callbackUrl[0]
     : params.callbackUrl;
+
+  // If they're already signed in, don't make them sit on a signin
+  // page with a 'Open workspace' button — just take them where they
+  // were going. Default to /app since the chat host is signin's
+  // home zone.
+  if (session?.user?.email) {
+    redirect(getSafeRedirectPath(callbackUrl) || "/app");
+  }
+
   const t = ZONE_THEME[zone];
 
   // Per-zone copy so the surface speaks to where you actually are.

@@ -52,7 +52,12 @@ function hostRoute(req: NextRequest): NextResponse | null {
   // chat.sansxel.ai
   if (host === CHAT_HOST) {
     if (path === "/") {
-      return NextResponse.rewrite(new URL("/app", url));
+      // Root of chat = the workshop. Redirect (not rewrite) to /app
+      // so the URL bar shows /app and the auth gate below catches
+      // unsigned users — otherwise a rewrite would render /app
+      // without ever firing the auth check, dropping unsigned
+      // visitors into the workshop UI with no session.
+      return NextResponse.redirect(new URL("/app", url), 302);
     }
     if (startsWithAny(path, MARKETING_PATHS)) {
       return NextResponse.redirect(
@@ -115,10 +120,18 @@ export default async function proxy(req: NextRequest) {
   const hostResp = hostRoute(req);
   if (hostResp) return hostResp;
 
-  // 2. Auth gate for /account + /api/account.
+  // 2. Auth gate for the workshop + account surfaces. Without /app
+  //    in here, an unsigned visitor would land on chat.sansxel.ai/app
+  //    and see the workshop chrome with no session — confusing
+  //    'why is nothing working' state. Now they get bounced to
+  //    /signin with the original path stashed in callbackUrl so
+  //    they land back where they were going after sign-in.
   const { pathname, search } = req.nextUrl;
   const requiresAuth =
-    pathname.startsWith("/account") || pathname.startsWith("/api/account");
+    pathname === "/app" ||
+    pathname.startsWith("/app/") ||
+    pathname.startsWith("/account") ||
+    pathname.startsWith("/api/account");
   if (requiresAuth) {
     const token = await getToken({
       req,
