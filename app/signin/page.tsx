@@ -50,27 +50,27 @@ export default async function SignInPage({
         : "Email, Google, and GitHub all sign in to the same sansxel account.";
 
   return (
-    <div className="mx-auto max-w-4xl py-6 sm:py-10">
-      {/* Hero header, generous breathing room above the form. */}
-      <div className="mx-auto max-w-2xl text-center">
+    <div className="mx-auto max-w-6xl py-8 sm:py-14">
+      {/* Hero header. Generous breathing room above the form. */}
+      <div className="mx-auto max-w-3xl text-center">
         <div className={`text-xs font-medium uppercase tracking-[0.22em] ${t.accent}`}>
           {t.signInLabel}
         </div>
         <h1
-          className={`mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl ${zone === "platform" ? "font-mono" : ""}`}
+          className={`mt-6 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl ${zone === "platform" ? "font-mono" : ""}`}
         >
           {headline}
         </h1>
-        <p className="mt-5 text-sm leading-7 text-neutral-300 sm:text-base sm:leading-8">
+        <p className="mt-6 text-sm leading-7 text-neutral-300 sm:text-base sm:leading-8">
           {subline}
         </p>
       </div>
 
-      {/* More space between header and form panels, was mt-10, now
-          mt-16 so the page reads as 'header section' + 'form section'
-          instead of one wall of text. */}
-      <div className="mx-auto mt-16 max-w-4xl sm:mt-20">
-        <div className="grid gap-8 xl:grid-cols-[1.08fr_.92fr] xl:gap-10 xl:items-start">
+      {/* The two-column form region. Wider gap so the password form
+          and the OAuth providers feel like distinct choices rather
+          than one continuous panel. */}
+      <div className="mx-auto mt-24 max-w-6xl sm:mt-32">
+        <div className="grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-20 xl:gap-28 lg:items-start">
           <AuthPanel
             callbackUrl={getSafeRedirectPath(callbackUrl)}
             initialSessionEmail={session?.user?.email ?? null}

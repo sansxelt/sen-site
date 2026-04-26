@@ -15,9 +15,19 @@ export async function ZoneShell({
   // Optional override, useful when a page wants to force a specific
   // zone (e.g. testing the platform variant from any host).
   zoneOverride,
+  // Hide the top-right back link. Used on /signin where the link
+  // would otherwise take an unauth user to the workshop, which
+  // bounces them right back to /signin (circular).
+  hideBackLink = false,
+  // Widen the inner content column from the default max-w-3xl
+  // (768px) to max-w-6xl (1152px). Used by /signin where the
+  // two-column auth + OAuth layout needs real horizontal room.
+  wide = false,
 }: {
   children: ReactNode;
   zoneOverride?: Zone;
+  hideBackLink?: boolean;
+  wide?: boolean;
 }) {
   const zone = zoneOverride ?? (await getZone());
   const t = ZONE_THEME[zone];
@@ -33,7 +43,7 @@ export async function ZoneShell({
   return (
     <div className={`min-h-screen ${t.bg} text-neutral-100 ${t.font}`}>
       <header className="border-b border-white/[0.06]">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5 sm:px-8 sm:py-6">
+        <div className={`mx-auto flex ${wide ? "max-w-6xl" : "max-w-3xl"} items-center justify-between px-6 py-5 sm:px-8 sm:py-6`}>
           <div className="flex items-center gap-3">
             <div className={`h-2.5 w-2.5 rounded-full ${t.accent.replace("text-", "bg-")} shadow-[0_0_10px_currentColor] opacity-90`} />
             <div className="flex flex-col gap-1.5 leading-none">
@@ -45,16 +55,18 @@ export async function ZoneShell({
               </div>
             </div>
           </div>
-          <Link
-            href={homeHref}
-            className={`text-[11px] text-neutral-500 transition hover:text-neutral-200 ${zone === "platform" ? "font-mono" : ""}`}
-          >
-            {homeLabel}
-          </Link>
+          {!hideBackLink && (
+            <Link
+              href={homeHref}
+              className={`text-[11px] text-neutral-500 transition hover:text-neutral-200 ${zone === "platform" ? "font-mono" : ""}`}
+            >
+              {homeLabel}
+            </Link>
+          )}
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-12 sm:px-8 sm:py-16">
+      <main className={`mx-auto ${wide ? "max-w-6xl" : "max-w-3xl"} px-6 py-12 sm:px-8 sm:py-16`}>
         {children}
       </main>
     </div>
