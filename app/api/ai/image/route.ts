@@ -49,9 +49,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  let payload: { prompt?: unknown; size?: unknown; thread_id?: unknown };
+  let payload: { prompt?: unknown; size?: unknown; thread_id?: unknown; count?: unknown };
   try {
-    payload = (await request.json()) as { prompt?: unknown; size?: unknown; thread_id?: unknown };
+    payload = (await request.json()) as { prompt?: unknown; size?: unknown; thread_id?: unknown; count?: unknown };
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -67,6 +67,12 @@ export async function POST(request: Request) {
     typeof payload.thread_id === "string" && payload.thread_id.trim()
       ? payload.thread_id.trim()
       : null;
+
+  // Multi-image: client can ask for up to 4 in one call. Capped low
+  // because each image is its own credit burn AND the response payload
+  // grows linearly (b64 PNGs are 500KB-2MB each).
+  const countRaw = Math.floor(Number(payload.count ?? 1));
+  const count = Math.min(4, Math.max(1, Number.isFinite(countRaw) ? countRaw : 1));
 
   const requestedSize =
     typeof payload.size === "string" && (ALLOWED_SIZES as string[]).includes(payload.size)
@@ -148,11 +154,10 @@ export async function POST(request: Request) {
       model,
       prompt: safePrompt,
       size: requestedSize,
-      n: 1,
+      n: count,
     });
 
-    const first = result.data?.[0];
-    if (!first) {
+    if (!result.data || result.data.length === 0) {
       return NextResponse.json(
         { error: "No image returned." },
         { status: 502 },
@@ -161,15 +166,21 @@ export async function POST(request: Request) {
 
     // gpt-image-1 returns base64 by default; dall-e-3 can return a
     // hosted URL. Handle both so the route survives a model swap.
-    let url: string | null = null;
-    if (typeof first.b64_json === "string" && first.b64_json) {
-      url = `data:image/png;base64,${first.b64_json}`;
-    } else if (typeof first.url === "string" && first.url) {
-      url = first.url;
+    const urls: string[] = [];
+    let revised: string | null = null;
+    for (const img of result.data) {
+      if (typeof img.b64_json === "string" && img.b64_json) {
+        urls.push(`data:image/png;base64,${img.b64_json}`);
+      } else if (typeof img.url === "string" && img.url) {
+        urls.push(img.url);
+      }
+      if (!revised && typeof img.revised_prompt === "string") {
+        revised = img.revised_prompt;
+      }
     }
-    if (!url) {
+    if (urls.length === 0) {
       return NextResponse.json(
-        { error: "Image response had no usable url." },
+        { error: "Image response had no usable urls." },
         { status: 502 },
       );
     }
@@ -183,16 +194,16 @@ export async function POST(request: Request) {
       duration_ms: Date.now() - startedAt,
     });
 
-    const revised =
-      typeof first.revised_prompt === "string" ? first.revised_prompt : null;
-
-    // Persist the assistant turn with the image markdown so the
-    // generated image survives a thread switch / reload. The data URL
-    // can be 500KB-2MB base64; we accept the storage cost rather than
-    // standing up a separate Supabase Storage upload pipeline.
+    // Persist the assistant turn with image markdown for each
+    // generated image. Multi-image renders as a sequence of
+    // ![generated image N](url) blocks separated by newlines —
+    // the client renderer treats consecutive images as a grid.
+    const imageMarkdown = urls
+      .map((u, i) => `![generated image ${i + 1}](${u})`)
+      .join("\n\n");
     const caption = revised
-      ? `*${revised}*\n\n![generated image](${url})`
-      : `![generated image](${url})`;
+      ? `*${revised}*\n\n${imageMarkdown}`
+      : imageMarkdown;
     if (resolvedThreadId) {
       void saveMessage({
         email,
@@ -203,8 +214,13 @@ export async function POST(request: Request) {
       });
     }
 
+    // Response shape: urls[] is the new canonical field; url is a
+    // legacy alias for the first image so existing single-image
+    // clients keep working without code changes.
     return NextResponse.json(
-      revised ? { url, revised_prompt: revised } : { url },
+      revised
+        ? { url: urls[0], urls, revised_prompt: revised }
+        : { url: urls[0], urls },
       {
         status: 200,
         headers: {

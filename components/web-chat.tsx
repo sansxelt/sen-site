@@ -1158,11 +1158,31 @@ export function WebChat({
     const prompt = (overridePrompt ?? input).trim();
     if (!prompt || generatingImage) return;
 
+    // Detect multi-image intent in the prompt. Patterns we catch:
+    //   "generate 4 images of a cat"
+    //   "make three variations"
+    //   "draw 2 pictures"
+    //   "give me 4 of a sunset"
+    // Capped at 4 (matches API). Default 1 if nothing matches.
+    const NUMBER_WORDS: Record<string, number> = {
+      one: 1, two: 2, three: 3, four: 4,
+    };
+    let count = 1;
+    const numericMatch = prompt.match(/\b(\d+)\s+(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|render|variation|version|of)/i);
+    const wordMatch = prompt.match(/\b(one|two|three|four)\s+(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|render|variation|version)/i);
+    if (numericMatch) {
+      const n = parseInt(numericMatch[1], 10);
+      if (Number.isFinite(n)) count = Math.min(4, Math.max(1, n));
+    } else if (wordMatch) {
+      count = NUMBER_WORDS[wordMatch[1].toLowerCase()] ?? 1;
+    }
+
     const userMsg: ChatMessage = { role: "user", content: prompt };
+    const placeholder = count > 1 ? `Generating ${count} images…` : "Generating image…";
     setMessages((prev) => [
       ...prev,
       userMsg,
-      { role: "assistant", content: "Generating image…" },
+      { role: "assistant", content: placeholder },
     ]);
     setInput("");
     setGeneratingImage(true);
@@ -1195,7 +1215,7 @@ export function WebChat({
       const res = await fetch("/api/ai/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, thread_id: tidAtStart ?? undefined }),
+        body: JSON.stringify({ prompt, count, thread_id: tidAtStart ?? undefined }),
       });
       // Server resolves / creates the thread + persists user prompt
       // immediately. Capture the echoed id so follow-up chat turns
@@ -1223,10 +1243,21 @@ export function WebChat({
         }
         throw new Error(detail);
       }
-      const data = (await res.json()) as { url: string; revised_prompt?: string };
+      const data = (await res.json()) as {
+        url: string;
+        urls?: string[];
+        revised_prompt?: string;
+      };
+      // Multi-image: render each as its own ![] block — markdown
+      // renderer + the new .webchat-image-grid CSS detects two or
+      // more consecutive images and lays them out in a grid.
+      const allUrls = data.urls && data.urls.length > 0 ? data.urls : [data.url];
+      const imageMarkdown = allUrls
+        .map((u, i) => `![generated image ${i + 1}](${u})`)
+        .join("\n\n");
       const caption = data.revised_prompt
-        ? `*${data.revised_prompt}*\n\n![generated image](${data.url})`
-        : `![generated image](${data.url})`;
+        ? `*${data.revised_prompt}*\n\n${imageMarkdown}`
+        : imageMarkdown;
       setMessages((prev) => {
         const next = [...prev];
         const last = next[next.length - 1];

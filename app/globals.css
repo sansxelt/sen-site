@@ -1591,6 +1591,28 @@ div[id] {
 .webchat-msg .md p { margin: 0.55em 0; }
 .webchat-msg .md p:first-child { margin-top: 0; }
 .webchat-msg .md p:last-child  { margin-bottom: 0; }
+
+/* Generated images. Single image: full width, rounded card. */
+.webchat-msg .md img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 8px 0;
+}
+/* Multi-image grid: when the bubble has 2+ paragraphs that each
+   contain only an image, lay them out as a 2-column grid (Claude
+   pattern). Falls back to stacked on browsers without :has(). */
+.webchat-msg .md:has(p:has(> img:only-child) + p:has(> img:only-child)) p:has(> img:only-child) {
+  display: inline-block;
+  width: calc(50% - 6px);
+  margin: 4px 3px;
+  vertical-align: top;
+}
+.webchat-msg .md:has(p:has(> img:only-child) + p:has(> img:only-child)) p:has(> img:only-child) img {
+  margin: 0;
+}
 .webchat-msg .md ul, .webchat-msg .md ol { margin: 0.55em 0; padding-left: 1.4em; }
 .webchat-msg .md li { margin: 0.18em 0; }
 .webchat-msg .md a {
