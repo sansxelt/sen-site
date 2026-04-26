@@ -13,26 +13,195 @@ import {
 } from "@/components/learn/article-blocks";
 import type { ReactNode } from "react";
 
-// Sansxel Learn — articles live as TS objects with a render() function
-// that returns JSX. Keeps everything type-safe and lets each article
-// compose the article-blocks freely without an MDX build step. When
-// the article count grows past ~30, swap this single file for one
-// per article in lib/learn/articles/.
+// Sansxel Learn — content registry. Articles are typed objects with
+// a render() function returning JSX, so authoring is just composing
+// blocks from components/learn/article-blocks. Schema is hierarchical:
+//
+//   topic       → top-level subject (ai / coding / databases / api / …)
+//   subtopic?   → optional second level (javascript under coding, etc.)
+//   level       → difficulty pill (beginner / intermediate / advanced)
+//
+// Routes:
+//   /learn                                  → hub (sidebar + featured)
+//   /learn/topics/[topic]                   → all articles in a topic
+//   /learn/topics/[topic]/[subtopic]        → narrowed to a subtopic
+//   /learn/[slug]                           → article detail
+//
+// Topic URLs are nested under /learn/topics/ so they don't collide
+// with the article slug route at /learn/[slug].
 
-export type ArticleCategory =
-  | "beginner"
-  | "intermediate"
-  | "advanced"
+// ───────────────────────────────────────────────────────────────
+// Topic tree
+// ───────────────────────────────────────────────────────────────
+
+export type TopicKey =
+  | "ai"
+  | "coding"
+  | "databases"
+  | "api"
+  | "mcp"
+  | "systems"
   | "build"
-  | "api";
+  | "skills"
+  | "monetization";
+
+export type Subtopic = { key: string; label: string };
+export type Topic = {
+  key: TopicKey;
+  label: string;
+  description: string;
+  emoji: string;
+  subtopics: Subtopic[];
+};
+
+export const TOPICS: Topic[] = [
+  {
+    key: "ai",
+    label: "AI",
+    emoji: "🧠",
+    description: "What AI actually is, how it works, what it can and can't do.",
+    subtopics: [
+      { key: "concepts", label: "Concepts" },
+      { key: "how-it-works", label: "How it works" },
+      { key: "voice", label: "Voice" },
+      { key: "vision", label: "Vision" },
+    ],
+  },
+  {
+    key: "coding",
+    label: "Coding",
+    emoji: "💻",
+    description: "Languages, web, frontend, backend — the actual stack.",
+    subtopics: [
+      { key: "javascript", label: "JavaScript" },
+      { key: "python", label: "Python" },
+      { key: "web-dev", label: "Web dev" },
+      { key: "frontend", label: "Frontend" },
+      { key: "backend", label: "Backend" },
+    ],
+  },
+  {
+    key: "databases",
+    label: "Databases",
+    emoji: "🗄️",
+    description: "SQL, NoSQL, schema design — picking + using the right store.",
+    subtopics: [
+      { key: "sql", label: "SQL" },
+      { key: "nosql", label: "NoSQL" },
+      { key: "design", label: "Schema design" },
+    ],
+  },
+  {
+    key: "api",
+    label: "APIs",
+    emoji: "🔌",
+    description: "REST, auth, requests — talking to other services and ours.",
+    subtopics: [
+      { key: "rest", label: "REST" },
+      { key: "auth", label: "Auth" },
+      { key: "requests", label: "Requests" },
+    ],
+  },
+  {
+    key: "mcp",
+    label: "MCP",
+    emoji: "🪝",
+    description: "The Model Context Protocol — connecting tools to AIs.",
+    subtopics: [
+      { key: "concepts", label: "Concepts" },
+      { key: "integration", label: "Integration" },
+      { key: "use-cases", label: "Use cases" },
+    ],
+  },
+  {
+    key: "systems",
+    label: "Systems",
+    emoji: "🏗️",
+    description: "Architecture, scaling, performance — making things hold up.",
+    subtopics: [
+      { key: "architecture", label: "Architecture" },
+      { key: "scaling", label: "Scaling" },
+      { key: "performance", label: "Performance" },
+    ],
+  },
+  {
+    key: "build",
+    label: "Build",
+    emoji: "🛠️",
+    description: "Hands-on tutorials. Real projects, full apps, AI builds.",
+    subtopics: [
+      { key: "projects", label: "Projects" },
+      { key: "full-apps", label: "Full apps" },
+      { key: "ai-apps", label: "AI apps" },
+    ],
+  },
+  {
+    key: "skills",
+    label: "Skills",
+    emoji: "🧩",
+    description: "Debugging, thinking, problem solving — the meta game.",
+    subtopics: [
+      { key: "debugging", label: "Debugging" },
+      { key: "thinking", label: "Thinking" },
+      { key: "problem-solving", label: "Problem solving" },
+    ],
+  },
+  {
+    key: "monetization",
+    label: "Monetization",
+    emoji: "💸",
+    description: "Turning what you build into something that pays.",
+    subtopics: [
+      { key: "saas", label: "SaaS" },
+      { key: "apis", label: "APIs" },
+      { key: "pricing", label: "Pricing" },
+    ],
+  },
+];
+
+export const TOPIC_BY_KEY: Record<TopicKey, Topic> = Object.fromEntries(
+  TOPICS.map((t) => [t.key, t]),
+) as Record<TopicKey, Topic>;
+
+export function getTopic(key: string): Topic | null {
+  return TOPIC_BY_KEY[key as TopicKey] ?? null;
+}
+
+export function getSubtopic(topic: Topic, key: string): Subtopic | null {
+  return topic.subtopics.find((s) => s.key === key) ?? null;
+}
+
+// ───────────────────────────────────────────────────────────────
+// Difficulty levels
+// ───────────────────────────────────────────────────────────────
+
+export type LevelKey = "beginner" | "intermediate" | "advanced";
+
+export const LEVELS: Array<{ key: LevelKey; label: string }> = [
+  { key: "beginner",     label: "Beginner" },
+  { key: "intermediate", label: "Intermediate" },
+  { key: "advanced",     label: "Advanced" },
+];
+
+export const LEVEL_TONE: Record<LevelKey, string> = {
+  beginner:     "border-emerald-400/25 bg-emerald-400/[0.06] text-emerald-300",
+  intermediate: "border-sky-400/25 bg-sky-400/[0.06] text-sky-300",
+  advanced:     "border-violet-400/25 bg-violet-400/[0.06] text-violet-300",
+};
+
+// ───────────────────────────────────────────────────────────────
+// Article schema
+// ───────────────────────────────────────────────────────────────
 
 export type ArticleMeta = {
   slug: string;
   title: string;
   excerpt: string;
-  category: ArticleCategory;
+  topic: TopicKey;
+  subtopic?: string;     // matches a Subtopic.key under the topic
+  level: LevelKey;
   readMinutes: number;
-  publishedAt: string; // ISO
+  publishedAt: string;   // ISO
   coverEmoji: string;
 };
 
@@ -40,14 +209,19 @@ export type Article = ArticleMeta & {
   render: () => ReactNode;
 };
 
+// ───────────────────────────────────────────────────────────────
+// Articles
+// ───────────────────────────────────────────────────────────────
+
 export const ARTICLES: Article[] = [
-  // ───────────────────────────────────────────────────────────────
   {
     slug: "what-is-ai",
     title: "What is AI, really?",
     excerpt:
       "AI like ChatGPT works by predicting the next word — kind of like autocomplete, but way smarter. Here's the plain-English version of what's happening under the hood.",
-    category: "beginner",
+    topic: "ai",
+    subtopic: "concepts",
+    level: "beginner",
     readMinutes: 4,
     publishedAt: "2026-04-25",
     coverEmoji: "🧠",
@@ -126,13 +300,14 @@ export const ARTICLES: Article[] = [
     ),
   },
 
-  // ───────────────────────────────────────────────────────────────
   {
     slug: "how-voice-ai-works",
     title: "How voice AI works (talk → text → AI → speech)",
     excerpt:
       "When you talk to an AI, three different models are running in sequence. Here's what each one does and why latency matters more than you think.",
-    category: "beginner",
+    topic: "ai",
+    subtopic: "voice",
+    level: "beginner",
     readMinutes: 5,
     publishedAt: "2026-04-25",
     coverEmoji: "🎙️",
@@ -193,13 +368,14 @@ export const ARTICLES: Article[] = [
     ),
   },
 
-  // ───────────────────────────────────────────────────────────────
   {
     slug: "build-your-first-ai-app",
     title: "Build your first AI app in 10 minutes",
     excerpt:
       "A real working chat app, end to end. JavaScript, no framework, ~50 lines. You'll get a feel for how requests, streaming, and prompts fit together.",
-    category: "build",
+    topic: "build",
+    subtopic: "ai-apps",
+    level: "beginner",
     readMinutes: 10,
     publishedAt: "2026-04-25",
     coverEmoji: "🛠️",
@@ -294,13 +470,14 @@ export const ARTICLES: Article[] = [
     ),
   },
 
-  // ───────────────────────────────────────────────────────────────
   {
     slug: "sansxel-rest-api-quickstart",
     title: "Sansxel REST API — quickstart",
     excerpt:
       "Authenticate, send a chat request, stream a reply. Three steps. Copy-paste examples in JavaScript and Python.",
-    category: "api",
+    topic: "api",
+    subtopic: "rest",
+    level: "beginner",
     readMinutes: 6,
     publishedAt: "2026-04-25",
     coverEmoji: "🔌",
@@ -410,26 +587,15 @@ export const ARTICLE_BY_SLUG: Record<string, Article> = Object.fromEntries(
   ARTICLES.map((a) => [a.slug, a]),
 );
 
-export const CATEGORY_ORDER: ArticleCategory[] = [
-  "beginner",
-  "intermediate",
-  "advanced",
-  "build",
-  "api",
-];
+// Filtering helpers used by the topic / subtopic landing pages.
+export function articlesInTopic(topic: TopicKey): Article[] {
+  return ARTICLES.filter((a) => a.topic === topic);
+}
 
-export const CATEGORY_LABEL: Record<ArticleCategory, string> = {
-  beginner: "Beginner",
-  intermediate: "Intermediate",
-  advanced: "Advanced",
-  build: "Build",
-  api: "API",
-};
+export function articlesInSubtopic(topic: TopicKey, subtopic: string): Article[] {
+  return ARTICLES.filter((a) => a.topic === topic && a.subtopic === subtopic);
+}
 
-export const CATEGORY_DESCRIPTION: Record<ArticleCategory, string> = {
-  beginner: "Start here — the basics, in plain English.",
-  intermediate: "Once you've got the hang of it.",
-  advanced: "Deeper dives for power users.",
-  build: "Hands-on tutorials with code.",
-  api: "Talking to sansxel programmatically.",
-};
+export function countArticlesInTopic(topic: TopicKey): number {
+  return articlesInTopic(topic).length;
+}

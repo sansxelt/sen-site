@@ -1,22 +1,11 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import type { ArticleMeta } from "@/lib/learn-content";
-
-const CATEGORY_LABEL: Record<ArticleMeta["category"], string> = {
-  beginner: "Beginner",
-  intermediate: "Intermediate",
-  advanced: "Advanced",
-  build: "Build",
-  api: "API",
-};
-
-const CATEGORY_TONE: Record<ArticleMeta["category"], string> = {
-  beginner:     "border-emerald-400/25 bg-emerald-400/[0.06] text-emerald-300",
-  intermediate: "border-sky-400/25 bg-sky-400/[0.06] text-sky-300",
-  advanced:     "border-violet-400/25 bg-violet-400/[0.06] text-violet-300",
-  build:        "border-amber-400/25 bg-amber-400/[0.06] text-amber-300",
-  api:          "border-fuchsia-400/25 bg-fuchsia-400/[0.06] text-fuchsia-300",
-};
+import {
+  getSubtopic,
+  getTopic,
+  LEVEL_TONE,
+  type ArticleMeta,
+} from "@/lib/learn-content";
 
 export function ArticleShell({
   meta,
@@ -25,23 +14,46 @@ export function ArticleShell({
   meta: ArticleMeta;
   children: ReactNode;
 }) {
+  const topic = getTopic(meta.topic);
+  const sub = topic && meta.subtopic ? getSubtopic(topic, meta.subtopic) : null;
+
   return (
-    <article className="mx-auto max-w-[780px] px-4 pt-8 pb-20 sm:px-6 sm:pt-10 sm:pb-24 lg:px-8">
-      {/* Breadcrumb */}
+    <article className="mx-auto max-w-[780px] pt-8 pb-20 sm:pt-10 sm:pb-24">
+      {/* Breadcrumb shows full path: Learn / Topic / Subtopic */}
       <nav className="text-xs text-neutral-500">
         <Link href="/learn" className="transition hover:text-neutral-300">
           Learn
         </Link>
-        <span className="mx-2 text-neutral-700">/</span>
-        <span className="text-neutral-400">{CATEGORY_LABEL[meta.category]}</span>
+        {topic && (
+          <>
+            <span className="mx-2 text-neutral-700">/</span>
+            <Link
+              href={`/learn/topics/${topic.key}`}
+              className="transition hover:text-neutral-300"
+            >
+              {topic.label}
+            </Link>
+          </>
+        )}
+        {sub && topic && (
+          <>
+            <span className="mx-2 text-neutral-700">/</span>
+            <Link
+              href={`/learn/topics/${topic.key}/${sub.key}`}
+              className="transition hover:text-neutral-300"
+            >
+              {sub.label}
+            </Link>
+          </>
+        )}
       </nav>
 
       <header className="mt-5">
         <div className="flex flex-wrap items-center gap-2">
           <span
-            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.14em] ${CATEGORY_TONE[meta.category]}`}
+            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.14em] ${LEVEL_TONE[meta.level]}`}
           >
-            {CATEGORY_LABEL[meta.category]}
+            {meta.level}
           </span>
           <span className="text-xs text-neutral-500">{meta.readMinutes} min read</span>
         </div>
@@ -53,9 +65,7 @@ export function ArticleShell({
         </p>
       </header>
 
-      <div className="mt-8">
-        {children}
-      </div>
+      <div className="mt-8">{children}</div>
     </article>
   );
 }

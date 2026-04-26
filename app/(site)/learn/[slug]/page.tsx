@@ -3,7 +3,13 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AuroraBackground } from "@/components/aurora-background";
 import { ArticleShell } from "@/components/learn/article-shell";
-import { ARTICLE_BY_SLUG, ARTICLES, CATEGORY_LABEL } from "@/lib/learn-content";
+import { LearnShell } from "@/components/learn/learn-shell";
+import {
+  ARTICLE_BY_SLUG,
+  ARTICLES,
+  getTopic,
+  LEVEL_TONE,
+} from "@/lib/learn-content";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -26,48 +32,61 @@ export default async function ArticlePage({ params }: Props) {
   const article = ARTICLE_BY_SLUG[slug];
   if (!article) notFound();
 
-  // Show 2-3 other articles at the bottom — same category first,
-  // anything else if there aren't enough peers.
+  // 'Keep learning' = same topic first, anything else as filler.
   const others = ARTICLES.filter((a) => a.slug !== article.slug);
-  const sameCategory = others.filter((a) => a.category === article.category);
-  const fillers = others.filter((a) => a.category !== article.category);
-  const related = [...sameCategory, ...fillers].slice(0, 3);
+  const sameTopic = others.filter((a) => a.topic === article.topic);
+  const fillers = others.filter((a) => a.topic !== article.topic);
+  const related = [...sameTopic, ...fillers].slice(0, 3);
 
   return (
     <>
       <AuroraBackground />
-      <ArticleShell meta={article}>{article.render()}</ArticleShell>
+      <LearnShell activeTopic={article.topic} activeSubtopic={article.subtopic}>
+        <ArticleShell meta={article}>{article.render()}</ArticleShell>
 
-      {related.length > 0 && (
-        <section className="mx-auto max-w-[1100px] px-4 pb-20 sm:px-6 sm:pb-24 lg:px-8">
-          <div className="border-t border-white/10 pt-10">
-            <h2 className="text-lg font-semibold text-white sm:text-xl">
-              Keep learning
-            </h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3 sm:gap-4">
-              {related.map((r) => (
-                <Link
-                  key={r.slug}
-                  href={`/learn/${r.slug}`}
-                  className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]"
-                >
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-neutral-500">{CATEGORY_LABEL[r.category]}</span>
-                    <span className="text-neutral-500">{r.readMinutes} min</span>
-                  </div>
-                  <div className="mt-3 text-2xl" aria-hidden>{r.coverEmoji}</div>
-                  <div className="mt-2 text-sm font-semibold text-white transition group-hover:text-violet-200">
-                    {r.title}
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-neutral-400">
-                    {r.excerpt}
-                  </p>
-                </Link>
-              ))}
+        {related.length > 0 && (
+          <section className="mx-auto max-w-[780px] pb-20">
+            <div className="border-t border-white/10 pt-10">
+              <h2 className="text-lg font-semibold text-white sm:text-xl">
+                Keep learning
+              </h2>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3 sm:gap-4">
+                {related.map((r) => {
+                  const t = getTopic(r.topic);
+                  return (
+                    <Link
+                      key={r.slug}
+                      href={`/learn/${r.slug}`}
+                      className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] ${LEVEL_TONE[r.level]}`}
+                        >
+                          {r.level}
+                        </span>
+                        <span className="text-neutral-500">{r.readMinutes} min</span>
+                      </div>
+                      <div className="mt-3 text-2xl" aria-hidden>{r.coverEmoji}</div>
+                      <div className="mt-2 text-sm font-semibold text-white transition group-hover:text-violet-200">
+                        {r.title}
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-xs leading-5 text-neutral-400">
+                        {r.excerpt}
+                      </p>
+                      {t && (
+                        <div className="mt-2 text-[10px] uppercase tracking-[0.14em] text-neutral-600">
+                          {t.label}
+                        </div>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+      </LearnShell>
     </>
   );
 }
