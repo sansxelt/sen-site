@@ -5,6 +5,15 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { Zone } from "../lib/zone";
+
+// Pinwheel mark per host. Same geometry, different accent triangle.
+// next/image auto-applies `unoptimized` for .svg sources in v16.
+const ZONE_LOGO: Record<Zone, string> = {
+  apex: "/logo-violet.svg",
+  chat: "/logo-cyan.svg",
+  platform: "/logo-amber.svg",
+};
 
 type NavItem = {
   href: string;
@@ -317,10 +326,11 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-export function DashboardNav({ userEmail }: { userEmail: string }) {
+export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; zone?: Zone }) {
   const pathname = usePathname();
   const router = useRouter();
   const inWorkshop = pathname === "/app" || pathname.startsWith("/app/");
+  const logoSrc = ZONE_LOGO[zone];
   // ChatGPT-style mobile drawer for chat history.
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Close the drawer whenever the route changes (user navigated).
@@ -378,7 +388,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
         <Link href="/app" className="flex items-center gap-2.5 py-6">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
-            <Image src="/icon.png" alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
+            <Image src={logoSrc} alt="sansxel" width={20} height={20} className="h-5 w-5 object-contain" priority />
           </div>
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold text-white">sansxel</span>
@@ -481,7 +491,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
           )}
           <Link href="/app" className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1">
-              <Image src="/icon.png" alt="sansxel" width={18} height={18} className="h-full w-full object-contain" priority />
+              <Image src={logoSrc} alt="sansxel" width={18} height={18} className="h-full w-full object-contain" priority />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-white">sansxel</span>

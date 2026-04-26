@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 import { auth } from "../../auth";
 import { DashboardNav } from "../../components/dashboard-nav";
+import { getZone } from "../../lib/zone";
 
 export default async function AccountLayout({ children }: { children: ReactNode }) {
-  const session = await auth();
+  const [session, zone] = await Promise.all([auth(), getZone()]);
   const userEmail = session?.user?.email ?? "";
 
   return (
@@ -13,7 +14,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
       {/* Flex column on mobile, flex row on desktop */}
       <div className="flex min-h-screen flex-col lg:flex-row">
         {/* DashboardNav renders the sidebar on desktop and top bar on mobile */}
-        <DashboardNav userEmail={userEmail} />
+        <DashboardNav userEmail={userEmail} zone={zone} />
 
         {/* pb-[calc(env(safe-area-inset-bottom,0px)+72px)] clears the fixed mobile bottom nav */}
         <main className="flex-1 px-4 py-6 pb-[88px] sm:px-6 sm:pb-[88px] lg:py-10 lg:pl-10 lg:pr-8 lg:pb-10">

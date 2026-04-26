@@ -3,8 +3,17 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
+import { getZone } from "../lib/zone";
 import { MobileNav } from "./mobile-nav";
 import { ZoneDropdown } from "./zone-dropdown";
+
+// Pinwheel mark per host. Same geometry, different accent triangle.
+// next/image auto-applies `unoptimized` for .svg sources in v16.
+const ZONE_LOGO: Record<"apex" | "chat" | "platform", string> = {
+  apex: "/logo-violet.svg",
+  chat: "/logo-cyan.svg",
+  platform: "/logo-amber.svg",
+};
 
 const footerGroups = [
   {
@@ -55,8 +64,9 @@ const primaryLinks: SiteNavLink[] = [
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
-  const session = await auth();
+  const [session, zone] = await Promise.all([auth(), getZone()]);
   const signedIn = Boolean(session?.user?.email);
+  const logoSrc = ZONE_LOGO[zone];
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-neutral-950 text-neutral-100">
@@ -69,7 +79,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               <Link href="/home" className="inline-flex shrink-0 items-center gap-2.5">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-2">
                   <Image
-                    src="/icon.png"
+                    src={logoSrc}
                     alt="sansxel"
                     width={22}
                     height={22}
@@ -143,7 +153,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               <Link href="/home" className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-1.5">
                   <Image
-                    src="/icon.png"
+                    src={logoSrc}
                     alt="sansxel"
                     width={18}
                     height={18}
