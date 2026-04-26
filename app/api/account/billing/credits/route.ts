@@ -54,7 +54,12 @@ export async function POST(request: Request) {
       amount: dollars * 100, // dollars → cents
       currency: "usd",
       customer: customer.id,
-      automatic_payment_methods: { enabled: true },
+      // Explicit allow-list — same set the recurring subscription
+      // route uses. Without this, automatic_payment_methods would
+      // surface every method enabled in the Stripe dashboard
+      // (Amazon Pay, Klarna, Affirm, etc.) which isn't what we
+      // want — those need separate setup we haven't done.
+      payment_method_types: ["card", "link", "cashapp"],
       metadata: {
         kind: "credits",
         email: normalizedEmail,

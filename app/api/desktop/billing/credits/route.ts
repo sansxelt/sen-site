@@ -57,7 +57,9 @@ export async function POST(request: Request) {
       amount: dollars * 100, // dollars → cents
       currency: "usd",
       customer: customer.id,
-      automatic_payment_methods: { enabled: true },
+      // Explicit allow-list — Amazon Pay / Klarna / etc. require
+      // separate setup we haven't done. Match the recurring sub set.
+      payment_method_types: ["card", "link", "cashapp"],
       metadata: {
         kind: "credits",
         email: normalizedEmail,

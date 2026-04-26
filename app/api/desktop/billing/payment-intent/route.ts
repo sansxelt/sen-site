@@ -99,7 +99,9 @@ export async function POST(request: Request) {
           amount,
           currency: price.currency,
           customer: customer.id,
-          automatic_payment_methods: { enabled: true },
+          // Explicit allow-list — Amazon Pay / Klarna / etc. need
+          // separate setup we haven't done. Match the recurring set.
+          payment_method_types: ["card", "link", "cashapp"],
           metadata: {
             addonKey,
             purchaseKind: "one_time_boost",

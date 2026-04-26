@@ -294,9 +294,9 @@ export function BillingPanel({ state, publishableKey }: Props) {
                         <div className="mt-1 text-xs text-neutral-400">{addon.description}</div>
                         <div className="mt-1 text-xs font-medium text-neutral-300">{addon.monthlyLabel}</div>
                       </div>
-                      <div className="flex shrink-0 flex-col items-end gap-2">
+                      <div className="flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-40">
                         {ownedViaPlan ? (
-                          <span className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-semibold text-emerald-300">
+                          <span className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-center text-xs font-semibold text-emerald-300">
                             ✓ Included
                           </span>
                         ) : (
@@ -305,7 +305,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
                               type="button"
                               onClick={() => handleAddAddon(addon.key)}
                               disabled={busy === `add-${addon.key}`}
-                              className="w-full rounded-xl bg-white px-4 py-1.5 text-xs font-semibold transition hover:opacity-90 disabled:opacity-60 sm:w-auto"
+                              className="w-full rounded-xl bg-white px-4 py-1.5 text-center text-xs font-semibold transition hover:opacity-90 disabled:opacity-60"
                               style={{ color: "#0a0a0c" }}
                               title="Add via card (modifies your existing subscription)"
                             >
