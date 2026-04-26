@@ -149,7 +149,11 @@ export async function getWeeklyUsage(email: string): Promise<WeeklyUsage> {
         .from("usage_events" as never)
         .select("audio_seconds")
         .eq("email", email)
-        .eq("kind", "voice_speak")
+        // Both directions count toward the voice cap. Without
+        // voice_transcribe in here, the new transcribe gate would
+        // never see real usage and would only block on the
+        // single-request projected estimate.
+        .in("kind", ["voice_speak", "voice_transcribe"])
         .gte("created_at", sinceIso),
       supabase
         .from("usage_events" as never)

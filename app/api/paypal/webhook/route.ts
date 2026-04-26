@@ -6,6 +6,7 @@ import {
   type PaypalSubscription,
 } from "../../../../lib/paypal";
 import { upsertActiveSubscription } from "../../../../lib/subscriptions";
+import { invalidateAddonsCache } from "../../../../lib/active-addons";
 
 /**
  * Map PayPal's subscription state to the same normalized-status format our
@@ -72,6 +73,10 @@ async function handleSubscriptionEvent(event: WebhookEvent) {
     provider:               "paypal",
     providerSubscriptionId: subscription.id,
   });
+  // Plan change can flip what's "Owned with [Plan]" — drop the cached
+  // addon set so the cap-lift logic re-resolves immediately. Mirrors
+  // the same call in the Stripe webhook.
+  invalidateAddonsCache(custom.email);
 }
 
 type WebhookEvent = {

@@ -3,6 +3,15 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../../lib/desktop-auth";
 import { recordUsage } from "../../../../../lib/usage";
+import { getPlanForEmail } from "../../../../../lib/account-billing";
+import {
+  consumeBoostForKind,
+  consumeCreditFor,
+  decideVoiceRequest,
+  getWeeklyUsage,
+  hasUnconsumedBoost,
+} from "../../../../../lib/plan-limits";
+import { getActiveAddonKeys } from "../../../../../lib/active-addons";
 
 export const runtime = "nodejs";
 
@@ -43,6 +52,46 @@ export async function POST(request: Request) {
   const surface =
     request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
 
+  // v0.1.16 — Plan gate. Same model the speak route uses: estimate
+  // seconds from audio size (worst case ~24 kbps Opus = 3 KB/s, so
+  // bytes/3000 over-estimates which is the safe direction for cap
+  // checks). Call decideVoiceRequest with that estimate, fall back
+  // to boost/credit ledger when the cap is hit. Without this gate,
+  // any signed-in user could burn unlimited Whisper minutes.
+  const projectedSeconds = Math.max(1, Math.ceil(audio.size / 3000));
+  const [plan, weekly, activeAddons] = await Promise.all([
+    getPlanForEmail(email),
+    getWeeklyUsage(email),
+    getActiveAddonKeys(email),
+  ]);
+  const decision = decideVoiceRequest({
+    plan,
+    weekly,
+    added_seconds: projectedSeconds,
+    activeAddons,
+  });
+  if (decision.kind === "blocked") {
+    let allowed = false;
+    if (await hasUnconsumedBoost(email, "voice")) {
+      const burnt = await consumeBoostForKind(email, "voice");
+      if (burnt) allowed = true;
+    }
+    if (!allowed && (await consumeCreditFor(email, "voice_minute"))) {
+      allowed = true;
+    }
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          error: decision.reason,
+          limit: decision.limit,
+          used: decision.used,
+          reset: decision.reset,
+        },
+        { status: 429 },
+      );
+    }
+  }
+
   try {
     const result = await client.audio.transcriptions.create({
       file,
@@ -58,6 +107,7 @@ export async function POST(request: Request) {
       // duration estimation.
       input_tokens: Math.ceil(audio.size / 1024), // KB as a rough proxy
       duration_ms: Date.now() - startedAt,
+      audio_seconds: projectedSeconds,
     });
     return NextResponse.json({ text: result.text });
   } catch (err) {
