@@ -46,8 +46,8 @@ export const ZONE_THEME: Record<Zone, {
   chat: {
     label: "sansxel · workshop",
     tagline: "Pick up where you left off",
-    accent: "text-violet-300",
-    accentSoft: "bg-violet-400/[0.08]",
+    accent: "text-emerald-300",
+    accentSoft: "bg-emerald-400/[0.08]",
     bg: "bg-neutral-950",
     font: "",
     signInLabel: "Sign in to the workshop",
@@ -55,8 +55,8 @@ export const ZONE_THEME: Record<Zone, {
   platform: {
     label: "sansxel · platform",
     tagline: "Developer console",
-    accent: "text-cyan-300",
-    accentSoft: "bg-cyan-400/[0.06]",
+    accent: "text-amber-300",
+    accentSoft: "bg-amber-400/[0.06]",
     bg: "bg-[#070a10]",
     font: "font-mono",
     signInLabel: "Sign in to platform",

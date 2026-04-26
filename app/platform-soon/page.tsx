@@ -4,8 +4,9 @@ import Link from "next/link";
 // Placeholder served at platform.sansxel.ai/ until the real
 // developer console + docs land. Distinct visual identity from
 // sansxel.ai (marketing) and chat.sansxel.ai (workshop), terminal/
-// console aesthetic, mono type, cyan accent. Each subdomain feels
-// like its own surface, not the same site three times.
+// console aesthetic, mono type, amber accent (matches the platform
+// pinwheel favicon). Each subdomain feels like its own surface,
+// not the same site three times.
 
 export const metadata: Metadata = {
   title: "sansxel platform",
@@ -16,14 +17,16 @@ export default function PlatformSoonPage() {
   return (
     <main className="min-h-screen bg-[#070a10] text-neutral-200">
       {/* Top zone bar, signals 'this is the dev zone' instantly.
-          Wordmark hugs the left edge, back link hugs the right edge.
-          Scaling padding matches site-shell + ZoneShell so every
-          surface across the site has the same edge rhythm. */}
+          Bound to the same max-width as the content below so the
+          wordmark and back link sit on the visual edges of the
+          page (left/right gutters of the content column), not the
+          screen edges. The full-screen edge version looked lonely
+          when the content was centered narrow. */}
       <header className="border-b border-white/[0.06]">
-        <div className="flex items-center justify-between px-4 py-4 sm:px-6 sm:py-5 lg:px-10 xl:px-14 2xl:px-20">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 sm:px-8">
           <div className="flex items-center gap-3">
-            <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
-            <span className="font-mono text-xs uppercase tracking-[0.22em] text-cyan-300">
+            <div className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.7)]" />
+            <span className="font-mono text-xs uppercase tracking-[0.22em] text-amber-300">
               sansxel · platform
             </span>
           </div>
@@ -38,8 +41,8 @@ export default function PlatformSoonPage() {
 
       <div className="mx-auto max-w-5xl px-6 py-20 sm:px-8 sm:py-28">
         {/* Terminal-style status block */}
-        <div className="mb-10 inline-flex items-center gap-3 rounded-md border border-cyan-400/20 bg-cyan-400/[0.04] px-3 py-1.5 font-mono text-[11px] text-cyan-300">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-cyan-400" />
+        <div className="mb-10 inline-flex items-center gap-3 rounded-md border border-amber-400/20 bg-amber-400/[0.04] px-3 py-1.5 font-mono text-[11px] text-amber-300">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
           status: building
         </div>
 
@@ -56,42 +59,42 @@ export default function PlatformSoonPage() {
         <div className="mt-12 grid gap-3 sm:grid-cols-2 sm:gap-4">
           <Link
             href="https://chat.sansxel.ai/account/keys"
-            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-cyan-400/30 hover:bg-cyan-400/[0.03]"
+            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-amber-400/30 hover:bg-amber-400/[0.03]"
           >
-            <span className="mt-0.5 font-mono text-xs text-cyan-400">$</span>
+            <span className="mt-0.5 font-mono text-xs text-amber-400">$</span>
             <div className="flex-1">
               <div className="font-mono text-sm text-white">get-api-key</div>
               <div className="mt-1 text-xs text-neutral-500">
                 Generate a bearer token for the REST API.
               </div>
             </div>
-            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-cyan-300">→</span>
+            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-amber-300">→</span>
           </Link>
           <Link
             href="https://sansxel.ai/learn/sansxel-rest-api-quickstart"
-            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-cyan-400/30 hover:bg-cyan-400/[0.03]"
+            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-amber-400/30 hover:bg-amber-400/[0.03]"
           >
-            <span className="mt-0.5 font-mono text-xs text-cyan-400">$</span>
+            <span className="mt-0.5 font-mono text-xs text-amber-400">$</span>
             <div className="flex-1">
               <div className="font-mono text-sm text-white">read-quickstart</div>
               <div className="mt-1 text-xs text-neutral-500">
                 Auth + first request + streaming, in JS &amp; Python.
               </div>
             </div>
-            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-cyan-300">→</span>
+            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-amber-300">→</span>
           </Link>
           <Link
             href="https://chat.sansxel.ai"
-            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-cyan-400/30 hover:bg-cyan-400/[0.03]"
+            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-amber-400/30 hover:bg-amber-400/[0.03]"
           >
-            <span className="mt-0.5 font-mono text-xs text-cyan-400">$</span>
+            <span className="mt-0.5 font-mono text-xs text-amber-400">$</span>
             <div className="flex-1">
               <div className="font-mono text-sm text-white">open-workshop</div>
               <div className="mt-1 text-xs text-neutral-500">
                 Try the product first if you haven&apos;t already.
               </div>
             </div>
-            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-cyan-300">→</span>
+            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-amber-300">→</span>
           </Link>
           <div className="flex items-start gap-3 rounded-md border border-white/[0.06] bg-white/[0.01] px-5 py-4 opacity-60">
             <span className="mt-0.5 font-mono text-xs text-neutral-600">$</span>
