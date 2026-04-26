@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
 import { MobileNav } from "./mobile-nav";
+import { ZoneDropdown } from "./zone-dropdown";
 
 const footerGroups = [
   {
@@ -110,8 +111,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 accessHref={signedIn ? "/app" : getSignInPath()}
               />
 
-              {/* Log in ghost link (only when signed out) — openai.com
-                  pattern: secondary verb + primary product CTA pair. */}
+              {/* Log in ghost link (only when signed out) sits next
+                  to the dropdown trigger — same secondary/primary
+                  rhythm as enterprise SaaS headers. */}
               {!signedIn && (
                 <Link
                   href={getSignInPath()}
@@ -121,12 +123,10 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 </Link>
               )}
 
-              <Link
-                href={signedIn ? "/app" : getSignInPath()}
-                className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
-              >
-                {signedIn ? "Open Workshop" : "Try sansxel ↗"}
-              </Link>
+              {/* Dropdown splits the primary CTA into the two real
+                  product surfaces (workshop + platform) so users can
+                  pick instead of being forced to one. */}
+              <ZoneDropdown signedIn={signedIn} />
             </div>
           </div>
         </div>
