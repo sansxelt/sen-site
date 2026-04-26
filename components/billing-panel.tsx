@@ -333,10 +333,14 @@ export function BillingPanel({ state, publishableKey }: Props) {
                             <button
                               type="button"
                               onClick={() => handleAddAddon(addon.key)}
-                              disabled={busy === `add-${addon.key}`}
+                              disabled={busy === `add-${addon.key}` || !hasPlan}
                               className="w-full rounded-xl bg-white px-4 py-1.5 text-center text-xs font-semibold transition hover:opacity-90 disabled:opacity-60"
                               style={{ color: "#0a0a0c" }}
-                              title="Add via card (modifies your existing subscription)"
+                              title={
+                                hasPlan
+                                  ? "Add via card (modifies your existing subscription)"
+                                  : "Subscribe to a plan first to add addons via card"
+                              }
                             >
                               {busy === `add-${addon.key}` ? "Adding…" : "Add with card"}
                             </button>
@@ -347,6 +351,11 @@ export function BillingPanel({ state, publishableKey }: Props) {
                                 amountUsd={addon.monthlyValue}
                                 onActivated={() => router.refresh()}
                               />
+                            )}
+                            {!hasPlan && (
+                              <p className="text-[11px] leading-snug text-neutral-500">
+                                Card addons require an active plan. Subscribe first or use PayPal one-off.
+                              </p>
                             )}
                           </>
                         )}

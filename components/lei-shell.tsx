@@ -209,7 +209,11 @@ export function LeiShell({ children }: { children: ReactNode }) {
       {/* lei-shell--split keeps the LEI panel slot reserved when an
           attachment panel is active. lei-shell--with-history keeps
           the chat history rail slot reserved otherwise. They share
-          the same right-side column, never both at once. */}
+          the same right-side column, never both at once visually,
+          but BOTH stay mounted (toggled with hidden) so the inactive
+          one's scroll position and in-flight state survive the swap.
+          On mobile the unmounting was reading as "things disappear"
+          when the user opened/closed an attachment panel. */}
       <div
         className={`lei-shell${panel.kind !== "none" ? " lei-shell--split" : " lei-shell--with-history"}`}
         onDragEnter={onDragEnter}
@@ -218,13 +222,14 @@ export function LeiShell({ children }: { children: ReactNode }) {
         onDrop={onDrop}
       >
         <div className="lei-shell-main">{children}</div>
-        {panel.kind !== "none" ? (
-          <aside className="lei-shell-panel">
+        <aside className="lei-shell-panel" hidden={panel.kind === "none"}>
+          {panel.kind !== "none" && (
             <LeiPanelStage panel={panel} attachments={attachments} onClose={() => setPanelState({ kind: "none" })} />
-          </aside>
-        ) : (
+          )}
+        </aside>
+        <div hidden={panel.kind !== "none"}>
           <ChatHistoryRail panelOpen={false} />
-        )}
+        </div>
 
         {dragging && <DropOverlay />}
       </div>

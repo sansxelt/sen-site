@@ -558,11 +558,21 @@ export function WebChat({
           if (m) {
             const mt = (att.mime || m[1] || "image/png").toLowerCase();
             const accepted = ["image/png", "image/jpeg", "image/gif", "image/webp"] as const;
-            const safe = (accepted as readonly string[]).includes(mt) ? mt : "image/png";
-            imageBlocks.push({
-              media_type: safe as (typeof accepted)[number],
-              data: m[2],
-            });
+            if ((accepted as readonly string[]).includes(mt)) {
+              imageBlocks.push({
+                media_type: mt as (typeof accepted)[number],
+                data: m[2],
+              });
+            } else {
+              // Mislabeling unsupported formats (HEIC, HEIF, BMP) as
+              // PNG before sending to vision used to silently fail.
+              // Surface the rejection so users know to retake or
+              // convert instead of waiting on a response that never
+              // comes.
+              attachmentBlocks.push(
+                `\n\n[Skipped image: ${att.name}. Format ${mt} is not supported by sansxel-1 vision yet, please use PNG, JPEG, WEBP, or GIF.]`,
+              );
+            }
           }
         } catch {
           attachmentBlocks.push(`\n\n[Could not attach image: ${att.name}]`);
@@ -1822,6 +1832,15 @@ export function WebChat({
           type="file"
           multiple
           hidden
+          // Image MIMEs are listed explicitly (no image/* and no
+          // .heic/.heif) so iOS Safari converts a freshly taken
+          // camera photo from HEIC to JPEG before upload. With
+          // image/* iOS uploads the original HEIC bytes, the
+          // vision API rejects them, and the user sees nothing.
+          // capture is intentionally omitted so the picker still
+          // offers "Take Photo" alongside "Photo Library" + "Choose
+          // File" on mobile.
+          accept="image/png,image/jpeg,image/gif,image/webp,video/*,audio/*,.pdf,.txt,.md,.csv,.json"
           onChange={(e) => {
             const files = e.target.files;
             if (files && files.length) void lei.addFiles(files);

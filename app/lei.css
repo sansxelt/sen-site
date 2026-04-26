@@ -1055,3 +1055,21 @@ textarea.is-live-transcript::after {
   min-width: 280px;
   min-height: 320px;
 }
+
+/* On phones the desktop float (360px wide, top:80px right:20px) clips
+   off the right edge and stacks behind iOS bottom safe-area / mobile
+   nav. Pin it to the bottom of the viewport with both edges hugging
+   the screen, drop the resize handle (touch can't grab it anyway). */
+@media (max-width: 640px) {
+  .copilot-bar--float {
+    top: auto;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+    max-height: 60vh;
+    min-width: 0;
+    min-height: 0;
+    resize: none;
+  }
+}
