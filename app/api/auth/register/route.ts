@@ -53,6 +53,13 @@ export async function POST(request: Request) {
     );
   }
 
+  if (!name) {
+    return NextResponse.json(
+      { error: "Add your name so emails address you properly." },
+      { status: 400 },
+    );
+  }
+
   if (password.length < 8) {
     return NextResponse.json(
       { error: "Use a password with at least 8 characters." },

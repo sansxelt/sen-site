@@ -64,6 +64,22 @@ export function CheckoutForm({ cycle, plan, publishableKey, seats, userEmail }: 
 
   const stripeP = useMemo(() => stripePromise(publishableKey), [publishableKey]);
 
+  // Surface a clear error when Stripe.js itself fails to load (bad
+  // publishable key, network blocked, ad-blocker eats it). Otherwise
+  // <Elements stripe={null}> would render an empty form and the
+  // user would be stuck on a blank checkout with no feedback.
+  useEffect(() => {
+    let cancelled = false;
+    void stripeP.then((s) => {
+      if (!cancelled && !s) {
+        setLoadError(
+          "Couldn't load Stripe. Disable any payment-related extensions or check your connection, then refresh.",
+        );
+      }
+    });
+    return () => { cancelled = true; };
+  }, [stripeP]);
+
   if (loadError) {
     return (
       <div className="rounded-2xl border border-red-400/20 bg-red-400/5 p-5 text-sm text-red-200">

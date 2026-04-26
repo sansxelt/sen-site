@@ -396,6 +396,8 @@ export function AuthPanel({
                 placeholder="Name"
                 disabled={emailBusy}
                 className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-400 focus:border-white/25 disabled:opacity-60"
+                required
+                minLength={1}
               />
             )}
             <input

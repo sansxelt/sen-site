@@ -69,7 +69,9 @@
       "Bash(xargs ls *)",
       "Bash(awk '/^function EditorLayout/,/^function [A-Z]/' components/hero-activity.tsx)",
       "Bash(awk 'NR>=889 && NR<=1100 && /^function [A-Z]/' components/hero-activity.tsx)",
-      "Bash(awk 'NR>=889 && /^function [A-Z]/{c++; print NR\": \"$0; if\\(c==2\\) exit}' components/hero-activity.tsx)"
+      "Bash(awk 'NR>=889 && /^function [A-Z]/{c++; print NR\": \"$0; if\\(c==2\\) exit}' components/hero-activity.tsx)",
+      "Bash(grep -E \"^d.*/\\(home|download\\)$\")",
+      "Bash(xargs -I {} sh -c 'echo \"=== {} ===\" && head -20 \"{}\"')"
     ]
   }
 }
