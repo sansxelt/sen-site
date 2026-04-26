@@ -9,16 +9,13 @@ import {
 } from "../../lib/desktop-release";
 import { getSubscriptionByEmail, readPricingSnapshot } from "../../lib/subscriptions";
 import { getUserProfileByEmail } from "../../lib/user-profile";
-// v0.1.12 \u2014 billing section now lives inline on /account so users
-// see plan / addons / payment / invoices in one place. /account/billing
-// redirects here. BillingPanel is a client component; embedding from a
-// server component creates a clean client-island boundary.
-import { BillingPanel } from "../../components/billing-panel";
-import { getBillingState } from "../../lib/billing-state";
-import { isStripeConfigured, getStripePublishableKey } from "../../lib/stripe";
 import { getCreditBalance } from "../../lib/credits";
-import { pricingPlanMap, getPricingPlan } from "../../lib/pricing";
-import type { PricingPlanKey } from "../../lib/pricing";
+
+// v0.1.16: split overview from billing. Billing now has its own
+// route at /account/billing again (the v0.1.12 inline-merge made
+// the two pages render identically, which read as a bug). This
+// page is overview-only: welcome, prefs, profile, mini stats,
+// usage, keys, desktop, setup checklist.
 
 export const metadata: Metadata = {
   title: "Overview",
@@ -28,38 +25,16 @@ export const metadata: Metadata = {
 export default async function AccountPage() {
   const session = await auth();
   const email = session?.user?.email ?? "";
-  const stripeReady = isStripeConfigured();
-  const publishableKey = getStripePublishableKey();
-  const [profile, keys, rawSubscription, billingState, credits] = await Promise.all([
+  const [profile, keys, rawSubscription, credits] = await Promise.all([
     getUserProfileByEmail(email),
     listApiKeys(email),
     getSubscriptionByEmail(email),
-    stripeReady && email ? getBillingState(email.toLowerCase()) : Promise.resolve(null),
     email ? getCreditBalance(email.toLowerCase()) : Promise.resolve(0),
   ]);
-  // v0.1.12 \u2014 1 USD = 100 credits per CREDITS_PER_DOLLAR in lib/credits.ts.
+  // 1 USD = 100 credits per CREDITS_PER_DOLLAR in lib/credits.ts.
   const creditsDollars = (credits / 100).toFixed(2);
   const subscription = readPricingSnapshot(rawSubscription);
   const sessionState = readSessionState(session, profile);
-
-  // v0.1.13 \u2014 Reconcile the Supabase subscription snapshot with the
-  // Stripe billing state. Comped users (e.g. founders, internal accounts)
-  // are Pro in our DB but have no Stripe subscription, so getBillingState
-  // returns plan: null and the BillingPanel falls back to "Free" \u2014 which
-  // contradicts every other place we render their plan ("Pro" in the
-  // user card, on /account/usage, in the dashboard nav, etc.). When
-  // Stripe doesn't know the plan but our DB does, inject the snapshot's
-  // plan into billingState so the panel renders Pro \u00b7 Comped instead
-  // of "Free \u00b7 No billing active".
-  const reconciledBilling = (() => {
-    if (!billingState) return null;
-    if (billingState.plan) return billingState;
-    const snapshotKey = subscription.plan.key as PricingPlanKey;
-    if (snapshotKey === "free" || !(snapshotKey in pricingPlanMap)) {
-      return billingState;
-    }
-    return { ...billingState, plan: getPricingPlan(snapshotKey) };
-  })();
 
   const displayName =
     profile?.display_name ??
@@ -222,16 +197,13 @@ export default async function AccountPage() {
         </Link>
       </div>
 
-      {/* v0.1.12 \u2014 dropped the redundant "Plan" mini-stat tile (the
-          full plan + status now lives in the Billing section below).
-          Replaced with a "Credits" tile pulled from the live billing
-          state so users see at a glance what they have to spend on
-          pay-as-you-go usage. */}
+      {/* Mini stats. Credits links to /account/billing (the dedicated
+          billing page) so users land where they can actually top up. */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <MiniStat
           label="Credits"
           value={`$${creditsDollars}`}
-          href="#billing"
+          href="/account/billing"
         />
         <MiniStat label="API keys" value={String(keys.length)} href="/account/keys" />
         <MiniStat
@@ -245,44 +217,6 @@ export default async function AccountPage() {
           href="/account/memory"
         />
       </div>
-
-      {/* v0.1.12 \u2014 Inline Billing section. Used to live ONLY at
-          /account/billing as a barebones page; now the full BillingPanel
-          (plan + status badge, addons grid, payment method, invoices,
-          credits modal) is here so users land on it directly. The
-          /account/billing route now redirects to /account#billing so
-          deep links still work. */}
-      <section
-        id="billing"
-        className="scroll-mt-24 rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-7"
-      >
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-300/85">
-              Billing
-            </div>
-            <h2 className="mt-1 text-lg font-semibold tracking-tight text-white sm:text-xl">
-              Plan, addons, payment, and invoices
-            </h2>
-          </div>
-          {!stripeReady && (
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-400">
-              Billing not configured on this server
-            </span>
-          )}
-        </div>
-        {stripeReady && reconciledBilling ? (
-          <BillingPanel state={reconciledBilling} publishableKey={publishableKey ?? ""} />
-        ) : (
-          <p className="text-sm text-neutral-400">
-            Sign in to manage your subscription. Visit{" "}
-            <Link href="/pricing" className="sansxel-subtle-link">
-              pricing
-            </Link>{" "}
-            to compare plans.
-          </p>
-        )}
-      </section>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
         <div className="space-y-5">

@@ -261,7 +261,12 @@ export function BillingPanel({ state, publishableKey }: Props) {
       </section>
 
       {/* ── Addons ─────────────────────────────────────────────────── */}
-      {hasPlan && (
+      {/* Always rendered. Was gated on hasPlan, which made the section
+          invisible to Free users even though several addons are
+          available regardless of plan tier. The section itself shows
+          a "No addons available" empty state when there's nothing to
+          surface, so leaving it always-on is safe. */}
+      {(
         <section
           className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
         >
