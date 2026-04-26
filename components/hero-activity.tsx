@@ -2043,12 +2043,12 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           Premium workspace memory for focused work
         </div>
 
-        {/* Heading: static line + cycling verb. The static "remembers"
-            second line was dropped — the rotating verb IS the
-            headline now (creating, debugging, designing, etc.) so we
-            don't pre-flatten the message with a bland anchor. */}
+        {/* Heading: static line + cycling verb. Words are gerunds
+            (creating, debugging, designing) so the static line uses
+            "that's" — present continuous — so every rotation is
+            grammatically clean: "The AI that's designing." */}
         <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl sm:leading-[1.05] lg:text-7xl">
-          <span className="block">The AI that</span>
+          <span className="block">The AI that&rsquo;s</span>
           <span className="relative block" style={{ minHeight: "1.1em" }}>
             {prev && (
               <span
