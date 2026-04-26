@@ -3,7 +3,9 @@ import { auth } from "@/auth";
 import { AuroraBackground } from "@/components/aurora-background";
 import { AuthFlow } from "@/components/auth-flow";
 import { HeistCard } from "@/components/heist-card";
-import { HeroActivity } from "@/components/hero-activity";
+// HeroActivity removed — replaced by editorial featured-tile hero
+// (openai.com pattern). Kept the import line removed but the
+// component still exists for /features etc. to use if needed.
 import { SpotlightCard } from "@/components/spotlight-card";
 import { readAccountContext } from "@/lib/account-session";
 import { getSignInPath } from "@/lib/auth-ui";
@@ -68,7 +70,9 @@ export default async function HomePage() {
   const session                = await auth();
   const signedIn               = Boolean(session?.user?.email);
   const profile                = await getUserProfileByEmail(session?.user?.email);
-  const initialAccountContext  = readAccountContext(session, profile);
+  // initialAccountContext was passed to HeroActivity (now removed).
+  // Read still here for downstream sections that depend on session.
+  void readAccountContext(session, profile);
   const pricingPreview         = pricingPlans.filter(
     (plan) => plan.key === "free" || plan.key === "pro" || plan.key === "teams",
   );
@@ -77,14 +81,99 @@ export default async function HomePage() {
     <>
       <AuroraBackground />
 
-      {/* ── Hero ─────────────────────────────────────────────────── */}
+      {/* ── Editorial hero — big featured tile + right column cards.
+          Same shape as openai.com / anthropic.com homepage: one
+          headline announcement on the left taking ~60% of the
+          viewport, two stacked themed cards on the right linking
+          to the other zones. ──────────────────────────────────── */}
       <section
         id="top"
         data-stagger
         style={{ "--stagger-i": 0 } as React.CSSProperties}
-        className="mx-auto grid max-w-[1600px] gap-6 px-4 pb-12 pt-8 sm:gap-10 sm:px-6 sm:pb-16 sm:pt-12 lg:grid-cols-[1.1fr_.9fr] lg:items-start lg:gap-16 lg:px-8 lg:pb-16 lg:pt-16"
+        className="mx-auto grid max-w-[1600px] gap-4 px-4 pb-12 pt-6 sm:gap-5 sm:px-6 sm:pb-16 sm:pt-8 lg:grid-cols-[1.65fr_1fr] lg:gap-5 lg:px-8 lg:pb-20 lg:pt-10"
       >
-        <HeroActivity isSignedIn={Boolean(initialAccountContext)} />
+        {/* Featured tile — gradient cover, overlay copy, big CTA. */}
+        <Link
+          href="/features"
+          className="group relative isolate flex aspect-[4/3] overflow-hidden rounded-3xl border border-white/10 bg-neutral-950 sm:aspect-[16/10] lg:aspect-auto lg:min-h-[560px]"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(167,139,250,0.45),transparent_55%),radial-gradient(circle_at_70%_70%,rgba(244,114,182,0.35),transparent_60%),linear-gradient(180deg,rgba(8,8,12,0.4),rgba(8,8,12,0.85))]" />
+          <div className="relative z-10 flex w-full flex-col justify-between p-7 sm:p-9 lg:p-12">
+            <div>
+              <div className="text-xs font-medium uppercase tracking-[0.22em] text-violet-200">
+                Featured
+              </div>
+              <h1 className="mt-4 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
+                Introducing<br />sansxel-1.
+              </h1>
+              <p className="mt-5 max-w-xl text-base leading-7 text-neutral-200 sm:text-lg sm:leading-8">
+                The AI workshop for makers. Talk, type, drop files,
+                generate images, search live — one workspace that
+                adapts to whatever you&apos;re building.
+              </p>
+            </div>
+            <div className="mt-8 flex items-center gap-3 text-sm font-medium text-white">
+              <span className="rounded-full bg-white px-4 py-2 text-black transition group-hover:opacity-90">
+                Read the launch →
+              </span>
+              <span className="text-xs text-neutral-300/80">
+                v0.1.16 · 12 min read
+              </span>
+            </div>
+          </div>
+        </Link>
+
+        {/* Right column: two stacked feature cards routing to the
+            other zones. */}
+        <div className="flex flex-col gap-4 sm:gap-5">
+          <Link
+            href={signedIn ? "https://chat.sansxel.ai" : "/signin"}
+            className="group relative isolate flex flex-1 overflow-hidden rounded-3xl border border-white/10 bg-neutral-950"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_30%,rgba(52,211,153,0.35),transparent_60%),linear-gradient(180deg,rgba(8,12,10,0.55),rgba(8,12,10,0.95))]" />
+            <div className="relative z-10 flex w-full flex-col justify-between p-6 sm:p-7">
+              <div>
+                <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-emerald-200">
+                  The workshop
+                </div>
+                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                  Open the workshop on chat.sansxel.ai.
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-neutral-300">
+                  Voice, drag-drop, image gen, web search — the
+                  product itself, ready to use.
+                </p>
+              </div>
+              <div className="mt-6 text-sm font-medium text-emerald-200">
+                {signedIn ? "Open workshop →" : "Start free →"}
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/learn"
+            className="group relative isolate flex flex-1 overflow-hidden rounded-3xl border border-white/10 bg-neutral-950"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_30%,rgba(96,165,250,0.30),transparent_60%),linear-gradient(180deg,rgba(8,10,16,0.55),rgba(8,10,16,0.95))]" />
+            <div className="relative z-10 flex w-full flex-col justify-between p-6 sm:p-7">
+              <div>
+                <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-200">
+                  Learn
+                </div>
+                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                  AI explained simply.
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-neutral-300">
+                  Plain-English guides — what AI is, how to use it,
+                  and how to build with it.
+                </p>
+              </div>
+              <div className="mt-6 text-sm font-medium text-sky-200">
+                Browse the library →
+              </div>
+            </div>
+          </Link>
+        </div>
       </section>
 
       <section

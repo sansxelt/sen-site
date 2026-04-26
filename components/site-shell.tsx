@@ -42,17 +42,15 @@ type SiteNavLink = {
   authOnly?: boolean;
 };
 
+// Tightened to OpenAI-style breadth: 4 broad categories. 'How it
+// works' folded into Features; 'Download' hidden from primary nav
+// (still in footer + Mobile drawer for signed-in users); 'Contact'
+// pulled out of the main row to declutter.
 const primaryLinks: SiteNavLink[] = [
-  { href: "/home", label: "Home" },
-  { href: "/features", label: "Features" },
-  { href: "/function", label: "How it works" },
+  { href: "/features", label: "Product" },
   { href: "/learn", label: "Learn" },
   { href: "/pricing", label: "Pricing" },
-  // Chat removed — signed-in users go through the Workshop button on
-  // the right; the chat is the default view there.
-  // Download is auth-gated (the page itself redirects), so hide the
-  // nav link for logged-out visitors — they'd just bounce to /signin.
-  { href: "/download", label: "Download", authOnly: true },
+  { href: "/download", label: "Desktop", authOnly: true },
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
@@ -89,7 +87,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               </Link>
             </div>
 
-            <nav className="hidden items-center gap-5 text-sm text-neutral-400 lg:flex">
+            <nav className="hidden items-center gap-6 text-sm text-neutral-300 lg:flex">
               {primaryLinks.filter((link) => !link.authOnly || signedIn).map((link) => (
                 <Link
                   key={link.href}
@@ -99,15 +97,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/contact"
-                className="rounded-md whitespace-nowrap px-1 py-0.5 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
-              >
-                Contact
-              </Link>
             </nav>
 
-            <div className="flex shrink-0 items-center gap-2 lg:flex-1 lg:justify-end">
+            <div className="flex shrink-0 items-center gap-3 lg:flex-1 lg:justify-end">
               {/* Mobile drawer trigger — only renders on <lg screens */}
               <MobileNav
                 links={[
@@ -118,11 +110,22 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 accessHref={signedIn ? "/app" : getSignInPath()}
               />
 
+              {/* Log in ghost link (only when signed out) — openai.com
+                  pattern: secondary verb + primary product CTA pair. */}
+              {!signedIn && (
+                <Link
+                  href={getSignInPath()}
+                  className="hidden text-sm font-medium text-neutral-300 transition hover:text-white lg:inline"
+                >
+                  Log in
+                </Link>
+              )}
+
               <Link
                 href={signedIn ? "/app" : getSignInPath()}
                 className="sansxel-white-button rounded-xl bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90"
               >
-                {signedIn ? "Open Workshop" : "Access"}
+                {signedIn ? "Open Workshop" : "Try sansxel ↗"}
               </Link>
             </div>
           </div>
