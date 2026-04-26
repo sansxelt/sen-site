@@ -1177,8 +1177,12 @@ export async function POST(request: Request) {
     });
   } catch (err) {
     console.error("ai/chat failed:", err);
+    // Surface a slightly more useful generic message than the old
+    // "Could not start AI chat." — the cap-block path has its own
+    // detailed reason, so this catch only fires on real upstream
+    // failures (Anthropic outage, malformed payload, etc.).
     return NextResponse.json(
-      { error: "Could not start AI chat." },
+      { error: "sansxel-1 is having trouble responding right now. Try again in a moment." },
       { status: 500 },
     );
   }

@@ -956,7 +956,17 @@ export function WebChat({
       }
     } catch (err) {
       if ((err as { name?: string })?.name === "AbortError") return;
-      setChatError(err instanceof Error ? err.message : "Chat failed.");
+      // Network-level failures (browser couldn't even reach the
+      // server) come back as TypeError "Failed to fetch" — useless
+      // to the user. Translate to something readable.
+      const isNetworkErr =
+        err instanceof TypeError && /failed to fetch|networkerror/i.test(err.message);
+      const msg = isNetworkErr
+        ? "Couldn't reach sansxel. Check your connection and try again."
+        : err instanceof Error
+        ? err.message
+        : "Chat failed.";
+      setChatError(msg);
       // Same cross-thread guard — don't pop a message off the new
       // thread's list because the OLD thread's send errored.
       if (isStillThisThread()) {
