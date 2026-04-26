@@ -122,13 +122,13 @@ export function OAuthSection({
   }
 
   return (
-    <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 sm:p-6">
+    <div className="rounded-[28px] border border-white/10 bg-black/20 p-6 sm:p-8">
       <div className="text-sm font-medium text-white">Continue with a provider</div>
-      <p className="mt-1.5 text-sm leading-6 text-neutral-400">
+      <p className="mt-2 text-sm leading-6 text-neutral-400">
         Faster start — picks up in the same workspace flow.
       </p>
 
-      <div className="mt-5 grid gap-3">
+      <div className="mt-6 grid gap-4">
         {oauthProviders.map((option) => {
           const providerBusy = activeProvider === option.provider;
           return (
@@ -160,11 +160,11 @@ export function OAuthSection({
         })}
       </div>
 
-      <div className="mt-5 border-t border-white/[0.08] pt-4">
+      <div className="mt-7 border-t border-white/[0.08] pt-5">
         <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
           Destination
         </div>
-        <div className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-neutral-400">
+        <div className="mt-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 font-mono text-xs text-neutral-400">
           {safeRedirectPath}
         </div>
       </div>
@@ -353,7 +353,7 @@ export function AuthPanel({
         {/* Heading + toggle. Wraps to two rows when the toggle won't
             fit cleanly next to the heading (avoids the 'Create acco…'
             text clip). */}
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-4">
           <h3 className="text-2xl font-semibold tracking-tight text-white">
             Continue into sansxel.
           </h3>
@@ -381,19 +381,19 @@ export function AuthPanel({
       </div>
 
       {/* ── Email card ──────────────────────────────────────────── */}
-      <div className="mt-6">
+      <div className="mt-8 sm:mt-10">
 
-        <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5 sm:p-6">
+        <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
           <div className="text-sm font-medium text-white">
             {mode === "signup" ? "Create with email" : "Sign in with email"}
           </div>
-          <p className="mt-1.5 text-sm leading-6 text-neutral-400">
+          <p className="mt-2 text-sm leading-6 text-neutral-400">
             {mode === "signup"
               ? "Password-based account on sansxel."
               : "Use your email and password."}
           </p>
 
-          <form onSubmit={handleEmailAuth} className="mt-5 space-y-3">
+          <form onSubmit={handleEmailAuth} className="mt-6 space-y-4">
             {mode === "signup" && (
               <input
                 type="text"
