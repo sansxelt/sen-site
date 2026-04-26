@@ -629,6 +629,17 @@ function systemPromptForPayload(
 }
 
 export async function POST(request: Request) {
+  // v0.1.16 — Phase timing markers. Logged at the end as a single
+  // line so we can spot which phase is dominating cold-start TTFT.
+  // Cheap (Date.now) and only emit on the slow path; if total <300ms
+  // we skip the verbose log to keep noise down.
+  const tReqStart = Date.now();
+  let tAuth = tReqStart;
+  let tFetches = tReqStart;
+  let tThread = tReqStart;
+  let tStreamCall = tReqStart;
+  let tFirstToken: number | null = null;
+
   // Two ways to authenticate this endpoint: a Bearer token (desktop)
   // or a NextAuth session cookie (browser at sansxel.ai/app). Either
   // one identifies a user; the rest of the route is identical.
@@ -640,6 +651,7 @@ export async function POST(request: Request) {
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+  tAuth = Date.now();
 
   let payload: ChatBody;
   try {
@@ -684,6 +696,7 @@ export async function POST(request: Request) {
     getWeeklyUsage(email),
     getActiveAddonKeys(email),
   ]);
+  tFetches = Date.now();
   let resolvedTier = resolveTier(plan, requestedTier);
 
   // Plan limits: hard weekly cap on free/apprentice/studio,
@@ -851,6 +864,7 @@ export async function POST(request: Request) {
     } catch (err) {
       console.warn("ai/chat thread persist (user turn) failed:", err);
     }
+    tThread = Date.now();
 
     // v0.1.16 r7 — Progressive save re-enabled. The hang was a
     // CLIENT-SIDE thread-id capture bug, not the persistence layer.
@@ -869,7 +883,7 @@ export async function POST(request: Request) {
 
     // v0.1.16 r5 — Quick timing markers so the Vercel function logs
     // show where time goes when chats feel slow.
-    const tStreamCall = Date.now();
+    tStreamCall = Date.now();
     console.log(
       `[ai/chat] tools=${toolsForCall.length} promptLen=${lastUserText.length} model=${descriptor.model}`,
     );
@@ -1022,13 +1036,7 @@ export async function POST(request: Request) {
               ) {
                 if (!firstTokenLogged) {
                   firstTokenLogged = true;
-                  console.log(
-                    `[ai/chat] first-token in ${Date.now() - tStreamCall}ms`,
-                  );
-                }
-                if (!firstTokenLogged) {
-                  firstTokenLogged = true;
-                  console.log(`[ai/chat] first-token in ${Date.now() - tStreamCall}ms`);
+                  tFirstToken = Date.now();
                 }
                 assistantBuffer += event.delta.text;
                 writeLine({ type: "text", text: event.delta.text });
@@ -1046,9 +1054,7 @@ export async function POST(request: Request) {
             ) {
               if (!firstTokenLogged) {
                 firstTokenLogged = true;
-                console.log(
-                  `[ai/chat] first-token (text path) in ${Date.now() - tStreamCall}ms`,
-                );
+                tFirstToken = Date.now();
               }
               // Legacy plain-text path.
               assistantBuffer += event.delta.text;
@@ -1060,6 +1066,18 @@ export async function POST(request: Request) {
           console.error("ai/chat stream error:", err);
         } finally {
           controller.close();
+          // v0.1.16 — Phase summary log. Emits one line per request
+          // with where the time went so we can spot the dominant
+          // phase when chats feel slow. Skipped on requests that
+          // resolved fast (<500ms total) to keep the log noise down.
+          const tEnd = Date.now();
+          const total = tEnd - tReqStart;
+          if (total >= 500) {
+            const ftt = tFirstToken ? tFirstToken - tStreamCall : -1;
+            console.log(
+              `[ai/chat phases] auth=${tAuth - tReqStart}ms fetches=${tFetches - tAuth}ms thread=${tThread - tFetches}ms preStream=${tStreamCall - tThread}ms ftt=${ftt}ms total=${total}ms cancelled=${clientAborted}`,
+            );
+          }
           // Fire-and-forget usage record after the stream resolves
           void recordUsage({
             email,
