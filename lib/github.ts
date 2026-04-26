@@ -25,6 +25,15 @@ export async function getGithubIntegration(
   return (data as unknown as GitHubIntegration) ?? null;
 }
 
+export async function deleteGithubIntegration(email: string): Promise<void> {
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("github_integrations" as never)
+    .delete()
+    .eq("email", email);
+  if (error) throw error;
+}
+
 export async function upsertGithubIntegration(
   integration: Omit<GitHubIntegration, "connected_at">,
 ): Promise<GitHubIntegration> {

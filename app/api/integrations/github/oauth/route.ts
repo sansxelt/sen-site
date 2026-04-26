@@ -20,7 +20,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const clientId = process.env.GITHUB_CLIENT_ID ?? "";
+  const clientId = process.env.GITHUB_CLIENT_ID;
+  if (!clientId) {
+    // Without this guard the redirect to github.com/login/oauth/authorize
+    // would land on a "Bad request" page or silently fail. Bouncing
+    // back to /account/integrations with an error param means the
+    // user gets actionable feedback in the integrations banner.
+    const url = new URL(request.url);
+    const back = new URL("/account/integrations", url.origin);
+    back.searchParams.set("github", "error");
+    back.searchParams.set("reason", "server_misconfigured");
+    return NextResponse.redirect(back, 302);
+  }
   const params = new URLSearchParams({
     client_id: clientId,
     scope: "repo,user",
