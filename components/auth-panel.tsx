@@ -186,11 +186,15 @@ export function ModeSwitcher({
   onModeChange: (mode: AuthMode) => void;
 }) {
   return (
-    <div className="flex w-full overflow-hidden rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm">
+    // Sized to content (not w-full) so the active 'Create account'
+    // pill never clips. Heading flex-row above shrinks the ModeSwitcher
+    // when w-full was set; sizing to content + a wrap-friendly heading
+    // row fixes the 'Create acco…' clipping.
+    <div className="inline-flex shrink-0 rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm">
       <button
         type="button"
         onClick={() => onModeChange("signup")}
-        className={`flex-1 whitespace-nowrap rounded-[16px] px-3 py-2.5 leading-none transition focus-visible:outline-none sm:px-5 ${
+        className={`whitespace-nowrap rounded-[16px] px-4 py-2 leading-none transition focus-visible:outline-none sm:px-5 ${
           mode === "signup"
             ? "sansxel-white-button bg-white text-black"
             : "text-neutral-200 hover:text-white"
@@ -201,7 +205,7 @@ export function ModeSwitcher({
       <button
         type="button"
         onClick={() => onModeChange("signin")}
-        className={`flex-1 whitespace-nowrap rounded-[16px] px-3 py-2.5 leading-none transition focus-visible:outline-none sm:px-5 ${
+        className={`whitespace-nowrap rounded-[16px] px-4 py-2 leading-none transition focus-visible:outline-none sm:px-5 ${
           mode === "signin"
             ? "sansxel-white-button bg-white text-black"
             : "text-neutral-200 hover:text-white"
@@ -346,8 +350,10 @@ export function AuthPanel({
           )}
         </div>
 
-        {/* Heading + toggle in the same row, centered with each other */}
-        <div className="mt-2 flex items-center justify-between gap-4">
+        {/* Heading + toggle. Wraps to two rows when the toggle won't
+            fit cleanly next to the heading (avoids the 'Create acco…'
+            text clip). */}
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <h3 className="text-2xl font-semibold tracking-tight text-white">
             Continue into sansxel.
           </h3>

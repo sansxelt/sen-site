@@ -2,10 +2,11 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { AuroraBackground } from "@/components/aurora-background";
 import { AuthFlow } from "@/components/auth-flow";
+import { DotGrid } from "@/components/dot-grid";
 import { HeistCard } from "@/components/heist-card";
 // HeroActivity removed — replaced by editorial featured-tile hero
-// (openai.com pattern). Kept the import line removed but the
-// component still exists for /features etc. to use if needed.
+// in sansxel's own visual language (DotGrid texture, HeistCard tilt,
+// hx-gradient-text, mono kickers). Not a generic radial gradient.
 import { SpotlightCard } from "@/components/spotlight-card";
 import { readAccountContext } from "@/lib/account-session";
 import { getSignInPath } from "@/lib/auth-ui";
@@ -81,98 +82,126 @@ export default async function HomePage() {
     <>
       <AuroraBackground />
 
-      {/* ── Editorial hero — big featured tile + right column cards.
-          Same shape as openai.com / anthropic.com homepage: one
-          headline announcement on the left taking ~60% of the
-          viewport, two stacked themed cards on the right linking
-          to the other zones. ──────────────────────────────────── */}
+      {/* ── Hero — sansxel-native editorial layout. Same structure
+          as the openai/anthropic 'big featured tile + side rail'
+          shape but in our own visual language: DotGrid texture,
+          HeistCard tilt, hx-gradient-text headline, mono kickers,
+          aurora ribbon at the bottom edge. NOT a copy. ────────── */}
       <section
         id="top"
         data-stagger
         style={{ "--stagger-i": 0 } as React.CSSProperties}
         className="mx-auto grid max-w-[1600px] gap-4 px-4 pb-12 pt-6 sm:gap-5 sm:px-6 sm:pb-16 sm:pt-8 lg:grid-cols-[1.65fr_1fr] lg:gap-5 lg:px-8 lg:pb-20 lg:pt-10"
       >
-        {/* Featured tile — gradient cover, overlay copy, big CTA. */}
-        <Link
-          href="/features"
-          className="group relative isolate flex aspect-[4/3] overflow-hidden rounded-3xl border border-white/10 bg-neutral-950 sm:aspect-[16/10] lg:aspect-auto lg:min-h-[560px]"
+        {/* Featured tile — DotGrid texture + aurora ribbon + brand
+            wordmark corner badge. */}
+        <HeistCard
+          tilt
+          className="group relative aspect-[4/3] overflow-hidden p-0 sm:aspect-[16/10] lg:aspect-auto lg:min-h-[560px]"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(167,139,250,0.45),transparent_55%),radial-gradient(circle_at_70%_70%,rgba(244,114,182,0.35),transparent_60%),linear-gradient(180deg,rgba(8,8,12,0.4),rgba(8,8,12,0.85))]" />
-          <div className="relative z-10 flex w-full flex-col justify-between p-7 sm:p-9 lg:p-12">
-            <div>
-              <div className="text-xs font-medium uppercase tracking-[0.22em] text-violet-200">
-                Featured
+          <Link href="/features" className="block h-full w-full">
+            {/* Layer 1: dot grid texture */}
+            <DotGrid opacity={0.09} />
+            {/* Layer 2: aurora ribbon at the bottom edge */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-1/2 bg-[radial-gradient(120%_80%_at_50%_120%,rgba(167,139,250,0.35),transparent_55%),radial-gradient(80%_60%_at_15%_110%,rgba(244,114,182,0.25),transparent_60%)]" />
+            {/* Layer 3: very subtle scanline overlay for texture */}
+            <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,transparent_30%)]" />
+            {/* Top-right corner: version pill, sansxel-mono accent */}
+            <div className="absolute right-5 top-5 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-3 py-1.5 font-mono text-[10px] tracking-[0.18em] text-violet-200 backdrop-blur-sm sm:right-7 sm:top-7">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-300 shadow-[0_0_8px_rgba(196,181,253,0.9)]" />
+              v0.1.16 · LIVE
+            </div>
+            {/* Body */}
+            <div className="relative z-10 flex h-full w-full flex-col justify-between p-7 sm:p-10 lg:p-12">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-violet-300">
+                  ── featured launch
+                </div>
+                <h1 className="hx-gradient-text mt-5 text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl lg:text-7xl">
+                  The workshop, not<br />a chat box.
+                </h1>
+                <p className="mt-5 max-w-xl text-base leading-7 text-neutral-200 sm:text-lg sm:leading-8">
+                  Voice, drag-drop, image gen, web search, persistent
+                  memory — sansxel-1 is one workspace that adapts to
+                  whatever you&apos;re shipping right now.
+                </p>
               </div>
-              <h1 className="mt-4 text-4xl font-semibold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-7xl">
-                Introducing<br />sansxel-1.
-              </h1>
-              <p className="mt-5 max-w-xl text-base leading-7 text-neutral-200 sm:text-lg sm:leading-8">
-                The AI workshop for makers. Talk, type, drop files,
-                generate images, search live — one workspace that
-                adapts to whatever you&apos;re building.
-              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition group-hover:opacity-90">
+                  Read the launch
+                  <span aria-hidden>→</span>
+                </span>
+                <span className="font-mono text-[11px] text-neutral-400">
+                  / 12 min read
+                </span>
+              </div>
             </div>
-            <div className="mt-8 flex items-center gap-3 text-sm font-medium text-white">
-              <span className="rounded-full bg-white px-4 py-2 text-black transition group-hover:opacity-90">
-                Read the launch →
-              </span>
-              <span className="text-xs text-neutral-300/80">
-                v0.1.16 · 12 min read
-              </span>
-            </div>
-          </div>
-        </Link>
+          </Link>
+        </HeistCard>
 
-        {/* Right column: two stacked feature cards routing to the
-            other zones. */}
+        {/* Right column — two HeistCards with sansxel texture (no
+            generic radial gradients). */}
         <div className="flex flex-col gap-4 sm:gap-5">
-          <Link
-            href={signedIn ? "https://chat.sansxel.ai" : "/signin"}
-            className="group relative isolate flex flex-1 overflow-hidden rounded-3xl border border-white/10 bg-neutral-950"
-          >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_30%,rgba(52,211,153,0.35),transparent_60%),linear-gradient(180deg,rgba(8,12,10,0.55),rgba(8,12,10,0.95))]" />
-            <div className="relative z-10 flex w-full flex-col justify-between p-6 sm:p-7">
-              <div>
-                <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-emerald-200">
-                  The workshop
+          {/* Workshop card — emerald accent + DotGrid */}
+          <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
+            <Link
+              href={signedIn ? "https://chat.sansxel.ai" : "/signin"}
+              className="block h-full w-full"
+            >
+              <DotGrid opacity={0.07} />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_15%_20%,rgba(52,211,153,0.25),transparent_60%)]" />
+              <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-emerald-200/80">
+                /chat
+              </div>
+              <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
+                <div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-emerald-300">
+                    ── the workshop
+                  </div>
+                  <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+                    Open it on<br />chat.sansxel.ai.
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-neutral-300">
+                    The product itself — chat, voice, files, images,
+                    live web. Ready to use.
+                  </p>
                 </div>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                  Open the workshop on chat.sansxel.ai.
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-neutral-300">
-                  Voice, drag-drop, image gen, web search — the
-                  product itself, ready to use.
-                </p>
+                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-200">
+                  {signedIn ? "Open workshop" : "Start free"}
+                  <span aria-hidden>→</span>
+                </div>
               </div>
-              <div className="mt-6 text-sm font-medium text-emerald-200">
-                {signedIn ? "Open workshop →" : "Start free →"}
-              </div>
-            </div>
-          </Link>
+            </Link>
+          </HeistCard>
 
-          <Link
-            href="/learn"
-            className="group relative isolate flex flex-1 overflow-hidden rounded-3xl border border-white/10 bg-neutral-950"
-          >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_30%,rgba(96,165,250,0.30),transparent_60%),linear-gradient(180deg,rgba(8,10,16,0.55),rgba(8,10,16,0.95))]" />
-            <div className="relative z-10 flex w-full flex-col justify-between p-6 sm:p-7">
-              <div>
-                <div className="text-[11px] font-medium uppercase tracking-[0.22em] text-sky-200">
-                  Learn
+          {/* Learn card — sky accent + DotGrid */}
+          <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
+            <Link href="/learn" className="block h-full w-full">
+              <DotGrid opacity={0.07} />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_85%_20%,rgba(96,165,250,0.22),transparent_60%)]" />
+              <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-sky-200/80">
+                /learn
+              </div>
+              <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
+                <div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-sky-300">
+                    ── learn
+                  </div>
+                  <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+                    AI, explained<br />in plain English.
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-neutral-300">
+                    Short guides for builders — concepts, code,
+                    real examples. No PhD tone.
+                  </p>
                 </div>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                  AI explained simply.
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-neutral-300">
-                  Plain-English guides — what AI is, how to use it,
-                  and how to build with it.
-                </p>
+                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-sky-200">
+                  Browse the library
+                  <span aria-hidden>→</span>
+                </div>
               </div>
-              <div className="mt-6 text-sm font-medium text-sky-200">
-                Browse the library →
-              </div>
-            </div>
-          </Link>
+            </Link>
+          </HeistCard>
         </div>
       </section>
 
