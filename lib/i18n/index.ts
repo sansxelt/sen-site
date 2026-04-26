@@ -59,10 +59,33 @@ const COMMON_WORDS: Record<Exclude<LanguageCode, "en" | "ja" | "zh" | "ko" | "hi
   pt: ["o", "a", "os", "as", "um", "uma", "de", "do", "da", "em", "para", "por", "com", "que", "não", "sim", "obrigado", "obrigada", "olá", "muito", "está"],
 };
 
+// English stop words used to suppress collisions. Without this, a
+// prompt like "can u make a short video of a cat" gets classified
+// as Portuguese because "a" matches Portuguese's definite-article-
+// fem. entry twice — clearing the >=2 hit threshold even though the
+// rest of the prompt is obviously English.
+const ENGLISH_WORDS = new Set([
+  "the", "a", "an", "and", "or", "but", "is", "are", "was", "were",
+  "be", "been", "being", "do", "does", "did", "have", "has", "had",
+  "of", "in", "on", "to", "for", "with", "by", "at", "from", "as",
+  "this", "that", "these", "those", "it", "its", "i", "me", "my",
+  "you", "your", "we", "us", "our", "he", "she", "they", "them",
+  "can", "could", "will", "would", "should", "may", "might",
+  "what", "how", "why", "when", "where", "who", "which",
+  "make", "made", "go", "get", "got", "want", "need", "like",
+  "yes", "no", "ok", "okay", "thanks", "please", "hi", "hey", "hello",
+  "u", "ur", "lol", "tbh", "rn",
+]);
+
+// Count tokens that are in `words` AND NOT in the English stop-word
+// set. The English exclusion stops common cross-language particles
+// (mostly "a" / "o") from inflating the score for romance languages
+// when the input is plain English with a few collisions.
 function countWordHits(tokens: string[], words: string[]): number {
   const set = new Set(words);
   let hits = 0;
   for (const tok of tokens) {
+    if (ENGLISH_WORDS.has(tok)) continue;
     if (set.has(tok)) hits += 1;
   }
   return hits;
