@@ -7,7 +7,7 @@ import type {
   LearnPieceWithChapters,
 } from "@/lib/learn-db";
 
-// ReactMarkdown component overrides — explicit Tailwind classes
+// ReactMarkdown component overrides: explicit Tailwind classes
 // instead of @tailwindcss/typography, since the plugin isn't
 // installed and prose classes would be no-ops.
 const MD_COMPONENTS: Components = {

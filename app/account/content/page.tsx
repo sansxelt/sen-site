@@ -13,16 +13,17 @@ import {
 // and recently published pieces so the operator can land thousands
 // of pages with a real review step rather than autopilot publish.
 //
-// Gated by ADMIN_EMAILS env var via isAdminEmail() — non-admins get
-// bounced to /account so signed-in non-operators can't poke at
-// drafts.
+// Gated by ADMIN_EMAILS env var via isAdminEmail(). The /account
+// path is already auth-gated by proxy.ts (getToken redirects to
+// /signin), so this page only needs the admin role check. Doing
+// our own auth() redirect here causes a loop when auth() and the
+// proxy's getToken() disagree on cookie visibility.
 
 export const dynamic = "force-dynamic";
 
 export default async function ContentAdminPage() {
   const session = await auth();
   const email = session?.user?.email ?? null;
-  if (!email) redirect("/auth/signin?callbackUrl=/account/content");
   if (!isAdminEmail(email)) redirect("/account");
 
   const dbReady = isDatabaseConfigured();
@@ -42,7 +43,7 @@ export default async function ContentAdminPage() {
         </div>
         <h1 className="text-3xl font-semibold text-white">Content review</h1>
         <p className="max-w-2xl text-sm leading-relaxed text-neutral-400">
-          Drafts ingested by <code className="text-neutral-300">scripts/ingest-content.mjs</code> land here. Approve before publish — every page on <code className="text-neutral-300">sansxel.ai</code> shares a domain reputation.
+          Drafts ingested by <code className="text-neutral-300">scripts/ingest-content.mjs</code> land here. Approve before publish, since every page on <code className="text-neutral-300">sansxel.ai</code> shares a domain reputation.
         </p>
       </header>
 

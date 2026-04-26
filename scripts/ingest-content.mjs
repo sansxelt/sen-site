@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Learn content ingester. Takes a topic and content type, pulls
-// open-licensed sources (Wikipedia for now — arXiv/GitHub later),
+// open-licensed sources (Wikipedia for now, arXiv/GitHub later),
 // asks Claude to draft a piece grounded in those sources, and
 // saves it as a draft in Supabase for review.
 //
@@ -11,12 +11,12 @@
 // CLI args:
 //   --type    article | info | research        (required)
 //   --topic   ai | coding | databases | etc.  (required, matches lib/learn-content TOPICS)
-//   --title   piece title — drives the search query and the slug
+//   --title   piece title (drives the search query and the slug)
 //   --subtopic   optional taxonomy refinement
 //   --query   override the Wikipedia search term (defaults to title)
 //
-// The script does NOT publish — pieces land as `draft` and need
-// approval through /account/content. That's intentional: thousands
+// The script does NOT publish. Pieces land as `draft` and need
+// approval through /account/content. That is intentional: thousands
 // of pages with no review step is how a domain gets de-indexed.
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -49,7 +49,7 @@ const query = args.query ?? args.title;
 console.log(`[1/4] researching "${query}" via Wikipedia…`);
 const sources = await fetchWikipediaSources(query);
 if (sources.length === 0) {
-  console.error("no usable sources — try a broader --query");
+  console.error("no usable sources. try a broader --query");
   process.exit(1);
 }
 console.log(`      found ${sources.length} source(s)`);
@@ -170,7 +170,7 @@ async function fetchWikipediaSources(q) {
   const titles = searchJson?.[1] ?? [];
   const urls = searchJson?.[3] ?? [];
 
-  // 2. Pull each article's REST summary (no auth, CC-BY-SA — we cite).
+  // 2. Pull each article's REST summary (no auth, CC-BY-SA, we cite).
   const out = [];
   for (let i = 0; i < titles.length; i++) {
     const title = titles[i];
@@ -204,31 +204,32 @@ async function draftPiece({ type, topic, subtopic, title, sources }) {
     .join("\n\n");
 
   const lengthGuidance = {
-    info: "single chapter, 300-600 words. Glossary/definition feel — concise, structured.",
+    info: "single chapter, 300-600 words. Glossary or definition feel: concise and structured.",
     article: "single chapter, 1500-3000 words. Educational essay feel.",
-    research: "3-6 chapters, ~600-1200 words each. Deep-dive feel — split by concept, not by length.",
+    research: "3-6 chapters, ~600-1200 words each. Deep-dive feel, split by concept rather than by length.",
   }[type];
 
-  const prompt = `Write a ${type} for the sansxel.ai Learn library on this topic:
+  const prompt = `Write a ${type} for the sansxel.ai Learn library on this topic.
 
 TITLE: ${title}
 TOPIC: ${topic}${subtopic ? ` / ${subtopic}` : ""}
 
 LENGTH: ${lengthGuidance}
 
-SOURCES (ground every claim in these — DO NOT invent facts. Use [Source N] inline citations where you draw on a specific source.):
+SOURCES (ground every claim in these. Do NOT invent facts. Use [Source N] inline citations where you draw on a specific source):
 
 ${sourceBlock}
 
 INSTRUCTIONS:
 - Write in clear, accessible prose. No filler. No "in conclusion".
-- Use markdown — headings, lists, code blocks where they help.
+- Use markdown for headings, lists, and code blocks where they help.
 - Inline cite as [Source N] where N matches the numbered list above. The N maps directly to a citation row in our DB so render order matters.
-- If a claim isn't supported by the sources above, OMIT it. Do not hallucinate.
+- If a claim is not supported by the sources above, OMIT it. Do not hallucinate.
 - Pick a short URL slug (kebab-case, max 60 chars).
 - Pick a 1-emoji cover (relevant to the topic).
 - Estimate read minutes honestly (about 200 wpm).
-- Return ONLY a JSON object — no commentary, no markdown fences around it. Schema:
+- DO NOT use em dashes (—) anywhere in your output. Use commas, periods, parentheses, or colons instead. Em dashes read as AI-generated to most readers.
+- Return ONLY a JSON object. No commentary, no markdown fences around it. Schema:
 
 ${type === "research"
     ? `{"title":"...","slug":"...","excerpt":"...","cover_emoji":"📚","read_minutes":12,"chapters":[{"slug":"...","title":"...","body_md":"..."}]}`
@@ -255,7 +256,7 @@ ${type === "research"
     console.error("claude returned non-JSON:", cleaned.slice(0, 400));
     throw err;
   }
-  // Normalize slug — model occasionally returns spaces/punctuation.
+  // Normalize slug since the model occasionally returns spaces or punctuation.
   parsed.slug = slugify(parsed.slug ?? parsed.title);
   return parsed;
 }

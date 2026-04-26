@@ -6,12 +6,12 @@ import { LearnPieceView } from "@/components/learn/learn-piece-view";
 import { getPieceWithChapters } from "@/lib/learn-db";
 
 // DB-backed Learn detail page. /learn/p/[slug] always lands on the
-// first chapter so the canonical share URL stays clean — chapters
+// first chapter so the canonical share URL stays clean. Chapters
 // 2+ live at /learn/p/[slug]/[chapter-slug].
 //
 // 404s on drafts so unpublished work doesn't leak via slug guessing.
 
-export const revalidate = 300; // 5 min — new pieces propagate without redeploy
+export const revalidate = 300; // 5 min, so new pieces propagate without redeploy
 
 type Params = { slug: string };
 

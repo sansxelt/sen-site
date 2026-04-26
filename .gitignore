@@ -53,3 +53,4 @@ sansxel-updater.key.pub
 
 
 .vercel
+.env*.local

@@ -2,7 +2,7 @@
 // that should only be visible to operators of sansxel, not to every
 // signed-in user.
 //
-// Source of truth is the ADMIN_EMAILS env var — comma-separated
+// Source of truth is the ADMIN_EMAILS env var: comma-separated
 // list. Empty/unset means "nobody is admin" (defense-in-depth: a
 // fresh deploy with the var missing locks admin pages, doesn't
 // open them).

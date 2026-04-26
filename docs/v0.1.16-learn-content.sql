@@ -3,7 +3,7 @@
 -- Replaces the hardcoded lib/learn-content.tsx pattern with a
 -- DB-backed pipeline so we can ship pieces without redeploying.
 -- Three content types (article / info / research) cover the full
--- breadth — info is single-page glossary, articles are 1500-3000
+-- breadth: info is single-page glossary, articles are 1500-3000
 -- word essays, research is multi-chapter deep-dives.
 --
 -- Run this in Supabase before the new /account/content admin or

@@ -6,7 +6,7 @@ import { LearnPieceView } from "@/components/learn/learn-piece-view";
 import { getPieceWithChapters } from "@/lib/learn-db";
 
 // Specific-chapter page for multi-chapter pieces. The first chapter
-// canonicalizes to /learn/p/[slug] (no chapter segment) — visiting
+// canonicalizes to /learn/p/[slug] (no chapter segment). Visiting
 // it via this route 308-redirects so we don't index two URLs for
 // the same content.
 

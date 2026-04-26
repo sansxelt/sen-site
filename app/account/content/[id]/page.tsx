@@ -13,7 +13,7 @@ import {
 
 // Edit + publish surface for a single piece. Lists every chapter as
 // its own form so saving a single chapter doesn't replay the
-// metadata save (and vice versa) — keeps each operation atomic and
+// metadata save (and vice versa). Keeps each operation atomic and
 // makes the diff in the DB obvious.
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,9 @@ export default async function ContentEditPage({ params }: { params: Promise<Para
   const { id } = await params;
   const session = await auth();
   const email = session?.user?.email ?? null;
-  if (!email) redirect(`/auth/signin?callbackUrl=/account/content/${id}`);
+  // Auth gate already enforced by proxy.ts. Only need the admin
+  // role check here. Adding our own auth redirect loops when auth()
+  // and the proxy's getToken() see different cookies.
   if (!isAdminEmail(email)) redirect("/account");
 
   const piece = await getPieceWithChapters(id);
@@ -66,7 +68,7 @@ export default async function ContentEditPage({ params }: { params: Promise<Para
             <button
               type="submit"
               className="rounded-full border border-red-400/30 bg-red-400/[0.08] px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-400/[0.16]"
-              // No browser confirm() — server actions can't be intercepted
+              // No browser confirm(): server actions can't be intercepted
               // for a JS-less confirm. Real safety is the audit trail
               // (cascade delete on FK) + the unpublish-first habit.
             >

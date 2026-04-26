@@ -13,7 +13,7 @@ import {
 } from "../../../../lib/learn-db";
 
 // Server actions for the content review UI. Every action re-checks
-// the admin gate — the form posts can be replayed by any signed-in
+// the admin gate, since the form posts can be replayed by any signed-in
 // user, so we don't trust the page-level redirect alone.
 
 async function assertAdmin() {
@@ -87,7 +87,7 @@ export async function saveChapterAction(formData: FormData) {
   const body = String(formData.get("body_md") ?? "");
   if (!chapterId) return;
   await updateChapterBody(chapterId, body);
-  // Don't know the piece slug from chapter id alone — bust the
+  // Don't know the piece slug from chapter id alone, so bust the
   // index pages and let detail-page revalidation happen on next
   // visit. ISR on the detail route handles the rest.
   bustCaches(undefined);

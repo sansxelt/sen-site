@@ -1,9 +1,9 @@
 // DB helpers for the Learn content publication system.
 //
-// Three tables (learn_pieces, learn_chapters, learn_sources) — see
+// Three tables (learn_pieces, learn_chapters, learn_sources). See
 // docs/v0.1.16-learn-content.sql. All helpers fail open (return
 // null/empty) when the migration hasn't been run yet OR Supabase is
-// transiently down — same convention as lib/chat-history.ts.
+// transiently down. Same convention as lib/chat-history.ts.
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 
@@ -92,7 +92,7 @@ export async function listPublishedPieces(opts?: {
   }
 }
 
-/** Lists pieces by status — used by the admin review UI. Most-recent
+/** Lists pieces by status. Used by the admin review UI. Most-recent
  * first by updated_at so freshly-edited drafts surface immediately. */
 export async function listPiecesByStatus(
   status: LearnPieceStatus,
@@ -199,7 +199,7 @@ export type DraftSourceInput = {
 
 /** Creates a draft piece + chapters + sources in one transactional
  * sequence. Throws on hard failure (caller should surface the error
- * rather than silently lose work — drafts are valuable). */
+ * rather than silently lose work, since drafts are valuable). */
 export async function createDraftPiece(input: {
   type: LearnPieceType;
   slug: string;
@@ -264,7 +264,7 @@ export async function createDraftPiece(input: {
       .from(SOURCES as never)
       .insert(sourceRows as never);
     if (srcErr) {
-      // Sources are non-essential — log and keep the piece.
+      // Sources are non-essential. Log and keep the piece.
       console.warn("createDraftPiece sources failed:", srcErr.message);
     }
   }
@@ -300,7 +300,7 @@ export async function publishPiece(id: string): Promise<LearnPiece | null> {
 }
 
 /** Reverts a piece to draft. Useful if a published piece needs
- * pulling. Doesn't clear published_at — preserves "first published"
+ * pulling. Doesn't clear published_at, so we preserve "first published"
  * history for analytics. */
 export async function unpublishPiece(id: string): Promise<LearnPiece | null> {
   if (!isDatabaseConfigured()) return null;
@@ -385,7 +385,7 @@ export async function updateChapterBody(
 }
 
 /** Hard-deletes a piece + cascade-deletes chapters/sources via FK.
- * Use with care — for accidentally-created drafts, not for retiring
+ * Use with care: for accidentally-created drafts, not for retiring
  * published pieces (use unpublishPiece for those). */
 export async function deletePiece(id: string): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
