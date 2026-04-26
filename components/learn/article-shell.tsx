@@ -6,6 +6,7 @@ import {
   LEVEL_TONE,
   type ArticleMeta,
 } from "@/lib/learn-content";
+import { BecomeContributorCard } from "./become-contributor-card";
 
 export function ArticleShell({
   meta,
@@ -63,9 +64,27 @@ export function ArticleShell({
         <p className="mt-3 text-base leading-7 text-neutral-300 sm:text-lg sm:leading-8">
           {meta.excerpt}
         </p>
+        <div className="mt-4 flex items-center gap-2 text-xs text-neutral-400">
+          <span>By</span>
+          <span className="font-medium text-neutral-200">Sansxel (OWNER)</span>
+          {meta.publishedAt && (
+            <>
+              <span aria-hidden className="text-neutral-600">·</span>
+              <span>
+                {new Date(meta.publishedAt).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </>
+          )}
+        </div>
       </header>
 
       <div className="mt-8">{children}</div>
+
+      <BecomeContributorCard />
     </article>
   );
 }

@@ -2,10 +2,21 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { isAdminEmail } from "@/lib/admin";
 import type {
   LearnChapter,
   LearnPieceWithChapters,
 } from "@/lib/learn-db";
+import { BecomeContributorCard } from "./become-contributor-card";
+
+// Author label rule: null author OR an admin email both render as
+// "Sansxel (OWNER)" so seeded pieces and operator-written pieces
+// share a single byline. Once we onboard external contributors
+// (path: contact help@sansxel.ai) their email will pass through.
+function authorLabel(authorEmail: string | null): string {
+  if (!authorEmail || isAdminEmail(authorEmail)) return "Sansxel (OWNER)";
+  return authorEmail;
+}
 
 // ReactMarkdown component overrides: explicit Tailwind classes
 // instead of @tailwindcss/typography, since the plugin isn't
@@ -106,6 +117,24 @@ export function LearnPieceView({
             {piece.title}
           </h1>
         </div>
+        <div className="flex items-center gap-2 text-xs text-neutral-400">
+          <span>By</span>
+          <span className="font-medium text-neutral-200">
+            {authorLabel(piece.author_email)}
+          </span>
+          {piece.published_at && (
+            <>
+              <span aria-hidden className="text-neutral-600">·</span>
+              <span>
+                {new Date(piece.published_at).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </>
+          )}
+        </div>
         {piece.excerpt && (
           <p className="max-w-2xl text-base leading-relaxed text-neutral-400">
             {piece.excerpt}
@@ -187,6 +216,8 @@ export function LearnPieceView({
           </ol>
         </section>
       )}
+
+      <BecomeContributorCard />
     </article>
   );
 }

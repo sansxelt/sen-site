@@ -52,15 +52,15 @@ type SiteNavLink = {
   authOnly?: boolean;
 };
 
-// Tightened to OpenAI-style breadth: 4 broad categories. 'How it
-// works' folded into Features; 'Download' hidden from primary nav
-// (still in footer + Mobile drawer for signed-in users); 'Contact'
-// pulled out of the main row to declutter.
+// 'How it works' folded into Features; 'Download' hidden from
+// primary nav (still in footer + Mobile drawer for signed-in users).
+// Contact is back in the row by user request.
 const primaryLinks: SiteNavLink[] = [
   { href: "/features", label: "Product" },
   { href: "/learn", label: "Learn" },
   { href: "/pricing", label: "Pricing" },
   { href: "/download", label: "Desktop", authOnly: true },
+  { href: "/contact", label: "Contact" },
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
@@ -109,12 +109,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
             </nav>
 
             <div className="flex shrink-0 items-center gap-3 lg:flex-1 lg:justify-end">
-              {/* Mobile drawer trigger — only renders on <lg screens */}
+              {/* Mobile drawer trigger, only renders on <lg screens */}
               <MobileNav
-                links={[
-                  ...primaryLinks.filter((l) => !l.authOnly || signedIn),
-                  { href: "/contact", label: "Contact" },
-                ]}
+                links={primaryLinks.filter((l) => !l.authOnly || signedIn)}
                 signedIn={signedIn}
                 accessHref={signedIn ? "/app" : getSignInPath()}
               />
