@@ -182,7 +182,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="mt-10 border-t border-white/[0.06] pt-6 text-xs text-neutral-600">
-            Copyright 2026 sansxel. Built for clarity, usable output, and momentum.
+            © 2026 sansxel. All rights reserved.
           </div>
         </div>
       </footer>

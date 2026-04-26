@@ -139,38 +139,97 @@ export default async function HomePage() {
           </Link>
         </HeistCard>
 
-        {/* Right column. The old Workshop card here was a duplicate
-            of the "Open" button in the marketing nav (both led to
-            chat.sansxel.ai), so we dropped it. Learn now owns the
-            full right column with a taller layout that balances the
-            featured-launch card on the left. */}
-        <HeistCard tilt className="group relative overflow-hidden p-0">
-          <Link href="/learn" className="block h-full w-full">
-            <DotGrid opacity={0.07} />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_85%_20%,rgba(96,165,250,0.22),transparent_60%)]" />
-            <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-sky-200/80">
-              /learn
-            </div>
-            <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
-              <div>
-                <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-sky-300">
-                  ── learn
+        {/* Right column. Workshop / Open-it-on-chat card was dropped
+            because the marketing nav's Open button already does
+            that. The remaining cards point at things the nav
+            doesn't trivially open: Learn, the desktop app, and
+            pricing. Stacked vertically so the column feels full
+            against the big featured-launch card on the left. */}
+        <div className="flex flex-col gap-4 sm:gap-5">
+          <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
+            <Link href="/learn" className="block h-full w-full">
+              <DotGrid opacity={0.07} />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_85%_20%,rgba(96,165,250,0.22),transparent_60%)]" />
+              <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-sky-200/80">
+                /learn
+              </div>
+              <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
+                <div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-sky-300">
+                    ── learn
+                  </div>
+                  <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+                    AI, explained<br />in plain English.
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-neutral-300">
+                    Short guides for builders, concepts, code,
+                    real examples. No PhD tone.
+                  </p>
                 </div>
-                <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
-                  AI, explained<br />in plain English.
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-neutral-300">
-                  Short guides for builders, concepts, code,
-                  real examples. No PhD tone.
-                </p>
+                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-sky-200">
+                  Browse the library
+                  <span aria-hidden>→</span>
+                </div>
               </div>
-              <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-sky-200">
-                Browse the library
-                <span aria-hidden>→</span>
+            </Link>
+          </HeistCard>
+
+          <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
+            <Link href="/download" className="block h-full w-full">
+              <DotGrid opacity={0.07} />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_15%_20%,rgba(244,114,182,0.22),transparent_60%)]" />
+              <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-pink-200/80">
+                /download
               </div>
-            </div>
-          </Link>
-        </HeistCard>
+              <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
+                <div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-pink-300">
+                    ── desktop
+                  </div>
+                  <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+                    Sansxel on<br />your machine.
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-neutral-300">
+                    Toolbar modes, MCP, full voice loop, system tray.
+                    Same account as the web.
+                  </p>
+                </div>
+                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-pink-200">
+                  Get the desktop app
+                  <span aria-hidden>→</span>
+                </div>
+              </div>
+            </Link>
+          </HeistCard>
+
+          <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
+            <Link href="/pricing" className="block h-full w-full">
+              <DotGrid opacity={0.07} />
+              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_85%_20%,rgba(251,191,36,0.18),transparent_60%)]" />
+              <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-amber-200/80">
+                /pricing
+              </div>
+              <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
+                <div>
+                  <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-amber-300">
+                    ── pricing
+                  </div>
+                  <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+                    Free works.<br />Pro is honest.
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-neutral-300">
+                    Generous weekly base on every plan. Pay only when
+                    you push past, no surprise bills.
+                  </p>
+                </div>
+                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-amber-200">
+                  See plans
+                  <span aria-hidden>→</span>
+                </div>
+              </div>
+            </Link>
+          </HeistCard>
+        </div>
       </section>
 
       <section

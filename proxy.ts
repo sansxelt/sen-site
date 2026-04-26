@@ -134,6 +134,21 @@ export default async function proxy(req: NextRequest) {
       secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
     });
     if (!token?.email) {
+      // API requests need JSON, not an HTML signin page. Returning
+      // a 302 to /signin made the credits top-up modal explode with
+      // "Unexpected token '<', '<!DOCTYPE'... is not valid JSON"
+      // because fetch() follows the redirect and the client tries
+      // to JSON.parse the signin HTML. Routes under /api/account
+      // also do their own auth() check, so this is a defensive
+      // 401 in case getToken sees a cookie auth() doesn't (which
+      // is the OPPOSITE of the page-level disagreement we already
+      // worked around for /account; covering both directions).
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "Sign in to continue." },
+          { status: 401 },
+        );
+      }
       const callbackUrl = getSafeRedirectPath(`${pathname}${search}`);
       const signInUrl = new URL("/signin", req.nextUrl.origin);
       signInUrl.searchParams.set("callbackUrl", callbackUrl);
