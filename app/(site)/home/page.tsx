@@ -43,24 +43,24 @@ const escalation = [
   },
 ];
 
-const liveWritingHighlights = [
+const workshopHighlights = [
   {
-    eyebrow: "Browser-native",
-    title: "Write live in your browser",
+    eyebrow: "One workspace",
+    title: "Chat, voice, drop, generate — all here",
     detail:
-      "Open Sansxel in Chrome, Edge, or Safari and keep the draft active in real time instead of bouncing between tabs and prompts.",
+      "Talk through a problem, drop a screenshot, paste a YouTube link, generate an image inline. Same surface, no tab juggling.",
   },
   {
-    eyebrow: "Source-aware",
-    title: "Keep the draft and the source trail together",
+    eyebrow: "Threads that follow you",
+    title: "Pick up on any device, mid-sentence",
     detail:
-      "Pull references, shape lines, and keep supporting context attached to the exact paragraph you are building.",
+      "Conversations save server-side and sync across web and desktop. AI-titled in the sidebar so you can find them again.",
   },
   {
-    eyebrow: "Continuous flow",
-    title: "Return to the sentence, not just the document",
+    eyebrow: "Built for makers",
+    title: "For people shipping things, not writing emails",
     detail:
-      "Come back to the latest revision notes, cursor position, and next sentence that was forming before you paused.",
+      "Indie devs, designers, students, creators — sansxel adapts to whatever you're building right now instead of being one shape for everyone.",
   },
 ];
 
@@ -88,7 +88,7 @@ export default async function HomePage() {
       </section>
 
       <section
-        id="live-writing"
+        id="workshop"
         data-stagger
         style={{ "--stagger-i": 1 } as React.CSSProperties}
         className="mx-auto max-w-[1600px] px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
@@ -96,25 +96,25 @@ export default async function HomePage() {
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-200/80">
-              For writing
+              The workshop
             </div>
             <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
-              Built to keep live writing moving.
+              One surface that adapts to what you&apos;re building.
             </h2>
             <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
-              Sansxel is strongest when the draft is happening in real time. It keeps the browser
-              session, source trail, revision steps, and next sentence aligned so the writing flow
-              stays intact.
+              Most AI is a chat box pretending to be everything. Sansxel is a workshop:
+              voice, drag-drop, image gen, web search, persistent memory — all in the same
+              workspace, all morphing to fit the request.
             </p>
           </div>
           <div className="rounded-3xl border border-emerald-400/10 bg-emerald-400/[0.03] px-5 py-4 text-sm leading-6 text-neutral-200 lg:max-w-sm lg:border-emerald-400/15 lg:bg-emerald-400/[0.05]">
-            Open Sansxel in your browser, write live, and return to the exact line you were shaping
-            instead of rebuilding the scene from memory.
+            Open it in your browser, drop whatever you&apos;re working on, and pick up on
+            your phone an hour later — same threads, same memory.
           </div>
         </div>
 
         <div className="mt-10 grid gap-4 lg:grid-cols-3">
-          {liveWritingHighlights.map((item) => (
+          {workshopHighlights.map((item) => (
             <HeistCard
               key={item.title}
               tilt
@@ -134,13 +134,13 @@ export default async function HomePage() {
             href="/features"
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-neutral-200 transition hover:bg-white/10"
           >
-            Explore writing features →
+            Explore the workshop →
           </Link>
           <Link
-            href={signedIn ? "/account" : "/signin"}
+            href={signedIn ? "/app" : "/signin"}
             className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.08] px-4 py-2 text-emerald-100 transition hover:bg-emerald-400/[0.14]"
           >
-            {signedIn ? "Open workspace →" : "Start writing live →"}
+            {signedIn ? "Open workshop →" : "Start free →"}
           </Link>
         </div>
       </section>
