@@ -9,41 +9,18 @@ import { signOAuthSignupToken } from "./lib/oauth-signup-token";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
-// v0.1.16 — Sign-in cookie spans .sansxel.ai so a session set on
-// chat.sansxel.ai is also valid on sansxel.ai and platform.sansxel.ai
-// (cross-subdomain SSO). __Host- prefix on the CSRF token forbids
-// the Domain attribute, so CSRF stays single-host (it's per-form-
-// submission anyway, not session state).
-const isProd = process.env.NODE_ENV === "production";
-const COOKIE_DOMAIN = isProd ? ".sansxel.ai" : undefined;
+// v0.1.16 — Tried to span the session cookie across .sansxel.ai for
+// cross-subdomain SSO; that triggered NextAuth Configuration errors
+// on signin. Reverted to default single-host cookies. Cross-subdomain
+// SSO will need a different mechanism (token exchange endpoint or
+// AUTH_URL pointing at a single canonical host that all subdomains
+// redirect to for sign-in).
 
 const authResult = NextAuth({
   trustHost: true,
   pages: {
     error: "/auth/error",
     signIn: "/signin",
-  },
-  cookies: {
-    sessionToken: {
-      name: isProd ? "__Secure-authjs.session-token" : "authjs.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: isProd,
-        domain: COOKIE_DOMAIN,
-      },
-    },
-    callbackUrl: {
-      name: isProd ? "__Secure-authjs.callback-url" : "authjs.callback-url",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: isProd,
-        domain: COOKIE_DOMAIN,
-      },
-    },
   },
   providers: [
     Credentials({
