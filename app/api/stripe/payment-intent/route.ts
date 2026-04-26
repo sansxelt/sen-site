@@ -10,8 +10,9 @@ import {
 } from "../../../../lib/stripe";
 import type { BillingCycle } from "../../../../lib/stripe";
 import { upsertSubscriptionSelection } from "../../../../lib/subscriptions";
-import type { PricingPlanKey } from "../../../../lib/pricing";
-import { isOneTimeBoost } from "../../../../lib/pricing";
+import type { BillingAddonKey, PricingPlanKey } from "../../../../lib/pricing";
+import { isOneTimeBoost, planIncludesAddon } from "../../../../lib/pricing";
+import { getPlanForEmail } from "../../../../lib/account-billing";
 
 /**
  * Extract a human-readable error message from anything Stripe/Supabase/native
@@ -106,6 +107,31 @@ export async function POST(request: Request) {
   }
 
   const email = session.user.email.toLowerCase();
+
+  // v0.1.16 — Server-side guard against buying an addon that the
+  // user's current plan already includes. The billing UI hides the
+  // buy button via planIncludesAddon, but a direct API hit would
+  // still get processed and silently double-charge. Block here.
+  // Plan-only purchases (no addonKey) skip this check.
+  if (addonKey) {
+    try {
+      const currentPlan = await getPlanForEmail(email);
+      if (planIncludesAddon(currentPlan, addonKey as BillingAddonKey)) {
+        return NextResponse.json(
+          {
+            error: `Your ${currentPlan} plan already includes ${addonKey.replace(/_/g, " ")}. No need to buy it.`,
+          },
+          { status: 409 },
+        );
+      }
+    } catch (err) {
+      // Plan lookup failure is non-fatal — fall through and let the
+      // existing Stripe path handle it. Worst case the user gets a
+      // useful error from Stripe; best case they're a free user with
+      // no inclusions to enforce.
+      console.warn("[payment-intent] plan inclusion check failed:", err);
+    }
+  }
 
   try {
     const stripe = getStripe();

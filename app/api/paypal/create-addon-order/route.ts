@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { createPaypalOrder, isPaypalConfigured } from "../../../../lib/paypal";
-import { billingAddonMap, type BillingAddonKey } from "../../../../lib/pricing";
+import { billingAddonMap, type BillingAddonKey, planIncludesAddon } from "../../../../lib/pricing";
+import { getPlanForEmail } from "../../../../lib/account-billing";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,24 @@ export async function POST(request: Request) {
   }
 
   const email = session.user.email.toLowerCase();
+
+  // v0.1.16 — Same plan-inclusion guard as the Stripe path. Don't
+  // let PayPal create an order for an addon the user's plan already
+  // bundles. The UI hides this case, but a direct API hit would
+  // otherwise charge them for something they already get.
+  try {
+    const currentPlan = await getPlanForEmail(email);
+    if (planIncludesAddon(currentPlan, addonKey)) {
+      return NextResponse.json(
+        {
+          error: `Your ${currentPlan} plan already includes ${addonKey.replace(/_/g, " ")}. No need to buy it.`,
+        },
+        { status: 409 },
+      );
+    }
+  } catch (err) {
+    console.warn("[paypal create-addon-order] plan inclusion check failed:", err);
+  }
 
   try {
     const order = await createPaypalOrder({
