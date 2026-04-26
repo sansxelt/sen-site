@@ -79,6 +79,26 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     return threads.filter((t) => t.title.toLowerCase().includes(q));
   }, [threads, query]);
 
+  // Density toggle — persists to localStorage so the user's choice
+  // sticks across reloads. Default is "compact" because the original
+  // size felt overweight for a sidebar of titles ("the titles are
+  // too big" feedback). Click the icon in the rail header to flip.
+  const [density, setDensity] = useState<"compact" | "comfy">(() => {
+    if (typeof window === "undefined") return "compact";
+    return window.localStorage.getItem("sansxel.rail.density") === "comfy"
+      ? "comfy"
+      : "compact";
+  });
+  const toggleDensity = () => {
+    setDensity((d) => {
+      const next = d === "compact" ? "comfy" : "compact";
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("sansxel.rail.density", next);
+      }
+      return next;
+    });
+  };
+
   // Live in-flight thread set, refreshed on every flight:changed
   // event from WebChat (write side).
   const [flightIds, setFlightIds] = useState<Set<string>>(() => readFlightIds());
@@ -208,7 +228,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   };
 
   return (
-    <aside className="chat-history-rail">
+    <aside className={`chat-history-rail chat-history-rail--${density}`}>
       <div className="chat-history-head">
         <div className="chat-history-head-row">
           <div>
@@ -217,23 +237,34 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
               {threads ? `${threads.length} saved` : "—"}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              // ChatGPT pattern: hard-cancel any in-flight stream so
-              // the workspace flips to fresh state instantly. WebChat
-              // listens for this and aborts + clears.
-              if (typeof window !== "undefined") {
-                window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
-              }
-              router.replace("/app?new=1");
-            }}
-            className="chat-history-new-pill"
-            title="Start a new chat"
-          >
-            <span aria-hidden className="pill-glyph">＋</span>
-            <span>New</span>
-          </button>
+          <div className="chat-history-head-actions">
+            <button
+              type="button"
+              onClick={toggleDensity}
+              className="chat-history-density-toggle"
+              title={density === "compact" ? "Switch to comfy size" : "Switch to compact size"}
+              aria-label="Toggle thread row density"
+            >
+              {density === "compact" ? "↕" : "↔"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                // ChatGPT pattern: hard-cancel any in-flight stream so
+                // the workspace flips to fresh state instantly. WebChat
+                // listens for this and aborts + clears.
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
+                }
+                router.replace("/app?new=1");
+              }}
+              className="chat-history-new-pill"
+              title="Start a new chat"
+            >
+              <span aria-hidden className="pill-glyph">＋</span>
+              <span>New</span>
+            </button>
+          </div>
         </div>
         {threads && threads.length > 0 && (
           <div className="chat-history-search">

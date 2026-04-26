@@ -553,7 +553,12 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
       )}
 
       {/* ── Mobile: fixed bottom nav bar ─────────────────────────────── */}
-      <nav
+      {/* ChatGPT mobile pattern: chat surface is full-screen with NO
+          bottom tab bar. Hamburger drawer carries everything. Showing
+          a 5-icon nav under the keyboard / send button on /app eats
+          screen real estate the user wants for the chat itself. Bar
+          stays on every other route (account / billing / settings). */}
+      {!inWorkshop && <nav
         className="fixed inset-x-0 bottom-0 z-50 overflow-x-auto border-t border-white/[0.08] bg-neutral-950/95 backdrop-blur-xl lg:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
@@ -579,7 +584,7 @@ export function DashboardNav({ userEmail }: { userEmail: string }) {
             </Link>
           ))}
         </div>
-      </nav>
+      </nav>}
     </>
   );
 }

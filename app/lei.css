@@ -272,10 +272,10 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 .chat-history-item-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #f5f3ff;
   white-space: nowrap;
@@ -284,9 +284,59 @@
   line-height: 1.3;
 }
 .chat-history-item-meta {
-  font-size: 11px;
+  font-size: 10px;
   color: rgba(229,231,235,0.45);
   letter-spacing: 0.01em;
+}
+
+/* Density toggle. Default rail is compact (above values); comfy
+   bumps things up for users who prefer the larger size. Toggling
+   sticks via localStorage. Both modes inherit the same colors,
+   borders, in-flight dot — only sizing changes. */
+.chat-history-rail--comfy .chat-history-item {
+  padding: 12px 12px 12px 14px;
+  gap: 8px;
+}
+.chat-history-rail--comfy .chat-history-item-body {
+  gap: 4px;
+}
+.chat-history-rail--comfy .chat-history-item-title {
+  font-size: 14px;
+}
+.chat-history-rail--comfy .chat-history-item-meta {
+  font-size: 12px;
+}
+
+/* Tighten the compact mode below the default — the user explicitly
+   said titles were too big in the screenshot. */
+.chat-history-rail--compact .chat-history-item {
+  padding: 7px 9px 7px 11px;
+  gap: 5px;
+}
+
+/* Density toggle button in the rail header — sits next to "+ New". */
+.chat-history-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.chat-history-density-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.2);
+  color: rgba(196, 181, 253, 0.85);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.chat-history-density-toggle:hover {
+  background: rgba(167, 139, 250, 0.14);
+  border-color: rgba(167, 139, 250, 0.4);
 }
 
 /* In-flight (generating) indicator on a thread row. */
