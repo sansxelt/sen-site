@@ -13,17 +13,19 @@ import {
 // and recently published pieces so the operator can land thousands
 // of pages with a real review step rather than autopilot publish.
 //
-// Gated by ADMIN_EMAILS env var via isAdminEmail(). The /account
-// path is already auth-gated by proxy.ts (getToken redirects to
-// /signin), so this page only needs the admin role check. Doing
-// our own auth() redirect here causes a loop when auth() and the
-// proxy's getToken() disagree on cookie visibility.
+// /account/content is excluded from proxy.ts's auth gate (see the
+// comment in proxy.ts) because getToken() and auth() can disagree
+// on cookie visibility, which produced an infinite /signin loop in
+// production. The page-level auth() check below uses /signin
+// (canonical signin route, matches lib/auth-ui.getSignInPath) plus
+// the admin role check.
 
 export const dynamic = "force-dynamic";
 
 export default async function ContentAdminPage() {
   const session = await auth();
   const email = session?.user?.email ?? null;
+  if (!email) redirect("/signin?callbackUrl=%2Faccount%2Fcontent");
   if (!isAdminEmail(email)) redirect("/account");
 
   const dbReady = isDatabaseConfigured();

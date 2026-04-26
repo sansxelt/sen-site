@@ -24,9 +24,12 @@ export default async function ContentEditPage({ params }: { params: Promise<Para
   const { id } = await params;
   const session = await auth();
   const email = session?.user?.email ?? null;
-  // Auth gate already enforced by proxy.ts. Only need the admin
-  // role check here. Adding our own auth redirect loops when auth()
-  // and the proxy's getToken() see different cookies.
+  // /account/content is excluded from proxy.ts's auth gate (see
+  // proxy.ts) so we own the auth redirect here. /signin is the
+  // canonical signin route (matches lib/auth-ui.getSignInPath).
+  if (!email) {
+    redirect(`/signin?callbackUrl=${encodeURIComponent(`/account/content/${id}`)}`);
+  }
   if (!isAdminEmail(email)) redirect("/account");
 
   const piece = await getPieceWithChapters(id);
