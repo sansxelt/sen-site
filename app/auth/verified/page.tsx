@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getSignInPath } from "../../../../lib/auth-ui";
+import { getSignInPath } from "../../../lib/auth-ui";
 
 export const metadata = {
   title: "Account verified",

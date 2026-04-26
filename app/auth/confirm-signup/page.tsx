@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { verifyOAuthSignupToken } from "../../../../lib/oauth-signup-token";
+import { verifyOAuthSignupToken } from "../../../lib/oauth-signup-token";
 import { ConfirmSignupForm } from "./confirm-form";
 
 export const metadata: Metadata = {

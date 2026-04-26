@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { getSignInPath } from "../../../../lib/auth-ui";
+import { getSignInPath } from "../../../lib/auth-ui";
 
 type Status =
   | { kind: "signing-in" }

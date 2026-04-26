@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { auth } from "../../../auth";
-import { CheckoutForm } from "../../../components/checkout-form";
-import { PayPalCheckoutButton } from "../../../components/paypal-checkout-button";
-import { getSignInPath } from "../../../lib/auth-ui";
-import { getPricingPlan, pricingPlanMap } from "../../../lib/pricing";
-import { getPaypalPlanId } from "../../../lib/paypal";
-import { getStripePublishableKey, isStripeConfigured } from "../../../lib/stripe";
+import { auth } from "../../auth";
+import { CheckoutForm } from "../../components/checkout-form";
+import { PayPalCheckoutButton } from "../../components/paypal-checkout-button";
+import { getSignInPath } from "../../lib/auth-ui";
+import { getPricingPlan, pricingPlanMap } from "../../lib/pricing";
+import { getPaypalPlanId } from "../../lib/paypal";
+import { getStripePublishableKey, isStripeConfigured } from "../../lib/stripe";
 
 export const metadata = {
   title: "Checkout",

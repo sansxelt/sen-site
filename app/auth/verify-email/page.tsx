@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ResendVerification } from "../../../../components/resend-verification";
-import { SignupWaitingPoller } from "../../../../components/signup-waiting-poller";
+import { ResendVerification } from "../../../components/resend-verification";
+import { SignupWaitingPoller } from "../../../components/signup-waiting-poller";
 
 export const metadata = {
   title: "Check your email",

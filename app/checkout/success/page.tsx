@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "../../../../auth";
-import { getSignInPath } from "../../../../lib/auth-ui";
-import { getPricingPlan, pricingPlanMap } from "../../../../lib/pricing";
-import { CheckoutSuccessPoller } from "../../../../components/checkout-success-poller";
+import { auth } from "../../../auth";
+import { getSignInPath } from "../../../lib/auth-ui";
+import { getPricingPlan, pricingPlanMap } from "../../../lib/pricing";
+import { CheckoutSuccessPoller } from "../../../components/checkout-success-poller";
 
 export const metadata = {
   title: "Confirming payment",
