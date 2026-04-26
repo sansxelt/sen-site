@@ -306,7 +306,7 @@ export default async function HomePage() {
               Pick up where you left off.
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-6 text-neutral-200">
-              Jump into your workspace or review billing, API keys, and team settings in one place.
+              Jump into your workspace or review billing, usage, and account settings in one place.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link

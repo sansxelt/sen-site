@@ -45,7 +45,7 @@ const whatShifts = [
     step: "02",
     title: "Drop",
     description:
-      "Drag a file or paste a screenshot. The right panel morphs to fit it: image analysis, video timeline, file breakdown, code preview. The chat stays in the center; the tool comes to you.",
+      "Drag a file or paste a screenshot. The right panel morphs to fit it: image analysis, file breakdown, code preview, document parse. The chat stays in the center; the tool comes to you.",
   },
   {
     step: "03",

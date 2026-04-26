@@ -77,12 +77,12 @@ const principles = [
   {
     title: "Web is taste, desktop is shipping",
     description:
-      "Web sansxel is a real workshop in your browser — voice, drop, generate, search. Desktop is the same workshop with file edits, MCP, and the always-on voice loop. Same brain, two surfaces.",
+      "Web sansxel is a real workshop in your browser — voice, drop, generate, search. Desktop adds direct file edits and MCP server connections. Same brain, two surfaces.",
   },
   {
     title: "Pay for what you use",
     description:
-      "1 USD = 100 credits. Chat costs 1, image costs 5, voice 2/min, copilot 1. Same balance covers everything. Pro tiers bypass credits for normal use; only burn credits past your weekly cap. No surprise bills.",
+      "Every plan ships with a generous weekly base — 50 chats on Free, 1500 on Plus. When you push past, top up credits ($1 = 100 credits, 1¢ per chat) or add Power Pack to lift every cap to unlimited. No surprise bills.",
   },
   {
     title: "It looks the way it should",

@@ -1510,7 +1510,7 @@ export function WebChat({
           <div className="webchat-desktop-cta-badges" aria-hidden="true">
             <span className="webchat-desktop-chip">Touches your files</span>
             <span className="webchat-desktop-chip">MCP servers</span>
-            <span className="webchat-desktop-chip">Always-on voice</span>
+            <span className="webchat-desktop-chip">No mic prompts</span>
           </div>
           <a href="/download" className="webchat-desktop-cta-link">
             Get sansxel desktop →
