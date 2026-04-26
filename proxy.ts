@@ -52,12 +52,10 @@ function hostRoute(req: NextRequest): NextResponse | null {
   // chat.sansxel.ai
   if (host === CHAT_HOST) {
     if (path === "/") {
-      // Root of chat = the workshop. Redirect (not rewrite) to /app
-      // so the URL bar shows /app and the auth gate below catches
-      // unsigned users — otherwise a rewrite would render /app
-      // without ever firing the auth check, dropping unsigned
-      // visitors into the workshop UI with no session.
-      return NextResponse.redirect(new URL("/app", url), 302);
+      // Root = workshop. Rewrite to /app so the URL bar stays at /
+      // and the workshop renders. /app's page.tsx now handles its
+      // own auth gate via auth() (avoids the proxy getToken mismatch).
+      return NextResponse.rewrite(new URL("/app", url));
     }
     if (startsWithAny(path, MARKETING_PATHS)) {
       return NextResponse.redirect(
@@ -120,18 +118,14 @@ export default async function proxy(req: NextRequest) {
   const hostResp = hostRoute(req);
   if (hostResp) return hostResp;
 
-  // 2. Auth gate for the workshop + account surfaces. Without /app
-  //    in here, an unsigned visitor would land on chat.sansxel.ai/app
-  //    and see the workshop chrome with no session — confusing
-  //    'why is nothing working' state. Now they get bounced to
-  //    /signin with the original path stashed in callbackUrl so
-  //    they land back where they were going after sign-in.
+  // 2. Auth gate for /account + /api/account only. /app is gated at
+  //    the page level via auth() in app/app/page.tsx — the proxy's
+  //    getToken() sometimes misses cookies that auth() sees
+  //    (different cookie-name resolution between the two), causing
+  //    an infinite redirect loop between /signin and /app.
   const { pathname, search } = req.nextUrl;
   const requiresAuth =
-    pathname === "/app" ||
-    pathname.startsWith("/app/") ||
-    pathname.startsWith("/account") ||
-    pathname.startsWith("/api/account");
+    pathname.startsWith("/account") || pathname.startsWith("/api/account");
   if (requiresAuth) {
     const token = await getToken({
       req,

@@ -33,14 +33,16 @@ export async function ZoneShell({
   return (
     <div className={`min-h-screen ${t.bg} text-neutral-100 ${t.font}`}>
       <header className="border-b border-white/[0.06]">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4 sm:px-8">
-          <div className="flex items-center gap-2.5">
-            <div className={`h-2 w-2 rounded-full ${t.accent.replace("text-", "bg-")} shadow-[0_0_10px_currentColor] opacity-90`} />
-            <div className="leading-tight">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-5 sm:px-8 sm:py-6">
+          <div className="flex items-center gap-3">
+            <div className={`h-2.5 w-2.5 rounded-full ${t.accent.replace("text-", "bg-")} shadow-[0_0_10px_currentColor] opacity-90`} />
+            <div className="flex flex-col gap-1.5 leading-none">
               <div className={`text-[13px] font-semibold tracking-tight text-white ${zone === "platform" ? "font-mono" : ""}`}>
                 {t.label}
               </div>
-              <div className="text-[10px] text-neutral-500">{t.tagline}</div>
+              <div className="text-[10px] tracking-wide text-neutral-500">
+                {t.tagline}
+              </div>
             </div>
           </div>
           <Link
