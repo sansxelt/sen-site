@@ -139,70 +139,38 @@ export default async function HomePage() {
           </Link>
         </HeistCard>
 
-        {/* Right column, two HeistCards with sansxel texture (no
-            generic radial gradients). */}
-        <div className="flex flex-col gap-4 sm:gap-5">
-          {/* Workshop card, emerald accent + DotGrid */}
-          <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
-            <Link
-              href={signedIn ? "https://chat.sansxel.ai" : "/signin"}
-              className="block h-full w-full"
-            >
-              <DotGrid opacity={0.07} />
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_15%_20%,rgba(52,211,153,0.25),transparent_60%)]" />
-              <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-emerald-200/80">
-                /chat
-              </div>
-              <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
-                <div>
-                  <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-emerald-300">
-                    ── the workshop
-                  </div>
-                  <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
-                    Open it on<br />chat.sansxel.ai.
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-neutral-300">
-                    The product itself, chat, voice, files, images,
-                    live web. Ready to use.
-                  </p>
+        {/* Right column. The old Workshop card here was a duplicate
+            of the "Open" button in the marketing nav (both led to
+            chat.sansxel.ai), so we dropped it. Learn now owns the
+            full right column with a taller layout that balances the
+            featured-launch card on the left. */}
+        <HeistCard tilt className="group relative overflow-hidden p-0">
+          <Link href="/learn" className="block h-full w-full">
+            <DotGrid opacity={0.07} />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_85%_20%,rgba(96,165,250,0.22),transparent_60%)]" />
+            <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-sky-200/80">
+              /learn
+            </div>
+            <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
+              <div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-sky-300">
+                  ── learn
                 </div>
-                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-200">
-                  {signedIn ? "Open workshop" : "Start free"}
-                  <span aria-hidden>→</span>
-                </div>
+                <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+                  AI, explained<br />in plain English.
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-neutral-300">
+                  Short guides for builders, concepts, code,
+                  real examples. No PhD tone.
+                </p>
               </div>
-            </Link>
-          </HeistCard>
-
-          {/* Learn card, sky accent + DotGrid */}
-          <HeistCard tilt className="group relative flex-1 overflow-hidden p-0">
-            <Link href="/learn" className="block h-full w-full">
-              <DotGrid opacity={0.07} />
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(70%_50%_at_85%_20%,rgba(96,165,250,0.22),transparent_60%)]" />
-              <div className="absolute right-5 top-5 z-10 font-mono text-[10px] uppercase tracking-[0.22em] text-sky-200/80">
-                /learn
+              <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-sky-200">
+                Browse the library
+                <span aria-hidden>→</span>
               </div>
-              <div className="relative z-10 flex h-full w-full flex-col justify-between p-6 sm:p-7">
-                <div>
-                  <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-sky-300">
-                    ── learn
-                  </div>
-                  <h2 className="mt-3 text-2xl font-semibold leading-tight tracking-tight text-white sm:text-3xl">
-                    AI, explained<br />in plain English.
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-neutral-300">
-                    Short guides for builders, concepts, code,
-                    real examples. No PhD tone.
-                  </p>
-                </div>
-                <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-sky-200">
-                  Browse the library
-                  <span aria-hidden>→</span>
-                </div>
-              </div>
-            </Link>
-          </HeistCard>
-        </div>
+            </div>
+          </Link>
+        </HeistCard>
       </section>
 
       <section
