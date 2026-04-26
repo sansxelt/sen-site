@@ -1,5 +1,5 @@
 import type { ModelTier, PlanKey } from "./ai-models";
-import type { BillingAddonKey } from "./pricing";
+import { type BillingAddonKey, planIncludesAddon } from "./pricing";
 import { getSupabaseAdminClient } from "./supabase-admin";
 import {
   consumeCredits,
@@ -177,6 +177,29 @@ export type LimitDecision =
   | { kind: "ok"; throttledTier?: ModelTier }
   | { kind: "blocked"; reason: string; reset: string; limit: number; used: number };
 
+// Addons (or plans that bundle them) that lift the corresponding cap.
+// Used by all three decide* functions so the lift logic is in one
+// place. Plan inclusion is honored alongside Stripe-item ownership
+// because "Owned with Plus" in the UI implies the feature is granted
+// even when no Stripe addon item is on file.
+const LIFTERS: Record<"chat" | "image" | "voice", BillingAddonKey[]> = {
+  chat: ["power_pack", "copilot_pro_pack"],
+  image: ["power_pack"],
+  voice: ["power_pack"],
+};
+
+function isCapLifted(
+  kind: "chat" | "image" | "voice",
+  plan: PlanKey,
+  activeAddons: Set<BillingAddonKey> | undefined,
+): boolean {
+  for (const addon of LIFTERS[kind]) {
+    if (activeAddons?.has(addon)) return true;
+    if (planIncludesAddon(plan, addon)) return true;
+  }
+  return false;
+}
+
 // Decide whether a chat request can proceed. Returns either { ok }
 // (optionally with a throttled tier the caller should use instead of
 // what the user asked for) or { blocked } with the human-readable
@@ -186,6 +209,8 @@ export type LimitDecision =
 // power_pack make the chat cap unlimited (matches "Unlimited copilot
 // for any plan" copy on the addon). Pro tier throttling also relaxes
 // — paying for unlimited shouldn't silently get you a worse model.
+// Plans that BUNDLE the same addon (Plus → copilot_pro_pack, Pro →
+// both) lift via the same path.
 export function decideChatRequest(args: {
   plan: PlanKey;
   requestedTier: ModelTier;
@@ -193,10 +218,7 @@ export function decideChatRequest(args: {
   activeAddons?: Set<BillingAddonKey>;
 }): LimitDecision {
   const limits = PLAN_LIMITS[args.plan];
-  const liftedByAddon =
-    !!args.activeAddons &&
-    (args.activeAddons.has("power_pack") ||
-      args.activeAddons.has("copilot_pro_pack"));
+  const liftedByAddon = isCapLifted("chat", args.plan, args.activeAddons);
 
   // 1. Hard cap (free / apprentice / studio) — bypassed if the user
   // has Copilot Pro Pack or Power Pack.
@@ -255,7 +277,7 @@ export function decideImageRequest(args: {
 }): LimitDecision {
   const limits = PLAN_LIMITS[args.plan];
   const cap = limits.weekly_image_requests;
-  const liftedByAddon = !!args.activeAddons?.has("power_pack");
+  const liftedByAddon = isCapLifted("image", args.plan, args.activeAddons);
   if (cap === null) return { kind: "ok" };
   if (cap === 0) {
     return {
@@ -317,8 +339,8 @@ export function decideVoiceRequest(args: {
   }
   // cap=0 means voice isn't on this plan at all — addon doesn't unlock.
   const liftedByAddon =
-    !!args.activeAddons?.has("power_pack") &&
-    limits.weekly_voice_seconds > 0;
+    limits.weekly_voice_seconds > 0 &&
+    isCapLifted("voice", args.plan, args.activeAddons);
   if (liftedByAddon) return { kind: "ok" };
   const projected =
     args.weekly.voice_seconds + (args.added_seconds ?? 0);

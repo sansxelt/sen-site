@@ -21,6 +21,7 @@ import {
 import { getUserProfileByEmail } from "../../../../lib/user-profile";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
 import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
+import { invalidateAddonsCache } from "../../../../lib/active-addons";
 
 /**
  * Look up the customer's display name so every billing email greets
@@ -118,6 +119,13 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
     currentPeriodEnd: ctx.periodEndUnix,
     stripeStatus:     subscription.status,
   });
+
+  // Drop the cached addon set for this user — the subscription changed
+  // (item added / removed / cancelled), so the cap-lift logic needs to
+  // re-resolve from Stripe on the next request rather than serving a
+  // stale cached set. Covers admin actions in the Stripe dashboard,
+  // not just buys via our own routes.
+  invalidateAddonsCache(ctx.email);
 
   // ── Email side effects ─────────────────────────────────────────
   // Only send for events where a user-facing state changed.  Event
@@ -381,7 +389,12 @@ async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
     // event. Anything else, log and swallow — we still want to 200.
     if ((error as { code?: string }).code === "23505") return;
     console.error("[stripe webhook] boost_credits insert failed:", error.message);
+    return;
   }
+  // One-time boosts don't lift caps via getActiveAddonKeys (that's
+  // only for recurring addons), but invalidating is harmless and
+  // keeps the cache honest if the schema later grows.
+  invalidateAddonsCache(userEmail);
 }
 
 // ── Route handler ──────────────────────────────────────────────────────────

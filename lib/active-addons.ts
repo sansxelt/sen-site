@@ -16,6 +16,7 @@
 import {
   type BillingAddonKey,
   billingAddonMap,
+  isOneTimeBoost,
 } from "./pricing";
 import {
   findUsableSubscription,
@@ -23,6 +24,7 @@ import {
   isStripeConfigured,
   STRIPE_PRICES,
 } from "./stripe";
+import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 
 type CacheEntry = {
   addons: Set<BillingAddonKey>;
@@ -41,6 +43,49 @@ function resolveAddonKeyFromPrice(priceId: string): BillingAddonKey | null {
   return null;
 }
 
+// PayPal-purchased recurring addons (Copilot Pro Pack / Power Pack)
+// land in boost_credits with the addon_key — the same table one-time
+// boosts use. They never get "consumed" because they grant ongoing
+// access, not a single boost burn. We treat any unconsumed recurring
+// addon row within the last 30 days as active (matches the "one
+// billing cycle" copy the PayPal capture route shows the user).
+const PAYPAL_ADDON_WINDOW_DAYS = 30;
+
+async function getActiveAddonsFromPaypal(
+  email: string,
+): Promise<Set<BillingAddonKey>> {
+  const out = new Set<BillingAddonKey>();
+  if (!isDatabaseConfigured()) return out;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const cutoff = new Date(
+      Date.now() - PAYPAL_ADDON_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    const { data, error } = await supabase
+      .from("boost_credits" as never)
+      .select("addon_key, created_at, consumed")
+      .eq("email", email)
+      .eq("consumed", false)
+      .gte("created_at", cutoff);
+    if (error) {
+      console.warn("[active-addons] paypal lookup failed:", error.message);
+      return out;
+    }
+    for (const row of (data ?? []) as Array<{ addon_key: string }>) {
+      const key = row.addon_key as BillingAddonKey;
+      // Only RECURRING addons grant ongoing access. One-time boosts
+      // (session_boost / weekly_boost) are handled separately by
+      // consumeBoostForKind and shouldn't show up here as "active."
+      if (key in billingAddonMap && !isOneTimeBoost(key)) {
+        out.add(key);
+      }
+    }
+  } catch (err) {
+    console.warn("[active-addons] paypal lookup threw:", err);
+  }
+  return out;
+}
+
 export async function getActiveAddonKeys(
   email: string,
 ): Promise<Set<BillingAddonKey>> {
@@ -55,29 +100,39 @@ export async function getActiveAddonKeys(
 
   const result = new Set<BillingAddonKey>();
 
-  if (!isStripeConfigured()) {
-    cache.set(key, { addons: result, expiresAt: now + TTL_MS });
-    return result;
-  }
-
-  try {
-    const customer = await getOrCreateCustomer(key);
-    const subscription = await findUsableSubscription(customer.id);
-    if (subscription) {
-      // Only count addons attached to a LIVE subscription. Canceled /
-      // incomplete subs have items but the user isn't being charged,
-      // so they shouldn't unlock unlimited.
-      const liveStatuses = new Set(["active", "trialing", "past_due"]);
-      if (liveStatuses.has(subscription.status)) {
-        for (const item of subscription.items.data) {
-          const addonKey = resolveAddonKeyFromPrice(item.price.id);
-          if (addonKey) result.add(addonKey);
+  // Fetch Stripe + PayPal sources in parallel. Either source missing
+  // / failing is fine — we just lose visibility into addons from that
+  // path until next cache cycle.
+  const stripePromise: Promise<Set<BillingAddonKey>> = (async () => {
+    const out = new Set<BillingAddonKey>();
+    if (!isStripeConfigured()) return out;
+    try {
+      const customer = await getOrCreateCustomer(key);
+      const subscription = await findUsableSubscription(customer.id);
+      if (subscription) {
+        // Only count addons attached to a LIVE subscription. Canceled /
+        // incomplete subs have items but the user isn't being charged,
+        // so they shouldn't unlock unlimited.
+        const liveStatuses = new Set(["active", "trialing", "past_due"]);
+        if (liveStatuses.has(subscription.status)) {
+          for (const item of subscription.items.data) {
+            const addonKey = resolveAddonKeyFromPrice(item.price.id);
+            if (addonKey) out.add(addonKey);
+          }
         }
       }
+    } catch (err) {
+      console.warn("[active-addons] Stripe lookup failed:", err);
     }
-  } catch (err) {
-    console.warn("[active-addons] Stripe lookup failed, defaulting empty:", err);
-  }
+    return out;
+  })();
+
+  const [stripeAddons, paypalAddons] = await Promise.all([
+    stripePromise,
+    getActiveAddonsFromPaypal(key),
+  ]);
+  for (const k of stripeAddons) result.add(k);
+  for (const k of paypalAddons) result.add(k);
 
   cache.set(key, { addons: result, expiresAt: now + TTL_MS });
   return result;

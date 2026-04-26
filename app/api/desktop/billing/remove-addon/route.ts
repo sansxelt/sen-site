@@ -7,6 +7,7 @@ import {
   STRIPE_PRICES,
 } from "../../../../../lib/stripe";
 import type { BillingAddonKey } from "../../../../../lib/pricing";
+import { invalidateAddonsCache } from "../../../../../lib/active-addons";
 
 export async function POST(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
     await stripe.subscriptionItems.del(item.id, {
       proration_behavior: "create_prorations",
     });
+    invalidateAddonsCache(email.toLowerCase());
 
     return NextResponse.json({ ok: true });
   } catch (err) {

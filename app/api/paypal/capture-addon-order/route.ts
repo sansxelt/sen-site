@@ -3,6 +3,7 @@ import { auth } from "../../../../auth";
 import { capturePaypalOrder, isPaypalConfigured } from "../../../../lib/paypal";
 import { billingAddonMap, isOneTimeBoost, type BillingAddonKey } from "../../../../lib/pricing";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
+import { invalidateAddonsCache } from "../../../../lib/active-addons";
 
 export const runtime = "nodejs";
 
@@ -94,6 +95,9 @@ export async function POST(request: Request) {
     }
 
     const recurring = !isOneTimeBoost(addonKey);
+    // Drop any cached addon set so the new PayPal-bought recurring
+    // addon takes effect on the next chat/image/voice request.
+    invalidateAddonsCache(email);
     return NextResponse.json({
       status: "active",
       orderId,

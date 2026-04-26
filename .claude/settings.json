@@ -64,7 +64,8 @@
       "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST --max-time 10 https://sansxel.ai__TRACKED_VAR__ -H 'Content-Type: application/json' -d '{}')",
       "Bash(curl -s -o /dev/null -w '%{http_code}' -X POST --max-time 10 https://sansxel.ai__TRACKED_VAR__ -d '{}')",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" --max-time 10 \"https://sansxel.ai/api/account/theme\")",
-      "Bash(npx vercel *)"
+      "Bash(npx vercel *)",
+      "Bash(xargs grep *)"
     ]
   }
 }

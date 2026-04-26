@@ -10,7 +10,9 @@ import {
 } from "../../../../../lib/stripe";
 import { extractBillingErrorMessage, extractClientSecret, buildBillingPaymentSettings } from "../../../../../lib/desktop-billing";
 import { upsertSubscriptionSelection } from "../../../../../lib/subscriptions";
-import { isOneTimeBoost, type PricingPlanKey } from "../../../../../lib/pricing";
+import { isOneTimeBoost, planIncludesAddon, type BillingAddonKey, type PricingPlanKey } from "../../../../../lib/pricing";
+import { getPlanForEmail } from "../../../../../lib/account-billing";
+import { invalidateAddonsCache } from "../../../../../lib/active-addons";
 
 export async function POST(request: Request) {
   if (!isStripeConfigured()) {
@@ -48,6 +50,24 @@ export async function POST(request: Request) {
   }
 
   const normalizedEmail = email.toLowerCase();
+
+  // Server-side guard: refuse to charge for an addon the user's plan
+  // already includes. Mirrors the web payment-intent route.
+  if (addonKey) {
+    try {
+      const currentPlan = await getPlanForEmail(normalizedEmail);
+      if (planIncludesAddon(currentPlan, addonKey as BillingAddonKey)) {
+        return NextResponse.json(
+          {
+            error: `Your ${currentPlan} plan already includes ${addonKey.replace(/_/g, " ")}. No need to buy it.`,
+          },
+          { status: 409 },
+        );
+      }
+    } catch (err) {
+      console.warn("[desktop payment-intent] plan inclusion check failed:", err);
+    }
+  }
 
   try {
     const stripe = getStripe();
@@ -116,6 +136,7 @@ export async function POST(request: Request) {
           quantity: 1,
           proration_behavior: "create_prorations",
         });
+        invalidateAddonsCache(normalizedEmail);
         return NextResponse.json({ status: "addon_added", subscriptionId: existing.id });
       }
       return NextResponse.json({ error: "Pick a plan before adding addons." }, { status: 400 });
