@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "./auth";
+import { getToken } from "next-auth/jwt";
 import { getSafeRedirectPath } from "./lib/auth-ui";
 
 // Single Next.js 16 proxy that does TWO things:
@@ -104,28 +104,36 @@ function hostRoute(req: NextRequest): NextResponse | null {
   return null;
 }
 
-// auth() wrapper exposes req.auth (the session) inside the callback,
-// so we can replicate the existing /account gate without a separate
-// proxy file.
-export default auth((req) => {
+// Plain async proxy (no auth() wrapper). The wrapper was rewriting
+// every NextResponse.rewrite into a 307 redirect to AUTH_URL — that
+// broke chat.sansxel.ai/ → /app and platform.sansxel.ai/ → /platform-soon
+// because both are rewrites, not redirects. We use getToken() directly
+// from next-auth/jwt to gate /account paths instead — same end result,
+// no canonicalization side-effect on rewrites.
+export default async function proxy(req: NextRequest) {
   // 1. Host routing first.
   const hostResp = hostRoute(req);
   if (hostResp) return hostResp;
 
-  // 2. Auth gate for /account + /api/account, mirroring the old
-  //    `authorized` callback that fired when the matcher was narrow.
+  // 2. Auth gate for /account + /api/account.
   const { pathname, search } = req.nextUrl;
   const requiresAuth =
     pathname.startsWith("/account") || pathname.startsWith("/api/account");
-  if (requiresAuth && !req.auth?.user?.email) {
-    const callbackUrl = getSafeRedirectPath(`${pathname}${search}`);
-    const signInUrl = new URL("/signin", req.nextUrl.origin);
-    signInUrl.searchParams.set("callbackUrl", callbackUrl);
-    return NextResponse.redirect(signInUrl);
+  if (requiresAuth) {
+    const token = await getToken({
+      req,
+      secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+    });
+    if (!token?.email) {
+      const callbackUrl = getSafeRedirectPath(`${pathname}${search}`);
+      const signInUrl = new URL("/signin", req.nextUrl.origin);
+      signInUrl.searchParams.set("callbackUrl", callbackUrl);
+      return NextResponse.redirect(signInUrl);
+    }
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   // Catch all paths EXCEPT:
