@@ -11,6 +11,7 @@ const footerGroups = [
     links: [
       { href: "/features", label: "Features" },
       { href: "/function", label: "How it works" },
+      { href: "/learn", label: "Learn" },
       { href: "/pricing", label: "Pricing" },
       { href: "/download", label: "Download" },
     ],
@@ -45,6 +46,7 @@ const primaryLinks: SiteNavLink[] = [
   { href: "/home", label: "Home" },
   { href: "/features", label: "Features" },
   { href: "/function", label: "How it works" },
+  { href: "/learn", label: "Learn" },
   { href: "/pricing", label: "Pricing" },
   // Chat removed — signed-in users go through the Workshop button on
   // the right; the chat is the default view there.
