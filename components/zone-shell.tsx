@@ -1,12 +1,14 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getZone, ZONE_THEME, type Zone } from "@/lib/zone";
 
 // Wraps an auth/checkout page in a thin zone-aware shell:
 //   - per-zone background color
-//   - top bar with the zone wordmark + tagline + a back link to the
-//     correct surface (workshop home / platform docs / marketing)
-//   - per-zone accent dot + font
+//   - top bar with the zone pinwheel + wordmark + tagline + a back
+//     link, edge-aligned across breakpoints to match the marketing
+//     site nav rhythm so every surface reads as the same site
+//   - per-zone font (mono on platform)
 // The page content lives unchanged inside <main>; the shell handles
 // the chrome so each subdomain's auth flow feels native.
 
@@ -20,8 +22,8 @@ export async function ZoneShell({
   hideBackLink = false,
   // Override where the back link points + how it's labeled. /signin
   // uses this to send unauth visitors back to the marketing home
-  // (https://sansxel.ai) instead of the per-zone workshop, since the
-  // workshop is auth-gated and looping users back to /signin is bad.
+  // instead of the per-zone workshop, since the workshop is auth
+  // gated and looping users back to /signin is bad.
   backHrefOverride,
   backLabelOverride,
   // Widen the inner content column from the default max-w-3xl
@@ -52,22 +54,32 @@ export async function ZoneShell({
   return (
     <div className={`min-h-screen ${t.bg} text-neutral-100 ${t.font}`}>
       <header className="border-b border-white/[0.06]">
-        {/* Header sits at the screen edges, not centered in the
-            content column. Same scaling pad pattern as the marketing
-            nav (site-shell): tighter on phones, comfy on wide
-            monitors. Inner content below stays centered. */}
-        <div className="flex items-center justify-between px-4 py-5 sm:px-6 sm:py-6 lg:px-10 xl:px-14 2xl:px-20">
-          <div className="flex items-center gap-3">
-            <div className={`h-2.5 w-2.5 rounded-full ${t.accent.replace("text-", "bg-")} shadow-[0_0_10px_currentColor] opacity-90`} />
-            <div className="flex flex-col gap-1.5 leading-none">
-              <div className={`text-[13px] font-semibold tracking-tight text-white ${zone === "platform" ? "font-mono" : ""}`}>
+        {/* Edge-aligned chrome. Wordmark hugs the left edge, back
+            link hugs the right edge. Same scaling pad as the
+            marketing nav (site-shell): tighter on phones, comfy on
+            wide monitors. Inner content below stays centered. */}
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-10 xl:px-14 2xl:px-20">
+          <Link
+            href={zone === "platform" ? "https://platform.sansxel.ai" : zone === "chat" ? "https://chat.sansxel.ai" : "/home"}
+            className="inline-flex shrink-0 items-center gap-2.5"
+          >
+            <Image
+              src={t.logoSrc}
+              alt="sansxel"
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-xl"
+              priority
+            />
+            <div>
+              <div className={`text-sm font-semibold tracking-tight text-white sm:text-base ${zone === "platform" ? "font-mono" : ""}`}>
                 {t.label}
               </div>
-              <div className="text-[10px] tracking-wide text-neutral-500">
+              <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
                 {t.tagline}
               </div>
             </div>
-          </div>
+          </Link>
           {!hideBackLink && (
             <Link
               href={homeHref}

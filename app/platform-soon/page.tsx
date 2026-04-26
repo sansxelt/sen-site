@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 // Placeholder served at platform.sansxel.ai/ until the real
@@ -16,20 +17,33 @@ export const metadata: Metadata = {
 export default function PlatformSoonPage() {
   return (
     <main className="min-h-screen bg-[#070a10] text-neutral-200">
-      {/* Top zone bar, signals 'this is the dev zone' instantly.
-          Bound to the same max-width as the content below so the
-          wordmark and back link sit on the visual edges of the
-          page (left/right gutters of the content column), not the
-          screen edges. The full-screen edge version looked lonely
-          when the content was centered narrow. */}
+      {/* Top zone bar matches the marketing site nav: pinwheel +
+          wordmark + tagline on the left edge, back link on the
+          right edge. Scaling padding so the chrome rhythm is the
+          same on every surface (apex, chat workshop, this). */}
       <header className="border-b border-white/[0.06]">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 sm:px-8">
-          <div className="flex items-center gap-3">
-            <div className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.7)]" />
-            <span className="font-mono text-xs uppercase tracking-[0.22em] text-amber-300">
-              sansxel · platform
-            </span>
-          </div>
+        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-10 xl:px-14 2xl:px-20">
+          <Link
+            href="https://platform.sansxel.ai"
+            className="inline-flex shrink-0 items-center gap-2.5"
+          >
+            <Image
+              src="/logo-amber.svg"
+              alt="sansxel"
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-xl"
+              priority
+            />
+            <div>
+              <div className="font-mono text-sm font-semibold tracking-tight text-white sm:text-base">
+                sansxel
+              </div>
+              <div className="hidden font-mono text-[11px] leading-none text-neutral-500 sm:block">
+                Platform · developer console
+              </div>
+            </div>
+          </Link>
           <Link
             href="https://sansxel.ai"
             className="font-mono text-[11px] text-neutral-500 transition hover:text-neutral-200"
