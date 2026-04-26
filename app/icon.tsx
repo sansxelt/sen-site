@@ -1,9 +1,11 @@
 import { ImageResponse } from "next/og";
 import { headers } from "next/headers";
 
-// Per-host favicon. Pinwheel mark with one accent triangle that
-// changes per zone — same geometry as the brand logos in
-// public/logo-{violet,cyan,amber}.svg.
+// Per-host favicon. Pinwheel mark inside a circular mask — the
+// rounded-square version was used in the headers but looked wrong
+// on the browser tab next to the round close-X / loading spinner,
+// so the favicon gets a circle instead. Source SVGs in
+// public/logo-circle-{violet,cyan,amber}.svg.
 //
 //   sansxel.ai          → violet pinwheel (main)
 //   chat.sansxel.ai     → cyan   pinwheel (workshop)
@@ -17,7 +19,7 @@ export const contentType = "image/png";
 export const dynamic = "force-dynamic"; // host-aware, can't be cached statically
 
 function pinwheelDataUri(accent: string): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 680"><rect width="680" height="680" fill="#0a0a0a" rx="24"/><polygon points="340,340 116,116 340,60" fill="#ffffff"/><polygon points="340,340 564,116 620,340" fill="${accent}"/><polygon points="340,340 396,620 144,564" fill="#ffffff"/><circle cx="340" cy="340" r="14" fill="#0a0a0a"/></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 680"><defs><clipPath id="cc"><circle cx="340" cy="340" r="340"/></clipPath></defs><g clip-path="url(#cc)"><rect width="680" height="680" fill="#0a0a0a"/><polygon points="340,340 180,180 340,140" fill="#ffffff"/><polygon points="340,340 500,180 540,340" fill="${accent}"/><polygon points="340,340 380,540 200,500" fill="#ffffff"/><circle cx="340" cy="340" r="14" fill="#0a0a0a"/></g></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
