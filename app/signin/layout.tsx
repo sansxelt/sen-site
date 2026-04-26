@@ -5,11 +5,18 @@ import { ZoneShell } from "@/components/zone-shell";
 // shows workshop chrome, platform.sansxel.ai shows the dev console
 // chrome, etc. Same component, different identity per host.
 //
-// hideBackLink: the default ZoneShell back link points to the zone
-// home (workshop / platform / apex), but on chat + platform that
-// destination is itself auth-gated, so an unauth visitor clicking
-// the link gets bounced right back to /signin. Hiding the link
-// here removes the dead-end loop.
+// The back link is forced to the apex marketing site instead of
+// the per-zone home, because the per-zone home (workshop/platform)
+// is itself auth-gated and would just bounce an unauth visitor
+// right back to /signin. Marketing is always reachable.
 export default function SignInLayout({ children }: { children: ReactNode }) {
-  return <ZoneShell hideBackLink wide>{children}</ZoneShell>;
+  return (
+    <ZoneShell
+      wide
+      backHrefOverride="https://sansxel.ai/home"
+      backLabelOverride="← sansxel.ai"
+    >
+      {children}
+    </ZoneShell>
+  );
 }
