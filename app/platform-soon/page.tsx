@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 // Placeholder served at platform.sansxel.ai/ until the real
 // developer console + docs land. Distinct visual identity from
@@ -44,12 +45,15 @@ export default function PlatformSoonPage() {
               </div>
             </div>
           </Link>
-          <Link
-            href="https://sansxel.ai"
-            className="font-mono text-[11px] text-neutral-500 transition hover:text-neutral-200"
-          >
-            ← sansxel.ai
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link
+              href="https://sansxel.ai"
+              className="font-mono text-[11px] text-neutral-500 transition hover:text-neutral-200"
+            >
+              ← sansxel.ai
+            </Link>
+          </div>
         </div>
       </header>
 
