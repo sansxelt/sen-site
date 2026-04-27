@@ -206,6 +206,14 @@
   padding: 10px 10px 14px;
   display: flex; flex-direction: column;
   gap: 6px;
+  /* Hide the scrollbar visually but keep the scroll behavior. The
+     site-wide thin purple scrollbar in globals.css read as visual
+     noise on the chat history rail since the rail already has its
+     own border + bg treatment. */
+  scrollbar-width: none;
+}
+.chat-history-list::-webkit-scrollbar {
+  display: none;
 }
 .chat-history-empty {
   padding: 14px 10px;
