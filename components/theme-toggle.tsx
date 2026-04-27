@@ -3,31 +3,24 @@
 import { useEffect, useState } from "react";
 import { getThemeChoice, setThemeChoice } from "./theme-provider";
 
-type Choice = "light" | "dark" | "system";
+type Choice = "light" | "system" | "dark";
 
-// Compact header-mounted theme toggle. Single-button rotation
-// through Light → System → Dark so the chrome stays narrow on
-// every shell (marketing nav, ZoneShell, DashboardNav). The deeper
-// 3-up picker still lives in /account/settings for users who want
-// a steady setting instead of a quick flip.
+// Three-segment header control. All modes always visible so System
+// stays one-click reachable instead of getting skipped by the cycle
+// fallback. Wider than the old single-button toggle (~96px vs 32px),
+// still fits inside marketing nav, ZoneShell, and DashboardNav. The
+// /account/settings picker still exists for the long-form copy.
 
-const ORDER: Choice[] = ["light", "system", "dark"];
-
-function resolveDisplay(c: Choice): "light" | "dark" {
-  if (c === "light") return "light";
-  if (c === "dark") return "dark";
-  if (typeof window !== "undefined" && window.matchMedia) {
-    return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-  }
-  return "dark";
-}
-
-const META: Record<Choice, { label: string; next: string; icon: React.ReactNode }> = {
-  light: {
+const OPTIONS: Array<{
+  value: Choice;
+  label: string;
+  icon: React.ReactNode;
+}> = [
+  {
+    value: "light",
     label: "Light",
-    next: "Switch to system",
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.5" />
         <path
           d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.2 3.2l1.06 1.06M11.74 11.74l1.06 1.06M3.2 12.8l1.06-1.06M11.74 4.26l1.06-1.06"
@@ -38,21 +31,21 @@ const META: Record<Choice, { label: string; next: string; icon: React.ReactNode 
       </svg>
     ),
   },
-  system: {
+  {
+    value: "system",
     label: "System",
-    next: "Switch to dark",
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <rect x="1.5" y="2" width="13" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
         <path d="M5 14h6M8 11v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     ),
   },
-  dark: {
+  {
+    value: "dark",
     label: "Dark",
-    next: "Switch to light",
     icon: (
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path
           d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"
           stroke="currentColor"
@@ -62,60 +55,66 @@ const META: Record<Choice, { label: string; next: string; icon: React.ReactNode 
       </svg>
     ),
   },
-};
+];
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
-  const [choice, setChoice] = useState<Choice>("dark");
+  const [choice, setChoiceState] = useState<Choice>("dark");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setChoice(getThemeChoice());
+    setChoiceState(getThemeChoice());
     setMounted(true);
-    // Pick up changes from another tab / from /account/settings.
     const onChange = (e: Event) => {
       const next = (e as CustomEvent<Choice>).detail;
       if (next === "light" || next === "dark" || next === "system") {
-        setChoice(next);
+        setChoiceState(next);
       }
     };
     window.addEventListener("sansxel:theme:changed", onChange);
     return () => window.removeEventListener("sansxel:theme:changed", onChange);
   }, []);
 
-  const cycle = () => {
-    const idx = ORDER.indexOf(choice);
-    let nextIdx = (idx + 1) % ORDER.length;
-    let next = ORDER[nextIdx];
-    // Skip a step if the next choice would render identically to the
-    // current one (e.g. going Light → System on a light-OS machine).
-    // Without this, the click looks like a no-op and "switch back to
-    // dark" feels broken.
-    if (resolveDisplay(next) === resolveDisplay(choice)) {
-      nextIdx = (nextIdx + 1) % ORDER.length;
-      next = ORDER[nextIdx];
-    }
-    setChoice(next);
+  const apply = (next: Choice) => {
+    setChoiceState(next);
     setThemeChoice(next);
   };
 
-  // Render the dark icon during SSR + first client paint to avoid
-  // hydration mismatch on a dark-default load. Real choice fills in
-  // after the localStorage read on mount.
-  const display = mounted ? choice : "dark";
-  const meta = META[display];
+  // Mirror the old button's SSR safeguard: paint "dark" as the active
+  // segment until localStorage is read on mount, otherwise we get a
+  // hydration mismatch on dark-default loads.
+  const display: Choice = mounted ? choice : "dark";
 
   return (
-    <button
-      type="button"
-      onClick={cycle}
-      title={`Theme: ${meta.label}. ${meta.next}.`}
-      aria-label={`Theme: ${meta.label}. Click to ${meta.next.toLowerCase()}.`}
+    <div
+      role="radiogroup"
+      aria-label="Theme"
       className={
-        "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-neutral-300 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white " +
+        "inline-flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/[0.04] p-0.5 " +
         className
       }
     >
-      {meta.icon}
-    </button>
+      {OPTIONS.map((opt) => {
+        const active = display === opt.value;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            onClick={() => apply(opt.value)}
+            title={opt.label}
+            aria-label={opt.label}
+            className={
+              "inline-flex h-7 w-7 items-center justify-center rounded-md transition " +
+              (active
+                ? "bg-white/[0.12] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset]"
+                : "text-neutral-400 hover:bg-white/[0.06] hover:text-white")
+            }
+          >
+            {opt.icon}
+          </button>
+        );
+      })}
+    </div>
   );
 }
