@@ -13,6 +13,15 @@ type Choice = "light" | "dark" | "system";
 
 const ORDER: Choice[] = ["light", "system", "dark"];
 
+function resolveDisplay(c: Choice): "light" | "dark" {
+  if (c === "light") return "light";
+  if (c === "dark") return "dark";
+  if (typeof window !== "undefined" && window.matchMedia) {
+    return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  }
+  return "dark";
+}
+
 const META: Record<Choice, { label: string; next: string; icon: React.ReactNode }> = {
   light: {
     label: "Light",
@@ -75,7 +84,16 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
 
   const cycle = () => {
     const idx = ORDER.indexOf(choice);
-    const next = ORDER[(idx + 1) % ORDER.length];
+    let nextIdx = (idx + 1) % ORDER.length;
+    let next = ORDER[nextIdx];
+    // Skip a step if the next choice would render identically to the
+    // current one (e.g. going Light → System on a light-OS machine).
+    // Without this, the click looks like a no-op and "switch back to
+    // dark" feels broken.
+    if (resolveDisplay(next) === resolveDisplay(choice)) {
+      nextIdx = (nextIdx + 1) % ORDER.length;
+      next = ORDER[nextIdx];
+    }
     setChoice(next);
     setThemeChoice(next);
   };
