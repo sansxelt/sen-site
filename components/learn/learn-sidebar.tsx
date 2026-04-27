@@ -93,7 +93,7 @@ export function LearnSidebar({ activeTopic, activeSubtopic, topicCounts }: Props
                   }`}
                 >
                   <span className="flex-1 truncate">{topic.label}</span>
-                  <span className="text-[10px] text-neutral-600">{count}</span>
+                  <span className={`text-[11px] tabular-nums ${count > 0 ? "text-neutral-300" : "text-neutral-600"}`}>{count}</span>
                 </Link>
                 {topic.subtopics.length > 0 && (
                   <button

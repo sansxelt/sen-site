@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getZone, ZONE_THEME, type Zone } from "@/lib/zone";
+import { ThemeToggle } from "./theme-toggle";
 
 // Wraps an auth/checkout page in a thin zone-aware shell:
 //   - per-zone background color
@@ -80,14 +81,17 @@ export async function ZoneShell({
               </div>
             </div>
           </Link>
-          {!hideBackLink && (
-            <Link
-              href={homeHref}
-              className={`text-[11px] text-neutral-500 transition hover:text-neutral-200 ${zone === "platform" ? "font-mono" : ""}`}
-            >
-              {homeLabel}
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            {!hideBackLink && (
+              <Link
+                href={homeHref}
+                className={`text-[11px] text-neutral-500 transition hover:text-neutral-200 ${zone === "platform" ? "font-mono" : ""}`}
+              >
+                {homeLabel}
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

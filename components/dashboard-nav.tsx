@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Zone } from "../lib/zone";
+import { ThemeToggle } from "./theme-toggle";
 
 // Pinwheel mark per host. Same geometry, different accent triangle.
 // next/image auto-applies `unoptimized` for .svg sources in v16.
@@ -386,13 +387,16 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
           pinned at top and the desktop CTA + footer stay pinned at
           bottom, ChatGPT-style. */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
-        <Link href="/app" className="flex items-center gap-2.5 py-6">
-          <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" priority />
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold text-white">sansxel</span>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
-          </div>
-        </Link>
+        <div className="flex items-center justify-between py-6">
+          <Link href="/app" className="flex items-center gap-2.5">
+            <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" priority />
+            <div className="flex flex-col leading-tight">
+              <span className="text-sm font-semibold text-white">sansxel</span>
+              <span className="text-[10px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
+            </div>
+          </Link>
+          <ThemeToggle />
+        </div>
 
         {/* Chat link always visible regardless of route. Clicking it
             while ALREADY on /app would otherwise drop the ?thread=
@@ -502,6 +506,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
               {userEmail}
             </span>
           )}
+          <ThemeToggle />
           <Link
             href="/home"
             className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"

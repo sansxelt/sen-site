@@ -5,6 +5,7 @@ import { auth } from "../auth";
 import { getSignInPath } from "../lib/auth-ui";
 import { getZone } from "../lib/zone";
 import { MobileNav } from "./mobile-nav";
+import { ThemeToggle } from "./theme-toggle";
 import { ZoneDropdown } from "./zone-dropdown";
 
 // Pinwheel mark per host. Same geometry, different accent triangle.
@@ -127,6 +128,8 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                   Log in
                 </Link>
               )}
+
+              <ThemeToggle />
 
               {/* Dropdown splits the primary CTA into the two real
                   product surfaces (workshop + platform) so users can
