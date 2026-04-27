@@ -8,6 +8,7 @@ import {
   type LearnPiece,
   type LearnPieceStatus,
 } from "../../../lib/learn-db";
+import { publishAllDraftsAction, publishOneAction } from "./actions";
 
 // Admin-only Learn content review board. Lists drafts, in-review,
 // and recently published pieces so the operator can land thousands
@@ -59,9 +60,20 @@ export default async function ContentAdminPage() {
         title="Drafts"
         empty="No drafts. Run scripts/ingest-content.mjs to create one."
         items={drafts}
+        showInlinePublish
+        bulkAction={drafts.length > 1 ? (
+          <form action={publishAllDraftsAction}>
+            <button
+              type="submit"
+              className="rounded-full border border-emerald-400/30 bg-emerald-400/[0.10] px-3 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-400/[0.18]"
+            >
+              Publish all {drafts.length}
+            </button>
+          </form>
+        ) : null}
       />
       {inReview.length > 0 && (
-        <Bucket title="In review" empty="" items={inReview} />
+        <Bucket title="In review" empty="" items={inReview} showInlinePublish />
       )}
       <Bucket
         title="Recently published"
@@ -76,17 +88,24 @@ function Bucket({
   title,
   empty,
   items,
+  showInlinePublish = false,
+  bulkAction = null,
 }: {
   title: string;
   empty: string;
   items: LearnPiece[];
+  showInlinePublish?: boolean;
+  bulkAction?: React.ReactNode;
 }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-neutral-300">
-        {title}{" "}
-        <span className="ml-1 text-neutral-600">({items.length})</span>
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-neutral-300">
+          {title}{" "}
+          <span className="ml-1 text-neutral-600">({items.length})</span>
+        </h2>
+        {bulkAction}
+      </div>
       {items.length === 0 ? (
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-6 text-sm text-neutral-500">
           {empty}
@@ -94,10 +113,10 @@ function Bucket({
       ) : (
         <ul className="divide-y divide-white/[0.06] rounded-xl border border-white/[0.06]">
           {items.map((p) => (
-            <li key={p.id}>
+            <li key={p.id} className="flex items-stretch">
               <Link
                 href={`/account/content/${p.id}`}
-                className="flex items-start gap-4 px-4 py-4 transition hover:bg-white/[0.03]"
+                className="flex flex-1 items-start gap-4 px-4 py-4 transition hover:bg-white/[0.03]"
               >
                 <span className="text-2xl">{p.cover_emoji ?? "📄"}</span>
                 <div className="min-w-0 flex-1">
@@ -122,6 +141,18 @@ function Bucket({
                   </div>
                 </div>
               </Link>
+              {showInlinePublish && p.status !== "published" && (
+                <form action={publishOneAction} className="flex shrink-0 items-center pr-3">
+                  <input type="hidden" name="id" value={p.id} />
+                  <button
+                    type="submit"
+                    title="Publish this piece"
+                    className="rounded-full border border-emerald-400/30 bg-emerald-400/[0.10] px-3 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-400/[0.18]"
+                  >
+                    Publish
+                  </button>
+                </form>
+              )}
             </li>
           ))}
         </ul>
