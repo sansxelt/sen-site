@@ -31,8 +31,16 @@
   flex-direction: column;
   border-left: 1px solid rgba(255,255,255,0.06);
   background: rgba(15,12,28,0.4);
+  /* Sticky + viewport height pins the rail to the visible window
+     and gives .chat-history-list (flex:1; overflow-y:auto) a real
+     bounded parent to scroll inside. Without this the rail grows
+     tall enough to fit every entry, the page can't scroll, and
+     entries below the fold become unreachable. */
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
   min-height: 0;
-  height: 100%;
   overflow: hidden;
 }
 .chat-history-head {
