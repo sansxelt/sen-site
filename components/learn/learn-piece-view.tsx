@@ -146,6 +146,39 @@ export function LearnPieceView({
         )}
       </header>
 
+      {/* Sources at the top: readers can audit what the piece is
+          grounded in before they invest time reading. Citation
+          numbers in the body link back to this list by ordinal. */}
+      {piece.sources.length > 0 && (
+        <section className="mt-8 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <h2 className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-400">
+            Sources
+          </h2>
+          <ol className="mt-3 space-y-2 text-sm text-neutral-300">
+            {piece.sources.map((s) => (
+              <li key={s.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span className="shrink-0 text-xs text-neutral-600">
+                  [{s.ord + 1}]
+                </span>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noreferrer nofollow"
+                  className="break-words text-violet-300 underline-offset-2 hover:underline"
+                >
+                  {s.title ?? s.url}
+                </a>
+                {s.source_type && (
+                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] uppercase tracking-[0.14em] text-neutral-400">
+                    {s.source_type}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       {multi && (
         <ChapterNav piece={piece} activeId={activeChapter.id} />
       )}
@@ -189,36 +222,6 @@ export function LearnPieceView({
             <span />
           )}
         </nav>
-      )}
-
-      {piece.sources.length > 0 && (
-        <section className="mt-12 border-t border-white/[0.06] pt-6">
-          <h2 className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-            Sources
-          </h2>
-          <ol className="mt-4 space-y-2 text-sm text-neutral-400">
-            {piece.sources.map((s) => (
-              <li key={s.id} className="flex gap-2">
-                <span className="shrink-0 text-neutral-600">
-                  [{s.ord + 1}]
-                </span>
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noreferrer nofollow"
-                  className="break-words text-violet-300 underline-offset-2 hover:underline"
-                >
-                  {s.title ?? s.url}
-                </a>
-                {s.source_type && (
-                  <span className="text-[10px] uppercase tracking-[0.14em] text-neutral-600">
-                    {s.source_type}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ol>
-        </section>
       )}
 
       <BecomeContributorCard />

@@ -21,9 +21,13 @@ type Props = {
   // the value down explicitly.
   activeTopic?: TopicKey;
   activeSubtopic?: string;
+  // Server-computed counts: hardcoded + DB-published pieces per
+  // topic. Overrides the hardcoded-only fallback used when this
+  // prop isn't passed.
+  topicCounts?: Record<string, number>;
 };
 
-export function LearnSidebar({ activeTopic, activeSubtopic }: Props) {
+export function LearnSidebar({ activeTopic, activeSubtopic, topicCounts }: Props) {
   const pathname = usePathname() ?? "";
   // Auto-expand the active topic so the user can see where they are.
   // Other topics start collapsed to keep the rail readable; they
@@ -75,7 +79,7 @@ export function LearnSidebar({ activeTopic, activeSubtopic }: Props) {
       <nav className="flex flex-col gap-0.5">
         {TOPICS.map((topic) => {
           const open = expanded.has(topic.key);
-          const count = countArticlesInTopic(topic.key);
+          const count = topicCounts?.[topic.key] ?? countArticlesInTopic(topic.key);
           const active = isTopicActive(topic.key);
           return (
             <div key={topic.key}>

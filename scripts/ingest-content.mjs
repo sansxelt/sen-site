@@ -46,13 +46,17 @@ const supabase = createClient(
 // --- pipeline ------------------------------------------------------
 
 const query = args.query ?? args.title;
-console.log(`[1/4] researching "${query}" via Wikipedia…`);
-const sources = await fetchWikipediaSources(query);
+console.log(`[1/4] researching "${query}" across Wikipedia + arXiv…`);
+const [wiki, arxiv] = await Promise.all([
+  fetchWikipediaSources(query),
+  fetchArxivSources(query, args.type === "research" ? 3 : 2),
+]);
+const sources = [...wiki, ...arxiv];
 if (sources.length === 0) {
   console.error("no usable sources. try a broader --query");
   process.exit(1);
 }
-console.log(`      found ${sources.length} source(s)`);
+console.log(`      found ${sources.length} source(s) (${wiki.length} wiki, ${arxiv.length} arxiv)`);
 
 console.log(`[2/4] drafting ${args.type} with claude-opus-4-7…`);
 const draft = await draftPiece({
@@ -161,7 +165,7 @@ function slugify(s) {
 
 async function fetchWikipediaSources(q) {
   // 1. Search Wikipedia for relevant article titles.
-  const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=${encodeURIComponent(q)}&limit=4&namespace=0`;
+  const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=${encodeURIComponent(q)}&limit=3&namespace=0`;
   const searchRes = await fetch(searchUrl, {
     headers: { "User-Agent": "sansxel-content-ingester/0.1 (+https://sansxel.ai)" },
   });
@@ -195,6 +199,50 @@ async function fetchWikipediaSources(q) {
   return out;
 }
 
+// arXiv API. Atom XML response. Pulls top-N papers matching the
+// query and returns abstract excerpts. We extract via regex
+// because the alternative (xml2js / fast-xml-parser) would add a
+// dep just for this. Fields we need (title, summary, id, authors)
+// have stable shapes.
+async function fetchArxivSources(q, max = 2) {
+  try {
+    const url = `https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(q)}&max_results=${max}&sortBy=relevance&sortOrder=descending`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "sansxel-content-ingester/0.1 (+https://sansxel.ai)" },
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const entries = xml.split("<entry>").slice(1);
+    const out = [];
+    for (const raw of entries) {
+      const block = raw.split("</entry>")[0];
+      const pick = (tag) => {
+        const m = block.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`));
+        return m ? m[1].trim().replace(/\\s+/g, " ") : null;
+      };
+      const idUrl = pick("id");
+      const title = pick("title");
+      const summary = pick("summary");
+      const authorMatches = block.match(/<name>([^<]+)<\/name>/g) || [];
+      const authors = authorMatches
+        .map((m) => m.replace(/<\/?name>/g, ""))
+        .slice(0, 3)
+        .join(", ");
+      if (idUrl && title && summary) {
+        out.push({
+          title: title.replace(/\s+/g, " ").trim(),
+          url: idUrl,
+          source_type: "arxiv",
+          excerpt: `${authors ? `Authors: ${authors}. ` : ""}${summary.slice(0, 700)}`,
+        });
+      }
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
 async function draftPiece({ type, topic, subtopic, title, sources }) {
   const sourceBlock = sources
     .map(
@@ -221,14 +269,24 @@ SOURCES (ground every claim in these. Do NOT invent facts. Use [Source N] inline
 ${sourceBlock}
 
 INSTRUCTIONS:
-- Write in clear, accessible prose. No filler. No "in conclusion".
-- Use markdown for headings, lists, and code blocks where they help.
-- Inline cite as [Source N] where N matches the numbered list above. The N maps directly to a citation row in our DB so render order matters.
-- If a claim is not supported by the sources above, OMIT it. Do not hallucinate.
+- Write like a real human, not an AI assistant. The piece should sound like a developer-friend explaining the topic over coffee, not like a Wikipedia summary or a corporate blog.
+  Specific tells to AVOID:
+    * em dashes (—) anywhere. use commas, periods, colons, or parentheses.
+    * "In this article we will explore..." / "Let's dive into..." / "In conclusion..." / "It's worth noting that..." / "It is important to note...". cut all of it.
+    * over-hedging ("might possibly suggest", "tends to often"). pick a stance.
+    * lists for things that should be a sentence. lists for things that ARE actually a list, fine.
+    * three-adjective stacks ("clear, concise, and structured"). pick one.
+    * the word "delve" or "leverage" as a verb. never.
+  Specific things to DO:
+    * vary sentence length. short ones land. medium ones build. occasionally a longer one stretches the thought.
+    * concrete examples over abstractions. "GPT-5 has a 256k context window" beats "modern LLMs support large context windows".
+    * contractions when natural ("doesn't", "you'll").
+    * speak directly to the reader ("you"). don't narrate ("we will see").
+- Ground every claim in the SOURCES above. Inline cite as [Source N] where N matches the numbered list. If a claim isn't supported, omit it. Do not hallucinate.
+- Use markdown for headings, lists, and code blocks where they actually help. Don't sprinkle them just to look structured.
 - Pick a short URL slug (kebab-case, max 60 chars).
-- Pick a 1-emoji cover (relevant to the topic).
+- Pick a 1-emoji cover relevant to the topic.
 - Estimate read minutes honestly (about 200 wpm).
-- DO NOT use em dashes (—) anywhere in your output. Use commas, periods, parentheses, or colons instead. Em dashes read as AI-generated to most readers.
 - Return ONLY a JSON object. No commentary, no markdown fences around it. Schema:
 
 ${type === "research"
