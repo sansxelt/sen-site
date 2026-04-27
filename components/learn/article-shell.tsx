@@ -66,7 +66,10 @@ export function ArticleShell({
         </p>
         <div className="mt-4 flex items-center gap-2 text-xs text-neutral-400">
           <span>By</span>
-          <span className="font-medium text-neutral-200">Sansxel (OWNER)</span>
+          <span className="font-medium text-neutral-200">Nishanth</span>
+          <span className="rounded-full border border-violet-400/30 bg-violet-400/[0.10] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-violet-200">
+            Owner
+          </span>
           {meta.publishedAt && (
             <>
               <span aria-hidden className="text-neutral-600">·</span>
