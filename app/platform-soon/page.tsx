@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function PlatformSoonPage() {
   return (
-    <main className="min-h-screen bg-[#070a10] text-neutral-200">
+    <main className="min-h-screen bg-neutral-950 text-neutral-200">
       {/* Top zone bar matches the marketing site nav: pinwheel +
           wordmark + tagline on the left edge, back link on the
           right edge. Scaling padding so the chrome rhythm is the

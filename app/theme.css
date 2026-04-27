@@ -47,6 +47,11 @@ html[data-theme="light"] .text-white { color: #0a0a0c !important; }
 html[data-theme="light"] .text-neutral-300 { color: #525252 !important; }
 html[data-theme="light"] .text-neutral-400 { color: #737373 !important; }
 html[data-theme="light"] .text-neutral-500 { color: #8a8a8a !important; }
+/* neutral-600/700 are near-black on dark; on light they read as
+   dim greys. Without these the platform-soon footer + disabled
+   menu items vanish into the white page. */
+html[data-theme="light"] .text-neutral-600 { color: #9ca3af !important; }
+html[data-theme="light"] .text-neutral-700 { color: #b8b8b8 !important; }
 
 /* Soft white-on-dark surfaces become soft dark-on-white */
 html[data-theme="light"] .bg-white\/5    { background-color: rgba(0, 0, 0, 0.04) !important; }
@@ -369,6 +374,14 @@ html[data-theme="light"] aside.chat-drawer-in { background: #ffffff !important; 
 
 /* Modals (UpdatePaymentMethodModal etc), invert overlay tint */
 html[data-theme="light"] .fixed.inset-0.bg-black\/60 { background-color: rgba(0,0,0,0.45) !important; }
+
+/* Code preview blocks (platform-soon curl sample, etc) — bg-black/60
+   on a white page is just a black rectangle. Soften to a tinted
+   light surface and force readable text. */
+html[data-theme="light"] pre.bg-black\/60 {
+  background-color: rgba(0,0,0,0.04) !important;
+  color: #0a0a0c !important;
+}
 
 /* Form notices and messages */
 html[data-theme="light"] .webchat-notice {
