@@ -5,6 +5,7 @@ import { auth } from "../auth";
 import { isAdminEmail } from "../lib/admin";
 import { getSignInPath } from "../lib/auth-ui";
 import { getZone } from "../lib/zone";
+import { AccountDropdown } from "./account-dropdown";
 import { MobileNav } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
 import { ZoneDropdown } from "./zone-dropdown";
@@ -67,8 +68,9 @@ const primaryLinks: SiteNavLink[] = [
 
 export async function SiteShell({ children }: { children: ReactNode }) {
   const [session, zone] = await Promise.all([auth(), getZone()]);
-  const signedIn = Boolean(session?.user?.email);
-  const isAdmin = isAdminEmail(session?.user?.email ?? null);
+  const userEmail = session?.user?.email ?? "";
+  const signedIn = Boolean(userEmail);
+  const isAdmin = isAdminEmail(userEmail || null);
   const logoSrc = ZONE_LOGO[zone];
 
   return (
@@ -134,10 +136,17 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
               <ThemeToggle />
 
+              {/* Account avatar (signed-in only). Separate from the
+                  Apps dropdown so "where do I go" stays distinct
+                  from "manage me". */}
+              {signedIn && (
+                <AccountDropdown email={userEmail} isAdmin={isAdmin} />
+              )}
+
               {/* Dropdown splits the primary CTA into the two real
                   product surfaces (workshop + platform) so users can
                   pick instead of being forced to one. */}
-              <ZoneDropdown signedIn={signedIn} isAdmin={isAdmin} />
+              <ZoneDropdown signedIn={signedIn} />
             </div>
           </div>
         </div>
