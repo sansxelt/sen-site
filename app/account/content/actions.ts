@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../auth";
 import { isAdminEmail } from "../../../lib/admin";
+import { getApprovedDisplayName } from "../../../lib/contributors";
 import {
   createDraftPiece,
   listPiecesByStatus,
@@ -78,6 +79,14 @@ export async function createDraftFromFormAction(formData: FormData) {
     n += 1;
   }
 
+  // Snapshot the byline at write time. Admins skip this — the
+  // renderer flips them to "Sansxel (OWNER)" via authorLabel —
+  // contributors get their hardlocked display_name baked in so a
+  // later rename of the contributor doesn't rewrite the byline.
+  const displayName = isAdminEmail(email)
+    ? null
+    : await getApprovedDisplayName(email);
+
   const piece = await createDraftPiece({
     type,
     slug,
@@ -85,6 +94,7 @@ export async function createDraftFromFormAction(formData: FormData) {
     topic,
     subtopic: subtopic || undefined,
     author_email: email,
+    author_display_name: displayName ?? undefined,
     chapters: [
       {
         ord: 0,

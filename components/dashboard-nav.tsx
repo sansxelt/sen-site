@@ -388,7 +388,8 @@ export function DashboardNav({
         {
           label: "Admin",
           items: [
-            { href: "/account/content", label: "Learn content", icon: <PenIcon /> },
+            { href: "/account/content",      label: "Learn content", icon: <PenIcon /> },
+            { href: "/account/contributors", label: "Contributors",  icon: <PenIcon /> },
           ],
         },
       ]

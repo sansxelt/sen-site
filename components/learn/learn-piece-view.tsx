@@ -9,13 +9,18 @@ import type {
 } from "@/lib/learn-db";
 import { BecomeContributorCard } from "./become-contributor-card";
 
-// Author label rule: null author OR an admin email both render as
-// "Sansxel (OWNER)" (brand-voice byline). Seeded pieces and
-// owner-written pieces share this single byline. External
-// contributors (once they onboard via help@sansxel.ai) will
-// surface their own email until we add a per-author display_name
-// lookup.
-function authorLabel(authorEmail: string | null): string {
+// Author label rule, in priority order:
+//   1. Snapshotted display_name on the piece (hardlocked at write
+//      time for approved contributors)
+//   2. Admin email or null author → "Sansxel (OWNER)"
+//   3. Bare email fallback (legacy / unapproved authors)
+function authorLabel(
+  authorEmail: string | null,
+  authorDisplayName: string | null,
+): string {
+  if (authorDisplayName && authorDisplayName.trim().length > 0) {
+    return authorDisplayName;
+  }
   if (!authorEmail || isAdminEmail(authorEmail)) return "Sansxel (OWNER)";
   return authorEmail;
 }
@@ -119,7 +124,7 @@ export function LearnPieceView({
         <div className="flex items-center gap-2 text-xs text-neutral-400">
           <span>By</span>
           <span className="font-medium text-neutral-200">
-            {authorLabel(piece.author_email)}
+            {authorLabel(piece.author_email, piece.author_display_name)}
           </span>
           {piece.published_at && (
             <>
@@ -140,6 +145,13 @@ export function LearnPieceView({
           </p>
         )}
       </header>
+
+      {/* Multi-chapter pieces lead with the page switcher so readers
+          can see the structure (and jump deep) before they commit to
+          reading top-to-bottom. Single-chapter pieces hide it. */}
+      {multi && (
+        <ChapterNav piece={piece} activeId={activeChapter.id} />
+      )}
 
       {/* Sources at the top: readers can audit what the piece is
           grounded in before they invest time reading. Citation
@@ -172,10 +184,6 @@ export function LearnPieceView({
             ))}
           </ol>
         </section>
-      )}
-
-      {multi && (
-        <ChapterNav piece={piece} activeId={activeChapter.id} />
       )}
 
       <div className="mt-8 max-w-2xl text-base leading-relaxed text-neutral-200">

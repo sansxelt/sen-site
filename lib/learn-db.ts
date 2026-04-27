@@ -23,6 +23,10 @@ export type LearnPiece = {
   status: LearnPieceStatus;
   read_minutes: number | null;
   author_email: string | null;
+  // Hardlocked byline snapshot for non-admin contributors. Null for
+  // admin-authored pieces (the renderer falls back to "Sansxel
+  // (OWNER)") and legacy pieces seeded before v0.2.0-contributors.
+  author_display_name: string | null;
   created_at: string;
   updated_at: string;
   published_at: string | null;
@@ -211,6 +215,7 @@ export async function createDraftPiece(input: {
   cover_emoji?: string;
   read_minutes?: number;
   author_email?: string;
+  author_display_name?: string;
   chapters: DraftChapterInput[];
   sources?: DraftSourceInput[];
 }): Promise<LearnPiece> {
@@ -228,6 +233,7 @@ export async function createDraftPiece(input: {
       cover_emoji: input.cover_emoji ?? null,
       read_minutes: input.read_minutes ?? null,
       author_email: input.author_email ?? null,
+      author_display_name: input.author_display_name ?? null,
       status: "draft",
     } as never)
     .select("*")
@@ -380,6 +386,93 @@ export async function updateChapterBody(
     return true;
   } catch (err) {
     console.warn("updateChapterBody threw:", err);
+    return false;
+  }
+}
+
+/** Appends a new chapter to a piece. Computes the next ord by
+ * MAX(ord)+1 so the new chapter lands at the end. Slug is uniqued
+ * within the piece (collision → slug-2, slug-3, ...). */
+export async function addChapter(input: {
+  pieceId: string;
+  title: string;
+  slug: string;
+  bodyMd?: string;
+}): Promise<LearnChapter | null> {
+  if (!isDatabaseConfigured()) return null;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data: existing } = await supabase
+      .from(CHAPTERS as never)
+      .select("ord, slug")
+      .eq("piece_id", input.pieceId);
+    const rows = (existing ?? []) as unknown as Array<{ ord: number; slug: string }>;
+    const nextOrd = rows.length === 0
+      ? 0
+      : Math.max(...rows.map((r) => r.ord)) + 1;
+    const taken = new Set(rows.map((r) => r.slug));
+    let slug = input.slug;
+    let n = 2;
+    while (taken.has(slug)) {
+      slug = `${input.slug}-${n}`;
+      n += 1;
+    }
+    const { data, error } = await supabase
+      .from(CHAPTERS as never)
+      .insert({
+        piece_id: input.pieceId,
+        ord: nextOrd,
+        slug,
+        title: input.title,
+        body_md: input.bodyMd ?? "",
+      } as never)
+      .select("*")
+      .single();
+    if (error || !data) {
+      console.warn("addChapter failed:", error?.message);
+      return null;
+    }
+    await supabase
+      .from(PIECES as never)
+      .update({ updated_at: new Date().toISOString() } as never)
+      .eq("id", input.pieceId);
+    return data as unknown as LearnChapter;
+  } catch (err) {
+    console.warn("addChapter threw:", err);
+    return null;
+  }
+}
+
+/** Removes a chapter. The piece keeps its other chapters; ord values
+ * are NOT renumbered (gaps are tolerated by the reader, prev/next
+ * just orders by ord asc). */
+export async function deleteChapter(chapterId: string): Promise<boolean> {
+  if (!isDatabaseConfigured()) return false;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data: ch } = await supabase
+      .from(CHAPTERS as never)
+      .select("piece_id")
+      .eq("id", chapterId)
+      .single();
+    const pieceId = (ch as unknown as { piece_id?: string } | null)?.piece_id;
+    const { error } = await supabase
+      .from(CHAPTERS as never)
+      .delete()
+      .eq("id", chapterId);
+    if (error) {
+      console.warn("deleteChapter failed:", error.message);
+      return false;
+    }
+    if (pieceId) {
+      await supabase
+        .from(PIECES as never)
+        .update({ updated_at: new Date().toISOString() } as never)
+        .eq("id", pieceId);
+    }
+    return true;
+  } catch (err) {
+    console.warn("deleteChapter threw:", err);
     return false;
   }
 }

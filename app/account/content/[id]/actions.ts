@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { auth } from "../../../../auth";
 import { isAdminEmail } from "../../../../lib/admin";
 import {
+  addChapter,
+  deleteChapter,
   publishPiece,
   unpublishPiece,
   updatePieceMeta,
@@ -90,5 +92,37 @@ export async function saveChapterAction(formData: FormData) {
   // Don't know the piece slug from chapter id alone, so bust the
   // index pages and let detail-page revalidation happen on next
   // visit. ISR on the detail route handles the rest.
+  bustCaches(undefined);
+}
+
+function slugifyTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60) || "chapter";
+}
+
+export async function addChapterAction(formData: FormData) {
+  await assertAdmin();
+  const pieceId = String(formData.get("piece_id") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  if (!pieceId || !title) return;
+  await addChapter({
+    pieceId,
+    title,
+    slug: slugifyTitle(title),
+    bodyMd: "Write this chapter here.",
+  });
+  bustCaches(undefined);
+}
+
+export async function deleteChapterAction(formData: FormData) {
+  await assertAdmin();
+  const chapterId = String(formData.get("chapter_id") ?? "");
+  if (!chapterId) return;
+  await deleteChapter(chapterId);
   bustCaches(undefined);
 }

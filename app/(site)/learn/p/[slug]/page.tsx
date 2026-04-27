@@ -18,7 +18,13 @@ const CANONICAL_BASE = "https://www.sansxel.ai";
 
 type Params = { slug: string };
 
-function authorName(authorEmail: string | null): string {
+function authorName(
+  authorEmail: string | null,
+  authorDisplayName: string | null,
+): string {
+  if (authorDisplayName && authorDisplayName.trim().length > 0) {
+    return authorDisplayName;
+  }
   if (!authorEmail || isAdminEmail(authorEmail)) return "Sansxel (OWNER)";
   return authorEmail;
 }
@@ -38,7 +44,7 @@ export async function generateMetadata({
     title: piece.title,
     description: piece.excerpt ?? undefined,
     alternates: { canonical: url },
-    authors: [{ name: authorName(piece.author_email) }],
+    authors: [{ name: authorName(piece.author_email, piece.author_display_name) }],
     openGraph: {
       title: piece.title,
       description: piece.excerpt ?? undefined,
@@ -47,7 +53,7 @@ export async function generateMetadata({
       siteName: "sansxel",
       publishedTime: piece.published_at ?? undefined,
       modifiedTime: piece.updated_at,
-      authors: [authorName(piece.author_email)],
+      authors: [authorName(piece.author_email, piece.author_display_name)],
       tags: [piece.topic, piece.subtopic ?? ""].filter(Boolean),
     },
     twitter: {
@@ -82,7 +88,7 @@ export default async function LearnPiecePage({
     dateModified: piece.updated_at,
     author: {
       "@type": "Person",
-      name: authorName(piece.author_email),
+      name: authorName(piece.author_email, piece.author_display_name),
     },
     publisher: {
       "@type": "Organization",

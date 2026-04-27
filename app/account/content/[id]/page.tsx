@@ -4,6 +4,8 @@ import { auth } from "../../../../auth";
 import { isAdminEmail } from "../../../../lib/admin";
 import { getPieceWithChapters } from "../../../../lib/learn-db";
 import {
+  addChapterAction,
+  deleteChapterAction,
   publishAction,
   unpublishAction,
   deleteAction,
@@ -140,12 +142,29 @@ export default async function ContentEditPage({ params }: { params: Promise<Para
 
       {/* Chapters */}
       <section className="space-y-4">
-        <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-neutral-300">
-          Chapters{" "}
-          <span className="ml-1 text-neutral-600">
-            ({piece.chapters.length})
-          </span>
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-neutral-300">
+            Chapters{" "}
+            <span className="ml-1 text-neutral-600">
+              ({piece.chapters.length})
+            </span>
+          </h2>
+          <form action={addChapterAction} className="flex items-center gap-2">
+            <input type="hidden" name="piece_id" value={piece.id} />
+            <input
+              name="title"
+              required
+              placeholder="New chapter title"
+              className="rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-sm text-neutral-100 outline-none transition focus:border-white/30"
+            />
+            <button
+              type="submit"
+              className="rounded-full border border-emerald-400/30 bg-emerald-400/[0.10] px-3 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-400/[0.18]"
+            >
+              + Add chapter
+            </button>
+          </form>
+        </div>
         {piece.chapters.map((c) => (
           <div
             key={c.id}
@@ -153,8 +172,22 @@ export default async function ContentEditPage({ params }: { params: Promise<Para
           >
             <div className="flex items-baseline justify-between gap-3">
               <div className="text-sm font-medium text-white">{c.title}</div>
-              <div className="text-[10px] uppercase tracking-[0.16em] text-neutral-500">
-                Chapter {c.ord + 1} · /{c.slug}
+              <div className="flex items-center gap-3">
+                <div className="text-[10px] uppercase tracking-[0.16em] text-neutral-500">
+                  Chapter {c.ord + 1} · /{c.slug}
+                </div>
+                {piece.chapters.length > 1 && (
+                  <form action={deleteChapterAction}>
+                    <input type="hidden" name="chapter_id" value={c.id} />
+                    <button
+                      type="submit"
+                      title="Delete this chapter"
+                      className="rounded-full border border-red-400/30 bg-red-400/[0.06] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-red-300 transition hover:bg-red-400/[0.16]"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                )}
               </div>
             </div>
             <form action={saveChapterAction} className="space-y-3">
