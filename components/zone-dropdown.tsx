@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 
 // Header dropdown, primary product CTA that splits into the two
@@ -111,6 +112,57 @@ export function ZoneDropdown({ signedIn }: Props) {
             </div>
             <span aria-hidden className="mt-1 text-xs text-neutral-600">↗</span>
           </Link>
+
+          {signedIn && (
+            <>
+              <div className="border-t border-white/[0.06] px-4 py-2 text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
+                Account
+              </div>
+              <Link
+                href="/account"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-neutral-200 transition hover:bg-white/[0.04] hover:text-white"
+              >
+                Overview
+              </Link>
+              <Link
+                href="/account/settings"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-neutral-200 transition hover:bg-white/[0.04] hover:text-white"
+              >
+                Settings
+              </Link>
+              <Link
+                href="/account/billing"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-neutral-200 transition hover:bg-white/[0.04] hover:text-white"
+              >
+                Billing
+              </Link>
+              <Link
+                href="/account/usage"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-neutral-200 transition hover:bg-white/[0.04] hover:text-white"
+              >
+                Usage
+              </Link>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false);
+                  void signOut({ callbackUrl: "/" });
+                }}
+                className="block w-full border-t border-white/[0.06] px-4 py-2.5 text-left text-sm text-neutral-400 transition hover:bg-white/[0.04] hover:text-white"
+              >
+                Sign out
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

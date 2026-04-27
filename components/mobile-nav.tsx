@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -132,6 +133,38 @@ export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
                         {link.label}
                       </Link>
                     ))}
+                  </>
+                )}
+
+                {signedIn && (
+                  <>
+                    <div className="mx-3 mb-1 mt-3 px-1 text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
+                      Account
+                    </div>
+                    {[
+                      { href: "/account",          label: "Overview" },
+                      { href: "/account/settings", label: "Settings" },
+                      { href: "/account/billing",  label: "Billing" },
+                      { href: "/account/usage",    label: "Usage" },
+                    ].map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className="block rounded-xl px-3 py-3 text-[15px] font-medium text-neutral-300 transition hover:bg-white/5 hover:text-white"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        void signOut({ callbackUrl: "/" });
+                      }}
+                      className="mt-1 block w-full rounded-xl px-3 py-3 text-left text-sm text-neutral-400 transition hover:bg-white/5 hover:text-white"
+                    >
+                      Sign out
+                    </button>
                   </>
                 )}
               </div>
