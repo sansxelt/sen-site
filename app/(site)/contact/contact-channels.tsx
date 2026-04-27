@@ -10,6 +10,11 @@ const channels = [
     description: "Questions about accounts, auth, access, and onboarding.",
   },
   {
+    title: "Write for Learn",
+    email: "help@sansxel.ai",
+    description: "Apply to contribute. Send your name, a link to past work, and the topics you want to cover. Approved writers get a hardlocked byline.",
+  },
+  {
     title: "Privacy requests",
     email: "privacy@sansxel.ai",
     description: "Requests related to account data, deletion, export, or policy questions.",
@@ -35,10 +40,10 @@ export function ContactChannels() {
 
   return (
     <>
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {channels.map(({ title, email, description }) => (
           <button
-            key={email}
+            key={title}
             type="button"
             onClick={() => setComposing({ email, title })}
             className="group cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 text-left transition hover:border-white/20 hover:bg-white/10 active:scale-[0.98] sm:p-6"
