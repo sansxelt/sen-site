@@ -10,13 +10,13 @@ import type {
 import { BecomeContributorCard } from "./become-contributor-card";
 
 // Author label rule: null author OR an admin email both render as
-// the operator's display name. Seeded pieces (no author_email) and
-// owner-written pieces share a single byline. External contributors
-// (once they onboard via help@sansxel.ai) will surface their own
-// email until we add a per-author display_name lookup.
-const OWNER_DISPLAY_NAME = "Nishanth";
+// "Sansxel (OWNER)" (brand-voice byline). Seeded pieces and
+// owner-written pieces share this single byline. External
+// contributors (once they onboard via help@sansxel.ai) will
+// surface their own email until we add a per-author display_name
+// lookup.
 function authorLabel(authorEmail: string | null): string {
-  if (!authorEmail || isAdminEmail(authorEmail)) return OWNER_DISPLAY_NAME;
+  if (!authorEmail || isAdminEmail(authorEmail)) return "Sansxel (OWNER)";
   return authorEmail;
 }
 
@@ -121,11 +121,6 @@ export function LearnPieceView({
           <span className="font-medium text-neutral-200">
             {authorLabel(piece.author_email)}
           </span>
-          {(!piece.author_email || isAdminEmail(piece.author_email)) && (
-            <span className="rounded-full border border-violet-400/30 bg-violet-400/[0.10] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-violet-200">
-              Owner
-            </span>
-          )}
           {piece.published_at && (
             <>
               <span aria-hidden className="text-neutral-600">·</span>
