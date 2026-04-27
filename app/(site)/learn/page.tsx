@@ -8,6 +8,10 @@ import {
   TOPICS,
   countArticlesInTopic,
 } from "@/lib/learn-content";
+import { listPublishedPieces } from "@/lib/learn-db";
+
+// 5 min so freshly-published DB pieces show up without a redeploy.
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Learn AI",
@@ -15,11 +19,50 @@ export const metadata: Metadata = {
     "Plain-English guides to AI, coding, APIs, MCP, system design, and shipping real products. Beginner to advanced.",
 };
 
-export default function LearnIndexPage() {
-  // Featured = newest 4 articles, surfaces what's worth reading first.
-  const featured = [...ARTICLES]
+export default async function LearnIndexPage() {
+  // DB-backed published pieces live alongside the hardcoded ARTICLES.
+  // Topic counts merge both sources so the sidebar reflects real
+  // total content, not just the legacy hardcoded list.
+  const dbPieces = await listPublishedPieces({ limit: 50 });
+
+  function totalCountForTopic(topicKey: string): number {
+    const hardcoded = countArticlesInTopic(topicKey as Parameters<typeof countArticlesInTopic>[0]);
+    const dbCount = dbPieces.filter((p) => p.topic === topicKey).length;
+    return hardcoded + dbCount;
+  }
+
+  // Featured = newest 4 across both sources, by ISO date desc.
+  const merged: Array<{
+    slug: string;
+    title: string;
+    excerpt: string;
+    readMinutes: number | null;
+    level: keyof typeof LEVEL_TONE | null;
+    publishedAt: string;
+    href: string;
+  }> = [
+    ...ARTICLES.map((a) => ({
+      slug: a.slug,
+      title: a.title,
+      excerpt: a.excerpt,
+      readMinutes: a.readMinutes,
+      level: a.level,
+      publishedAt: a.publishedAt,
+      href: `/learn/${a.slug}`,
+    })),
+    ...dbPieces.map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt ?? "",
+      readMinutes: p.read_minutes,
+      level: null,
+      publishedAt: p.published_at ?? p.created_at,
+      href: `/learn/p/${p.slug}`,
+    })),
+  ];
+  const featured = merged
     .sort((a, b) => (a.publishedAt > b.publishedAt ? -1 : 1))
-    .slice(0, 4);
+    .slice(0, 6);
 
   return (
     <>
@@ -47,7 +90,7 @@ export default function LearnIndexPage() {
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {TOPICS.map((topic) => {
-                const count = countArticlesInTopic(topic.key);
+                const count = totalCountForTopic(topic.key);
                 return (
                   <Link
                     key={topic.key}
@@ -84,22 +127,30 @@ export default function LearnIndexPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
               {featured.map((article) => (
                 <Link
-                  key={article.slug}
-                  href={`/learn/${article.slug}`}
+                  key={article.href}
+                  href={article.href}
                   className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:border-white/20 hover:bg-white/[0.04]"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span
-                      className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] ${LEVEL_TONE[article.level]}`}
-                    >
-                      {article.level}
-                    </span>
-                    <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
+                    {article.level ? (
+                      <span
+                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] ${LEVEL_TONE[article.level]}`}
+                      >
+                        {article.level}
+                      </span>
+                    ) : (
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400">
+                        New
+                      </span>
+                    )}
+                    {article.readMinutes && (
+                      <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
+                    )}
                   </div>
                   <h3 className="mt-3 text-lg font-semibold text-white transition group-hover:text-violet-200">
                     {article.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-6 text-neutral-400">
+                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-neutral-400">
                     {article.excerpt}
                   </p>
                 </Link>
