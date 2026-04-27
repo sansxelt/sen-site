@@ -7,12 +7,7 @@ const channels = [
   {
     title: "General support",
     email: "help@sansxel.ai",
-    description: "Questions about accounts, auth, access, and onboarding.",
-  },
-  {
-    title: "Write for Learn",
-    email: "help@sansxel.ai",
-    description: "Apply to contribute. Send your name, a link to past work, and the topics you want to cover. Approved writers get a hardlocked byline.",
+    description: "Accounts, auth, access, onboarding. Also where you apply to write for Learn — send your name, past work, and topics; approved writers get a hardlocked byline.",
   },
   {
     title: "Privacy requests",
@@ -40,7 +35,7 @@ export function ContactChannels() {
 
   return (
     <>
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {channels.map(({ title, email, description }) => (
           <button
             key={title}
