@@ -4,6 +4,7 @@ import { AuroraBackground } from "@/components/aurora-background";
 import { LearnShell } from "@/components/learn/learn-shell";
 import { LearnPieceView } from "@/components/learn/learn-piece-view";
 import { getPieceWithChapters } from "@/lib/learn-db";
+import { isAdminEmail } from "@/lib/admin";
 
 // DB-backed Learn detail page. /learn/p/[slug] always lands on the
 // first chapter so the canonical share URL stays clean. Chapters
@@ -13,7 +14,14 @@ import { getPieceWithChapters } from "@/lib/learn-db";
 
 export const revalidate = 300; // 5 min, so new pieces propagate without redeploy
 
+const CANONICAL_BASE = "https://www.sansxel.ai";
+
 type Params = { slug: string };
+
+function authorName(authorEmail: string | null): string {
+  if (!authorEmail || isAdminEmail(authorEmail)) return "Sansxel (OWNER)";
+  return authorEmail;
+}
 
 export async function generateMetadata({
   params,
@@ -25,13 +33,27 @@ export async function generateMetadata({
   if (!piece || piece.status !== "published") {
     return { title: "Not found" };
   }
+  const url = `${CANONICAL_BASE}/learn/p/${piece.slug}`;
   return {
     title: piece.title,
     description: piece.excerpt ?? undefined,
+    alternates: { canonical: url },
+    authors: [{ name: authorName(piece.author_email) }],
     openGraph: {
       title: piece.title,
       description: piece.excerpt ?? undefined,
       type: "article",
+      url,
+      siteName: "sansxel",
+      publishedTime: piece.published_at ?? undefined,
+      modifiedTime: piece.updated_at,
+      authors: [authorName(piece.author_email)],
+      tags: [piece.topic, piece.subtopic ?? ""].filter(Boolean),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: piece.title,
+      description: piece.excerpt ?? undefined,
     },
   };
 }
@@ -47,10 +69,50 @@ export default async function LearnPiecePage({
     notFound();
   }
 
+  // JSON-LD Article schema. Google reads this for rich-result
+  // eligibility (article cards in search, author/date display) and
+  // for general topical understanding. Inline <script> in the page
+  // is the standard pattern; Next.js handles the SSR fine.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: piece.title,
+    description: piece.excerpt ?? undefined,
+    datePublished: piece.published_at ?? undefined,
+    dateModified: piece.updated_at,
+    author: {
+      "@type": "Person",
+      name: authorName(piece.author_email),
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "sansxel",
+      url: "https://www.sansxel.ai",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${CANONICAL_BASE}/learn/p/${piece.slug}`,
+    },
+    articleSection: piece.topic,
+    keywords: [piece.topic, piece.subtopic, ...piece.sources.map((s) => s.title ?? s.url).filter(Boolean)]
+      .filter(Boolean)
+      .join(", "),
+    citation: piece.sources.map((s) => ({
+      "@type": "CreativeWork",
+      name: s.title ?? s.url,
+      url: s.url,
+    })),
+  };
+
   return (
     <>
       <AuroraBackground />
       <LearnShell>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <LearnPieceView piece={piece} activeChapter={piece.chapters[0]} />
       </LearnShell>
     </>

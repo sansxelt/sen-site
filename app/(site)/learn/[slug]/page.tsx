@@ -17,13 +17,33 @@ export async function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
+const CANONICAL_BASE = "https://www.sansxel.ai";
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const article = ARTICLE_BY_SLUG[slug];
   if (!article) return { title: "Not found" };
+  const url = `${CANONICAL_BASE}/learn/${article.slug}`;
   return {
     title: `${article.title} · Learn`,
     description: article.excerpt,
+    alternates: { canonical: url },
+    authors: [{ name: "Sansxel (OWNER)" }],
+    openGraph: {
+      title: article.title,
+      description: article.excerpt,
+      type: "article",
+      url,
+      siteName: "sansxel",
+      publishedTime: article.publishedAt,
+      authors: ["Sansxel (OWNER)"],
+      tags: [article.topic, article.subtopic ?? ""].filter(Boolean),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.excerpt,
+    },
   };
 }
 
@@ -38,10 +58,34 @@ export default async function ArticlePage({ params }: Props) {
   const fillers = others.filter((a) => a.topic !== article.topic);
   const related = [...sameTopic, ...fillers].slice(0, 3);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.excerpt,
+    datePublished: article.publishedAt,
+    author: { "@type": "Person", name: "Sansxel (OWNER)" },
+    publisher: {
+      "@type": "Organization",
+      name: "sansxel",
+      url: "https://www.sansxel.ai",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${CANONICAL_BASE}/learn/${article.slug}`,
+    },
+    articleSection: article.topic,
+  };
+
   return (
     <>
       <AuroraBackground />
       <LearnShell activeTopic={article.topic} activeSubtopic={article.subtopic}>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <ArticleShell meta={article}>{article.render()}</ArticleShell>
 
         {related.length > 0 && (
