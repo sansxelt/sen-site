@@ -9,9 +9,22 @@ import {
   getSubtopic,
   getTopic,
   LEVEL_TONE,
+  type LevelKey,
 } from "@/lib/learn-content";
+import { listPublishedPieces } from "@/lib/learn-db";
+
+type MergedArticle = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  level: LevelKey | null;
+  readMinutes: number | null;
+  href: string;
+};
 
 type Props = { params: Promise<{ topic: string; subtopic: string }> };
+
+export const revalidate = 300;
 
 export async function generateStaticParams() {
   return TOPICS.flatMap((t) =>
@@ -36,7 +49,30 @@ export default async function SubtopicPage({ params }: Props) {
   const sub = t ? getSubtopic(t, subtopic) : null;
   if (!t || !sub) notFound();
 
-  const articles = articlesInSubtopic(t.key, sub.key);
+  // Merge hardcoded ARTICLES with DB pieces tagged to this exact
+  // subtopic. DB pieces don't have a level so render with a "New"
+  // pill instead of the beginner/intermediate/advanced tone.
+  const hardcoded: MergedArticle[] = articlesInSubtopic(t.key, sub.key).map((a) => ({
+    slug: a.slug,
+    title: a.title,
+    excerpt: a.excerpt,
+    level: a.level,
+    readMinutes: a.readMinutes,
+    href: `/learn/${a.slug}`,
+  }));
+  const dbPieces: MergedArticle[] = (
+    await listPublishedPieces({ topic: t.key, limit: 200 })
+  )
+    .filter((p) => p.subtopic === sub.key)
+    .map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      excerpt: p.excerpt ?? "",
+      level: null,
+      readMinutes: p.read_minutes,
+      href: `/learn/p/${p.slug}`,
+    }));
+  const articles: MergedArticle[] = [...hardcoded, ...dbPieces];
 
   return (
     <>
@@ -81,17 +117,25 @@ export default async function SubtopicPage({ params }: Props) {
             <div className="mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
               {articles.map((article) => (
                 <Link
-                  key={article.slug}
-                  href={`/learn/${article.slug}`}
+                  key={article.href}
+                  href={article.href}
                   className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:border-white/20 hover:bg-white/[0.04]"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span
-                      className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] ${LEVEL_TONE[article.level]}`}
-                    >
-                      {article.level}
-                    </span>
-                    <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
+                    {article.level ? (
+                      <span
+                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] ${LEVEL_TONE[article.level]}`}
+                      >
+                        {article.level}
+                      </span>
+                    ) : (
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400">
+                        New
+                      </span>
+                    )}
+                    {article.readMinutes && (
+                      <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
+                    )}
                   </div>
                   <h3 className="mt-3 text-base font-semibold text-white transition group-hover:text-violet-200">
                     {article.title}

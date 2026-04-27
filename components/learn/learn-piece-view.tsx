@@ -113,12 +113,9 @@ export function LearnPieceView({
             </>
           )}
         </div>
-        <div className="flex items-baseline gap-3">
-          <span className="text-4xl">{piece.cover_emoji ?? "📄"}</span>
-          <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
-            {piece.title}
-          </h1>
-        </div>
+        <h1 className="text-3xl font-semibold leading-tight text-white sm:text-4xl">
+          {piece.title}
+        </h1>
         <div className="flex items-center gap-2 text-xs text-neutral-400">
           <span>By</span>
           <span className="font-medium text-neutral-200">
