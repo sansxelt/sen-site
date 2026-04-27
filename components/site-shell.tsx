@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { auth } from "../auth";
+import { isAdminEmail } from "../lib/admin";
 import { getSignInPath } from "../lib/auth-ui";
 import { getZone } from "../lib/zone";
 import { MobileNav } from "./mobile-nav";
@@ -67,6 +68,7 @@ const primaryLinks: SiteNavLink[] = [
 export async function SiteShell({ children }: { children: ReactNode }) {
   const [session, zone] = await Promise.all([auth(), getZone()]);
   const signedIn = Boolean(session?.user?.email);
+  const isAdmin = isAdminEmail(session?.user?.email ?? null);
   const logoSrc = ZONE_LOGO[zone];
 
   return (
@@ -114,6 +116,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               <MobileNav
                 links={primaryLinks.filter((l) => !l.authOnly || signedIn)}
                 signedIn={signedIn}
+                isAdmin={isAdmin}
                 accessHref={signedIn ? "/app" : getSignInPath()}
               />
 
@@ -134,7 +137,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               {/* Dropdown splits the primary CTA into the two real
                   product surfaces (workshop + platform) so users can
                   pick instead of being forced to one. */}
-              <ZoneDropdown signedIn={signedIn} />
+              <ZoneDropdown signedIn={signedIn} isAdmin={isAdmin} />
             </div>
           </div>
         </div>

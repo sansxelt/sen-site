@@ -12,6 +12,7 @@ type Props = {
   links:       Link[];
   secondary?:  Link[];
   signedIn:    boolean;
+  isAdmin?:    boolean;
   accessHref:  string;
 };
 
@@ -28,7 +29,7 @@ type Props = {
  * tap register before the new page fades in.  We close the drawer on
  * every pathname change to keep state tidy.
  */
-export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
+export function MobileNav({ links, secondary, signedIn, isAdmin = false, accessHref }: Props) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -146,6 +147,9 @@ export function MobileNav({ links, secondary, signedIn, accessHref }: Props) {
                       { href: "/account/settings", label: "Settings" },
                       { href: "/account/billing",  label: "Billing" },
                       { href: "/account/usage",    label: "Usage" },
+                      ...(isAdmin
+                        ? [{ href: "/account/content", label: "Learn content (admin)" }]
+                        : []),
                     ].map((link) => (
                       <Link
                         key={link.href}

@@ -14,9 +14,10 @@ import { useEffect, useRef, useState } from "react";
 
 type Props = {
   signedIn: boolean;
+  isAdmin?: boolean;
 };
 
-export function ZoneDropdown({ signedIn }: Props) {
+export function ZoneDropdown({ signedIn, isAdmin = false }: Props) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -150,6 +151,16 @@ export function ZoneDropdown({ signedIn }: Props) {
               >
                 Usage
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/account/content"
+                  role="menuitem"
+                  onClick={() => setOpen(false)}
+                  className="block px-4 py-2.5 text-sm text-violet-200 transition hover:bg-white/[0.04] hover:text-white"
+                >
+                  Learn content (admin)
+                </Link>
+              )}
               <button
                 type="button"
                 role="menuitem"

@@ -8,7 +8,11 @@ import {
   type LearnPiece,
   type LearnPieceStatus,
 } from "../../../lib/learn-db";
-import { publishAllDraftsAction, publishOneAction } from "./actions";
+import {
+  createDraftFromFormAction,
+  publishAllDraftsAction,
+  publishOneAction,
+} from "./actions";
 
 // Admin-only Learn content review board. Lists drafts, in-review,
 // and recently published pieces so the operator can land thousands
@@ -54,6 +58,54 @@ export default async function ContentAdminPage() {
         <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-4 py-3 text-sm text-amber-200">
           Database isn&apos;t configured. Set <code>SUPABASE_URL</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code>, then run <code>docs/v0.1.16-learn-content.sql</code>.
         </div>
+      )}
+
+      {dbReady && (
+        <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5">
+          <h2 className="text-sm font-medium uppercase tracking-[0.14em] text-neutral-300">
+            New piece
+          </h2>
+          <p className="mt-1 text-xs text-neutral-500">
+            Create a draft, then write the body on the next screen.
+          </p>
+          <form
+            action={createDraftFromFormAction}
+            className="mt-4 grid gap-3 sm:grid-cols-[1.6fr_1fr_1fr_auto]"
+          >
+            <input
+              name="title"
+              required
+              placeholder="Title"
+              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-neutral-100 outline-none transition focus:border-white/30"
+            />
+            <input
+              name="topic"
+              placeholder="Topic (e.g. products)"
+              defaultValue="general"
+              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-neutral-100 outline-none transition focus:border-white/30"
+            />
+            <input
+              name="subtopic"
+              placeholder="Subtopic (optional)"
+              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-neutral-100 outline-none transition focus:border-white/30"
+            />
+            <select
+              name="type"
+              defaultValue="article"
+              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-neutral-100 outline-none transition focus:border-white/30"
+            >
+              <option value="article">Article</option>
+              <option value="info">Info</option>
+              <option value="research">Research</option>
+            </select>
+            <button
+              type="submit"
+              className="col-span-full justify-self-end rounded-full border border-emerald-400/30 bg-emerald-400/[0.10] px-4 py-1.5 text-xs font-medium text-emerald-200 transition hover:bg-emerald-400/[0.18]"
+            >
+              Create draft
+            </button>
+          </form>
+        </section>
       )}
 
       <Bucket
