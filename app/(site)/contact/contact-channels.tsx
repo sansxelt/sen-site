@@ -7,7 +7,7 @@ const channels = [
   {
     title: "General support",
     email: "help@sansxel.ai",
-    description: "Accounts, auth, access, onboarding. Also where you apply to write for Learn — send your name, past work, and topics; approved writers get a hardlocked byline.",
+    description: "Accounts, auth, access, onboarding. Also where you apply to write for Learn. Send your name, past work, and the topics you want to cover. Approved writers get a hardlocked byline.",
   },
   {
     title: "Privacy requests",
