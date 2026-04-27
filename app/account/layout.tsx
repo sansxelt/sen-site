@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "../../auth";
 import { DashboardNav } from "../../components/dashboard-nav";
+import { isAdminEmail } from "../../lib/admin";
 import { getZone } from "../../lib/zone";
 
 // /account moved off the proxy auth gate (proxy.ts now only gates
@@ -15,6 +16,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
   if (!userEmail) {
     redirect("/signin?callbackUrl=%2Faccount");
   }
+  const isAdmin = isAdminEmail(userEmail);
 
   return (
     <div className="relative min-h-screen bg-neutral-950 text-neutral-100">
@@ -23,7 +25,7 @@ export default async function AccountLayout({ children }: { children: ReactNode 
       {/* Flex column on mobile, flex row on desktop */}
       <div className="flex min-h-screen flex-col lg:flex-row">
         {/* DashboardNav renders the sidebar on desktop and top bar on mobile */}
-        <DashboardNav userEmail={userEmail} zone={zone} />
+        <DashboardNav userEmail={userEmail} zone={zone} isAdmin={isAdmin} />
 
         {/* pb-[calc(env(safe-area-inset-bottom,0px)+72px)] clears the fixed mobile bottom nav */}
         <main className="flex-1 px-4 py-6 pb-[88px] sm:px-6 sm:pb-[88px] lg:py-10 lg:pl-10 lg:pr-8 lg:pb-10">

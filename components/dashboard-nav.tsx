@@ -327,7 +327,23 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; zone?: Zone }) {
+function PenIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="m2.5 13.5 1-3 8-8 2 2-8 8-3 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function DashboardNav({
+  userEmail,
+  zone = "apex",
+  isAdmin = false,
+}: {
+  userEmail: string;
+  zone?: Zone;
+  isAdmin?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const inWorkshop = pathname === "/app" || pathname.startsWith("/app/");
@@ -364,6 +380,20 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
     navGroups[2].items[2],          // Bench  → Desktop (primary CTA)
   ];
 
+  // Admins get an extra group exposing the Learn content board
+  // alongside the workshop stations. Hidden for everyone else.
+  const effectiveGroups: NavGroup[] = isAdmin
+    ? [
+        ...navGroups,
+        {
+          label: "Admin",
+          items: [
+            { href: "/account/content", label: "Learn content", icon: <PenIcon /> },
+          ],
+        },
+      ]
+    : navGroups;
+
   const navLink = (item: NavItem) => (
     <Link
       key={item.href}
@@ -395,7 +425,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
               <span className="text-[10px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
             </div>
           </Link>
-          <ThemeToggle />
+          <ThemeToggle compact />
         </div>
 
         {/* Chat link always visible regardless of route. Clicking it
@@ -418,7 +448,7 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
         </Link>
 
         <nav className="flex flex-col gap-3">
-          {navGroups.map((group) => (
+          {effectiveGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-0.5">
               <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
                 {group.label}
@@ -500,13 +530,23 @@ export function DashboardNav({ userEmail, zone = "apex" }: { userEmail: string; 
           </Link>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {userEmail && (
             <span className="hidden max-w-[140px] truncate text-xs text-neutral-500 sm:block">
               {userEmail}
             </span>
           )}
-          <ThemeToggle />
+          <ThemeToggle compact />
+          {isAdmin && (
+            <Link
+              href="/account/content"
+              className="flex items-center gap-1 rounded-xl border border-violet-400/30 bg-violet-400/[0.08] px-2.5 py-1.5 text-xs text-violet-200 transition hover:bg-violet-400/[0.16] hover:text-white"
+              title="Learn content (admin)"
+            >
+              <PenIcon />
+              <span className="hidden xs:inline sm:inline">Admin</span>
+            </Link>
+          )}
           <Link
             href="/home"
             className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"

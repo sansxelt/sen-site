@@ -136,17 +136,17 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
               <ThemeToggle />
 
-              {/* Account avatar (signed-in only). Separate from the
-                  Apps dropdown so "where do I go" stays distinct
-                  from "manage me". */}
-              {signedIn && (
-                <AccountDropdown email={userEmail} isAdmin={isAdmin} />
-              )}
-
               {/* Dropdown splits the primary CTA into the two real
                   product surfaces (workshop + platform) so users can
                   pick instead of being forced to one. */}
               <ZoneDropdown signedIn={signedIn} />
+
+              {/* Account avatar pinned to the absolute right (signed-in
+                  only). "Manage me" lives at the edge of the chrome,
+                  past the primary CTA. */}
+              {signedIn && (
+                <AccountDropdown email={userEmail} isAdmin={isAdmin} />
+              )}
             </div>
           </div>
         </div>

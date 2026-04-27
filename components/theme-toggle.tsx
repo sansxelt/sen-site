@@ -57,7 +57,13 @@ const OPTIONS: Array<{
   },
 ];
 
-export function ThemeToggle({ className = "" }: { className?: string }) {
+export function ThemeToggle({
+  className = "",
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   const [choice, setChoiceState] = useState<Choice>("dark");
   const [mounted, setMounted] = useState(false);
 
@@ -105,7 +111,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
             title={opt.label}
             aria-label={opt.label}
             className={
-              "inline-flex h-7 w-7 items-center justify-center rounded-md transition " +
+              `inline-flex ${compact ? "h-6 w-6" : "h-7 w-7"} items-center justify-center rounded-md transition ` +
               (active
                 ? "bg-white/[0.12] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.06)_inset]"
                 : "text-neutral-400 hover:bg-white/[0.06] hover:text-white")
