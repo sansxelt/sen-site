@@ -1668,6 +1668,75 @@ div[id] {
 .webchat-msg .md:has(p:has(> img:only-child) + p:has(> img:only-child)) p:has(> img:only-child) img {
   margin: 0;
 }
+
+/* ── Image-result card (custom render for image-gen turns) ──────
+   Same bytes as the markdown render above, but laid out as a real
+   card with iterate controls. Only used when an assistant turn is
+   detected as image-only — text turns keep using the markdown
+   bubble. */
+.webchat-img-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.webchat-img-grid {
+  display: grid;
+  gap: 6px;
+}
+.webchat-img-grid--1 { grid-template-columns: 1fr; }
+.webchat-img-grid--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.webchat-img-grid--3,
+.webchat-img-grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.webchat-img-tile {
+  display: block;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.3);
+  line-height: 0;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+.webchat-img-tile:hover {
+  border-color: rgba(167, 139, 250, 0.45);
+  transform: translateY(-1px);
+}
+.webchat-img-tile img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.webchat-img-caption {
+  font-size: 12.5px;
+  font-style: italic;
+  line-height: 1.5;
+  color: rgba(229, 231, 235, 0.65);
+}
+.webchat-img-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.webchat-img-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(229, 231, 235, 0.85);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.webchat-img-btn:hover {
+  background: rgba(167, 139, 250, 0.10);
+  border-color: rgba(167, 139, 250, 0.4);
+  color: #f5f3ff;
+}
 .webchat-msg .md ul, .webchat-msg .md ol { margin: 0.55em 0; padding-left: 1.4em; }
 .webchat-msg .md li { margin: 0.18em 0; }
 .webchat-msg .md a {

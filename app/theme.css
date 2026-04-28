@@ -104,6 +104,30 @@ html[data-theme="light"] .webchat-empty-continue-arrow {
   color: #6d28d9;
 }
 
+/* Image-result card in light mode: tone the tile borders + caption
+   for the lighter surface. The action buttons share the same hue
+   but with darker baseline ink. */
+html[data-theme="light"] .webchat-img-tile {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+html[data-theme="light"] .webchat-img-tile:hover {
+  border-color: rgba(139, 92, 246, 0.45);
+}
+html[data-theme="light"] .webchat-img-caption {
+  color: rgba(31, 31, 31, 0.7);
+}
+html[data-theme="light"] .webchat-img-btn {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.10);
+  color: #1f1f1f;
+}
+html[data-theme="light"] .webchat-img-btn:hover {
+  background: rgba(139, 92, 246, 0.10);
+  border-color: rgba(139, 92, 246, 0.45);
+  color: #0a0a0c;
+}
+
 /* Account/dashboard sidebar */
 html[data-theme="light"] aside.lg\:flex { background: rgba(0, 0, 0, 0.02); border-color: rgba(0, 0, 0, 0.10); }
 

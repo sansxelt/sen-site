@@ -1810,6 +1810,18 @@ export function WebChat({
                     <WebAssistantBubble
                       content={m.content}
                       streaming={isStillStreaming}
+                      userPrompt={
+                        i > 0 && messages[i - 1]?.role === "user"
+                          ? messages[i - 1].content
+                          : undefined
+                      }
+                      onIterate={(prompt) => {
+                        void generateImageFromInput(prompt);
+                      }}
+                      onPrefillInput={(text) => {
+                        setInput(text);
+                        textareaRef.current?.focus();
+                      }}
                     />
                   ) : (
                     m.content
@@ -2296,15 +2308,76 @@ function parseSections(content: string): Section[] {
   return out;
 }
 
+// Detects assistant turns that are nothing but image markdown
+// (with an optional italic caption above). Returns the parsed
+// urls + caption when the whole message is an image render, else
+// null. Letting us swap the markdown bubble for a richer card
+// without changing how generation/persistence work.
+function parseImageMessage(content: string): {
+  caption: string | null;
+  urls: string[];
+} | null {
+  const trimmed = content.trim();
+  if (!trimmed.includes("![")) return null;
+
+  let body = trimmed;
+  let caption: string | null = null;
+  // Optional leading italic line, e.g. "*revised prompt text*"
+  const captionMatch = body.match(/^\*([^*\n][^*\n]*)\*\s*\n+/);
+  if (captionMatch) {
+    caption = captionMatch[1].trim();
+    body = body.slice(captionMatch[0].length).trim();
+  }
+
+  const urls: string[] = [];
+  const imgRe = /!\[[^\]]*\]\(([^)\s]+)[^)]*\)/g;
+  let lastEnd = 0;
+  let m: RegExpExecArray | null;
+  while ((m = imgRe.exec(body)) !== null) {
+    if (body.slice(lastEnd, m.index).trim().length > 0) return null;
+    urls.push(m[1]);
+    lastEnd = m.index + m[0].length;
+  }
+  if (body.slice(lastEnd).trim().length > 0) return null;
+  if (urls.length === 0) return null;
+  return { caption, urls };
+}
+
 function WebAssistantBubble({
   content,
   streaming,
+  userPrompt,
+  onIterate,
+  onPrefillInput,
 }: {
   content: string;
   streaming: boolean;
+  userPrompt?: string;
+  onIterate?: (prompt: string) => void;
+  onPrefillInput?: (text: string) => void;
 }) {
   // Strip thinking blocks, internal reasoning isn't shown to the user.
   const sections = parseSections(content).filter((s) => s.type !== "thinking");
+
+  // Image-result fast path: when the whole message is image markdown
+  // (with optional caption), render a custom card with iterate
+  // controls instead of plain markdown. Streaming bypasses this so
+  // the placeholder "Generating image…" still flows normally.
+  if (!streaming && sections.length === 1) {
+    const parsed = parseImageMessage(sections[0].text);
+    if (parsed) {
+      return (
+        <WebImageResultCard
+          urls={parsed.urls}
+          caption={parsed.caption}
+          userPrompt={userPrompt}
+          onIterate={onIterate}
+          onPrefillInput={onPrefillInput}
+        />
+      );
+    }
+  }
+
   return (
     <>
       {sections.map((s, i) => {
@@ -2328,6 +2401,94 @@ function WebAssistantBubble({
         );
       })}
     </>
+  );
+}
+
+// Custom render for image-gen output. Replaces the plain markdown
+// `![](url)` block with a grid + iterate controls (variation,
+// refine, download, copy). The data path is unchanged: the
+// assistant turn still stores image markdown so persistence,
+// re-loading old threads, and copy-paste keep working \u2014 the card
+// just sits on top of the same bytes when the message is detected
+// as an image-only render.
+function WebImageResultCard({
+  urls,
+  caption,
+  userPrompt,
+  onIterate,
+  onPrefillInput,
+}: {
+  urls: string[];
+  caption: string | null;
+  userPrompt?: string;
+  onIterate?: (prompt: string) => void;
+  onPrefillInput?: (text: string) => void;
+}) {
+  const promptForActions = (userPrompt ?? caption ?? "").trim();
+  const canIterate = Boolean(promptForActions && onIterate);
+  const canRefine = Boolean(promptForActions && onPrefillInput);
+
+  return (
+    <div className="webchat-img-card">
+      <div
+        className={`webchat-img-grid webchat-img-grid--${urls.length}`}
+      >
+        {urls.map((u, i) => (
+          <a
+            key={`${u}-${i}`}
+            href={u}
+            target="_blank"
+            rel="noreferrer"
+            className="webchat-img-tile"
+            title="Open full size"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={u} alt={`generated ${i + 1}`} />
+          </a>
+        ))}
+      </div>
+
+      {caption && (
+        <div className="webchat-img-caption">{caption}</div>
+      )}
+
+      <div className="webchat-img-actions">
+        {canIterate && (
+          <button
+            type="button"
+            className="webchat-img-btn"
+            onClick={() => onIterate?.(promptForActions)}
+            title="Generate another version of the same prompt"
+          >
+            <span aria-hidden>\u21bb</span> Variation
+          </button>
+        )}
+        {canRefine && (
+          <button
+            type="button"
+            className="webchat-img-btn"
+            onClick={() => onPrefillInput?.(promptForActions)}
+            title="Edit the prompt and run again"
+          >
+            <span aria-hidden>\u270e</span> Refine
+          </button>
+        )}
+        {urls.map((u, i) => (
+          <a
+            key={`dl-${u}-${i}`}
+            href={u}
+            download={`sansxel-image-${i + 1}.png`}
+            target="_blank"
+            rel="noreferrer"
+            className="webchat-img-btn"
+            title={urls.length > 1 ? `Download image ${i + 1}` : "Download"}
+          >
+            <span aria-hidden>\u2193</span>{" "}
+            {urls.length > 1 ? `#${i + 1}` : "Download"}
+          </a>
+        ))}
+      </div>
+    </div>
   );
 }
 
