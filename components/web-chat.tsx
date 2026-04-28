@@ -586,12 +586,22 @@ export function WebChat({
     if (!text && imageBlocks.length === 0) return;
 
     // Auto-route image-gen intent so users don't have to click a
-    // separate button. "gen an image of X", "draw me a Y", "make a
-    // picture of Z" → route to /api/ai/image instead of a chat turn.
+    // separate button. Two patterns trigger:
+    //   1. Verb + visual-noun: "make a graph", "draw a logo",
+    //      "show me a chart", "give me an illustration"
+    //   2. Visual verb alone: "plot y=x+5", "graph this", "chart
+    //      sales", "visualize the data", "diagram the flow"
     // Skipped when there's an attached image (probably means
-    // "analyze this", not "make a new one").
-    const IMAGE_GEN_INTENT = /^\s*(?:gen(?:erate)?|make|create|draw|paint|imagine|illustrate|render|design|sketch)\s+(?:me\s+)?(?:an?\s+|the\s+|some\s+)?(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|logo|graphic|render)\b/i;
-    if (IMAGE_GEN_INTENT.test(baseText) && imageBlocks.length === 0) {
+    // "analyze this", not "make a new one"). False positives are
+    // recoverable — user retypes once they see the image.
+    const IMAGE_GEN_INTENT =
+      /^\s*(?:gen(?:erate)?|make|create|draw|paint|imagine|illustrate|render|design|sketch|show(?:\s+me)?|give(?:\s+me)?)\s+(?:me\s+)?(?:an?\s+|the\s+|some\s+)?(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|logo|graphic|render|graph|chart|plot|diagram|map|visualization|viz|infographic|figure|icon|poster|banner|wallpaper)\b/i;
+    const VISUAL_VERB_INTENT =
+      /^\s*(?:plot|graph|chart|visuali[sz]e|diagram)\b\s+\S/i;
+    const isImageRequest =
+      (IMAGE_GEN_INTENT.test(baseText) || VISUAL_VERB_INTENT.test(baseText)) &&
+      imageBlocks.length === 0;
+    if (isImageRequest) {
       lei.clearAttachments();
       void generateImageFromInput(baseText);
       setInput("");
