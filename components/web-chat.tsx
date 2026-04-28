@@ -309,6 +309,7 @@ export function WebChat({
         const detailRes = await fetch(`/api/threads/${targetId}`, { cache: "no-store" });
         if (!detailRes.ok || cancelled) return;
         const detail = (await detailRes.json()) as {
+          thread?: { updated_at?: string };
           messages?: Array<{
             role: "user" | "assistant" | "system";
             content: string;
@@ -336,7 +337,100 @@ export function WebChat({
               ? ((m as { images?: ChatImageInline[] }).images ?? undefined)
               : undefined,
           }));
-        setMessages(restored);
+        // Resume-streaming detection: if the user comes back to a
+        // thread that's still generating server-side (thread bumped
+        // its updated_at within ~10s), flip the streaming flag so
+        // the bouncing dots / cursor render, then poll until the
+        // server stream actually ends. Two cases hit this path:
+        //   - chat: assistant placeholder exists (last role is
+        //     assistant) and content is still filling in
+        //   - image gen: NO placeholder is created, last role is
+        //     user, image is being generated server-side
+        // For the second case we append a synthetic empty assistant
+        // bubble so the inflight UI shows; the next poll replaces
+        // it once the server saves the real assistant turn.
+        const updatedAt = detail.thread?.updated_at;
+        const ageMs = updatedAt
+          ? Date.now() - new Date(updatedAt).getTime()
+          : Number.POSITIVE_INFINITY;
+        const lastMsg = restored[restored.length - 1];
+        const isResuming = Boolean(lastMsg) && ageMs < 10_000;
+        const initial =
+          isResuming && lastMsg?.role === "user"
+            ? [...restored, { role: "assistant" as const, content: "" }]
+            : restored;
+        setMessages(initial);
+
+        if (isResuming) {
+          setStreaming(true);
+          // Poll the thread every 2s for fresh content. Stop once
+          // updated_at has been quiet for 5s (server's last save
+          // happened, stream ended) or after a hard 90s ceiling.
+          let lastSeen = updatedAt ?? new Date().toISOString();
+          let lastChange = Date.now();
+          const startedAt = Date.now();
+          const pollId = window.setInterval(async () => {
+            if (cancelled || threadIdRef.current !== targetId) {
+              window.clearInterval(pollId);
+              return;
+            }
+            try {
+              const r = await fetch(`/api/threads/${targetId}`, {
+                cache: "no-store",
+              });
+              if (!r.ok) return;
+              const d = (await r.json()) as {
+                thread?: { updated_at?: string };
+                messages?: Array<{
+                  role: "user" | "assistant" | "system";
+                  content: string;
+                  images?: ChatImageInline[] | null;
+                }>;
+              };
+              if (cancelled || threadIdRef.current !== targetId) return;
+              const next = (d.messages ?? [])
+                .filter((mm) => mm.role === "user" || mm.role === "assistant")
+                .map((mm) => ({
+                  role: mm.role as "user" | "assistant",
+                  content: mm.content,
+                  images: Array.isArray(
+                    (mm as { images?: ChatImageInline[] | null }).images,
+                  )
+                    ? ((mm as { images?: ChatImageInline[] }).images ?? undefined)
+                    : undefined,
+                }));
+              const nextLast = next[next.length - 1];
+              const augmented =
+                nextLast?.role === "user"
+                  ? [...next, { role: "assistant" as const, content: "" }]
+                  : next;
+              setMessages(augmented);
+              const nextUpdated = d.thread?.updated_at;
+              if (nextUpdated && nextUpdated !== lastSeen) {
+                lastSeen = nextUpdated;
+                lastChange = Date.now();
+              }
+              const quietFor = Date.now() - lastChange;
+              const totalFor = Date.now() - startedAt;
+              // Bail when the server has been quiet for 5s AND the
+              // assistant turn has actually been saved. Avoids
+              // killing the spinner mid-image-gen just because the
+              // throttled save loop hasn't bumped updated_at lately.
+              const settled =
+                quietFor > 5_000 &&
+                nextLast?.role === "assistant" &&
+                (nextLast?.content ?? "").length > 0;
+              if (settled || totalFor > 90_000) {
+                window.clearInterval(pollId);
+                if (!cancelled && threadIdRef.current === targetId) {
+                  setStreaming(false);
+                }
+              }
+            } catch {
+              // ignore, next tick will retry
+            }
+          }, 2000);
+        }
       } catch {
         // ignore, blank chat is fine
       }
