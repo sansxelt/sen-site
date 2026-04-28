@@ -8,7 +8,12 @@ import { useLei } from "./lei-shell";
 import { previewCreditCost } from "@/lib/lei";
 import { planDisplayName } from "@/lib/pricing";
 
-type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatImageInline = { media_type: string; data: string };
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  images?: ChatImageInline[];
+};
 
 // Cross-component "thread is generating" tracker. WebChat writes;
 // chat-history rail + the floating back-to-chat pill read. Lives in
@@ -300,7 +305,11 @@ export function WebChat({
         const detailRes = await fetch(`/api/threads/${targetId}`, { cache: "no-store" });
         if (!detailRes.ok || cancelled) return;
         const detail = (await detailRes.json()) as {
-          messages?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+          messages?: Array<{
+            role: "user" | "assistant" | "system";
+            content: string;
+            images?: ChatImageInline[] | null;
+          }>;
         };
         if (cancelled) return;
         setThreadId(targetId);
@@ -314,7 +323,15 @@ export function WebChat({
         }
         const restored = (detail.messages ?? [])
           .filter((m) => m.role === "user" || m.role === "assistant")
-          .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+          .map((m) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+            images: Array.isArray(
+              (m as { images?: ChatImageInline[] | null }).images,
+            )
+              ? ((m as { images?: ChatImageInline[] }).images ?? undefined)
+              : undefined,
+          }));
         setMessages(restored);
       } catch {
         // ignore, blank chat is fine
@@ -616,7 +633,11 @@ export function WebChat({
       abortRef.current = null;
     }
 
-    const userMsg: ChatMessage = { role: "user", content: text };
+    const userMsg: ChatMessage = {
+      role: "user",
+      content: text,
+      images: imageBlocks.length > 0 ? imageBlocks : undefined,
+    };
     // Build the network payload separately so the in-UI message stays
     // text-only (we already render the image previews via the LEI
     // attachment chips above the input).
@@ -1834,7 +1855,7 @@ export function WebChat({
                       }}
                     />
                   ) : (
-                    m.content
+                    <WebUserBubble content={m.content} images={m.images} />
                   )}
                 </div>
               );
@@ -2410,6 +2431,47 @@ function WebAssistantBubble({
           </div>
         );
       })}
+    </>
+  );
+}
+
+// Renders a user turn. Plain text used to be inlined directly into
+// the bubble, but image-attached turns need to surface the image(s)
+// the user sent so the chat reads correctly on reload (and on
+// scroll-up). Images come back from the server as base64 with a
+// media_type, so we build a data URL on render. No markdown for
+// user turns \u2014 that's an assistant-only convention.
+function WebUserBubble({
+  content,
+  images,
+}: {
+  content: string;
+  images?: Array<{ media_type: string; data: string }>;
+}) {
+  const hasImages = Boolean(images && images.length > 0);
+  return (
+    <>
+      {hasImages && (
+        <div className="webchat-user-images">
+          {images!.map((img, i) => {
+            const url = `data:${img.media_type};base64,${img.data}`;
+            return (
+              <a
+                key={i}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="webchat-user-image-tile"
+                title="Open full size"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={`attachment ${i + 1}`} />
+              </a>
+            );
+          })}
+        </div>
+      )}
+      {content && <span>{content}</span>}
     </>
   );
 }

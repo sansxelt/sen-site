@@ -188,7 +188,13 @@ export async function appendMessage(args: {
   createdAt?: string;
 }): Promise<void> {
   const { email, threadId, role, content, createdAt } = args;
-  if (!email || !threadId || !content || !isDatabaseConfigured()) return;
+  if (!email || !threadId || !isDatabaseConfigured()) return;
+  // Allow empty content if there are images attached (image-only
+  // user turn). Without this, dropping an image and pressing send
+  // with no caption left no row in chat_messages, so reloading the
+  // thread showed the assistant analysis with no preceding turn.
+  const hasImages = Boolean(args.images && args.images.length);
+  if (!content && !hasImages) return;
   try {
     const supabase = getSupabaseAdminClient();
 

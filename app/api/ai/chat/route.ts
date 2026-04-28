@@ -849,7 +849,8 @@ export async function POST(request: Request) {
         const lastUserTurn = [...payload.messages].reverse().find((m) => m.role === "user");
         if (lastUserTurn) {
           const text = chatContentToText(lastUserTurn.content);
-          if (text) {
+          const hasImages = Array.isArray(lastUserTurn.images) && lastUserTurn.images.length > 0;
+          if (text || hasImages) {
             void saveMessage({
               email,
               threadId: resolvedThreadId,

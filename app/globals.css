@@ -1647,6 +1647,30 @@ div[id] {
 .webchat-msg .md p:first-child { margin-top: 0; }
 .webchat-msg .md p:last-child  { margin-bottom: 0; }
 
+/* User-turn attached images. Sit above any caption text inside
+   the user bubble so reloading a thread shows the image the user
+   sent (vs. an empty bubble before the assistant's analysis). */
+.webchat-user-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.webchat-user-image-tile {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  line-height: 0;
+  max-width: 220px;
+}
+.webchat-user-image-tile img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 /* Generated images. Single image: full width, rounded card. */
 .webchat-msg .md img {
   display: block;
