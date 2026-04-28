@@ -78,8 +78,8 @@ export default async function LearnIndexPage() {
               AI, coding, and shipping, explained simply.
             </h1>
             <p className="mt-4 text-base leading-7 text-neutral-200 sm:text-lg sm:leading-8">
-              A structured platform for going from zero to building real
-              products. Short reads, real code, no PhD tone.
+              Pick a topic, ship something by the end. Short reads, real
+              code, no fluff.
             </p>
           </div>
 
