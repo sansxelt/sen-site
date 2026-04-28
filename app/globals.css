@@ -1498,6 +1498,61 @@ div[id] {
 @media (max-width: 600px) {
   .webchat-empty-suggestions { grid-template-columns: 1fr; }
 }
+
+/* "Pick up where you left off" — surfaces the last 1-2 threads in
+   the empty state so a returning user can resume in one click
+   instead of digging through the rail. ChatGPT/Claude bury this
+   in their history sidebar; surfacing it on the canvas itself is
+   the maker-shaped move. */
+.webchat-empty-continue {
+  margin-top: 26px;
+  text-align: left;
+}
+.webchat-empty-continue-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.85);
+  margin-bottom: 8px;
+}
+.webchat-empty-continue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.webchat-empty-continue-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: rgba(167,139,250,0.06);
+  border: 1px solid rgba(167,139,250,0.22);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #f5f3ff;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.4;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+.webchat-empty-continue-item:hover {
+  background: rgba(167,139,250,0.14);
+  border-color: rgba(167,139,250,0.5);
+}
+.webchat-empty-continue-arrow {
+  font-size: 13px;
+  color: rgba(196,181,253,0.85);
+  flex-shrink: 0;
+}
+.webchat-empty-continue-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .webchat-empty-suggestion {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.08);

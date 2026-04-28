@@ -198,6 +198,7 @@ export function WebChat({
   //   (no params)       → on first mount only, restore most recent;
   //                       after that, leave the active chat alone
   const searchParams = useSearchParams();
+  const router = useRouter();
   const wantsNew = searchParams?.get("new") === "1";
   const requestedThreadParam = searchParams?.get("thread") ?? null;
   const promptParam = searchParams?.get("prompt") ?? null;
@@ -1499,6 +1500,40 @@ export function WebChat({
 
   const showEmpty = messages.length === 0;
   const allowedTiers = new Set(tiers.map((t) => t.tier));
+
+  // Recent threads pulled lazily for the empty-state "Pick up where
+  // you left off" section. Different from the chat history rail's
+  // copy of the same data — they don't share state, but the
+  // duplicate fetch is cheap and the rail isn't always mounted
+  // (mobile hides it). If the user signs out or has no history
+  // we just hide the section.
+  const [recentThreads, setRecentThreads] = useState<
+    Array<{ id: string; title: string; updated_at?: string }> | null
+  >(null);
+  useEffect(() => {
+    if (!showEmpty) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/threads", { cache: "no-store" });
+        if (!res.ok) {
+          if (!cancelled) setRecentThreads([]);
+          return;
+        }
+        const data = (await res.json()) as {
+          threads?: Array<{ id: string; title: string; updated_at?: string }>;
+        };
+        if (!cancelled) {
+          setRecentThreads((data.threads ?? []).slice(0, 2));
+        }
+      } catch {
+        if (!cancelled) setRecentThreads([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [showEmpty]);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // textareaRef is declared at the top of the component so the
   // document-level paste handler can use it. Reused here.
@@ -1705,6 +1740,30 @@ export function WebChat({
               Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
               working on, code, design, research, a half-baked idea at 2am.
             </p>
+            {recentThreads && recentThreads.length > 0 && (
+              <div className="webchat-empty-continue">
+                <div className="webchat-empty-continue-label">
+                  Pick up where you left off
+                </div>
+                <div className="webchat-empty-continue-list">
+                  {recentThreads.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      className="webchat-empty-continue-item"
+                      onClick={() => router.push(`/app?thread=${t.id}`)}
+                    >
+                      <span className="webchat-empty-continue-arrow" aria-hidden>
+                        ↻
+                      </span>
+                      <span className="webchat-empty-continue-title">
+                        {t.title || "Untitled chat"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="webchat-empty-suggestions">
               {[
                 "Help me debug this React state issue",
