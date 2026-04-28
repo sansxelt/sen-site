@@ -77,6 +77,56 @@ export function InflightBackToChat() {
     };
   }, []);
 
+  // Server-side verification: when localStorage says a thread is
+  // generating, double-check against the thread's updated_at. The
+  // server bumps updated_at every ~900ms during streaming (each
+  // throttled save in lib/chat-history:updateMessageContent), so
+  // anything older than 10s means generation has actually ended,
+  // even if the WebChat unmount nuked the cleanup that should have
+  // cleared the local flight flag.
+  useEffect(() => {
+    if (!flightId) return;
+    let cancelled = false;
+
+    const verify = async () => {
+      try {
+        const res = await fetch(`/api/threads/${flightId}`, {
+          cache: "no-store",
+        });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          thread?: { updated_at?: string };
+        };
+        const updatedAt = data?.thread?.updated_at;
+        if (!updatedAt) return;
+        const age = Date.now() - new Date(updatedAt).getTime();
+        if (age > 10_000 && !cancelled) {
+          // Stream is done (or died). Clear the stale flag so the
+          // pill stops claiming it's still generating.
+          if (typeof window !== "undefined") {
+            const flight = readFlight();
+            delete flight[flightId];
+            window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
+            window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+          }
+          setFlightId(null);
+        }
+      } catch {
+        // Verification is best-effort; pill stays until TTL if we
+        // can't reach the server.
+      }
+    };
+
+    // Immediate check on flight-id change, then poll while the pill
+    // is visible so a stream that finishes off-page hides quickly.
+    void verify();
+    const id = setInterval(verify, 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [flightId]);
+
   if (!flightId) return null;
   // On /app the user is already in the workspace and can see the
   // active generation directly, no need for the floating pill.

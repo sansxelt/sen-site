@@ -2532,7 +2532,7 @@ function WebImageResultCard({
             onClick={() => onIterate?.(promptForActions)}
             title="Generate another version of the same prompt"
           >
-            <span aria-hidden>\u21bb</span> Variation
+            <span aria-hidden>{"\u21bb"}</span> Variation
           </button>
         )}
         {canRefine && (
@@ -2542,7 +2542,7 @@ function WebImageResultCard({
             onClick={() => onPrefillInput?.(promptForActions)}
             title="Edit the prompt and run again"
           >
-            <span aria-hidden>\u270e</span> Refine
+            <span aria-hidden>{"\u270e"}</span> Refine
           </button>
         )}
         {urls.map((u, i) => (
@@ -2555,7 +2555,7 @@ function WebImageResultCard({
             className="webchat-img-btn"
             title={urls.length > 1 ? `Download image ${i + 1}` : "Download"}
           >
-            <span aria-hidden>\u2193</span>{" "}
+            <span aria-hidden>{"\u2193"}</span>{" "}
             {urls.length > 1 ? `#${i + 1}` : "Download"}
           </a>
         ))}
