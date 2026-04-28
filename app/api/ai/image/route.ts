@@ -230,8 +230,24 @@ export async function POST(request: Request) {
     );
   } catch (err) {
     console.error("ai/image failed:", err);
-    const message =
-      err instanceof Error ? err.message : "Could not generate image.";
+    // Sanitize provider errors before returning to the client.
+    // OpenAI's safety / rate-limit / billing messages include
+    // request IDs, support URLs, and other implementation details
+    // we don't want to surface as user-facing copy.
+    let message = "Could not generate that image. Try a different prompt.";
+    if (err instanceof Error) {
+      const raw = err.message ?? "";
+      if (/safety system|content_policy|moderation/i.test(raw)) {
+        message =
+          "That prompt was rejected by the safety filter. Try rephrasing it.";
+      } else if (/rate limit|too many requests/i.test(raw)) {
+        message =
+          "Image gen is rate-limited right now. Try again in a minute.";
+      } else if (/billing|quota|insufficient_quota/i.test(raw)) {
+        message =
+          "Image gen is temporarily unavailable. Try again soon.";
+      }
+    }
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

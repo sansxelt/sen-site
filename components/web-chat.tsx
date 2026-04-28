@@ -1361,11 +1361,20 @@ export function WebChat({
     };
     if (tidAtStart) writeFlight(tidAtStart);
 
+    // Wire image gen into the same Stop button path the chat stream
+    // uses. Without an AbortController on the fetch, hitting Stop
+    // (or navigating away) does nothing — the request keeps running
+    // upstream and the placeholder bubble sits on "Generating image…"
+    // until the response finally lands.
+    const ac = new AbortController();
+    abortRef.current = ac;
+
     try {
       const res = await fetch("/api/ai/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, count, thread_id: tidAtStart ?? undefined }),
+        signal: ac.signal,
       });
       // Server resolves / creates the thread + persists user prompt
       // immediately. Capture the echoed id so follow-up chat turns
@@ -1422,22 +1431,32 @@ export function WebChat({
         window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
       }
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Image generation failed.";
-      setChatError(message);
-      // Drop the placeholder so the chat doesn't show "Generating…" forever.
+      const aborted =
+        (err instanceof DOMException && err.name === "AbortError") ||
+        (err instanceof Error && err.name === "AbortError");
+      const message = aborted
+        ? null
+        : err instanceof Error
+          ? err.message
+          : "Image generation failed.";
+      if (message) setChatError(message);
+      // Drop the placeholder so the chat doesn't show "Generating…"
+      // forever. Match anything that STARTS with "Generating "
+      // because the Stop button may have appended a cancellation
+      // tail to the same bubble before this catch ran.
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         if (
           last &&
           last.role === "assistant" &&
-          last.content === "Generating image…"
+          /^Generating /.test(last.content)
         ) {
           return prev.slice(0, -1);
         }
         return prev;
       });
     } finally {
+      if (abortRef.current === ac) abortRef.current = null;
       setGeneratingImage(false);
       clearFlight(threadIdRef.current);
     }
@@ -2144,7 +2163,7 @@ export function WebChat({
             onStop={stopVoice}
           />
 
-          {streaming ? (
+          {streaming || generatingImage ? (
             <button
               type="button"
               onClick={stop}
