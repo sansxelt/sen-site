@@ -268,37 +268,17 @@ export function WebChat({
       try {
         let targetId = requestedThreadParam;
         if (!targetId) {
-          // No URL hint, only auto-restore on first mount.
-          if (hasHydratedRef.current) return;
-          // Cross-device fresh-vs-resume rule: default to a fresh
-          // chat, but if the most recent thread (any device, same
-          // account, server-side updated_at) was active within the
-          // last 15 minutes, jump back to it. Lets a phone → laptop
-          // handoff feel seamless without dragging stale sessions
-          // back the next morning.
-          const RESUME_WINDOW_MS = 15 * 60 * 1000;
-          const res = await fetch("/api/threads", { cache: "no-store" });
-          if (!res.ok) {
-            hasHydratedRef.current = true;
-            return;
-          }
-          const data = (await res.json()) as {
-            threads?: Array<{ id: string; updated_at?: string }>;
-          };
-          const top = data.threads?.[0];
-          if (top?.updated_at) {
-            const age = Date.now() - new Date(top.updated_at).getTime();
-            if (age < RESUME_WINDOW_MS) {
-              targetId = top.id;
-            }
-          }
-          if (!targetId) {
-            hasHydratedRef.current = true;
-            setThreadId(null);
-            setMessages([]);
-            setInput("");
-            return;
-          }
+          // No URL hint, no auto-restore. Always land on a fresh
+          // chat and let the empty-state "Pick up where you left
+          // off" card surface the recent threads as one-click
+          // resume buttons. Auto-jumping into the last thread
+          // looked stale and dragged the user back into work they
+          // were ready to leave behind.
+          hasHydratedRef.current = true;
+          setThreadId(null);
+          setMessages([]);
+          setInput("");
+          return;
         }
         hasHydratedRef.current = true;
         if (cancelled) return;
