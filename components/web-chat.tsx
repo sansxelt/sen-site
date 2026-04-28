@@ -2026,7 +2026,7 @@ export function WebChat({
           ) : (
             <button
               type="submit"
-              disabled={!input.trim()}
+              disabled={!input.trim() && lei.attachments.length === 0}
               className="webchat-send"
             >
               Send
