@@ -338,23 +338,29 @@ export function WebChat({
               : undefined,
           }));
         // Resume-streaming detection: if the user comes back to a
-        // thread that's still generating server-side (thread bumped
-        // its updated_at within ~10s), flip the streaming flag so
-        // the bouncing dots / cursor render, then poll until the
-        // server stream actually ends. Two cases hit this path:
+        // thread that's still generating server-side, flip the
+        // streaming flag so the bouncing dots / cursor render,
+        // then poll until the server stream actually ends. Two
+        // cases hit this path with different freshness thresholds:
         //   - chat: assistant placeholder exists (last role is
-        //     assistant) and content is still filling in
+        //     assistant). Server bumps updated_at every ~900ms
+        //     during streaming, so 10s of staleness means done.
         //   - image gen: NO placeholder is created, last role is
-        //     user, image is being generated server-side
-        // For the second case we append a synthetic empty assistant
-        // bubble so the inflight UI shows; the next poll replaces
-        // it once the server saves the real assistant turn.
+        //     user, server doesn't bump updated_at during the
+        //     OpenAI call. Could be stale for 30s+ mid-flight, so
+        //     the threshold is 3 min (covers any reasonable image
+        //     gen runtime; older = the request is genuinely dead).
+        // For the image-gen case we append a synthetic empty
+        // assistant bubble so the inflight UI shows; the next poll
+        // replaces it once the server saves the real assistant turn.
         const updatedAt = detail.thread?.updated_at;
         const ageMs = updatedAt
           ? Date.now() - new Date(updatedAt).getTime()
           : Number.POSITIVE_INFINITY;
         const lastMsg = restored[restored.length - 1];
-        const isResuming = Boolean(lastMsg) && ageMs < 10_000;
+        const isResuming =
+          (lastMsg?.role === "assistant" && ageMs < 10_000) ||
+          (lastMsg?.role === "user" && ageMs < 180_000);
         const initial =
           isResuming && lastMsg?.role === "user"
             ? [...restored, { role: "assistant" as const, content: "" }]
@@ -420,10 +426,29 @@ export function WebChat({
                 quietFor > 5_000 &&
                 nextLast?.role === "assistant" &&
                 (nextLast?.content ?? "").length > 0;
-              if (settled || totalFor > 90_000) {
+              const timedOut = totalFor > 180_000;
+              if (settled || timedOut) {
                 window.clearInterval(pollId);
                 if (!cancelled && threadIdRef.current === targetId) {
                   setStreaming(false);
+                  // Hard timeout cleanup: if the server never saved
+                  // an assistant turn (image gen hung, fetch died
+                  // upstream), drop the synthetic empty placeholder
+                  // we appended so the user isn't staring at a
+                  // dead bubble forever.
+                  if (
+                    timedOut &&
+                    nextLast?.role === "assistant" &&
+                    !(nextLast?.content ?? "").length
+                  ) {
+                    setMessages((prev) => {
+                      const tail = prev[prev.length - 1];
+                      if (tail?.role === "assistant" && !tail.content) {
+                        return prev.slice(0, -1);
+                      }
+                      return prev;
+                    });
+                  }
                 }
               }
             } catch {
