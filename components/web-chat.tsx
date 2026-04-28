@@ -607,20 +607,30 @@ export function WebChat({
     if (!text && imageBlocks.length === 0) return;
 
     // Auto-route image-gen intent so users don't have to click a
-    // separate button. Two patterns trigger:
-    //   1. Verb + visual-noun: "make a graph", "draw a logo",
-    //      "show me a chart", "give me an illustration"
-    //   2. Visual verb alone: "plot y=x+5", "graph this", "chart
-    //      sales", "visualize the data", "diagram the flow"
+    // separate button. Three patterns trigger:
+    //   1. Strong-visual verb + ANY subject: "gen a cat", "draw
+    //      a sunset", "imagine a cyberpunk city". These verbs are
+    //      almost only used in image-gen context, so we don't gate
+    //      on a noun list.
+    //   2. Generic verb + visual noun: "make a graph", "show me a
+    //      chart", "give me an illustration". These verbs are
+    //      ambiguous on their own (make a sandwich? show me the
+    //      file?), so the noun gate stays.
+    //   3. Visual verb alone: "plot y=x+5", "graph this", "chart
+    //      sales", "visualize the data", "diagram the flow".
     // Skipped when there's an attached image (probably means
     // "analyze this", not "make a new one"). False positives are
     // recoverable — user retypes once they see the image.
+    const STRONG_IMAGE_VERB =
+      /^\s*(?:gen(?:erate)?|draw|paint|imagine|illustrate|render|sketch)\b\s+\S/i;
     const IMAGE_GEN_INTENT =
-      /^\s*(?:gen(?:erate)?|make|create|draw|paint|imagine|illustrate|render|design|sketch|show(?:\s+me)?|give(?:\s+me)?)\s+(?:me\s+)?(?:an?\s+|the\s+|some\s+)?(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|logo|graphic|render|graph|chart|plot|diagram|map|visualization|viz|infographic|figure|icon|poster|banner|wallpaper)\b/i;
+      /^\s*(?:make|create|design|show(?:\s+me)?|give(?:\s+me)?)\s+(?:me\s+)?(?:an?\s+|the\s+|some\s+)?(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|logo|graphic|render|graph|chart|plot|diagram|map|visualization|viz|infographic|figure|icon|poster|banner|wallpaper)\b/i;
     const VISUAL_VERB_INTENT =
       /^\s*(?:plot|graph|chart|visuali[sz]e|diagram)\b\s+\S/i;
     const isImageRequest =
-      (IMAGE_GEN_INTENT.test(baseText) || VISUAL_VERB_INTENT.test(baseText)) &&
+      (STRONG_IMAGE_VERB.test(baseText) ||
+        IMAGE_GEN_INTENT.test(baseText) ||
+        VISUAL_VERB_INTENT.test(baseText)) &&
       imageBlocks.length === 0;
     if (isImageRequest) {
       lei.clearAttachments();
@@ -2318,27 +2328,23 @@ type Section =
 
 function parseSections(content: string): Section[] {
   const out: Section[] = [];
-  const OPEN = "<think>";
-  const CLOSE = "</think>";
+  // Match <think>…</think> AND <thinking>…</thinking>. The system
+  // prompt asks for <think> but Claude/GPT often emit <thinking>
+  // when "thinking out loud" — without this, the raw tag leaks
+  // into the rendered bubble.
+  const TAG_RE = /<think(?:ing)?>([\s\S]*?)(?:<\/think(?:ing)?>|$)/gi;
   let cursor = 0;
-  while (cursor < content.length) {
-    const openIdx = content.indexOf(OPEN, cursor);
-    if (openIdx === -1) {
-      const tail = content.slice(cursor);
-      if (tail) out.push({ type: "answer", text: tail });
-      break;
+  let m: RegExpExecArray | null;
+  while ((m = TAG_RE.exec(content)) !== null) {
+    if (m.index > cursor) {
+      out.push({ type: "answer", text: content.slice(cursor, m.index) });
     }
-    if (openIdx > cursor) {
-      out.push({ type: "answer", text: content.slice(cursor, openIdx) });
-    }
-    const innerStart = openIdx + OPEN.length;
-    const closeIdx = content.indexOf(CLOSE, innerStart);
-    if (closeIdx === -1) {
-      out.push({ type: "thinking", text: content.slice(innerStart) });
-      break;
-    }
-    out.push({ type: "thinking", text: content.slice(innerStart, closeIdx) });
-    cursor = closeIdx + CLOSE.length;
+    out.push({ type: "thinking", text: m[1] });
+    cursor = m.index + m[0].length;
+  }
+  if (cursor < content.length) {
+    const tail = content.slice(cursor);
+    if (tail) out.push({ type: "answer", text: tail });
   }
   return out;
 }
