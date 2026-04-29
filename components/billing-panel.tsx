@@ -149,6 +149,45 @@ export function BillingPanel({ state, publishableKey }: Props) {
         </div>
       )}
 
+      {/* ── Payment method (TOP, so a card is on file before any
+            buy click). Card-required addons + plan upgrades all
+            check this section first; PayPal one-offs route through
+            their own buttons next to each addon and don't need
+            anything here. ───────────────────────────────────────── */}
+      <section
+        className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
+              Payment method
+            </div>
+            {state.paymentMethod ? (
+              <div className="mt-1.5 text-sm text-white sm:mt-2">
+                <span className="font-medium uppercase">{state.paymentMethod.brand}</span>{" "}
+                ending in {state.paymentMethod.last4}
+                <span className="ml-1.5 block text-xs text-neutral-400 sm:ml-2 sm:inline">
+                  expires {String(state.paymentMethod.expMonth).padStart(2, "0")}/{state.paymentMethod.expYear}
+                </span>
+              </div>
+            ) : (
+              <div className="mt-1.5 text-sm text-neutral-500 sm:mt-2">
+                No card on file. Add one to subscribe or grab a card-only addon. PayPal one-offs work without a saved card.
+              </div>
+            )}
+          </div>
+          {publishableKey && (
+            <button
+              type="button"
+              onClick={() => setPmOpen(true)}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition hover:bg-white/10 sm:rounded-2xl sm:px-4 sm:text-sm"
+            >
+              {state.paymentMethod ? "Update card" : "Add card"}
+            </button>
+          )}
+        </div>
+      </section>
+
       {/* ── Current plan ────────────────────────────────────────────── */}
       <section
         className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
@@ -431,39 +470,6 @@ export function BillingPanel({ state, publishableKey }: Props) {
             )}
           </>
         )}
-      </section>
-
-      {/* ── Payment method ─────────────────────────────────────────── */}
-      <section
-        className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
-      >
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="text-[10px] font-medium uppercase tracking-[0.2em] text-neutral-400 sm:text-xs">
-              Payment method
-            </div>
-            {state.paymentMethod ? (
-              <div className="mt-1.5 text-sm text-white sm:mt-2">
-                <span className="font-medium uppercase">{state.paymentMethod.brand}</span>{" "}
-                ending in {state.paymentMethod.last4}
-                <span className="ml-1.5 block text-xs text-neutral-400 sm:ml-2 sm:inline">
-                  expires {String(state.paymentMethod.expMonth).padStart(2, "0")}/{state.paymentMethod.expYear}
-                </span>
-              </div>
-            ) : (
-              <div className="mt-1.5 text-sm text-neutral-500 sm:mt-2">No payment method on file.</div>
-            )}
-          </div>
-          {publishableKey && (
-            <button
-              type="button"
-              onClick={() => setPmOpen(true)}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition hover:bg-white/10 sm:rounded-2xl sm:px-4 sm:text-sm"
-            >
-              {state.paymentMethod ? "Update card" : "Add card"}
-            </button>
-          )}
-        </div>
       </section>
 
       {/* ── Invoices ───────────────────────────────────────────────── */}
