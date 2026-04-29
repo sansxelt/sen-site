@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { getSafeRedirectPath } from "./lib/auth-ui";
 
-// Single Next.js 16 proxy that does TWO things:
+// Next.js 16 proxy. Single job now: host routing.
 //
-//   1. Host routing — splits sansxel.ai / chat.sansxel.ai /
-//      platform.sansxel.ai into their own zones (workshop, marketing,
-//      docs).
-//   2. Auth gating — gates /account and /api/account paths behind a
-//      session redirect to /signin (replicates what the previous
-//      `export { auth as proxy }` did for the narrow matcher).
+// Host routing splits sansxel.ai / chat.sansxel.ai /
+// platform.sansxel.ai into their own zones (workshop, marketing,
+// docs).
+//
+// Auth gating used to live here too but moved into route + layout
+// auth() checks; getToken() at the proxy layer disagreed with
+// auth() about cookie visibility, which produced false 401s
+// (most recently the Top-up Credits modal returning "Sign in to
+// continue" while the user was clearly signed in).
 //
 // Localhost + Vercel preview URLs (random *.vercel.app) skip host
 // routing so dev + previews keep working.
@@ -108,54 +109,28 @@ function hostRoute(req: NextRequest): NextResponse | null {
 }
 
 // Plain async proxy (no auth() wrapper). The wrapper was rewriting
-// every NextResponse.rewrite into a 307 redirect to AUTH_URL — that
-// broke chat.sansxel.ai/ → /app and platform.sansxel.ai/ → /platform-soon
-// because both are rewrites, not redirects. We use getToken() directly
-// from next-auth/jwt to gate /account paths instead — same end result,
-// no canonicalization side-effect on rewrites.
+// every NextResponse.rewrite into a 307 redirect to AUTH_URL,
+// which broke chat.sansxel.ai/ → /app and platform.sansxel.ai/ →
+// /platform-soon because both are rewrites, not redirects. Now
+// the proxy stays out of auth entirely; routes + layouts handle
+// it via auth() instead.
 export default async function proxy(req: NextRequest) {
   // 1. Host routing first.
   const hostResp = hostRoute(req);
   if (hostResp) return hostResp;
 
-  // 2. Auth gate for /api/account only now. /account (the page tree)
-  //    moved to a layout-level auth() check in
-  //    app/account/layout.tsx for the same reason /app and
-  //    /account/content already did: proxy getToken() sometimes
-  //    misses cookies that auth() sees, which produced an infinite
-  //    /signin <-> /account redirect loop right after OAuth set
-  //    the cookie. /api/account stays here because API routes
-  //    don't have a layout to host the check.
-  const { pathname, search } = req.nextUrl;
-  const requiresAuth = pathname.startsWith("/api/account");
-  if (requiresAuth) {
-    const token = await getToken({
-      req,
-      secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-    });
-    if (!token?.email) {
-      // API requests need JSON, not an HTML signin page. Returning
-      // a 302 to /signin made the credits top-up modal explode with
-      // "Unexpected token '<', '<!DOCTYPE'... is not valid JSON"
-      // because fetch() follows the redirect and the client tries
-      // to JSON.parse the signin HTML. Routes under /api/account
-      // also do their own auth() check, so this is a defensive
-      // 401 in case getToken sees a cookie auth() doesn't (which
-      // is the OPPOSITE of the page-level disagreement we already
-      // worked around for /account; covering both directions).
-      if (pathname.startsWith("/api/")) {
-        return NextResponse.json(
-          { error: "Sign in to continue." },
-          { status: 401 },
-        );
-      }
-      const callbackUrl = getSafeRedirectPath(`${pathname}${search}`);
-      const signInUrl = new URL("/signin", req.nextUrl.origin);
-      signInUrl.searchParams.set("callbackUrl", callbackUrl);
-      return NextResponse.redirect(signInUrl);
-    }
-  }
-
+  // 2. Auth gate removed at the proxy layer.
+  //
+  // Used to gate /api/account/* via getToken(), but that produced
+  // false negatives whenever getToken's view of cookies disagreed
+  // with auth()'s. The Top-up Credits modal hit this: getToken
+  // returned no email even when the user was signed in, so the
+  // proxy 401'd "Sign in to continue" before the route ever ran.
+  //
+  // Every /api/account/* route already does its own auth() check
+  // (verified by grep) and 401s correctly when there's no session,
+  // so the proxy gate was pure noise. /account (the page tree)
+  // moved off the proxy for the same reason in v0.1.16.
   return NextResponse.next();
 }
 
