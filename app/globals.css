@@ -1820,7 +1820,12 @@ div[id] {
   color: rgba(167, 139, 250, 0.85);
   text-transform: lowercase;
 }
-.webchat-msg .md .md-codeblock-copy {
+.webchat-msg .md .md-codeblock-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.webchat-msg .md .md-codeblock-action {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.10);
   color: rgba(229, 231, 235, 0.75);
@@ -1831,10 +1836,25 @@ div[id] {
   cursor: pointer;
   transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
-.webchat-msg .md .md-codeblock-copy:hover {
+.webchat-msg .md .md-codeblock-action:hover {
   background: rgba(167, 139, 250, 0.10);
   border-color: rgba(167, 139, 250, 0.4);
   color: #f5f3ff;
+}
+.webchat-msg .md .md-codeblock-preview {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: #ffffff;
+  /* Light backdrop because most demo HTML is light-styled. The
+     iframe is sandboxed (no allow-same-origin), so this surface
+     can't be styled by the embedded doc anyway. */
+}
+.webchat-msg .md .md-codeblock-preview-frame {
+  display: block;
+  width: 100%;
+  min-height: 240px;
+  height: 360px;
+  border: 0;
+  background: transparent;
 }
 .webchat-msg .md .md-codeblock-body {
   margin: 0;

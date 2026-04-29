@@ -262,14 +262,17 @@ html[data-theme="light"] .webchat-msg .md .md-codeblock-head {
 html[data-theme="light"] .webchat-msg .md .md-codeblock-lang {
   color: #6d28d9;
 }
-html[data-theme="light"] .webchat-msg .md .md-codeblock-copy {
+html[data-theme="light"] .webchat-msg .md .md-codeblock-action {
   border-color: rgba(0, 0, 0, 0.10);
   color: #1f1f1f;
 }
-html[data-theme="light"] .webchat-msg .md .md-codeblock-copy:hover {
+html[data-theme="light"] .webchat-msg .md .md-codeblock-action:hover {
   background: rgba(139, 92, 246, 0.10);
   border-color: rgba(139, 92, 246, 0.4);
   color: #0a0a0c;
+}
+html[data-theme="light"] .webchat-msg .md .md-codeblock-preview {
+  border-top-color: rgba(0, 0, 0, 0.08);
 }
 html[data-theme="light"] .webchat-msg .md .md-codeblock-body--shiki pre,
 html[data-theme="light"] .webchat-msg .md .md-codeblock-body--plain {
