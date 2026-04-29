@@ -70,6 +70,16 @@ export default async function UsagePage() {
       : 0;
   const weeklyVoiceLimit = planLimit.weekly_voice_seconds;
   const weeklyVoiceUsed = Math.round(weeklyUsage?.voice_seconds ?? 0);
+  const weeklyVoicePct =
+    weeklyVoiceLimit && weeklyVoiceLimit > 0
+      ? Math.min((weeklyVoiceUsed / weeklyVoiceLimit) * 100, 100)
+      : 0;
+  const weeklyImageLimit = planLimit.weekly_image_requests;
+  const weeklyImageUsed = weeklyUsage?.image_requests ?? 0;
+  const weeklyImagePct =
+    weeklyImageLimit && weeklyImageLimit > 0
+      ? Math.min((weeklyImageUsed / weeklyImageLimit) * 100, 100)
+      : 0;
 
   const proThrottleNext = planLimit.pro_throttle
     ? weeklyChatUsed < planLimit.pro_throttle.smart_to_balanced
@@ -117,56 +127,60 @@ export default async function UsagePage() {
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-300">
                 This week
               </div>
-              <div className="mt-1.5 text-2xl font-semibold text-white">
-                {weeklyChatUsed.toLocaleString()}
-                <span className="ml-1.5 text-sm font-normal text-neutral-400">
-                  /{" "}
-                  {weeklyChatLimit === null
-                    ? "unlimited"
-                    : weeklyChatLimit.toLocaleString()}
-                </span>
-              </div>
-              <div className="mt-1 text-sm text-neutral-400">
-                Chat requests on the {currentPlan.name} plan
+              <div className="mt-1.5 text-sm text-neutral-400">
+                Resets {weekReset.toUTCString().slice(0, 22)} ({resetDays}d {resetHours}h)
               </div>
             </div>
 
-            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-right text-xs text-neutral-400">
+            <div className="rounded-lg border border-white/10 bg-black/20 px-3 py-1.5 text-right text-xs">
               <div className="font-medium text-white">{currentPlan.name}</div>
-              <div className="mt-1 text-[11px] text-neutral-500">
-                resets {weekReset.toUTCString().slice(0, 22)}
+              <div className="mt-0.5 text-[11px] text-neutral-500">
+                {currentPlan.monthlyLabel}
               </div>
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <UsageChip>{currentPlan.name} plan</UsageChip>
-            <UsageChip>{currentPlan.memoryWindow}</UsageChip>
-            <UsageChip>{formatVoiceBudget(weeklyVoiceLimit)}</UsageChip>
-            <UsageChip>{formatMonthlyApiBudget(monthlyLimit)}</UsageChip>
+          {/* Three weekly bars (chat / image / voice). Free / paid
+              tiers have different mixes of caps; UsageBar collapses
+              gracefully when a metric is unlimited or unavailable
+              on the current plan. */}
+          <div className="mt-5 space-y-4">
+            <UsageBar
+              label="Chat"
+              used={weeklyChatUsed}
+              limit={weeklyChatLimit}
+              pct={weeklyChatPct}
+              formatUsed={(n) => `${n.toLocaleString()} chats`}
+              formatLimit={formatChatBudget}
+            />
+            <UsageBar
+              label="Images"
+              used={weeklyImageUsed}
+              limit={weeklyImageLimit}
+              pct={weeklyImagePct}
+              formatUsed={(n) => `${n.toLocaleString()} images`}
+              formatLimit={(l) =>
+                l === null
+                  ? "Unlimited images"
+                  : l === 0
+                    ? "Images on paid plans"
+                    : `${l.toLocaleString()} images / week`
+              }
+            />
+            <UsageBar
+              label="Voice"
+              used={weeklyVoiceUsed}
+              limit={weeklyVoiceLimit}
+              pct={weeklyVoicePct}
+              formatUsed={(n) =>
+                `${Math.floor(n / 60)}m ${n % 60}s`
+              }
+              formatLimit={formatVoiceBudget}
+            />
           </div>
-
-          {weeklyChatLimit !== null && (
-            <>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-purple-400 transition-all"
-                  style={{ width: `${weeklyChatPct}%` }}
-                />
-              </div>
-              <div className="mt-1.5 flex items-center justify-between text-xs">
-                <span className="text-neutral-500">
-                  {weeklyChatPct.toFixed(1)}% used
-                </span>
-                <span className="text-neutral-500">
-                  {(weeklyChatLimit - weeklyChatUsed).toLocaleString()} remaining
-                </span>
-              </div>
-            </>
-          )}
 
           {planLimit.pro_throttle && currentProTier && (
-            <div className="mt-4 rounded-lg border border-amber-400/15 bg-amber-400/[0.05] p-3 text-xs leading-5 text-amber-200/85">
+            <div className="mt-5 rounded-lg border border-amber-400/15 bg-amber-400/[0.05] p-3 text-xs leading-5 text-amber-200/85">
               <span className="font-semibold uppercase tracking-[0.14em] text-amber-300">
                 Pro throttle
               </span>
@@ -182,21 +196,16 @@ export default async function UsagePage() {
                     next downshift.
                   </>
                 ) : (
-                  <>You&apos;re on the lowest tier this week - resets {fmt(weekReset)}.</>
+                  <>You&apos;re on the lowest tier this week, resets {fmt(weekReset)}.</>
                 )}
               </span>
             </div>
           )}
 
-          {weeklyVoiceLimit !== null && weeklyVoiceLimit > 0 && (
-            <div className="mt-4 flex items-center justify-between text-xs">
-              <span className="text-neutral-500">Voice this week</span>
-              <span className="font-mono tabular-nums text-neutral-300">
-                {Math.floor(weeklyVoiceUsed / 60)}m {weeklyVoiceUsed % 60}s /{" "}
-                {Math.floor(weeklyVoiceLimit / 60)}m
-              </span>
-            </div>
-          )}
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-white/[0.06] pt-4">
+            <UsageChip>{currentPlan.memoryWindow}</UsageChip>
+            <UsageChip>{formatMonthlyApiBudget(monthlyLimit)}</UsageChip>
+          </div>
         </div>
 
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-5">
@@ -258,7 +267,7 @@ export default async function UsagePage() {
             </div>
 
             <Link
-              href="/account#billing"
+              href="/account/plan"
               className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/[0.07]"
             >
               Manage
@@ -427,6 +436,63 @@ export default async function UsagePage() {
         <Link href={usageSupportHref} className="sansxel-subtle-link">
           Contact us.
         </Link>
+      </div>
+    </div>
+  );
+}
+
+// Three-mode progress bar: paid + capped (real bar with %),
+// unlimited (full muted bar with "Unlimited" tag), or unavailable
+// on the current plan (zero bar with "Paid plans only" hint).
+function UsageBar({
+  label,
+  used,
+  limit,
+  pct,
+  formatUsed,
+  formatLimit,
+}: {
+  label: string;
+  used: number;
+  limit: number | null;
+  pct: number;
+  formatUsed: (n: number) => string;
+  formatLimit: (l: number | null) => string;
+}) {
+  const unlimited = limit === null;
+  const blocked = limit === 0;
+  const remaining = limit && limit > 0 ? Math.max(0, limit - used) : 0;
+  const barClass = unlimited
+    ? "bg-white/30"
+    : pct >= 90
+      ? "bg-rose-400"
+      : pct >= 70
+        ? "bg-amber-400"
+        : "bg-purple-400";
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3 text-xs">
+        <span className="text-neutral-400">{label}</span>
+        <span className="font-mono tabular-nums text-neutral-300">
+          {blocked ? "—" : formatUsed(used)}
+          {!blocked && !unlimited && limit !== null && (
+            <span className="text-neutral-600"> / {formatUsed(limit)}</span>
+          )}
+        </span>
+      </div>
+      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/10">
+        <div
+          className={`h-full rounded-full transition-all ${barClass}`}
+          style={{ width: `${unlimited ? 100 : blocked ? 0 : pct}%` }}
+        />
+      </div>
+      <div className="mt-1.5 text-[11px] text-neutral-500">
+        {unlimited
+          ? "Unlimited"
+          : blocked
+            ? formatLimit(limit)
+            : `${pct.toFixed(0)}% used, ${remaining.toLocaleString()} left`}
       </div>
     </div>
   );
