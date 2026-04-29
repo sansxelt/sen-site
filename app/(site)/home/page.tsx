@@ -32,7 +32,7 @@ const FEATURED_LEARN = [...ARTICLES]
 
 // Keep the escalation teaser, it's the single most distinctive concept
 // of the product.  Everything else (transforms, why-sansxel, product
-// shape) lives on /features and /function where people come for depth.
+// shape) lives on /product where people come for depth.
 const escalation = [
   {
     size: "Small",
@@ -116,7 +116,7 @@ export default async function HomePage() {
           tilt
           className="group relative aspect-[4/3] overflow-hidden p-0 sm:aspect-[16/10] lg:aspect-auto lg:min-h-[560px]"
         >
-          <Link href="/features" className="block h-full w-full">
+          <Link href="/product" className="block h-full w-full">
             {/* Layer 1: dot grid texture */}
             <DotGrid opacity={0.09} />
             {/* Layer 2: aurora ribbon at the bottom edge */}
@@ -251,7 +251,7 @@ export default async function HomePage() {
 
         <div className="mt-8 flex flex-wrap gap-3 text-sm">
           <Link
-            href="/features"
+            href="/product"
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-neutral-200 transition hover:bg-white/10"
           >
             Explore the workshop →
@@ -314,16 +314,10 @@ export default async function HomePage() {
 
         <div className="mt-8 flex flex-wrap gap-3 text-sm">
           <Link
-            href="/function"
+            href="/product"
             className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-neutral-200 transition hover:bg-white/10"
           >
-            See how it works →
-          </Link>
-          <Link
-            href="/features"
-            className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-neutral-200 transition hover:bg-white/10"
-          >
-            Full feature set →
+            Tour the workshop →
           </Link>
         </div>
       </section>
@@ -450,8 +444,8 @@ export default async function HomePage() {
         {/* Compact "what's next" row, one click to each depth page */}
         <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["/features",  "Features",       "Ask, Explore, Create, Build"],
-            ["/function",  "How it works",   "One prompt → real output"],
+            ["/product",   "Product",        "Ask, Explore, Create, Build"],
+            ["/learn",     "Learn",          "Short reads, real code"],
             ["/pricing",   "Pricing",        "Free, Pro, Teams"],
             ["/contact",   "Contact",        "Talk to us"],
           ].map(([href, label, desc]) => (

@@ -138,7 +138,7 @@ function baseHtml(content: string) {
         <tr><td style="padding:22px 4px 0;border-top:1px solid #e5e5e5;margin-top:22px;">
           <p class="sx-footer-links" style="margin:16px 0 0;font-size:11px;line-height:1.9;color:#a3a3a3;word-break:break-word;">
             <a href="https://sansxel.ai" style="color:#737373;text-decoration:none;">sansxel.ai</a>
-             · <a href="https://sansxel.ai/features" style="color:#737373;text-decoration:none;">Features</a>
+             · <a href="https://sansxel.ai/product" style="color:#737373;text-decoration:none;">Product</a>
              · <a href="https://sansxel.ai/pricing" style="color:#737373;text-decoration:none;">Pricing</a>
              · <a href="https://sansxel.ai/privacy" style="color:#737373;text-decoration:none;">Privacy</a>
              · <a href="https://sansxel.ai/terms" style="color:#737373;text-decoration:none;">Terms</a>
@@ -218,7 +218,7 @@ export function welcomeHtml(name?: string) {
     </ul>
     <a href="https://sansxel.ai/account" class="sx-btn" style="${BTN_STYLE}">Open workspace</a>
     <span class="sx-btn-spacer">&nbsp;</span>
-    <a href="https://sansxel.ai/features" class="sx-btn" style="${BTN_LIGHT}">Tour the features</a>
+    <a href="https://sansxel.ai/product" class="sx-btn" style="${BTN_LIGHT}">Tour the product</a>
     <div style="${NOTE_STYLE}">
       <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email, the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@sansxel.ai" style="color:#0a0a0a;">help@sansxel.ai</a>.
     </div>

@@ -30,11 +30,11 @@ const CHAT_PATHS = [
 
 const MARKETING_PATHS = [
   "/home",
-  "/features",
-  "/function",
+  "/product",
   "/learn",
   "/pricing",
   "/contact",
+  "/contribute",
   "/download",
   "/privacy",
   "/terms",

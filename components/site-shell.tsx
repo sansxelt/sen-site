@@ -22,8 +22,7 @@ const footerGroups = [
   {
     label: "Product",
     links: [
-      { href: "/features", label: "Features" },
-      { href: "/function", label: "How it works" },
+      { href: "/product", label: "Product" },
       { href: "/learn", label: "Learn" },
       { href: "/pricing", label: "Pricing" },
       { href: "/download", label: "Download" },
@@ -55,11 +54,12 @@ type SiteNavLink = {
   authOnly?: boolean;
 };
 
-// 'How it works' folded into Features; 'Download' hidden from
-// primary nav (still in footer + Mobile drawer for signed-in users).
-// Contact is back in the row by user request.
+// 'Features' and 'How it works' merged into a single Product page;
+// 'Download' hidden from primary nav (still in footer + mobile
+// drawer for signed-in users). Contact is back in the row by user
+// request.
 const primaryLinks: SiteNavLink[] = [
-  { href: "/features", label: "Product" },
+  { href: "/product", label: "Product" },
   { href: "/learn", label: "Learn" },
   { href: "/pricing", label: "Pricing" },
   { href: "/download", label: "Desktop", authOnly: true },

@@ -16,8 +16,7 @@ const client = new Anthropic();
 const SITE_ROUTES = `Routes on sansxel.ai:
 - /            - home
 - /home        - home (alias)
-- /features    - feature overview
-- /function    - how sansxel-1 works
+- /product     - product overview (features + how it works)
 - /pricing     - plans + pricing
 - /download    - download the desktop app
 - /contact     - contact us

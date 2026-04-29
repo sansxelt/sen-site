@@ -132,8 +132,7 @@ export default async function DownloadPage() {
 
           <div className="mt-6 grid gap-3">
             {[
-              ["/features", "See features"],
-              ["/function", "See how it works"],
+              ["/product", "Tour the product"],
               ["/pricing", "Review pricing"],
               ["/contact", "Talk to support"],
             ].map(([href, label]) => (

@@ -15,8 +15,7 @@ type Item = {
 const STATIC_ITEMS: Item[] = [
   // Navigation
   { id: "nav-home",      label: "Home",        section: "Navigate", href: "/home" },
-  { id: "nav-features",  label: "Features",    section: "Navigate", href: "/features" },
-  { id: "nav-function",  label: "How it works",section: "Navigate", href: "/function" },
+  { id: "nav-product",   label: "Product",     section: "Navigate", href: "/product" },
   { id: "nav-pricing",   label: "Pricing",     section: "Navigate", href: "/pricing" },
   { id: "nav-contact",   label: "Contact",     section: "Navigate", href: "/contact" },
   { id: "nav-app",       label: "Open chat",   section: "Navigate", href: "/app", hint: "sansxel-1 in browser" },
