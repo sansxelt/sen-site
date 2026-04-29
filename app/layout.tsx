@@ -14,23 +14,24 @@ const BASE = "https://www.sansxel.ai";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
-    default: "sansxel, the AI workshop for makers",
+    default: "sansxel, AI with persistent project memory",
     template: "%s | sansxel",
   },
   description:
-    "Talk, type, drop files, generate images, search live. One AI workshop for indie devs, designers, students, and creators who actually ship. Web in your browser, real shop on desktop.",
+    "Stop re-explaining yourself to AI. Every chatbot forgets you between sessions. Sansxel remembers your projects, your context, your goals. Every session picks up where the last one left off.",
   keywords: [
     "sansxel",
     "sansxel ai",
+    "ai with memory",
+    "persistent memory ai",
+    "ai project memory",
     "ai workshop",
     "ai for makers",
     "ai for indie devs",
     "ai for creators",
-    "ai for students",
     "ai chat with voice",
     "ai with web search",
     "multimodal ai",
-    "ai with mcp",
   ],
   authors: [{ name: "sansxel", url: BASE }],
   creator: "sansxel",
@@ -41,16 +42,16 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE,
     siteName: "sansxel",
-    title: "sansxel, the AI workshop for makers",
+    title: "Stop re-explaining yourself to AI.",
     description:
-      "Talk, type, drop files, generate images, search live. One workshop for indie devs, designers, students, and creators who ship.",
+      "Every chatbot forgets you between sessions. Sansxel remembers your projects, your context, your goals. Every session picks up where the last one left off.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "sansxel, the AI workshop for makers",
+    title: "Stop re-explaining yourself to AI.",
     description:
-      "Talk, type, drop files, generate images, search live. One workshop for indie devs, designers, students, and creators who ship.",
+      "Sansxel remembers your projects, context, and goals. Every session picks up where the last one left off.",
     images: ["/og-image.png"],
     creator: "@sansxel",
   },
@@ -90,7 +91,7 @@ export default async function RootLayout({
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "The AI workshop for makers. Chat, voice, drag-drop, image generation, live web search, persistent memory, all in one workspace. Web for taste, desktop for shipping.",
+                "AI with persistent project memory. Sansxel remembers your projects, context, and goals; every session picks up where the last one left off. Chat, voice, drag-drop, image generation, live web search, all in one workspace.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",

@@ -116,40 +116,43 @@ export default async function HomePage() {
           tilt
           className="group relative aspect-[4/3] overflow-hidden p-0 sm:aspect-[16/10] lg:aspect-auto lg:min-h-[560px]"
         >
-          <Link href="/product" className="block h-full w-full">
+          <Link
+            href={signedIn ? "/app" : getSignInPath("/app")}
+            className="block h-full w-full"
+          >
             {/* Layer 1: dot grid texture */}
             <DotGrid opacity={0.09} />
             {/* Layer 2: aurora ribbon at the bottom edge */}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-1/2 bg-[radial-gradient(120%_80%_at_50%_120%,rgba(167,139,250,0.35),transparent_55%),radial-gradient(80%_60%_at_15%_110%,rgba(244,114,182,0.25),transparent_60%)]" />
             {/* Layer 3: very subtle scanline overlay for texture */}
             <div className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_0%,transparent_30%)]" />
-            {/* Top-right corner: version pill, sansxel-mono accent */}
+            {/* Top-right corner: status pill */}
             <div className="absolute right-5 top-5 z-10 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-3 py-1.5 font-mono text-[10px] tracking-[0.18em] text-violet-200 backdrop-blur-sm sm:right-7 sm:top-7">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-300 shadow-[0_0_8px_rgba(196,181,253,0.9)]" />
-              v0.1.16 · LIVE
+              memory wedge · LIVE
             </div>
             {/* Body */}
             <div className="relative z-10 flex h-full w-full flex-col justify-between p-7 sm:p-10 lg:p-12">
               <div>
                 <div className="font-mono text-[11px] uppercase tracking-[0.28em] text-violet-300">
-                  ── featured launch
+                  ── the wedge
                 </div>
                 <h1 className="hx-gradient-text mt-5 text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl lg:text-7xl">
-                  The workshop, not<br />a chat box.
+                  Stop re-explaining<br />yourself to AI.
                 </h1>
                 <p className="mt-5 max-w-xl text-base leading-7 text-neutral-200 sm:text-lg sm:leading-8">
-                  Voice, drag-drop, image gen, web search, persistent
-                  memory, sansxel-1 is one workspace that adapts to
-                  whatever you&apos;re shipping right now.
+                  Every chatbot forgets you between sessions. Sansxel
+                  remembers your projects, your context, your goals.
+                  Every session picks up where the last one left off.
                 </p>
               </div>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black transition group-hover:opacity-90">
-                  Read the launch
+                  {signedIn ? "Open the workshop" : "Start free"}
                   <span aria-hidden>→</span>
                 </span>
                 <span className="font-mono text-[11px] text-neutral-400">
-                  / 12 min read
+                  / no card required
                 </span>
               </div>
             </div>
@@ -204,6 +207,129 @@ export default async function HomePage() {
               </HeistCard>
             );
           })}
+        </div>
+      </section>
+
+      {/* ── Comparison: us vs the others ─────────────────────────
+            Three columns calling out the wedge against the obvious
+            comps. ChatGPT / Claude / Gemini own the "general AI"
+            slot but reset every chat. Notion AI / Copilot own the
+            "embedded AI" slot but stay generic. Sansxel sits in
+            the gap: AI you can build a project on, with memory
+            that survives the tab close. */}
+      <section
+        id="vs"
+        data-stagger
+        style={{ "--stagger-i": 1 } as React.CSSProperties}
+        className="mx-auto max-w-[1600px] px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
+      >
+        <div className="max-w-2xl">
+          <div className="text-sm font-medium uppercase tracking-[0.2em] text-violet-300">
+            Why sansxel
+          </div>
+          <h2 className="hx-gradient-text mt-3 text-2xl font-semibold tracking-tight sm:text-4xl">
+            Memory you can actually feel.
+          </h2>
+          <p className="mt-4 max-w-xl text-base leading-7 text-neutral-200">
+            Same chat models everyone else uses. Different shape of
+            workspace, with project memory that compounds instead of
+            resetting every tab close.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          {[
+            {
+              title: "ChatGPT, Claude, Gemini",
+              tone: "muted",
+              points: [
+                "Forget you between chats",
+                "No project structure",
+                "You re-paste the same context every session",
+              ],
+            },
+            {
+              title: "Notion AI, Copilot",
+              tone: "muted",
+              points: [
+                "Locked to one host platform",
+                "Generic outputs, no real memory of your work",
+                "You bend your work to fit their box",
+              ],
+            },
+            {
+              title: "Sansxel",
+              tone: "accent",
+              points: [
+                "Persistent project memory across sessions",
+                "Description, goals, and pinned context auto-injected on every send",
+                "Outputs shaped by your project, not a blank prompt",
+                "Built for builders shipping real things",
+              ],
+            },
+          ].map((col) => (
+            <HeistCard
+              key={col.title}
+              tilt
+              className={
+                "h-full p-6 sm:p-7 " +
+                (col.tone === "accent"
+                  ? "border-violet-400/30 bg-violet-500/[0.05]"
+                  : "")
+              }
+            >
+              <div
+                className={
+                  "inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.15em] " +
+                  (col.tone === "accent"
+                    ? "border-violet-400/30 bg-violet-400/[0.10] text-violet-200"
+                    : "border-white/10 bg-white/[0.06] text-neutral-400")
+                }
+              >
+                {col.tone === "accent" ? "us" : "them"}
+              </div>
+              <h3
+                className={
+                  "mt-4 text-lg font-semibold " +
+                  (col.tone === "accent" ? "text-white" : "text-neutral-200")
+                }
+              >
+                {col.title}
+              </h3>
+              <ul className="mt-4 space-y-2.5 text-sm leading-6">
+                {col.points.map((p) => (
+                  <li
+                    key={p}
+                    className={
+                      "flex items-start gap-2 " +
+                      (col.tone === "accent"
+                        ? "text-neutral-100"
+                        : "text-neutral-400")
+                    }
+                  >
+                    <span
+                      className={
+                        "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full " +
+                        (col.tone === "accent"
+                          ? "bg-violet-300"
+                          : "bg-neutral-600")
+                      }
+                      aria-hidden
+                    />
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </HeistCard>
+          ))}
+        </div>
+
+        <div className="mt-10 max-w-2xl text-sm leading-7 text-neutral-400">
+          <span className="font-semibold text-neutral-200">AI shouldn&apos;t have amnesia.</span>{" "}
+          You explain your project. Again. And again. Important
+          context lives across 40 different chats. Every output feels
+          disconnected. Your work doesn&apos;t compound, it resets.
+          Sansxel is one workspace where memory actually works.
         </div>
       </section>
 
