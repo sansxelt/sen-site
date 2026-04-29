@@ -44,26 +44,45 @@ export async function POST() {
   }
   const rows = (data as unknown as Row[]) ?? [];
 
-  // Cancel upstream Stripe subs first so nobody gets a renewal
-  // charge after the local rows are gone. Failures are tracked but
-  // don't block the local wipe.
+  // Cancel every live Stripe subscription, not just the ones
+  // tracked in account_subscriptions. Sweep the Stripe side
+  // independently so stale subs from dev / test (where the local
+  // row was deleted but the Stripe sub kept ticking) also get
+  // canceled. Otherwise getBillingState() resolves users to Pro
+  // off the Stripe row alone.
   let stripeCanceled = 0;
   let stripeFailed = 0;
   if (isStripeConfigured()) {
     const stripe = getStripe();
-    for (const row of rows) {
-      if (row.provider === "stripe" && row.provider_subscription_id) {
-        try {
-          await stripe.subscriptions.cancel(row.provider_subscription_id);
-          stripeCanceled += 1;
-        } catch (err) {
-          console.warn(
-            `[reset-all-to-free] cancel ${row.provider_subscription_id} failed:`,
-            err,
-          );
-          stripeFailed += 1;
+    let starting_after: string | undefined;
+    while (true) {
+      const page = await stripe.subscriptions.list({
+        status: "all",
+        limit: 100,
+        ...(starting_after ? { starting_after } : {}),
+      });
+      for (const sub of page.data) {
+        if (
+          sub.status === "active" ||
+          sub.status === "trialing" ||
+          sub.status === "past_due" ||
+          sub.status === "unpaid" ||
+          sub.status === "incomplete"
+        ) {
+          try {
+            await stripe.subscriptions.cancel(sub.id);
+            stripeCanceled += 1;
+          } catch (err) {
+            console.warn(
+              `[reset-all-to-free] cancel ${sub.id} failed:`,
+              err,
+            );
+            stripeFailed += 1;
+          }
         }
       }
+      if (!page.has_more || page.data.length === 0) break;
+      starting_after = page.data[page.data.length - 1].id;
     }
   }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "../../../../../auth";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../../lib/supabase-admin";
-import { getStripe, isStripeConfigured } from "../../../../../lib/stripe";
+import { getOrCreateCustomer, getStripe, isStripeConfigured } from "../../../../../lib/stripe";
 
 export const runtime = "nodejs";
 
@@ -40,23 +40,41 @@ export async function POST() {
     .maybeSingle();
   const row = (data as unknown as Row) ?? null;
 
-  // Cancel the upstream Stripe sub if there is one. PayPal / other
-  // providers fall through; we just drop the local row and let the
-  // user re-subscribe later if they want.
-  if (
-    row?.provider === "stripe" &&
-    row.provider_subscription_id &&
-    isStripeConfigured()
-  ) {
+  // Cancel every active Stripe subscription on the caller's
+  // customer record, not just the one tracked in
+  // account_subscriptions. The local row can be missing or stale
+  // while Stripe still has a live sub from an earlier dev / test
+  // grant; without this pass, getBillingState would still resolve
+  // the user to Pro on /account/plan.
+  if (isStripeConfigured()) {
     try {
       const stripe = getStripe();
-      await stripe.subscriptions.cancel(row.provider_subscription_id);
+      const customer = await getOrCreateCustomer(email);
+      const subs = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: "all",
+        limit: 50,
+      });
+      for (const sub of subs.data) {
+        if (
+          sub.status === "active" ||
+          sub.status === "trialing" ||
+          sub.status === "past_due" ||
+          sub.status === "unpaid" ||
+          sub.status === "incomplete"
+        ) {
+          try {
+            await stripe.subscriptions.cancel(sub.id);
+          } catch (err) {
+            console.warn(`[reset-to-free] cancel ${sub.id} failed:`, err);
+          }
+        }
+      }
     } catch (err) {
-      // Non-fatal. The Stripe row may already be canceled, or the
-      // sub id might be stale. Either way, drop the local record.
-      console.warn("[reset-to-free] stripe cancel failed:", err);
+      console.warn("[reset-to-free] stripe sweep failed:", err);
     }
   }
+  void row;
 
   const { error: delErr } = await supabase
     .from("account_subscriptions" as never)
