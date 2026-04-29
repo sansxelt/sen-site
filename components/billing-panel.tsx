@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { billingAddons, planIncludesAddon, pricingPlans } from "../lib/pricing";
+import { billingAddons, isOneTimeBoost, planIncludesAddon, pricingPlans } from "../lib/pricing";
 import type { BillingState } from "../lib/billing-state";
 import { UpdatePaymentMethodModal } from "./update-payment-method-modal";
 import { BuyCreditsModal } from "./buy-credits-modal";
@@ -369,33 +369,57 @@ export function BillingPanel({ state, publishableKey }: Props) {
                           </span>
                         ) : (
                           <>
-                            <button
-                              type="button"
-                              onClick={() => handleAddAddon(addon.key)}
-                              disabled={busy === `add-${addon.key}` || !hasPlan}
-                              className="w-full rounded-xl bg-white px-4 py-1.5 text-center text-xs font-semibold transition hover:opacity-90 disabled:opacity-60"
-                              style={{ color: "#0a0a0c" }}
-                              title={
-                                hasPlan
+                            {(() => {
+                              const oneTime = isOneTimeBoost(addon.key);
+                              const hasCard = Boolean(state.paymentMethod);
+                              // One-time boosts (Session / Weekly) only
+                              // need a card on file, no plan required.
+                              // Recurring addons modify an existing
+                              // subscription, so they still need a plan.
+                              const cardEligible = oneTime ? hasCard : hasPlan;
+                              const cardTitle = oneTime
+                                ? hasCard
+                                  ? `Charges $${addon.monthlyValue} to your card on file`
+                                  : "Add a card first to buy this with card"
+                                : hasPlan
                                   ? "Add via card (modifies your existing subscription)"
-                                  : "Subscribe to a plan first to add addons via card"
-                              }
-                            >
-                              {busy === `add-${addon.key}` ? "Adding…" : "Add with card"}
-                            </button>
-                            {paypalClientId && addon.monthlyValue > 0 && (
-                              <PayPalAddonButton
-                                addonKey={addon.key}
-                                addonName={addon.name}
-                                amountUsd={addon.monthlyValue}
-                                onActivated={() => router.refresh()}
-                              />
-                            )}
-                            {!hasPlan && (
-                              <p className="text-[11px] leading-snug text-neutral-500">
-                                Card addons require an active plan. Subscribe first or use PayPal one-off.
-                              </p>
-                            )}
+                                  : "Subscribe to a plan first to add addons via card";
+                              return (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleAddAddon(addon.key)}
+                                    disabled={
+                                      busy === `add-${addon.key}` || !cardEligible
+                                    }
+                                    className="w-full rounded-xl bg-white px-4 py-1.5 text-center text-xs font-semibold transition hover:opacity-90 disabled:opacity-60"
+                                    style={{ color: "#0a0a0c" }}
+                                    title={cardTitle}
+                                  >
+                                    {busy === `add-${addon.key}`
+                                      ? "Buying…"
+                                      : oneTime
+                                        ? `Buy with card · $${addon.monthlyValue}`
+                                        : "Add with card"}
+                                  </button>
+                                  {paypalClientId && addon.monthlyValue > 0 && (
+                                    <PayPalAddonButton
+                                      addonKey={addon.key}
+                                      addonName={addon.name}
+                                      amountUsd={addon.monthlyValue}
+                                      onActivated={() => router.refresh()}
+                                    />
+                                  )}
+                                  {!cardEligible && (
+                                    <p className="text-[11px] leading-snug text-neutral-500">
+                                      {oneTime
+                                        ? "Add a card at the top of this page, or use PayPal."
+                                        : "Card addons need an active plan. Subscribe first or use PayPal."}
+                                    </p>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </>
                         )}
                       </div>
