@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "katex/dist/katex.min.css";
 @import "./lei.css";
 @import "./theme.css";
 
@@ -1788,6 +1789,85 @@ div[id] {
   font-size: 12.5px;
 }
 .webchat-msg .md pre code { background: transparent; border: 0; padding: 0; font-size: inherit; }
+
+/* ── Custom CodeBlock (Shiki + copy button) ─────────────────
+   Replaces the default <pre><code> render for fenced code via
+   the components.code override in WebAssistantBubble. Header
+   row carries the language tag + copy button; body uses Shiki's
+   pre.shiki output when a known language is detected, or a
+   plain <pre> while the highlighter is loading / on unknown
+   languages. */
+.webchat-msg .md .md-codeblock {
+  margin: 0.6em 0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0a0a0d;
+}
+.webchat-msg .md .md-codeblock-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 11px;
+}
+.webchat-msg .md .md-codeblock-lang {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.04em;
+  color: rgba(167, 139, 250, 0.85);
+  text-transform: lowercase;
+}
+.webchat-msg .md .md-codeblock-copy {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(229, 231, 235, 0.75);
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+.webchat-msg .md .md-codeblock-copy:hover {
+  background: rgba(167, 139, 250, 0.10);
+  border-color: rgba(167, 139, 250, 0.4);
+  color: #f5f3ff;
+}
+.webchat-msg .md .md-codeblock-body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow-x: auto;
+}
+.webchat-msg .md .md-codeblock-body--shiki pre,
+.webchat-msg .md .md-codeblock-body--plain {
+  margin: 0;
+  padding: 12px 14px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.webchat-msg .md .md-codeblock-body code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* KaTeX math sizing inside chat bubbles. The katex.css default
+   font-size feels heavy in 13-14px chat copy; pull it down a
+   touch and let display-mode equations breathe with vertical
+   margin. */
+.webchat-msg .md .katex { font-size: 1.05em; }
+.webchat-msg .md .katex-display { margin: 0.6em 0; overflow-x: auto; overflow-y: hidden; }
 .webchat-msg .md blockquote {
   margin: 0.6em 0;
   padding: 4px 0 4px 12px;

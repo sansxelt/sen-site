@@ -20,6 +20,7 @@
     "bcryptjs": "^3.0.3",
     "framer-motion": "^12.38.0",
     "geist": "^1.7.0",
+    "katex": "^0.16.45",
     "next": "16.2.3",
     "next-auth": "^5.0.0-beta.30",
     "openai": "^6.34.0",
@@ -27,8 +28,11 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "resend": "^6.10.0",
+    "shiki": "^4.0.2",
     "stripe": "^22.0.1"
   },
   "devDependencies": {

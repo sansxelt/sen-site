@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import { CodeBlock } from "./code-block";
 import { useLei } from "./lei-shell";
 import { previewCreditCost } from "@/lib/lei";
 import { planDisplayName } from "@/lib/pricing";
@@ -2570,8 +2573,35 @@ function WebAssistantBubble({
         return (
           <div key={i} className="md">
             <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex]}
               urlTransform={(url) => url}
+              components={{
+                // v0.2.0 phase B, Shiki syntax highlight + copy
+                // button on every fenced block. Inline `code` (no
+                // language class) falls through to the default
+                // tinted span the rest of the .md theme styles.
+                code({ className, children, ...props }) {
+                  const isFenced =
+                    typeof className === "string" &&
+                    className.includes("language-");
+                  const text = String(children ?? "");
+                  if (!isFenced) {
+                    return (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  }
+                  return <CodeBlock className={className}>{text}</CodeBlock>;
+                },
+                // ReactMarkdown wraps fenced code in <pre><code>;
+                // CodeBlock supplies its own <pre>, so swallow the
+                // outer <pre> when its only child is our component.
+                pre({ children }) {
+                  return <>{children}</>;
+                },
+              }}
             >
               {s.text}
             </ReactMarkdown>
