@@ -611,8 +611,12 @@ function ChangePlanSelect({
   setError: (v: string | null) => void;
 }) {
   const router = useRouter();
-  const selectablePlans = pricingPlans.filter((p) =>
-    p.key !== "free" && p.key !== "enterprise" && p.key !== "teams",
+  const selectablePlans = pricingPlans.filter(
+    (p) =>
+      !p.hidden &&
+      p.key !== "free" &&
+      p.key !== "enterprise" &&
+      p.key !== "teams",
   );
   const [cycle, setCycle] = useState<"monthly" | "yearly">(currentCycle);
 

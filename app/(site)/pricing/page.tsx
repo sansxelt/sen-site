@@ -8,7 +8,7 @@ import { PricingPacks } from "@/components/pricing-packs";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Sansxel pricing for Free, Core, Plus, Pro, Teams, and Enterprise plans.",
+    "Sansxel pricing. Free for everyday use, Pro for unlimited chat / image / voice and persistent project memory, Teams for shared workspaces.",
 };
 
 export default function PricingPage() {
@@ -89,16 +89,16 @@ export default function PricingPage() {
         <div className="mt-16 grid gap-4 sm:mt-[4.5rem] sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {[
             [
-              "Personal plans",
-              "Built for everyday use, deeper create work, and full personal build power without making the product feel niche.",
+              "Free",
+              "Everyday questions, light create work, and a 7-day memory window. No card required.",
             ],
             [
-              "Team plans",
-              "For shared libraries, collaboration, admin controls, and a cleaner path from individual use to team adoption.",
+              "Pro",
+              "$15 / month. Unlimited chat, image, and voice; persistent project memory; Copilot Pro Pack + Power Pack included; API access.",
             ],
             [
-              "Enterprise rollout",
-              "Manual by design for organizations that need more capacity, governance, onboarding help, and custom deployment shape.",
+              "Teams",
+              "Shared libraries, team spaces, admin controls. Talk to us for rollout shape and seat pricing.",
             ],
           ].map(([title, description]) => (
             <HeistCard key={title} className="p-6 sm:p-7">

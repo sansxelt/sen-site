@@ -78,7 +78,7 @@ export async function GET(request: Request) {
             itemId,
           })) ?? [],
       },
-      plans: pricingPlans.map((plan) => ({
+      plans: pricingPlans.filter((p) => !p.hidden).map((plan) => ({
         key: plan.key,
         name: plan.name,
         description: plan.description,

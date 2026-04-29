@@ -52,6 +52,11 @@ export type PricingPlan = {
   ctaVariant: "account" | "contact";
   description: string;
   featured?: boolean;
+  // v0.2.0, hidden = legacy / deprecated tier still accepted by the
+  // type system + DB but not shown in the user-facing pricing list,
+  // upgrade paths, or compare table. Existing subs on these tiers
+  // keep working; nobody new can pick them.
+  hidden?: boolean;
   key: PricingPlanKey;
   memoryWindow: string;
   monthlyCredits: string;
@@ -111,19 +116,24 @@ export const pricingPlans: PricingPlan[] = [
     support: "Community support",
     yearlyLabel: undefined,
   },
+  // v0.2.0, "Core" + "Plus" hidden. Single paid personal tier now,
+  // see "Pro" below. These rows stay in the catalog so existing
+  // subscribers on these keys keep rendering; no new sign-ups land
+  // here because hidden=true filters them out of pricing UI.
   {
     apiRequestLimit: 50000,
     ctaLabel: "Choose Core",
     ctaVariant: "account",
     description:
-      "For people who want Sansxel as a daily thinking and output tool.",
+      "Legacy daily-use tier. Existing subscribers stay on this; new sign-ups are routed to Pro.",
+    hidden: true,
     key: "apprentice",
     memoryWindow: "30-day history",
     monthlyCredits: "Standard usage",
     monthlyLabel: "$12 / month",
     monthlyValue: 12,
-    name: "Core",
-    note: "Daily personal use",
+    name: "Core (legacy)",
+    note: "Legacy daily personal use",
     points: [
       "Everything in Free",
       "More Ask and Explore usage",
@@ -140,14 +150,15 @@ export const pricingPlans: PricingPlan[] = [
     ctaLabel: "Choose Plus",
     ctaVariant: "account",
     description:
-      "For heavier personal workflows moving from rough input to polished deliverables.",
+      "Legacy heavier-workflow tier. Existing subscribers stay on this; new sign-ups are routed to Pro.",
+    hidden: true,
     key: "studio",
     memoryWindow: "60-day history",
     monthlyCredits: "Expanded usage",
     monthlyLabel: "$20 / month",
     monthlyValue: 20,
-    name: "Plus",
-    note: "Richer create workflows",
+    name: "Plus (legacy)",
+    note: "Legacy richer-create workflows",
     points: [
       "Everything in Core",
       "Copilot Pro Pack included, unlimited chat",
@@ -161,29 +172,29 @@ export const pricingPlans: PricingPlan[] = [
   },
   {
     apiRequestLimit: 500000,
-    badge: "Best Value",
-    ctaLabel: "Choose Pro",
+    badge: "Most popular",
+    ctaLabel: "Go Pro",
     ctaVariant: "account",
     description:
-      "The full personal plan for people building products, systems, and polished deliverables every week.",
+      "Everything in Free, lifted weekly caps, Copilot Pro Pack + Power Pack included, API access. The single personal tier above Free.",
     featured: true,
     key: "pro",
     memoryWindow: "120-day history",
     monthlyCredits: "High usage + API access",
-    monthlyLabel: "$39 / month",
-    monthlyValue: 39,
+    monthlyLabel: "$15 / month",
+    monthlyValue: 15,
     name: "Pro",
-    note: "Full build power",
+    note: "The paid plan",
     points: [
-      "Everything in Plus",
+      "Unlimited chat, image, and voice (no weekly caps)",
+      "Persistent project memory",
       "Copilot Pro Pack + Power Pack included",
       "API access for custom workflows",
-      "Early access to advanced build features",
     ],
     seats: "1 seat",
     segment: "individual",
     support: "Priority support",
-    yearlyLabel: "$390 / year",
+    yearlyLabel: "$150 / year",
   },
   {
     apiRequestLimit: 300000,

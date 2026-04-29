@@ -338,7 +338,7 @@ function PickPlansStep({
       </p>
 
       <div className="mt-5 grid gap-2 sm:grid-cols-2 sm:gap-3">
-        {pricingPlans.map((plan) => {
+        {pricingPlans.filter((plan) => !plan.hidden).map((plan) => {
           const isSelected = selected.has(plan.key);
           return (
             <button
