@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import { useLei } from "./lei-shell";
 import { previewCreditCost } from "@/lib/lei";
 import { planDisplayName } from "@/lib/pricing";
+import { ProjectPicker, getActiveProjectId } from "./project-picker";
 
 type ChatImageInline = { media_type: string; data: string };
 type ChatMessage = {
@@ -839,6 +840,14 @@ export function WebChat({
           client_timezone: clientTimezone,
           client_time_label: clientTimeLabel,
           thread_id: threadIdRef.current ?? undefined,
+          // v0.2.0, attach the new thread to the active project (if
+          // any). Server ignores this when thread_id is already
+          // resolved, so it can't sneak context into someone else's
+          // existing thread; the assignment only happens on first
+          // turn of a fresh thread.
+          project_id: threadIdRef.current
+            ? undefined
+            : getActiveProjectId() ?? undefined,
         }),
         signal: ac.signal,
       });
@@ -1378,7 +1387,17 @@ export function WebChat({
       const res = await fetch("/api/ai/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, count, thread_id: tidAtStart ?? undefined }),
+        body: JSON.stringify({
+          prompt,
+          count,
+          thread_id: tidAtStart ?? undefined,
+          // v0.2.0, route image-gen turns into the active project
+          // when no thread is in flight yet. Server resolves /
+          // creates the thread and attaches it to the project on
+          // creation. No server-side image-gen context injection
+          // (text-only wedge for now); this is just thread routing.
+          project_id: tidAtStart ? undefined : getActiveProjectId() ?? undefined,
+        }),
         signal: ac.signal,
       });
       // Server resolves / creates the thread + persists user prompt
@@ -2111,6 +2130,7 @@ export function WebChat({
         />
         <div className="webchat-input-actions">
           <div className="webchat-input-actions-left">
+            <ProjectPicker />
             <span
               className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
               title={

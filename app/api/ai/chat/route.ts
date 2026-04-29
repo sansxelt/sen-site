@@ -35,9 +35,15 @@ import {
   createAssistantPlaceholder,
   createThread as createChatThread,
   getThread as getChatThread,
+  getThreadProjectId,
   listMessages as listChatMessages,
   updateMessageContent,
 } from "../../../../lib/chat-history";
+import {
+  buildProjectContextBlock,
+  getProjectWithPins,
+  listPinsForProject,
+} from "../../../../lib/projects";
 import { generateAndSetThreadTitle } from "../../../../lib/thread-title";
 
 export const runtime = "nodejs";
@@ -200,6 +206,11 @@ type ChatBody = {
   // header so the client can stash it for follow-up turns. Same
   // account → same threads from any device.
   thread_id?: string;
+  // v0.2.0, project this chat belongs to. Honored only when the
+  // server is creating a NEW thread on this request; for existing
+  // threads the server reads project_id from the thread row itself
+  // (so a malicious client can't steal another project's context).
+  project_id?: string | null;
   // v0.1.12, client-supplied local time so the model can answer
   // "what time is it for me" without claiming it has no access to
   // the system clock. Client passes IANA timezone + a pre-formatted
@@ -559,8 +570,17 @@ function resolveVoiceHumanizationSource(payload: ChatBody): string | null {
 function systemPromptForPayload(
   payload: ChatBody,
   referenceBlock = "",
+  projectContextBlock = "",
 ): string {
   let prompt = SYSTEM_PROMPT;
+
+  // v0.2.0, project memory wedge. Project description + goals +
+  // pinned items go RIGHT AFTER the base prompt so they ground
+  // every reply in the user's long-running context. Order locked
+  // by spec: base → project → reference → persona/voice overlays.
+  if (projectContextBlock) {
+    prompt = `${prompt}\n\n${projectContextBlock}`;
+  }
 
   // v0.1.4, Source-attached reference block (RAG). Lives BEFORE the
   // persona overlay so persona instructions still take priority on
@@ -842,7 +862,16 @@ export async function POST(request: Request) {
         resolvedThreadId = owned ? owned.id : null;
       }
       if (!resolvedThreadId) {
-        const created = await createChatThread(email);
+        // v0.2.0, attach a brand-new thread to the project the
+        // client claims it belongs to. Verified by the FK + the
+        // project's owner_email (lib/projects sets owner on insert,
+        // so a guessed UUID from another account won't insert
+        // under this user's chat_threads row anyway).
+        const newProjectId =
+          typeof payload.project_id === "string" && payload.project_id.trim()
+            ? payload.project_id.trim()
+            : null;
+        const created = await createChatThread(email, undefined, newProjectId);
         if (created) resolvedThreadId = created.id;
       }
       if (resolvedThreadId) {
@@ -885,11 +914,34 @@ export async function POST(request: Request) {
         })
       : Promise.resolve(null);
 
+    // v0.2.0, project memory wedge. If the resolved thread belongs
+    // to a project, fetch the project + pinned items and assemble
+    // the context block. Server is the source of truth for the
+    // thread's project; client-supplied project_id is honored only
+    // when CREATING a new thread above, so a malicious client
+    // can't inject context from a project they don't own.
+    let projectContextBlock = "";
+    if (resolvedThreadId) {
+      const projectId = await getThreadProjectId(email, resolvedThreadId);
+      if (projectId) {
+        const [project, pins] = await Promise.all([
+          getProjectWithPins(email, projectId),
+          listPinsForProject(projectId),
+        ]);
+        if (project) {
+          projectContextBlock = buildProjectContextBlock({
+            project,
+            pins,
+          });
+        }
+      }
+    }
+
     // v0.1.16 r5, Quick timing markers so the Vercel function logs
     // show where time goes when chats feel slow.
     tStreamCall = Date.now();
     console.log(
-      `[ai/chat] tools=${toolsForCall.length} promptLen=${lastUserText.length} model=${descriptor.model}`,
+      `[ai/chat] tools=${toolsForCall.length} promptLen=${lastUserText.length} model=${descriptor.model} projectCtx=${projectContextBlock.length}`,
     );
 
     // v0.1.16, web_fetch_20250910 is still on a beta header. Send it
@@ -919,7 +971,7 @@ export async function POST(request: Request) {
         // 1-3 sentences). Cap tokens hard so the model can't drift
         // into a multi-paragraph essay that takes 8 seconds to TTS.
         max_tokens: isVoiceTurn ? 320 : 2048,
-        system: systemPromptForPayload(payload, referenceBlock),
+        system: systemPromptForPayload(payload, referenceBlock, projectContextBlock),
         // v0.1.4, translate to Anthropic content-block form so user
         // turns with attached images become multimodal content arrays.
         // Text-only turns pass through as plain strings.

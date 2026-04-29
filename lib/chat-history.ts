@@ -148,13 +148,22 @@ export async function listMessages(email: string, threadId: string): Promise<Sto
  * to "New chat", the first appendMessage will rename it to a snippet
  * of the first user turn.
  */
-export async function createThread(email: string, title?: string): Promise<ChatThread | null> {
+export async function createThread(
+  email: string,
+  title?: string,
+  projectId?: string | null,
+): Promise<ChatThread | null> {
   if (!email || !isDatabaseConfigured()) return null;
   try {
     const supabase = getSupabaseAdminClient();
+    const row: Record<string, unknown> = {
+      email: email.toLowerCase(),
+      title: title ?? TITLE_FALLBACK,
+    };
+    if (projectId) row.project_id = projectId;
     const { data, error } = await supabase
       .from("chat_threads" as never)
-      .insert([{ email: email.toLowerCase(), title: title ?? TITLE_FALLBACK }] as never)
+      .insert([row] as never)
       .select("id, email, title, created_at, updated_at")
       .single();
     if (error || !data) {
@@ -330,6 +339,61 @@ export async function renameThread(email: string, threadId: string, title: strin
   } catch (err) {
     console.warn("renameThread threw:", err);
     return false;
+  }
+}
+
+/** Attaches (or detaches with null) a thread to a project. Returns
+ * false if the thread isn't owned by this email or the DB isn't
+ * configured. The project itself is NOT ownership-verified here,
+ * the caller (route) does that before forwarding. */
+export async function setThreadProject(
+  email: string,
+  threadId: string,
+  projectId: string | null,
+): Promise<boolean> {
+  if (!email || !threadId || !isDatabaseConfigured()) return false;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from("chat_threads" as never)
+      .update({
+        project_id: projectId,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", threadId)
+      .eq("email", email.toLowerCase());
+    if (error) {
+      console.warn("setThreadProject failed:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("setThreadProject threw:", err);
+    return false;
+  }
+}
+
+/** Reads thread.project_id (nullable). Used by the chat route to
+ * decide whether to inject project context into the system message.
+ * Returns null on any error so a missing column / down DB just
+ * degrades to "no project context", never blocks chat. */
+export async function getThreadProjectId(
+  email: string,
+  threadId: string,
+): Promise<string | null> {
+  if (!email || !threadId || !isDatabaseConfigured()) return null;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("chat_threads" as never)
+      .select("project_id")
+      .eq("id", threadId)
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+    if (error || !data) return null;
+    return ((data as unknown as { project_id?: string | null }).project_id) ?? null;
+  } catch {
+    return null;
   }
 }
 

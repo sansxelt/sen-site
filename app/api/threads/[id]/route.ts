@@ -6,7 +6,9 @@ import {
   getThread,
   listMessages,
   renameThread,
+  setThreadProject,
 } from "../../../../lib/chat-history";
+import { getProjectWithPins } from "../../../../lib/projects";
 
 export const runtime = "nodejs";
 
@@ -36,7 +38,10 @@ export async function GET(
   );
 }
 
-// PATCH /api/threads/[id], body: { title }
+// PATCH /api/threads/[id], body: { title? } and/or { project_id? }.
+// project_id may be a uuid (assign), null (detach), or omitted
+// (untouched). When assigning, we verify the project belongs to the
+// caller before writing.
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -45,14 +50,40 @@ export async function PATCH(
   const email = await emailFromRequest(request);
   if (!email) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const payload = (await request.json().catch(() => ({}))) as { title?: string };
-  const title = typeof payload.title === "string" ? payload.title : "";
-  if (!title.trim()) {
-    return NextResponse.json({ error: "Title is required." }, { status: 400 });
+  const payload = (await request.json().catch(() => ({}))) as {
+    title?: string;
+    project_id?: string | null;
+  };
+
+  let didTouch = false;
+
+  if (typeof payload.title === "string") {
+    if (!payload.title.trim()) {
+      return NextResponse.json({ error: "Title is required." }, { status: 400 });
+    }
+    const ok = await renameThread(email, id, payload.title);
+    if (!ok) return NextResponse.json({ error: "Rename failed." }, { status: 500 });
+    didTouch = true;
   }
 
-  const ok = await renameThread(email, id, title);
-  if (!ok) return NextResponse.json({ error: "Rename failed." }, { status: 500 });
+  if (payload.project_id !== undefined) {
+    let nextId: string | null = null;
+    if (payload.project_id) {
+      // Confirm caller owns the project before linking the thread.
+      const project = await getProjectWithPins(email, payload.project_id);
+      if (!project) {
+        return NextResponse.json({ error: "Project not found." }, { status: 404 });
+      }
+      nextId = project.id;
+    }
+    const ok = await setThreadProject(email, id, nextId);
+    if (!ok) return NextResponse.json({ error: "Project assign failed." }, { status: 500 });
+    didTouch = true;
+  }
+
+  if (!didTouch) {
+    return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
+  }
   return NextResponse.json({ ok: true });
 }
 

@@ -49,9 +49,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  let payload: { prompt?: unknown; size?: unknown; thread_id?: unknown; count?: unknown };
+  let payload: {
+    prompt?: unknown;
+    size?: unknown;
+    thread_id?: unknown;
+    count?: unknown;
+    project_id?: unknown;
+  };
   try {
-    payload = (await request.json()) as { prompt?: unknown; size?: unknown; thread_id?: unknown; count?: unknown };
+    payload = (await request.json()) as {
+      prompt?: unknown;
+      size?: unknown;
+      thread_id?: unknown;
+      count?: unknown;
+      project_id?: unknown;
+    };
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
@@ -133,7 +145,11 @@ export async function POST(request: Request) {
       resolvedThreadId = owned ? owned.id : null;
     }
     if (!resolvedThreadId) {
-      const created = await createChatThread(email);
+      const newProjectId =
+        typeof payload.project_id === "string" && payload.project_id.trim()
+          ? payload.project_id.trim()
+          : null;
+      const created = await createChatThread(email, undefined, newProjectId);
       if (created) resolvedThreadId = created.id;
     }
     if (resolvedThreadId) {
