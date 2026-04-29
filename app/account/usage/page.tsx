@@ -27,10 +27,12 @@ export const metadata: Metadata = {
 const usageSupportHref =
   "/contact?subject=Higher%20usage%20limits&message=I%20need%20more%20usage%20for%3A%20#contact-form";
 
-// v0.2.0, single-paid-tier ladder. Apprentice / studio are legacy
-// keys still recognized in the DB but no new sign-ups land on them
-// (hidden=true in pricingPlans). Upgrade nudges go straight to Pro.
-const personalUpgradeOrder: PricingPlanKey[] = ["free", "pro"];
+const personalUpgradeOrder: PricingPlanKey[] = [
+  "free",
+  "apprentice",
+  "studio",
+  "pro",
+];
 
 export default async function UsagePage() {
   const session = await auth();
