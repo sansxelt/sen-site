@@ -20,6 +20,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/features", destination: "/product", permanent: true },
       { source: "/function", destination: "/product", permanent: true },
+      // Legacy single-page billing was split into Plan / Addons /
+      // Credits under Shop. Old bookmarks land on Plan.
+      { source: "/account/billing", destination: "/account/plan", permanent: true },
     ];
   },
 };

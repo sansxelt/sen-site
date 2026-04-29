@@ -68,7 +68,9 @@ export function AccountDropdown({ email, isAdmin = false }: Props) {
           {[
             { href: "/account",          label: "Overview" },
             { href: "/account/settings", label: "Settings" },
-            { href: "/account/billing",  label: "Billing" },
+            { href: "/account/plan",     label: "Plan" },
+            { href: "/account/addons",   label: "Addons" },
+            { href: "/account/credits",  label: "Credits" },
             { href: "/account/usage",    label: "Usage" },
           ].map((link) => (
             <Link

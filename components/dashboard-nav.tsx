@@ -313,7 +313,9 @@ const navGroups: NavGroup[] = [
     label: "Shop",
     items: [
       { href: "/account",              label: "Overview",     icon: <OverviewIcon /> },
-      { href: "/account/billing",      label: "Billing",      icon: <BillingIcon /> },
+      { href: "/account/plan",         label: "Plan",         icon: <BillingIcon /> },
+      { href: "/account/addons",       label: "Addons",       icon: <AddonsIcon /> },
+      { href: "/account/credits",      label: "Credits",      icon: <CreditsIcon /> },
       { href: "/account/usage",        label: "Usage",        icon: <UsageIcon /> },
     ],
   },
@@ -331,6 +333,26 @@ function PenIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
       <path d="m2.5 13.5 1-3 8-8 2 2-8 8-3 1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function AddonsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <rect x="1.5" y="1.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="9" y="1.5" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="1.5" y="9" width="5.5" height="5.5" rx="1" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M11.75 9.5v5M9.25 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CreditsIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 6.5c-.6-.7-1.4-1-2-1-1 0-2 .6-2 1.6 0 .9.8 1.2 2 1.4s2 .5 2 1.4c0 1-1 1.6-2 1.6-.6 0-1.4-.3-2-1M8 4.5v7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   );
 }

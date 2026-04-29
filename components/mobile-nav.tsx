@@ -145,7 +145,9 @@ export function MobileNav({ links, secondary, signedIn, isAdmin = false, accessH
                     {[
                       { href: "/account",          label: "Overview" },
                       { href: "/account/settings", label: "Settings" },
-                      { href: "/account/billing",  label: "Billing" },
+                      { href: "/account/plan",     label: "Plan" },
+                      { href: "/account/addons",   label: "Addons" },
+                      { href: "/account/credits",  label: "Credits" },
                       { href: "/account/usage",    label: "Usage" },
                       ...(isAdmin
                         ? [{ href: "/account/content", label: "Learn content (admin)" }]

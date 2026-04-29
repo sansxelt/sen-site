@@ -11,9 +11,22 @@ import { PayPalAddonButton, PayPalAddonsProvider } from "./paypal-addon-button";
 // 3D tilt removed, billing/payment surfaces shouldn't feel "playful";
 // users want them to read as steady and trustworthy.
 
+// Which sections of the panel to render. Pass a narrow list when
+// rendering a focused page (/account/plan, /account/addons,
+// /account/credits) so each shop entry actually does what its
+// label says. Default = all sections, preserving the legacy
+// /account/billing one-pager URL.
+export type BillingSection =
+  | "payment"
+  | "plan"
+  | "addons"
+  | "credits"
+  | "invoices";
+
 type Props = {
   state: BillingState;
   publishableKey: string;
+  sections?: BillingSection[];
 };
 
 type UsageSummary = {
@@ -57,7 +70,17 @@ function formatDate(iso: string | null) {
   }
 }
 
-export function BillingPanel({ state, publishableKey }: Props) {
+const ALL_SECTIONS: BillingSection[] = [
+  "payment",
+  "plan",
+  "addons",
+  "credits",
+  "invoices",
+];
+
+export function BillingPanel({ state, publishableKey, sections }: Props) {
+  const visible = new Set<BillingSection>(sections ?? ALL_SECTIONS);
+  const showSection = (key: BillingSection) => visible.has(key);
   const router = useRouter();
   const [busy, setBusy]   = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -154,6 +177,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
             check this section first; PayPal one-offs route through
             their own buttons next to each addon and don't need
             anything here. ───────────────────────────────────────── */}
+      {showSection("payment") && (
       <section
         className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
       >
@@ -187,8 +211,10 @@ export function BillingPanel({ state, publishableKey }: Props) {
           )}
         </div>
       </section>
+      )}
 
       {/* ── Current plan ────────────────────────────────────────────── */}
+      {showSection("plan") && (
       <section
         className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
       >
@@ -298,6 +324,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
           )}
         </div>
       </section>
+      )}
 
       {/* ── Addons ─────────────────────────────────────────────────── */}
       {/* Always rendered. Was gated on hasPlan, which made the section
@@ -305,7 +332,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
           available regardless of plan tier. The section itself shows
           a "No addons available" empty state when there's nothing to
           surface, so leaving it always-on is safe. */}
-      {(
+      {showSection("addons") && (
         <section
           className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
         >
@@ -433,6 +460,7 @@ export function BillingPanel({ state, publishableKey }: Props) {
       )}
 
       {/* ── Credits + usage ────────────────────────────────────────── */}
+      {showSection("credits") && (
       <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
@@ -495,9 +523,10 @@ export function BillingPanel({ state, publishableKey }: Props) {
           </>
         )}
       </section>
+      )}
 
       {/* ── Invoices ───────────────────────────────────────────────── */}
-      {state.invoices.length > 0 && (
+      {showSection("invoices") && state.invoices.length > 0 && (
         <section
           className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:rounded-3xl sm:p-6"
         >

@@ -8,17 +8,16 @@ import { getSubscriptionByEmail, readPricingSnapshot } from "../../../lib/subscr
 import { pricingPlanMap, getPricingPlan } from "../../../lib/pricing";
 import type { PricingPlanKey } from "../../../lib/pricing";
 
-// v0.1.16: real billing page (was a redirect to /account#billing
-// after the v0.1.12 inline-merge). Splitting the surfaces back out
-// because /account and /account/billing rendering identical content
-// read as a bug to users.
+// Plan + payment method + invoices. Splits the legacy single
+// /account/billing one-pager into focused entries under Shop so
+// each sidebar item does what its label says.
 
 export const metadata: Metadata = {
-  title: "Billing",
-  description: "Plan, addons, payment, and invoices for your sansxel account.",
+  title: "Plan",
+  description: "Subscription plan, payment method, and invoices for your sansxel account.",
 };
 
-export default async function AccountBillingPage() {
+export default async function AccountPlanPage() {
   const session = await auth();
   const email = session?.user?.email ?? "";
   const stripeReady = isStripeConfigured();
@@ -29,14 +28,6 @@ export default async function AccountBillingPage() {
     stripeReady && email ? getBillingState(email.toLowerCase()) : Promise.resolve(null),
   ]);
   const subscription = readPricingSnapshot(rawSubscription);
-
-  // Reconcile the Supabase subscription snapshot with the Stripe
-  // billing state. Comped users (founders, internal) are Pro in our
-  // DB but have no Stripe subscription, so getBillingState returns
-  // plan: null and BillingPanel falls back to "Free", which
-  // contradicts every other place we render their plan. When Stripe
-  // doesn't know the plan but our DB does, inject the snapshot's
-  // plan so the panel renders Pro · Comped instead of Free.
   const reconciledBilling = (() => {
     if (!billingState) return null;
     if (billingState.plan) return billingState;
@@ -51,14 +42,13 @@ export default async function AccountBillingPage() {
     <div className="space-y-6">
       <header className="space-y-1">
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-purple-300/85">
-          Billing
+          Plan
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Plan, addons, payment, and invoices
+          Subscription, payment method, and invoices
         </h1>
         <p className="max-w-xl text-sm leading-6 text-neutral-400">
-          Manage your subscription, add or remove addons, update your payment method,
-          and download invoices. Credits top up here too.
+          Pick a tier, swap your card, download receipts. Addons and credits live on their own pages.
         </p>
       </header>
 
@@ -69,7 +59,11 @@ export default async function AccountBillingPage() {
       )}
 
       {stripeReady && reconciledBilling ? (
-        <BillingPanel state={reconciledBilling} publishableKey={publishableKey ?? ""} />
+        <BillingPanel
+          state={reconciledBilling}
+          publishableKey={publishableKey ?? ""}
+          sections={["payment", "plan", "invoices"]}
+        />
       ) : stripeReady ? (
         <p className="text-sm text-neutral-400">
           Sign in to manage your subscription. Visit{" "}
