@@ -1648,6 +1648,41 @@ div[id] {
 .webchat-msg .md p:first-child { margin-top: 0; }
 .webchat-msg .md p:last-child  { margin-bottom: 0; }
 
+/* Per-bubble action row. Edit on user turns, Regenerate on
+   assistant turns. Hidden until the message is hovered so the
+   chat reads as conversation, not a settings menu. */
+.webchat-msg .webchat-user-actions,
+.webchat-msg .webchat-assistant-actions {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+.webchat-msg:hover .webchat-user-actions,
+.webchat-msg:hover .webchat-assistant-actions,
+.webchat-msg .webchat-user-actions:focus-within,
+.webchat-msg .webchat-assistant-actions:focus-within {
+  opacity: 1;
+}
+.webchat-msg .webchat-bubble-action {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(229, 231, 235, 0.85);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+.webchat-msg .webchat-bubble-action:hover {
+  background: rgba(167, 139, 250, 0.10);
+  border-color: rgba(167, 139, 250, 0.4);
+  color: #f5f3ff;
+}
+
 /* User-turn attached images. Sit above any caption text inside
    the user bubble so reloading a thread shows the image the user
    sent (vs. an empty bubble before the assistant's analysis). */

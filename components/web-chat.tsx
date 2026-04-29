@@ -2009,7 +2009,14 @@ export function WebChat({
                       }}
                     />
                   ) : (
-                    <WebUserBubble content={m.content} images={m.images} />
+                    <WebUserBubble
+                      content={m.content}
+                      images={m.images}
+                      onEdit={(text) => {
+                        setInput(text);
+                        textareaRef.current?.focus();
+                      }}
+                    />
                   )}
                 </div>
               );
@@ -2609,6 +2616,18 @@ function WebAssistantBubble({
           </div>
         );
       })}
+      {!streaming && userPrompt && onPrefillInput && (
+        <div className="webchat-assistant-actions">
+          <button
+            type="button"
+            className="webchat-bubble-action"
+            title="Drop the previous prompt back into the input so you can tweak it and re-run"
+            onClick={() => onPrefillInput(userPrompt)}
+          >
+            Regenerate
+          </button>
+        </div>
+      )}
     </>
   );
 }
@@ -2622,9 +2641,11 @@ function WebAssistantBubble({
 function WebUserBubble({
   content,
   images,
+  onEdit,
 }: {
   content: string;
   images?: Array<{ media_type: string; data: string }>;
+  onEdit?: (text: string) => void;
 }) {
   const hasImages = Boolean(images && images.length > 0);
   return (
@@ -2650,6 +2671,18 @@ function WebUserBubble({
         </div>
       )}
       {content && <span>{content}</span>}
+      {onEdit && content && (
+        <div className="webchat-user-actions">
+          <button
+            type="button"
+            className="webchat-bubble-action"
+            title="Edit and re-send (loads the message back into the input box)"
+            onClick={() => onEdit(content)}
+          >
+            Edit
+          </button>
+        </div>
+      )}
     </>
   );
 }
