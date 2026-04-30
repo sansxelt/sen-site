@@ -335,6 +335,74 @@ export function WebChat({
   const hasHydratedRef = useRef(false);
   const promptHandledRef = useRef(false);
 
+  // v0.2.0 phase H — project attachment proof. Projects were
+  // invisible: pinned context auto-injected into the system
+  // prompt, but the user had no UI proof anything happened. Now
+  // we surface a small strip at the top of project-attached
+  // threads showing the project name + pin count, so "is this
+  // project doing anything?" has a visible answer.
+  type AttachedProject = {
+    id: string;
+    name: string;
+    pinCount: number;
+  };
+  const [attachedProject, setAttachedProject] =
+    useState<AttachedProject | null>(null);
+  const fetchAttachedProject = useCallback(
+    async (projectId: string | null) => {
+      if (!projectId) {
+        setAttachedProject(null);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/projects/${projectId}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) {
+          setAttachedProject(null);
+          return;
+        }
+        const data = (await res.json()) as {
+          project?: {
+            id: string;
+            name: string;
+            pinned?: Array<{ id: string }>;
+          };
+        };
+        if (!data.project) {
+          setAttachedProject(null);
+          return;
+        }
+        setAttachedProject({
+          id: data.project.id,
+          name: data.project.name,
+          pinCount: data.project.pinned?.length ?? 0,
+        });
+      } catch {
+        setAttachedProject(null);
+      }
+    },
+    [],
+  );
+  // Re-evaluate when the active thread changes (loaded a different
+  // chat) or when the picker fires sansxel:project:changed for the
+  // current thread.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // On mount, surface the active project even before a thread
+    // exists, so a fresh chat with a project pre-selected shows
+    // the strip immediately ("you'll send this with Project X").
+    const initialActive = getActiveProjectId();
+    if (initialActive) void fetchAttachedProject(initialActive);
+    const onProjectChanged = (e: Event) => {
+      const detail = (e as CustomEvent<string | null>).detail ?? null;
+      void fetchAttachedProject(detail);
+    };
+    window.addEventListener("sansxel:project:changed", onProjectChanged);
+    return () =>
+      window.removeEventListener("sansxel:project:changed", onProjectChanged);
+  }, [fetchAttachedProject]);
+
   // v0.1.16, Pre-fill input from ?prompt= so the home page teaser
   // can ship a question into the workshop. We pre-fill (not auto-
   // send) so the user retains agency + can edit.
@@ -458,11 +526,15 @@ export function WebChat({
         const detailRes = await fetch(`/api/threads/${targetId}`, { cache: "no-store" });
         if (!detailRes.ok || cancelled) return;
         const detail = (await detailRes.json()) as {
-          thread?: { updated_at?: string };
+          thread?: { updated_at?: string; project_id?: string | null };
           messages?: ServerMessage[];
         };
         if (cancelled) return;
         setThreadId(targetId);
+        // Surface the project-attached strip if this thread is
+        // filed under a project. Detaching is also handled here:
+        // a thread with project_id=null clears the strip.
+        void fetchAttachedProject(detail.thread?.project_id ?? null);
         // Reflect the active thread in the URL so the chat history
         // rail's active-state outline picks it up. ReplaceState (no
         // history entry) so the back button still feels normal.
@@ -2869,6 +2941,25 @@ export function WebChat({
       )}
 
       <div className="webchat-scroll" ref={scrollRef} onScroll={onScroll}>
+        {/* Phase H — project-attached strip. Visible proof that
+            the active project is in the loop. Without this users
+            saw the AI reply normally and concluded "projects do
+            nothing" because the pinned context disappears into
+            the system prompt. */}
+        {attachedProject && (
+          <div className="webchat-project-strip" role="note">
+            <span className="webchat-project-strip-icon" aria-hidden>◇</span>
+            <span className="webchat-project-strip-name">
+              {attachedProject.name}
+            </span>
+            <span className="webchat-project-strip-sep" aria-hidden>·</span>
+            <span className="webchat-project-strip-meta">
+              {attachedProject.pinCount}{" "}
+              {attachedProject.pinCount === 1 ? "pin" : "pins"} attached
+            </span>
+            <span className="webchat-project-strip-active">Context active</span>
+          </div>
+        )}
         {showEmpty ? (
           <div className="webchat-empty">
             <div className="webchat-empty-mark">sansxel-1</div>
