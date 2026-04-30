@@ -98,6 +98,28 @@ export function parseSansxelCard(raw: string): CardJSON | null {
   }
 }
 
+// Renders while a sansxel-card is still being streamed by the
+// model so the user doesn't see partial JSON typing in. Three
+// shimmer rows + a subtle status line ("Building card…"); the
+// real card swaps in over the top with its own entry animation
+// once the JSON parses. Sized to roughly match a stat-grid so
+// the layout shift is small.
+export function SansxelCardSkeleton() {
+  return (
+    <div className="sx-card sx-card--skeleton" aria-hidden>
+      <div className="sx-skeleton-status">
+        <span className="sx-skeleton-pulse" />
+        Building card…
+      </div>
+      <div className="sx-skeleton-rows">
+        <div className="sx-skeleton-row" />
+        <div className="sx-skeleton-row" />
+        <div className="sx-skeleton-row" />
+      </div>
+    </div>
+  );
+}
+
 export function SansxelCard({ data }: { data: CardJSON }) {
   switch (data.type) {
     case "stat-grid":

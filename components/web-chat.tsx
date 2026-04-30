@@ -2856,7 +2856,14 @@ function WebAssistantBubble({
                       </code>
                     );
                   }
-                  return <CodeBlock className={className}>{text}</CodeBlock>;
+                  return (
+                    <CodeBlock
+                      className={className}
+                      streaming={streaming && isLast}
+                    >
+                      {text}
+                    </CodeBlock>
+                  );
                 },
                 // ReactMarkdown wraps fenced code in <pre><code>;
                 // CodeBlock supplies its own <pre>, so swallow the

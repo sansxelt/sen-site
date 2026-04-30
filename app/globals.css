@@ -1995,23 +1995,139 @@ div[id] {
 .webchat-msg .md .katex-display { margin: 0.6em 0; overflow-x: auto; overflow-y: hidden; }
 
 /* ── v0.2.0 phase F: custom UI cards ─────────────────────────
-   Generic shell + per-shape styles for sansxel-card output.
-   Sit inside an assistant bubble's .md block, replacing the
-   plain code render that would otherwise show the raw JSON. */
+   Sansxel-signature treatment: gradient ring, faint dot-grid
+   underlay, entry slide / fade so the card LANDS instead of
+   pops. Designed to read as a deliberate sansxel surface, not
+   a generic markdown card. */
 .webchat-msg .md .sx-card {
-  margin: 0.7em 0;
-  border-radius: 14px;
-  border: 1px solid rgba(167, 139, 250, 0.22);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(167, 139, 250, 0.05),
-      rgba(0, 0, 0, 0.18)
-    );
-  padding: 14px 16px;
+  position: relative;
+  margin: 0.9em 0;
+  border-radius: 18px;
+  padding: 18px 20px;
   font-size: 13.5px;
   line-height: 1.55;
   color: rgba(229, 231, 235, 0.95);
+  /* Inner content sits over the dot-grid pseudo-element. */
+  isolation: isolate;
+  /* Animated gradient ring: solid violet edge with a dim
+     fuchsia bloom in the corners. Achieved with a layered
+     background-clip trick so the ring stays crisp at any
+     zoom. Inner panel uses a separate background. */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(167, 139, 250, 0.06),
+      rgba(0, 0, 0, 0.22)
+    ) padding-box,
+    linear-gradient(
+      135deg,
+      rgba(167, 139, 250, 0.55) 0%,
+      rgba(217, 70, 239, 0.35) 45%,
+      rgba(96, 165, 250, 0.35) 100%
+    ) border-box;
+  border: 1px solid transparent;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 18px 36px -22px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(167, 139, 250, 0.08);
+  animation: sx-card-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Dot-grid texture, subtle. Same vocabulary as the marketing
+   home page so cards read as part of the same product. */
+.webchat-msg .md .sx-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: radial-gradient(
+    rgba(167, 139, 250, 0.18) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+  background-position: 8px 8px;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: -1;
+}
+/* Tiny "sansxel" mark in the bottom-right so the card
+   reads as a sansxel-issued surface, not a vendor card. */
+.webchat-msg .md .sx-card::after {
+  content: "sansxel";
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(196, 181, 253, 0.45);
+  pointer-events: none;
+}
+@keyframes sx-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Skeleton state while the card JSON is still streaming. Same
+   shell as the real card so the layout shift on swap is a few
+   pixels at most. */
+.webchat-msg .md .sx-card--skeleton {
+  animation: sx-card-in 220ms ease-out;
+}
+.webchat-msg .md .sx-card--skeleton::after { content: ""; }
+.webchat-msg .md .sx-skeleton-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(196, 181, 253, 0.85);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.webchat-msg .md .sx-skeleton-pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(196, 181, 253, 0.95);
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.7);
+  animation: sx-skeleton-pulse 1.1s ease-in-out infinite;
+}
+@keyframes sx-skeleton-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+.webchat-msg .md .sx-skeleton-rows {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.webchat-msg .md .sx-skeleton-row {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(167, 139, 250, 0.06) 0%,
+    rgba(167, 139, 250, 0.18) 40%,
+    rgba(167, 139, 250, 0.06) 80%
+  );
+  background-size: 220% 100%;
+  animation: sx-skeleton-shimmer 1.4s linear infinite;
+}
+.webchat-msg .md .sx-skeleton-row:nth-child(1) { width: 65%; }
+.webchat-msg .md .sx-skeleton-row:nth-child(2) { width: 90%; }
+.webchat-msg .md .sx-skeleton-row:nth-child(3) { width: 78%; }
+@keyframes sx-skeleton-shimmer {
+  from { background-position: 220% 0; }
+  to   { background-position: -20% 0; }
 }
 .webchat-msg .md .sx-card-head {
   margin-bottom: 12px;

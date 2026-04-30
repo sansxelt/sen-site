@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { codeToHtml } from "shiki/bundle/web";
-import { parseSansxelCard, SansxelCard } from "./sansxel-card";
+import {
+  parseSansxelCard,
+  SansxelCard,
+  SansxelCardSkeleton,
+} from "./sansxel-card";
 
 // Code block with Shiki syntax highlighting + copy-to-clipboard.
 // Drop-in replacement for ReactMarkdown's default <code> block
@@ -186,9 +190,14 @@ const PREVIEWABLE = new Set([
 export function CodeBlock({
   children,
   className,
+  streaming,
 }: {
   children: string;
   className?: string;
+  // True while the parent assistant bubble is still streaming.
+  // Used to hide partial sansxel-card JSON behind a skeleton so
+  // the user doesn't see raw braces typing in mid-stream.
+  streaming?: boolean;
 }) {
   const langMatch = /language-([\w-]+)/.exec(className ?? "");
   const lang = normLang(langMatch?.[1]);
@@ -205,11 +214,17 @@ export function CodeBlock({
   // calls so the hook order stays stable) and hand off to
   // <SansxelCard /> so dashboards, comparisons, plans, and
   // quotes render as real components instead of basic markdown.
+  // While the parent is still streaming, hide the partial JSON
+  // behind a skeleton so the user doesn't watch braces type in
+  // mid-stream; once the full payload arrives the card swaps
+  // in cleanly.
   if (rawLang === "sansxel-card") {
     const parsed = parseSansxelCard(code);
     if (parsed) return <SansxelCard data={parsed} />;
-    // Malformed JSON falls through to the normal code render
-    // so the user at least sees what the model emitted.
+    if (streaming) return <SansxelCardSkeleton />;
+    // Stream done but JSON still won't parse. Fall through to
+    // the normal code render so the user sees what the model
+    // emitted instead of a stuck skeleton.
   }
 
   useEffect(() => {
