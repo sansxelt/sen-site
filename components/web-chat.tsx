@@ -1320,7 +1320,7 @@ export function WebChat({
         }, 3500);
       }
     }
-  }, [input, messages, tier, lei]);
+  }, [input, messages, tier, lei, editingTurn]);
 
   const stop = useCallback(() => {
     if (abortRef.current) {
