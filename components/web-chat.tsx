@@ -371,6 +371,30 @@ export function WebChat({
     return () => window.removeEventListener("sansxel:new-chat", onNewChat);
   }, []);
 
+  // v0.2.0 phase H — when the user picks a project mid-thread,
+  // PATCH the active thread so it inherits the new project_id.
+  // Without this, projects only attached at thread CREATION
+  // (first send), so picking a project after the conversation
+  // started had no effect on subsequent replies — context never
+  // reached the system prompt and projects felt broken.
+  // Picking "No project" detaches (project_id=null).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onProjectChanged = (e: Event) => {
+      const detail = (e as CustomEvent<string | null>).detail ?? null;
+      const tid = threadIdRef.current;
+      if (!tid) return; // no thread yet — id sticks at first send
+      void fetch(`/api/threads/${tid}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_id: detail }),
+      }).catch(() => {});
+    };
+    window.addEventListener("sansxel:project:changed", onProjectChanged);
+    return () =>
+      window.removeEventListener("sansxel:project:changed", onProjectChanged);
+  }, []);
+
   // v0.2.0 phase G+ — pinned-prompt run-as-Duel. The project panel
   // dispatches sansxel:duel-prompt with the prompt content; we
   // force duel mode on (so the toggle visibly reflects what's

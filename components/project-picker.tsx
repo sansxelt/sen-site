@@ -133,6 +133,11 @@ export function ProjectPicker() {
 
   const activeName =
     activeId && projects.find((p) => p.id === activeId)?.name;
+  // Pin count surfaces at a glance how much context is attached
+  // to the active project — addresses the "I added pins, did
+  // anything happen?" feedback. Counts both kinds (context +
+  // prompt pins) so the chip reflects total weight.
+  const activePinCount = active?.pinned?.length ?? 0;
 
   return (
     <div ref={wrapRef} className="project-picker">
@@ -140,7 +145,15 @@ export function ProjectPicker() {
         type="button"
         className={`project-picker-trigger${activeId ? " is-active" : ""}`}
         onClick={() => setOpen((o) => !o)}
-        title={activeName ? `Project: ${activeName}` : "No project"}
+        title={
+          activeName
+            ? `Project: ${activeName}${
+                activePinCount > 0
+                  ? ` (${activePinCount} pin${activePinCount === 1 ? "" : "s"})`
+                  : ""
+              }`
+            : "No project"
+        }
       >
         <span className="project-picker-glyph" aria-hidden>
           {"◇"}
@@ -148,6 +161,11 @@ export function ProjectPicker() {
         <span className="project-picker-label">
           {activeName ?? "No project"}
         </span>
+        {activeId && activePinCount > 0 && (
+          <span className="project-picker-pin-count" aria-hidden>
+            {activePinCount}
+          </span>
+        )}
         <span className="project-picker-caret" aria-hidden>
           {"▾"}
         </span>

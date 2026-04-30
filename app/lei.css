@@ -827,6 +827,26 @@
 }
 .project-picker-caret { font-size: 9px; opacity: 0.6; }
 
+/* Pin count chip in the active-project trigger. Tiny violet
+   pill so the user sees at a glance how much context is
+   attached without opening the menu. */
+.project-picker-pin-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: rgba(168, 85, 247, 0.18);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #e9d5ff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
 .project-picker-menu {
   position: absolute;
   bottom: calc(100% + 8px);
