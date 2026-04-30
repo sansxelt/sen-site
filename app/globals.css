@@ -2010,68 +2010,25 @@ div[id] {
    a generic markdown card. */
 .webchat-msg .md .sx-card {
   position: relative;
-  margin: 0.9em 0;
-  border-radius: 18px;
-  padding: 18px 20px;
+  margin: 0.6em 0;
+  border-radius: 14px;
+  padding: 14px 16px;
   font-size: 13.5px;
-  line-height: 1.55;
+  line-height: 1.5;
   color: rgba(229, 231, 235, 0.95);
-  /* Inner content sits over the dot-grid pseudo-element. */
-  isolation: isolate;
-  /* Animated gradient ring: solid violet edge with a dim
-     fuchsia bloom in the corners. Achieved with a layered
-     background-clip trick so the ring stays crisp at any
-     zoom. Inner panel uses a separate background. */
-  background:
-    linear-gradient(
-      180deg,
-      rgba(167, 139, 250, 0.06),
-      rgba(0, 0, 0, 0.22)
-    ) padding-box,
-    linear-gradient(
-      135deg,
-      rgba(167, 139, 250, 0.55) 0%,
-      rgba(217, 70, 239, 0.35) 45%,
-      rgba(96, 165, 250, 0.35) 100%
-    ) border-box;
-  border: 1px solid transparent;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 18px 36px -22px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(167, 139, 250, 0.08);
-  animation: sx-card-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-/* Dot-grid texture, subtle. Same vocabulary as the marketing
-   home page so cards read as part of the same product. */
-.webchat-msg .md .sx-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-image: radial-gradient(
-    rgba(167, 139, 250, 0.18) 1px,
-    transparent 1px
+  background: linear-gradient(
+    180deg,
+    rgba(167, 139, 250, 0.04),
+    rgba(0, 0, 0, 0.18)
   );
-  background-size: 18px 18px;
-  background-position: 8px 8px;
-  opacity: 0.18;
-  pointer-events: none;
-  z-index: -1;
-}
-/* Tiny "sansxel" mark in the bottom-right so the card
-   reads as a sansxel-issued surface, not a vendor card. */
-.webchat-msg .md .sx-card::after {
-  content: "sansxel";
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(196, 181, 253, 0.45);
-  pointer-events: none;
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 12px 24px -22px rgba(0, 0, 0, 0.6);
+  animation: sx-card-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Tabular numerals make the value column line up cleanly
+     across rows. Stat-grid + key-value lean on this. */
+  font-variant-numeric: tabular-nums;
 }
 @keyframes sx-card-in {
   from {
@@ -2181,8 +2138,14 @@ div[id] {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding: 7px 0;
+  padding: 7px 6px;
+  margin: 0 -6px;
+  border-radius: 6px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 140ms ease;
+}
+.webchat-msg .md .sx-stat-row:hover {
+  background: rgba(167, 139, 250, 0.06);
 }
 .webchat-msg .md .sx-stat-row:last-child { border-bottom: 0; }
 .webchat-msg .md .sx-stat-row-main { min-width: 0; flex: 1; }
@@ -2357,8 +2320,14 @@ div[id] {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  padding: 7px 0;
+  padding: 7px 6px;
+  margin: 0 -6px;
+  border-radius: 6px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 140ms ease;
+}
+.webchat-msg .md .sx-kv-row:hover {
+  background: rgba(167, 139, 250, 0.06);
 }
 .webchat-msg .md .sx-kv-row:last-child { border-bottom: 0; }
 .webchat-msg .md .sx-kv-label {

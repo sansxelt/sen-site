@@ -210,21 +210,29 @@ export function CodeBlock({
 
   // v0.2.0 phase F: custom UI cards. The model emits a fenced
   // `sansxel-card` block whose body is JSON describing one of
-  // the registered card shapes. Detect that here (after hook
-  // calls so the hook order stays stable) and hand off to
-  // <SansxelCard /> so dashboards, comparisons, plans, and
-  // quotes render as real components instead of basic markdown.
-  // While the parent is still streaming, hide the partial JSON
-  // behind a skeleton so the user doesn't watch braces type in
-  // mid-stream; once the full payload arrives the card swaps
-  // in cleanly.
-  if (rawLang === "sansxel-card") {
+  // the registered card shapes. We also auto-detect cards even
+  // when the model tagged the fence wrong (saw it ship a
+  // second card as ```plain```), as long as the body parses
+  // and carries a known card type.
+  //
+  // Streaming behavior: show a skeleton until the bubble has
+  // fully streamed, THEN parse and render. Toggling between
+  // card / skeleton mid-stream as the JSON validity flickered
+  // produced an obvious blinking effect; only render the real
+  // card on the post-stream pass.
+  const looksLikeCardLang = rawLang === "sansxel-card";
+  const couldBeCardJson =
+    looksLikeCardLang ||
+    (code.length > 0 && /^\s*\{[\s\S]*"type"\s*:/.test(code));
+  if (couldBeCardJson) {
+    if (streaming) return <SansxelCardSkeleton />;
     const parsed = parseSansxelCard(code);
     if (parsed) return <SansxelCard data={parsed} />;
-    if (streaming) return <SansxelCardSkeleton />;
-    // Stream done but JSON still won't parse. Fall through to
-    // the normal code render so the user sees what the model
-    // emitted instead of a stuck skeleton.
+    // Stream done but JSON still won't parse. If the language
+    // tag was sansxel-card, fall through to plain code render
+    // so the user sees what the model emitted. If the tag was
+    // something else, ALSO fall through (the heuristic was a
+    // false positive on a normal JSON payload, no harm).
   }
 
   useEffect(() => {
