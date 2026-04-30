@@ -1648,6 +1648,20 @@ div[id] {
 .webchat-msg .md p:first-child { margin-top: 0; }
 .webchat-msg .md p:last-child  { margin-bottom: 0; }
 
+/* In-place edit banner shown above a user bubble that's
+   currently being rewritten. Submitting the input while this
+   banner is up triggers the truncate-and-resend flow. */
+.webchat-msg .webchat-user-edit-banner {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  color: #f5f3ff;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
 /* Per-bubble action row. Edit on user turns, Regenerate on
    assistant turns. Hidden until the message is hovered so the
    chat reads as conversation, not a settings menu. */
@@ -2070,6 +2084,28 @@ div[id] {
   background: transparent;
   color: rgba(254, 202, 202, 0.95);
   border: 1px solid rgba(254, 202, 202, 0.4);
+}
+.webchat-error-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.webchat-error-detail {
+  font-size: 12.5px;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+.webchat-error-prompt {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  max-height: 80px;
+  overflow: auto;
+  word-break: break-word;
 }
 
 @keyframes webchat-msg-in {

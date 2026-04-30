@@ -373,6 +373,58 @@ export async function setThreadProject(
   }
 }
 
+/** Truncates a thread at `fromMessageId`, deleting that message
+ * AND every newer message in the same thread. Used by the edit-
+ * and-resend flow: the user rewrites an old turn, the server
+ * wipes everything from that turn forward, then the normal save
+ * path appends the new (edited) user turn + a fresh assistant
+ * response. Returns true on success, false on any failure;
+ * caller treats false as "leave the thread alone." */
+export async function deleteMessagesFromId(
+  email: string,
+  threadId: string,
+  fromMessageId: string,
+): Promise<boolean> {
+  if (!email || !threadId || !fromMessageId || !isDatabaseConfigured()) {
+    return false;
+  }
+  try {
+    const supabase = getSupabaseAdminClient();
+    // Confirm the thread is owned by the caller before touching it.
+    const owned = await getThread(email, threadId);
+    if (!owned) return false;
+    // Fetch the message's created_at so we can delete by timestamp
+    // (works even if id ordering isn't monotonic).
+    const { data, error: lookupErr } = await supabase
+      .from("chat_messages" as never)
+      .select("created_at")
+      .eq("id", fromMessageId)
+      .eq("thread_id", threadId)
+      .maybeSingle();
+    if (lookupErr || !data) return false;
+    const fromTs = (data as unknown as { created_at?: string }).created_at;
+    if (!fromTs) return false;
+    const { error: delErr } = await supabase
+      .from("chat_messages" as never)
+      .delete()
+      .eq("thread_id", threadId)
+      .gte("created_at", fromTs);
+    if (delErr) {
+      console.warn("deleteMessagesFromId failed:", delErr.message);
+      return false;
+    }
+    // Bump the thread's updated_at so the rail re-sorts.
+    await supabase
+      .from("chat_threads" as never)
+      .update({ updated_at: new Date().toISOString() } as never)
+      .eq("id", threadId);
+    return true;
+  } catch (err) {
+    console.warn("deleteMessagesFromId threw:", err);
+    return false;
+  }
+}
+
 /** Reads thread.project_id (nullable). Used by the chat route to
  * decide whether to inject project context into the system message.
  * Returns null on any error so a missing column / down DB just

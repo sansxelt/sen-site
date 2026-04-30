@@ -17,6 +17,11 @@ type ChatMessage = {
   role: "user" | "assistant";
   content: string;
   images?: ChatImageInline[];
+  // Server-side row id for messages loaded from /api/threads/[id].
+  // Fresh in-memory turns don't carry one until the next reload.
+  // Used by edit-and-resend to tell the server which row to
+  // truncate from.
+  id?: string;
 };
 
 // Cross-component "thread is generating" tracker. WebChat writes;
@@ -295,6 +300,7 @@ export function WebChat({
         const detail = (await detailRes.json()) as {
           thread?: { updated_at?: string };
           messages?: Array<{
+            id?: string;
             role: "user" | "assistant" | "system";
             content: string;
             images?: ChatImageInline[] | null;
@@ -315,6 +321,7 @@ export function WebChat({
           .map((m) => ({
             role: m.role as "user" | "assistant",
             content: m.content,
+            id: (m as { id?: string }).id,
             images: Array.isArray(
               (m as { images?: ChatImageInline[] | null }).images,
             )
@@ -372,6 +379,7 @@ export function WebChat({
               const d = (await r.json()) as {
                 thread?: { updated_at?: string };
                 messages?: Array<{
+                  id?: string;
                   role: "user" | "assistant" | "system";
                   content: string;
                   images?: ChatImageInline[] | null;
@@ -383,6 +391,7 @@ export function WebChat({
                 .map((mm) => ({
                   role: mm.role as "user" | "assistant",
                   content: mm.content,
+                  id: (mm as { id?: string }).id,
                   images: Array.isArray(
                     (mm as { images?: ChatImageInline[] | null }).images,
                   )
@@ -460,6 +469,25 @@ export function WebChat({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [planNotice, setPlanNotice] = useState<string | null>(null);
   const [chatError, setChatError] = useState<string | null>(null);
+  // v0.2.0 phase E, dedicated image-gen failure state. When the
+  // /api/ai/image route 4xx/5xx, we stash both the prompt that
+  // tried (so Retry doesn't need the user to re-type) and the
+  // actual error so the pill copy is honest. Cleared on
+  // successful retry / new send.
+  const [imageRetry, setImageRetry] = useState<{
+    prompt: string;
+    message: string;
+  } | null>(null);
+  // v0.2.0 phase E, edit-and-resend state. When set, the next
+  // send() truncates the local history at this index AND tells
+  // the server to delete from this message id forward. The
+  // server then saves the new (edited) user turn + a fresh
+  // assistant response, so the conversation cleanly diverges
+  // at the edit. Cleared after submit or cancel.
+  const [editingTurn, setEditingTurn] = useState<{
+    index: number;
+    messageId: string | null;
+  } | null>(null);
   const [voiceState, setVoiceState] = useState<
     "idle" | "recording" | "transcribing" | "speaking"
   >("idle");
@@ -755,20 +783,35 @@ export function WebChat({
       content: text,
       images: imageBlocks.length > 0 ? imageBlocks : undefined,
     };
+    // v0.2.0 phase E, edit-and-resend. When the user rewrote an
+    // old turn, slice everything from that turn forward off both
+    // the in-UI list and the network payload so the model gets
+    // the same conversation shape the user sees on screen.
+    // Server-side truncation is requested via
+    // truncate_from_message_id below.
+    const baseMessages =
+      editingTurn !== null && editingTurn.index >= 0
+        ? messages.slice(0, editingTurn.index)
+        : messages;
     // Build the network payload separately so the in-UI message stays
     // text-only (we already render the image previews via the LEI
     // attachment chips above the input).
     const payloadMessages = [
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ...baseMessages.map((m) => ({ role: m.role, content: m.content })),
       imageBlocks.length > 0
         ? { role: "user" as const, content: text || "Here's an image, what do you see?", images: imageBlocks }
         : { role: "user" as const, content: text },
     ];
-    const next = [...messages, userMsg];
+    const next = [...baseMessages, userMsg];
     setMessages([...next, { role: "assistant", content: "" }]);
     setInput("");
     setStreaming(true);
     setChatError(null);
+    setImageRetry(null);
+    // Clear edit-mode state once the truncation values are
+    // captured into the network payload above; a follow-up send
+    // shouldn't re-truncate the same point.
+    if (editingTurn !== null) setEditingTurn(null);
     // v0.2.0 phase E, ChatGPT-style staged status pill. Server
     // overrides this once a real "phase" event arrives (searching,
     // reading the page, writing); locally we lead with "Thinking…"
@@ -865,6 +908,13 @@ export function WebChat({
           project_id: threadIdRef.current
             ? undefined
             : getActiveProjectId() ?? undefined,
+          // v0.2.0 phase E, edit-and-resend. When the user is
+          // rewriting an old turn, the server deletes from this
+          // message id forward before saving the new user turn.
+          // Local state was already truncated when edit mode was
+          // entered, so the server view matches the UI on reload.
+          truncate_from_message_id:
+            editingTurn?.messageId ?? undefined,
         }),
         signal: ac.signal,
       });
@@ -1400,6 +1450,7 @@ export function WebChat({
     setInput("");
     setGeneratingImage(true);
     setChatError(null);
+    setImageRetry(null);
     if (typeof window !== "undefined") {
       window.localStorage.setItem("sansxel.lastActivity", String(Date.now()));
     }
@@ -1512,7 +1563,13 @@ export function WebChat({
         : err instanceof Error
           ? err.message
           : "Image generation failed.";
-      if (message) setChatError(message);
+      if (message) {
+        // Surface a dedicated retry pill instead of a generic chat
+        // error so the user can re-fire the same prompt with one
+        // click. Generic chatError stays clear; ImageRetryPill
+        // owns this failure mode end-to-end.
+        setImageRetry({ prompt, message });
+      }
       // Drop the placeholder so the chat doesn't show "Generating…"
       // forever. Match anything that STARTS with "Generating "
       // because the Stop button may have appended a cancellation
@@ -2064,9 +2121,26 @@ export function WebChat({
                     <WebUserBubble
                       content={m.content}
                       images={m.images}
-                      onEdit={(text) => {
-                        setInput(text);
-                        textareaRef.current?.focus();
+                      isEditing={editingTurn?.index === i}
+                      // Hide Edit while a stream is running so a
+                      // mid-flight click can't queue a truncate
+                      // against an active assistant turn the
+                      // server is still writing to.
+                      onEdit={
+                        streaming || generatingImage
+                          ? undefined
+                          : (text) => {
+                              setEditingTurn({
+                                index: i,
+                                messageId: m.id ?? null,
+                              });
+                              setInput(text);
+                              textareaRef.current?.focus();
+                            }
+                      }
+                      onCancelEdit={() => {
+                        setEditingTurn(null);
+                        setInput("");
                       }}
                     />
                   )}
@@ -2087,6 +2161,18 @@ export function WebChat({
                   setChatError(null);
                   void send(lastUser.content);
                 }}
+              />
+            )}
+            {imageRetry && (
+              <ImageRetryPill
+                message={imageRetry.message}
+                prompt={imageRetry.prompt}
+                onRetry={() => {
+                  const p = imageRetry.prompt;
+                  setImageRetry(null);
+                  void generateImageFromInput(p);
+                }}
+                onDismiss={() => setImageRetry(null)}
               />
             )}
           </div>
@@ -2743,11 +2829,15 @@ function CopyMessageButton({ content }: { content: string }) {
 function WebUserBubble({
   content,
   images,
+  isEditing,
   onEdit,
+  onCancelEdit,
 }: {
   content: string;
   images?: Array<{ media_type: string; data: string }>;
+  isEditing?: boolean;
   onEdit?: (text: string) => void;
+  onCancelEdit?: () => void;
 }) {
   const hasImages = Boolean(images && images.length > 0);
   return (
@@ -2773,16 +2863,33 @@ function WebUserBubble({
         </div>
       )}
       {content && <span>{content}</span>}
+      {isEditing && (
+        <div className="webchat-user-edit-banner">
+          Editing this turn. Submitting will rewrite the conversation from
+          here forward.
+        </div>
+      )}
       {onEdit && content && (
         <div className="webchat-user-actions">
-          <button
-            type="button"
-            className="webchat-bubble-action"
-            title="Edit and re-send (loads the message back into the input box)"
-            onClick={() => onEdit(content)}
-          >
-            Edit
-          </button>
+          {isEditing ? (
+            <button
+              type="button"
+              className="webchat-bubble-action"
+              title="Cancel and keep the original turn"
+              onClick={() => onCancelEdit?.()}
+            >
+              Cancel edit
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="webchat-bubble-action"
+              title="Edit and resend. Drops every reply after this turn and re-runs from the new content."
+              onClick={() => onEdit(content)}
+            >
+              Edit
+            </button>
+          )}
         </div>
       )}
     </>
@@ -2943,6 +3050,53 @@ function ChatErrorPill({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function ImageRetryPill({
+  message,
+  prompt,
+  onRetry,
+  onDismiss,
+}: {
+  message: string;
+  prompt: string;
+  onRetry: () => void;
+  onDismiss: () => void;
+}) {
+  // Echoes the failure reason + the original prompt verbatim so
+  // the user can decide to retry as-is or copy the prompt and
+  // tweak in the input box. Retry kicks the same gen pipeline
+  // (Preparing -> Generating -> Finalizing).
+  return (
+    <div className="webchat-error">
+      <div>
+        <div className="webchat-error-title">Image generation failed</div>
+        <div className="webchat-error-detail">{message}</div>
+        <div
+          className="webchat-error-prompt"
+          title="The prompt that was sent"
+        >
+          {prompt}
+        </div>
+      </div>
+      <div className="webchat-error-actions">
+        <button
+          type="button"
+          onClick={onRetry}
+          className="webchat-error-cta"
+        >
+          Retry image
+        </button>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="webchat-error-cta webchat-error-cta--ghost"
+        >
+          Dismiss
+        </button>
+      </div>
     </div>
   );
 }

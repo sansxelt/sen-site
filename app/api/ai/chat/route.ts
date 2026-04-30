@@ -34,6 +34,7 @@ import {
   appendMessage as saveMessage,
   createAssistantPlaceholder,
   createThread as createChatThread,
+  deleteMessagesFromId,
   getThread as getChatThread,
   getThreadProjectId,
   listMessages as listChatMessages,
@@ -211,6 +212,13 @@ type ChatBody = {
   // threads the server reads project_id from the thread row itself
   // (so a malicious client can't steal another project's context).
   project_id?: string | null;
+  // v0.2.0 phase E, edit-and-resend branching. When set, the
+  // server deletes the message with this id AND every newer
+  // message in the same thread BEFORE saving the new user turn.
+  // Frontend uses this to rewrite an old turn cleanly: the
+  // client truncates its local state to the same point, the
+  // server matches, and the conversation diverges at the edit.
+  truncate_from_message_id?: string;
   // v0.1.12, client-supplied local time so the model can answer
   // "what time is it for me" without claiming it has no access to
   // the system clock. Client passes IANA timezone + a pre-formatted
@@ -873,6 +881,22 @@ export async function POST(request: Request) {
             : null;
         const created = await createChatThread(email, undefined, newProjectId);
         if (created) resolvedThreadId = created.id;
+      }
+      // v0.2.0 phase E, edit-and-resend. Wipe the rewritten turn
+      // and everything after it BEFORE the new user turn is
+      // saved, so a reload doesn't show duplicate / orphaned
+      // history. No-op when truncate_from_message_id is missing
+      // or the row doesn't belong to this user's thread.
+      if (
+        resolvedThreadId &&
+        typeof payload.truncate_from_message_id === "string" &&
+        payload.truncate_from_message_id.trim()
+      ) {
+        await deleteMessagesFromId(
+          email,
+          resolvedThreadId,
+          payload.truncate_from_message_id.trim(),
+        );
       }
       if (resolvedThreadId) {
         const lastUserTurn = [...payload.messages].reverse().find((m) => m.role === "user");
