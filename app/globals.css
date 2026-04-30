@@ -1601,9 +1601,12 @@ div[id] {
   flex-direction: column;
   gap: 14px;
   /* Pin messages to the bottom of the scroll area so a short
-     reply sits just above the composer instead of leaving a
-     giant gap (ChatGPT / Claude pattern). When the list overflows
-     the auto-margin collapses and normal scrolling kicks in. */
+     reply sits right above the composer (Claude / iMessage
+     pattern). Auto-margin collapses once the list overflows so
+     longer conversations scroll normally. The desktop CTA is
+     hidden during active chats so the space above the messages
+     reads as "earlier conversation scrolled off" rather than
+     dead space. */
   margin-top: auto;
 }
 

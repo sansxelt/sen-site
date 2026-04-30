@@ -2002,28 +2002,32 @@ export function WebChat({
         </div>
       )}
 
-      {/* Web is the trial. Desktop is where the real workshop lives. */}
-      <div className="webchat-desktop-cta">
-        <div className="webchat-desktop-cta-copy">
-          <span className="webchat-desktop-cta-kicker">
-            The real workshop runs on desktop
-          </span>
-          <p>
-            File edits, MCP tools, the full voice loop without browser permissions.
-            Web is great for a taste, desktop is where you ship.
-          </p>
-        </div>
-        <div className="webchat-desktop-cta-actions">
-          <div className="webchat-desktop-cta-badges" aria-hidden="true">
-            <span className="webchat-desktop-chip">Touches your files</span>
-            <span className="webchat-desktop-chip">MCP servers</span>
-            <span className="webchat-desktop-chip">No mic prompts</span>
+      {/* Web is the trial. Desktop is where the real workshop lives.
+          Only shown on the empty state; once a conversation starts
+          the card disappears so it doesn't crowd the chat. */}
+      {showEmpty && (
+        <div className="webchat-desktop-cta">
+          <div className="webchat-desktop-cta-copy">
+            <span className="webchat-desktop-cta-kicker">
+              The real workshop runs on desktop
+            </span>
+            <p>
+              File edits, MCP tools, the full voice loop without browser permissions.
+              Web is great for a taste, desktop is where you ship.
+            </p>
           </div>
-          <a href="/download" className="webchat-desktop-cta-link">
-            Get sansxel desktop →
-          </a>
+          <div className="webchat-desktop-cta-actions">
+            <div className="webchat-desktop-cta-badges" aria-hidden="true">
+              <span className="webchat-desktop-chip">Touches your files</span>
+              <span className="webchat-desktop-chip">MCP servers</span>
+              <span className="webchat-desktop-chip">No mic prompts</span>
+            </div>
+            <a href="/download" className="webchat-desktop-cta-link">
+              Get sansxel desktop →
+            </a>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="webchat-scroll" ref={scrollRef} onScroll={onScroll}>
         {showEmpty ? (
