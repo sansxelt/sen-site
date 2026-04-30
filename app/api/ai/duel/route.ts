@@ -48,11 +48,11 @@ import {
 } from "../../../../lib/projects";
 import {
   consumeBoostForKind,
-  consumeCreditFor,
   decideChatRequest,
   getWeeklyUsage,
   hasUnconsumedBoost,
 } from "../../../../lib/plan-limits";
+import { consumeCredits, CREDIT_COSTS } from "../../../../lib/credits";
 import { getActiveAddonKeys } from "../../../../lib/active-addons";
 import { detectLanguage, langLabel } from "../../../../lib/i18n";
 import { recordUsage } from "../../../../lib/usage";
@@ -142,36 +142,72 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing messages." }, { status: 400 });
   }
 
-  // Plan gating. Duel runs both calls in parallel so it's roughly
-  // 2× a normal chat in compute, but for v1 we charge one weekly
-  // chat slot. Bump to 2 once we have signal it's getting abused.
+  // Plan gating. A duel fires TWO model calls (GPT + Claude) in
+  // parallel, so it bills 2 weekly chat slots — not 1. Two-step
+  // check: first decideChatRequest to see if the FIRST slot fits
+  // (catches the "you're already at the cap" case with the right
+  // upgrade copy), then a synthetic +1 weekly check to see if the
+  // SECOND slot also fits. Either failing falls through to the
+  // boost / credit ledger; the ledger is charged at 2× chat cost.
+  //
+  // Usage recording stays organic: each pump (Claude, GPT) calls
+  // recordUsage({ kind: "chat" }) when its stream resolves, so
+  // weekly.chat_requests naturally ticks up by 2 per duel without
+  // any extra accounting here.
+  const DUEL_CHAT_SLOTS = 2;
   const [plan, weekly, activeAddons] = await Promise.all([
     getPlanForEmail(email),
     getWeeklyUsage(email),
     getActiveAddonKeys(email),
   ]);
-  const decision = decideChatRequest({
+  const firstSlotDecision = decideChatRequest({
     plan,
     requestedTier: "balanced",
     weekly,
     activeAddons,
   });
-  if (decision.kind === "blocked") {
+  const secondSlotDecision = decideChatRequest({
+    plan,
+    requestedTier: "balanced",
+    weekly: { ...weekly, chat_requests: weekly.chat_requests + 1 },
+    activeAddons,
+  });
+  const blockingDecision =
+    firstSlotDecision.kind === "blocked"
+      ? firstSlotDecision
+      : secondSlotDecision.kind === "blocked"
+        ? secondSlotDecision
+        : null;
+  if (blockingDecision) {
     let allowed = false;
+    // Boost path: a single boost (session_boost = +50, weekly_boost
+    // = +500) easily covers a duel's 2-slot cost. Burn one and let
+    // the request through.
     if (await hasUnconsumedBoost(email, "chat")) {
       const burnt = await consumeBoostForKind(email, "chat");
       if (burnt) allowed = true;
     }
-    if (!allowed && (await consumeCreditFor(email, "chat"))) {
-      allowed = true;
+    // Credit ledger path: charge 2× the chat credit cost since
+    // we're spending two model calls.
+    if (!allowed) {
+      const cost = CREDIT_COSTS.chat * DUEL_CHAT_SLOTS;
+      const refId = `duel-chat:${Math.floor(Date.now() / 1000)}`;
+      const { ok } = await consumeCredits(email, cost, "consume", refId);
+      if (ok) allowed = true;
     }
     if (!allowed) {
+      // Use the SECOND-slot reason if that's what blocked us, since
+      // it's the duel-specific overflow ("would put you 1 over").
+      // The decision copy already mentions resets / upgrades.
       return NextResponse.json(
         {
-          error: decision.reason,
-          limit: decision.limit,
-          used: decision.used,
-          reset: decision.reset,
+          error:
+            firstSlotDecision.kind === "blocked"
+              ? blockingDecision.reason
+              : `Duel costs 2 chats and you only have 1 left this week. ${blockingDecision.reason}`,
+          limit: blockingDecision.limit,
+          used: blockingDecision.used,
+          reset: blockingDecision.reset,
         },
         { status: 429 },
       );

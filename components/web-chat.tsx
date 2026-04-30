@@ -1726,12 +1726,8 @@ export function WebChat({
             nl = buf.indexOf("\n");
           }
         }
-        // Mark streaming over once both sides settled.
-        updateDuel((cur) => ({ ...cur, streaming: false }));
       } catch (err) {
-        if ((err as { name?: string })?.name === "AbortError") {
-          updateDuel((cur) => ({ ...cur, streaming: false }));
-        } else {
+        if ((err as { name?: string })?.name !== "AbortError") {
           const isNetworkErr =
             err instanceof TypeError &&
             /failed to fetch|networkerror/i.test(err.message);
@@ -1756,6 +1752,37 @@ export function WebChat({
         }
       } finally {
         if (abortRef.current === ac) abortRef.current = null;
+        // Always force both sides done + clear streaming, regardless
+        // of how we exited (clean finish, abort, network drop, server
+        // forgot to emit 'done'). Without this, a side that never got
+        // its 'done' event leaves payload.done=false, which keeps
+        // CodeBlock's streaming prop true and the SansxelCardSkeleton
+        // ("Building card…") hangs around forever on any code-block
+        // or card-shaped JSON the model emitted.
+        setMessages((prev) => {
+          const copy = [...prev];
+          const last = copy[copy.length - 1];
+          if (last?.duel) {
+            copy[copy.length - 1] = {
+              ...last,
+              duel: {
+                ...last.duel,
+                streaming: false,
+                left: {
+                  ...last.duel.left,
+                  done: true,
+                  phaseLabel: null,
+                },
+                right: {
+                  ...last.duel.right,
+                  done: true,
+                  phaseLabel: null,
+                },
+              },
+            };
+          }
+          return copy;
+        });
         setStreaming(false);
         setPhaseLabel(null);
         void lei.refreshBalance();
@@ -2428,6 +2455,7 @@ export function WebChat({
     hasImage: hasImageAttached,
     hasVideo: hasVideoAttached,
     voiceMode,
+    duelMode,
     plan,
   });
   const hideTranscript = voiceMode && lei.voiceStyle === "v2v";

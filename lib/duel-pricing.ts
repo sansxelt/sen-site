@@ -8,6 +8,13 @@
 // Numbers are USD per 1M tokens; mirror Anthropic + OpenAI public
 // pricing pages. If the underlying model ids in lib/ai-models.ts
 // change, update the matching row here.
+//
+// Last verified: 2026-04-29. Sources:
+//   - Anthropic: https://www.anthropic.com/pricing
+//   - OpenAI:    https://openai.com/api/pricing
+// If you ship a deploy 90+ days from the date above, sanity-check
+// these against the live pricing pages — providers reprice silently
+// and a wildly wrong cost chip is worse than no chip at all.
 
 type Pricing = {
   // USD per 1,000,000 input tokens.
@@ -17,17 +24,18 @@ type Pricing = {
 };
 
 const PRICING: Record<string, Pricing> = {
-  // Anthropic Claude models.
+  // Anthropic Claude models. Sonnet family ($3 / $15) hasn't moved
+  // since 3.5; Haiku 4.5 is the cheap reasoning tier; Opus 4.x sits
+  // at the top end.
   "claude-sonnet-4-6": { input_per_mtok: 3, output_per_mtok: 15 },
   "claude-sonnet-4-5": { input_per_mtok: 3, output_per_mtok: 15 },
   "claude-haiku-4-5-20251001": { input_per_mtok: 1, output_per_mtok: 5 },
   "claude-opus-4-7": { input_per_mtok: 15, output_per_mtok: 75 },
-  // OpenAI models. gpt-5 row is a placeholder estimate so the cost
-  // chip still renders if the user flips DUEL_GPT_MODEL=gpt-5 before
-  // OpenAI publishes final pricing; revise once it's real.
-  "gpt-4o": { input_per_mtok: 2.5, output_per_mtok: 10 },
+  // OpenAI models. gpt-5 standard tier sits below gpt-4o on input
+  // (per OpenAI's published pricing) but matches it on output.
+  "gpt-4o":      { input_per_mtok: 2.5,  output_per_mtok: 10 },
   "gpt-4o-mini": { input_per_mtok: 0.15, output_per_mtok: 0.6 },
-  "gpt-5": { input_per_mtok: 5, output_per_mtok: 20 },
+  "gpt-5":       { input_per_mtok: 1.25, output_per_mtok: 10 },
 };
 
 // Returns USD cost for a given model + token usage. Unknown models

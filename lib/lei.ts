@@ -63,6 +63,7 @@ export function previewCreditCost(args: {
   hasImage?: boolean;
   hasVideo?: boolean;
   voiceMode?: boolean;
+  duelMode?: boolean;
   plan?: string;
 }): CostPreview {
   const planCovers = PLAN_BYPASSES_CREDITS.has((args.plan ?? "").toLowerCase());
@@ -76,6 +77,17 @@ export function previewCreditCost(args: {
   }
   if (args.voiceMode) {
     return fmt("voice_minute", planCovers);
+  }
+  if (args.duelMode) {
+    // Duel runs two model calls in parallel (GPT + Claude), so the
+    // cost chip + plan cap accounting bill it as 2 chats.
+    const credits = CREDIT_COSTS.chat * 2;
+    return {
+      kind: "chat",
+      credits,
+      usd: `$${(credits / 100).toFixed(2)}`,
+      planCovers,
+    };
   }
   return fmt("chat", planCovers);
 }
