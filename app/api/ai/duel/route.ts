@@ -196,15 +196,12 @@ export async function POST(request: Request) {
       if (ok) allowed = true;
     }
     if (!allowed) {
-      // Use the SECOND-slot reason if that's what blocked us, since
-      // it's the duel-specific overflow ("would put you 1 over").
-      // The decision copy already mentions resets / upgrades.
+      // Polished copy + upgrade link. The frontend's error pill
+      // surfaces upgrade_url as a "Upgrade" button when present.
       return NextResponse.json(
         {
-          error:
-            firstSlotDecision.kind === "blocked"
-              ? blockingDecision.reason
-              : `Duel costs 2 chats and you only have 1 left this week. ${blockingDecision.reason}`,
+          error: "Duel uses 2 chats. Upgrade to compare answers.",
+          upgrade_url: "/account/plan",
           limit: blockingDecision.limit,
           used: blockingDecision.used,
           reset: blockingDecision.reset,

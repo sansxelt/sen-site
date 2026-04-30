@@ -370,6 +370,24 @@ export function WebChat({
     return () => window.removeEventListener("sansxel:new-chat", onNewChat);
   }, []);
 
+  // v0.2.0 phase G+ — pinned-prompt run-as-Duel. The project panel
+  // dispatches sansxel:duel-prompt with the prompt content; we
+  // force duel mode on (so the toggle visibly reflects what's
+  // running) and fire the duel immediately, no confirmation step.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onDuelPrompt = (e: Event) => {
+      const detail = (e as CustomEvent<{ prompt?: string }>).detail;
+      const prompt = (detail?.prompt ?? "").trim();
+      if (!prompt) return;
+      setDuelMode(true);
+      void sendDuelRef.current?.(prompt);
+    };
+    window.addEventListener("sansxel:duel-prompt", onDuelPrompt);
+    return () =>
+      window.removeEventListener("sansxel:duel-prompt", onDuelPrompt);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1794,10 +1812,20 @@ export function WebChat({
     [input, messages, lei],
   );
 
+  // Stash sendDuel in a ref so global event listeners (pinned-prompt
+  // run-as-Duel) can call the latest closure without re-binding the
+  // listener on every messages-state change.
+  const sendDuelRef = useRef(sendDuel);
+  useEffect(() => {
+    sendDuelRef.current = sendDuel;
+  }, [sendDuel]);
+
   // Pick a winner for an open duel turn. Tells the server to mark
   // the chosen row + delete the loser, then collapses the duel
   // message in local state into a regular solo assistant turn so
-  // the rest of the thread reads as one canonical reply.
+  // the rest of the thread reads as one canonical reply. Also
+  // re-focuses the input + dispatches a global event so the
+  // active project's scoreboard increments instantly.
   const pickDuelWinner = useCallback(
     async (msgIndex: number, side: DuelSideKey) => {
       const target = messages[msgIndex];
@@ -1815,6 +1843,23 @@ export function WebChat({
         copy[msgIndex] = collapsed;
         return copy;
       });
+      // Optimistic scoreboard bump for any project panel watching.
+      // Detail carries the active project id at click time so panels
+      // for OTHER projects don't increment by accident.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("sansxel:duel-pick", {
+            detail: { side, projectId: getActiveProjectId() },
+          }),
+        );
+      }
+      // Send focus back to the composer so the user keeps typing.
+      // requestAnimationFrame so React commits the collapse first.
+      if (typeof window !== "undefined") {
+        window.requestAnimationFrame(() => {
+          textareaRef.current?.focus();
+        });
+      }
       const tid = threadId ?? threadIdRef.current;
       if (!tid || !groupId) return;
       try {
@@ -3838,6 +3883,10 @@ function DuelTurn({
   const bothDone = left.done && right.done;
   const eitherHasContent = left.content.length > 0 || right.content.length > 0;
   const showActions = bothDone || (!streaming && eitherHasContent);
+  // Track which side the user is hovering so the matching Pick
+  // button can light up — makes the comparison feel like the UI
+  // is taking part in the decision instead of just sitting there.
+  const [hoverSide, setHoverSide] = useState<DuelSideKey | null>(null);
 
   const formatCostChip = (side: DuelSidePayload): string | null => {
     if (typeof side.cost !== "number") return null;
@@ -3848,32 +3897,44 @@ function DuelTurn({
 
   return (
     <div className="webchat-duel">
-      <div className="webchat-duel-cols">
+      <div
+        className={`webchat-duel-cols${
+          hoverSide ? ` is-hover-${hoverSide}` : ""
+        }`}
+      >
         <DuelColumn
           label="GPT"
+          side="left"
           payload={left}
           costChip={formatCostChip(left)}
           streaming={streaming}
+          onHoverChange={setHoverSide}
         />
         <div className="webchat-duel-divider" aria-hidden />
         <DuelColumn
           label="Claude"
+          side="right"
           payload={right}
           costChip={formatCostChip(right)}
           streaming={streaming}
+          onHoverChange={setHoverSide}
         />
       </div>
       {showActions && (
         <div className="webchat-duel-actions">
           <button
             type="button"
-            className="webchat-duel-pick webchat-duel-pick--left"
+            className={`webchat-duel-pick webchat-duel-pick--left${
+              hoverSide === "left" ? " is-anticipated" : ""
+            }`}
             onClick={() => onPickWinner("left")}
+            onMouseEnter={() => setHoverSide("left")}
+            onMouseLeave={() => setHoverSide(null)}
             disabled={streaming || !left.content || !!left.error}
-            title="Keep the GPT response and continue the chat from there"
+            title="Keep the GPT response and continue the chat"
           >
-            <span className="webchat-duel-pick-side">GPT</span>
-            <span>Pick this</span>
+            <span className="webchat-duel-pick-marker" aria-hidden>◀</span>
+            <span className="webchat-duel-pick-label">Pick GPT</span>
           </button>
           <button
             type="button"
@@ -3886,13 +3947,17 @@ function DuelTurn({
           </button>
           <button
             type="button"
-            className="webchat-duel-pick webchat-duel-pick--right"
+            className={`webchat-duel-pick webchat-duel-pick--right${
+              hoverSide === "right" ? " is-anticipated" : ""
+            }`}
             onClick={() => onPickWinner("right")}
+            onMouseEnter={() => setHoverSide("right")}
+            onMouseLeave={() => setHoverSide(null)}
             disabled={streaming || !right.content || !!right.error}
-            title="Keep the Claude response and continue the chat from there"
+            title="Keep the Claude response and continue the chat"
           >
-            <span>Pick this</span>
-            <span className="webchat-duel-pick-side">Claude</span>
+            <span className="webchat-duel-pick-label">Pick Claude</span>
+            <span className="webchat-duel-pick-marker" aria-hidden>▶</span>
           </button>
         </div>
       )}
@@ -3902,20 +3967,31 @@ function DuelTurn({
 
 function DuelColumn({
   label,
+  side,
   payload,
   costChip,
   streaming,
+  onHoverChange,
 }: {
   label: string;
+  side: DuelSideKey;
   payload: DuelSidePayload;
   costChip: string | null;
   streaming: boolean;
+  onHoverChange?: (side: DuelSideKey | null) => void;
 }) {
   const isThisSideStreaming = streaming && !payload.done;
   return (
-    <div className="webchat-duel-col">
+    <div
+      className={`webchat-duel-col webchat-duel-col--${side}`}
+      onMouseEnter={() => onHoverChange?.(side)}
+      onMouseLeave={() => onHoverChange?.(null)}
+    >
       <div className="webchat-duel-head">
-        <span className="webchat-duel-label">{label}</span>
+        <span className="webchat-duel-label">
+          <span className={`webchat-duel-label-dot webchat-duel-label-dot--${side}`} aria-hidden />
+          {label}
+        </span>
         {costChip && <span className="webchat-duel-cost">{costChip}</span>}
       </div>
       {payload.error ? (

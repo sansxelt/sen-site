@@ -20,14 +20,33 @@ export type Project = {
   goals: string | null;
 };
 
+// v0.2.0 phase G+ — pin kind. "context" pins auto-inject into the
+// chat system prompt (the original memory wedge); "prompt" pins are
+// one-click run-as-Duel shortcuts shown in the project panel.
+export type PinKind = "context" | "prompt";
+
 type Pin = {
   id: string;
   label: string | null;
   content: string;
   ord: number;
+  kind?: PinKind;
 };
 
 export type ProjectWithPins = Project & { pinned: Pin[] };
+
+export type DuelStats = {
+  gpt_wins: number;
+  claude_wins: number;
+  total: number;
+  recent: Array<{
+    id: string;
+    side: "left" | "right";
+    model: string | null;
+    content: string;
+    picked_at: string;
+  }>;
+};
 
 export function getActiveProjectId(): string | null {
   if (typeof window === "undefined") return null;
@@ -427,22 +446,198 @@ function ActiveProjectPanel({
         </div>
       )}
 
-      <PinList project={project} onChanged={onChanged} onLoading={onLoading} />
+      <PinList
+        project={project}
+        kind="context"
+        onChanged={onChanged}
+        onLoading={onLoading}
+      />
+      <PinList
+        project={project}
+        kind="prompt"
+        onChanged={onChanged}
+        onLoading={onLoading}
+      />
+      <DuelScoreboard projectId={project.id} />
+    </div>
+  );
+}
+
+// v0.2.0 phase G+ — per-project GPT vs Claude scoreboard + recent
+// winners. Fetches /api/projects/[id]/duel-stats on mount and
+// listens for sansxel:duel-pick events to bump the local count
+// instantly when the user picks a winner. A debounced server
+// re-fetch reconciles the optimistic count with the real one.
+function DuelScoreboard({ projectId }: { projectId: string }) {
+  const [stats, setStats] = useState<DuelStats | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/duel-stats`, {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as DuelStats;
+      setStats(data);
+    } catch {
+      // ignore
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  // Optimistic bump on pick — server reconciles a moment later.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onPick = (e: Event) => {
+      const detail = (e as CustomEvent<{ side?: string; projectId?: string | null }>).detail;
+      if (!detail?.side) return;
+      // Only react to picks from chats inside THIS project. The
+      // event includes the active-project-id at click time, so a
+      // duel in a different project won't pollute this scoreboard.
+      if (detail.projectId && detail.projectId !== projectId) return;
+      setStats((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          gpt_wins:
+            detail.side === "left" ? prev.gpt_wins + 1 : prev.gpt_wins,
+          claude_wins:
+            detail.side === "right" ? prev.claude_wins + 1 : prev.claude_wins,
+          total: prev.total + 1,
+        };
+      });
+      // Reconcile against server in the background; the loser row
+      // delete + winner-flag update completes after the optimistic
+      // bump, so a brief delay before the refetch lets it settle.
+      window.setTimeout(() => {
+        void refresh();
+      }, 1200);
+    };
+    window.addEventListener("sansxel:duel-pick", onPick);
+    return () => window.removeEventListener("sansxel:duel-pick", onPick);
+  }, [projectId, refresh]);
+
+  if (!stats || stats.total === 0) {
+    return (
+      <div className="project-picker-scoreboard project-picker-scoreboard--empty">
+        <div className="project-picker-section-label">Compare scoreboard</div>
+        <p className="project-picker-empty">
+          No duels picked yet. Run a duel and pick a winner to start tracking.
+        </p>
+      </div>
+    );
+  }
+
+  const total = Math.max(1, stats.total);
+  const gptPct = Math.round((stats.gpt_wins / total) * 100);
+  return (
+    <div className="project-picker-scoreboard">
+      <div className="project-picker-section-label">
+        Compare scoreboard
+        <span className="project-picker-token-pill">{stats.total} pick{stats.total === 1 ? "" : "s"}</span>
+      </div>
+      <div className="project-picker-score-row">
+        <div className="project-picker-score project-picker-score--left">
+          <span className="project-picker-score-dot project-picker-score-dot--left" aria-hidden />
+          <span className="project-picker-score-label">GPT</span>
+          <span className="project-picker-score-num">{stats.gpt_wins}</span>
+        </div>
+        <div className="project-picker-score-bar" aria-hidden>
+          <div
+            className="project-picker-score-bar-fill"
+            style={{ width: `${gptPct}%` }}
+          />
+        </div>
+        <div className="project-picker-score project-picker-score--right">
+          <span className="project-picker-score-num">{stats.claude_wins}</span>
+          <span className="project-picker-score-label">Claude</span>
+          <span className="project-picker-score-dot project-picker-score-dot--right" aria-hidden />
+        </div>
+      </div>
+      {stats.recent.length > 0 && (
+        <div className="project-picker-winners">
+          <div className="project-picker-winners-label">Recent winners</div>
+          {stats.recent.slice(0, 3).map((w) => (
+            <RecentWinnerRow key={w.id} winner={w} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RecentWinnerRow({
+  winner,
+}: {
+  winner: DuelStats["recent"][number];
+}) {
+  const [copied, setCopied] = useState(false);
+  const sideLabel = winner.side === "left" ? "GPT" : "Claude";
+  const snippet = winner.content.length > 140
+    ? winner.content.slice(0, 140).trimEnd() + "…"
+    : winner.content;
+  return (
+    <div className="project-picker-winner">
+      <div className="project-picker-winner-meta">
+        <span
+          className={`project-picker-score-dot project-picker-score-dot--${winner.side}`}
+          aria-hidden
+        />
+        <span className="project-picker-winner-label">{sideLabel}</span>
+        <button
+          type="button"
+          className="project-picker-winner-copy"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(winner.content);
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1500);
+            } catch {
+              // ignore
+            }
+          }}
+        >
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <p className="project-picker-winner-snippet">{snippet}</p>
     </div>
   );
 }
 
 function PinList({
   project,
+  kind,
   onChanged,
   onLoading,
 }: {
   project: ProjectWithPins;
+  kind: PinKind;
   onChanged: () => Promise<void> | void;
   onLoading: (b: boolean) => void;
 }) {
   const [newLabel, setNewLabel] = useState("");
   const [newContent, setNewContent] = useState("");
+
+  // Filter to this kind. Old rows that came in pre-migration default
+  // to "context" so the existing pin set keeps appearing under
+  // Pinned context, not under Quick prompts.
+  const pins = project.pinned.filter((p) => (p.kind ?? "context") === kind);
+
+  const sectionLabel = kind === "prompt" ? "Quick prompts" : "Pinned context";
+  const emptyCopy =
+    kind === "prompt"
+      ? "Save prompts you reuse — clicking one fires a duel with the project context attached."
+      : "Nothing pinned yet. Add facts the AI should remember every time you chat in this project.";
+  const submitLabel =
+    kind === "prompt" ? "Save prompt" : "Pin to project";
+  const contentPlaceholder =
+    kind === "prompt"
+      ? "Prompt to fire on click (e.g. \"Write the investor pitch\")"
+      : "What should the AI remember?";
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -455,6 +650,7 @@ function PinList({
         body: JSON.stringify({
           label: newLabel.trim() || undefined,
           content: newContent.trim(),
+          kind,
         }),
       });
       if (res.ok) {
@@ -477,18 +673,36 @@ function PinList({
     }
   };
 
+  // Click-to-fire: prompt pins dispatch a window event the
+  // WebChat listens for and runs immediately as a Duel turn.
+  // Active project context auto-injects via the duel route the
+  // same way solo chat does, so no extra wiring needed here.
+  const fireDuel = (content: string) => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(
+      new CustomEvent("sansxel:duel-prompt", {
+        detail: { prompt: content },
+      }),
+    );
+  };
+
   return (
-    <div className="project-picker-pins">
+    <div className={`project-picker-pins project-picker-pins--${kind}`}>
       <div className="project-picker-section-label">
-        Pinned context ({project.pinned.length})
+        {sectionLabel} ({pins.length})
       </div>
-      {project.pinned.length === 0 && (
-        <p className="project-picker-empty">
-          Nothing pinned yet. Add facts the AI should remember every time you chat in this project.
-        </p>
+      {pins.length === 0 && (
+        <p className="project-picker-empty">{emptyCopy}</p>
       )}
-      {project.pinned.map((p) => (
-        <PinRow key={p.id} pin={p} onChanged={onChanged} onRemove={() => void remove(p.id)} />
+      {pins.map((p) => (
+        <PinRow
+          key={p.id}
+          pin={p}
+          kind={kind}
+          onChanged={onChanged}
+          onRemove={() => void remove(p.id)}
+          onFireDuel={kind === "prompt" ? () => fireDuel(p.content) : undefined}
+        />
       ))}
 
       <form className="project-picker-add-pin" onSubmit={add}>
@@ -501,7 +715,7 @@ function PinList({
         <textarea
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
-          placeholder="What should the AI remember?"
+          placeholder={contentPlaceholder}
           rows={2}
           className="project-picker-textarea"
         />
@@ -510,7 +724,7 @@ function PinList({
           disabled={!newContent.trim()}
           className="project-picker-submit"
         >
-          Pin to project
+          {submitLabel}
         </button>
       </form>
     </div>
@@ -519,12 +733,16 @@ function PinList({
 
 function PinRow({
   pin,
+  kind,
   onChanged,
   onRemove,
+  onFireDuel,
 }: {
   pin: Pin;
+  kind: PinKind;
   onChanged: () => Promise<void> | void;
   onRemove: () => void;
+  onFireDuel?: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(pin.label ?? "");
@@ -584,6 +802,47 @@ function PinRow({
             }}
           >
             Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Prompt-kind pins are clickable shortcuts: the whole row is a
+  // button that fires the prompt as a Duel turn. Edit / Remove
+  // become small inline icons so a stray click doesn't accidentally
+  // trigger a chat. Context-kind pins keep the original layout.
+  if (kind === "prompt" && onFireDuel) {
+    return (
+      <div className="project-picker-pin project-picker-pin--prompt">
+        <button
+          type="button"
+          className="project-picker-prompt-fire"
+          onClick={onFireDuel}
+          title="Run as Duel — sends to GPT and Claude with this project's context"
+        >
+          {pin.label && (
+            <span className="project-picker-pin-label">{pin.label}</span>
+          )}
+          <span className="project-picker-pin-content">{pin.content}</span>
+          <span className="project-picker-prompt-cta" aria-hidden>Run ▶</span>
+        </button>
+        <div className="project-picker-pin-actions">
+          <button
+            type="button"
+            className="project-picker-pin-action"
+            onClick={() => setEditing(true)}
+            title="Edit"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className="project-picker-pin-action is-danger"
+            onClick={onRemove}
+            title="Remove"
+          >
+            Remove
           </button>
         </div>
       </div>

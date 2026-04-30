@@ -24,16 +24,19 @@ export async function POST(
   const body = (await request.json().catch(() => ({}))) as {
     label?: string;
     content?: string;
+    kind?: string;
   };
   const content = (body.content ?? "").trim();
   if (!content) {
     return NextResponse.json({ error: "Content required." }, { status: 400 });
   }
+  const kind = body.kind === "prompt" ? "prompt" : "context";
   const pin = await addPin({
     email,
     projectId: id,
     label: body.label,
     content,
+    kind,
   });
   if (!pin) {
     return NextResponse.json({ error: "Could not add pin." }, { status: 400 });

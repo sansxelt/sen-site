@@ -19,12 +19,23 @@ export type Project = {
   updated_at: string;
 };
 
+// v0.2.0 phase G+ — pinned items split by kind:
+//  - "context": auto-injected into the chat's system prompt (the
+//    original memory-wedge behavior).
+//  - "prompt":  a one-click saved prompt the user fires from the
+//    project panel; runs as a Duel turn on click. NOT injected into
+//    the system prompt.
+// Migration in docs/v0.2.0-duel-projects.sql defaults existing rows
+// to 'context' so older data behaves the same.
+export type PinKind = "context" | "prompt";
+
 export type ProjectPinnedItem = {
   id: string;
   project_id: string;
   label: string | null;
   content: string;
   ord: number;
+  kind: PinKind;
   created_at: string;
   updated_at: string;
 };
@@ -191,9 +202,11 @@ export async function addPin(input: {
   projectId: string;
   label?: string;
   content: string;
+  kind?: PinKind;
 }): Promise<ProjectPinnedItem | null> {
   if (!isDatabaseConfigured() || !input.email || !input.projectId) return null;
   if (!input.content?.trim()) return null;
+  const kind: PinKind = input.kind === "prompt" ? "prompt" : "context";
   try {
     const supabase = getSupabaseAdminClient();
     // Verify ownership before insert. Without this, a user could
@@ -206,11 +219,13 @@ export async function addPin(input: {
       .maybeSingle();
     if (!project) return null;
 
-    // Pick the next ord (max + 1) so new pins land at the bottom.
+    // Pick the next ord (max + 1) within this kind so prompt and
+    // context pins keep separate orderings.
     const { data: existing } = await supabase
       .from(PINS as never)
       .select("ord")
-      .eq("project_id", input.projectId);
+      .eq("project_id", input.projectId)
+      .eq("kind", kind);
     const rows = (existing ?? []) as unknown as Array<{ ord: number }>;
     const nextOrd = rows.length === 0
       ? 0
@@ -223,6 +238,7 @@ export async function addPin(input: {
         label: input.label?.trim() || null,
         content: input.content.trim(),
         ord: nextOrd,
+        kind,
       } as never)
       .select("*")
       .single();
@@ -330,9 +346,13 @@ export function buildProjectContextBlock(input: {
   if (project.goals?.trim()) {
     parts.push(`Goals: ${project.goals.trim()}`);
   }
-  if (pins.length > 0) {
+  // Only "context" pins get auto-injected. "prompt" pins are
+  // user-clickable shortcuts (fired from the project panel) and
+  // would just bloat the system prompt if injected as memory.
+  const contextPins = pins.filter((p) => (p.kind ?? "context") === "context");
+  if (contextPins.length > 0) {
     parts.push("Pinned context:");
-    for (const pin of pins) {
+    for (const pin of contextPins) {
       const label = pin.label?.trim();
       const head = label ? `- [${label}]` : "-";
       parts.push(`${head} ${pin.content.trim()}`);

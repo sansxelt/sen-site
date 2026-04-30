@@ -1676,17 +1676,33 @@ div[id] {
   align-items: stretch;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
+  transition: border-color 160ms ease;
+}
+/* When the user hovers a column, lift the border on that side
+   subtly so the UI feels like it's leaning toward the choice
+   they're considering. Pure visual cue — clicking the column
+   doesn't pick it; that's still the action button below. */
+.webchat-duel-cols.is-hover-left {
+  border-color: rgba(52, 211, 153, 0.35);
+}
+.webchat-duel-cols.is-hover-right {
+  border-color: rgba(192, 132, 252, 0.35);
 }
 
 .webchat-duel-col {
   flex: 1 1 0;
   min-width: 0;
-  padding: 14px 16px;
+  padding: 12px 16px 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  cursor: default;
+  transition: background 160ms ease;
+}
+.webchat-duel-col:hover {
+  background: rgba(255, 255, 255, 0.015);
 }
 
 .webchat-duel-divider {
@@ -1705,25 +1721,44 @@ div[id] {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .webchat-duel-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(220, 220, 235, 0.85);
+  color: rgba(235, 235, 245, 0.92);
+}
+.webchat-duel-label-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+/* GPT side = teal; Claude side = violet. Signals brand without
+   shouting. Same dots used on the project scoreboard so the
+   color mapping reads consistently across the surface. */
+.webchat-duel-label-dot--left {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.55);
+}
+.webchat-duel-label-dot--right {
+  background: linear-gradient(135deg, #c084fc, #a855f7);
+  box-shadow: 0 0 6px rgba(192, 132, 252, 0.55);
 }
 
 .webchat-duel-cost {
-  font-size: 11px;
+  font-size: 10px;
   font-variant-numeric: tabular-nums;
-  color: rgba(180, 180, 200, 0.7);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 2px 8px;
+  color: rgba(170, 170, 190, 0.55);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1px 7px;
   border-radius: 999px;
 }
 
@@ -1732,6 +1767,7 @@ div[id] {
   line-height: 1.6;
   color: rgba(235, 235, 245, 0.94);
   position: relative;
+  flex: 1;
 }
 
 .webchat-duel-pending {
@@ -1741,6 +1777,7 @@ div[id] {
   font-size: 13px;
   color: rgba(180, 180, 200, 0.75);
   font-style: italic;
+  padding: 4px 0;
 }
 
 .webchat-duel-error {
@@ -1753,67 +1790,100 @@ div[id] {
 }
 
 .webchat-duel-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-  margin-top: 10px;
-  padding: 10px 14px;
+  margin-top: 8px;
+  padding: 10px 12px;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 12px;
 }
 
+/* Pick buttons: bigger, color-coded per side. The marker arrow
+   points back at the column the button picks, so the connection
+   between the column and its action button is visually obvious.
+   is-anticipated lights the matching button when the user hovers
+   the column (or the button itself), making the UI feel like
+   it's nodding along with the user. */
 .webchat-duel-pick {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 8px 14px;
-  background: rgba(140, 90, 255, 0.12);
-  border: 1px solid rgba(140, 90, 255, 0.3);
+  padding: 10px 16px;
   border-radius: 10px;
-  color: #f5f3ff;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
-}
-.webchat-duel-pick:hover:not(:disabled) {
-  background: rgba(140, 90, 255, 0.22);
-  border-color: rgba(140, 90, 255, 0.5);
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 120ms ease,
+    box-shadow 160ms ease;
 }
 .webchat-duel-pick:active:not(:disabled) {
   transform: translateY(1px);
 }
 .webchat-duel-pick:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
-
-.webchat-duel-pick-side {
+.webchat-duel-pick-marker {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(220, 220, 235, 0.85);
+  opacity: 0.7;
+}
+.webchat-duel-pick-label {
+  white-space: nowrap;
+}
+
+/* Left = GPT (teal). Right = Claude (violet). Default state is
+   subdued; hover/anticipated bumps fill + ring + glow. */
+.webchat-duel-pick--left {
+  background: rgba(16, 185, 129, 0.10);
+  border: 1px solid rgba(52, 211, 153, 0.32);
+  color: #d1fae5;
+  justify-self: stretch;
+}
+.webchat-duel-pick--left:hover:not(:disabled),
+.webchat-duel-pick--left.is-anticipated {
+  background: rgba(16, 185, 129, 0.20);
+  border-color: rgba(52, 211, 153, 0.6);
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.15), 0 6px 18px -10px rgba(16, 185, 129, 0.55);
+}
+
+.webchat-duel-pick--right {
+  background: rgba(168, 85, 247, 0.10);
+  border: 1px solid rgba(192, 132, 252, 0.32);
+  color: #f3e8ff;
+  justify-self: stretch;
+}
+.webchat-duel-pick--right:hover:not(:disabled),
+.webchat-duel-pick--right.is-anticipated {
+  background: rgba(168, 85, 247, 0.20);
+  border-color: rgba(192, 132, 252, 0.6);
+  box-shadow: 0 0 0 1px rgba(192, 132, 252, 0.15), 0 6px 18px -10px rgba(168, 85, 247, 0.55);
 }
 
 .webchat-duel-retry {
-  padding: 8px 12px;
+  padding: 8px 14px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  color: rgba(220, 220, 235, 0.85);
-  font-size: 13px;
+  color: rgba(200, 200, 220, 0.75);
+  font-size: 12px;
   cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 .webchat-duel-retry:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: rgba(235, 235, 245, 0.95);
 }
 .webchat-duel-retry:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -1873,16 +1943,17 @@ div[id] {
     flex: 0 0 1px;
   }
   .webchat-duel-actions {
-    flex-wrap: wrap;
-    justify-content: center;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "left right"
+      "retry retry";
+    gap: 8px;
   }
-  .webchat-duel-pick {
-    flex: 1 1 45%;
-    justify-content: center;
-  }
+  .webchat-duel-pick--left { grid-area: left; }
+  .webchat-duel-pick--right { grid-area: right; }
   .webchat-duel-retry {
-    flex: 1 1 100%;
-    text-align: center;
+    grid-area: retry;
+    width: 100%;
   }
 }
 
