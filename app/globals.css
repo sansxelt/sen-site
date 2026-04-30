@@ -1680,6 +1680,15 @@ div[id] {
 .webchat-msg .webchat-assistant-actions:focus-within {
   opacity: 1;
 }
+/* Touch devices have no hover, so the action row would never
+   appear. Always show on coarse-pointer surfaces (phones,
+   tablets) so Edit / Regenerate / Copy stay reachable. */
+@media (hover: none) and (pointer: coarse) {
+  .webchat-msg .webchat-user-actions,
+  .webchat-msg .webchat-assistant-actions {
+    opacity: 1;
+  }
+}
 .webchat-msg .webchat-bubble-action {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.10);
@@ -1714,6 +1723,10 @@ div[id] {
   background: rgba(0, 0, 0, 0.25);
   line-height: 0;
   max-width: 220px;
+  /* Reserve space before the data: URL decodes so the bubble
+     doesn't jump when the image lays in. The actual aspect ratio
+     overrides this once the img has its intrinsic dimensions. */
+  min-height: 120px;
 }
 .webchat-user-image-tile img {
   display: block;
@@ -1768,6 +1781,11 @@ div[id] {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.3);
   line-height: 0;
+  /* aspect-ratio keeps the slot square until the generated PNG
+     decodes, so a 1024x1024 image doesn't yank the page when it
+     lays in. The img inside still sets its own intrinsic ratio
+     via width:100%; height:auto. */
+  aspect-ratio: 1 / 1;
   transition: border-color 140ms ease, transform 140ms ease;
 }
 .webchat-img-tile:hover {
@@ -2148,7 +2166,23 @@ div[id] {
   font-size: 11.5px;
   font-weight: 500;
   letter-spacing: 0.01em;
-  animation: webchat-phase-fade-in 220ms ease-out;
+  /* Pill bg fades in once on mount, never re-runs while the
+     label crossfades inside it. Faster cubic-bezier matches the
+     Claude/ChatGPT status feel. */
+  animation: webchat-phase-fade-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background 200ms ease, border-color 200ms ease;
+}
+/* Per-label crossfade: keyed span remounts when the label
+   changes so this animation re-runs each time. Short + tiny
+   y-offset so the text swap reads as a soft slide instead of a
+   hard cut. */
+.webchat-phase-text {
+  display: inline-block;
+  animation: webchat-phase-text-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes webchat-phase-text-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .webchat-phase-pill::before {
   content: "";

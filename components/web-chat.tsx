@@ -2095,7 +2095,18 @@ export function WebChat({
                     <div className="webchat-inflight">
                       {phaseLabel && (
                         <div className="webchat-phase-pill" aria-live="polite">
-                          {phaseLabel}
+                          {/* keyed span so React remounts the
+                              text node on label change, re-running
+                              the CSS fade. Looks like a soft
+                              crossfade between Thinking ->
+                              Analyzing -> Searching -> Writing
+                              instead of an abrupt text swap. */}
+                          <span
+                            key={phaseLabel}
+                            className="webchat-phase-text"
+                          >
+                            {phaseLabel}
+                          </span>
                         </div>
                       )}
                       <WebBounceDots />
