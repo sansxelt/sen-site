@@ -769,6 +769,20 @@ export function WebChat({
     setInput("");
     setStreaming(true);
     setChatError(null);
+    // v0.2.0 phase E, ChatGPT-style staged status pill. Server
+    // overrides this once a real "phase" event arrives (searching,
+    // reading the page, writing); locally we lead with "Thinking…"
+    // and bump to "Analyzing…" if no token has flowed by ~700ms so
+    // the bubble never feels dead between submit and first byte.
+    setPhaseLabel("Thinking…");
+    const analyzingTimer =
+      typeof window !== "undefined"
+        ? window.setTimeout(() => {
+            setPhaseLabel((cur) =>
+              cur === "Thinking…" ? "Analyzing…" : cur,
+            );
+          }, 700)
+        : null;
     // Touch the activity timestamp so the next-mount idle check
     // knows the user was active recently and shouldn't get auto-
     // bumped to a new chat.
@@ -1229,6 +1243,9 @@ export function WebChat({
       if (abortRef.current === ac) {
         abortRef.current = null;
       }
+      if (analyzingTimer !== null && typeof window !== "undefined") {
+        window.clearTimeout(analyzingTimer);
+      }
       if (isStillThisThread()) {
         setStreaming(false);
         setPhaseLabel(null);
@@ -1345,12 +1362,41 @@ export function WebChat({
     }
 
     const userMsg: ChatMessage = { role: "user", content: prompt };
-    const placeholder = count > 1 ? `Generating ${count} images…` : "Generating image…";
-    setMessages((prev) => [
-      ...prev,
-      userMsg,
-      { role: "assistant", content: placeholder },
-    ]);
+    // v0.2.0 phase E, staged image-gen status. The OpenAI image
+    // route is one POST + one render so we can't stream phases
+    // back; client-side timers fake the stages so the bubble
+    // never feels frozen during a 10-60s gen. The catch handler
+    // drops any "Generating " placeholder regardless of which
+    // stage it stopped on.
+    const placeholderPlural = count > 1;
+    const stage1 = "Preparing prompt…";
+    const stage2 = placeholderPlural
+      ? `Generating ${count} images…`
+      : "Generating image…";
+    const stage3 = "Finalizing…";
+    setMessages((prev) => [...prev, userMsg, { role: "assistant", content: stage1 }]);
+    const swapStage = (next: string) => {
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (
+          last?.role === "assistant" &&
+          /^(Preparing|Generating|Finalizing)/.test(last.content)
+        ) {
+          const copy = [...prev];
+          copy[copy.length - 1] = { ...last, content: next };
+          return copy;
+        }
+        return prev;
+      });
+    };
+    const stageTimer1 =
+      typeof window !== "undefined"
+        ? window.setTimeout(() => swapStage(stage2), 1500)
+        : null;
+    const stageTimer2 =
+      typeof window !== "undefined"
+        ? window.setTimeout(() => swapStage(stage3), 12000)
+        : null;
     setInput("");
     setGeneratingImage(true);
     setChatError(null);
@@ -1476,7 +1522,7 @@ export function WebChat({
         if (
           last &&
           last.role === "assistant" &&
-          /^Generating /.test(last.content)
+          /^(Preparing|Generating|Finalizing)/.test(last.content)
         ) {
           return prev.slice(0, -1);
         }
@@ -1484,6 +1530,12 @@ export function WebChat({
       });
     } finally {
       if (abortRef.current === ac) abortRef.current = null;
+      if (stageTimer1 !== null && typeof window !== "undefined") {
+        window.clearTimeout(stageTimer1);
+      }
+      if (stageTimer2 !== null && typeof window !== "undefined") {
+        window.clearTimeout(stageTimer2);
+      }
       setGeneratingImage(false);
       clearFlight(threadIdRef.current);
     }
@@ -2021,7 +2073,22 @@ export function WebChat({
                 </div>
               );
             })}
-            {chatError && <ChatErrorPill message={chatError} />}
+            {chatError && (
+              <ChatErrorPill
+                message={chatError}
+                onRetry={() => {
+                  // Re-run the most recent user prompt. Pulled from
+                  // messages state so retry survives across mounts
+                  // and works for both fresh sends and stale errors.
+                  const lastUser = [...messages]
+                    .reverse()
+                    .find((m) => m.role === "user");
+                  if (!lastUser?.content) return;
+                  setChatError(null);
+                  void send(lastUser.content);
+                }}
+              />
+            )}
           </div>
         )}
         {showJumpToBottom && (
@@ -2616,19 +2683,54 @@ function WebAssistantBubble({
           </div>
         );
       })}
-      {!streaming && userPrompt && onPrefillInput && (
+      {!streaming && content && (
         <div className="webchat-assistant-actions">
-          <button
-            type="button"
-            className="webchat-bubble-action"
-            title="Drop the previous prompt back into the input so you can tweak it and re-run"
-            onClick={() => onPrefillInput(userPrompt)}
-          >
-            Regenerate
-          </button>
+          <CopyMessageButton content={content} />
+          {userPrompt && onPrefillInput && (
+            <button
+              type="button"
+              className="webchat-bubble-action"
+              title="Drop the previous prompt back into the input so you can tweak it and re-run"
+              onClick={() => onPrefillInput(userPrompt)}
+            >
+              Regenerate
+            </button>
+          )}
         </div>
       )}
     </>
+  );
+}
+
+// Whole-message Copy on assistant turns. Strips <think>/<thinking>
+// blocks from the source so the user gets just the visible answer
+// (parseSections already filters reasoning out of render, this
+// mirrors that for the clipboard).
+function CopyMessageButton({ content }: { content: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    const visible = parseSections(content)
+      .filter((s) => s.type !== "thinking")
+      .map((s) => s.text)
+      .join("")
+      .trim();
+    try {
+      await navigator.clipboard.writeText(visible || content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // ignore; clipboard unavailable
+    }
+  }
+  return (
+    <button
+      type="button"
+      className="webchat-bubble-action"
+      title="Copy the message"
+      onClick={() => void copy()}
+    >
+      {copied ? "Copied" : "Copy"}
+    </button>
   );
 }
 
@@ -2799,27 +2901,48 @@ function WebStreamingFadeText({ text }: { text: string }) {
 // CTAs as plain text. We surface them as actual clickable buttons
 // below the message so the user doesn't have to mentally parse where
 // to go. Generic errors render as the plain pill they always did.
-function ChatErrorPill({ message }: { message: string }) {
+function ChatErrorPill({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry?: () => void;
+}) {
   const lower = message.toLowerCase();
   const isCapBlock =
     lower.includes("weekly") ||
     lower.includes("resets") ||
     lower.includes("boost") ||
     lower.includes("upgrade");
-  if (!isCapBlock) {
-    return <div className="webchat-error">{message}</div>;
+  if (isCapBlock) {
+    return (
+      <div className="webchat-error">
+        <div>{message}</div>
+        <div className="webchat-error-actions">
+          <a href="/account/plan" className="webchat-error-cta">
+            Open billing
+          </a>
+          <a href="/pricing" className="webchat-error-cta webchat-error-cta--ghost">
+            See plans
+          </a>
+        </div>
+      </div>
+    );
   }
   return (
     <div className="webchat-error">
       <div>{message}</div>
-      <div className="webchat-error-actions">
-        <a href="/account/billing" className="webchat-error-cta">
-          Open billing
-        </a>
-        <a href="/pricing" className="webchat-error-cta webchat-error-cta--ghost">
-          See plans
-        </a>
-      </div>
+      {onRetry && (
+        <div className="webchat-error-actions">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="webchat-error-cta"
+          >
+            Retry
+          </button>
+        </div>
+      )}
     </div>
   );
 }
