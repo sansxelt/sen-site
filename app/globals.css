@@ -1600,14 +1600,6 @@ div[id] {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  /* Pin messages to the bottom of the scroll area so a short
-     reply sits right above the composer (Claude / iMessage
-     pattern). Auto-margin collapses once the list overflows so
-     longer conversations scroll normally. The desktop CTA is
-     hidden during active chats so the space above the messages
-     reads as "earlier conversation scrolled off" rather than
-     dead space. */
-  margin-top: auto;
 }
 
 .webchat-msg {
@@ -1671,20 +1663,37 @@ div[id] {
   line-height: 1.45;
 }
 
-/* Per-bubble action row hidden via display: none until hovered
-   so it occupies zero layout space when collapsed. max-height: 0
-   was leaving a flex baseline that read as 'double spacing'
-   under every bubble even without hovering. */
+/* Per-bubble action row collapses to zero layout when not
+   hovered (no ghost gap below bubbles), expands smoothly on
+   hover / focus-within. Max-height + opacity transitions
+   together so the row fades AND grows in one motion instead
+   of an abrupt display: flex pop-in. min-height: 0 +
+   margin-top: 0 keeps the collapsed state at literal zero
+   height even with display: flex active.   */
 .webchat-msg .webchat-user-actions,
 .webchat-msg .webchat-assistant-actions {
-  display: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 0;
+  min-height: 0;
+  margin-top: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    max-height 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 200ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms ease;
 }
 .webchat-msg:hover .webchat-user-actions,
 .webchat-msg:hover .webchat-assistant-actions,
 .webchat-msg .webchat-user-actions:focus-within,
 .webchat-msg .webchat-assistant-actions:focus-within {
-  display: flex;
+  max-height: 40px;
   margin-top: 8px;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Per-bubble action row. Edit on user turns, Regenerate on
@@ -1707,15 +1716,15 @@ div[id] {
 }
 /* Touch devices have no hover, so the action row would never
    appear. Always show on coarse-pointer surfaces (phones,
-   tablets) so Edit / Regenerate / Copy stay reachable. Force
-   display: flex so the collapsed display: none above doesn't
-   keep them hidden. */
+   tablets) so Edit / Regenerate / Copy stay reachable. Override
+   the collapsed max-height/opacity from the rule above. */
 @media (hover: none) and (pointer: coarse) {
   .webchat-msg .webchat-user-actions,
   .webchat-msg .webchat-assistant-actions {
-    display: flex;
+    max-height: 40px;
     margin-top: 8px;
     opacity: 1;
+    pointer-events: auto;
   }
 }
 .webchat-msg .webchat-bubble-action {

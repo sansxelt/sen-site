@@ -747,30 +747,29 @@ export function WebChat({
     if (!text && imageBlocks.length === 0) return;
 
     // Auto-route image-gen intent so users don't have to click a
-    // separate button. Three patterns trigger:
+    // separate button. Two patterns trigger now:
     //   1. Strong-visual verb + ANY subject: "gen a cat", "draw
-    //      a sunset", "imagine a cyberpunk city". These verbs are
-    //      almost only used in image-gen context, so we don't gate
-    //      on a noun list.
-    //   2. Generic verb + visual noun: "make a graph", "show me a
-    //      chart", "give me an illustration". These verbs are
-    //      ambiguous on their own (make a sandwich? show me the
-    //      file?), so the noun gate stays.
-    //   3. Visual verb alone: "plot y=x+5", "graph this", "chart
-    //      sales", "visualize the data", "diagram the flow".
+    //      a sunset", "imagine a cyberpunk city". These verbs
+    //      are almost only used in image-gen context, so we
+    //      don't gate on a noun list.
+    //   2. Generic verb + clearly-visual noun: "make a logo",
+    //      "show me a portrait", "give me an illustration".
+    //      The noun list is INTENTIONALLY narrow now: graph /
+    //      chart / plot / diagram / figure / visualization /
+    //      map / etc. were removed because those map to text
+    //      sansxel-card output (stat-grid, comparison) NOT to
+    //      image generation. Letting the chat model decide
+    //      whether to render a card vs. fire image gen yields
+    //      better answers than my regex pre-classifying.
     // Skipped when there's an attached image (probably means
-    // "analyze this", not "make a new one"). False positives are
-    // recoverable — user retypes once they see the image.
+    // "analyze this", not "make a new one").
     const STRONG_IMAGE_VERB =
       /^\s*(?:gen(?:erate)?|draw|paint|imagine|illustrate|render|sketch)\b\s+\S/i;
     const IMAGE_GEN_INTENT =
-      /^\s*(?:make|create|design|show(?:\s+me)?|give(?:\s+me)?)\s+(?:me\s+)?(?:an?\s+|the\s+|some\s+)?(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|logo|graphic|render|graph|chart|plot|diagram|map|visualization|viz|infographic|figure|icon|poster|banner|wallpaper)\b/i;
-    const VISUAL_VERB_INTENT =
-      /^\s*(?:plot|graph|chart|visuali[sz]e|diagram)\b\s+\S/i;
+      /^\s*(?:make|create|design|show(?:\s+me)?|give(?:\s+me)?)\s+(?:me\s+)?(?:an?\s+|the\s+|some\s+)?(?:image|picture|pic|photo|illustration|art|drawing|painting|sketch|portrait|logo|graphic|render|icon|poster|banner|wallpaper)\b/i;
     const isImageRequest =
       (STRONG_IMAGE_VERB.test(baseText) ||
-        IMAGE_GEN_INTENT.test(baseText) ||
-        VISUAL_VERB_INTENT.test(baseText)) &&
+        IMAGE_GEN_INTENT.test(baseText)) &&
       imageBlocks.length === 0;
     if (isImageRequest) {
       lei.clearAttachments();
