@@ -67,6 +67,11 @@ export function ProjectPicker() {
   const [active, setActive] = useState<ProjectWithPins | null>(null);
   const [loading, setLoading] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  // Menu ref so we can scroll the active panel into view after a
+  // create — the form sits in the middle of the dropdown and the
+  // panel renders below it, so a fresh save lands offscreen
+  // unless we scroll there manually.
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const refreshList = useCallback(async () => {
     try {
@@ -172,7 +177,7 @@ export function ProjectPicker() {
       </button>
 
       {open && (
-        <div className="project-picker-menu" role="menu">
+        <div className="project-picker-menu" role="menu" ref={menuRef}>
           <div className="project-picker-section-label">Projects</div>
           <button
             type="button"
@@ -209,6 +214,13 @@ export function ProjectPicker() {
               void refreshList();
               select(p.id);
               setOpen(true);
+              // Scroll the menu so the user actually sees the new
+              // active panel land (otherwise the form clears and
+              // it feels like nothing happened).
+              window.setTimeout(() => {
+                const m = menuRef.current;
+                if (m) m.scrollTo({ top: m.scrollHeight, behavior: "smooth" });
+              }, 220);
             }}
           />
 
@@ -240,6 +252,10 @@ function CreateProjectForm({
   const [goals, setGoals] = useState("");
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Success ribbon: shows for 1.5s after a successful create so
+  // the user has clear visual confirmation. Without this the
+  // form just silently cleared and the save felt invisible.
+  const [savedFlash, setSavedFlash] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,6 +281,8 @@ function CreateProjectForm({
       setName("");
       setDescription("");
       setGoals("");
+      setSavedFlash(true);
+      window.setTimeout(() => setSavedFlash(false), 1500);
       onCreated(data.project);
     } catch {
       setErr("Network error.");
@@ -295,12 +313,17 @@ function CreateProjectForm({
         className="project-picker-input"
       />
       {err && <div className="project-picker-error">{err}</div>}
+      {savedFlash && (
+        <div className="project-picker-saved" role="status">
+          Saved. Pick it from the list above to attach this chat.
+        </div>
+      )}
       <button
         type="submit"
         disabled={!name.trim() || pending}
         className="project-picker-submit"
       >
-        {pending ? "Creating…" : "Create project"}
+        {pending ? "Creating…" : savedFlash ? "Saved!" : "Create project"}
       </button>
     </form>
   );
