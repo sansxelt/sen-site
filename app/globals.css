@@ -1304,11 +1304,12 @@ div[id] {
   /* /app no longer lives under the marketing header (it has its own
      workshop layout), so subtract 0 not the marketing header height. */
   height: 100vh;
-  /* Tighter ChatGPT-style column. 920 felt cavernous on wide screens
-     once the workshop sidebar + chat history rail were added, bubbles
-     wound up at opposite edges with a desert in between. 720 keeps
-     them in a comfortable conversation column. */
-  max-width: 760px;
+  /* Tighter conversation column so user / assistant bubbles
+     sit close enough to read as one back-and-forth, not as
+     "two floating UI elements at opposite edges of a desert."
+     700px lands roughly where ChatGPT / Claude keep their
+     reading column. */
+  max-width: 700px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -1599,28 +1600,36 @@ div[id] {
 .webchat-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  /* Tighter rhythm so consecutive turns feel like one
+     back-and-forth instead of two separate UI cards. */
+  gap: 8px;
 }
 
 .webchat-msg {
   position: relative;
   font-size: 14px;
-  line-height: 1.65;
-  padding: 12px 16px;
+  line-height: 1.6;
+  /* Smaller, consistent padding across user + assistant so the
+     two read as part of the same system. */
+  padding: 10px 14px;
   border-radius: 16px;
   white-space: pre-wrap;
   word-wrap: break-word;
-  /* Tighter than 88% so user/assistant bubbles can never sit at
-     opposite edges with a chasm between them. */
-  max-width: 92%;
-  animation: webchat-msg-in 220ms ease-out;
+  /* 70% lets each bubble breathe but keeps them inside the
+     column rhythm; the parent .webchat already caps the
+     conversation at 700px. */
+  max-width: 70%;
+  animation: webchat-msg-in 200ms ease-out both;
 }
 
 .webchat-msg--user {
   align-self: flex-end;
-  background: rgba(167, 139, 250, 0.18);
+  /* Softened from 0.25 border so the bubble doesn't read as a
+     thick neon ring next to the assistant's barely-there
+     edge. Same hue, less shout. */
+  background: rgba(140, 90, 255, 0.15);
   color: #fafafa;
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  border: 1px solid rgba(140, 90, 255, 0.3);
 }
 
 .webchat-msg--assistant {
