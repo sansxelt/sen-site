@@ -125,6 +125,12 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   // before. Each project section header is collapsible. When the
   // user is searching (query non-empty) we auto-expand all sections
   // so matches don't hide behind a folded header.
+  //
+  // EMPTY sections are intentionally included: a freshly-created
+  // project with zero attached chats still gets a folder header in
+  // the rail so the user has visible proof the project exists. The
+  // empty state inside renders a "Start a chat in this project"
+  // hint instead of thread rows.
   const grouped = useMemo(() => {
     const ungrouped: Thread[] = [];
     const byProject = new Map<string, Thread[]>();
@@ -138,13 +144,15 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
       list.push(t);
       byProject.set(pid, list);
     }
-    // Order project sections by the project's most-recent thread,
-    // matches the flat list's "newest first" feel.
-    const projectSections = [...byProject.entries()]
-      .map(([pid, list]) => ({
-        id: pid,
-        name: projects.find((p) => p.id === pid)?.name ?? "Project",
-        threads: list,
+    // Build a section per project, including projects with no
+    // attached threads so they're still visible in the rail.
+    // Sort: projects with recent activity first; empty projects
+    // sink to the bottom (newest empty first by id stability).
+    const projectSections = projects
+      .map((p) => ({
+        id: p.id,
+        name: p.name,
+        threads: byProject.get(p.id) ?? [],
       }))
       .sort((a, b) => {
         const ta = new Date(a.threads[0]?.updated_at ?? 0).getTime();
@@ -480,6 +488,38 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
                     {section.threads.length}
                   </span>
                 </button>
+                {!collapsed && section.threads.length === 0 && (
+                  <button
+                    type="button"
+                    className="chat-history-project-empty"
+                    onClick={() => {
+                      // Set this project active + start a fresh chat
+                      // so the user can attach work to it right away.
+                      // (setActiveProjectId also dispatches the
+                      // sansxel:project:changed event the picker +
+                      // composer listen for.)
+                      if (typeof window !== "undefined") {
+                        window.localStorage.setItem(
+                          "sansxel.activeProjectId",
+                          section.id,
+                        );
+                        window.dispatchEvent(
+                          new CustomEvent("sansxel:project:changed", {
+                            detail: section.id,
+                          }),
+                        );
+                        window.dispatchEvent(
+                          new CustomEvent("sansxel:new-chat"),
+                        );
+                      }
+                      router.replace("/app?new=1");
+                    }}
+                    title={`Start a chat in ${section.name}`}
+                  >
+                    <span className="chat-history-project-empty-glyph" aria-hidden>+</span>
+                    <span>Start a chat here</span>
+                  </button>
+                )}
                 {!collapsed &&
                   section.threads.map((t) => (
                     <ThreadRow

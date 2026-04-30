@@ -248,6 +248,17 @@ export function ProjectPicker() {
 
           <CreateProjectForm
             onCreated={(p) => {
+              // Optimistic insert at the top so the trigger label
+              // updates IMMEDIATELY to the new project's name.
+              // Without this the picker said "No project" until
+              // refreshList returned a beat later (because the
+              // trigger reads the name from the projects list,
+              // which was still stale). refreshList runs anyway
+              // and reconciles with the server's authoritative
+              // list a moment later.
+              setProjects((prev) =>
+                prev.some((x) => x.id === p.id) ? prev : [p, ...prev],
+              );
               void refreshList();
               select(p.id);
               setOpen(true);
