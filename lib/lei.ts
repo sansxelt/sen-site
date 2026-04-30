@@ -63,7 +63,6 @@ export function previewCreditCost(args: {
   hasImage?: boolean;
   hasVideo?: boolean;
   voiceMode?: boolean;
-  duelMode?: boolean;
   plan?: string;
 }): CostPreview {
   const planCovers = PLAN_BYPASSES_CREDITS.has((args.plan ?? "").toLowerCase());
@@ -77,21 +76,6 @@ export function previewCreditCost(args: {
   }
   if (args.voiceMode) {
     return fmt("voice_minute", planCovers);
-  }
-  if (args.duelMode) {
-    // Duel runs two model calls in parallel (GPT + Claude). The
-    // chip charges 3× the chat credit cost — 2 for the parallel
-    // calls plus a 1-credit "comparison premium" so duels actually
-    // contribute margin instead of being subsidised. Weekly cap
-    // accounting still consumes 2 chat slots (one per model call);
-    // the third credit is purely the credit-ledger price.
-    const credits = CREDIT_COSTS.chat * 3;
-    return {
-      kind: "chat",
-      credits,
-      usd: `$${(credits / 100).toFixed(2)}`,
-      planCovers,
-    };
   }
   return fmt("chat", planCovers);
 }

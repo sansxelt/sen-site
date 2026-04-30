@@ -381,7 +381,6 @@ export function WebChat({
       const detail = (e as CustomEvent<{ prompt?: string }>).detail;
       const prompt = (detail?.prompt ?? "").trim();
       if (!prompt) return;
-      setDuelMode(true);
       trackClientEvent("duel_pinned_prompt_fired", {
         prompt_length: prompt.length,
       });
@@ -561,18 +560,14 @@ export function WebChat({
     return () => { cancelled = true; };
   }, [wantsNew, requestedThreadParam]);
   const [streaming, setStreaming] = useState(false);
-  // v0.2.0 phase G — Solo / Duel composer toggle. Default Solo so
-  // existing users see no behavior change. Persisted in
-  // localStorage so a user who lives in Duel mode doesn't have to
-  // re-flip every refresh.
-  const [duelMode, setDuelMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("sansxel.duelMode") === "1";
-  });
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem("sansxel.duelMode", duelMode ? "1" : "0");
-  }, [duelMode]);
+  // v0.2.0 phase H — Duel is now an explicit per-message action
+  // (a "Duel" button next to Send) instead of a sticky mode toggle.
+  // Reasoning: making every casual "yo" / "wsg" round into a duel
+  // was overkill for 95% of conversations. The compare flow is
+  // valuable when the user actually wants to compare; otherwise
+  // it's just two replies + a Pick UI on a one-line answer.
+  // The old localStorage key (sansxel.duelMode) is left orphaned;
+  // browsers clean stale keys, no migration needed.
 
   // v0.2.0 phase G+ — weekly usage snapshot for monetization hooks
   // (low-chat banner, winner-moment upsell, "Liking Duel?" copy).
@@ -2719,7 +2714,6 @@ export function WebChat({
     hasImage: hasImageAttached,
     hasVideo: hasVideoAttached,
     voiceMode,
-    duelMode,
     plan,
   });
   const hideTranscript = voiceMode && lei.voiceStyle === "v2v";
@@ -2905,15 +2899,12 @@ export function WebChat({
           </div>
         ) : (
           <div className="webchat-list">
-            {/* v0.2.0 phase G+ — pre-429 low-chat banner. Fires when
-                the user is in Duel mode and has 5 or fewer chats
-                left, OR has 1 or fewer duels left on a duel-capped
-                plan. The 429 path still kicks in if they push past
-                it; this is just the pre-block warning so they
-                aren't surprised. Hidden once they upgrade or the
-                week resets. */}
-            {duelMode &&
-              !hasUnlimitedChat &&
+            {/* Phase H — pre-429 low-chat banner. Plan-agnostic now
+                that Duel is opt-in per message; fires whenever the
+                user is on a capped plan and within 5 chats of the
+                cap. Suppressed while the winner-moment upsell is
+                visible so we never stack two CTAs. */}
+            {!hasUnlimitedChat &&
               !showDuelUpsell &&
               ((typeof chatRemaining === "number" && chatRemaining <= 5) ||
                 (typeof duelRemaining === "number" && duelRemaining <= 1)) && (
@@ -2925,7 +2916,7 @@ export function WebChat({
                         : "1 duel left this week."
                       : `${chatRemaining} chats left this week.`}
                     <span className="webchat-low-chat-banner-sub">
-                      Upgrade to keep using Duel.
+                      Upgrade to keep going.
                     </span>
                   </span>
                   <a
@@ -3139,8 +3130,7 @@ export function WebChat({
         className="webchat-input"
         onSubmit={(e) => {
           e.preventDefault();
-          if (duelMode) void sendDuel();
-          else void send();
+          void send();
         }}
       >
         {voiceState === "recording" && <WebVoiceWave mode="listening" />}
@@ -3178,8 +3168,7 @@ export function WebChat({
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              if (duelMode) void sendDuel();
-              else void send();
+              void send();
             }
           }}
           placeholder={
@@ -3198,45 +3187,17 @@ export function WebChat({
         <div className="webchat-input-actions">
           <div className="webchat-input-actions-left">
             <ProjectPicker />
-            <div
-              className={`webchat-mode-toggle${duelMode ? " is-duel" : ""}`}
-              role="group"
-              aria-label="Composer mode"
-            >
-              <button
-                type="button"
-                className={`webchat-mode-btn${!duelMode ? " is-active" : ""}`}
-                onClick={() => setDuelMode(false)}
-                aria-pressed={!duelMode}
-                title="Single response from sansxel-1"
-              >
-                Solo
-              </button>
-              <button
-                type="button"
-                className={`webchat-mode-btn${duelMode ? " is-active" : ""}`}
-                onClick={() => setDuelMode(true)}
-                aria-pressed={duelMode}
-                title="Side-by-side: GPT vs Claude on the same prompt"
-              >
-                Duel
-              </button>
-            </div>
             <span
               className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
               title={
                 costPreview.planCovers
                   ? `Included in your ${planDisplayName(plan)} plan, no credits used unless you exceed your weekly cap`
-                  : duelMode
-                    ? `Duel costs ${costPreview.credits} credits and uses 2 weekly chat slots`
-                    : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
+                  : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
               }
             >
               {costPreview.planCovers
                 ? `✓ ${planDisplayName(plan)}`
-                : duelMode
-                  ? `≈ ${costPreview.credits} credits · 2 chat slots`
-                  : `≈ ${costPreview.credits} credits`}
+                : `≈ ${costPreview.credits} credits`}
             </span>
             <PlanExpiryNote expiresAt={planExpiresAt} canceling={planCanceling} />
           </div>
@@ -3294,13 +3255,30 @@ export function WebChat({
               Stop
             </button>
           ) : (
-            <button
-              type="submit"
-              disabled={!input.trim() && lei.attachments.length === 0}
-              className="webchat-send"
-            >
-              Send
-            </button>
+            <>
+              {/* Phase H — Duel as a per-message action. Sits next
+                  to Send so the user opts in only when they want a
+                  GPT vs Claude comparison; default press is Send
+                  (single solo response). type=button so Enter in
+                  the textarea doesn't trigger it; only clicking
+                  fires the duel. */}
+              <button
+                type="button"
+                disabled={!input.trim() && lei.attachments.length === 0}
+                onClick={() => void sendDuel()}
+                className="webchat-duel-btn"
+                title="Compare GPT vs Claude on this prompt — costs 3 credits + 2 chat slots"
+              >
+                Duel
+              </button>
+              <button
+                type="submit"
+                disabled={!input.trim() && lei.attachments.length === 0}
+                className="webchat-send"
+              >
+                Send
+              </button>
+            </>
           )}
           </div>
         </div>
