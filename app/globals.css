@@ -1611,6 +1611,7 @@ div[id] {
 }
 
 .webchat-msg {
+  position: relative;
   font-size: 14px;
   line-height: 1.65;
   padding: 12px 16px;
@@ -1670,6 +1671,25 @@ div[id] {
   line-height: 1.45;
 }
 
+/* Per-bubble action row collapses to zero height when hidden so
+   it doesn't reserve invisible space below every message bubble.
+   Without this, opacity: 0 still occupied ~32px under each turn,
+   which read as 'double spacing' between consecutive bubbles. */
+.webchat-msg .webchat-user-actions,
+.webchat-msg .webchat-assistant-actions {
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  transition: max-height 160ms ease, margin-top 160ms ease, opacity 140ms ease;
+}
+.webchat-msg:hover .webchat-user-actions,
+.webchat-msg:hover .webchat-assistant-actions,
+.webchat-msg .webchat-user-actions:focus-within,
+.webchat-msg .webchat-assistant-actions:focus-within {
+  max-height: 40px;
+  margin-top: 8px;
+}
+
 /* Per-bubble action row. Edit on user turns, Regenerate on
    assistant turns. Hidden until the message is hovered so the
    chat reads as conversation, not a settings menu. */
@@ -1690,11 +1710,15 @@ div[id] {
 }
 /* Touch devices have no hover, so the action row would never
    appear. Always show on coarse-pointer surfaces (phones,
-   tablets) so Edit / Regenerate / Copy stay reachable. */
+   tablets) so Edit / Regenerate / Copy stay reachable. Has to
+   expand both opacity AND max-height since the collapsed-by-
+   default rule reserves zero height. */
 @media (hover: none) and (pointer: coarse) {
   .webchat-msg .webchat-user-actions,
   .webchat-msg .webchat-assistant-actions {
     opacity: 1;
+    max-height: 40px;
+    margin-top: 8px;
   }
 }
 .webchat-msg .webchat-bubble-action {
@@ -2058,15 +2082,22 @@ div[id] {
 }
 
 .webchat-cursor {
-  display: inline-block;
+  /* Position-absolute the streaming cursor in the bottom-right
+     corner of the assistant bubble so it doesn't add a new block
+     line under the last <p> (which was producing ~23px of
+     phantom space mid-stream). The bubble is the positioned
+     ancestor (rule below adds position: relative to .webchat-msg
+     so this anchor works). */
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
   width: 2px;
   height: 1em;
   background: #a78bfa;
-  margin-left: 2px;
-  vertical-align: text-bottom;
   border-radius: 1px;
   animation: webchat-cursor-blink 1s steps(2, end) infinite;
   box-shadow: 0 0 6px rgba(167, 139, 250, 0.5);
+  pointer-events: none;
 }
 
 @keyframes webchat-cursor-blink {
