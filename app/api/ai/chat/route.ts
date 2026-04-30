@@ -219,6 +219,14 @@ type ChatBody = {
   // client truncates its local state to the same point, the
   // server matches, and the conversation diverges at the edit.
   truncate_from_message_id?: string;
+  // v0.2.0 phase E, real Regenerate. When set, the server
+  // deletes the assistant message at this id (and anything
+  // after) AND skips the user-turn save (the user message that
+  // prompted this is already in the DB and stays). A new
+  // assistant placeholder + stream takes over. Mutually
+  // exclusive with truncate_from_message_id at the call site;
+  // server treats them independently.
+  regenerate_from_assistant_id?: string;
   // v0.1.12, client-supplied local time so the model can answer
   // "what time is it for me" without claiming it has no access to
   // the system clock. Client passes IANA timezone + a pre-formatted
@@ -898,7 +906,22 @@ export async function POST(request: Request) {
           payload.truncate_from_message_id.trim(),
         );
       }
-      if (resolvedThreadId) {
+      // v0.2.0 phase E, real Regenerate. Delete the assistant
+      // turn the user wants regenerated (and any orphan rows
+      // after it), but DO NOT save a new user turn since the
+      // user message that prompted this is already in DB. The
+      // skip flag below short-circuits the save block.
+      const isRegenerate =
+        typeof payload.regenerate_from_assistant_id === "string" &&
+        payload.regenerate_from_assistant_id.trim().length > 0;
+      if (resolvedThreadId && isRegenerate) {
+        await deleteMessagesFromId(
+          email,
+          resolvedThreadId,
+          (payload.regenerate_from_assistant_id as string).trim(),
+        );
+      }
+      if (resolvedThreadId && !isRegenerate) {
         const lastUserTurn = [...payload.messages].reverse().find((m) => m.role === "user");
         if (lastUserTurn) {
           const text = chatContentToText(lastUserTurn.content);
@@ -1050,6 +1073,24 @@ export async function POST(request: Request) {
       async start(controller) {
         let inputTokens = 0;
         let outputTokens = 0;
+
+        // v0.2.0 phase E, emit the assistant message id back to
+        // the client as soon as the placeholder row exists in
+        // chat_messages. Lets the UI wire Regenerate to a real
+        // server id even on a fresh stream (no reload required).
+        // Fire-and-forget; failure just leaves the client without
+        // the id and Regenerate falls back to prefill.
+        void assistantMessageIdPromise.then((aid) => {
+          if (aid) {
+            try {
+              const body =
+                `\x1F${JSON.stringify({ type: "assistant_id", id: aid })}\x1F`;
+              controller.enqueue(encoder.encode(body));
+            } catch {
+              // controller may already be closed
+            }
+          }
+        });
 
         // v0.1.8, when streaming JSON-Lines, every event is a
         // single-line JSON object terminated by \n. Buffers tool

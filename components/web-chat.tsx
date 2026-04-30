@@ -488,6 +488,11 @@ export function WebChat({
     index: number;
     messageId: string | null;
   } | null>(null);
+  // v0.2.0 phase E, real Regenerate. Captured at click time and
+  // attached to the next send() so the API call carries
+  // regenerate_from_assistant_id. Cleared once captured into the
+  // network payload so the next normal turn doesn't carry it.
+  const regenerateTargetRef = useRef<string | null>(null);
   const [voiceState, setVoiceState] = useState<
     "idle" | "recording" | "transcribing" | "speaking"
   >("idle");
@@ -678,7 +683,11 @@ export function WebChat({
     setShowJumpToBottom(false);
   }, []);
 
-  const send = useCallback(async (overrideText?: string, fromVoice = false) => {
+  const send = useCallback(async (
+    overrideText?: string,
+    fromVoice = false,
+    overrideBaseMessages?: ChatMessage[],
+  ) => {
     const baseText = (overrideText ?? input).trim();
 
     // File / code attachments inline into the prompt (text). Image
@@ -783,16 +792,16 @@ export function WebChat({
       content: text,
       images: imageBlocks.length > 0 ? imageBlocks : undefined,
     };
-    // v0.2.0 phase E, edit-and-resend. When the user rewrote an
-    // old turn, slice everything from that turn forward off both
-    // the in-UI list and the network payload so the model gets
-    // the same conversation shape the user sees on screen.
-    // Server-side truncation is requested via
-    // truncate_from_message_id below.
+    // v0.2.0 phase E, edit-and-resend / regenerate. Slice
+    // messages forward off the chain when the caller has a
+    // specific truncation point (Edit) OR rebuilds the chain
+    // explicitly (Regenerate passes overrideBaseMessages so
+    // send doesn't have to wait for React state to catch up).
     const baseMessages =
-      editingTurn !== null && editingTurn.index >= 0
+      overrideBaseMessages ??
+      (editingTurn !== null && editingTurn.index >= 0
         ? messages.slice(0, editingTurn.index)
-        : messages;
+        : messages);
     // Build the network payload separately so the in-UI message stays
     // text-only (we already render the image previews via the LEI
     // attachment chips above the input).
@@ -889,6 +898,12 @@ export function WebChat({
         // ignore \u2014 ISO fallback
       }
 
+      // Capture + clear the regenerate target before the fetch
+      // serialises the body. Any concurrent / follow-up send
+      // shouldn't carry the same id.
+      const regenerateConsumed = regenerateTargetRef.current;
+      regenerateTargetRef.current = null;
+
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -915,6 +930,12 @@ export function WebChat({
           // entered, so the server view matches the UI on reload.
           truncate_from_message_id:
             editingTurn?.messageId ?? undefined,
+          // v0.2.0 phase E, real Regenerate. Server deletes the
+          // old assistant turn (and orphans after) AND skips the
+          // user-save block since the prior user message is
+          // already in DB. Consumed once via the ref above.
+          regenerate_from_assistant_id:
+            regenerateConsumed ?? undefined,
         }),
         signal: ac.signal,
       });
@@ -1145,7 +1166,12 @@ export function WebChat({
       let pendingPhaseBuf = "";
       const handlePhaseEvent = (raw: string) => {
         try {
-          const evt = JSON.parse(raw) as { type?: string; label?: string; kind?: string };
+          const evt = JSON.parse(raw) as {
+            type?: string;
+            label?: string;
+            kind?: string;
+            id?: string;
+          };
           if (evt.type === "phase" && typeof evt.label === "string") {
             // "writing" phase clears the label so the pill goes away
             // once real text starts flowing, bouncing dots visually
@@ -1155,6 +1181,21 @@ export function WebChat({
             } else {
               setPhaseLabel(evt.label);
             }
+          } else if (evt.type === "assistant_id" && typeof evt.id === "string") {
+            // v0.2.0 phase E, server echo of the assistant
+            // message row id. Attach it to the trailing
+            // placeholder so Regenerate can target a real DB
+            // row without a reload first.
+            const aid = evt.id;
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last && last.role === "assistant" && !last.id) {
+                const copy = [...prev];
+                copy[copy.length - 1] = { ...last, id: aid };
+                return copy;
+              }
+              return prev;
+            });
           }
         } catch {
           // malformed marker, ignore
@@ -1321,6 +1362,39 @@ export function WebChat({
       }
     }
   }, [input, messages, tier, lei, editingTurn]);
+
+  // v0.2.0 phase E, real Regenerate. Drop the assistant turn the
+  // user wants regenerated AND the prior user turn locally, then
+  // re-fire send() with the user's prompt. Server-side, the chat
+  // route deletes the old assistant + everything after it via
+  // regenerate_from_assistant_id, AND skips the user-save block
+  // (the original user row stays in DB). Net effect: same user
+  // message, fresh assistant reply, no duplicates anywhere.
+  const regenerate = useCallback(
+    async (assistantIdx: number, assistantId: string | null) => {
+      const userIdx = assistantIdx - 1;
+      if (userIdx < 0) return;
+      const userMsg = messages[userIdx];
+      if (!userMsg || userMsg.role !== "user" || !userMsg.content) return;
+      if (!assistantId) {
+        // Fallback for in-memory turns without a server id (the
+        // assistant_id event raced with this click). Prefill the
+        // input so the user can resubmit manually; preserves the
+        // older shipped behavior.
+        setInput(userMsg.content);
+        textareaRef.current?.focus();
+        return;
+      }
+      regenerateTargetRef.current = assistantId;
+      const truncated = messages.slice(0, userIdx);
+      setMessages(truncated);
+      // Pass truncated as overrideBaseMessages so send() doesn't
+      // race React state and serialise the OLD chain into the
+      // network payload.
+      await send(userMsg.content, false, truncated);
+    },
+    [messages, send],
+  );
 
   const stop = useCallback(() => {
     if (abortRef.current) {
@@ -2131,6 +2205,19 @@ export function WebChat({
                         setInput(text);
                         textareaRef.current?.focus();
                       }}
+                      onRegenerate={
+                        // Real regenerate: drop the assistant
+                        // turn locally + tell the server to
+                        // delete it from chat_messages, then
+                        // stream a fresh reply for the same
+                        // user prompt. Hidden while another
+                        // turn is in flight.
+                        streaming || generatingImage
+                          ? undefined
+                          : () => {
+                              void regenerate(i, m.id ?? null);
+                            }
+                      }
                     />
                   ) : (
                     <WebUserBubble
@@ -2706,12 +2793,14 @@ function WebAssistantBubble({
   userPrompt,
   onIterate,
   onPrefillInput,
+  onRegenerate,
 }: {
   content: string;
   streaming: boolean;
   userPrompt?: string;
   onIterate?: (prompt: string) => void;
   onPrefillInput?: (text: string) => void;
+  onRegenerate?: () => void;
 }) {
   // Strip thinking blocks, internal reasoning isn't shown to the user.
   const sections = parseSections(content).filter((s) => s.type !== "thinking");
@@ -2787,12 +2876,12 @@ function WebAssistantBubble({
       {!streaming && content && (
         <div className="webchat-assistant-actions">
           <CopyMessageButton content={content} />
-          {userPrompt && onPrefillInput && (
+          {onRegenerate && (
             <button
               type="button"
               className="webchat-bubble-action"
-              title="Drop the previous prompt back into the input so you can tweak it and re-run"
-              onClick={() => onPrefillInput(userPrompt)}
+              title="Re-run this answer. Drops the current reply server-side and streams a fresh one for the same question."
+              onClick={onRegenerate}
             >
               Regenerate
             </button>
