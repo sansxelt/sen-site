@@ -82,8 +82,10 @@ export async function listThreads(email: string): Promise<ChatThread[]> {
       .order("updated_at", { ascending: false })
       .limit(100);
     if (error) {
-      // Fallback: if the join fails (older schema, etc.), return
-      // all threads, better than nothing.
+      console.warn("listThreads primary failed:", error.message);
+      // Fallback 1: drop the chat_messages inner join, keep
+      // project_id (handles plain-DB hiccups + threads with zero
+      // messages that the join filtered out).
       const fallback = await supabase
         .from("chat_threads" as never)
         .select("id, email, title, created_at, updated_at, project_id")
@@ -92,7 +94,20 @@ export async function listThreads(email: string): Promise<ChatThread[]> {
         .limit(100);
       if (fallback.error) {
         console.warn("listThreads fallback failed:", fallback.error.message);
-        return [];
+        // Fallback 2: drop project_id too (handles deploys where
+        // the v0.2.0-projects migration hasn't been applied yet,
+        // which would otherwise blow up the entire rail).
+        const minimal = await supabase
+          .from("chat_threads" as never)
+          .select("id, email, title, created_at, updated_at")
+          .eq("email", email.toLowerCase())
+          .order("updated_at", { ascending: false })
+          .limit(100);
+        if (minimal.error) {
+          console.warn("listThreads minimal failed:", minimal.error.message);
+          return [];
+        }
+        return (minimal.data ?? []) as unknown as ChatThread[];
       }
       return (fallback.data ?? []) as unknown as ChatThread[];
     }
@@ -123,8 +138,19 @@ export async function getThread(email: string, threadId: string): Promise<ChatTh
       .eq("email", email.toLowerCase())
       .maybeSingle();
     if (error) {
-      console.warn("getThread failed:", error.message);
-      return null;
+      console.warn("getThread project_id select failed:", error.message);
+      // Fallback when project_id column isn't present yet.
+      const minimal = await supabase
+        .from("chat_threads" as never)
+        .select("id, email, title, created_at, updated_at")
+        .eq("id", threadId)
+        .eq("email", email.toLowerCase())
+        .maybeSingle();
+      if (minimal.error) {
+        console.warn("getThread minimal failed:", minimal.error.message);
+        return null;
+      }
+      return (minimal.data as unknown as ChatThread) ?? null;
     }
     return (data as unknown as ChatThread) ?? null;
   } catch (err) {
