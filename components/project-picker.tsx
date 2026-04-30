@@ -215,7 +215,16 @@ export function ProjectPicker() {
               {apiStatus.message}
             </div>
           )}
-          <div className="project-picker-section-label">Projects</div>
+          <div className="project-picker-section-label">
+            Projects
+            <a
+              href="/account/memory"
+              className="project-picker-manage-link"
+              title="Open the full Projects page"
+            >
+              Manage all →
+            </a>
+          </div>
           <button
             type="button"
             className={`project-picker-item${!activeId ? " is-selected" : ""}`}

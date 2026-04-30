@@ -977,6 +977,31 @@
 /* Pin count chip in the active-project trigger. Tiny violet
    pill so the user sees at a glance how much context is
    attached without opening the menu. */
+/* Inline link to /account/memory inside the picker section
+   header so users can jump to the full management page. Mirrors
+   the "Open all" pattern from the chat history rail. */
+.project-picker-section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.project-picker-manage-link {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: rgba(196, 181, 253, 0.85);
+  text-decoration: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  transition: background 120ms ease, color 120ms ease;
+}
+.project-picker-manage-link:hover {
+  background: rgba(168, 85, 247, 0.14);
+  color: #f3e8ff;
+}
+
 .project-picker-saved {
   font-size: 12px;
   color: #86efac;
