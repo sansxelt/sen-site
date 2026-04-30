@@ -2859,9 +2859,7 @@ export function WebChat({
                 ? "Transcribing…"
                 : voiceState === "speaking"
                   ? "Speaking…"
-                  : duelMode
-                    ? "Compare GPT vs Claude on the same prompt…"
-                    : "Message sansxel-1…"
+                  : "Message sansxel-1…"
           }
           rows={1}
           disabled={voiceState === "recording" || voiceState === "transcribing"}
