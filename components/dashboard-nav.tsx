@@ -304,7 +304,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Brain",
     items: [
-      { href: "/account/memory",       label: "Memory",       icon: <MemoryIcon /> },
+      { href: "/account/memory",       label: "Projects",     icon: <MemoryIcon /> },
       { href: "/account/integrations", label: "Integrations", icon: <IntegrationsIcon /> },
       { href: "/account/keys",         label: "API Keys",     icon: <KeyIcon /> },
     ],
