@@ -73,14 +73,44 @@ export function ProjectPicker() {
   // unless we scroll there manually.
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // v0.2.0 phase H — visible API status. When list / detail fetches
+  // fail (auth, DB, network) we surface a banner inside the picker
+  // instead of silently returning empty arrays — that was hiding
+  // real failures behind a "no projects yet" state.
+  const [apiStatus, setApiStatus] = useState<
+    | { kind: "ok" }
+    | { kind: "loading" }
+    | { kind: "error"; message: string }
+  >({ kind: "loading" });
+
   const refreshList = useCallback(async () => {
     try {
       const res = await fetch("/api/projects", { cache: "no-store" });
-      if (!res.ok) return;
+      if (!res.ok) {
+        let detail = `HTTP ${res.status}`;
+        try {
+          const d = (await res.json()) as { error?: string };
+          if (d.error) detail = d.error;
+        } catch {}
+        console.warn("[projects] list failed:", res.status, detail);
+        setApiStatus({
+          kind: "error",
+          message:
+            res.status === 401
+              ? "Sign in to use projects."
+              : `Couldn't load projects (${detail}).`,
+        });
+        return;
+      }
       const data = (await res.json()) as { projects?: Project[] };
       setProjects(data.projects ?? []);
-    } catch {
-      // ignore
+      setApiStatus({ kind: "ok" });
+    } catch (err) {
+      console.warn("[projects] list threw:", err);
+      setApiStatus({
+        kind: "error",
+        message: "Network error loading projects.",
+      });
     }
   }, []);
 
@@ -92,12 +122,14 @@ export function ProjectPicker() {
     try {
       const res = await fetch(`/api/projects/${id}`, { cache: "no-store" });
       if (!res.ok) {
+        console.warn("[projects] detail failed:", id, res.status);
         setActive(null);
         return;
       }
       const data = (await res.json()) as { project?: ProjectWithPins };
       setActive(data.project ?? null);
-    } catch {
+    } catch (err) {
+      console.warn("[projects] detail threw:", err);
       setActive(null);
     }
   }, []);
@@ -178,6 +210,11 @@ export function ProjectPicker() {
 
       {open && (
         <div className="project-picker-menu" role="menu" ref={menuRef}>
+          {apiStatus.kind === "error" && (
+            <div className="project-picker-error" role="alert">
+              {apiStatus.message}
+            </div>
+          )}
           <div className="project-picker-section-label">Projects</div>
           <button
             type="button"
@@ -274,18 +311,26 @@ function CreateProjectForm({
       });
       if (!res.ok) {
         const d = (await res.json().catch(() => ({}))) as { error?: string };
-        setErr(d.error ?? "Could not create.");
+        const detail = d.error ?? `HTTP ${res.status}`;
+        console.warn("[projects] create failed:", res.status, detail);
+        setErr(
+          res.status === 401
+            ? "Sign in to create projects."
+            : `Couldn't save: ${detail}`,
+        );
         return;
       }
       const data = (await res.json()) as { project: Project };
+      console.log("[projects] created:", data.project?.id, data.project?.name);
       setName("");
       setDescription("");
       setGoals("");
       setSavedFlash(true);
       window.setTimeout(() => setSavedFlash(false), 1500);
       onCreated(data.project);
-    } catch {
-      setErr("Network error.");
+    } catch (err) {
+      console.warn("[projects] create threw:", err);
+      setErr("Network error. Check your connection and try again.");
     } finally {
       setPending(false);
     }
