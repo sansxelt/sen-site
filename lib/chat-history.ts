@@ -16,6 +16,10 @@ export type ChatThread = {
   title: string;
   created_at: string;
   updated_at: string;
+  // v0.2.0 — project this thread is attached to (null for plain
+  // chats). The chat history rail groups threads by this id so
+  // projects act as folders/categories for the user's chats.
+  project_id?: string | null;
 };
 
 export type StoredMessage = {
@@ -73,7 +77,7 @@ export async function listThreads(email: string): Promise<ChatThread[]> {
     // message row.
     const { data, error } = await supabase
       .from("chat_threads" as never)
-      .select("id, email, title, created_at, updated_at, chat_messages!inner(id)")
+      .select("id, email, title, created_at, updated_at, project_id, chat_messages!inner(id)")
       .eq("email", email.toLowerCase())
       .order("updated_at", { ascending: false })
       .limit(100);
@@ -82,7 +86,7 @@ export async function listThreads(email: string): Promise<ChatThread[]> {
       // all threads, better than nothing.
       const fallback = await supabase
         .from("chat_threads" as never)
-        .select("id, email, title, created_at, updated_at")
+        .select("id, email, title, created_at, updated_at, project_id")
         .eq("email", email.toLowerCase())
         .order("updated_at", { ascending: false })
         .limit(100);
@@ -114,7 +118,7 @@ export async function getThread(email: string, threadId: string): Promise<ChatTh
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("chat_threads" as never)
-      .select("id, email, title, created_at, updated_at")
+      .select("id, email, title, created_at, updated_at, project_id")
       .eq("id", threadId)
       .eq("email", email.toLowerCase())
       .maybeSingle();

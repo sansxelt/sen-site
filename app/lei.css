@@ -446,6 +446,122 @@
   background: rgba(239,68,68,0.18);
   color: #fecaca;
 }
+.chat-history-action.is-open {
+  background: rgba(168, 85, 247, 0.18);
+  color: #e9d5ff;
+}
+
+/* v0.2.0 — project sections in the rail. Collapsible header that
+   acts like a folder. The chat rows inside indent slightly so the
+   hierarchy reads visually. */
+.chat-history-project-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 6px;
+}
+.chat-history-project-head {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: rgba(229, 231, 235, 0.7);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background 120ms ease, color 120ms ease;
+}
+.chat-history-project-head:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+.chat-history-project-caret {
+  font-size: 10px;
+  width: 10px;
+  display: inline-flex;
+  justify-content: center;
+  color: rgba(168, 85, 247, 0.8);
+}
+.chat-history-project-name {
+  flex: 1;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  font-size: 12px;
+  color: rgba(229, 231, 235, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-history-project-count {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  background: rgba(168, 85, 247, 0.14);
+  color: #e9d5ff;
+  border-radius: 999px;
+  padding: 1px 7px;
+  letter-spacing: 0;
+}
+.chat-history-project-section .chat-history-item {
+  margin-left: 8px;
+  border-left: 1px solid rgba(168, 85, 247, 0.12);
+  padding-left: 10px;
+}
+
+/* Move-to-project popover, anchors next to the row's move icon. */
+.chat-history-move-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.chat-history-move-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 60;
+  min-width: 180px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: rgba(15, 12, 28, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  animation: chat-history-move-in 140ms ease-out;
+}
+@keyframes chat-history-move-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.chat-history-move-item {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: rgba(229, 231, 235, 0.85);
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease;
+}
+.chat-history-move-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+.chat-history-move-item.is-current {
+  background: rgba(168, 85, 247, 0.16);
+  color: #e9d5ff;
+}
 .chat-history-item--editing {
   padding: 4px 6px;
 }
