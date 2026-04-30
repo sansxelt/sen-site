@@ -57,6 +57,7 @@ import { consumeCredits, CREDIT_COSTS } from "../../../../lib/credits";
 import { getActiveAddonKeys } from "../../../../lib/active-addons";
 import { detectLanguage, langLabel } from "../../../../lib/i18n";
 import { recordUsage } from "../../../../lib/usage";
+import { recordMetric } from "../../../../lib/metrics";
 import { priceFor } from "../../../../lib/duel-pricing";
 import { randomUUID } from "node:crypto";
 
@@ -219,6 +220,20 @@ export async function POST(request: Request) {
         duelCapDecision.kind === "blocked"
           ? duelCapDecision.reason
           : "Duel uses 2 chats. Upgrade to compare answers.";
+      recordMetric({
+        kind: "limit_hit",
+        email,
+        props: {
+          surface_kind: "duel",
+          plan,
+          gate:
+            duelCapDecision.kind === "blocked"
+              ? "duel_cap"
+              : "chat_cap",
+          used: blockingDecision.used,
+          limit: blockingDecision.limit,
+        },
+      });
       return NextResponse.json(
         {
           error: message,
@@ -230,6 +245,17 @@ export async function POST(request: Request) {
         { status: 429 },
       );
     }
+    // We allowed the request via fallback (boost or credits).
+    // Note which one for funnel analysis.
+    recordMetric({
+      kind: "credits_used",
+      email,
+      props: {
+        surface_kind: "duel",
+        plan,
+        amount: duelCapDecision.kind === "blocked" ? 0 : 3,
+      },
+    });
   }
 
   // Fire-and-forget usage event so weekly_duel_requests counts
@@ -242,6 +268,16 @@ export async function POST(request: Request) {
       request.headers.get("x-sansxel-surface") === "desktop"
         ? "desktop"
         : "web",
+  });
+  // Duel is officially in flight. Log started so we can compute
+  // started -> completed conversion + per-plan volume.
+  recordMetric({
+    kind: "duel_started",
+    email,
+    props: {
+      plan,
+      project_attached: !!payload.project_id || !!payload.thread_id,
+    },
   });
 
   // Resolve / create the thread + save the user turn.
@@ -354,6 +390,20 @@ export async function POST(request: Request) {
     upstreamAbort.abort();
   });
 
+  // Outer scope so the post-pump duel_completed metric can summarize
+  // both sides' final state (tokens, cost, errors). Each pump fills
+  // its own slot when its stream resolves.
+  type SideOutcome = {
+    bytes: number;
+    input_tokens: number;
+    output_tokens: number;
+    cost: number;
+    error: boolean;
+    first_token_ms?: number;
+  };
+  const startedAt = Date.now();
+  const outcome: { left?: SideOutcome; right?: SideOutcome } = {};
+
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
       const writeLine = (obj: Record<string, unknown>) => {
@@ -382,7 +432,8 @@ export async function POST(request: Request) {
         let buffer = "";
         let inputTokens = 0;
         let outputTokens = 0;
-        const startedAt = Date.now();
+        const pumpStartedAt = Date.now();
+        let firstTokenMs: number | undefined;
         try {
           const stream = await anthropic.messages.stream(
             {
@@ -410,6 +461,7 @@ export async function POST(request: Request) {
             ) {
               if (!firstToken) {
                 firstToken = true;
+                firstTokenMs = Date.now() - pumpStartedAt;
                 writeLine({ side: "right", type: "phase", label: "Writing…" });
               }
               buffer += event.delta.text;
@@ -417,6 +469,14 @@ export async function POST(request: Request) {
             }
           }
           const cost = priceFor(claudeModel, inputTokens, outputTokens);
+          outcome.right = {
+            bytes: buffer.length,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cost,
+            error: false,
+            first_token_ms: firstTokenMs,
+          };
           writeLine({
             side: "right",
             type: "done",
@@ -440,10 +500,18 @@ export async function POST(request: Request) {
             input_tokens: inputTokens,
             output_tokens: outputTokens,
             total_tokens: inputTokens + outputTokens,
-            duration_ms: Date.now() - startedAt,
+            duration_ms: Date.now() - pumpStartedAt,
           });
         } catch (err) {
           const msg = err instanceof Error ? err.message : "stream failed";
+          outcome.right = {
+            bytes: buffer.length,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cost: 0,
+            error: true,
+            first_token_ms: firstTokenMs,
+          };
           writeLine({ side: "right", type: "error", message: msg });
           if (resolvedThreadId && rightMessageId && buffer.trim()) {
             // Save what we got so the user doesn't lose partial output.
@@ -460,7 +528,8 @@ export async function POST(request: Request) {
         let buffer = "";
         let inputTokens = 0;
         let outputTokens = 0;
-        const startedAt = Date.now();
+        const pumpStartedAt = Date.now();
+        let firstTokenMs: number | undefined;
         try {
           const stream = await openai.chat.completions.create(
             {
@@ -489,6 +558,7 @@ export async function POST(request: Request) {
             if (typeof delta === "string" && delta.length > 0) {
               if (!firstToken) {
                 firstToken = true;
+                firstTokenMs = Date.now() - pumpStartedAt;
                 writeLine({ side: "left", type: "phase", label: "Writing…" });
               }
               buffer += delta;
@@ -496,6 +566,14 @@ export async function POST(request: Request) {
             }
           }
           const cost = priceFor(gptModel, inputTokens, outputTokens);
+          outcome.left = {
+            bytes: buffer.length,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cost,
+            error: false,
+            first_token_ms: firstTokenMs,
+          };
           writeLine({
             side: "left",
             type: "done",
@@ -519,10 +597,18 @@ export async function POST(request: Request) {
             input_tokens: inputTokens,
             output_tokens: outputTokens,
             total_tokens: inputTokens + outputTokens,
-            duration_ms: Date.now() - startedAt,
+            duration_ms: Date.now() - pumpStartedAt,
           });
         } catch (err) {
           const msg = err instanceof Error ? err.message : "stream failed";
+          outcome.left = {
+            bytes: buffer.length,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cost: 0,
+            error: true,
+            first_token_ms: firstTokenMs,
+          };
           writeLine({ side: "left", type: "error", message: msg });
           if (resolvedThreadId && leftMessageId && buffer.trim()) {
             await setDuelMessageContent({
@@ -539,6 +625,28 @@ export async function POST(request: Request) {
       try {
         await Promise.allSettled([pumpGpt(), pumpClaude()]);
       } finally {
+        // duel_completed metric. Captures both sides' final state
+        // (error, tokens, cost, TTFT) so we can spot one-side
+        // failures + per-model latency drift over time.
+        recordMetric({
+          kind: "duel_completed",
+          email,
+          surface,
+          props: {
+            duration_ms: Date.now() - startedAt,
+            cancelled: clientAborted,
+            gpt_error: outcome.left?.error ?? true,
+            gpt_input_tokens: outcome.left?.input_tokens ?? 0,
+            gpt_output_tokens: outcome.left?.output_tokens ?? 0,
+            gpt_cost_usd: outcome.left?.cost ?? 0,
+            gpt_first_token_ms: outcome.left?.first_token_ms ?? null,
+            claude_error: outcome.right?.error ?? true,
+            claude_input_tokens: outcome.right?.input_tokens ?? 0,
+            claude_output_tokens: outcome.right?.output_tokens ?? 0,
+            claude_cost_usd: outcome.right?.cost ?? 0,
+            claude_first_token_ms: outcome.right?.first_token_ms ?? null,
+          },
+        });
         writeLine({
           type: "meta",
           group_id: groupId,

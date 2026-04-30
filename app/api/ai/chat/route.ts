@@ -20,6 +20,7 @@ import {
   type Persona,
 } from "../../../../lib/ai-voices";
 import { recordUsage } from "../../../../lib/usage";
+import { recordMetric } from "../../../../lib/metrics";
 import {
   consumeBoostForKind,
   consumeCreditFor,
@@ -779,6 +780,16 @@ export async function POST(request: Request) {
       allowed = true;
     }
     if (!allowed) {
+      recordMetric({
+        kind: "limit_hit",
+        email,
+        props: {
+          surface_kind: "chat",
+          plan,
+          used: decision.used,
+          limit: decision.limit,
+        },
+      });
       return NextResponse.json(
         {
           error: decision.reason,

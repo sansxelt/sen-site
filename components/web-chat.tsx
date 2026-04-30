@@ -11,6 +11,7 @@ import { useLei } from "./lei-shell";
 import { previewCreditCost } from "@/lib/lei";
 import { planDisplayName } from "@/lib/pricing";
 import { ProjectPicker, getActiveProjectId } from "./project-picker";
+import { trackClientEvent } from "@/lib/client-metrics";
 
 type ChatImageInline = { media_type: string; data: string };
 
@@ -381,6 +382,9 @@ export function WebChat({
       const prompt = (detail?.prompt ?? "").trim();
       if (!prompt) return;
       setDuelMode(true);
+      trackClientEvent("duel_pinned_prompt_fired", {
+        prompt_length: prompt.length,
+      });
       void sendDuelRef.current?.(prompt);
     };
     window.addEventListener("sansxel:duel-prompt", onDuelPrompt);
@@ -1912,11 +1916,22 @@ export function WebChat({
     !hasUnlimitedChat &&
     !duelUpsellDismissed &&
     duelPickCount >= DUEL_UPSELL_AFTER;
+  // Fire duel_upsell_shown exactly once per session, the first time
+  // the upsell becomes eligible to render. Stops us from spamming
+  // the metric on every render once the threshold is crossed.
+  const upsellShownReportedRef = useRef(false);
+  useEffect(() => {
+    if (showDuelUpsell && !upsellShownReportedRef.current) {
+      upsellShownReportedRef.current = true;
+      trackClientEvent("duel_upsell_shown", { picks: duelPickCount });
+    }
+  }, [showDuelUpsell, duelPickCount]);
   const dismissDuelUpsell = () => {
     setDuelUpsellDismissed(true);
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem("sansxel.duelUpsellDismissed", "1");
     }
+    trackClientEvent("duel_upsell_dismissed");
   };
 
   // Pick a winner for an open duel turn. Tells the server to mark
@@ -1955,6 +1970,7 @@ export function WebChat({
       // Bump the per-session pick counter that drives the
       // winner-moment upsell.
       setDuelPickCount((n) => n + 1);
+      trackClientEvent("duel_winner_picked", { side });
       // Send focus back to the composer so the user keeps typing.
       // requestAnimationFrame so React commits the collapse first.
       if (typeof window !== "undefined") {
@@ -2020,6 +2036,7 @@ export function WebChat({
       // sendDuel rebuilds them clean.
       const truncated = messages.slice(0, msgIndex - 1);
       setMessages(truncated);
+      trackClientEvent("duel_retry_both");
       await sendDuel(userPrompt, truncated);
     },
     [messages, sendDuel],
@@ -2813,6 +2830,11 @@ export function WebChat({
                   <a
                     className="webchat-low-chat-banner-cta"
                     href="/account/plan"
+                    onClick={() =>
+                      trackClientEvent("upgrade_clicked", {
+                        source: "low_chat_banner",
+                      })
+                    }
                   >
                     Upgrade →
                   </a>
@@ -3840,10 +3862,26 @@ function ChatErrorPill({
       <div className="webchat-error">
         <div>{message}</div>
         <div className="webchat-error-actions">
-          <a href="/account/plan" className="webchat-error-cta">
+          <a
+            href="/account/plan"
+            className="webchat-error-cta"
+            onClick={() =>
+              trackClientEvent("upgrade_clicked", {
+                source: "error_pill_billing",
+              })
+            }
+          >
             Open billing
           </a>
-          <a href="/pricing" className="webchat-error-cta webchat-error-cta--ghost">
+          <a
+            href="/pricing"
+            className="webchat-error-cta webchat-error-cta--ghost"
+            onClick={() =>
+              trackClientEvent("upgrade_clicked", {
+                source: "error_pill_pricing",
+              })
+            }
+          >
             See plans
           </a>
         </div>
@@ -4104,7 +4142,15 @@ function DuelTurn({
           <span className="webchat-duel-upsell-text">
             Liking Duel? Upgrade for more comparisons.
           </span>
-          <a className="webchat-duel-upsell-cta" href="/account/plan">
+          <a
+            className="webchat-duel-upsell-cta"
+            href="/account/plan"
+            onClick={() =>
+              trackClientEvent("upgrade_clicked", {
+                source: "winner_upsell",
+              })
+            }
+          >
             Upgrade →
           </a>
           <button

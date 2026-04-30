@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
 import { recordUsage } from "../../../../lib/usage";
+import { recordMetric } from "../../../../lib/metrics";
 import { getPlanForEmail } from "../../../../lib/account-billing";
 import {
   consumeBoostForKind,
@@ -116,6 +117,16 @@ export async function POST(request: Request) {
       allowed = true;
     }
     if (!allowed) {
+      recordMetric({
+        kind: "limit_hit",
+        email,
+        props: {
+          surface_kind: "image",
+          plan,
+          used: decision.used,
+          limit: decision.limit,
+        },
+      });
       return NextResponse.json(
         {
           error: decision.reason,
