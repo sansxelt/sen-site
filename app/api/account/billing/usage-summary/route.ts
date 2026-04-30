@@ -24,6 +24,7 @@ type Out = {
     chat: { used: number; cap: number | null; lifted: boolean };
     image: { used: number; cap: number | null; lifted: boolean };
     voice_seconds: { used: number; cap: number | null; lifted: boolean };
+    duel: { used: number; cap: number | null; lifted: boolean };
     reset_iso: string;
   };
   boosts: { session: number; weekly: number };
@@ -38,6 +39,7 @@ export async function GET() {
       chat: { used: 0, cap: null, lifted: false },
       image: { used: 0, cap: null, lifted: false },
       voice_seconds: { used: 0, cap: null, lifted: false },
+      duel: { used: 0, cap: null, lifted: false },
       reset_iso: nextWeekResetUtc().toISOString(),
     },
     boosts: { session: 0, weekly: 0 },
@@ -55,10 +57,14 @@ export async function GET() {
     const limits = PLAN_LIMITS[plan];
     // A cap-lift addon (power_pack lifts everything; copilot_pro_pack
     // lifts chat) effectively makes the cap unlimited for the user.
+    // Duel cap follows chat (any unlimited-chat addon implies
+    // unlimited duels too — capping duels for unlimited-chat users
+    // would be inconsistent).
     const chatLifted =
       addons.has("power_pack") || addons.has("copilot_pro_pack");
     const imageLifted = addons.has("power_pack");
     const voiceLifted = addons.has("power_pack");
+    const duelLifted = chatLifted;
     return NextResponse.json({
       balance,
       weekly: {
@@ -76,6 +82,11 @@ export async function GET() {
           used: weekly.voice_seconds,
           cap: voiceLifted ? null : limits.weekly_voice_seconds,
           lifted: voiceLifted,
+        },
+        duel: {
+          used: weekly.duel_requests,
+          cap: duelLifted ? null : limits.weekly_duel_requests,
+          lifted: duelLifted,
         },
         reset_iso: nextWeekResetUtc().toISOString(),
       },

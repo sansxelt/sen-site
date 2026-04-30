@@ -50,6 +50,11 @@ export type PlanLimits = {
   weekly_chat_requests: number | null; // null = unlimited
   weekly_voice_seconds: number | null;
   weekly_image_requests: number | null; // null = unlimited, 0 = blocked
+  // v0.2.0 phase G+ — separate cap for side-by-side duels. Free is
+  // the only plan with a real cap here (5/wk) so duels can't soak
+  // up the entire 50-chat weekly budget. null = unlimited (paid
+  // plans + the chat cap is the only thing that bites).
+  weekly_duel_requests: number | null;
   // Pro-only: monotonic thresholds the resolver uses to step down
   // from smart to balanced to fast as weekly chat usage piles up.
   pro_throttle?: {
@@ -64,24 +69,32 @@ export const PLAN_LIMITS: Record<PlanKey, PlanLimits> = {
     weekly_chat_requests: 50,
     weekly_voice_seconds: 0,
     weekly_image_requests: 3,
+    // Free can run at most 5 duels/week even if their chat budget
+    // would allow more. Forces upgrade pressure when duels are the
+    // hook. Beyond 5 they fall through to the credit ledger or a
+    // hard 429 with the "upgrade to compare answers" copy.
+    weekly_duel_requests: 5,
     session_warn_after: 30,
   },
   apprentice: {
     weekly_chat_requests: 500,
     weekly_voice_seconds: 30 * 60, // 30 min
     weekly_image_requests: 25,
+    weekly_duel_requests: null,
     session_warn_after: 60,
   },
   studio: {
     weekly_chat_requests: 1500,
     weekly_voice_seconds: 90 * 60, // 90 min
     weekly_image_requests: 100,
+    weekly_duel_requests: null,
     session_warn_after: 80,
   },
   pro: {
     weekly_chat_requests: null,
     weekly_voice_seconds: null,
     weekly_image_requests: null,
+    weekly_duel_requests: null,
     pro_throttle: {
       smart_to_balanced: 1500,
       balanced_to_fast: 3000,
@@ -92,12 +105,14 @@ export const PLAN_LIMITS: Record<PlanKey, PlanLimits> = {
     weekly_chat_requests: null,
     weekly_voice_seconds: null,
     weekly_image_requests: null,
+    weekly_duel_requests: null,
     session_warn_after: 100,
   },
   enterprise: {
     weekly_chat_requests: null,
     weekly_voice_seconds: null,
     weekly_image_requests: null,
+    weekly_duel_requests: null,
   },
 };
 
@@ -125,6 +140,11 @@ export type WeeklyUsage = {
   chat_requests: number;
   voice_seconds: number;
   image_requests: number;
+  // v0.2.0 phase G+ — duel events. One row per Pick-able duel
+  // (server writes a single kind="duel" event when the duel
+  // starts; the two per-side chat events still fire so chat
+  // accounting moves by 2 per duel).
+  duel_requests: number;
   week_start: Date;
 };
 
@@ -137,13 +157,14 @@ export async function getWeeklyUsage(email: string): Promise<WeeklyUsage> {
     chat_requests: 0,
     voice_seconds: 0,
     image_requests: 0,
+    duel_requests: 0,
     week_start: weekStart,
   };
   try {
     const supabase = getSupabaseAdminClient();
     const sinceIso = weekStart.toISOString();
 
-    const [chatRes, voiceRes, imageRes] = await Promise.all([
+    const [chatRes, voiceRes, imageRes, duelRes] = await Promise.all([
       supabase
         .from("usage_events" as never)
         .select("id", { count: "exact", head: true })
@@ -166,6 +187,12 @@ export async function getWeeklyUsage(email: string): Promise<WeeklyUsage> {
         .eq("email", email)
         .eq("kind", "image")
         .gte("created_at", sinceIso),
+      supabase
+        .from("usage_events" as never)
+        .select("id", { count: "exact", head: true })
+        .eq("email", email)
+        .eq("kind", "duel")
+        .gte("created_at", sinceIso),
     ]);
 
     result.chat_requests = chatRes.count ?? 0;
@@ -176,6 +203,7 @@ export async function getWeeklyUsage(email: string): Promise<WeeklyUsage> {
       }
     }
     result.image_requests = imageRes.count ?? 0;
+    result.duel_requests = duelRes.count ?? 0;
   } catch (err) {
     console.warn("getWeeklyUsage failed:", err);
   }
@@ -267,6 +295,34 @@ export function decideChatRequest(args: {
     }
   }
 
+  return { kind: "ok" };
+}
+
+// v0.2.0 phase G+ — duel-specific cap check. Free has a 5/wk duel
+// cap independent of its 50/wk chat cap; paid plans are uncapped
+// here. Bypassed by the same Power Pack / Copilot Pro Pack lifts
+// that bypass the chat cap (since both packs already imply
+// unlimited chat, capping their duels would be inconsistent).
+export function decideDuelRequest(args: {
+  plan: PlanKey;
+  weekly: WeeklyUsage;
+  activeAddons?: Set<BillingAddonKey>;
+}): LimitDecision {
+  const limits = PLAN_LIMITS[args.plan];
+  const cap = limits.weekly_duel_requests;
+  if (cap === null) return { kind: "ok" };
+  const liftedByAddon = isCapLifted("chat", args.plan, args.activeAddons);
+  if (liftedByAddon) return { kind: "ok" };
+  if (args.weekly.duel_requests >= cap) {
+    const resetIso = nextWeekResetUtc().toISOString();
+    return {
+      kind: "blocked",
+      reason: `You've used all ${cap} weekly duels on ${planDisplayName(args.plan)}. Upgrade to compare answers.`,
+      reset: resetIso,
+      limit: cap,
+      used: args.weekly.duel_requests,
+    };
+  }
   return { kind: "ok" };
 }
 

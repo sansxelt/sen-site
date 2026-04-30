@@ -9,7 +9,11 @@ export type UsageKind =
   | "summary"
   | "web_search"
   | "deep_research"
-  | "quiz";
+  | "quiz"
+  // v0.2.0 phase G+ — one row per duel (in addition to the two
+  // chat rows the per-side recordUsage calls write). Lets us
+  // track + cap duel volume independently of chat volume.
+  | "duel";
 
 export type UsageSurface = "web" | "desktop";
 

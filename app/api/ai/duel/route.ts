@@ -49,6 +49,7 @@ import {
 import {
   consumeBoostForKind,
   decideChatRequest,
+  decideDuelRequest,
   getWeeklyUsage,
   hasUnconsumedBoost,
 } from "../../../../lib/plan-limits";
@@ -142,24 +143,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing messages." }, { status: 400 });
   }
 
-  // Plan gating. A duel fires TWO model calls (GPT + Claude) in
-  // parallel, so it bills 2 weekly chat slots — not 1. Two-step
-  // check: first decideChatRequest to see if the FIRST slot fits
-  // (catches the "you're already at the cap" case with the right
-  // upgrade copy), then a synthetic +1 weekly check to see if the
-  // SECOND slot also fits. Either failing falls through to the
-  // boost / credit ledger; the ledger is charged at 2× chat cost.
+  // Plan gating for duel — three-layer gate:
   //
-  // Usage recording stays organic: each pump (Claude, GPT) calls
-  // recordUsage({ kind: "chat" }) when its stream resolves, so
-  // weekly.chat_requests naturally ticks up by 2 per duel without
-  // any extra accounting here.
-  const DUEL_CHAT_SLOTS = 2;
+  //   1. weekly_duel_requests cap (Free = 5/wk; paid plans = null
+  //      meaning the chat cap is the only thing that bites).
+  //   2. weekly_chat_requests cap, two-slot aware. A duel = TWO
+  //      model calls so we run decideChatRequest twice (current
+  //      weekly + synthetic +1) to verify both slots fit.
+  //   3. If either gate blocks, fall through to boosts (legacy,
+  //      one boost covers the 2 chat slots) → credits (3-credit
+  //      cost, slightly above chat to reflect the 2 model calls
+  //      + the differentiation premium) → 429.
+  //
+  // Usage recording: per-side recordUsage({ kind: "chat" }) writes
+  // 2 chat events naturally. We ALSO write a single
+  // recordUsage({ kind: "duel" }) below so weekly.duel_requests
+  // can be capped + monitored independently of chat volume.
+  const DUEL_CREDIT_COST = CREDIT_COSTS.chat * 3;
   const [plan, weekly, activeAddons] = await Promise.all([
     getPlanForEmail(email),
     getWeeklyUsage(email),
     getActiveAddonKeys(email),
   ]);
+  const duelCapDecision = decideDuelRequest({
+    plan,
+    weekly,
+    activeAddons,
+  });
   const firstSlotDecision = decideChatRequest({
     plan,
     requestedTier: "balanced",
@@ -172,35 +182,46 @@ export async function POST(request: Request) {
     weekly: { ...weekly, chat_requests: weekly.chat_requests + 1 },
     activeAddons,
   });
+  // Pick the most relevant blocking decision: duel cap first
+  // (Free's hardest gate), then chat-slot 1, then chat-slot 2.
   const blockingDecision =
-    firstSlotDecision.kind === "blocked"
-      ? firstSlotDecision
-      : secondSlotDecision.kind === "blocked"
-        ? secondSlotDecision
-        : null;
+    duelCapDecision.kind === "blocked"
+      ? duelCapDecision
+      : firstSlotDecision.kind === "blocked"
+        ? firstSlotDecision
+        : secondSlotDecision.kind === "blocked"
+          ? secondSlotDecision
+          : null;
   if (blockingDecision) {
     let allowed = false;
-    // Boost path: a single boost (session_boost = +50, weekly_boost
-    // = +500) easily covers a duel's 2-slot cost. Burn one and let
-    // the request through.
-    if (await hasUnconsumedBoost(email, "chat")) {
+    // Boost path: a legacy session/weekly boost lifts the chat cap.
+    // It does NOT lift the duel-only cap (5/wk on Free) — that's an
+    // upgrade-driving wall, not a top-up wall, by design. Boost
+    // bypass only runs when the chat cap was the gate.
+    if (
+      duelCapDecision.kind !== "blocked" &&
+      (await hasUnconsumedBoost(email, "chat"))
+    ) {
       const burnt = await consumeBoostForKind(email, "chat");
       if (burnt) allowed = true;
     }
-    // Credit ledger path: charge 2× the chat credit cost since
-    // we're spending two model calls.
+    // Credit ledger path: 3-credit cost. Burns from balance for any
+    // gate (duel cap, chat cap, or both).
     if (!allowed) {
-      const cost = CREDIT_COSTS.chat * DUEL_CHAT_SLOTS;
       const refId = `duel-chat:${Math.floor(Date.now() / 1000)}`;
-      const { ok } = await consumeCredits(email, cost, "consume", refId);
+      const { ok } = await consumeCredits(email, DUEL_CREDIT_COST, "consume", refId);
       if (ok) allowed = true;
     }
     if (!allowed) {
-      // Polished copy + upgrade link. The frontend's error pill
-      // surfaces upgrade_url as a "Upgrade" button when present.
+      // Polished copy + upgrade link. Frontend's error pill
+      // surfaces upgrade_url as an "Upgrade" CTA when present.
+      const message =
+        duelCapDecision.kind === "blocked"
+          ? duelCapDecision.reason
+          : "Duel uses 2 chats. Upgrade to compare answers.";
       return NextResponse.json(
         {
-          error: "Duel uses 2 chats. Upgrade to compare answers.",
+          error: message,
           upgrade_url: "/account/plan",
           limit: blockingDecision.limit,
           used: blockingDecision.used,
@@ -210,6 +231,18 @@ export async function POST(request: Request) {
       );
     }
   }
+
+  // Fire-and-forget usage event so weekly_duel_requests counts
+  // up by 1 per duel (independent of the 2 chat events the per-
+  // side pumps will write when their streams resolve).
+  void recordUsage({
+    email,
+    kind: "duel",
+    surface:
+      request.headers.get("x-sansxel-surface") === "desktop"
+        ? "desktop"
+        : "web",
+  });
 
   // Resolve / create the thread + save the user turn.
   let resolvedThreadId: string | null = null;

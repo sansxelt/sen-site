@@ -1887,6 +1887,74 @@ div[id] {
   cursor: not-allowed;
 }
 
+/* v0.2.0 phase G+ — winner-moment upsell. Sits under the action
+   row once the user has resolved 3+ duels this session. Subtle so
+   it reads as a friendly hint, not a paywall. */
+.webchat-duel-upsell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: rgba(140, 90, 255, 0.04);
+  border: 1px solid rgba(140, 90, 255, 0.12);
+  border-radius: 10px;
+  font-size: 12px;
+  color: rgba(220, 220, 235, 0.85);
+}
+.webchat-duel-upsell-text {
+  flex: 1;
+}
+.webchat-duel-upsell-cta {
+  font-weight: 600;
+  color: #c4b5fd;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.webchat-duel-upsell-cta:hover { color: #d8b4fe; text-decoration: underline; }
+.webchat-duel-upsell-dismiss {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: rgba(170, 170, 190, 0.6);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.webchat-duel-upsell-dismiss:hover { color: rgba(220, 220, 235, 0.95); }
+
+/* Pre-429 low-chat banner. Sits at the top of the messages list
+   when the user is in Duel mode and almost out of chats / duels.
+   Color-coded amber so it reads as a warning, not an error. */
+.webchat-low-chat-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  margin-bottom: 8px;
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  border-radius: 12px;
+  font-size: 13px;
+  color: rgba(254, 240, 138, 0.95);
+}
+.webchat-low-chat-banner-text { flex: 1; }
+.webchat-low-chat-banner-sub {
+  margin-left: 6px;
+  color: rgba(220, 220, 235, 0.7);
+}
+.webchat-low-chat-banner-cta {
+  font-weight: 600;
+  color: #fde68a;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.webchat-low-chat-banner-cta:hover {
+  color: #fef3c7;
+  text-decoration: underline;
+}
+
 /* Composer Solo/Duel toggle pill. */
 .webchat-mode-toggle {
   display: inline-flex;

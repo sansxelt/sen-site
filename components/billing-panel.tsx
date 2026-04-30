@@ -158,7 +158,14 @@ export function BillingPanel({ state, publishableKey, sections }: Props) {
 
   const hasPlan = Boolean(state.plan);
   const activeAddonKeys = new Set(state.activeAddons.map((a) => a.addon.key));
-  const availableAddons = billingAddons.filter((a) => !activeAddonKeys.has(a.key));
+  // v0.2.0 phase G+ — one-time boosts (Session Boost / Weekly Boost)
+  // were redundant with the credit ledger ($5 = 500 chats either way)
+  // and confused the pricing story. Hide the buy buttons; the
+  // consume path stays active in plan-limits so any rows already
+  // sitting in boost_credits keep working until they're spent.
+  const availableAddons = billingAddons.filter(
+    (a) => !activeAddonKeys.has(a.key) && !isOneTimeBoost(a.key),
+  );
 
   // v0.1.13 \u2014 3D tilt on each billing section so the "main changing UI"
   // matches the heist-style 3D affordance the rest of the marketing

@@ -68,6 +68,12 @@ export default async function UsagePage() {
     weeklyChatLimit && weeklyChatLimit > 0
       ? Math.min((weeklyChatUsed / weeklyChatLimit) * 100, 100)
       : 0;
+  const weeklyDuelLimit = planLimit.weekly_duel_requests;
+  const weeklyDuelUsed = weeklyUsage?.duel_requests ?? 0;
+  const weeklyDuelPct =
+    weeklyDuelLimit && weeklyDuelLimit > 0
+      ? Math.min((weeklyDuelUsed / weeklyDuelLimit) * 100, 100)
+      : 0;
   const weeklyVoiceLimit = planLimit.weekly_voice_seconds;
   const weeklyVoiceUsed = Math.round(weeklyUsage?.voice_seconds ?? 0);
   const weeklyVoicePct =
@@ -152,6 +158,18 @@ export default async function UsagePage() {
               pct={weeklyChatPct}
               formatUsed={(n) => `${n.toLocaleString()} chats`}
               formatLimit={formatChatBudget}
+            />
+            <UsageBar
+              label="Duels"
+              used={weeklyDuelUsed}
+              limit={weeklyDuelLimit}
+              pct={weeklyDuelPct}
+              formatUsed={(n) => `${n.toLocaleString()} duel${n === 1 ? "" : "s"}`}
+              formatLimit={(l) =>
+                l === null
+                  ? "Unlimited duels"
+                  : `${l.toLocaleString()} duels / week`
+              }
             />
             <UsageBar
               label="Images"

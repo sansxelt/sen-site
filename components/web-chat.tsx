@@ -569,6 +569,68 @@ export function WebChat({
     if (typeof window === "undefined") return;
     window.localStorage.setItem("sansxel.duelMode", duelMode ? "1" : "0");
   }, [duelMode]);
+
+  // v0.2.0 phase G+ — weekly usage snapshot for monetization hooks
+  // (low-chat banner, winner-moment upsell, "Liking Duel?" copy).
+  // Refreshes at mount + on every sansxel:threads:changed event,
+  // which fires after each send/duel — so the numbers stay close
+  // to live without us building a separate refresh path.
+  type WeeklyBucket = { used: number; cap: number | null; lifted: boolean };
+  type WeeklySnapshot = {
+    chat: WeeklyBucket;
+    duel: WeeklyBucket;
+  };
+  const [weeklySnapshot, setWeeklySnapshot] = useState<WeeklySnapshot | null>(
+    null,
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const r = await fetch("/api/account/billing/usage-summary", {
+          cache: "no-store",
+        });
+        if (!r.ok || cancelled) return;
+        const data = (await r.json()) as {
+          weekly?: { chat?: WeeklyBucket; duel?: WeeklyBucket };
+        };
+        if (cancelled) return;
+        const chat = data.weekly?.chat;
+        const duel = data.weekly?.duel;
+        if (chat && duel) {
+          setWeeklySnapshot({ chat, duel });
+        }
+      } catch {
+        // ignore — banner just doesn't render
+      }
+    };
+    void refresh();
+    const onChanged = () => void refresh();
+    window.addEventListener("sansxel:threads:changed", onChanged);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("sansxel:threads:changed", onChanged);
+    };
+  }, []);
+
+  // Derived: how many chats / duels remain on the user's plan,
+  // and whether the cap is unlimited (paid + unlimited-chat addon).
+  // null = unlimited; numeric = remaining count (clamped to 0).
+  const chatRemaining: number | null = weeklySnapshot
+    ? weeklySnapshot.chat.lifted || weeklySnapshot.chat.cap === null
+      ? null
+      : Math.max(0, weeklySnapshot.chat.cap - weeklySnapshot.chat.used)
+    : null;
+  const duelRemaining: number | null = weeklySnapshot
+    ? weeklySnapshot.duel.lifted || weeklySnapshot.duel.cap === null
+      ? null
+      : Math.max(0, weeklySnapshot.duel.cap - weeklySnapshot.duel.used)
+    : null;
+  const hasUnlimitedChat = weeklySnapshot
+    ? weeklySnapshot.chat.lifted || weeklySnapshot.chat.cap === null
+    : false;
+
   // ChatGPT/Claude-style live phase label during generation
   // "Searching the web…" / "Reading the page…" / "Writing answer…"
   // Cleared when the stream ends or the answer text starts flowing.
@@ -1820,6 +1882,43 @@ export function WebChat({
     sendDuelRef.current = sendDuel;
   }, [sendDuel]);
 
+  // v0.2.0 phase G+ — winner-moment upsell. Counts how many duels
+  // the user has resolved this session. Once they cross the
+  // threshold (3 picks), the action row underneath the duel shows
+  // a subtle "Liking Duel? Upgrade for more comparisons →" link
+  // that goes to /account/plan. Suppressed when the user is on
+  // an unlimited plan (Pro / Teams / Enterprise / Power Pack /
+  // Copilot Pro Pack — anyone who can't meaningfully upgrade)
+  // OR when they've dismissed it once already.
+  const DUEL_UPSELL_AFTER = 3;
+  const [duelPickCount, setDuelPickCount] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    const raw = window.sessionStorage.getItem("sansxel.duelPickCount");
+    const n = raw ? Number.parseInt(raw, 10) : 0;
+    return Number.isFinite(n) ? n : 0;
+  });
+  const [duelUpsellDismissed, setDuelUpsellDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem("sansxel.duelUpsellDismissed") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.sessionStorage.setItem(
+      "sansxel.duelPickCount",
+      String(duelPickCount),
+    );
+  }, [duelPickCount]);
+  const showDuelUpsell =
+    !hasUnlimitedChat &&
+    !duelUpsellDismissed &&
+    duelPickCount >= DUEL_UPSELL_AFTER;
+  const dismissDuelUpsell = () => {
+    setDuelUpsellDismissed(true);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("sansxel.duelUpsellDismissed", "1");
+    }
+  };
+
   // Pick a winner for an open duel turn. Tells the server to mark
   // the chosen row + delete the loser, then collapses the duel
   // message in local state into a regular solo assistant turn so
@@ -1853,6 +1952,9 @@ export function WebChat({
           }),
         );
       }
+      // Bump the per-session pick counter that drives the
+      // winner-moment upsell.
+      setDuelPickCount((n) => n + 1);
       // Send focus back to the composer so the user keeps typing.
       // requestAnimationFrame so React commits the collapse first.
       if (typeof window !== "undefined") {
@@ -2686,6 +2788,36 @@ export function WebChat({
           </div>
         ) : (
           <div className="webchat-list">
+            {/* v0.2.0 phase G+ — pre-429 low-chat banner. Fires when
+                the user is in Duel mode and has 5 or fewer chats
+                left, OR has 1 or fewer duels left on a duel-capped
+                plan. The 429 path still kicks in if they push past
+                it; this is just the pre-block warning so they
+                aren't surprised. Hidden once they upgrade or the
+                week resets. */}
+            {duelMode &&
+              !hasUnlimitedChat &&
+              ((typeof chatRemaining === "number" && chatRemaining <= 5) ||
+                (typeof duelRemaining === "number" && duelRemaining <= 1)) && (
+                <div className="webchat-low-chat-banner" role="note">
+                  <span className="webchat-low-chat-banner-text">
+                    {typeof duelRemaining === "number" && duelRemaining <= 1
+                      ? duelRemaining === 0
+                        ? "You've used your weekly duels."
+                        : "1 duel left this week."
+                      : `${chatRemaining} chats left this week.`}
+                    <span className="webchat-low-chat-banner-sub">
+                      Upgrade to keep using Duel.
+                    </span>
+                  </span>
+                  <a
+                    className="webchat-low-chat-banner-cta"
+                    href="/account/plan"
+                  >
+                    Upgrade →
+                  </a>
+                </div>
+              )}
             {messages.map((m, i) => {
               const isLast = i === messages.length - 1;
               const isInflight =
@@ -2703,6 +2835,8 @@ export function WebChat({
                       state={m.duel}
                       onPickWinner={(side) => void pickDuelWinner(i, side)}
                       onRetryBoth={() => void retryDuelBoth(i)}
+                      showUpsell={showDuelUpsell}
+                      onDismissUpsell={dismissDuelUpsell}
                     />
                   </div>
                 );
@@ -3874,10 +4008,14 @@ function DuelTurn({
   state,
   onPickWinner,
   onRetryBoth,
+  showUpsell,
+  onDismissUpsell,
 }: {
   state: DuelTurnState;
   onPickWinner: (side: DuelSideKey) => void;
   onRetryBoth: () => void;
+  showUpsell?: boolean;
+  onDismissUpsell?: () => void;
 }) {
   const { left, right, streaming } = state;
   const bothDone = left.done && right.done;
@@ -3958,6 +4096,25 @@ function DuelTurn({
           >
             <span className="webchat-duel-pick-label">Pick Claude</span>
             <span className="webchat-duel-pick-marker" aria-hidden>▶</span>
+          </button>
+        </div>
+      )}
+      {showActions && showUpsell && (
+        <div className="webchat-duel-upsell" role="note">
+          <span className="webchat-duel-upsell-text">
+            Liking Duel? Upgrade for more comparisons.
+          </span>
+          <a className="webchat-duel-upsell-cta" href="/account/plan">
+            Upgrade →
+          </a>
+          <button
+            type="button"
+            className="webchat-duel-upsell-dismiss"
+            onClick={onDismissUpsell}
+            aria-label="Dismiss"
+            title="Dismiss"
+          >
+            ×
           </button>
         </div>
       )}
