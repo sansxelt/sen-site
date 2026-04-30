@@ -25,6 +25,14 @@ export type StoredMessage = {
   content: string;
   images: Array<{ media_type: string; data: string }> | null;
   created_at: string;
+  // v0.2.0 phase G — duel turn columns. Null on every solo turn,
+  // populated on side-by-side duel turns. duel_winner is true on
+  // a chosen winner row (loser deleted) and null while the duel is
+  // still open. See lib/duel-history.ts.
+  duel_group_id?: string | null;
+  duel_side?: "left" | "right" | null;
+  duel_model?: string | null;
+  duel_winner?: boolean | null;
 };
 
 const TITLE_FALLBACK = "New chat";
@@ -129,12 +137,24 @@ export async function listMessages(email: string, threadId: string): Promise<Sto
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("chat_messages" as never)
-      .select("id, thread_id, role, content, images, created_at")
+      .select(
+        "id, thread_id, role, content, images, created_at, duel_group_id, duel_side, duel_model, duel_winner",
+      )
       .eq("thread_id", threadId)
       .order("created_at", { ascending: true });
     if (error) {
-      console.warn("listMessages failed:", error.message);
-      return [];
+      // Fallback when the duel migration hasn't run yet — re-query
+      // without the duel columns so old deploys still load history.
+      const fallback = await supabase
+        .from("chat_messages" as never)
+        .select("id, thread_id, role, content, images, created_at")
+        .eq("thread_id", threadId)
+        .order("created_at", { ascending: true });
+      if (fallback.error) {
+        console.warn("listMessages failed:", error.message);
+        return [];
+      }
+      return (fallback.data ?? []) as unknown as StoredMessage[];
     }
     return (data ?? []) as unknown as StoredMessage[];
   } catch (err) {

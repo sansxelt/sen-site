@@ -13,6 +13,34 @@ import { planDisplayName } from "@/lib/pricing";
 import { ProjectPicker, getActiveProjectId } from "./project-picker";
 
 type ChatImageInline = { media_type: string; data: string };
+
+// v0.2.0 phase G — duel turn metadata. When a ChatMessage carries a
+// `duel` field, it renders as a side-by-side comparison instead of
+// a single bubble. Both sides stream independently into the same
+// message object; once the user picks a winner the duel field is
+// cleared and the chosen content collapses into the regular
+// content/id fields like any solo assistant turn.
+type DuelSideKey = "left" | "right";
+type DuelSidePayload = {
+  side: DuelSideKey;
+  model: string;
+  content: string;
+  done: boolean;
+  cost?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  error?: string;
+  messageId?: string;
+  phaseLabel?: string | null;
+};
+type DuelTurnState = {
+  groupId: string | null;
+  threadId: string | null;
+  left: DuelSidePayload;
+  right: DuelSidePayload;
+  streaming: boolean;
+};
+
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
@@ -22,6 +50,9 @@ type ChatMessage = {
   // Used by edit-and-resend to tell the server which row to
   // truncate from.
   id?: string;
+  // v0.2.0 phase G — populated on duel turns; mutually exclusive with
+  // a populated `content`. Solo turns leave this undefined.
+  duel?: DuelTurnState;
 };
 
 // Cross-component "thread is generating" tracker. WebChat writes;
@@ -54,6 +85,90 @@ function readFlight(): FlightMap {
 type ModelTier = "fast" | "balanced" | "smart";
 
 type Tier = { tier: ModelTier; display_name: string; blurb: string };
+
+// Server message shape returned from /api/threads/[id]. Duel fields
+// are nullable on solo turns and on deploys before the v0.2.0-duel
+// migration has run.
+type ServerMessage = {
+  id?: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  images?: ChatImageInline[] | null;
+  duel_group_id?: string | null;
+  duel_side?: "left" | "right" | null;
+  duel_model?: string | null;
+  duel_winner?: boolean | null;
+};
+
+// Collapses consecutive duel-tagged assistant rows (same group_id)
+// into a single ChatMessage with .duel populated, so the UI renders
+// historical duels as side-by-side comparisons. Solo turns and
+// resolved duels (winner=true, loser deleted) pass through as
+// regular assistant messages.
+function mapServerMessages(rows: ServerMessage[]): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  let i = 0;
+  while (i < rows.length) {
+    const row = rows[i];
+    if (row.role !== "user" && row.role !== "assistant") {
+      i += 1;
+      continue;
+    }
+    if (
+      row.role === "assistant" &&
+      row.duel_group_id &&
+      row.duel_winner !== true
+    ) {
+      // Look for the matching opposite side in the next slot.
+      const partner =
+        i + 1 < rows.length &&
+        rows[i + 1].role === "assistant" &&
+        rows[i + 1].duel_group_id === row.duel_group_id &&
+        rows[i + 1].duel_winner !== true
+          ? rows[i + 1]
+          : null;
+      const leftRow = row.duel_side === "left" ? row : partner;
+      const rightRow = row.duel_side === "right" ? row : partner;
+      const left: DuelSidePayload = {
+        side: "left",
+        model: leftRow?.duel_model ?? "GPT",
+        content: leftRow?.content ?? "",
+        done: true,
+        messageId: leftRow?.id,
+        phaseLabel: null,
+      };
+      const right: DuelSidePayload = {
+        side: "right",
+        model: rightRow?.duel_model ?? "Claude",
+        content: rightRow?.content ?? "",
+        done: true,
+        messageId: rightRow?.id,
+        phaseLabel: null,
+      };
+      out.push({
+        role: "assistant",
+        content: "",
+        duel: {
+          groupId: row.duel_group_id,
+          threadId: null,
+          left,
+          right,
+          streaming: false,
+        },
+      });
+      i += partner ? 2 : 1;
+      continue;
+    }
+    out.push({
+      role: row.role,
+      content: row.content,
+      id: row.id,
+      images: Array.isArray(row.images) ? row.images ?? undefined : undefined,
+    });
+    i += 1;
+  }
+  return out;
+}
 
 // Plan key (DB) → display name (what users actually see on billing).
 // Was showing 'Plan: studio' in the chat header while billing said
@@ -299,12 +414,7 @@ export function WebChat({
         if (!detailRes.ok || cancelled) return;
         const detail = (await detailRes.json()) as {
           thread?: { updated_at?: string };
-          messages?: Array<{
-            id?: string;
-            role: "user" | "assistant" | "system";
-            content: string;
-            images?: ChatImageInline[] | null;
-          }>;
+          messages?: ServerMessage[];
         };
         if (cancelled) return;
         setThreadId(targetId);
@@ -316,18 +426,7 @@ export function WebChat({
           url.searchParams.set("thread", targetId);
           window.history.replaceState({}, "", url.pathname + url.search);
         }
-        const restored = (detail.messages ?? [])
-          .filter((m) => m.role === "user" || m.role === "assistant")
-          .map((m) => ({
-            role: m.role as "user" | "assistant",
-            content: m.content,
-            id: (m as { id?: string }).id,
-            images: Array.isArray(
-              (m as { images?: ChatImageInline[] | null }).images,
-            )
-              ? ((m as { images?: ChatImageInline[] }).images ?? undefined)
-              : undefined,
-          }));
+        const restored = mapServerMessages(detail.messages ?? []);
         // Resume-streaming detection: if the user comes back to a
         // thread that's still generating server-side, flip the
         // streaming flag so the bouncing dots / cursor render,
@@ -378,26 +477,10 @@ export function WebChat({
               if (!r.ok) return;
               const d = (await r.json()) as {
                 thread?: { updated_at?: string };
-                messages?: Array<{
-                  id?: string;
-                  role: "user" | "assistant" | "system";
-                  content: string;
-                  images?: ChatImageInline[] | null;
-                }>;
+                messages?: ServerMessage[];
               };
               if (cancelled || threadIdRef.current !== targetId) return;
-              const next = (d.messages ?? [])
-                .filter((mm) => mm.role === "user" || mm.role === "assistant")
-                .map((mm) => ({
-                  role: mm.role as "user" | "assistant",
-                  content: mm.content,
-                  id: (mm as { id?: string }).id,
-                  images: Array.isArray(
-                    (mm as { images?: ChatImageInline[] | null }).images,
-                  )
-                    ? ((mm as { images?: ChatImageInline[] }).images ?? undefined)
-                    : undefined,
-                }));
+              const next = mapServerMessages(d.messages ?? []);
               const nextLast = next[next.length - 1];
               const augmented =
                 nextLast?.role === "user"
@@ -456,6 +539,18 @@ export function WebChat({
     return () => { cancelled = true; };
   }, [wantsNew, requestedThreadParam]);
   const [streaming, setStreaming] = useState(false);
+  // v0.2.0 phase G — Solo / Duel composer toggle. Default Solo so
+  // existing users see no behavior change. Persisted in
+  // localStorage so a user who lives in Duel mode doesn't have to
+  // re-flip every refresh.
+  const [duelMode, setDuelMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("sansxel.duelMode") === "1";
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("sansxel.duelMode", duelMode ? "1" : "0");
+  }, [duelMode]);
   // ChatGPT/Claude-style live phase label during generation
   // "Searching the web…" / "Reading the page…" / "Writing answer…"
   // Cleared when the stream ends or the answer text starts flowing.
@@ -1395,6 +1490,367 @@ export function WebChat({
     [messages, send],
   );
 
+  // v0.2.0 phase G — side-by-side model duel.
+  //
+  // Posts the user prompt to /api/ai/duel which fans out to GPT
+  // (left) + Claude (right) in parallel and multiplexes both streams
+  // back as newline-delimited JSON events with a `side` tag. We hold
+  // a single ChatMessage for the duel turn whose `.duel` field
+  // carries both sides' state; the renderer dispatches to the
+  // <DuelTurn /> component below.
+  //
+  // Tools (web_search, web_fetch) are intentionally OFF in duel mode
+  // to keep the comparison clean. Attachments are inlined as text
+  // (same as solo); images are skipped for v1 — the duel surface
+  // tells the user that explicitly above the columns.
+  const sendDuel = useCallback(
+    async (overrideText?: string, overrideBaseMessages?: ChatMessage[]) => {
+      const baseText = (overrideText ?? input).trim();
+      const attachmentBlocks: string[] = [];
+      let droppedImages = 0;
+      for (const att of lei.attachments) {
+        if (att.kind === "file" || att.kind === "code") {
+          if (att.text) {
+            attachmentBlocks.push(
+              `\n\n--- Attached: ${att.name} (${att.mime}) ---\n${att.text}\n--- end ---`,
+            );
+          }
+        } else if (att.kind === "image") {
+          droppedImages += 1;
+        } else {
+          attachmentBlocks.push(`\n\n[Attached ${att.kind}: ${att.name}]`);
+        }
+      }
+      let text = baseText + attachmentBlocks.join("");
+      if (droppedImages > 0) {
+        text = `${text}\n\n[Note: ${droppedImages} image attachment(s) were not sent to the duel — image input is solo-mode only for now.]`;
+      }
+      if (!text) return;
+
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+
+      const baseMessages = overrideBaseMessages ?? messages;
+      const payloadMessages = [
+        ...baseMessages
+          .filter((m) => !m.duel)
+          .map((m) => ({ role: m.role, content: m.content })),
+        { role: "user" as const, content: text },
+      ];
+      const userMsg: ChatMessage = { role: "user", content: text };
+      const initialDuel: DuelTurnState = {
+        groupId: null,
+        threadId: threadIdRef.current,
+        streaming: true,
+        left: {
+          side: "left",
+          model: "GPT",
+          content: "",
+          done: false,
+          phaseLabel: "Thinking…",
+        },
+        right: {
+          side: "right",
+          model: "Claude",
+          content: "",
+          done: false,
+          phaseLabel: "Thinking…",
+        },
+      };
+      const duelMsg: ChatMessage = {
+        role: "assistant",
+        content: "",
+        duel: initialDuel,
+      };
+      setMessages([...baseMessages, userMsg, duelMsg]);
+      setInput("");
+      setStreaming(true);
+      setChatError(null);
+      setImageRetry(null);
+      lei.clearAttachments();
+
+      let clientTimezone = "UTC";
+      let clientTimeLabel = new Date().toISOString();
+      try {
+        clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+      } catch {}
+      try {
+        clientTimeLabel = new Intl.DateTimeFormat(undefined, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          timeZoneName: "short",
+        }).format(new Date());
+      } catch {}
+
+      const ac = new AbortController();
+      abortRef.current = ac;
+
+      const updateDuel = (mutator: (cur: DuelTurnState) => DuelTurnState) => {
+        setMessages((prev) => {
+          const copy = [...prev];
+          const last = copy[copy.length - 1];
+          if (last && last.duel) {
+            copy[copy.length - 1] = { ...last, duel: mutator(last.duel) };
+          }
+          return copy;
+        });
+      };
+
+      try {
+        const res = await fetch("/api/ai/duel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: payloadMessages,
+            thread_id: threadIdRef.current ?? undefined,
+            project_id: threadIdRef.current
+              ? undefined
+              : getActiveProjectId() ?? undefined,
+            client_time_iso: new Date().toISOString(),
+            client_timezone: clientTimezone,
+            client_time_label: clientTimeLabel,
+          }),
+          signal: ac.signal,
+        });
+        const echoedThreadId = res.headers.get("x-sansxel-thread-id");
+        if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
+          setThreadId(echoedThreadId);
+          if (typeof window !== "undefined") {
+            const url = new URL(window.location.href);
+            url.searchParams.set("thread", echoedThreadId);
+            url.searchParams.delete("new");
+            window.history.replaceState({}, "", url.pathname + url.search);
+            window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+          }
+        }
+        if (!res.ok || !res.body) {
+          let detail = `duel ${res.status}`;
+          try {
+            const err = (await res.json()) as { error?: string };
+            if (err?.error) detail = err.error;
+          } catch {}
+          throw new Error(detail);
+        }
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          // Newline-delimited JSON, peel off complete lines.
+          let nl = buf.indexOf("\n");
+          while (nl >= 0) {
+            const line = buf.slice(0, nl).trim();
+            buf = buf.slice(nl + 1);
+            if (line) {
+              try {
+                const evt = JSON.parse(line) as {
+                  side?: DuelSideKey;
+                  type?: string;
+                  text?: string;
+                  label?: string;
+                  id?: string;
+                  cost?: number;
+                  input_tokens?: number;
+                  output_tokens?: number;
+                  message?: string;
+                  model?: string;
+                  group_id?: string;
+                  thread_id?: string | null;
+                };
+                if (evt.type === "meta") {
+                  updateDuel((cur) => ({
+                    ...cur,
+                    groupId: evt.group_id ?? cur.groupId,
+                    threadId: evt.thread_id ?? cur.threadId,
+                  }));
+                } else if (evt.side === "left" || evt.side === "right") {
+                  const which = evt.side;
+                  if (evt.type === "assistant_id" && evt.id) {
+                    updateDuel((cur) => ({
+                      ...cur,
+                      [which]: { ...cur[which], messageId: evt.id },
+                    }));
+                  } else if (evt.type === "phase") {
+                    updateDuel((cur) => ({
+                      ...cur,
+                      [which]: { ...cur[which], phaseLabel: evt.label ?? null },
+                    }));
+                  } else if (evt.type === "text" && typeof evt.text === "string") {
+                    updateDuel((cur) => ({
+                      ...cur,
+                      [which]: {
+                        ...cur[which],
+                        content: cur[which].content + evt.text,
+                        phaseLabel: null,
+                      },
+                    }));
+                  } else if (evt.type === "done") {
+                    updateDuel((cur) => ({
+                      ...cur,
+                      [which]: {
+                        ...cur[which],
+                        done: true,
+                        cost: evt.cost,
+                        inputTokens: evt.input_tokens,
+                        outputTokens: evt.output_tokens,
+                        model:
+                          evt.model ??
+                          (which === "left" ? "GPT" : "Claude"),
+                        phaseLabel: null,
+                      },
+                    }));
+                  } else if (evt.type === "error") {
+                    updateDuel((cur) => ({
+                      ...cur,
+                      [which]: {
+                        ...cur[which],
+                        done: true,
+                        error: evt.message ?? "Stream failed.",
+                        phaseLabel: null,
+                      },
+                    }));
+                  }
+                }
+              } catch {
+                // Malformed line, skip
+              }
+            }
+            nl = buf.indexOf("\n");
+          }
+        }
+        // Mark streaming over once both sides settled.
+        updateDuel((cur) => ({ ...cur, streaming: false }));
+      } catch (err) {
+        if ((err as { name?: string })?.name === "AbortError") {
+          updateDuel((cur) => ({ ...cur, streaming: false }));
+        } else {
+          const isNetworkErr =
+            err instanceof TypeError &&
+            /failed to fetch|networkerror/i.test(err.message);
+          const msg = isNetworkErr
+            ? "Couldn't reach sansxel. Check your connection and try again."
+            : err instanceof Error
+              ? err.message
+              : "Duel failed.";
+          setChatError(msg);
+          // Drop the empty duel placeholder so the error pill stands alone.
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (
+              last?.duel &&
+              !last.duel.left.content &&
+              !last.duel.right.content
+            ) {
+              return prev.slice(0, -1);
+            }
+            return prev;
+          });
+        }
+      } finally {
+        if (abortRef.current === ac) abortRef.current = null;
+        setStreaming(false);
+        setPhaseLabel(null);
+        void lei.refreshBalance();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+        }
+      }
+    },
+    [input, messages, lei],
+  );
+
+  // Pick a winner for an open duel turn. Tells the server to mark
+  // the chosen row + delete the loser, then collapses the duel
+  // message in local state into a regular solo assistant turn so
+  // the rest of the thread reads as one canonical reply.
+  const pickDuelWinner = useCallback(
+    async (msgIndex: number, side: DuelSideKey) => {
+      const target = messages[msgIndex];
+      if (!target?.duel) return;
+      const { groupId, threadId, left, right } = target.duel;
+      const winnerPayload = side === "left" ? left : right;
+      // Local collapse first for instant UX. Server failure rolls back.
+      const collapsed: ChatMessage = {
+        role: "assistant",
+        content: winnerPayload.content,
+        id: winnerPayload.messageId,
+      };
+      setMessages((prev) => {
+        const copy = [...prev];
+        copy[msgIndex] = collapsed;
+        return copy;
+      });
+      const tid = threadId ?? threadIdRef.current;
+      if (!tid || !groupId) return;
+      try {
+        const res = await fetch("/api/ai/duel/winner", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            thread_id: tid,
+            group_id: groupId,
+            side,
+          }),
+        });
+        if (!res.ok) {
+          // Roll back to the duel state so the user can try again.
+          setMessages((prev) => {
+            const copy = [...prev];
+            copy[msgIndex] = target;
+            return copy;
+          });
+          setChatError("Couldn't save your pick. Try again.");
+        }
+      } catch {
+        setMessages((prev) => {
+          const copy = [...prev];
+          copy[msgIndex] = target;
+          return copy;
+        });
+        setChatError("Couldn't save your pick. Try again.");
+      }
+    },
+    [messages],
+  );
+
+  // Retry both sides of a duel: discard the current pair server-side,
+  // remove the duel message locally, then re-fire sendDuel against
+  // the same user prompt that produced it.
+  const retryDuelBoth = useCallback(
+    async (msgIndex: number) => {
+      const target = messages[msgIndex];
+      if (!target?.duel) return;
+      const userPrompt = messages[msgIndex - 1]?.content;
+      if (!userPrompt) return;
+      const { groupId, threadId } = target.duel;
+      const tid = threadId ?? threadIdRef.current;
+      if (tid && groupId) {
+        try {
+          await fetch(
+            `/api/ai/duel?thread_id=${encodeURIComponent(tid)}&group_id=${encodeURIComponent(groupId)}`,
+            { method: "DELETE" },
+          );
+        } catch {
+          // best-effort, server-side cleanup may fail; we still re-run
+        }
+      }
+      // Drop the failed/abandoned duel + its preceding user msg so
+      // sendDuel rebuilds them clean.
+      const truncated = messages.slice(0, msgIndex - 1);
+      setMessages(truncated);
+      await sendDuel(userPrompt, truncated);
+    },
+    [messages, sendDuel],
+  );
+
   const stop = useCallback(() => {
     if (abortRef.current) {
       abortRef.current.abort();
@@ -2163,6 +2619,21 @@ export function WebChat({
                 isLast && m.role === "assistant" && streaming && m.content === "";
               const isStillStreaming =
                 isLast && m.role === "assistant" && streaming && m.content !== "";
+              // v0.2.0 phase G — duel-turn render branch. A populated
+              // .duel field means this message is a side-by-side
+              // comparison; render the dedicated component which
+              // breaks out of the 700px column for that turn only.
+              if (m.duel) {
+                return (
+                  <div key={i} className="webchat-msg webchat-msg--duel">
+                    <DuelTurn
+                      state={m.duel}
+                      onPickWinner={(side) => void pickDuelWinner(i, side)}
+                      onRetryBoth={() => void retryDuelBoth(i)}
+                    />
+                  </div>
+                );
+              }
               return (
                 <div
                   key={i}
@@ -2338,7 +2809,8 @@ export function WebChat({
         className="webchat-input"
         onSubmit={(e) => {
           e.preventDefault();
-          void send();
+          if (duelMode) void sendDuel();
+          else void send();
         }}
       >
         {voiceState === "recording" && <WebVoiceWave mode="listening" />}
@@ -2376,7 +2848,8 @@ export function WebChat({
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              void send();
+              if (duelMode) void sendDuel();
+              else void send();
             }
           }}
           placeholder={
@@ -2386,7 +2859,9 @@ export function WebChat({
                 ? "Transcribing…"
                 : voiceState === "speaking"
                   ? "Speaking…"
-                  : "Message sansxel-1…"
+                  : duelMode
+                    ? "Compare GPT vs Claude on the same prompt…"
+                    : "Message sansxel-1…"
           }
           rows={1}
           disabled={voiceState === "recording" || voiceState === "transcribing"}
@@ -2395,6 +2870,30 @@ export function WebChat({
         <div className="webchat-input-actions">
           <div className="webchat-input-actions-left">
             <ProjectPicker />
+            <div
+              className={`webchat-mode-toggle${duelMode ? " is-duel" : ""}`}
+              role="group"
+              aria-label="Composer mode"
+            >
+              <button
+                type="button"
+                className={`webchat-mode-btn${!duelMode ? " is-active" : ""}`}
+                onClick={() => setDuelMode(false)}
+                aria-pressed={!duelMode}
+                title="Single response from sansxel-1"
+              >
+                Solo
+              </button>
+              <button
+                type="button"
+                className={`webchat-mode-btn${duelMode ? " is-active" : ""}`}
+                onClick={() => setDuelMode(true)}
+                aria-pressed={duelMode}
+                title="Side-by-side: GPT vs Claude on the same prompt"
+              >
+                Duel
+              </button>
+            </div>
             <span
               className={`webchat-cost${costPreview.planCovers ? " webchat-cost--covered" : ""}`}
               title={
@@ -3292,5 +3791,152 @@ function WebBounceDots() {
       <span className="webchat-dot" />
       <span className="webchat-dot" />
     </span>
+  );
+}
+
+// v0.2.0 phase G — side-by-side duel render. Two columns that share
+// vertical scroll on desktop and stack under 720px (mobile) so the
+// comparison still reads cleanly on a phone. Cost chip per side
+// once the stream completes; Pick / Retry actions appear once at
+// least one side has rendered something.
+function DuelTurn({
+  state,
+  onPickWinner,
+  onRetryBoth,
+}: {
+  state: DuelTurnState;
+  onPickWinner: (side: DuelSideKey) => void;
+  onRetryBoth: () => void;
+}) {
+  const { left, right, streaming } = state;
+  const bothDone = left.done && right.done;
+  const eitherHasContent = left.content.length > 0 || right.content.length > 0;
+  const showActions = bothDone || (!streaming && eitherHasContent);
+
+  const formatCostChip = (side: DuelSidePayload): string | null => {
+    if (typeof side.cost !== "number") return null;
+    if (side.cost <= 0) return "$0.00";
+    if (side.cost < 0.01) return `$${side.cost.toFixed(4)}`;
+    return `$${side.cost.toFixed(2)}`;
+  };
+
+  return (
+    <div className="webchat-duel">
+      <div className="webchat-duel-cols">
+        <DuelColumn
+          label="GPT"
+          payload={left}
+          costChip={formatCostChip(left)}
+          streaming={streaming}
+        />
+        <div className="webchat-duel-divider" aria-hidden />
+        <DuelColumn
+          label="Claude"
+          payload={right}
+          costChip={formatCostChip(right)}
+          streaming={streaming}
+        />
+      </div>
+      {showActions && (
+        <div className="webchat-duel-actions">
+          <button
+            type="button"
+            className="webchat-duel-pick webchat-duel-pick--left"
+            onClick={() => onPickWinner("left")}
+            disabled={streaming || !left.content || !!left.error}
+            title="Keep the GPT response and continue the chat from there"
+          >
+            <span className="webchat-duel-pick-side">GPT</span>
+            <span>Pick this</span>
+          </button>
+          <button
+            type="button"
+            className="webchat-duel-retry"
+            onClick={onRetryBoth}
+            disabled={streaming}
+            title="Re-run both models on the same prompt"
+          >
+            Retry both
+          </button>
+          <button
+            type="button"
+            className="webchat-duel-pick webchat-duel-pick--right"
+            onClick={() => onPickWinner("right")}
+            disabled={streaming || !right.content || !!right.error}
+            title="Keep the Claude response and continue the chat from there"
+          >
+            <span>Pick this</span>
+            <span className="webchat-duel-pick-side">Claude</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DuelColumn({
+  label,
+  payload,
+  costChip,
+  streaming,
+}: {
+  label: string;
+  payload: DuelSidePayload;
+  costChip: string | null;
+  streaming: boolean;
+}) {
+  const isThisSideStreaming = streaming && !payload.done;
+  return (
+    <div className="webchat-duel-col">
+      <div className="webchat-duel-head">
+        <span className="webchat-duel-label">{label}</span>
+        {costChip && <span className="webchat-duel-cost">{costChip}</span>}
+      </div>
+      {payload.error ? (
+        <div className="webchat-duel-error">{payload.error}</div>
+      ) : !payload.content ? (
+        <div className="webchat-duel-pending">
+          {payload.phaseLabel ?? "Thinking…"}
+          <WebBounceDots />
+        </div>
+      ) : (
+        <div className="webchat-duel-body md">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm, remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+            urlTransform={(url) => url}
+            components={{
+              code({ className, children, ...props }) {
+                const isFenced =
+                  typeof className === "string" &&
+                  className.includes("language-");
+                const text = String(children ?? "");
+                if (!isFenced) {
+                  return (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  );
+                }
+                return (
+                  <CodeBlock
+                    className={className}
+                    streaming={isThisSideStreaming}
+                  >
+                    {text}
+                  </CodeBlock>
+                );
+              },
+              pre({ children }) {
+                return <>{children}</>;
+              },
+            }}
+          >
+            {payload.content}
+          </ReactMarkdown>
+          {isThisSideStreaming && <span className="webchat-cursor" />}
+        </div>
+      )}
+    </div>
   );
 }

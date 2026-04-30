@@ -1641,6 +1641,251 @@ div[id] {
   min-height: 18px;
 }
 
+/* v0.2.0 phase G — duel turn breakout. Two columns side-by-side,
+   wider than the regular 700px column so each side has room to
+   breathe. The negative margin lets the duel turn extend past the
+   parent .webchat's 700px max-width into the surrounding chat
+   panel; the max-width on the inner content keeps it from getting
+   absurdly wide on ultra-wide monitors.
+
+   On screens narrower than 720px the columns stack vertically with
+   labels at the top of each side so the comparison still reads
+   cleanly on a phone. */
+.webchat-msg--duel {
+  align-self: stretch;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  max-width: none;
+  width: 100%;
+}
+
+.webchat-duel {
+  /* Break out: cancel the parent's max-width, then re-cap so we don't
+     run edge-to-edge on huge screens. The max-width here roughly
+     matches the user's 1100px spec from the duel design doc. */
+  margin-left: calc((700px - min(1100px, 100%)) / 2);
+  margin-right: calc((700px - min(1100px, 100%)) / 2);
+  width: min(1100px, 100%);
+  max-width: 100%;
+}
+
+.webchat-duel-cols {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.webchat-duel-col {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.webchat-duel-divider {
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(167, 139, 250, 0.05),
+    rgba(167, 139, 250, 0.35),
+    rgba(167, 139, 250, 0.05)
+  );
+  flex: 0 0 1px;
+}
+
+.webchat-duel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.webchat-duel-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(220, 220, 235, 0.85);
+}
+
+.webchat-duel-cost {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(180, 180, 200, 0.7);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.webchat-duel-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(235, 235, 245, 0.94);
+  position: relative;
+}
+
+.webchat-duel-pending {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(180, 180, 200, 0.75);
+  font-style: italic;
+}
+
+.webchat-duel-error {
+  font-size: 13px;
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+
+.webchat-duel-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.webchat-duel-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(140, 90, 255, 0.12);
+  border: 1px solid rgba(140, 90, 255, 0.3);
+  border-radius: 10px;
+  color: #f5f3ff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.webchat-duel-pick:hover:not(:disabled) {
+  background: rgba(140, 90, 255, 0.22);
+  border-color: rgba(140, 90, 255, 0.5);
+}
+.webchat-duel-pick:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.webchat-duel-pick:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.webchat-duel-pick-side {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(220, 220, 235, 0.85);
+}
+
+.webchat-duel-retry {
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: rgba(220, 220, 235, 0.85);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.webchat-duel-retry:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.webchat-duel-retry:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Composer Solo/Duel toggle pill. */
+.webchat-mode-toggle {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 0;
+}
+.webchat-mode-toggle.is-duel {
+  border-color: rgba(140, 90, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(140, 90, 255, 0.15);
+}
+.webchat-mode-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: rgba(180, 180, 200, 0.75);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.webchat-mode-btn:hover {
+  color: #f5f3ff;
+}
+.webchat-mode-btn.is-active {
+  background: rgba(140, 90, 255, 0.18);
+  color: #f5f3ff;
+}
+
+/* Mobile: stack the two columns and drop the vertical divider so
+   each side gets the full width with its label still on top. */
+@media (max-width: 720px) {
+  .webchat-duel {
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+  }
+  .webchat-duel-cols {
+    flex-direction: column;
+  }
+  .webchat-duel-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      rgba(167, 139, 250, 0.05),
+      rgba(167, 139, 250, 0.35),
+      rgba(167, 139, 250, 0.05)
+    );
+    flex: 0 0 1px;
+  }
+  .webchat-duel-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .webchat-duel-pick {
+    flex: 1 1 45%;
+    justify-content: center;
+  }
+  .webchat-duel-retry {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+}
+
 /* Markdown rendering inside webchat assistant bubbles */
 .webchat-msg .md > *:first-child { margin-top: 0; }
 .webchat-msg .md > *:last-child  { margin-bottom: 0; }

@@ -81,3 +81,31 @@ export function descriptorForTier(tier: ModelTier): ModelDescriptor {
   if (!found) throw new Error(`Unknown tier: ${tier}`);
   return found;
 }
+
+// v0.2.0 phase G — side-by-side model duel.
+// The duel surface is opinionated: one column is GPT, one is Claude.
+// We don't expose tier picking inside duel mode (the moat is "compare
+// the two intelligences", not "pick a tier per side"). The Claude
+// side always uses our default chat tier (balanced sonnet-4-6); the
+// GPT side uses whichever DUEL_GPT_MODEL is configured below.
+//
+// DUEL_GPT_MODEL is read from env at runtime so we can flip to gpt-5
+// in the dashboard the moment it lands in our OpenAI account, no
+// redeploy. Falls back to gpt-4o if unset or empty.
+export const DUEL_CLAUDE_MODEL = "claude-sonnet-4-6" as const;
+
+export function getDuelGptModel(): string {
+  const fromEnv = (process.env.DUEL_GPT_MODEL ?? "").trim();
+  return fromEnv || "gpt-4o";
+}
+
+export type DuelSide = "left" | "right";
+
+// Display labels at the top of each duel column. Locked to GPT / Claude
+// so the user instantly understands what they're comparing, even if
+// the underlying model id changes (gpt-4o → gpt-5, sonnet-4-6 →
+// sonnet-4-7, etc.).
+export const DUEL_SIDE_LABELS: Record<DuelSide, string> = {
+  left: "GPT",
+  right: "Claude",
+};
