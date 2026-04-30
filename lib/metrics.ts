@@ -23,6 +23,7 @@ export type MetricKind =
   // Duel funnel
   | "duel_started"
   | "duel_completed"
+  | "duel_abandoned"
   | "duel_winner_picked"
   | "duel_pinned_prompt_fired"
   | "duel_retry_both"

@@ -18,6 +18,7 @@ export const runtime = "nodejs";
 const ALLOWED_KINDS: ReadonlySet<MetricKind> = new Set([
   "duel_started",
   "duel_completed",
+  "duel_abandoned",
   "duel_winner_picked",
   "duel_pinned_prompt_fired",
   "duel_retry_both",

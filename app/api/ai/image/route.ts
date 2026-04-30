@@ -122,6 +122,7 @@ export async function POST(request: Request) {
         email,
         props: {
           surface_kind: "image",
+          gate: "image_cap",
           plan,
           used: decision.used,
           limit: decision.limit,

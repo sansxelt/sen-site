@@ -839,19 +839,51 @@ export function WebChat({
   const stickToBottomRef = useRef(true);
   const [showJumpToBottom, setShowJumpToBottom] = useState(false);
 
+  // rAF-batched scroll handler. Without this, fast wheel input
+  // fires onScroll dozens of times per frame and the duel layout
+  // (two streams growing in parallel) reads as jittery — every
+  // tick re-evaluates near-bottom + dispatches a setState. One
+  // rAF tick = ~16ms, matches frame rate, kills the duplicates.
+  const scrollRafRef = useRef<number | null>(null);
   const onScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    const nearBottom = distanceFromBottom < 60;
-    stickToBottomRef.current = nearBottom;
-    setShowJumpToBottom(!nearBottom);
+    if (scrollRafRef.current !== null) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const el = scrollRef.current;
+      if (!el) return;
+      const distanceFromBottom =
+        el.scrollHeight - el.scrollTop - el.clientHeight;
+      const nearBottom = distanceFromBottom < 60;
+      stickToBottomRef.current = nearBottom;
+      setShowJumpToBottom(!nearBottom);
+    });
+  }, []);
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+      }
+    };
   }, []);
 
+  // Auto-stick to bottom while messages grow. rAF-batched + only
+  // scrolls when the scrollHeight actually changed — without the
+  // height check, a duel side that finishes before the other
+  // would keep firing scroll-to-bottom on every render of the
+  // still-streaming side, even though nothing visible moved.
+  const lastScrollHeightRef = useRef(0);
+  const autoScrollRafRef = useRef<number | null>(null);
   useEffect(() => {
-    if (scrollRef.current && stickToBottomRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (!stickToBottomRef.current) return;
+    if (autoScrollRafRef.current !== null) return;
+    autoScrollRafRef.current = requestAnimationFrame(() => {
+      autoScrollRafRef.current = null;
+      const el = scrollRef.current;
+      if (!el) return;
+      if (el.scrollHeight === lastScrollHeightRef.current) return;
+      lastScrollHeightRef.current = el.scrollHeight;
+      el.scrollTop = el.scrollHeight;
+    });
   }, [messages]);
 
   const jumpToBottom = useCallback(() => {
@@ -1587,6 +1619,55 @@ export function WebChat({
   // to keep the comparison clean. Attachments are inlined as text
   // (same as solo); images are skipped for v1 — the duel surface
   // tells the user that explicitly above the columns.
+  //
+  // Defined-before-sendDuel: the abandon-tracking helpers. sendDuel
+  // closes over them so they have to exist first; placing them
+  // here keeps the temporal-dead-zone error from popping up.
+  const duelAbandonRef = useRef<{
+    startedAt: number;
+    plan: string;
+    projectAttached: boolean;
+    timer: number | null;
+  } | null>(null);
+  const fireDuelAbandoned = useCallback(
+    (reason: "timeout" | "navigation") => {
+      const ctx = duelAbandonRef.current;
+      if (!ctx) return;
+      duelAbandonRef.current = null;
+      if (ctx.timer !== null && typeof window !== "undefined") {
+        window.clearTimeout(ctx.timer);
+      }
+      trackClientEvent("duel_abandoned", {
+        reason,
+        plan: ctx.plan,
+        project_attached: ctx.projectAttached,
+        time_since_start_ms: Date.now() - ctx.startedAt,
+      });
+    },
+    [],
+  );
+  const clearDuelAbandon = useCallback(() => {
+    const ctx = duelAbandonRef.current;
+    if (!ctx) return;
+    if (ctx.timer !== null && typeof window !== "undefined") {
+      window.clearTimeout(ctx.timer);
+    }
+    duelAbandonRef.current = null;
+  }, []);
+  // Beacon-fire on tab close / nav-away if a duel is in flight.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onUnload = () => {
+      if (duelAbandonRef.current) fireDuelAbandoned("navigation");
+    };
+    window.addEventListener("beforeunload", onUnload);
+    window.addEventListener("pagehide", onUnload);
+    return () => {
+      window.removeEventListener("beforeunload", onUnload);
+      window.removeEventListener("pagehide", onUnload);
+    };
+  }, [fireDuelAbandoned]);
+
   const sendDuel = useCallback(
     async (overrideText?: string, overrideBaseMessages?: ChatMessage[]) => {
       const baseText = (overrideText ?? input).trim();
@@ -1654,6 +1735,21 @@ export function WebChat({
       setChatError(null);
       setImageRetry(null);
       lei.clearAttachments();
+      // Start the abandon-tracking window. If the meta event
+      // arrives we clear it (= duel completed); else the 12s
+      // timer fires duel_abandoned with reason: "timeout".
+      // pagehide/beforeunload handles the nav-away case.
+      if (typeof window !== "undefined") {
+        const projectAttached = !!getActiveProjectId();
+        duelAbandonRef.current = {
+          startedAt: Date.now(),
+          plan,
+          projectAttached,
+          timer: window.setTimeout(() => {
+            fireDuelAbandoned("timeout");
+          }, 12_000),
+        };
+      }
 
       let clientTimezone = "UTC";
       let clientTimeLabel = new Date().toISOString();
@@ -1755,6 +1851,10 @@ export function WebChat({
                     groupId: evt.group_id ?? cur.groupId,
                     threadId: evt.thread_id ?? cur.threadId,
                   }));
+                  // Server confirmed duel finished — cancel
+                  // the abandon timer so we don't false-positive
+                  // when streaming legitimately ran past 12s.
+                  clearDuelAbandon();
                 } else if (evt.side === "left" || evt.side === "right") {
                   const which = evt.side;
                   if (evt.type === "assistant_id" && evt.id) {
@@ -1875,7 +1975,7 @@ export function WebChat({
         }
       }
     },
-    [input, messages, lei],
+    [input, messages, lei, plan, fireDuelAbandoned, clearDuelAbandon],
   );
 
   // Stash sendDuel in a ref so global event listeners (pinned-prompt
@@ -2814,6 +2914,7 @@ export function WebChat({
                 week resets. */}
             {duelMode &&
               !hasUnlimitedChat &&
+              !showDuelUpsell &&
               ((typeof chatRemaining === "number" && chatRemaining <= 5) ||
                 (typeof duelRemaining === "number" && duelRemaining <= 1)) && (
                 <div className="webchat-low-chat-banner" role="note">
@@ -3126,10 +3227,16 @@ export function WebChat({
               title={
                 costPreview.planCovers
                   ? `Included in your ${planDisplayName(plan)} plan, no credits used unless you exceed your weekly cap`
-                  : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
+                  : duelMode
+                    ? `Duel costs ${costPreview.credits} credits and uses 2 weekly chat slots`
+                    : `This action costs ${costPreview.credits} credits (${costPreview.usd})`
               }
             >
-              {costPreview.planCovers ? `✓ ${planDisplayName(plan)}` : `≈ ${costPreview.credits} credits`}
+              {costPreview.planCovers
+                ? `✓ ${planDisplayName(plan)}`
+                : duelMode
+                  ? `≈ ${costPreview.credits} credits · 2 chat slots`
+                  : `≈ ${costPreview.credits} credits`}
             </span>
             <PlanExpiryNote expiresAt={planExpiresAt} canceling={planCanceling} />
           </div>
@@ -4059,6 +4166,13 @@ function DuelTurn({
   const bothDone = left.done && right.done;
   const eitherHasContent = left.content.length > 0 || right.content.length > 0;
   const showActions = bothDone || (!streaming && eitherHasContent);
+  // Pick is only available when BOTH sides actually responded
+  // cleanly. If one side errored or rendered empty, the only
+  // valid recovery is Retry both — picking a "winner" with no
+  // counterpart isn't a comparison.
+  const bothValid =
+    !!left.content && !!right.content && !left.error && !right.error;
+  const pickDisabled = streaming || !bothValid;
   // Track which side the user is hovering so the matching Pick
   // button can light up — makes the comparison feel like the UI
   // is taking part in the decision instead of just sitting there.
@@ -4085,6 +4199,7 @@ function DuelTurn({
           costChip={formatCostChip(left)}
           streaming={streaming}
           onHoverChange={setHoverSide}
+          onRetry={onRetryBoth}
         />
         <div className="webchat-duel-divider" aria-hidden />
         <DuelColumn
@@ -4094,6 +4209,7 @@ function DuelTurn({
           costChip={formatCostChip(right)}
           streaming={streaming}
           onHoverChange={setHoverSide}
+          onRetry={onRetryBoth}
         />
       </div>
       {showActions && (
@@ -4101,13 +4217,17 @@ function DuelTurn({
           <button
             type="button"
             className={`webchat-duel-pick webchat-duel-pick--left${
-              hoverSide === "left" ? " is-anticipated" : ""
+              hoverSide === "left" && !pickDisabled ? " is-anticipated" : ""
             }`}
             onClick={() => onPickWinner("left")}
             onMouseEnter={() => setHoverSide("left")}
             onMouseLeave={() => setHoverSide(null)}
-            disabled={streaming || !left.content || !!left.error}
-            title="Keep the GPT response and continue the chat"
+            disabled={pickDisabled}
+            title={
+              bothValid
+                ? "Keep the GPT response and continue the chat"
+                : "Both sides need to respond before you can pick a winner"
+            }
           >
             <span className="webchat-duel-pick-marker" aria-hidden>◀</span>
             <span className="webchat-duel-pick-label">Pick GPT</span>
@@ -4124,13 +4244,17 @@ function DuelTurn({
           <button
             type="button"
             className={`webchat-duel-pick webchat-duel-pick--right${
-              hoverSide === "right" ? " is-anticipated" : ""
+              hoverSide === "right" && !pickDisabled ? " is-anticipated" : ""
             }`}
             onClick={() => onPickWinner("right")}
             onMouseEnter={() => setHoverSide("right")}
             onMouseLeave={() => setHoverSide(null)}
-            disabled={streaming || !right.content || !!right.error}
-            title="Keep the Claude response and continue the chat"
+            disabled={pickDisabled}
+            title={
+              bothValid
+                ? "Keep the Claude response and continue the chat"
+                : "Both sides need to respond before you can pick a winner"
+            }
           >
             <span className="webchat-duel-pick-label">Pick Claude</span>
             <span className="webchat-duel-pick-marker" aria-hidden>▶</span>
@@ -4175,6 +4299,7 @@ function DuelColumn({
   costChip,
   streaming,
   onHoverChange,
+  onRetry,
 }: {
   label: string;
   side: DuelSideKey;
@@ -4182,6 +4307,11 @@ function DuelColumn({
   costChip: string | null;
   streaming: boolean;
   onHoverChange?: (side: DuelSideKey | null) => void;
+  // Inline retry — fires Retry both behind the scenes (no
+  // single-side retry endpoint yet). Surfacing it on the
+  // errored column gives the user a recovery action without
+  // forcing them to scroll to the action row.
+  onRetry?: () => void;
 }) {
   const isThisSideStreaming = streaming && !payload.done;
   return (
@@ -4198,7 +4328,19 @@ function DuelColumn({
         {costChip && <span className="webchat-duel-cost">{costChip}</span>}
       </div>
       {payload.error ? (
-        <div className="webchat-duel-error">{payload.error}</div>
+        <div className="webchat-duel-error">
+          <span>{payload.error}</span>
+          {onRetry && (
+            <button
+              type="button"
+              className="webchat-duel-error-retry"
+              onClick={onRetry}
+              title="Re-run both sides"
+            >
+              Retry
+            </button>
+          )}
+        </div>
       ) : !payload.content ? (
         <div className="webchat-duel-pending">
           {payload.phaseLabel ?? "Thinking…"}

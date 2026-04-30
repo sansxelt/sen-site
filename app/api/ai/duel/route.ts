@@ -626,25 +626,38 @@ export async function POST(request: Request) {
         await Promise.allSettled([pumpGpt(), pumpClaude()]);
       } finally {
         // duel_completed metric. Captures both sides' final state
-        // (error, tokens, cost, TTFT) so we can spot one-side
-        // failures + per-model latency drift over time.
+        // (error, tokens, cost, TTFT) plus a derived ttft_ms (the
+        // FIRST byte the user saw on either side) so we can spot
+        // one-side failures + latency drift over time. ttft_slow
+        // is a precomputed flag at the >1.2s threshold for easy
+        // dashboarding without log-side math.
+        const leftTtft = outcome.left?.first_token_ms;
+        const rightTtft = outcome.right?.first_token_ms;
+        const ttftMs =
+          typeof leftTtft === "number" && typeof rightTtft === "number"
+            ? Math.min(leftTtft, rightTtft)
+            : (leftTtft ?? rightTtft ?? null);
+        const ttftSlow =
+          typeof ttftMs === "number" ? ttftMs > 1200 : false;
         recordMetric({
           kind: "duel_completed",
           email,
           surface,
           props: {
             duration_ms: Date.now() - startedAt,
+            ttft_ms: ttftMs,
+            ttft_slow: ttftSlow,
             cancelled: clientAborted,
             gpt_error: outcome.left?.error ?? true,
             gpt_input_tokens: outcome.left?.input_tokens ?? 0,
             gpt_output_tokens: outcome.left?.output_tokens ?? 0,
             gpt_cost_usd: outcome.left?.cost ?? 0,
-            gpt_first_token_ms: outcome.left?.first_token_ms ?? null,
+            gpt_ttft_ms: outcome.left?.first_token_ms ?? null,
             claude_error: outcome.right?.error ?? true,
             claude_input_tokens: outcome.right?.input_tokens ?? 0,
             claude_output_tokens: outcome.right?.output_tokens ?? 0,
             claude_cost_usd: outcome.right?.cost ?? 0,
-            claude_first_token_ms: outcome.right?.first_token_ms ?? null,
+            claude_ttft_ms: outcome.right?.first_token_ms ?? null,
           },
         });
         writeLine({
