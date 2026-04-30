@@ -1984,6 +1984,355 @@ div[id] {
    margin. */
 .webchat-msg .md .katex { font-size: 1.05em; }
 .webchat-msg .md .katex-display { margin: 0.6em 0; overflow-x: auto; overflow-y: hidden; }
+
+/* ── v0.2.0 phase F: custom UI cards ─────────────────────────
+   Generic shell + per-shape styles for sansxel-card output.
+   Sit inside an assistant bubble's .md block, replacing the
+   plain code render that would otherwise show the raw JSON. */
+.webchat-msg .md .sx-card {
+  margin: 0.7em 0;
+  border-radius: 14px;
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(167, 139, 250, 0.05),
+      rgba(0, 0, 0, 0.18)
+    );
+  padding: 14px 16px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: rgba(229, 231, 235, 0.95);
+}
+.webchat-msg .md .sx-card-head {
+  margin-bottom: 12px;
+}
+.webchat-msg .md .sx-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fafafa;
+  letter-spacing: -0.01em;
+}
+.webchat-msg .md .sx-card-subtitle {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: rgba(229, 231, 235, 0.6);
+  letter-spacing: 0.02em;
+}
+.webchat-msg .md .sx-card-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  color: rgba(229, 231, 235, 0.65);
+}
+.webchat-msg .md .sx-card-warn {
+  font-size: 12px;
+  color: rgba(252, 211, 77, 0.95);
+}
+
+/* tone modifiers */
+.sx-tone-up      { color: #34d399; }
+.sx-tone-down    { color: #f87171; }
+.sx-tone-neutral { color: rgba(229, 231, 235, 0.85); }
+
+/* stat-grid */
+.webchat-msg .md .sx-stat-grid-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.webchat-msg .md .sx-stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.webchat-msg .md .sx-stat-row:last-child { border-bottom: 0; }
+.webchat-msg .md .sx-stat-row-main { min-width: 0; flex: 1; }
+.webchat-msg .md .sx-stat-label {
+  font-size: 13px;
+  color: rgba(235, 235, 245, 0.92);
+  font-weight: 500;
+}
+.webchat-msg .md .sx-stat-hint {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(235, 235, 245, 0.55);
+}
+.webchat-msg .md .sx-stat-row-value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.webchat-msg .md .sx-stat-value {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fff;
+}
+.webchat-msg .md .sx-stat-change {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+.webchat-msg .md .sx-stat-change.sx-tone-up {
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+.webchat-msg .md .sx-stat-change.sx-tone-down {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+.webchat-msg .md .sx-stat-change.sx-tone-neutral {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* comparison */
+.webchat-msg .md .sx-comparison-cols {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 700px) {
+  .webchat-msg .md .sx-comparison-cols {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+.webchat-msg .md .sx-comparison-col {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 12px;
+}
+.webchat-msg .md .sx-comparison-col.sx-tone-us {
+  border-color: rgba(167, 139, 250, 0.4);
+  background: rgba(167, 139, 250, 0.07);
+}
+.webchat-msg .md .sx-comparison-col.sx-tone-them {
+  background: rgba(255, 255, 255, 0.015);
+}
+.webchat-msg .md .sx-comparison-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(229, 231, 235, 0.5);
+  min-height: 12px;
+}
+.webchat-msg .md .sx-tone-us .sx-comparison-eyebrow {
+  color: rgba(196, 181, 253, 0.95);
+}
+.webchat-msg .md .sx-comparison-heading {
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+.webchat-msg .md .sx-comparison-points {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.webchat-msg .md .sx-comparison-points li {
+  position: relative;
+  padding-left: 16px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(229, 231, 235, 0.85);
+}
+.webchat-msg .md .sx-comparison-points li::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 0.55em;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(229, 231, 235, 0.5);
+}
+.webchat-msg .md .sx-tone-us .sx-comparison-points li::before {
+  background: rgba(196, 181, 253, 0.95);
+}
+
+/* plan-steps */
+.webchat-msg .md .sx-plan-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.webchat-msg .md .sx-plan-step {
+  display: flex;
+  gap: 12px;
+}
+.webchat-msg .md .sx-plan-step-num {
+  flex-shrink: 0;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(196, 181, 253, 0.9);
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.webchat-msg .md .sx-plan-step-body { flex: 1; min-width: 0; }
+.webchat-msg .md .sx-plan-step-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fafafa;
+}
+.webchat-msg .md .sx-plan-step-text {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(229, 231, 235, 0.85);
+}
+.webchat-msg .md .sx-plan-step-sub {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: rgba(229, 231, 235, 0.7);
+}
+
+/* key-value */
+.webchat-msg .md .sx-kv-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.webchat-msg .md .sx-kv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.webchat-msg .md .sx-kv-row:last-child { border-bottom: 0; }
+.webchat-msg .md .sx-kv-label {
+  margin: 0;
+  font-size: 12.5px;
+  color: rgba(229, 231, 235, 0.6);
+  font-weight: 500;
+}
+.webchat-msg .md .sx-kv-value {
+  margin: 0;
+  font-size: 13px;
+  color: #fff;
+  text-align: right;
+  font-weight: 500;
+}
+
+/* quote */
+.webchat-msg .md .sx-quote {
+  position: relative;
+  padding: 18px 18px 14px;
+  border-left: 3px solid rgba(196, 181, 253, 0.7);
+  background: rgba(196, 181, 253, 0.05);
+}
+.webchat-msg .md .sx-quote-mark {
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  font-size: 32px;
+  line-height: 1;
+  color: rgba(196, 181, 253, 0.4);
+  font-family: Georgia, serif;
+}
+.webchat-msg .md .sx-quote-text {
+  margin: 0 0 0 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(245, 243, 255, 0.95);
+  font-style: italic;
+}
+.webchat-msg .md .sx-quote-meta {
+  margin: 8px 0 0 14px;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 11.5px;
+}
+.webchat-msg .md .sx-quote-author {
+  color: rgba(196, 181, 253, 0.85);
+  font-weight: 500;
+}
+.webchat-msg .md .sx-quote-source {
+  color: rgba(229, 231, 235, 0.55);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* timeline */
+.webchat-msg .md .sx-timeline-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.webchat-msg .md .sx-timeline-event {
+  position: relative;
+  padding-left: 24px;
+}
+.webchat-msg .md .sx-timeline-event::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 18px;
+  bottom: -16px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.webchat-msg .md .sx-timeline-event:last-child::before { display: none; }
+.webchat-msg .md .sx-timeline-dot {
+  position: absolute;
+  left: 1px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(196, 181, 253, 0.95);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+.webchat-msg .md .sx-timeline-when {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(196, 181, 253, 0.85);
+  text-transform: uppercase;
+}
+.webchat-msg .md .sx-timeline-title {
+  margin-top: 2px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #fafafa;
+}
+.webchat-msg .md .sx-timeline-text {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: rgba(229, 231, 235, 0.8);
+}
 .webchat-msg .md blockquote {
   margin: 0.6em 0;
   padding: 4px 0 4px 12px;

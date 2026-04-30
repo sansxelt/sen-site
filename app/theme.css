@@ -275,6 +275,73 @@ html[data-theme="light"] .webchat-msg .md .md-codeblock-preview {
   border-top-color: rgba(0, 0, 0, 0.08);
 }
 
+/* Custom UI cards: dark-glass treatment in dark mode, swap to a
+   soft tinted card on white. Just the chrome / text colors — the
+   tone-up / tone-down badges keep their semantic colors. */
+html[data-theme="light"] .webchat-msg .md .sx-card {
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.04), rgba(0, 0, 0, 0.02));
+  border-color: rgba(139, 92, 246, 0.28);
+  color: #1f1f1f;
+}
+html[data-theme="light"] .webchat-msg .md .sx-card-title { color: #0a0a0c; }
+html[data-theme="light"] .webchat-msg .md .sx-card-subtitle { color: rgba(0, 0, 0, 0.55); }
+html[data-theme="light"] .webchat-msg .md .sx-card-footer {
+  border-top-color: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.6);
+}
+html[data-theme="light"] .webchat-msg .md .sx-stat-row {
+  border-bottom-color: rgba(0, 0, 0, 0.05);
+}
+html[data-theme="light"] .webchat-msg .md .sx-stat-label { color: #0a0a0c; }
+html[data-theme="light"] .webchat-msg .md .sx-stat-hint { color: rgba(0, 0, 0, 0.55); }
+html[data-theme="light"] .webchat-msg .md .sx-stat-value { color: #0a0a0c; }
+html[data-theme="light"] .webchat-msg .md .sx-stat-change.sx-tone-neutral {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.10);
+  color: #1f1f1f;
+}
+html[data-theme="light"] .webchat-msg .md .sx-comparison-col {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+html[data-theme="light"] .webchat-msg .md .sx-comparison-col.sx-tone-us {
+  background: rgba(139, 92, 246, 0.07);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+html[data-theme="light"] .webchat-msg .md .sx-comparison-eyebrow { color: rgba(0, 0, 0, 0.5); }
+html[data-theme="light"] .webchat-msg .md .sx-tone-us .sx-comparison-eyebrow { color: #6d28d9; }
+html[data-theme="light"] .webchat-msg .md .sx-comparison-heading { color: #0a0a0c; }
+html[data-theme="light"] .webchat-msg .md .sx-comparison-points li { color: #1f1f1f; }
+html[data-theme="light"] .webchat-msg .md .sx-comparison-points li::before {
+  background: rgba(0, 0, 0, 0.4);
+}
+html[data-theme="light"] .webchat-msg .md .sx-tone-us .sx-comparison-points li::before {
+  background: #6d28d9;
+}
+html[data-theme="light"] .webchat-msg .md .sx-plan-step-num {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #6d28d9;
+}
+html[data-theme="light"] .webchat-msg .md .sx-plan-step-title { color: #0a0a0c; }
+html[data-theme="light"] .webchat-msg .md .sx-plan-step-text { color: #1f1f1f; }
+html[data-theme="light"] .webchat-msg .md .sx-plan-step-sub { color: rgba(0, 0, 0, 0.7); }
+html[data-theme="light"] .webchat-msg .md .sx-kv-row {
+  border-bottom-color: rgba(0, 0, 0, 0.05);
+}
+html[data-theme="light"] .webchat-msg .md .sx-kv-label { color: rgba(0, 0, 0, 0.55); }
+html[data-theme="light"] .webchat-msg .md .sx-kv-value { color: #0a0a0c; }
+html[data-theme="light"] .webchat-msg .md .sx-quote {
+  border-left-color: #6d28d9;
+  background: rgba(139, 92, 246, 0.04);
+}
+html[data-theme="light"] .webchat-msg .md .sx-quote-text { color: #1f1f1f; }
+html[data-theme="light"] .webchat-msg .md .sx-quote-author { color: #6d28d9; }
+html[data-theme="light"] .webchat-msg .md .sx-timeline-event::before { background: rgba(0, 0, 0, 0.10); }
+html[data-theme="light"] .webchat-msg .md .sx-timeline-when { color: #6d28d9; }
+html[data-theme="light"] .webchat-msg .md .sx-timeline-title { color: #0a0a0c; }
+html[data-theme="light"] .webchat-msg .md .sx-timeline-text { color: rgba(0, 0, 0, 0.7); }
+
 html[data-theme="light"] .webchat-msg .webchat-bubble-action {
   background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.10);

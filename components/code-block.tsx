@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { codeToHtml } from "shiki/bundle/web";
+import { parseSansxelCard, SansxelCard } from "./sansxel-card";
 
 // Code block with Shiki syntax highlighting + copy-to-clipboard.
 // Drop-in replacement for ReactMarkdown's default <code> block
@@ -192,11 +193,24 @@ export function CodeBlock({
   const langMatch = /language-([\w-]+)/.exec(className ?? "");
   const lang = normLang(langMatch?.[1]);
   const rawLang = (langMatch?.[1] ?? "").trim().toLowerCase();
+  const code = String(children).replace(/\n$/, "");
   const previewable = PREVIEWABLE.has(rawLang);
   const [highlighted, setHighlighted] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const code = String(children).replace(/\n$/, "");
+
+  // v0.2.0 phase F: custom UI cards. The model emits a fenced
+  // `sansxel-card` block whose body is JSON describing one of
+  // the registered card shapes. Detect that here (after hook
+  // calls so the hook order stays stable) and hand off to
+  // <SansxelCard /> so dashboards, comparisons, plans, and
+  // quotes render as real components instead of basic markdown.
+  if (rawLang === "sansxel-card") {
+    const parsed = parseSansxelCard(code);
+    if (parsed) return <SansxelCard data={parsed} />;
+    // Malformed JSON falls through to the normal code render
+    // so the user at least sees what the model emitted.
+  }
 
   useEffect(() => {
     let cancelled = false;
