@@ -215,6 +215,29 @@ export function ProjectPicker() {
               {apiStatus.message}
             </div>
           )}
+
+          {/* Phase H — create form moved to the TOP of the dropdown.
+              When users had multiple projects, the form sat below
+              the project list and scrolled offscreen — they couldn't
+              find it and assumed the picker had no create flow. */}
+          <CreateProjectForm
+            onCreated={(p) => {
+              // Optimistic insert at the top so the trigger label
+              // updates IMMEDIATELY to the new project's name.
+              setProjects((prev) =>
+                prev.some((x) => x.id === p.id) ? prev : [p, ...prev],
+              );
+              void refreshList();
+              select(p.id);
+              setOpen(true);
+              // Scroll to the active panel that just appeared.
+              window.setTimeout(() => {
+                const m = menuRef.current;
+                if (m) m.scrollTo({ top: m.scrollHeight, behavior: "smooth" });
+              }, 220);
+            }}
+          />
+
           <div className="project-picker-section-label">
             Projects
             <a
@@ -254,32 +277,6 @@ export function ProjectPicker() {
               )}
             </button>
           ))}
-
-          <CreateProjectForm
-            onCreated={(p) => {
-              // Optimistic insert at the top so the trigger label
-              // updates IMMEDIATELY to the new project's name.
-              // Without this the picker said "No project" until
-              // refreshList returned a beat later (because the
-              // trigger reads the name from the projects list,
-              // which was still stale). refreshList runs anyway
-              // and reconciles with the server's authoritative
-              // list a moment later.
-              setProjects((prev) =>
-                prev.some((x) => x.id === p.id) ? prev : [p, ...prev],
-              );
-              void refreshList();
-              select(p.id);
-              setOpen(true);
-              // Scroll the menu so the user actually sees the new
-              // active panel land (otherwise the form clears and
-              // it feels like nothing happened).
-              window.setTimeout(() => {
-                const m = menuRef.current;
-                if (m) m.scrollTo({ top: m.scrollHeight, behavior: "smooth" });
-              }, 220);
-            }}
-          />
 
           {active && (
             <ActiveProjectPanel

@@ -436,30 +436,10 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
         {!loading && threads && threads.length > 0 && visibleThreads.length === 0 && (
           <div className="chat-history-empty">No matches.</div>
         )}
-        {!loading && grouped.ungrouped.map((t) => (
-          <ThreadRow
-            key={t.id}
-            thread={t}
-            isActive={activeThreadId === t.id}
-            isEditing={editingId === t.id}
-            editValue={editValue}
-            setEditValue={setEditValue}
-            busy={busyId === t.id}
-            inFlight={flightIds.has(t.id)}
-            isMoveOpen={movingId === t.id}
-            projects={projects}
-            onClick={() => router.replace(`/app?thread=${t.id}`)}
-            onStartRename={() => startRename(t)}
-            onSubmitRename={() => submitRename(t.id)}
-            onCancelRename={() => setEditingId(null)}
-            onDelete={() => handleDelete(t.id)}
-            onOpenMove={() =>
-              setMovingId((cur) => (cur === t.id ? null : t.id))
-            }
-            onCloseMove={() => setMovingId(null)}
-            onMove={(pid) => void moveThreadToProject(t.id, pid)}
-          />
-        ))}
+        {/* Phase H — project folders render BEFORE the ungrouped
+            flat list. Without this they sank to the bottom of a
+            long history (31+ chats), invisible. ChatGPT-style
+            order: folders on top, flat chats below. */}
         {!loading &&
           grouped.projectSections.map((section) => {
             // While searching, force-expand sections so matches
@@ -548,6 +528,38 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
               </div>
             );
           })}
+        {/* Ungrouped (no project) chats render below the folders.
+            With folders on top, an "All chats" eyebrow keeps the
+            transition readable when both groups are present. */}
+        {!loading &&
+          grouped.projectSections.length > 0 &&
+          grouped.ungrouped.length > 0 && (
+            <div className="chat-history-flat-eyebrow">All chats</div>
+          )}
+        {!loading && grouped.ungrouped.map((t) => (
+          <ThreadRow
+            key={t.id}
+            thread={t}
+            isActive={activeThreadId === t.id}
+            isEditing={editingId === t.id}
+            editValue={editValue}
+            setEditValue={setEditValue}
+            busy={busyId === t.id}
+            inFlight={flightIds.has(t.id)}
+            isMoveOpen={movingId === t.id}
+            projects={projects}
+            onClick={() => router.replace(`/app?thread=${t.id}`)}
+            onStartRename={() => startRename(t)}
+            onSubmitRename={() => submitRename(t.id)}
+            onCancelRename={() => setEditingId(null)}
+            onDelete={() => handleDelete(t.id)}
+            onOpenMove={() =>
+              setMovingId((cur) => (cur === t.id ? null : t.id))
+            }
+            onCloseMove={() => setMovingId(null)}
+            onMove={(pid) => void moveThreadToProject(t.id, pid)}
+          />
+        ))}
       </div>
     </aside>
   );
