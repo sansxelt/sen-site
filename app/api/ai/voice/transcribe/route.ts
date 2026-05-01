@@ -95,12 +95,12 @@ export async function POST(request: Request) {
   try {
     const result = await client.audio.transcriptions.create({
       file,
-      model: "whisper-1",
+      model: "gpt-4o-mini-transcribe",
     });
     void recordUsage({
       email,
       kind: "voice_transcribe",
-      model: "whisper-1",
+      model: "gpt-4o-mini-transcribe",
       surface,
       // Whisper doesn't return token usage; approximate with byte size
       // for cost-class tracking. Refine later if we add server-side

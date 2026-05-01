@@ -811,21 +811,8 @@ export function WebChat({
   const abortRef = useRef<AbortController | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
-  // v0.1.16, Live preview transcript via the browser's Web Speech
-  // API (Chrome/Edge: window.webkitSpeechRecognition). Runs alongside
-  // MediaRecorder so the user sees their words appearing in real time
-  // while they speak. Whisper still produces the canonical transcript
-  // that actually gets sent, Web Speech is display-only because its
-  // accuracy is uneven across browsers and accents.
-  const [liveTranscript, setLiveTranscript] = useState("");
-  // Accumulator for the FINAL portion of the transcript across events.
-  // Web Speech returns cumulative interim results each event (each
-  // event's interim REPLACES the last); only when a result becomes
-  // final does it move into the canonical text. Mixing the two
-  // without this ref produced "eyeyebroweyebrow" duplication.
-  const finalTranscriptRef = useRef("");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const speechRecognitionRef = useRef<any>(null);
+  // (Web Speech live-preview state removed; transcribe path is the
+  // only source of text now. Simpler + fewer cross-browser bugs.)
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -2604,13 +2591,6 @@ export function WebChat({
         if (ev.data.size > 0) recordedChunksRef.current.push(ev.data);
       };
       recorder.onstop = async () => {
-        // Tear down the live preview recognizer; Whisper takes over.
-        if (speechRecognitionRef.current) {
-          try { speechRecognitionRef.current.stop(); } catch { /* ignore */ }
-          speechRecognitionRef.current = null;
-        }
-        finalTranscriptRef.current = "";
-        setLiveTranscript("");
         if (!voiceModeRef.current && micStreamRef.current) {
           micStreamRef.current.getTracks().forEach((t) => t.stop());
           micStreamRef.current = null;
@@ -2672,50 +2652,10 @@ export function WebChat({
       heardSpeechRef.current = false;
       recorder.start();
       setVoiceState("recording");
-
-      // Kick off the parallel Web Speech recognizer for live preview
-      // text. Silently no-ops on browsers that don't support it
-      // (Safari, Firefox); Whisper still works either way.
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const SR =
-          (window as any).SpeechRecognition ||
-          (window as any).webkitSpeechRecognition;
-        if (SR) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const rec: any = new SR();
-          rec.continuous = true;
-          rec.interimResults = true;
-          rec.lang = navigator.language || "en-US";
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          rec.onresult = (event: any) => {
-            // Walk only the new results since last event. Final pieces
-            // get committed to the ref accumulator (persistent across
-            // events); interim is always the latest replacement, never
-            // appended, that's the source of the duplication bug.
-            let interim = "";
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-              const t = event.results[i][0].transcript;
-              if (event.results[i].isFinal) {
-                finalTranscriptRef.current += t;
-              } else {
-                interim += t;
-              }
-            }
-            setLiveTranscript((finalTranscriptRef.current + interim).trimStart());
-          };
-          rec.onerror = () => {
-            // Permission denied / network, leave preview empty,
-            // Whisper takes over on stop.
-          };
-          rec.start();
-          speechRecognitionRef.current = rec;
-          finalTranscriptRef.current = "";
-          setLiveTranscript("");
-        }
-      } catch {
-        // ignore, preview is best-effort
-      }
+      // (Web Speech live preview removed — flaky cross-browser,
+      // and gpt-4o-mini-transcribe is fast enough server-side that
+      // the wait is negligible. One source of truth = simpler code,
+      // fewer bugs.)
     } catch (err) {
       setChatError(err instanceof Error ? err.message : "Mic access denied.");
       setVoiceState("idle");
@@ -3351,11 +3291,7 @@ export function WebChat({
 
         <textarea
           ref={textareaRef}
-          value={
-            voiceState === "recording" && liveTranscript
-              ? liveTranscript
-              : input
-          }
+          value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -3365,7 +3301,7 @@ export function WebChat({
           }}
           placeholder={
             voiceState === "recording"
-              ? "Listening… speak now"
+              ? "Listening… click mic again to send"
               : voiceState === "transcribing"
                 ? "Transcribing…"
                 : voiceState === "speaking"
@@ -3374,7 +3310,6 @@ export function WebChat({
           }
           rows={1}
           disabled={voiceState === "recording" || voiceState === "transcribing"}
-          className={voiceState === "recording" && liveTranscript ? "is-live-transcript" : undefined}
         />
         <div className="webchat-input-actions">
           <div className="webchat-input-actions-left">
