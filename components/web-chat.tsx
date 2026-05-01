@@ -3106,8 +3106,17 @@ export function WebChat({
               )}
             {messages.map((m, i) => {
               const isLast = i === messages.length - 1;
+              // Inflight = empty assistant placeholder at the end
+              // of the list. Used to require `streaming === true`
+              // too, but state-batching / URL-update races could
+              // flip streaming off momentarily and the phase pill
+              // + dots would vanish, leaving an empty bubble for
+              // 10+ seconds while waiting on first byte. Empty
+              // placeholders always get the inflight UI now;
+              // they're either filling in (smooth render) or
+              // getting removed (empty-stream guard).
               const isInflight =
-                isLast && m.role === "assistant" && streaming && m.content === "";
+                isLast && m.role === "assistant" && m.content === "";
               const isStillStreaming =
                 isLast && m.role === "assistant" && streaming && m.content !== "";
               // v0.2.0 phase G — duel-turn render branch. A populated
@@ -3134,22 +3143,24 @@ export function WebChat({
                 >
                   {isInflight ? (
                     <div className="webchat-inflight">
-                      {phaseLabel && (
-                        <div className="webchat-phase-pill" aria-live="polite">
-                          {/* keyed span so React remounts the
-                              text node on label change, re-running
-                              the CSS fade. Looks like a soft
-                              crossfade between Thinking ->
-                              Analyzing -> Searching -> Writing
-                              instead of an abrupt text swap. */}
-                          <span
-                            key={phaseLabel}
-                            className="webchat-phase-text"
-                          >
-                            {phaseLabel}
-                          </span>
-                        </div>
-                      )}
+                      <div className="webchat-phase-pill" aria-live="polite">
+                        {/* keyed span so React remounts the
+                            text node on label change, re-running
+                            the CSS fade. Looks like a soft
+                            crossfade between Thinking ->
+                            Analyzing -> Searching -> Writing
+                            instead of an abrupt text swap.
+                            Defaults to "Thinking…" when phaseLabel
+                            is null so the user always sees an
+                            indicator (vs. an empty bubble during
+                            slow first-byte waits). */}
+                        <span
+                          key={phaseLabel ?? "thinking"}
+                          className="webchat-phase-text"
+                        >
+                          {phaseLabel ?? "Thinking…"}
+                        </span>
+                      </div>
                       <WebBounceDots />
                     </div>
                   ) : m.role === "assistant" ? (
