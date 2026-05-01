@@ -289,16 +289,53 @@ export function WebChat({
         return;
       }
 
-      // Text-paste fallback: only kicks in when the user pasted
-      // somewhere OTHER than an input. Otherwise the default browser
-      // paste handles it natively.
+      // Text-paste handling, three cases:
+      //   1. Pasted into the chat textarea AND text is "long"
+      //      (>=2000 chars or >=30 lines): intercept, convert to
+      //      an attachment chip above the input. Same UX as
+      //      ChatGPT — long pastes don't bury the textarea, the
+      //      AI still scans them as if they were a file.
+      //      Multiple long pastes = multiple chips.
+      //   2. Pasted into the chat textarea AND text is short:
+      //      let the default browser paste fire (just types in).
+      //   3. Pasted somewhere ELSE on the page (no input focus):
+      //      append to the chat textarea + focus it.
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
       const inField =
         tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable;
-      if (inField) return;
       const text = dt.getData("text/plain");
       if (!text) return;
+
+      const PASTE_AS_ATTACHMENT_CHARS = 2000;
+      const PASTE_AS_ATTACHMENT_LINES = 30;
+      const lineCount = text.split("\n").length;
+      const isLongPaste =
+        text.length >= PASTE_AS_ATTACHMENT_CHARS ||
+        lineCount >= PASTE_AS_ATTACHMENT_LINES;
+
+      // Long paste into the chat textarea → convert to attachment.
+      if (
+        inField &&
+        target === textareaRef.current &&
+        isLongPaste
+      ) {
+        e.preventDefault();
+        // Heuristic: if it looks like code, name it .txt anyway —
+        // the AI sees the contents either way and the chip just
+        // labels it "Pasted text". Code-extension naming would
+        // route through the syntax-highlighted code panel which
+        // is distracting for ad-hoc paste-and-ask flows.
+        const filename = `Pasted (${text.length.toLocaleString()} chars).txt`;
+        const file = new File([text], filename, { type: "text/plain" });
+        void lei.addFiles([file]);
+        return;
+      }
+
+      // Short paste in any input: default browser paste.
+      if (inField) return;
+
+      // Paste outside any input: bring it into the chat textarea.
       e.preventDefault();
       setInput((prev) => prev + text);
       requestAnimationFrame(() => {
