@@ -990,6 +990,73 @@
 /* Pin count chip in the active-project trigger. Tiny violet
    pill so the user sees at a glance how much context is
    attached without opening the menu. */
+/* Phase H — primary CTA at the top of the picker dropdown.
+   Routes to /account/memory for project creation since the
+   picker is now selection-only. Designed as the most prominent
+   element in the dropdown so users see the path immediately. */
+.project-picker-create-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.16),
+    rgba(140, 90, 255, 0.10)
+  );
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 10px;
+  text-decoration: none;
+  color: #f3e8ff;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, transform 120ms ease;
+}
+.project-picker-create-cta:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.26),
+    rgba(140, 90, 255, 0.18)
+  );
+  border-color: rgba(192, 132, 252, 0.6);
+}
+.project-picker-create-cta:active {
+  transform: translateY(1px);
+}
+.project-picker-create-cta-glyph {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(168, 85, 247, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f3e8ff;
+  flex-shrink: 0;
+}
+.project-picker-create-cta-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.project-picker-create-cta-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f5f3ff;
+}
+.project-picker-create-cta-sub {
+  font-size: 11px;
+  color: rgba(220, 220, 235, 0.65);
+}
+.project-picker-create-cta-arrow {
+  font-size: 14px;
+  color: rgba(196, 181, 253, 0.85);
+  flex-shrink: 0;
+}
+
 /* Inline link to /account/memory inside the picker section
    header so users can jump to the full management page. Mirrors
    the "Open all" pattern from the chat history rail. */

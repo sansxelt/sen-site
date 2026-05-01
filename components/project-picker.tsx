@@ -216,27 +216,26 @@ export function ProjectPicker() {
             </div>
           )}
 
-          {/* Phase H — create form moved to the TOP of the dropdown.
-              When users had multiple projects, the form sat below
-              the project list and scrolled offscreen — they couldn't
-              find it and assumed the picker had no create flow. */}
-          <CreateProjectForm
-            onCreated={(p) => {
-              // Optimistic insert at the top so the trigger label
-              // updates IMMEDIATELY to the new project's name.
-              setProjects((prev) =>
-                prev.some((x) => x.id === p.id) ? prev : [p, ...prev],
-              );
-              void refreshList();
-              select(p.id);
-              setOpen(true);
-              // Scroll to the active panel that just appeared.
-              window.setTimeout(() => {
-                const m = menuRef.current;
-                if (m) m.scrollTo({ top: m.scrollHeight, behavior: "smooth" });
-              }, 220);
-            }}
-          />
+          {/* Phase H — picker is selection-only now. Creating a
+              new project redirects to /account/memory where the
+              full editor lives (better discoverability + no
+              cramped inline form). */}
+          <a
+            href="/account/memory"
+            className="project-picker-create-cta"
+            onClick={() => setOpen(false)}
+          >
+            <span className="project-picker-create-cta-glyph" aria-hidden>+</span>
+            <span className="project-picker-create-cta-body">
+              <span className="project-picker-create-cta-title">
+                Create new project
+              </span>
+              <span className="project-picker-create-cta-sub">
+                Opens the full editor with pinned context
+              </span>
+            </span>
+            <span className="project-picker-create-cta-arrow" aria-hidden>→</span>
+          </a>
 
           <div className="project-picker-section-label">
             Projects
@@ -296,100 +295,11 @@ export function ProjectPicker() {
 
 // --- Sub-components -------------------------------------------
 
-function CreateProjectForm({
-  onCreated,
-}: {
-  onCreated: (p: Project) => void;
-}) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [goals, setGoals] = useState("");
-  const [pending, setPending] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  // Success ribbon: shows for 1.5s after a successful create so
-  // the user has clear visual confirmation. Without this the
-  // form just silently cleared and the save felt invisible.
-  const [savedFlash, setSavedFlash] = useState(false);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || pending) return;
-    setPending(true);
-    setErr(null);
-    try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || undefined,
-          goals: goals.trim() || undefined,
-        }),
-      });
-      if (!res.ok) {
-        const d = (await res.json().catch(() => ({}))) as { error?: string };
-        const detail = d.error ?? `HTTP ${res.status}`;
-        console.warn("[projects] create failed:", res.status, detail);
-        setErr(
-          res.status === 401
-            ? "Sign in to create projects."
-            : `Couldn't save: ${detail}`,
-        );
-        return;
-      }
-      const data = (await res.json()) as { project: Project };
-      console.log("[projects] created:", data.project?.id, data.project?.name);
-      setName("");
-      setDescription("");
-      setGoals("");
-      setSavedFlash(true);
-      window.setTimeout(() => setSavedFlash(false), 1500);
-      onCreated(data.project);
-    } catch (err) {
-      console.warn("[projects] create threw:", err);
-      setErr("Network error. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
-  };
-
-  return (
-    <form className="project-picker-create" onSubmit={submit}>
-      <div className="project-picker-section-label">New project</div>
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Project name"
-        className="project-picker-input"
-      />
-      <input
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Description (optional)"
-        className="project-picker-input"
-      />
-      <input
-        value={goals}
-        onChange={(e) => setGoals(e.target.value)}
-        placeholder="Goals (optional)"
-        className="project-picker-input"
-      />
-      {err && <div className="project-picker-error">{err}</div>}
-      {savedFlash && (
-        <div className="project-picker-saved" role="status">
-          Saved. Pick it from the list above to attach this chat.
-        </div>
-      )}
-      <button
-        type="submit"
-        disabled={!name.trim() || pending}
-        className="project-picker-submit"
-      >
-        {pending ? "Creating…" : savedFlash ? "Saved!" : "Create project"}
-      </button>
-    </form>
-  );
-}
+// Phase H — CreateProjectForm removed. Project creation is now
+// only available on /account/memory (the dedicated management
+// page). The picker dropdown's "+ Create new project" CTA links
+// there instead. Less duplication, no cramped inline form, no
+// confusion about whether the picker form actually saves.
 
 function ActiveProjectPanel({
   project,
