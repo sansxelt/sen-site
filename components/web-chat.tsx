@@ -369,6 +369,18 @@ export function WebChat({
   const wantsNew = searchParams?.get("new") === "1";
   const requestedThreadParam = searchParams?.get("thread") ?? null;
   const promptParam = searchParams?.get("prompt") ?? null;
+  // ?project=<id> on a fresh chat URL pre-attaches that project
+  // to the next send, no localStorage race. Used by the rail's
+  // "Start a chat here" CTA: it sets the URL + WebChat picks it
+  // up here. Cleared after first send so it doesn't stick on
+  // subsequent turns of the same thread.
+  const requestedProjectParam = searchParams?.get("project") ?? null;
+  const pendingProjectIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (requestedProjectParam) {
+      pendingProjectIdRef.current = requestedProjectParam;
+    }
+  }, [requestedProjectParam]);
   const hasHydratedRef = useRef(false);
   const promptHandledRef = useRef(false);
 
@@ -1237,6 +1249,20 @@ export function WebChat({
       // shouldn't carry the same id.
       const regenerateConsumed = regenerateTargetRef.current;
       regenerateTargetRef.current = null;
+      // Same one-shot pattern for the pending ?project=<id>:
+      // capture, then clear so follow-up sends in the same thread
+      // don't re-attempt to attach. Also strip it from the URL.
+      const pendingProjectConsumed = pendingProjectIdRef.current;
+      if (pendingProjectConsumed) {
+        pendingProjectIdRef.current = null;
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          if (url.searchParams.get("project")) {
+            url.searchParams.delete("project");
+            window.history.replaceState({}, "", url.pathname + url.search);
+          }
+        }
+      }
 
       const res = await fetch("/api/ai/chat", {
         method: "POST",
@@ -1254,9 +1280,17 @@ export function WebChat({
           // resolved, so it can't sneak context into someone else's
           // existing thread; the assignment only happens on first
           // turn of a fresh thread.
+          //
+          // Source of truth (in priority order):
+          //   1. ?project=<id> URL param (rail "Start a chat here")
+          //   2. localStorage active project (composer picker)
+          // (1) wins so the URL-param flow always lands the chat
+          // in the right project even if the picker hasn't synced.
+          // Pending param is consumed once and cleared so follow-up
+          // turns don't re-attempt assignment.
           project_id: threadIdRef.current
             ? undefined
-            : getActiveProjectId() ?? undefined,
+            : (pendingProjectConsumed ?? getActiveProjectId() ?? undefined),
           // v0.2.0 phase E, edit-and-resend. When the user is
           // rewriting an old turn, the server deletes from this
           // message id forward before saving the new user turn.
@@ -1926,6 +1960,20 @@ export function WebChat({
         });
       };
 
+      // Same one-shot pendingProjectIdRef consume pattern as send()
+      // — capture, then clear + strip ?project= from the URL so a
+      // refresh doesn't re-attach.
+      const duelPendingProject = pendingProjectIdRef.current;
+      if (duelPendingProject) {
+        pendingProjectIdRef.current = null;
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          if (url.searchParams.get("project")) {
+            url.searchParams.delete("project");
+            window.history.replaceState({}, "", url.pathname + url.search);
+          }
+        }
+      }
       try {
         const res = await fetch("/api/ai/duel", {
           method: "POST",
@@ -1935,7 +1983,7 @@ export function WebChat({
             thread_id: threadIdRef.current ?? undefined,
             project_id: threadIdRef.current
               ? undefined
-              : getActiveProjectId() ?? undefined,
+              : (duelPendingProject ?? getActiveProjectId() ?? undefined),
             client_time_iso: new Date().toISOString(),
             client_timezone: clientTimezone,
             client_time_label: clientTimeLabel,

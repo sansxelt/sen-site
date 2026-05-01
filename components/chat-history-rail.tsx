@@ -506,13 +506,15 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
                   <button
                     type="button"
                     className="chat-history-project-empty"
-                    onClick={async () => {
-                      // Create the thread server-side WITH the
-                      // project_id baked in, then navigate to it.
-                      // Skips the previous localStorage→send race
-                      // where new chats could land in "All chats"
-                      // because getActiveProjectId() returned
-                      // before the URL effect committed.
+                    onClick={() => {
+                      // Set active project + open a blank chat
+                      // marked with the project id in the URL.
+                      // The thread is NOT created on the server
+                      // until the user actually sends a message —
+                      // no phantom empty threads. WebChat reads
+                      // the ?project= param at mount and uses it
+                      // for the first send's project_id, no
+                      // localStorage race.
                       if (typeof window !== "undefined") {
                         window.localStorage.setItem(
                           "sansxel.activeProjectId",
@@ -523,40 +525,11 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
                             detail: section.id,
                           }),
                         );
-                      }
-                      try {
-                        const res = await fetch("/api/threads", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ project_id: section.id }),
-                        });
-                        if (res.ok) {
-                          const data = (await res.json()) as {
-                            thread?: { id: string };
-                          };
-                          if (typeof window !== "undefined") {
-                            window.dispatchEvent(
-                              new CustomEvent("sansxel:new-chat"),
-                            );
-                            window.dispatchEvent(
-                              new CustomEvent("sansxel:threads:changed"),
-                            );
-                          }
-                          if (data.thread?.id) {
-                            router.replace(`/app?thread=${data.thread.id}`);
-                            return;
-                          }
-                        }
-                      } catch {
-                        // fall through to the legacy new-chat path
-                      }
-                      // Fallback if the create endpoint failed.
-                      if (typeof window !== "undefined") {
                         window.dispatchEvent(
                           new CustomEvent("sansxel:new-chat"),
                         );
                       }
-                      router.replace("/app?new=1");
+                      router.replace(`/app?new=1&project=${section.id}`);
                     }}
                     title={`Start a chat in ${section.name}`}
                   >
