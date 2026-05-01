@@ -451,6 +451,31 @@
   color: #e9d5ff;
 }
 
+/* v0.2.0 phase H — opt-in continuous AI rename. Sits below the
+   rename input when a thread is being edited. Tiny + subtle so
+   it doesn't compete with the input itself. */
+.chat-history-auto-rename-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 0 2px;
+  font-size: 11px;
+  color: rgba(196, 181, 253, 0.75);
+  cursor: pointer;
+  user-select: none;
+}
+.chat-history-auto-rename-toggle input[type="checkbox"] {
+  width: 12px;
+  height: 12px;
+  accent-color: #a855f7;
+  cursor: pointer;
+  margin: 0;
+}
+.chat-history-auto-rename-toggle:hover {
+  color: #e9d5ff;
+}
+
 /* v0.2.0 — project sections in the rail. Collapsible header that
    acts like a folder. The chat rows inside indent slightly so the
    hierarchy reads visually. */

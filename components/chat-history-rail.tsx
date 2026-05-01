@@ -11,6 +11,9 @@ type Thread = {
   // Drives the rail's project-folder grouping + the per-row
   // Move-to-project action.
   project_id?: string | null;
+  // v0.2.0 phase H — opt-in to continuous AI title updates.
+  // Default false; rail's rename UI exposes a checkbox.
+  auto_rename?: boolean;
 };
 type ProjectLite = { id: string; name: string };
 
@@ -314,8 +317,13 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     setEditingId(null);
     if (!title || !threads) return;
     const previous = threads;
-    // Optimistic update so the UI feels instant.
-    setThreads(threads.map((x) => (x.id === id ? { ...x, title } : x)));
+    // Manual rename clears auto_rename server-side; mirror that
+    // optimistically so the checkbox state matches in the UI.
+    setThreads(
+      threads.map((x) =>
+        x.id === id ? { ...x, title, auto_rename: false } : x,
+      ),
+    );
     try {
       const res = await fetch(`/api/threads/${id}`, {
         method: "PATCH",
@@ -327,6 +335,32 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
       } else {
         // Broadcast so any other rail mounts re-fetch.
         window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+      }
+    } catch {
+      setThreads(previous);
+    }
+  };
+
+  // Toggle the "let AI keep updating this title" checkbox. When
+  // enabled, the chat route regenerates the title after every
+  // assistant turn; when disabled, it sticks. Optimistic update
+  // for instant feedback; reverts on server error.
+  const toggleAutoRename = async (id: string, enabled: boolean) => {
+    if (!threads) return;
+    const previous = threads;
+    setThreads(
+      threads.map((x) =>
+        x.id === id ? { ...x, auto_rename: enabled } : x,
+      ),
+    );
+    try {
+      const res = await fetch(`/api/threads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ auto_rename: enabled }),
+      });
+      if (!res.ok) {
+        setThreads(previous);
       }
     } catch {
       setThreads(previous);
@@ -523,6 +557,9 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
                       }
                       onCloseMove={() => setMovingId(null)}
                       onMove={(pid) => void moveThreadToProject(t.id, pid)}
+                      onToggleAutoRename={(enabled) =>
+                        void toggleAutoRename(t.id, enabled)
+                      }
                     />
                   ))}
               </div>
@@ -558,6 +595,9 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             }
             onCloseMove={() => setMovingId(null)}
             onMove={(pid) => void moveThreadToProject(t.id, pid)}
+            onToggleAutoRename={(enabled) =>
+              void toggleAutoRename(t.id, enabled)
+            }
           />
         ))}
       </div>
@@ -583,6 +623,7 @@ function ThreadRow({
   onOpenMove,
   onCloseMove,
   onMove,
+  onToggleAutoRename,
 }: {
   thread: Thread;
   isActive: boolean;
@@ -601,6 +642,7 @@ function ThreadRow({
   onOpenMove: () => void;
   onCloseMove: () => void;
   onMove: (projectId: string | null) => void;
+  onToggleAutoRename: (enabled: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
@@ -624,6 +666,23 @@ function ThreadRow({
           onBlur={onSubmitRename}
           className="chat-history-edit-input"
         />
+        {/* Phase H — opt-in to continuous AI rename. When checked,
+            the chat route regenerates this thread's title after
+            every assistant turn so it tracks the topic as the
+            conversation evolves. Default off; manually renaming
+            in the input above also turns this off. */}
+        <label
+          className="chat-history-auto-rename-toggle"
+          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <input
+            type="checkbox"
+            checked={thread.auto_rename === true}
+            onChange={(e) => onToggleAutoRename(e.target.checked)}
+          />
+          <span>Let AI keep updating this title</span>
+        </label>
       </div>
     );
   }

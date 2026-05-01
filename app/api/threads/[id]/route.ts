@@ -6,6 +6,7 @@ import {
   getThread,
   listMessages,
   renameThread,
+  setThreadAutoRename,
   setThreadProject,
 } from "../../../../lib/chat-history";
 import { getProjectWithPins } from "../../../../lib/projects";
@@ -53,6 +54,7 @@ export async function PATCH(
   const payload = (await request.json().catch(() => ({}))) as {
     title?: string;
     project_id?: string | null;
+    auto_rename?: boolean;
   };
 
   let didTouch = false;
@@ -61,8 +63,18 @@ export async function PATCH(
     if (!payload.title.trim()) {
       return NextResponse.json({ error: "Title is required." }, { status: 400 });
     }
+    // Manual rename: byUser=true (default) clears auto_rename so
+    // the AI title regen stops overwriting the user's choice.
     const ok = await renameThread(email, id, payload.title);
     if (!ok) return NextResponse.json({ error: "Rename failed." }, { status: 500 });
+    didTouch = true;
+  }
+
+  if (typeof payload.auto_rename === "boolean") {
+    const ok = await setThreadAutoRename(email, id, payload.auto_rename);
+    if (!ok) {
+      return NextResponse.json({ error: "Auto-rename toggle failed." }, { status: 500 });
+    }
     didTouch = true;
   }
 

@@ -20,6 +20,12 @@ export type ChatThread = {
   // chats). The chat history rail groups threads by this id so
   // projects act as folders/categories for the user's chats.
   project_id?: string | null;
+  // v0.2.0 phase H — opt-in continuous AI rename. When true, the
+  // chat route re-runs the title generator after every assistant
+  // turn so the title evolves with the conversation. Default
+  // false: AI titles once after the first reply, then sticks.
+  // Manual renames flip this back to false (lock).
+  auto_rename?: boolean;
 };
 
 export type StoredMessage = {
@@ -77,7 +83,7 @@ export async function listThreads(email: string): Promise<ChatThread[]> {
     // message row.
     const { data, error } = await supabase
       .from("chat_threads" as never)
-      .select("id, email, title, created_at, updated_at, project_id, chat_messages!inner(id)")
+      .select("id, email, title, created_at, updated_at, project_id, auto_rename, chat_messages!inner(id)")
       .eq("email", email.toLowerCase())
       .order("updated_at", { ascending: false })
       .limit(100);
@@ -88,7 +94,7 @@ export async function listThreads(email: string): Promise<ChatThread[]> {
       // messages that the join filtered out).
       const fallback = await supabase
         .from("chat_threads" as never)
-        .select("id, email, title, created_at, updated_at, project_id")
+        .select("id, email, title, created_at, updated_at, project_id, auto_rename")
         .eq("email", email.toLowerCase())
         .order("updated_at", { ascending: false })
         .limit(100);
@@ -133,7 +139,7 @@ export async function getThread(email: string, threadId: string): Promise<ChatTh
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("chat_threads" as never)
-      .select("id, email, title, created_at, updated_at, project_id")
+      .select("id, email, title, created_at, updated_at, project_id, auto_rename")
       .eq("id", threadId)
       .eq("email", email.toLowerCase())
       .maybeSingle();
@@ -370,15 +376,30 @@ export async function updateMessageContent(
   }
 }
 
-/** Renames a thread (no-op if it doesn't belong to the user). */
-export async function renameThread(email: string, threadId: string, title: string): Promise<boolean> {
+/** Renames a thread. byUser=true (the default) is a manual rename
+ * from the rail or settings, which also clears auto_rename so the
+ * AI title regenerator stops overwriting the user's choice.
+ * byUser=false is the AI title generator's own update path; it
+ * leaves auto_rename alone. No-op if the thread doesn't belong to
+ * the user. */
+export async function renameThread(
+  email: string,
+  threadId: string,
+  title: string,
+  byUser: boolean = true,
+): Promise<boolean> {
   if (!email || !threadId || !isDatabaseConfigured()) return false;
   const safe = title.trim().slice(0, TITLE_MAX_LEN) || TITLE_FALLBACK;
   try {
     const supabase = getSupabaseAdminClient();
+    const update: Record<string, unknown> = {
+      title: safe,
+      updated_at: new Date().toISOString(),
+    };
+    if (byUser) update.auto_rename = false;
     const { error } = await supabase
       .from("chat_threads" as never)
-      .update({ title: safe, updated_at: new Date().toISOString() } as never)
+      .update(update as never)
       .eq("id", threadId)
       .eq("email", email.toLowerCase());
     if (error) {
@@ -388,6 +409,33 @@ export async function renameThread(email: string, threadId: string, title: strin
     return true;
   } catch (err) {
     console.warn("renameThread threw:", err);
+    return false;
+  }
+}
+
+/** Sets the auto_rename flag on a thread. true = AI keeps updating
+ * the title after each assistant turn; false = stick with whatever
+ * is set. Owner-checked. */
+export async function setThreadAutoRename(
+  email: string,
+  threadId: string,
+  enabled: boolean,
+): Promise<boolean> {
+  if (!email || !threadId || !isDatabaseConfigured()) return false;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from("chat_threads" as never)
+      .update({ auto_rename: enabled } as never)
+      .eq("id", threadId)
+      .eq("email", email.toLowerCase());
+    if (error) {
+      console.warn("setThreadAutoRename failed:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("setThreadAutoRename threw:", err);
     return false;
   }
 }

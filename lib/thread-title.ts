@@ -67,7 +67,10 @@ export async function generateAndSetThreadTitle(email: string, threadId: string)
     if (!cleaned) return;
     // Hard cap so a runaway title doesn't break the sidebar.
     const final = cleaned.length > 60 ? cleaned.slice(0, 59) + "…" : cleaned;
-    await renameThread(email, threadId, final);
+    // byUser=false: this is an AI rename, must NOT clear the
+    // auto_rename flag (otherwise the AI would lock itself out
+    // of subsequent updates).
+    await renameThread(email, threadId, final, false);
   } catch (err) {
     console.warn("generateAndSetThreadTitle failed:", err);
   }

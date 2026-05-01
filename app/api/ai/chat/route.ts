@@ -1298,20 +1298,23 @@ export async function POST(request: Request) {
                   content: finalContent,
                 });
               }
-              // After the assistant turn lands, fire AI title gen
-              // for threads that still have the auto-snippet title
-              // (the first user message). Cheap Haiku call. Fails
-              // open, bad titles just stay snippets if it errors.
+              // Title-gen logic, two paths:
+              //   1. First-pass AI rename: fire when the title still
+              //      looks like the auto-derived snippet (covers
+              //      brand-new threads AND old crap-titled ones the
+              //      user is reviving).
+              //   2. Continuous auto-rename: fire on EVERY assistant
+              //      turn when the user opted in via the rail's
+              //      "let AI keep updating" checkbox (auto_rename=true).
+              //      Lets the title evolve as the conversation drifts.
+              //
+              // Manual renames flip auto_rename = false, so this
+              // block respects them automatically.
               try {
                 const after = await listChatMessages(email, tid);
                 const firstUser = after.find((m) => m.role === "user");
                 const firstAssistant = after.find((m) => m.role === "assistant");
                 if (firstUser && firstAssistant) {
-                  // Snippet-detection regen: fire whenever the title
-                  // looks like the auto-derived first-message snippet
-                  // OR the placeholder. Covers fresh threads (first
-                  // round) AND old crap-titled ones the user is now
-                  // continuing, both auto-upgrade.
                   const t = await getChatThread(email, tid);
                   const currentTitle = (t?.title ?? "").trim();
                   const firstText = firstUser.content.replace(/\s+/g, " ").trim();
@@ -1324,7 +1327,8 @@ export async function POST(request: Request) {
                     looksLikeUrlTitle ||
                     (currentTitle.length < 30 &&
                       firstText.toLowerCase().startsWith(currentTitle.toLowerCase()));
-                  if (looksLikeSnippet) {
+                  const wantsContinuousRename = t?.auto_rename === true;
+                  if (looksLikeSnippet || wantsContinuousRename) {
                     await generateAndSetThreadTitle(email, tid);
                   }
                 }
