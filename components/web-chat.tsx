@@ -1586,6 +1586,26 @@ export function WebChat({
         assistant += tail;
         if (willSpeak) ttsBuf.text += tail;
       }
+      // Empty-stream guard. If the request completed cleanly but
+      // the model returned ZERO tokens (vision content moderation,
+      // upstream timeout that silently closed, etc.), the catch
+      // block never fires and the empty placeholder bubble lingers
+      // forever. Surface an error pill + drop the placeholder so
+      // the user can hit Retry instead of staring at nothing.
+      if (!assistant.trim()) {
+        if (isStillThisThread()) {
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last && last.role === "assistant" && !last.content) {
+              return prev.slice(0, -1);
+            }
+            return prev;
+          });
+          setChatError(
+            "No reply came back. Vision can stall on dense images — try sending again, or rephrase.",
+          );
+        }
+      }
       // Stream is done, let the smooth render drain the rest.
       smoothActive = false;
       // Wait for the visual to catch up before any post-stream work
