@@ -1402,10 +1402,13 @@ export function WebChat({
       };
       smoothRaf = requestAnimationFrame(tickRender);
 
-      // Sentence-streaming TTS, only in V→V mode. V→T is dictation:
-      // we transcribe, the AI replies in text, end of turn (no audio
-      // reply, no auto-restart of the mic).
-      const willSpeak = lastTurnWasVoice.current && lei.voiceStyle === "v2v";
+      // Auto-TTS removed: voice is Dictate-only now. User speaks,
+      // we transcribe, the AI replies in text, end of turn. The
+      // sentence-streaming TTS plumbing below is kept inert (the
+      // willSpeak gate stays false) but the variables are still
+      // referenced downstream — leaving them in scope avoids a
+      // bigger refactor for this pass.
+      const willSpeak = false;
       const ttsBuf = { text: "" };
       const ttsQueue: Array<{ blob: Blob | null; done: boolean }> = [];
       let ttsNextPlay = 0;
@@ -2717,14 +2720,14 @@ export function WebChat({
   }, [startRecording]);
 
   const enterVoiceMode = useCallback(async () => {
-    // V→V style: enter the full-screen orb overlay + continuous loop.
-    // V→T style: one-shot dictation, no overlay, no TTS, no auto-loop.
-    // The two modes need to look and feel obviously different.
-    if (lei.voiceStyle === "v2v") {
-      setVoiceMode(true);
-    }
+    // Voice is now Dictate-only: click mic → record → click again
+    // to send. No full-screen overlay, no auto-TTS, no auto-loop.
+    // The V2V "Talk" mode was the bulk of the "unnecessary stuff"
+    // user complaint and added a lot of state machine complexity
+    // for marginal value. Removed entirely; the v2v style toggle
+    // now no-ops (kept the read so older settings don't error).
     await startRecording();
-  }, [startRecording, lei.voiceStyle]);
+  }, [startRecording]);
 
   const exitVoiceMode = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state !== "inactive") {
@@ -2866,38 +2869,13 @@ export function WebChat({
     voiceMode,
     plan,
   });
-  const hideTranscript = voiceMode && lei.voiceStyle === "v2v";
+  // Talk-mode overlay removed entirely. Voice is Dictate-only now;
+  // the user clicks the mic button next to Send, records, clicks
+  // again, and the transcript drops into the input. No overlay,
+  // no auto-TTS, no auto-loop.
 
   return (
-    <section className={`webchat${hideTranscript ? " webchat--v2v" : ""}`}>
-      {voiceMode && (
-        <WebVoiceOverlay
-          state={voiceState}
-          level={audioLevel}
-          error={chatError}
-          onMicTap={() => {
-            // Tapping the orb when there's an error clears it +
-            // retries (most common case: mic permission was denied
-            // but user wants another try).
-            if (chatError) setChatError(null);
-            if (voiceState === "recording") {
-              const r = recorderRef.current;
-              if (r && r.state !== "inactive") r.stop();
-            } else if (voiceState === "speaking") {
-              if (audioElRef.current) {
-                audioElRef.current.pause();
-                audioElRef.current = null;
-              }
-              stopAnalyser();
-              setVoiceState("idle");
-              void startRecording();
-            } else if (voiceState === "idle") {
-              void startRecording();
-            }
-          }}
-          onExit={exitVoiceMode}
-        />
-      )}
+    <section className="webchat">
 
       <div className="webchat-bar">
         <div className="webchat-bar-left">
