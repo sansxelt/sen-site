@@ -124,10 +124,18 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
               {/* Log in ghost link (only when signed out) sits next
                   to the dropdown trigger, same secondary/primary
-                  rhythm as enterprise SaaS headers. */}
+                  rhythm as enterprise SaaS headers.
+
+                  Always points at chat.sansxel.ai/signin: the apex
+                  marketing site can't see chat's session cookie
+                  (auth.ts keeps cookies single-host), so logging in
+                  on apex would set a cookie on the wrong domain
+                  and the user would still appear signed-out on
+                  chat. Routing to chat's signin puts the cookie
+                  where the app actually lives. */}
               {!signedIn && (
                 <Link
-                  href={getSignInPath()}
+                  href="https://chat.sansxel.ai/signin"
                   className="hidden text-sm font-medium text-neutral-300 transition hover:text-white lg:inline"
                 >
                   Log in
