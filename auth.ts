@@ -16,11 +16,63 @@ import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials
 // posting cross-origin → browser blocks it → 'Configuration' error
 // page. Stripping AUTH_URL at module load forces NextAuth to fall
 // back to its trustHost-based per-request URL detection.
-//
-// Side effect: cookies stay single-host (no .sansxel.ai spanning).
-// Cross-subdomain SSO is a separate problem to solve later.
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
+
+// v0.2.0 phase H — cross-subdomain cookie. Set AUTH_COOKIE_DOMAIN
+// to ".sansxel.ai" (with the leading dot) in prod env so the
+// session cookie is scoped to all subdomains. Without this, the
+// apex marketing site (sansxel.ai) couldn't see chat.sansxel.ai's
+// session and showed "Log in" to already-signed-in users.
+//
+// Local dev / preview deploys: leave AUTH_COOKIE_DOMAIN unset, so
+// NextAuth uses its per-request default (single-host cookie) and
+// localhost / preview URLs keep working.
+//
+// Migration cost: existing chat-only cookies stay valid for now,
+// but new sign-ins will get the spanning cookie. Users who want
+// the apex to recognize them need to sign out + back in once.
+const cookieDomain = (process.env.AUTH_COOKIE_DOMAIN ?? "").trim() || undefined;
+const cookieOptions = cookieDomain
+  ? {
+      sessionToken: {
+        // NextAuth picks the secure-prefixed name automatically
+        // for HTTPS; matching that here so existing logic still
+        // works.
+        name: "__Secure-authjs.session-token",
+        options: {
+          httpOnly: true,
+          sameSite: "lax" as const,
+          path: "/",
+          secure: true,
+          domain: cookieDomain,
+        },
+      },
+      callbackUrl: {
+        name: "__Secure-authjs.callback-url",
+        options: {
+          httpOnly: true,
+          sameSite: "lax" as const,
+          path: "/",
+          secure: true,
+          domain: cookieDomain,
+        },
+      },
+      csrfToken: {
+        name: "__Host-authjs.csrf-token",
+        options: {
+          httpOnly: true,
+          sameSite: "lax" as const,
+          path: "/",
+          secure: true,
+          // __Host- prefix forbids a domain attribute, so we
+          // intentionally OMIT domain on the csrf cookie. The
+          // CSRF check still fires per-host; only the session
+          // needs to span subdomains for SSO to work.
+        },
+      },
+    }
+  : undefined;
 
 const authResult = NextAuth({
   trustHost: true,
@@ -93,6 +145,7 @@ const authResult = NextAuth({
   session: {
     strategy: "jwt",
   },
+  ...(cookieOptions ? { cookies: cookieOptions } : {}),
   callbacks: {
     async signIn({ user, account }) {
       // No email from the provider → reject. We can't create an account
