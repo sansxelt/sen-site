@@ -1049,15 +1049,24 @@ export function WebChat({
       } else if (att.kind === "image" && att.previewUrl) {
         try {
           const blob = await fetch(att.previewUrl).then((r) => r.blob());
+          // Downsample BEFORE base64. Phone photos are 12MP+
+          // (3-5MB raw). Server caps at 1MB and silently filters
+          // anything bigger — model receives only the text and
+          // bails. Resize to max 1568px on the longest edge
+          // (Anthropic's vision sweet spot) and re-encode as JPEG
+          // with quality stepping until we're under ~900KB.
+          const downsampled = await downsampleForVision(blob).catch(() => null);
+          const finalBlob = downsampled ?? blob;
+          const finalMime = downsampled ? "image/jpeg" : (att.mime || "image/png");
           const dataUrl = await new Promise<string>((resolve, reject) => {
             const r = new FileReader();
             r.onload = () => resolve(String(r.result));
             r.onerror = () => reject(new Error("read failed"));
-            r.readAsDataURL(blob);
+            r.readAsDataURL(finalBlob);
           });
           const m = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
           if (m) {
-            const mt = (att.mime || m[1] || "image/png").toLowerCase();
+            const mt = finalMime.toLowerCase();
             const accepted = ["image/png", "image/jpeg", "image/gif", "image/webp"] as const;
             if ((accepted as readonly string[]).includes(mt)) {
               imageBlocks.push({
@@ -4282,6 +4291,71 @@ function VoiceStyleToggle({
       >Talk</button>
     </div>
   );
+}
+
+// Downsample an image Blob for vision upload. Anthropic's vision
+// works best around ~1.15 megapixels and our server caps payload
+// at 1MB per image. Phone photos (12MP, 3-5MB) blew past both
+// limits and got silently filtered out, leaving the model with
+// only text — which on a "what's the answer to #3?" prompt looks
+// like the AI bailed.
+//
+// Strategy: load into <img>, scale longest edge down to MAX_EDGE
+// preserving aspect ratio, draw to canvas, export as JPEG with
+// stepping quality (0.85 -> 0.7 -> 0.55) until under MAX_BYTES.
+// Returns null on any failure so the caller falls back to the
+// original blob (which the server will then drop, but at least
+// the error pill fires instead of a silent empty stream).
+async function downsampleForVision(blob: Blob): Promise<Blob | null> {
+  const MAX_EDGE = 1568;
+  const MAX_BYTES = 900_000;
+  // Skip downsample for already-small images — keeps PNG quality
+  // for tiny screenshots and avoids needless re-encoding.
+  if (blob.size <= MAX_BYTES) {
+    // Still re-check dimensions; a small-byte image at 4000px wide
+    // is rare but possible. Cheap enough to always check.
+  }
+  try {
+    const url = URL.createObjectURL(blob);
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("image decode failed"));
+      el.src = url;
+    });
+    const longest = Math.max(img.naturalWidth, img.naturalHeight);
+    const scale = longest > MAX_EDGE ? MAX_EDGE / longest : 1;
+    if (scale === 1 && blob.size <= MAX_BYTES) {
+      URL.revokeObjectURL(url);
+      return blob;
+    }
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      URL.revokeObjectURL(url);
+      return null;
+    }
+    ctx.drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(url);
+    for (const quality of [0.85, 0.7, 0.55]) {
+      const out = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((b) => resolve(b), "image/jpeg", quality);
+      });
+      if (out && out.size <= MAX_BYTES) return out;
+    }
+    // Even at 0.55 quality we couldn't fit. Return the smallest
+    // attempt anyway; server will reject if still too big but at
+    // least the user sees the error pill.
+    return await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.55);
+    });
+  } catch {
+    return null;
+  }
 }
 
 function prettyAttSize(bytes: number): string {
