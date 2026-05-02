@@ -440,8 +440,9 @@ export function DashboardNav({
           column owns its own scroll so the brand + new-chat stay
           pinned at top and the desktop CTA + footer stay pinned at
           bottom, ChatGPT-style. */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-hidden border-r border-white/10 px-4 lg:flex">
-        <div className="flex items-center justify-between py-3">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
+        {/* Logo */}
+        <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] py-3">
           <Link href="/app" className="flex items-center gap-2.5">
             <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" priority />
             <div className="flex flex-col leading-tight">
@@ -452,20 +453,25 @@ export function DashboardNav({
           <ThemeToggle compact />
         </div>
 
-        <Link
-          href="/app"
-          onClick={(e) => { if (inWorkshop) e.preventDefault(); }}
-          className={`mb-1 flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-            isActive("/app")
-              ? "bg-white/10 text-white"
-              : "text-neutral-200 hover:bg-white/5 hover:text-white"
-          }`}
-        >
-          <ChatIcon />
-          Chat
-        </Link>
+        {/* Chat — pinned below logo with its own divider */}
+        <div className="shrink-0 border-b border-white/[0.06] py-2">
+          <Link
+            href="/app"
+            onClick={(e) => { if (inWorkshop) e.preventDefault(); }}
+            className={`flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+              isActive("/app")
+                ? "bg-white/10 text-white"
+                : "text-neutral-200 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <ChatIcon />
+            Chat
+          </Link>
+        </div>
 
-        <nav className="flex flex-col gap-1.5">
+        {/* Nav groups — flex-1 + min-h-0 so this section owns any
+            overflow on short viewports; logo + footer stay pinned. */}
+        <nav className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto py-2">
           {effectiveGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-0.5">
               <div className="px-3 pb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
@@ -476,7 +482,7 @@ export function DashboardNav({
           ))}
         </nav>
 
-        <div className="mt-auto border-t border-white/[0.06] pb-4 pt-3">
+        <div className="shrink-0 border-t border-white/[0.06] pb-4 pt-3">
           <div className="mb-1 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
 
           <Link
