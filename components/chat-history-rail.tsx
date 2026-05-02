@@ -105,6 +105,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   const params = useSearchParams();
   const router = useRouter();
   const activeThreadId = params?.get("thread") ?? null;
+  const pendingProjectId = params?.get("project") ?? null;
 
   // ChatGPT pattern: when the user is on a fresh "+ New chat" (URL
   // has ?new=1 or no thread param yet), prepend a virtual entry at
@@ -443,10 +444,10 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
         )}
       </div>
       <div className="chat-history-list">
-        {/* Phantom 'New chat' entry at the very top when the user is
-            on a fresh + New chat that hasn't been sent yet. Vanishes
-            once the URL gets a real ?thread=<id> after first send. */}
-        {isOnNewChat && (
+        {/* Phantom 'New chat' entry — only shown at top when NOT in
+            a project. Project-scoped new chats render inside their
+            project section below so the context is obvious. */}
+        {isOnNewChat && !pendingProjectId && (
           <div
             className="chat-history-item is-active is-pending"
             aria-label="New chat (not yet saved)"
@@ -502,7 +503,22 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
                     {section.threads.length}
                   </span>
                 </button>
-                {!collapsed && section.threads.length === 0 && (
+                {/* Phantom new-chat entry inside this project section
+                    when the user started a new chat from this project. */}
+                {!collapsed && isOnNewChat && pendingProjectId === section.id && (
+                  <div
+                    className="chat-history-item is-active is-pending"
+                    aria-label="New chat in project (not yet saved)"
+                  >
+                    <div className="chat-history-item-body">
+                      <div className="chat-history-item-title">New chat</div>
+                      <div className="chat-history-item-meta">
+                        In {section.name} · saves on first message
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!collapsed && section.threads.length === 0 && !(isOnNewChat && pendingProjectId === section.id) && (
                   <button
                     type="button"
                     className="chat-history-project-empty"
