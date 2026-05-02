@@ -139,6 +139,19 @@ export function ProjectPicker() {
     void refreshActive(id);
   }, [refreshList, refreshActive]);
 
+  // Keep the chip in sync when an external caller clears the project
+  // (e.g. + New button dispatches project:changed with null so the
+  // picker resets without the user having to open and re-select).
+  useEffect(() => {
+    const onChanged = (e: Event) => {
+      const id = (e as CustomEvent<string | null>).detail ?? null;
+      setActiveIdLocal(id);
+      void refreshActive(id);
+    };
+    window.addEventListener("sansxel:project:changed", onChanged);
+    return () => window.removeEventListener("sansxel:project:changed", onChanged);
+  }, [refreshActive]);
+
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
