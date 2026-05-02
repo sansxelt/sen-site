@@ -1264,6 +1264,15 @@ export function WebChat({
         }
       }
 
+      // Pre-compute which project (if any) this new thread will be
+      // filed under. Captured here so we can sync the strip AFTER the
+      // server confirms the thread was created, using the exact value
+      // that was actually sent — not a stale localStorage read.
+      const isNewThread = !threadIdRef.current;
+      const sentProjectId: string | null = isNewThread
+        ? (pendingProjectConsumed ?? getActiveProjectId() ?? null)
+        : null;
+
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1288,9 +1297,7 @@ export function WebChat({
           // in the right project even if the picker hasn't synced.
           // Pending param is consumed once and cleared so follow-up
           // turns don't re-attempt assignment.
-          project_id: threadIdRef.current
-            ? undefined
-            : (pendingProjectConsumed ?? getActiveProjectId() ?? undefined),
+          project_id: sentProjectId ?? undefined,
           // v0.2.0 phase E, edit-and-resend. When the user is
           // rewriting an old turn, the server deletes from this
           // message id forward before saving the new user turn.
@@ -1314,6 +1321,14 @@ export function WebChat({
       const echoedThreadId = res.headers.get("x-sansxel-thread-id");
       if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
         setThreadId(echoedThreadId);
+        // Sync the project strip to what was ACTUALLY saved. On first
+        // send (isNewThread), call fetchAttachedProject with the exact
+        // project ID that was sent to the server — or null if none was
+        // sent. This prevents "IN PROJECT" showing on threads that were
+        // never filed under a project, and confirms it when they were.
+        if (isNewThread) {
+          void fetchAttachedProject(sentProjectId);
+        }
         // Reflect the new active thread in the URL so the rail's
         // active outline picks up immediately.
         if (typeof window !== "undefined") {

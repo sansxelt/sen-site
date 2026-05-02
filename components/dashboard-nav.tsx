@@ -377,9 +377,12 @@ export function DashboardNav({
 
   const handleNewChat = () => {
     if (typeof window !== "undefined") {
-      // Clear active project so a plain new chat doesn't
-      // silently inherit the last project from localStorage.
+      // Clear active project so a plain new chat doesn't silently
+      // inherit the last project from localStorage. Must dispatch
+      // project:changed (not just remove from storage) so the strip
+      // in WebChat clears immediately without waiting for a remount.
       window.localStorage.removeItem("sansxel.activeProjectId");
+      window.dispatchEvent(new CustomEvent("sansxel:project:changed", { detail: null }));
       window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
     }
     router.replace("/app?new=1");
