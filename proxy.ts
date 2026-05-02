@@ -1,24 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Next.js 16 renamed middleware → proxy, but proxy is Node.js-only
-// and OpenNext on Cloudflare Workers only supports the Edge runtime
-// (the Worker runtime IS the Edge runtime, basically). So we keep
-// using the legacy `middleware.ts` filename + `middleware` function
-// to stay on Edge. Per the v16 upgrade docs:
-//
-//   "The edge runtime is NOT supported in proxy. The proxy runtime
-//    is nodejs, and it cannot be configured. If you want to continue
-//    using the edge runtime, keep using middleware."
-//
-// Single job here: host routing.
+// Next.js 16 proxy. Single job now: host routing.
 //
 // Host routing splits sansxel.ai / chat.sansxel.ai /
 // platform.sansxel.ai into their own zones (workshop, marketing,
 // docs).
 //
 // Auth gating used to live here too but moved into route + layout
-// auth() checks; getToken() at the middleware layer disagreed with
+// auth() checks; getToken() at the proxy layer disagreed with
 // auth() about cookie visibility, which produced false 401s
 // (most recently the Top-up Credits modal returning "Sign in to
 // continue" while the user was clearly signed in).
@@ -65,7 +55,7 @@ function hostRoute(req: NextRequest): NextResponse | null {
     if (path === "/") {
       // Root = workshop. Rewrite to /app so the URL bar stays at /
       // and the workshop renders. /app's page.tsx now handles its
-      // own auth gate via auth() (avoids the middleware getToken mismatch).
+      // own auth gate via auth() (avoids the proxy getToken mismatch).
       return NextResponse.rewrite(new URL("/app", url));
     }
     if (startsWithAny(path, MARKETING_PATHS)) {
@@ -74,7 +64,7 @@ function hostRoute(req: NextRequest): NextResponse | null {
         302,
       );
     }
-    return null; // pass through to auth gate / next handler
+    return null;
   }
 
   // platform.sansxel.ai
@@ -118,12 +108,7 @@ function hostRoute(req: NextRequest): NextResponse | null {
   return null;
 }
 
-// Plain async middleware (no auth() wrapper). The wrapper was
-// rewriting every NextResponse.rewrite into a 307 redirect to
-// AUTH_URL, which broke chat.sansxel.ai/ → /app and
-// platform.sansxel.ai/ → /platform-soon because both are rewrites,
-// not redirects. Routes + layouts handle auth via auth() instead.
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const hostResp = hostRoute(req);
   if (hostResp) return hostResp;
   return NextResponse.next();

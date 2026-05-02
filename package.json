@@ -7,8 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "npx -y @opennextjs/cloudflare@1.19.5 build && npx -y @opennextjs/cloudflare@1.19.5 deploy",
-    "preview": "npx -y @opennextjs/cloudflare@1.19.5 build && npx -y @opennextjs/cloudflare@1.19.5 preview",
     "desktop:dev": "npm --prefix desktop run tauri dev",
     "desktop:build": "npm --prefix desktop run tauri build",
     "desktop:keygen": "npm --prefix desktop run tauri signer generate -- -w sansxel-updater.key"
@@ -38,7 +36,6 @@
     "stripe": "^22.0.1"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.19.5",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
