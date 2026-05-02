@@ -37,13 +37,25 @@ export type StripePricedItemKey = PricingPlanKey | BillingAddonKey;
 
 export const STRIPE_PRICES: Record<StripePricedItemKey, Partial<Record<BillingCycle, string | undefined>>> = {
   free: {},
+  student: {
+    monthly: process.env.STRIPE_PRICE_STUDENT_MONTHLY,
+    yearly:  process.env.STRIPE_PRICE_STUDENT_YEARLY,
+  },
   apprentice: {
     monthly: process.env.STRIPE_PRICE_APPRENTICE_MONTHLY,
     yearly:  process.env.STRIPE_PRICE_APPRENTICE_YEARLY,
   },
+  creator: {
+    monthly: process.env.STRIPE_PRICE_CREATOR_MONTHLY,
+    yearly:  process.env.STRIPE_PRICE_CREATOR_YEARLY,
+  },
   studio: {
     monthly: process.env.STRIPE_PRICE_STUDIO_MONTHLY,
     yearly:  process.env.STRIPE_PRICE_STUDIO_YEARLY,
+  },
+  developer: {
+    monthly: process.env.STRIPE_PRICE_DEVELOPER_MONTHLY,
+    yearly:  process.env.STRIPE_PRICE_DEVELOPER_YEARLY,
   },
   pro: {
     monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
@@ -74,6 +86,25 @@ export const STRIPE_PRICES: Record<StripePricedItemKey, Partial<Record<BillingCy
   },
   weekly_boost: {
     monthly: process.env.STRIPE_PRICE_WEEKLY_BOOST,
+  },
+  // v0.2.x marketplace add-ons.
+  voice_pack_standard: {
+    monthly: process.env.STRIPE_PRICE_VOICE_PACK_STANDARD_MONTHLY,
+    yearly:  process.env.STRIPE_PRICE_VOICE_PACK_STANDARD_YEARLY,
+  },
+  storage_upgrade: {
+    monthly: process.env.STRIPE_PRICE_STORAGE_UPGRADE_MONTHLY,
+    yearly:  process.env.STRIPE_PRICE_STORAGE_UPGRADE_YEARLY,
+  },
+  template_pack: {
+    monthly: process.env.STRIPE_PRICE_TEMPLATE_PACK,
+  },
+  agent_pack: {
+    monthly: process.env.STRIPE_PRICE_AGENT_PACK_MONTHLY,
+    yearly:  process.env.STRIPE_PRICE_AGENT_PACK_YEARLY,
+  },
+  lifetime_deal: {
+    monthly: process.env.STRIPE_PRICE_LIFETIME_DEAL,
   },
 };
 

@@ -65,6 +65,27 @@ export type PlanLimits = {
 };
 
 export const PLAN_LIMITS: Record<PlanKey, PlanLimits> = {
+  student: {
+    weekly_chat_requests: 300,
+    weekly_voice_seconds: 15 * 60,
+    weekly_image_requests: 15,
+    weekly_duel_requests: 3,
+    session_warn_after: 40,
+  },
+  creator: {
+    weekly_chat_requests: 800,
+    weekly_voice_seconds: 45 * 60,
+    weekly_image_requests: 75,
+    weekly_duel_requests: null,
+    session_warn_after: 60,
+  },
+  developer: {
+    weekly_chat_requests: 1500,
+    weekly_voice_seconds: 90 * 60,
+    weekly_image_requests: 100,
+    weekly_duel_requests: null,
+    session_warn_after: 80,
+  },
   free: {
     weekly_chat_requests: 50,
     weekly_voice_seconds: 0,

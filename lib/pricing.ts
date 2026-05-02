@@ -1,7 +1,10 @@
 export type PricingPlanKey =
   | "free"
+  | "student"
   | "apprentice"
+  | "creator"
   | "studio"
+  | "developer"
   | "pro"
   | "teams"
   | "enterprise";
@@ -23,7 +26,13 @@ export type BillingAddonKey =
   // v0.1.9 dropped voice_minute_pack / image_credit_pack /
   // copilot_time_pack, replaced by buy-credits flow.
   | "session_boost"
-  | "weekly_boost";
+  | "weekly_boost"
+  // v0.2.x marketplace add-ons
+  | "voice_pack_standard"
+  | "storage_upgrade"
+  | "template_pack"
+  | "agent_pack"
+  | "lifetime_deal";
 
 // One-time top-up keys that are charged with a single PaymentIntent
 // instead of being attached as a recurring subscription item. Centralized
@@ -31,6 +40,8 @@ export type BillingAddonKey =
 export const ONE_TIME_BOOST_KEYS: ReadonlySet<BillingAddonKey> = new Set([
   "session_boost",
   "weekly_boost",
+  "template_pack",
+  "lifetime_deal",
 ]);
 
 export function isOneTimeBoost(key: string): key is BillingAddonKey {
@@ -80,6 +91,7 @@ export type PricingSnapshot = {
 };
 
 export type BillingAddon = {
+  badge?: string;
   ctaLabel: string;
   description: string;
   key: BillingAddonKey;
@@ -117,6 +129,32 @@ export const pricingPlans: PricingPlan[] = [
     yearlyLabel: undefined,
   },
   {
+    apiRequestLimit: 30000,
+    badge: "Student Rate",
+    ctaLabel: "Start student plan",
+    ctaVariant: "account",
+    description:
+      "Built for school. Homework help, document analysis, writing, tutoring, and voice study sessions.",
+    key: "student",
+    memoryWindow: "30-day history",
+    monthlyCredits: "Study usage",
+    monthlyLabel: "$6 / month",
+    monthlyValue: 6,
+    name: "Student",
+    note: "Verified students only",
+    points: [
+      "300 weekly chats",
+      "Tutoring + writing + math help",
+      "PDF and doc reading",
+      "15 voice minutes / week",
+      "15 image generations / week",
+    ],
+    seats: "1 seat",
+    segment: "individual",
+    support: "Community support",
+    yearlyLabel: "$54 / year",
+  },
+  {
     apiRequestLimit: 50000,
     ctaLabel: "Choose Core",
     ctaVariant: "account",
@@ -141,6 +179,31 @@ export const pricingPlans: PricingPlan[] = [
     yearlyLabel: "$120 / year",
   },
   {
+    apiRequestLimit: 80000,
+    ctaLabel: "Start creator plan",
+    ctaVariant: "account",
+    description:
+      "For YouTubers, designers, writers, streamers, and content creators who need images, scripts, and captions.",
+    key: "creator",
+    memoryWindow: "45-day history",
+    monthlyCredits: "Creator usage",
+    monthlyLabel: "$15 / month",
+    monthlyValue: 15,
+    name: "Creator",
+    note: "Content-first toolkit",
+    points: [
+      "800 weekly chats",
+      "75 image generations / week",
+      "Script, caption, and thumbnail help",
+      "45 voice minutes / week",
+      "Advanced writing and rewrite tools",
+    ],
+    seats: "1 seat",
+    segment: "individual",
+    support: "Standard support",
+    yearlyLabel: "$144 / year",
+  },
+  {
     apiRequestLimit: 150000,
     ctaLabel: "Choose Plus",
     ctaVariant: "account",
@@ -163,6 +226,31 @@ export const pricingPlans: PricingPlan[] = [
     segment: "individual",
     support: "Priority email support",
     yearlyLabel: "$192 / year",
+  },
+  {
+    apiRequestLimit: 200000,
+    ctaLabel: "Start developer plan",
+    ctaVariant: "account",
+    description:
+      "Higher code limits, repo analysis, app building, debugging, deployment help, and API access.",
+    key: "developer",
+    memoryWindow: "90-day history",
+    monthlyCredits: "Developer usage + API",
+    monthlyLabel: "$29 / month",
+    monthlyValue: 29,
+    name: "Developer",
+    note: "Build-first toolkit",
+    points: [
+      "1500 weekly chats",
+      "API access included",
+      "Deeper code and repo analysis",
+      "90 voice minutes / week",
+      "100 image generations / week",
+    ],
+    seats: "1 seat",
+    segment: "individual",
+    support: "Priority email support",
+    yearlyLabel: "$276 / year",
   },
   {
     apiRequestLimit: 500000,
@@ -312,6 +400,85 @@ export const billingAddons: BillingAddon[] = [
   // were dropped in favour of the flexible credit ledger. Users buy a
   // dollar balance and each feature burns credits at
   // CREDIT_COSTS[kind] (see lib/credits.ts).
+  // ──────────────────────────────────────────────────────────────────
+  // v0.2.x marketplace add-ons.
+  // ──────────────────────────────────────────────────────────────────
+  {
+    ctaLabel: "Add Voice Pack",
+    description: "Access premium AI voices, higher quality speech output, and additional voice styles.",
+    key: "voice_pack_standard",
+    monthlyLabel: "$4 / month",
+    monthlyValue: 4,
+    name: "Voice Pack",
+    note: "Upgrades voice quality",
+    points: [
+      "5 additional voice styles",
+      "Higher fidelity speech output",
+      "Narration and podcast-style voices",
+    ],
+    yearlyLabel: "$38 / year",
+  },
+  {
+    ctaLabel: "Add Storage",
+    description: "Extra storage for files, generated images, project history, documents, and workspace assets.",
+    key: "storage_upgrade",
+    monthlyLabel: "$3 / month",
+    monthlyValue: 3,
+    name: "Storage Upgrade",
+    note: "10 GB extra storage",
+    points: [
+      "+10 GB file and asset storage",
+      "Longer project memory retention",
+      "Extended chat history archive",
+    ],
+    yearlyLabel: "$28 / year",
+  },
+  {
+    ctaLabel: "Buy Template Pack",
+    description: "50 curated prompt packs, business workflows, study templates, content systems, and coding scaffolds.",
+    key: "template_pack",
+    monthlyLabel: "$6 one-time",
+    monthlyValue: 6,
+    name: "Template Pack",
+    note: "One-time purchase",
+    points: [
+      "50 professional prompt templates",
+      "Business, creator, and study packs",
+      "Instant workflow starters",
+    ],
+  },
+  {
+    ctaLabel: "Add Agent Pack",
+    description: "Unlock specialist agents for coding, school, content creation, research, and productivity.",
+    key: "agent_pack",
+    monthlyLabel: "$8 / month",
+    monthlyValue: 8,
+    name: "Agent Pack",
+    note: "Specialized AI agents",
+    points: [
+      "Coding agent (full-project debug)",
+      "Research agent (multi-source synthesis)",
+      "Study agent (tutoring + flashcards)",
+      "Content agent (script + SEO + captions)",
+    ],
+    yearlyLabel: "$76 / year",
+  },
+  {
+    badge: "Limited",
+    ctaLabel: "Get Lifetime Pro",
+    description: "Pay once, use Pro forever. Early adopter pricing — limited spots. Includes all current Pro features and future core updates.",
+    key: "lifetime_deal",
+    monthlyLabel: "$199 one-time",
+    monthlyValue: 199,
+    name: "Lifetime Pro",
+    note: "Limited — early adopter",
+    points: [
+      "Pro plan access forever",
+      "All future core feature updates",
+      "Early adopter badge",
+      "Priority support",
+    ],
+  },
 ];
 
 // v0.1.16, Plans that already INCLUDE the value of recurring addons.
@@ -331,8 +498,11 @@ export const billingAddons: BillingAddon[] = [
 // well with any plan when the user wants more.
 export const ADDONS_INCLUDED_BY_PLAN: Record<string, BillingAddonKey[]> = {
   free: [],
+  student: [],
   apprentice: [],
+  creator: [],
   studio: ["copilot_pro_pack"],
+  developer: [],
   pro: ["copilot_pro_pack", "power_pack"],
   teams: ["copilot_pro_pack", "power_pack"],
   enterprise: ["copilot_pro_pack", "power_pack"],
@@ -391,6 +561,9 @@ export function planDisplayName(key: string | null | undefined): string {
   if (k === "teams") return "Teams";
   if (k === "enterprise") return "Enterprise";
   if (k === "free") return "Free";
+  if (k === "student") return "Student";
+  if (k === "creator") return "Creator";
+  if (k === "developer") return "Developer";
   return key || "Free";
 }
 

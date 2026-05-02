@@ -7,8 +7,11 @@ export type ModelTier = "fast" | "balanced" | "smart";
 
 export type PlanKey =
   | "free"
+  | "student"
   | "apprentice"
+  | "creator"
   | "studio"
+  | "developer"
   | "pro"
   | "teams"
   | "enterprise";
@@ -48,8 +51,11 @@ export const MODEL_REGISTRY: ReadonlyArray<ModelDescriptor> = [
 
 const PLAN_RANK: Record<PlanKey, number> = {
   free: 0,
+  student: 0,
   apprentice: 1,
+  creator: 1,
   studio: 1,
+  developer: 2,
   pro: 2,
   teams: 3,
   enterprise: 3,
