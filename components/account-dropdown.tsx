@@ -100,7 +100,13 @@ export function AccountDropdown({ email, isAdmin = false }: Props) {
             role="menuitem"
             onClick={() => {
               setOpen(false);
-              void signOut({ callbackUrl: "/" });
+              // Sign out clears the .sansxel.ai-scoped cookie
+              // (auth.ts cookies config) and lands the user on
+              // the apex marketing site. Going to "/" here would
+              // bounce: chat.sansxel.ai's proxy rewrites "/" to
+              // /app, which requires auth, so the user'd loop
+              // straight back to /signin. Apex avoids the loop.
+              void signOut({ callbackUrl: "https://sansxel.ai" });
             }}
             className="block w-full border-t border-white/[0.06] px-4 py-2.5 text-left text-sm text-neutral-400 transition hover:bg-white/[0.04] hover:text-white"
           >
