@@ -245,7 +245,13 @@ const authResult = NextAuth({
       try {
         const parsed = new URL(url);
 
-        if (parsed.origin === baseUrl) {
+        // Allow redirects to the same origin or anywhere within the
+        // sansxel.ai family (apex + subdomains) so sign-out from
+        // chat/platform can land back on the apex marketing site.
+        const isSameOrigin = parsed.origin === baseUrl;
+        const isSansxelHost = /^https:\/\/([\w-]+\.)?sansxel\.ai$/.test(parsed.origin);
+
+        if (isSameOrigin || isSansxelHost) {
           return url;
         }
       } catch {
