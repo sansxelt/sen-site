@@ -2983,23 +2983,31 @@ export function WebChat({
       )}
 
       <div className="webchat-scroll" ref={scrollRef} onScroll={onScroll}>
-        {/* Phase H — project-attached strip. Visible proof that
-            the active project is in the loop. Without this users
-            saw the AI reply normally and concluded "projects do
-            nothing" because the pinned context disappears into
-            the system prompt. */}
+        {/* Phase H — project-attached strip. Shows whether the
+            current thread is already filed under a project (existing
+            thread, green "In project" badge) or will be on first send
+            (new thread, amber "Will save here" badge). The distinction
+            makes project membership unambiguous at a glance. */}
         {attachedProject && (
-          <div className="webchat-project-strip" role="note">
+          <div
+            className={`webchat-project-strip${threadId === null ? " webchat-project-strip--pending" : ""}`}
+            role="note"
+          >
             <span className="webchat-project-strip-icon" aria-hidden>◇</span>
             <span className="webchat-project-strip-name">
               {attachedProject.name}
             </span>
             <span className="webchat-project-strip-sep" aria-hidden>·</span>
             <span className="webchat-project-strip-meta">
-              {attachedProject.pinCount}{" "}
-              {attachedProject.pinCount === 1 ? "pin" : "pins"} attached
+              {threadId === null
+                ? "new chat"
+                : `${attachedProject.pinCount} ${attachedProject.pinCount === 1 ? "pin" : "pins"}`}
             </span>
-            <span className="webchat-project-strip-active">Context active</span>
+            {threadId === null ? (
+              <span className="webchat-project-strip-pending">Will save here</span>
+            ) : (
+              <span className="webchat-project-strip-active">In project</span>
+            )}
           </div>
         )}
         {showEmpty ? (
@@ -3010,6 +3018,13 @@ export function WebChat({
               Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
               working on, code, design, research, a half-baked idea at 2am.
             </p>
+            {attachedProject && (
+              <div className="webchat-empty-project-note">
+                <span className="webchat-empty-project-note-icon">◇</span>
+                Chat will be saved in{" "}
+                <strong>{attachedProject.name}</strong>
+              </div>
+            )}
             {recentThreads && recentThreads.length > 0 && (
               <div className="webchat-empty-continue">
                 <div className="webchat-empty-continue-label">

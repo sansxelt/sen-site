@@ -1647,6 +1647,49 @@ div[id] {
   text-transform: uppercase;
 }
 
+/* Pending (new-chat) variant of the project strip badge. Amber
+   instead of green to signal the thread hasn't been committed yet. */
+.webchat-project-strip--pending {
+  border-color: rgba(251, 191, 36, 0.28);
+  background: rgba(251, 191, 36, 0.05);
+}
+.webchat-project-strip-pending {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fcd34d;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Project note inside the empty-state "What are you making?" box.
+   Shows below the description when a project is active so the user
+   clearly knows the upcoming chat will land there. */
+.webchat-empty-project-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 5px 12px;
+  background: rgba(168, 85, 247, 0.07);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 999px;
+  font-size: 12px;
+  color: rgba(220, 210, 255, 0.85);
+}
+.webchat-empty-project-note strong {
+  color: #e9d5ff;
+  font-weight: 600;
+}
+.webchat-empty-project-note-icon {
+  color: #c4b5fd;
+  font-size: 11px;
+}
+
 .webchat-list {
   display: flex;
   flex-direction: column;
