@@ -1625,7 +1625,17 @@ export function WebChat({
       // block never fires and the empty placeholder bubble lingers
       // forever. Surface an error pill + drop the placeholder so
       // the user can hit Retry instead of staring at nothing.
-      if (!assistant.trim()) {
+      //
+      // Also guard the "all-thinking, no-answer" case: the model
+      // exhausted max_tokens inside a <think> block, parseSections
+      // matched everything as reasoning, and the rendered bubble is
+      // blank even though assistantBuffer is non-empty.
+      const visibleContent = parseSections(assistant)
+        .filter((s) => s.type !== "thinking")
+        .map((s) => s.text)
+        .join("")
+        .trim();
+      if (!assistant.trim() || (!visibleContent && assistant.includes("<think"))) {
         if (isStillThisThread()) {
           setMessages((prev) => {
             const last = prev[prev.length - 1];
@@ -3765,8 +3775,21 @@ function WebAssistantBubble({
   onPrefillInput?: (text: string) => void;
   onRegenerate?: () => void;
 }) {
+  const allSections = parseSections(content);
   // Strip thinking blocks, internal reasoning isn't shown to the user.
-  const sections = parseSections(content).filter((s) => s.type !== "thinking");
+  const sections = allSections.filter((s) => s.type !== "thinking");
+
+  // Guard: if the model was cut off inside a <think> block (hit token
+  // limit mid-reasoning), all sections filter out and the bubble
+  // renders blank. Detect this and surface a friendly retry message
+  // instead of leaving the user staring at nothing.
+  if (!streaming && sections.length === 0 && allSections.some((s) => s.type === "thinking")) {
+    return (
+      <p className="text-sm text-neutral-400 italic">
+        Ran out of space while reasoning — please try again, or break the request into smaller parts.
+      </p>
+    );
+  }
 
   // Image-result fast path: when the whole message is image markdown
   // (with optional caption), render a custom card with iterate

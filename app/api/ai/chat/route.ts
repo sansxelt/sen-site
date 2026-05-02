@@ -1042,7 +1042,12 @@ export async function POST(request: Request) {
         // Voice replies are short by design (system prompt enforces
         // 1-3 sentences). Cap tokens hard so the model can't drift
         // into a multi-paragraph essay that takes 8 seconds to TTS.
-        max_tokens: isVoiceTurn ? 320 : 2048,
+        // Non-voice: 8192 so multi-image analysis can finish reasoning
+        // inside <think> blocks AND still produce a full answer. The
+        // old 2048 limit caused the model to exhaust its budget inside
+        // an open <think> tag — parseSections matched everything as
+        // thinking, filtered it out, and the bubble rendered blank.
+        max_tokens: isVoiceTurn ? 320 : 8192,
         system: systemPromptForPayload(payload, referenceBlock, projectContextBlock),
         // v0.1.4, translate to Anthropic content-block form so user
         // turns with attached images become multimodal content arrays.
