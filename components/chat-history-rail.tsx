@@ -417,7 +417,10 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
                 if (typeof window !== "undefined") {
                   // Clear the active project so a plain new chat
                   // doesn't silently inherit the last project.
+                  // Must dispatch project:changed (not just remove from
+                  // storage) so the WebChat strip clears immediately.
                   window.localStorage.removeItem("sansxel.activeProjectId");
+                  window.dispatchEvent(new CustomEvent("sansxel:project:changed", { detail: null }));
                   window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
                 }
                 router.replace("/app?new=1");
