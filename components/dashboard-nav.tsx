@@ -422,7 +422,7 @@ export function DashboardNav({
     <Link
       key={item.href}
       href={item.href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+      className={`flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors ${
         isActive(item.href)
           ? "bg-white/10 text-white"
           : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100"
@@ -440,8 +440,8 @@ export function DashboardNav({
           column owns its own scroll so the brand + new-chat stay
           pinned at top and the desktop CTA + footer stay pinned at
           bottom, ChatGPT-style. */}
-      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
-        <div className="flex items-center justify-between py-6">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col overflow-hidden border-r border-white/10 px-4 lg:flex">
+        <div className="flex items-center justify-between py-3">
           <Link href="/app" className="flex items-center gap-2.5">
             <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" priority />
             <div className="flex flex-col leading-tight">
@@ -452,16 +452,10 @@ export function DashboardNav({
           <ThemeToggle compact />
         </div>
 
-        {/* Chat link always visible regardless of route. Clicking it
-            while ALREADY on /app would otherwise drop the ?thread=
-            param and dump the user back into a phantom New chat
-            block that. Real "+ New chat" lives in the right rail. */}
         <Link
           href="/app"
-          onClick={(e) => {
-            if (inWorkshop) e.preventDefault();
-          }}
-          className={`mb-3 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+          onClick={(e) => { if (inWorkshop) e.preventDefault(); }}
+          className={`mb-1 flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
             isActive("/app")
               ? "bg-white/10 text-white"
               : "text-neutral-200 hover:bg-white/5 hover:text-white"
@@ -471,10 +465,10 @@ export function DashboardNav({
           Chat
         </Link>
 
-        <nav className="flex flex-col gap-3">
+        <nav className="flex flex-col gap-1.5">
           {effectiveGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-0.5">
-              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+              <div className="px-3 pb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
                 {group.label}
               </div>
               {group.items.map(navLink)}
@@ -482,51 +476,28 @@ export function DashboardNav({
           ))}
         </nav>
 
-        {/* Get-Desktop CTA, pinned, always visible, the workshop's
-            primary upgrade path. Web is the trial, desktop is the
-            real shop. */}
-        <Link
-          href="/download"
-          className="mt-4 rounded-xl border border-violet-400/30 bg-gradient-to-br from-violet-500/[0.12] to-fuchsia-500/[0.08] p-3 text-xs transition hover:border-violet-400/60 hover:from-violet-500/[0.18] hover:to-fuchsia-500/[0.12]"
-        >
-          <div className="mb-1 flex items-center gap-1.5 font-semibold text-violet-100">
-            <span aria-hidden>🖥</span>
-            <span>Workshop on desktop</span>
-          </div>
-          <div className="text-[11px] leading-snug text-neutral-300">
-            Files, MCP, full voice loop. The real shop lives outside the browser.
-          </div>
-          <div className="mt-1.5 text-[11px] font-medium text-violet-300">Get desktop →</div>
-        </Link>
-
-        <div className="mt-auto pb-6 pt-4">
-          <div className="mb-2 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
+        <div className="mt-auto border-t border-white/[0.06] pb-4 pt-3">
+          <div className="mb-1 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
 
           <Link
             href="/home"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
           >
             <HomeIcon />
             Marketing site
           </Link>
 
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+            type="button"
+            onClick={async () => {
+              await signOut({ redirect: false });
+              window.location.href = "/home";
+            }}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
           >
             <SignOutIcon />
             Sign out
           </button>
-
-          <div className="my-2 border-t border-white/[0.06]" />
-
-          <Link
-            href="/account/settings#danger"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-500/70 transition hover:bg-red-500/5 hover:text-red-400"
-          >
-            <TrashIcon />
-            Delete account
-          </Link>
         </div>
       </aside>
 
@@ -580,7 +551,7 @@ export function DashboardNav({
             <span className="hidden xs:inline sm:inline">Home</span>
           </Link>
           <button
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={async () => { await signOut({ redirect: false }); window.location.href = "/home"; }}
             className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-neutral-400 transition hover:bg-white/10 hover:text-white"
           >
             <SignOutIcon />
