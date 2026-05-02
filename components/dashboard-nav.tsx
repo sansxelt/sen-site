@@ -376,10 +376,10 @@ export function DashboardNav({
   useEffect(() => { setDrawerOpen(false); }, [pathname]);
 
   const handleNewChat = () => {
-    // Hard-abort any in-flight chat stream + clear canvas instantly.
-    // Mirrors ChatGPT's '+ New chat' behavior, feels snappy,
-    // doesn't get stuck on a Stop button from a previous turn.
     if (typeof window !== "undefined") {
+      // Clear active project so a plain new chat doesn't
+      // silently inherit the last project from localStorage.
+      window.localStorage.removeItem("sansxel.activeProjectId");
       window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
     }
     router.replace("/app?new=1");

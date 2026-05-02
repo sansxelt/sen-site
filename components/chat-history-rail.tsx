@@ -414,10 +414,10 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             <button
               type="button"
               onClick={() => {
-                // ChatGPT pattern: hard-cancel any in-flight stream so
-                // the workspace flips to fresh state instantly. WebChat
-                // listens for this and aborts + clears.
                 if (typeof window !== "undefined") {
+                  // Clear the active project so a plain new chat
+                  // doesn't silently inherit the last project.
+                  window.localStorage.removeItem("sansxel.activeProjectId");
                   window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
                 }
                 router.replace("/app?new=1");
