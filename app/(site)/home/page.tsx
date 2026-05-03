@@ -1,17 +1,13 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { AuthFlow } from "@/components/auth-flow";
-import { CopilotSection } from "@/components/landing/copilot-section";
-import { EcosystemSection } from "@/components/landing/ecosystem-section";
-import { FutureHintSection } from "@/components/landing/future-hint-section";
 import { LandingHero } from "@/components/landing/landing-hero";
-import { MemorySection } from "@/components/landing/memory-section";
-import { ProductShowcaseSection } from "@/components/landing/product-showcase-section";
-import { WorkspaceSection } from "@/components/landing/workspace-section";
+import { WorkshopRevealSection } from "@/components/landing/workshop-reveal-section";
+import { ModulesSection, ModuleMockStyles } from "@/components/landing/modules-section";
+import { PlatformTeaserSection } from "@/components/landing/platform-teaser-section";
 import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
-
 
 export default async function HomePage() {
   const session  = await auth();
@@ -24,29 +20,21 @@ export default async function HomePage() {
 
   return (
     <main style={{ background: "#050507", overflowX: "hidden" }}>
+      <ModuleMockStyles />
 
       {/* 1. Hero */}
       <LandingHero signedIn={signedIn} />
 
-      {/* 2. Product showcase: Workshop */}
-      <WorkspaceSection />
+      {/* 2. Workshop scroll reveal */}
+      <WorkshopRevealSection />
 
-      {/* 3. Memory, projects, files */}
-      <MemorySection />
+      {/* 3. Modules — Copilot / Audio / Lens */}
+      <ModulesSection />
 
-      {/* 4. Copilot and integrations */}
-      <CopilotSection />
+      {/* 4. Platform teaser */}
+      <PlatformTeaserSection />
 
-      {/* 5. Product showcase: Lens, Audio, Copilot */}
-      <ProductShowcaseSection />
-
-      {/* 6. Future ecosystem hint: Whisper + Lens */}
-      <FutureHintSection />
-
-      {/* 7. Ecosystem map */}
-      <EcosystemSection signedIn={signedIn} />
-
-      {/* 8. Community / Discord */}
+      {/* 5. Community / Discord */}
       <section style={{ background: "#040406" }}>
         <div className="landing-divider" />
         <div
@@ -71,16 +59,10 @@ export default async function HomePage() {
           >
             ◈ discord
           </div>
-          <h2
-            className="landing-h2 landing-gradient-text"
-            style={{ marginBottom: 14 }}
-          >
+          <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 14 }}>
             Build with the early community.
           </h2>
-          <p
-            className="landing-body"
-            style={{ maxWidth: 440, margin: "0 auto 32px" }}
-          >
+          <p className="landing-body" style={{ maxWidth: 440, margin: "0 auto 32px" }}>
             Early users, feedback loops, and direct access. The Discord is where
             the product gets shaped.
           </p>
@@ -96,7 +78,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 9. Pricing */}
+      {/* 6. Pricing */}
       <section id="pricing" style={{ background: "#040406" }}>
         <div className="landing-divider" />
         <div className="landing-section" style={{ maxWidth: 1280, margin: "0 auto" }}>
@@ -112,11 +94,7 @@ export default async function HomePage() {
           </div>
 
           <div
-            style={{
-              display: "grid",
-              gap: 12,
-              gridTemplateColumns: "repeat(2, 1fr)",
-            }}
+            style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(2, 1fr)" }}
             className="lp-pricing-grid"
           >
             {pricingPreview.map((plan) => (
@@ -195,12 +173,8 @@ export default async function HomePage() {
                     fontWeight: 500,
                     textDecoration: "none",
                     transition: "opacity 0.15s",
-                    border: plan.featured
-                      ? "none"
-                      : "1px solid rgba(255,255,255,0.09)",
-                    background: plan.featured
-                      ? "rgba(168,196,255,0.15)"
-                      : "rgba(255,255,255,0.04)",
+                    border: plan.featured ? "none" : "1px solid rgba(255,255,255,0.09)",
+                    background: plan.featured ? "rgba(168,196,255,0.15)" : "rgba(255,255,255,0.04)",
                     color: plan.featured ? "#A8C4FF" : "#d4d4d8",
                   }}
                 >
@@ -222,32 +196,23 @@ export default async function HomePage() {
             </Link>
           </div>
         </div>
-
         <style>{`
           @media (min-width: 768px)  { .lp-pricing-grid { grid-template-columns: repeat(2, 1fr) !important; } }
           @media (min-width: 1024px) { .lp-pricing-grid { grid-template-columns: repeat(4, 1fr) !important; } }
         `}</style>
       </section>
 
-      {/* 10. Final CTA */}
-      <section
-        id="get-started"
-        style={{ background: "#040406", paddingBottom: 80 }}
-      >
+      {/* 7. Final CTA */}
+      <section id="get-started" style={{ background: "#040406", paddingBottom: 80 }}>
         <div className="landing-divider" style={{ marginBottom: 0 }} />
         <div
           className="landing-section"
           style={{ maxWidth: 1600, margin: "0 auto", paddingTop: 64 }}
         >
           {signedIn ? (
-            <div
-              className="landing-glass"
-              style={{ padding: "40px 40px" }}
-            >
+            <div className="landing-glass" style={{ padding: "40px 40px" }}>
               <div className="landing-kicker landing-kicker--dim">welcome back</div>
-              <h2 className="landing-h2 landing-gradient-text">
-                Pick up where you left off.
-              </h2>
+              <h2 className="landing-h2 landing-gradient-text">Pick up where you left off.</h2>
               <p className="landing-body" style={{ marginBottom: 28 }}>
                 Jump into your workspace or manage billing and account settings.
               </p>
@@ -278,19 +243,14 @@ export default async function HomePage() {
           )}
 
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2, 1fr)",
-              gap: 12,
-              marginTop: 40,
-            }}
+            style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginTop: 40 }}
             className="landing-quick-nav"
           >
             {[
-              ["/product",  "Product",  "Workspace · Copilot · Whisper · Lens"],
-              ["/pricing",  "Pricing",  "Free, Plus, Pro, Teams"],
-              ["/learn",    "Learn",    "Short reads, real examples"],
-              ["/contact",  "Contact",  "Talk to the team"],
+              ["/workshop",  "Workshop",  "Chat · Projects · Files · Memory · Voice"],
+              ["/pricing",   "Pricing",   "Free, Plus, Pro, Teams"],
+              ["/learn",     "Learn",     "Short reads, real examples"],
+              ["/contact",   "Contact",   "Talk to the team"],
             ].map(([href, label, desc]) => (
               <Link
                 key={href}
@@ -301,7 +261,6 @@ export default async function HomePage() {
                   background: "rgba(0,0,0,0.25)",
                   padding: "14px 16px",
                   textDecoration: "none",
-                  transition: "background 0.15s",
                 }}
               >
                 <div style={{ fontSize: 13, fontWeight: 500, color: "#e4e4e7", marginBottom: 3 }}>{label}</div>
@@ -325,7 +284,6 @@ export default async function HomePage() {
               background: "rgba(88,101,242,0.06)",
               padding: "14px 16px",
               textDecoration: "none",
-              transition: "background 0.15s",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -339,25 +297,14 @@ export default async function HomePage() {
           </a>
 
           {!signedIn && (
-            <p
-              style={{
-                marginTop: 32,
-                textAlign: "center",
-                fontSize: 12,
-                color: "#52525b",
-              }}
-            >
+            <p style={{ marginTop: 32, textAlign: "center", fontSize: 12, color: "#52525b" }}>
               Already have an account?{" "}
-              <Link
-                href={getSignInPath()}
-                style={{ color: "#a1a1aa", textDecoration: "underline", textUnderlineOffset: 4 }}
-              >
+              <Link href={getSignInPath()} style={{ color: "#a1a1aa", textDecoration: "underline", textUnderlineOffset: 4 }}>
                 Sign in
               </Link>
             </p>
           )}
         </div>
-
         <style>{`
           @media (min-width: 640px) { .landing-quick-nav { grid-template-columns: repeat(4, 1fr) !important; } }
         `}</style>
