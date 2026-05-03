@@ -5,8 +5,8 @@ import { pricingPlans, type PricingPlan } from "../lib/pricing";
 
 type Cycle = "monthly" | "yearly";
 
-const personalPlans = pricingPlans.slice(0, 4);
-const businessPlans = pricingPlans.slice(4);
+const personalPlans = pricingPlans.filter((p) => p.segment === "individual" && !p.hidden);
+const businessPlans = pricingPlans.filter((p) => p.segment === "team"       && !p.hidden);
 
 // ─── Single card face ─────────────────────────────────────────────────────
 
