@@ -16,31 +16,26 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
     offset: ["start start", "end start"],
   });
 
-  const compY    = useTransform(scrollYProgress, [0, 1], [0, 70]);
-  const compOp   = useTransform(scrollYProgress, [0, 0.72], [1, 0]);
-  const contentY = useTransform(scrollYProgress, [0, 1], [0, 26]);
-  const contentOp = useTransform(scrollYProgress, [0, 0.52], [1, 0]);
+  const compY    = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const compOp   = useTransform(scrollYProgress, [0, 0.70], [1, 0]);
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, 30]);
+  const contentOp = useTransform(scrollYProgress, [0, 0.50], [1, 0]);
 
   return (
     <section
       ref={sectionRef}
-      style={{
-        position: "relative",
-        minHeight: "100svh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        paddingBottom: 60,
-        background: "#050507",
-        overflowX: "clip",
-      }}
+      className="landing-hero"
+      style={{ paddingBottom: 60 }}
     >
-      {/* Dark stage background — very subtle radial */}
+      {/* Stage background light */}
+      <div className="landing-hero-light" />
+
+      {/* Dark edge vignette */}
       <div
         style={{
           position: "absolute", inset: 0, pointerEvents: "none",
           background:
-            "radial-gradient(ellipse 75% 55% at 50% 70%, rgba(100,80,180,0.07) 0%, transparent 65%)",
+            "radial-gradient(ellipse 90% 75% at 50% 60%, rgba(80,65,160,0.06) 0%, transparent 62%)",
         }}
       />
 
@@ -49,6 +44,7 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
         className="landing-hero-content"
         style={shouldReduce ? {} : { y: contentY, opacity: contentOp }}
       >
+        {/* Eyebrow */}
         <motion.div
           className="landing-eyebrow"
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -58,6 +54,7 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
           sansxel · one system
         </motion.div>
 
+        {/* H1 */}
         <motion.h1
           className="landing-h1 landing-gradient-text"
           style={{ display: "block", textAlign: "center" }}
@@ -67,19 +64,36 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
           The AI workshop<br />for makers.
         </motion.h1>
 
+        {/* Supporting line */}
+        <motion.p
+          style={{
+            fontSize: "clamp(1.0rem, 1.8vw, 1.2rem)",
+            fontWeight: 500,
+            color: "rgba(255,255,255,0.55)",
+            marginBottom: 10,
+            letterSpacing: "-0.01em",
+          }}
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.70, ease: EASE, delay: 0.32 }}
+        >
+          One AI. One purpose: help.
+        </motion.p>
+
+        {/* Subtext */}
         <motion.p
           className="landing-hero-sub"
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.70, ease: EASE, delay: 0.36 }}
+          transition={{ duration: 0.70, ease: EASE, delay: 0.42 }}
         >
           Sansxel connects workspace, private audio, and future visual interfaces
-          in one system built for people who ship.
+          in one system.
         </motion.p>
 
+        {/* CTAs */}
         <motion.div
           className="landing-hero-ctas"
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.70, ease: EASE, delay: 0.50 }}
+          transition={{ duration: 0.70, ease: EASE, delay: 0.54 }}
         >
           <Link
             href={signedIn ? "/app" : "/signin?callbackUrl=/app"}
@@ -99,12 +113,12 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
         </motion.div>
       </motion.div>
 
-      {/* Physical product composition — contact lens + earbuds */}
+      {/* Hardware composition */}
       <motion.div
         style={shouldReduce ? {} : { y: compY, opacity: compOp }}
-        initial={{ opacity: 0, y: 48 }}
+        initial={{ opacity: 0, y: 56 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.15, ease: EASE, delay: 0.55 }}
+        transition={{ duration: 1.20, ease: EASE, delay: 0.58 }}
       >
         <ProductComposition />
       </motion.div>
@@ -113,7 +127,7 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
       <motion.div
         className="landing-scroll-hint"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ delay: 1.7, duration: 0.8 }}
+        transition={{ delay: 1.8, duration: 0.8 }}
         aria-hidden
       >
         <motion.span

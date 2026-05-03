@@ -116,7 +116,7 @@ export const pricingPlans: PricingPlan[] = [
     monthlyLabel: "Free",
     monthlyValue: 0,
     name: "Free",
-    note: "No card required",
+    note: "For trying Sansxel",
     points: [
       "Core chat access",
       "Up to 3 projects",
@@ -164,7 +164,7 @@ export const pricingPlans: PricingPlan[] = [
     monthlyLabel: "$20 / month",
     monthlyValue: 20,
     name: "Plus",
-    note: "For everyday makers",
+    note: "For everyday use",
     points: [
       "More messages and usage",
       "More projects and memory",
@@ -298,7 +298,7 @@ export const pricingPlans: PricingPlan[] = [
     monthlyLabel: "$25 / seat",
     monthlyValue: 25,
     name: "Teams",
-    note: "Starts at 3 seats",
+    note: "For teams building together",
     points: [
       "Shared workspaces",
       "Team memory libraries",

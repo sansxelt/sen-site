@@ -75,11 +75,11 @@ function TabContent({ tab }: { tab: number }) {
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
         <div style={{ width: 20, height: 20, borderRadius: 6, background: `${ac},0.17)`, border: `1px solid ${ac},0.28)`, flexShrink: 0, marginTop: 1 }} />
-        <div style={{ flex: 1, padding: "8px 11px", borderRadius: "3px 10px 10px 10px", background: "rgba(255,255,255,0.026)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 4.5 }}>
-          <div style={{ height: 5, width: "90%", borderRadius: 3, background: "rgba(255,255,255,0.17)" }} />
-          <div style={{ height: 5, width: "74%", borderRadius: 3, background: "rgba(255,255,255,0.12)" }} />
-          <div style={{ height: 5, width: "83%", borderRadius: 3, background: "rgba(255,255,255,0.14)" }} />
-          <div style={{ height: 5, width: "55%", borderRadius: 3, background: "rgba(255,255,255,0.08)" }} />
+        <div style={{ flex: 1, padding: "8px 11px", borderRadius: "3px 10px 10px 10px", background: "rgba(255,255,255,0.065)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 4.5 }}>
+          <div style={{ height: 5, width: "90%", borderRadius: 3, background: "rgba(255,255,255,0.32)" }} />
+          <div style={{ height: 5, width: "74%", borderRadius: 3, background: "rgba(255,255,255,0.38)" }} />
+          <div style={{ height: 5, width: "83%", borderRadius: 3, background: "rgba(255,255,255,0.26)" }} />
+          <div style={{ height: 5, width: "55%", borderRadius: 3, background: "rgba(255,255,255,0.14)" }} />
         </div>
       </div>
       {/* Voice indicator */}
@@ -112,15 +112,15 @@ function TabContent({ tab }: { tab: number }) {
             <div style={{ width: 22, height: 28, borderRadius: 4, background: `${f.c}0.12)`, border: `1px solid ${f.c}0.20)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span style={{ fontSize: 5.5, fontWeight: 700, letterSpacing: "0.04em", color: `${f.c}0.80)`, fontFamily: "monospace" }}>{f.type}</span>
             </div>
-            <div style={{ height: 3.5, width: "75%", borderRadius: 2, background: "rgba(255,255,255,0.10)" }} />
-            <div style={{ height: 3, width: "52%", borderRadius: 2, background: "rgba(255,255,255,0.06)" }} />
+            <div style={{ height: 3.5, width: "75%", borderRadius: 2, background: "rgba(255,255,255,0.18)" }} />
+            <div style={{ height: 3, width: "52%", borderRadius: 2, background: "rgba(255,255,255,0.10)" }} />
           </div>
         ))}
       </div>
-      <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.022)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 4 }}>
+      <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", gap: 4 }}>
         <div style={{ height: 4.5, width: "86%", borderRadius: 3, background: "rgba(255,255,255,0.15)" }} />
-        <div style={{ height: 4.5, width: "68%", borderRadius: 3, background: "rgba(255,255,255,0.10)" }} />
-        <div style={{ height: 4.5, width: "58%", borderRadius: 3, background: "rgba(255,255,255,0.07)" }} />
+        <div style={{ height: 4.5, width: "68%", borderRadius: 3, background: "rgba(255,255,255,0.18)" }} />
+        <div style={{ height: 4.5, width: "58%", borderRadius: 3, background: "rgba(255,255,255,0.12)" }} />
       </div>
     </div>
   );
@@ -134,8 +134,8 @@ function TabContent({ tab }: { tab: number }) {
           <div style={{ width: 2.5, borderRadius: 2, background: `${ac},0.55)`, flexShrink: 0 }} />
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
             <div style={{ fontSize: 6, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: `${ac},0.65)` }}>{label}</div>
-            <div style={{ height: 4, width: `${[68, 80, 62, 55][i]}%`, borderRadius: 3, background: "rgba(255,255,255,0.17)" }} />
-            <div style={{ height: 3.5, width: `${[50, 60, 72, 44][i]}%`, borderRadius: 3, background: "rgba(255,255,255,0.10)" }} />
+            <div style={{ height: 4, width: `${[68, 80, 62, 55][i]}%`, borderRadius: 3, background: "rgba(255,255,255,0.32)" }} />
+            <div style={{ height: 3.5, width: `${[50, 60, 72, 44][i]}%`, borderRadius: 3, background: "rgba(255,255,255,0.18)" }} />
           </div>
         </div>
       ))}
@@ -146,7 +146,7 @@ function TabContent({ tab }: { tab: number }) {
   if (tab === 3) return (
     <div style={{ flex: 1, padding: "11px 13px", display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: `${ac},0.60)`, marginBottom: 2 }}>Image generation</div>
-      <div style={{ padding: "7px 10px", borderRadius: 7, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 7 }}>
+      <div style={{ padding: "7px 10px", borderRadius: 7, background: "rgba(255,255,255,0.062)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 7 }}>
         <div style={{ width: 5, height: 5, borderRadius: "50%", background: `${ac},0.75)`, flexShrink: 0 }} />
         <div style={{ height: 4, width: "72%", borderRadius: 3, background: "rgba(255,255,255,0.13)" }} />
       </div>
@@ -171,8 +171,8 @@ function TabContent({ tab }: { tab: number }) {
           </div>
         ))}
       </div>
-      <div style={{ padding: "7px 10px", borderRadius: 8, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ height: 4.5, width: "80%", borderRadius: 3, background: "rgba(255,255,255,0.14)" }} />
+      <div style={{ padding: "7px 10px", borderRadius: 8, background: "rgba(255,255,255,0.048)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ height: 4.5, width: "80%", borderRadius: 3, background: "rgba(255,255,255,0.26)" }} />
         <div style={{ height: 4, width: "58%", borderRadius: 3, background: "rgba(255,255,255,0.09)" }} />
       </div>
     </div>
@@ -182,7 +182,7 @@ function TabContent({ tab }: { tab: number }) {
   if (tab === 4) return (
     <div style={{ flex: 1, padding: "11px 13px", display: "flex", flexDirection: "column", gap: 6 }}>
       <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", color: `${ac},0.60)`, marginBottom: 2 }}>Live research</div>
-      <div style={{ padding: "7px 10px", borderRadius: 7, background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 7 }}>
+      <div style={{ padding: "7px 10px", borderRadius: 7, background: "rgba(255,255,255,0.062)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 7 }}>
         <div style={{ width: 7, height: 7, borderRadius: "50%", border: `1.5px solid ${ac},0.60)`, flexShrink: 0 }} />
         <div style={{ height: 4, width: "68%", borderRadius: 3, background: "rgba(255,255,255,0.13)" }} />
         <div style={{ height: 16, width: 22, borderRadius: 4, background: `${ac},0.16)`, marginLeft: "auto" }} />
@@ -194,9 +194,9 @@ function TabContent({ tab }: { tab: number }) {
       ].map((r, i) => (
         <div key={i} style={{ padding: "8px 10px", borderRadius: 8, background: `${ac},0.05)`, border: `1px solid ${ac},0.13)`, display: "flex", flexDirection: "column", gap: 3.5 }}>
           <div style={{ height: 3.5, width: r.domain, borderRadius: 2, background: `${ac},0.38)` }} />
-          <div style={{ height: 4.5, width: r.title, borderRadius: 3, background: "rgba(255,255,255,0.17)" }} />
+          <div style={{ height: 4.5, width: r.title, borderRadius: 3, background: "rgba(255,255,255,0.32)" }} />
           <div style={{ height: 3.5, width: r.s1, borderRadius: 3, background: "rgba(255,255,255,0.09)" }} />
-          <div style={{ height: 3.5, width: r.s2, borderRadius: 3, background: "rgba(255,255,255,0.06)" }} />
+          <div style={{ height: 3.5, width: r.s2, borderRadius: 3, background: "rgba(255,255,255,0.10)" }} />
         </div>
       ))}
     </div>
@@ -229,8 +229,8 @@ function TabContent({ tab }: { tab: number }) {
           </div>
         ))}
       </div>
-      <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.018)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 4 }}>
-        <div style={{ height: 4.5, width: "76%", borderRadius: 3, background: "rgba(255,255,255,0.14)" }} />
+      <div style={{ padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.048)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 4 }}>
+        <div style={{ height: 4.5, width: "76%", borderRadius: 3, background: "rgba(255,255,255,0.26)" }} />
         <div style={{ height: 4, width: "52%", borderRadius: 3, background: "rgba(255,255,255,0.09)" }} />
       </div>
     </div>
@@ -254,7 +254,7 @@ function TabContent({ tab }: { tab: number }) {
             <div style={{ height: 3.5, width: 30, borderRadius: 2, background: `${ac},0.35)` }} />
             <div style={{ height: 3.5, width: 24, borderRadius: 2, background: `${ac},0.22)` }} />
           </div>
-          <div style={{ height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+          <div style={{ height: 2.5, borderRadius: 2, background: "rgba(255,255,255,0.10)", overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${p.progress}%`, borderRadius: 2, background: `${ac},0.55)` }} />
           </div>
         </div>
@@ -282,7 +282,7 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
       <div style={{
         width: "min(800px, 91vw)",
         aspectRatio: "16 / 10",
-        background: "linear-gradient(148deg, #181824 0%, #0f0f1a 50%, #0c0c13 100%)",
+        background: "linear-gradient(148deg, #1e1e2c 0%, #161624 50%, #131320 100%)",
         borderRadius: 16,
         border: `1px solid ${ac},0.22)`,
         overflow: "hidden",
@@ -305,8 +305,8 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
 
         {/* Titlebar */}
         <div style={{
-          height: 36, borderBottom: "1px solid rgba(255,255,255,0.07)",
-          background: "rgba(255,255,255,0.022)",
+          height: 36, borderBottom: "1px solid rgba(255,255,255,0.09)",
+          background: "rgba(255,255,255,0.04)",
           display: "flex", alignItems: "center", padding: "0 13px", justifyContent: "space-between",
         }}>
           <div style={{ display: "flex", gap: 5.5 }}>
@@ -325,7 +325,7 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
                 border: `1px solid ${i === activeTab ? `${ac},0.26)` : "rgba(255,255,255,0.06)"}`,
                 transition: "background 0.4s, border-color 0.4s",
               }}>
-                <div style={{ height: 3.5, width: 18, borderRadius: 2, background: "rgba(255,255,255,0.14)" }} />
+                <div style={{ height: 3.5, width: 18, borderRadius: 2, background: "rgba(255,255,255,0.26)" }} />
               </div>
             ))}
           </div>
@@ -337,7 +337,7 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
           {/* LEFT SIDEBAR */}
           <div style={{
             width: "21%",
-            borderRight: "1px solid rgba(255,255,255,0.055)",
+            borderRight: "1px solid rgba(255,255,255,0.10)",
             padding: "11px 8px",
             display: "flex", flexDirection: "column", gap: 3,
             boxShadow: zone === "left" ? `inset 0 0 0 1px ${ac},0.22), 3px 0 20px ${ac},0.07)` : "none",
@@ -365,7 +365,7 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
             {([60, 46, 68] as const).map((w, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 6px" }}>
                 <div style={{ width: 10, height: 10, borderRadius: 2, background: "rgba(168,196,255,0.12)", flexShrink: 0 }} />
-                <div style={{ height: 4, width: `${w}%`, borderRadius: 3, background: "rgba(255,255,255,0.07)" }} />
+                <div style={{ height: 4, width: `${w}%`, borderRadius: 3, background: "rgba(255,255,255,0.12)" }} />
               </div>
             ))}
 
@@ -386,10 +386,10 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
             <div style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "7px 13px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                 <div style={{ width: 13, height: 13, borderRadius: 4, background: `${ac},0.22)`, transition: "background 0.4s" }} />
-                <div style={{ height: 5, width: 100, borderRadius: 3, background: "rgba(255,255,255,0.17)" }} />
+                <div style={{ height: 5, width: 100, borderRadius: 3, background: "rgba(255,255,255,0.32)" }} />
               </div>
               <div style={{ display: "flex", gap: 4 }}>
-                {([24, 18, 22] as const).map((w, i) => <div key={i} style={{ height: 4, width: w, borderRadius: 3, background: "rgba(255,255,255,0.07)" }} />)}
+                {([24, 18, 22] as const).map((w, i) => <div key={i} style={{ height: 4, width: w, borderRadius: 3, background: "rgba(255,255,255,0.12)" }} />)}
               </div>
             </div>
 
@@ -407,8 +407,8 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
             </AnimatePresence>
 
             {/* Input */}
-            <div style={{ margin: "0 12px 10px", display: "flex", alignItems: "center", gap: 7, padding: "8px 11px", borderRadius: 9, background: "rgba(255,255,255,0.022)", border: "1px solid rgba(255,255,255,0.09)" }}>
-              <div style={{ flex: 1, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.07)" }} />
+            <div style={{ margin: "0 12px 10px", display: "flex", alignItems: "center", gap: 7, padding: "8px 11px", borderRadius: 9, background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.09)" }}>
+              <div style={{ flex: 1, height: 5, borderRadius: 3, background: "rgba(255,255,255,0.12)" }} />
               <div style={{ display: "flex", gap: 5 }}>
                 <div style={{ width: 21, height: 21, borderRadius: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }} />
                 <div style={{ width: 21, height: 21, borderRadius: 5, background: `${ac},0.18)`, border: `1px solid ${ac},0.28)`, transition: "background 0.4s, border-color 0.4s" }} />
@@ -419,7 +419,7 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
           {/* RIGHT — Memory / context */}
           <div style={{
             width: "23%",
-            borderLeft: "1px solid rgba(255,255,255,0.05)",
+            borderLeft: "1px solid rgba(255,255,255,0.10)",
             padding: "11px 9px",
             display: "flex", flexDirection: "column", gap: 6,
             boxShadow: zone === "right" ? `inset 0 0 0 1px ${ac},0.22), -3px 0 20px ${ac},0.07)` : "none",
@@ -437,9 +437,9 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
                 border: `1px solid ${zone === "right" ? `${ac},0.20)` : c.br}`,
                 display: "flex", flexDirection: "column", gap: 3.5, transition: "background 0.45s, border-color 0.45s",
               }}>
-                <div style={{ height: 4, width: `${c.w1}%`, borderRadius: 3, background: "rgba(255,255,255,0.22)" }} />
-                <div style={{ height: 3.5, width: `${c.w2}%`, borderRadius: 3, background: "rgba(255,255,255,0.12)" }} />
-                <div style={{ height: 3.5, width: `${c.w3}%`, borderRadius: 3, background: "rgba(255,255,255,0.08)" }} />
+                <div style={{ height: 4, width: `${c.w1}%`, borderRadius: 3, background: "rgba(255,255,255,0.38)" }} />
+                <div style={{ height: 3.5, width: `${c.w2}%`, borderRadius: 3, background: "rgba(255,255,255,0.38)" }} />
+                <div style={{ height: 3.5, width: `${c.w3}%`, borderRadius: 3, background: "rgba(255,255,255,0.14)" }} />
               </div>
             ))}
             <div style={{ height: 1, background: "rgba(255,255,255,0.05)", margin: "1px 0" }} />
@@ -447,7 +447,7 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
             {([70, 55, 62] as const).map((w, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 4px" }}>
                 <div style={{ width: 5, height: 5, borderRadius: 2, background: "rgba(255,172,51,0.30)", flexShrink: 0 }} />
-                <div style={{ height: 3.5, width: `${w}%`, borderRadius: 3, background: "rgba(255,255,255,0.08)" }} />
+                <div style={{ height: 3.5, width: `${w}%`, borderRadius: 3, background: "rgba(255,255,255,0.14)" }} />
               </div>
             ))}
           </div>

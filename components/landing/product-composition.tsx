@@ -1,133 +1,167 @@
-/* Physical product composition — contact lens + earbuds
-   Used on the homepage hero and the product page hero. */
+/* Physical product composition — contact lens + earbuds on a dark stage.
+   The hero visual for the homepage and product page. Hardware only — no
+   software window lives here. */
 
 /* ─────────────────────────────────────────────────────────────────
-   CONTACT LENS — transparent, curved, glossy SVG
+   CONTACT LENS — transparent curved glass, pseudo-3D via CSS perspective
 ───────────────────────────────────────────────────────────────── */
-function ContactLens({ size = 260 }: { size?: number }) {
+function ContactLens({ size = 290 }: { size?: number }) {
   const h = size / 2;
   const v = `0 0 ${size} ${size}`;
 
   return (
     <svg width={size} height={size} viewBox={v} fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        {/* Glass body gradient — nearly transparent, cool blue tint */}
-        <radialGradient id="lensBody" cx="38%" cy="32%" r="62%">
-          <stop offset="0%"   stopColor="rgba(190,230,255,0.16)" />
-          <stop offset="42%"  stopColor="rgba(150,210,255,0.08)" />
-          <stop offset="100%" stopColor="rgba(100,180,255,0.02)" />
+        {/* Fresnel body — transparent center, translucent edge (real lens physics) */}
+        <radialGradient id="lensBody" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="rgba(155,220,255,0.03)" />
+          <stop offset="55%"  stopColor="rgba(140,210,255,0.07)" />
+          <stop offset="82%"  stopColor="rgba(120,200,255,0.14)" />
+          <stop offset="100%" stopColor="rgba(100,185,255,0.26)" />
         </radialGradient>
-        {/* Outer ambient halo */}
+        {/* Ambient halo — extends beyond the lens */}
         <radialGradient id="lensHalo" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="rgba(150,215,255,0.18)" />
-          <stop offset="65%"  stopColor="rgba(100,180,255,0.06)" />
+          <stop offset="0%"   stopColor="rgba(150,220,255,0.10)" />
+          <stop offset="65%"  stopColor="rgba(100,185,255,0.04)" />
           <stop offset="100%" stopColor="rgba(0,0,0,0)" />
         </radialGradient>
-        <filter id="lensBlur4" x="-30%" y="-30%" width="160%" height="160%">
+        {/* Dome highlight — upper-left curved surface glint */}
+        <radialGradient id="lensDomeHigh" cx="34%" cy="26%" r="44%">
+          <stop offset="0%"   stopColor="rgba(255,255,255,0.28)" />
+          <stop offset="55%"  stopColor="rgba(200,240,255,0.07)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+        <filter id="lBlur7" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="7" />
+        </filter>
+        <filter id="lBlur4" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="4" />
         </filter>
-        <filter id="lensBlur2" x="-30%" y="-30%" width="160%" height="160%">
+        <filter id="lBlur2" x="-25%" y="-25%" width="150%" height="150%">
           <feGaussianBlur stdDeviation="2" />
         </filter>
-        <filter id="lensBlur1" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="1.2" />
+        <filter id="lBlur1" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="1.1" />
+        </filter>
+        <filter id="lRimBlur" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.8" />
         </filter>
       </defs>
 
-      {/* Outer halo glow */}
-      <circle cx={h} cy={h} r={h * 0.98} fill="url(#lensHalo)" />
+      {/* Outer ambient halo */}
+      <circle cx={h} cy={h} r={h * 1.02} fill="url(#lensHalo)" filter="url(#lBlur7)" />
 
-      {/* Main lens body — transparent glass disc */}
+      {/* Fresnel lens body */}
       <circle cx={h} cy={h} r={h * 0.89} fill="url(#lensBody)" />
 
-      {/* Outer rim — thin, precise */}
-      <circle cx={h} cy={h} r={h * 0.89} stroke="rgba(190,235,255,0.32)" strokeWidth="1.4" />
+      {/* Dome curvature highlight overlay */}
+      <circle cx={h} cy={h} r={h * 0.89} fill="url(#lensDomeHigh)" />
 
-      {/* Rim lighting arc — upper-left, the dominant highlight */}
+      {/* Main rim — precise thin edge */}
+      <circle cx={h} cy={h} r={h * 0.89} stroke="rgba(210,242,255,0.44)" strokeWidth="1.4" fill="none" />
+
+      {/* Chromatic fringing — red channel displaced outward */}
+      <circle cx={h} cy={h} r={h * 0.905} stroke="rgba(255,80,80,0.07)" strokeWidth="4" fill="none" filter="url(#lRimBlur)" />
+      {/* Chromatic fringing — blue channel inward */}
+      <circle cx={h} cy={h} r={h * 0.875} stroke="rgba(80,120,255,0.08)" strokeWidth="5" fill="none" filter="url(#lBlur2)" />
+
+      {/* PRIMARY rim light — upper-left arc — dominant specular */}
       <path
-        d={`M ${h - h*0.76} ${h - h*0.52} A ${h*0.87} ${h*0.87} 0 0 1 ${h + h*0.25} ${h - h*0.84}`}
-        stroke="rgba(235,250,255,0.78)"
-        strokeWidth="2.8"
+        d={`M ${h - h*0.80} ${h - h*0.48} A ${h*0.88} ${h*0.88} 0 0 1 ${h + h*0.30} ${h - h*0.84}`}
+        stroke="rgba(245,254,255,0.90)"
+        strokeWidth="3.2"
         strokeLinecap="round"
+        fill="none"
       />
-      {/* Rim lighting arc — second pass, slightly offset, softer */}
+      {/* Soft glow pass on main rim light */}
       <path
-        d={`M ${h - h*0.72} ${h - h*0.56} A ${h*0.85} ${h*0.85} 0 0 1 ${h + h*0.20} ${h - h*0.82}`}
-        stroke="rgba(200,240,255,0.28)"
-        strokeWidth="5"
+        d={`M ${h - h*0.76} ${h - h*0.54} A ${h*0.86} ${h*0.86} 0 0 1 ${h + h*0.24} ${h - h*0.83}`}
+        stroke="rgba(190,242,255,0.32)"
+        strokeWidth="9"
         strokeLinecap="round"
-        filter="url(#lensBlur2)"
+        fill="none"
+        filter="url(#lBlur4)"
       />
 
-      {/* Secondary arc — lower-right, dim */}
+      {/* SECONDARY rim light — lower-right, dim cool */}
       <path
-        d={`M ${h + h*0.70} ${h + h*0.42} A ${h*0.80} ${h*0.80} 0 0 1 ${h + h*0.32} ${h + h*0.80}`}
-        stroke="rgba(130,200,255,0.22)"
+        d={`M ${h + h*0.72} ${h + h*0.40} A ${h*0.82} ${h*0.82} 0 0 1 ${h + h*0.36} ${h + h*0.80}`}
+        stroke="rgba(130,200,255,0.24)"
         strokeWidth="1.2"
         strokeLinecap="round"
+        fill="none"
       />
 
-      {/* Primary refraction caustic — blurred bright ellipse */}
+      {/* PRIMARY refraction caustic — bright blurred ellipse, upper-left */}
       <ellipse
-        cx={h - h*0.30}
-        cy={h - h*0.30}
-        rx={h * 0.27}
-        ry={h * 0.15}
-        fill="rgba(255,255,255,0.18)"
-        transform={`rotate(-28, ${h - h*0.30}, ${h - h*0.30})`}
-        filter="url(#lensBlur4)"
+        cx={h - h*0.27} cy={h - h*0.29}
+        rx={h * 0.32} ry={h * 0.17}
+        fill="rgba(255,255,255,0.36)"
+        transform={`rotate(-30, ${h - h*0.27}, ${h - h*0.29})`}
+        filter="url(#lBlur4)"
       />
-      {/* Secondary refraction — smaller, sharper spot */}
+      {/* Sharp specular hot-spot inside caustic */}
       <ellipse
-        cx={h - h*0.52}
-        cy={h - h*0.42}
-        rx={h * 0.11}
-        ry={h * 0.065}
-        fill="rgba(255,255,255,0.28)"
-        transform={`rotate(-20, ${h - h*0.52}, ${h - h*0.42})`}
-        filter="url(#lensBlur1)"
+        cx={h - h*0.33} cy={h - h*0.33}
+        rx={h * 0.11} ry={h * 0.065}
+        fill="rgba(255,255,255,0.60)"
+        transform={`rotate(-30, ${h - h*0.33}, ${h - h*0.33})`}
+        filter="url(#lBlur1)"
       />
 
-      {/* Inner micro-HUD dashed ring */}
+      {/* Secondary transmitted caustic — lower area */}
+      <ellipse
+        cx={h + h*0.20} cy={h + h*0.16}
+        rx={h * 0.19} ry={h * 0.10}
+        fill="rgba(200,240,255,0.11)"
+        transform={`rotate(22, ${h + h*0.20}, ${h + h*0.16})`}
+        filter="url(#lBlur4)"
+      />
+
+      {/* Inner micro-HUD ring — AR design language */}
       <circle
-        cx={h} cy={h} r={h * 0.50}
-        stroke="rgba(100,205,255,0.22)"
-        strokeWidth="0.8"
+        cx={h} cy={h} r={h * 0.52}
+        stroke="rgba(100,205,255,0.20)"
+        strokeWidth="0.9"
         strokeDasharray="4.5 8"
+        fill="none"
       />
-      {/* HUD tick marks — 8 evenly spaced */}
-      {Array.from({ length: 8 }).map((_, i) => {
-        const angle = (i * Math.PI * 2) / 8 - Math.PI / 2;
-        const ir = h * 0.50;
-        const or = h * 0.56;
+
+      {/* HUD tick marks — 12 total, longer on quarters */}
+      {Array.from({ length: 12 }).map((_, i) => {
+        const angle = (i * Math.PI * 2) / 12 - Math.PI / 2;
+        const ir = h * 0.52;
+        const or = h * (i % 3 === 0 ? 0.62 : 0.57);
+        const isMajor = i % 3 === 0;
         return (
           <line
             key={i}
             x1={h + ir * Math.cos(angle)} y1={h + ir * Math.sin(angle)}
             x2={h + or * Math.cos(angle)} y2={h + or * Math.sin(angle)}
-            stroke="rgba(100,205,255,0.22)"
-            strokeWidth="0.8"
+            stroke={`rgba(100,205,255,${isMajor ? 0.32 : 0.16})`}
+            strokeWidth={isMajor ? 1.1 : 0.7}
           />
         );
       })}
 
       {/* Pupil ring */}
-      <circle cx={h} cy={h} r={h * 0.28} stroke="rgba(110,210,255,0.38)" strokeWidth="1.2" />
+      <circle cx={h} cy={h} r={h * 0.30} stroke="rgba(110,210,255,0.36)" strokeWidth="1.3" fill="none" />
 
-      {/* Iris fill */}
-      <circle cx={h} cy={h} r={h * 0.20} fill="rgba(100,200,255,0.07)" stroke="rgba(100,205,255,0.28)" strokeWidth="0.8" />
+      {/* Iris fill + edge ring */}
+      <circle cx={h} cy={h} r={h * 0.21} fill="rgba(100,200,255,0.08)" stroke="rgba(100,205,255,0.28)" strokeWidth="0.9" />
 
-      {/* Center dot */}
-      <circle cx={h} cy={h} r={h * 0.055} fill="rgba(130,215,255,0.55)" />
+      {/* Center pupil dot + bright core */}
+      <circle cx={h} cy={h} r={h * 0.065} fill="rgba(130,215,255,0.55)" />
+      <circle cx={h} cy={h} r={h * 0.028} fill="rgba(210,245,255,0.95)" />
 
-      {/* Inner rim detail */}
-      <circle cx={h} cy={h} r={h * 0.72} stroke="rgba(150,215,255,0.08)" strokeWidth="0.6" />
+      {/* Inner depth ring */}
+      <circle cx={h} cy={h} r={h * 0.73} stroke="rgba(150,215,255,0.07)" strokeWidth="0.5" fill="none" />
     </svg>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   EARBUD — single premium earbud unit (CSS pseudo-3D)
+   EARBUD — single premium unit, CSS pseudo-3D with material depth
 ───────────────────────────────────────────────────────────────── */
 function EarbudUnit({
   rotate = 0,
@@ -152,89 +186,118 @@ function EarbudUnit({
       {/* Capsule / head */}
       <div
         style={{
-          width: 56,
-          height: 72,
+          width: 66,
+          height: 84,
           borderRadius: "50% 50% 44% 44% / 48% 48% 52% 52%",
           background:
-            "radial-gradient(ellipse at 34% 27%, #2e2e3e 0%, #1c1c28 42%, #101018 100%)",
+            "radial-gradient(ellipse at 32% 24%, #3c3c50 0%, #212132 38%, #0e0e1c 100%)",
           position: "relative",
           boxShadow: [
-            "0 22px 55px rgba(0,0,0,0.92)",
-            "inset 0 1.5px 0 rgba(255,255,255,0.13)",
-            "inset 0 -2px 3px rgba(0,0,0,0.58)",
-            "inset 2.5px 0 0 rgba(255,255,255,0.055)",
-            "inset -1.5px 0 0 rgba(0,0,0,0.45)",
+            "0 28px 64px rgba(0,0,0,0.96)",
+            "inset 0 2px 0 rgba(255,255,255,0.16)",
+            "inset 0 -3px 5px rgba(0,0,0,0.62)",
+            "inset 3px 0 0 rgba(255,255,255,0.06)",
+            "inset -2px 0 0 rgba(0,0,0,0.55)",
           ].join(","),
         }}
       >
-        {/* Specular highlight — upper-left catch light */}
+        {/* Large soft specular — primary dome glint */}
         <div
           style={{
             position: "absolute",
-            top: "9%", left: "16%",
-            width: "33%", height: "25%",
+            top: "6%", left: "10%",
+            width: "52%", height: "38%",
             background:
-              "radial-gradient(ellipse, rgba(255,255,255,0.26) 0%, transparent 70%)",
+              "radial-gradient(ellipse at 28% 28%, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.07) 55%, transparent 78%)",
             borderRadius: "50%",
-            filter: "blur(2.5px)",
+            filter: "blur(3.5px)",
           }}
         />
-        {/* Secondary specular — very small, sharp */}
+        {/* Sharp catch-light — key specular */}
         <div
           style={{
             position: "absolute",
-            top: "7%", left: "22%",
-            width: "12%", height: "10%",
-            background: "rgba(255,255,255,0.55)",
+            top: "8%", left: "19%",
+            width: "16%", height: "12%",
+            background: "rgba(255,255,255,0.78)",
             borderRadius: "50%",
-            filter: "blur(1px)",
+            filter: "blur(1.4px)",
           }}
         />
-        {/* Driver mesh — darker recessed circle */}
+        {/* Tiny secondary specular dot */}
         <div
           style={{
             position: "absolute",
-            top: "32%", left: "16%", right: "16%", bottom: "20%",
+            top: "13%", left: "38%",
+            width: "7%", height: "6%",
+            background: "rgba(255,255,255,0.45)",
+            borderRadius: "50%",
+            filter: "blur(0.8px)",
+          }}
+        />
+
+        {/* Driver mesh — recessed darker circle */}
+        <div
+          style={{
+            position: "absolute",
+            top: "28%", left: "14%", right: "14%", bottom: "18%",
             borderRadius: "50%",
             background:
-              "radial-gradient(circle at 40% 35%, rgba(22,22,34,0.70) 0%, rgba(8,8,14,0.80) 100%)",
+              "radial-gradient(circle at 40% 36%, rgba(14,14,24,0.65) 0%, rgba(5,5,12,0.88) 100%)",
             border: "1px solid rgba(255,255,255,0.04)",
-            boxShadow: "inset 0 2px 4px rgba(0,0,0,0.60)",
+            boxShadow:
+              "inset 0 2.5px 6px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.025)",
           }}
         />
-        {/* Mesh dot pattern on driver */}
+        {/* Driver mesh dot pattern */}
         <div
           style={{
             position: "absolute",
-            top: "36%", left: "20%", right: "20%", bottom: "24%",
+            top: "33%", left: "18%", right: "18%", bottom: "22%",
             borderRadius: "50%",
             backgroundImage:
-              "radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)",
+              "radial-gradient(circle, rgba(255,255,255,0.10) 1px, transparent 1px)",
             backgroundSize: "4px 4px",
           }}
         />
-        {/* Rim light — right edge */}
+
+        {/* Right rim light — blue-tinted catch */}
         <div
           style={{
             position: "absolute",
-            top: "13%", right: 0, bottom: "13%",
-            width: 2.5,
+            top: "10%", right: 0, bottom: "10%",
+            width: 3,
             background:
-              "linear-gradient(to bottom, transparent, rgba(120,195,255,0.38) 38%, rgba(120,195,255,0.22) 68%, transparent)",
+              "linear-gradient(to bottom, transparent 0%, rgba(120,195,255,0.44) 32%, rgba(100,180,255,0.28) 68%, transparent 100%)",
             borderRadius: 2,
           }}
         />
-        {/* Status LED — blue-white glow */}
+        {/* Left edge — subtle cool fill light */}
         <div
           style={{
             position: "absolute",
-            bottom: "18%", left: "50%",
+            top: "22%", left: 0, bottom: "22%",
+            width: 1.5,
+            background:
+              "linear-gradient(to bottom, transparent, rgba(150,200,255,0.12) 50%, transparent)",
+            borderRadius: 1,
+          }}
+        />
+
+        {/* Status LED */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "19%", left: "50%",
             transform: "translateX(-50%)",
-            width: 4.5, height: 4.5,
+            width: 5, height: 5,
             borderRadius: "50%",
-            background: "rgba(140,218,255,0.95)",
-            boxShadow:
-              "0 0 5px rgba(140,218,255,0.85), 0 0 12px rgba(140,218,255,0.45), 0 0 20px rgba(140,218,255,0.18)",
+            background: "rgba(140,222,255,0.96)",
+            boxShadow: [
+              "0 0 4px rgba(140,222,255,0.92)",
+              "0 0 12px rgba(120,205,255,0.60)",
+              "0 0 24px rgba(100,185,255,0.28)",
+            ].join(","),
           }}
         />
       </div>
@@ -242,39 +305,40 @@ function EarbudUnit({
       {/* Stem */}
       <div
         style={{
-          width: 15,
-          height: 44,
+          width: 17,
+          height: 52,
           marginTop: -1,
-          background: "linear-gradient(170deg, #222232 0%, #161622 55%, #111120 100%)",
-          borderRadius: "0 0 8px 8px",
+          background:
+            "linear-gradient(172deg, #252535 0%, #181826 55%, #111120 100%)",
+          borderRadius: "0 0 10px 10px",
           position: "relative",
           boxShadow: [
-            "0 12px 32px rgba(0,0,0,0.75)",
-            "inset 1.5px 0 0 rgba(255,255,255,0.07)",
-            "inset -1.5px 0 0 rgba(0,0,0,0.45)",
-            "inset 0 -2px 0 rgba(0,0,0,0.50)",
+            "0 16px 42px rgba(0,0,0,0.85)",
+            "inset 1.5px 0 0 rgba(255,255,255,0.08)",
+            "inset -1.5px 0 0 rgba(0,0,0,0.52)",
+            "inset 0 -2px 0 rgba(0,0,0,0.58)",
           ].join(","),
         }}
       >
-        {/* Stem rim light — right edge */}
+        {/* Stem rim light */}
         <div
           style={{
             position: "absolute",
-            top: 0, right: 0, bottom: "15%",
+            top: 0, right: 0, bottom: "14%",
             width: 1.5,
             background:
-              "linear-gradient(to bottom, rgba(120,195,255,0.22), rgba(120,195,255,0.10) 60%, transparent)",
+              "linear-gradient(to bottom, rgba(120,195,255,0.26), rgba(100,180,255,0.12) 60%, transparent)",
             borderRadius: 1,
           }}
         />
-        {/* Groove marks */}
-        {[36, 55, 72].map((pct, i) => (
+        {/* Grooves */}
+        {[36, 55, 73].map((pct, i) => (
           <div
             key={i}
             style={{
               position: "absolute",
-              top: `${pct}%`, left: "18%", right: "18%",
-              height: 0.8,
+              top: `${pct}%`, left: "17%", right: "17%",
+              height: 0.7,
               background: "rgba(255,255,255,0.07)",
               borderRadius: 1,
             }}
@@ -286,221 +350,217 @@ function EarbudUnit({
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Full composition — lens + earbuds on a stage
+   Full composition — lens + earbuds on a dark stage
+   CSS perspective transforms create the illusion of 3D space.
 ───────────────────────────────────────────────────────────────── */
 export function ProductComposition() {
   return (
     <div
       style={{
         position: "relative",
-        width: "min(700px, 93vw)",
-        height: "min(420px, 66vw)",
+        width: "min(740px, 96vw)",
+        height: "min(450px, 65vw)",
         margin: "0 auto",
         isolation: "isolate",
       }}
     >
-      {/* ── Background stage lighting ── */}
+      {/* ── Scene lighting ── */}
 
-      {/* Primary light from upper-center — cool blue */}
+      {/* Primary stage spotlight — upper center, cold white */}
       <div
         style={{
           position: "absolute",
-          top: "-8%", left: "8%", right: "28%",
-          height: "65%",
+          top: "-10%", left: "15%", right: "15%",
+          height: "58%",
           background:
-            "radial-gradient(ellipse, rgba(140,215,255,0.12) 0%, transparent 65%)",
-          filter: "blur(18px)",
+            "radial-gradient(ellipse, rgba(210,240,255,0.10) 0%, rgba(168,210,255,0.04) 45%, transparent 72%)",
+          filter: "blur(24px)",
           pointerEvents: "none",
         }}
       />
-      {/* Warm violet ambient — whole scene */}
+      {/* Secondary fill — warm violet from below, depth */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "radial-gradient(ellipse 80% 70% at 45% 48%, rgba(100,80,180,0.08) 0%, transparent 70%)",
+            "radial-gradient(ellipse 85% 75% at 44% 62%, rgba(88,72,180,0.08) 0%, transparent 68%)",
+          pointerEvents: "none",
+        }}
+      />
+      {/* Lens-side cool ambient */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-5%", left: "-8%",
+          width: "55%", height: "70%",
+          background:
+            "radial-gradient(ellipse, rgba(140,215,255,0.08) 0%, transparent 65%)",
+          filter: "blur(28px)",
           pointerEvents: "none",
         }}
       />
 
-      {/* ── CONTACT LENS — hero object, center-left, floating ── */}
+      {/* ── CONTACT LENS — hero object, center-left, 3D tilted ── */}
       <div
         className="hero-lens"
         style={{
           position: "absolute",
-          left: "3%",
-          top: "2%",
+          left: "2%",
+          top: "0%",
           filter:
-            "drop-shadow(0 28px 44px rgba(0,0,0,0.94)) drop-shadow(0 0 22px rgba(140,215,255,0.15))",
+            "drop-shadow(0 32px 52px rgba(0,0,0,0.96)) drop-shadow(0 0 28px rgba(140,215,255,0.14))",
         }}
       >
-        <ContactLens size={240} />
+        {/* CSS 3D perspective wrapper — makes SVG look like a tilted disc */}
+        <div style={{ perspective: "700px" }}>
+          <div
+            style={{
+              transform: "rotateX(32deg) rotateY(-14deg)",
+              transformStyle: "preserve-3d",
+            }}
+          >
+            <ContactLens size={290} />
+          </div>
+        </div>
       </div>
 
-      {/* Lens ambient glow on surface below */}
+      {/* Lens ambient glow on surface — ring reflection (lens is transparent) */}
       <div
         style={{
           position: "absolute",
-          left: "8%",
-          bottom: "14%",
-          width: 180,
-          height: 28,
+          left: "6%",
+          bottom: "13%",
+          width: 220,
+          height: 32,
           background:
-            "radial-gradient(ellipse, rgba(100,200,255,0.14) 0%, transparent 70%)",
+            "radial-gradient(ellipse, rgba(100,200,255,0.13) 0%, rgba(100,200,255,0.04) 50%, transparent 72%)",
           filter: "blur(8px)",
           pointerEvents: "none",
         }}
       />
 
-      {/* ── EARBUDS — companion objects, right side ── */}
+      {/* ── EARBUDS — right side, 3D perspective tilt ── */}
       <div
         className="hero-earbuds"
         style={{
           position: "absolute",
-          right: "6%",
-          top: "26%",
-          display: "flex",
-          gap: 11,
-          alignItems: "flex-end",
-          filter: "drop-shadow(0 18px 30px rgba(0,0,0,0.90))",
+          right: "4%",
+          top: "22%",
+          filter: "drop-shadow(0 20px 36px rgba(0,0,0,0.94))",
         }}
       >
-        <EarbudUnit rotate={-9} />
-        <EarbudUnit rotate={11} scale={0.88} opacity={0.76} />
+        {/* Perspective wrapper */}
+        <div style={{ perspective: "560px" }}>
+          <div
+            style={{
+              transform: "rotateX(10deg) rotateY(7deg)",
+              transformStyle: "preserve-3d",
+              display: "flex",
+              gap: 12,
+              alignItems: "flex-end",
+            }}
+          >
+            <EarbudUnit rotate={-10} />
+            <EarbudUnit rotate={12} scale={0.87} opacity={0.74} />
+          </div>
+        </div>
       </div>
 
-      {/* Earbuds ambient glow */}
+      {/* Earbuds floor glow */}
       <div
         style={{
           position: "absolute",
-          right: "8%",
-          bottom: "14%",
-          width: 130,
-          height: 22,
+          right: "6%",
+          bottom: "12%",
+          width: 140,
+          height: 24,
           background:
-            "radial-gradient(ellipse, rgba(130,210,255,0.12) 0%, transparent 70%)",
+            "radial-gradient(ellipse, rgba(130,210,255,0.11) 0%, transparent 70%)",
           filter: "blur(6px)",
           pointerEvents: "none",
         }}
       />
 
-      {/* ── Surface plane — minimal stage / table ── */}
+      {/* ── Stage surface — table/pedestal line ── */}
       <div
         style={{
           position: "absolute",
-          bottom: "14%", left: "2%", right: "2%",
+          bottom: "15%", left: "1%", right: "1%",
           height: 1,
           background:
-            "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.055) 20%, rgba(255,255,255,0.075) 50%, rgba(255,255,255,0.055) 80%, transparent 100%)",
-          borderRadius: 1,
+            "linear-gradient(to right, transparent 0%, rgba(255,255,255,0.04) 12%, rgba(255,255,255,0.08) 30%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.08) 70%, rgba(255,255,255,0.04) 88%, transparent 100%)",
         }}
       />
-      {/* Surface reflection glow beneath the line */}
+      {/* Surface bloom — light bouncing off the table */}
       <div
         style={{
           position: "absolute",
-          bottom: "5%", left: "5%", right: "5%",
-          height: 48,
+          bottom: "10%", left: "10%", right: "10%",
+          height: 60,
           background:
-            "radial-gradient(ellipse 85% 100% at 50% 0%, rgba(255,255,255,0.028) 0%, transparent 80%)",
+            "radial-gradient(ellipse 80% 100% at 50% 0%, rgba(255,255,255,0.022) 0%, transparent 80%)",
           pointerEvents: "none",
         }}
       />
 
       {/* ── Cast shadows — objects onto surface ── */}
-      {/* Lens shadow */}
+      {/* Lens shadow — elongated, hard-ish, perspective */}
       <div
         style={{
           position: "absolute",
-          left: "10%",
-          bottom: "10%",
-          width: 210,
-          height: 22,
+          left: "8%",
+          bottom: "9%",
+          width: 240,
+          height: 28,
           background:
-            "radial-gradient(ellipse, rgba(0,0,0,0.65) 0%, transparent 72%)",
-          filter: "blur(7px)",
+            "radial-gradient(ellipse 70% 100% at 40% 50%, rgba(0,0,0,0.72) 0%, transparent 75%)",
+          filter: "blur(6px)",
           pointerEvents: "none",
+          transform: "scaleX(1.1)",
         }}
       />
       {/* Earbuds shadow */}
       <div
         style={{
           position: "absolute",
-          right: "8%",
-          bottom: "10%",
-          width: 120,
-          height: 15,
+          right: "6%",
+          bottom: "9%",
+          width: 140,
+          height: 18,
           background:
-            "radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 72%)",
+            "radial-gradient(ellipse, rgba(0,0,0,0.62) 0%, transparent 75%)",
           filter: "blur(5px)",
           pointerEvents: "none",
         }}
       />
 
-      {/* ── Reflections below surface ── */}
+      {/* ── Reflections below the surface line ── */}
       {/* Lens reflection */}
       <div
         style={{
           position: "absolute",
-          left: "3%",
-          bottom: "-4%",
-          opacity: 0.06,
+          left: "2%",
+          bottom: "-6%",
+          opacity: 0.05,
           transform: "scaleY(-1)",
-          filter: "blur(4px)",
+          filter: "blur(5px)",
           pointerEvents: "none",
         }}
       >
-        <ContactLens size={200} />
+        <ContactLens size={240} />
       </div>
 
-      {/* ── Subtle Sansxel WORKSHOP interface context — behind objects ── */}
+      {/* ── Edge vignette — contains the scene, feels like a stage ── */}
       <div
         style={{
           position: "absolute",
-          right: "0%",
-          top: "5%",
-          width: "36%",
-          height: "55%",
-          borderRadius: 10,
+          inset: 0,
           background:
-            "linear-gradient(145deg, rgba(20,20,32,0.65) 0%, rgba(14,14,22,0.45) 100%)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          opacity: 0.55,
+            "radial-gradient(ellipse 105% 100% at 50% 50%, transparent 42%, rgba(5,5,7,0.25) 72%, rgba(5,5,7,0.55) 100%)",
           pointerEvents: "none",
-          overflow: "hidden",
         }}
-      >
-        {/* Tiny workshop UI context */}
-        <div
-          style={{
-            height: 20,
-            borderBottom: "1px solid rgba(255,255,255,0.05)",
-            background: "rgba(255,255,255,0.02)",
-            display: "flex",
-            alignItems: "center",
-            padding: "0 8px",
-            gap: 4,
-          }}
-        >
-          {[0, 1, 2].map(i => (
-            <div key={i} style={{ width: 5.5, height: 5.5, borderRadius: "50%", background: "rgba(255,255,255,0.12)" }} />
-          ))}
-        </div>
-        <div style={{ display: "flex", height: "calc(100% - 20px)" }}>
-          <div style={{ width: "30%", borderRight: "1px solid rgba(255,255,255,0.04)", padding: "6px 5px", display: "flex", flexDirection: "column", gap: 3 }}>
-            {[55, 44, 52].map((w, i) => (
-              <div key={i} style={{ height: 5, width: `${w}%`, borderRadius: 2, background: i === 0 ? "rgba(167,139,250,0.22)" : "rgba(255,255,255,0.06)" }} />
-            ))}
-          </div>
-          <div style={{ flex: 1, padding: "6px 7px", display: "flex", flexDirection: "column", gap: 4, justifyContent: "flex-end" }}>
-            {[90, 75, 82, 55].map((w, i) => (
-              <div key={i} style={{ height: 4, width: `${w}%`, borderRadius: 2, background: "rgba(255,255,255,0.10)" }} />
-            ))}
-          </div>
-        </div>
-      </div>
-
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { LandingHero } from "@/components/landing/landing-hero";
 import { WorkshopRevealSection } from "@/components/landing/workshop-reveal-section";
 import { ModulesSection, ModuleMockStyles } from "@/components/landing/modules-section";
 import { PlatformTeaserSection } from "@/components/landing/platform-teaser-section";
+import { HowItConnects } from "@/components/landing/how-it-connects";
 import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
@@ -25,7 +26,10 @@ export default async function HomePage() {
       {/* 1. Hero */}
       <LandingHero signedIn={signedIn} />
 
-      {/* 2. Workshop scroll reveal */}
+      {/* 2. How it connects */}
+      <HowItConnects />
+
+      {/* 3. Workshop scroll reveal */}
       <WorkshopRevealSection />
 
       {/* 3. Modules — Copilot / Audio / Lens */}
