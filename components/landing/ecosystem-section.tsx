@@ -7,11 +7,11 @@ const EASE        = [0.16, 1, 0.3,  1   ] as [number, number, number, number];
 const EASE_SPRING = [0.34, 1.56, 0.64, 1] as [number, number, number, number];
 
 const NODES = [
-  { id: "web",     label: "Web",     icon: "⬡", desc: "helps you think" },
-  { id: "copilot", label: "Copilot", icon: "◆", desc: "helps you act"   },
-  { id: "memory",  label: "Memory",  icon: "◎", desc: "connects it all", center: true },
-  { id: "whisper", label: "Whisper", icon: "◉", desc: "helps you hear"  },
-  { id: "lens",    label: "Lens",    icon: "○", desc: "helps you see"   },
+  { id: "web",     label: "Web",     icon: "⬡", desc: "where work starts" },
+  { id: "memory",  label: "Memory",  icon: "◎", desc: "stores context"    },
+  { id: "copilot", label: "Copilot", icon: "◆", desc: "acts across tools", center: true },
+  { id: "whisper", label: "Whisper", icon: "◉", desc: "audio layer"       },
+  { id: "lens",    label: "Lens",    icon: "○", desc: "future vision"     },
 ];
 
 /*
@@ -100,8 +100,8 @@ export function EcosystemSection({ signedIn }: { signedIn: boolean }) {
           viewport={{ once: true }}
           transition={{ duration: 0.6, ease: EASE, delay: 0.12 }}
         >
-          Web helps you think. Copilot helps you act. Whisper helps you hear.
-          Lens helps you see. Memory connects it all.
+          Web is where the work starts. Memory stores context. Copilot acts
+          across tools. Whisper and Lens extend it beyond the screen.
         </motion.p>
 
         {/* Node diagram */}
