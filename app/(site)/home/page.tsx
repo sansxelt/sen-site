@@ -19,7 +19,7 @@ export default async function HomePage() {
   );
 
   return (
-    <main style={{ background: "#050507", overflowX: "hidden" }}>
+    <main style={{ background: "#050507" }}>
       <ModuleMockStyles />
 
       {/* 1. Hero */}
