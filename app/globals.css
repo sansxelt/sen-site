@@ -4029,7 +4029,7 @@ div[id] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  overflow: hidden;
+  overflow-x: clip;
   background: #050507;
 }
 
