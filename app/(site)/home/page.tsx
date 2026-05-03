@@ -246,6 +246,35 @@ export default async function HomePage() {
             ))}
           </div>
 
+          {/* Discord community strip */}
+          <a
+            href="https://discord.gg/WEMgmvtDgG"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              marginTop: 12,
+              borderRadius: 16,
+              border: "1px solid rgba(88,101,242,0.22)",
+              background: "rgba(88,101,242,0.06)",
+              padding: "14px 16px",
+              textDecoration: "none",
+              transition: "background 0.15s",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 16, lineHeight: 1 }}>◈</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: "#e4e4e7", marginBottom: 2 }}>Join the Discord</div>
+                <div style={{ fontSize: 12, color: "#52525b" }}>Early users, feedback, and updates</div>
+              </div>
+            </div>
+            <span style={{ fontSize: 12, color: "rgba(88,101,242,0.75)", whiteSpace: "nowrap" }}>discord.gg →</span>
+          </a>
+
           {!signedIn && (
             <p
               style={{

@@ -46,6 +46,12 @@ const footerGroups = [
       { href: "/contact", label: "Contact" },
     ],
   },
+  {
+    label: "Community",
+    links: [
+      { href: "https://discord.gg/WEMgmvtDgG", label: "Discord" },
+    ],
+  },
 ];
 
 type SiteNavLink = {
