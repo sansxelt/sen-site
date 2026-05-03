@@ -14,7 +14,7 @@ const FEATURES = [
   },
   {
     title: "Generate inside the conversation.",
-    body: "Images, diagrams, and structured outputs appear inline — no switching tabs or tools.",
+    body: "Images, diagrams, and structured outputs appear inline. No switching tabs or tools.",
   },
   {
     title: "Web research, built in.",
@@ -22,7 +22,7 @@ const FEATURES = [
   },
   {
     title: "Voice, two ways.",
-    body: "Dictate your message or go full voice conversation — low-latency, back-and-forth, handsfree.",
+    body: "Dictate your message or go full voice conversation. Low-latency, back-and-forth, hands-free.",
   },
   {
     title: "Threads that follow you.",
@@ -146,7 +146,7 @@ export function WorkspaceSection() {
               custom={2}
               variants={fadeUp}
             >
-              Everything you need to think, create, and ship — in one surface
+              Everything you need to think, create, and ship. One surface
               that adapts to the work, not the other way around.
             </motion.p>
 

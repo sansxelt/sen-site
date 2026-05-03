@@ -20,9 +20,9 @@ const MCP_NODES = [
 ];
 
 const FEATURES = [
-  { title: "Screen + context awareness", body: "Copilot sees what you're working on and responds in context — no pasting, no re-explaining." },
+  { title: "Screen + context awareness", body: "Copilot sees what you're working on and responds in context. No pasting, no re-explaining." },
   { title: "MCP tool integrations",      body: "Connect files, browsers, code editors, and external services. Copilot acts across them, not just inside a chat box." },
-  { title: "Workflow automation",        body: "Chain multi-step actions across apps. Research, write, commit, send — without switching surfaces." },
+  { title: "Workflow automation",        body: "Chain multi-step actions across apps. Research, write, commit, and send without switching surfaces." },
   { title: "Coding, design, and files",  body: "Inline suggestions for code, design feedback from your canvas, and file operations without a terminal." },
 ];
 

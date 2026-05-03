@@ -110,7 +110,7 @@ export function LensSection() {
               The future interface is your field of view.
             </h2>
             <p className="landing-body">
-              Lens is the long-term vision for where this system goes — AI
+              Lens is the long-term vision for where this system goes: AI
               overlays in your line of sight. Real-time information, translation,
               navigation, and memory surfaced exactly when you need them.
             </p>

@@ -425,10 +425,12 @@ export function DashboardNav({
     <Link
       key={item.href}
       href={item.href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+      className={`sx-nav-item${
         isActive(item.href)
-          ? "bg-white/10 text-white"
-          : "text-neutral-400 hover:bg-white/5 hover:text-neutral-100"
+          ? zone === "platform"
+            ? " sx-nav-item--active sx-nav-item--active-platform"
+            : " sx-nav-item--active"
+          : ""
       }`}
     >
       {item.icon}
@@ -445,27 +447,28 @@ export function DashboardNav({
           bottom, ChatGPT-style. */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
         {/* Logo */}
-        <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] py-3">
+        <div className="flex shrink-0 items-center justify-between border-b py-3" style={{ borderColor: "var(--sx-border)" }}>
           <Link href="/app" className="flex items-center gap-2.5">
             <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" priority />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-white">sansxel</span>
-              <span className="text-[10px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
+              <span
+                className="text-[10px] uppercase tracking-[0.18em]"
+                style={{ color: zone === "platform" ? "rgba(255,212,90,0.60)" : "rgba(155,124,255,0.65)" }}
+              >
+                {zone === "platform" ? "Platform" : "Workshop"}
+              </span>
             </div>
           </Link>
           <ThemeToggle compact />
         </div>
 
-        {/* Chat — pinned below logo with its own divider */}
-        <div className="shrink-0 border-b border-white/[0.06] py-2">
+        {/* Chat — pinned below logo */}
+        <div className="shrink-0 border-b py-2" style={{ borderColor: "var(--sx-border)" }}>
           <Link
             href="/app"
             onClick={(e) => { if (inWorkshop) e.preventDefault(); }}
-            className={`flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              isActive("/app")
-                ? "bg-white/10 text-white"
-                : "text-neutral-200 hover:bg-white/5 hover:text-white"
-            }`}
+            className={`sx-nav-item font-medium${isActive("/app") ? " sx-nav-item--active" : ""}`}
           >
             <ChatIcon />
             Chat
@@ -477,32 +480,30 @@ export function DashboardNav({
         <nav className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto py-2">
           {effectiveGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-0.5">
-              <div className="px-3 pb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
-                {group.label}
-              </div>
+              <div className="sx-section-label">{group.label}</div>
               {group.items.map(navLink)}
             </div>
           ))}
         </nav>
 
-        <div className="shrink-0 border-t border-white/[0.06] pb-4 pt-3">
-          <div className="mb-1 truncate px-3 text-xs text-neutral-500">{userEmail}</div>
-
-          <Link
-            href="/home"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+        <div className="shrink-0 border-t pb-4 pt-3" style={{ borderColor: "var(--sx-border)" }}>
+          <div
+            className="mb-2 truncate px-3 text-[11px]"
+            style={{ color: "var(--sx-text-dim)" }}
           >
+            {userEmail}
+          </div>
+          <Link href="/home" className="sx-nav-item text-sm">
             <HomeIcon />
-            Marketing site
+            Home
           </Link>
-
           <button
             type="button"
             onClick={async () => {
               await signOut({ redirect: false });
               window.location.href = "/home";
             }}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-1.5 text-sm text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
+            className="sx-nav-item w-full text-sm"
           >
             <SignOutIcon />
             Sign out
@@ -529,7 +530,12 @@ export function DashboardNav({
             <Image src={logoSrc} alt="sansxel" width={28} height={28} className="h-7 w-7 rounded-lg" priority />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-white">sansxel</span>
-              <span className="text-[8.5px] uppercase tracking-[0.18em] text-violet-300/70">Workshop</span>
+              <span
+                className="text-[8.5px] uppercase tracking-[0.18em]"
+                style={{ color: zone === "platform" ? "rgba(255,212,90,0.60)" : "rgba(155,124,255,0.60)" }}
+              >
+                {zone === "platform" ? "Platform" : "Workshop"}
+              </span>
             </div>
           </Link>
         </div>
@@ -544,24 +550,20 @@ export function DashboardNav({
           {isAdmin && (
             <Link
               href="/account/content"
-              className="flex items-center gap-1 rounded-xl border border-violet-400/30 bg-violet-400/[0.08] px-2.5 py-1.5 text-xs text-violet-200 transition hover:bg-violet-400/[0.16] hover:text-white"
+              className="sx-btn sx-btn--workshop"
               title="Learn content (admin)"
             >
               <PenIcon />
               <span className="hidden xs:inline sm:inline">Admin</span>
             </Link>
           )}
-          <Link
-            href="/home"
-            className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white"
-            title="Return to home"
-          >
+          <Link href="/home" className="sx-btn sx-btn--ghost" title="Return to home">
             <HomeIcon />
             <span className="hidden xs:inline sm:inline">Home</span>
           </Link>
           <button
             onClick={async () => { await signOut({ redirect: false }); window.location.href = "/home"; }}
-            className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-neutral-400 transition hover:bg-white/10 hover:text-white"
+            className="sx-btn sx-btn--ghost"
           >
             <SignOutIcon />
             <span className="hidden xs:inline sm:inline">Sign out</span>
@@ -579,8 +581,8 @@ export function DashboardNav({
             className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
           />
           <aside className="fixed inset-y-0 left-0 z-[55] flex w-[82vw] max-w-[320px] flex-col border-r border-white/[0.08] bg-neutral-950/98 lg:hidden chat-drawer-in">
-            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-300/85">
+            <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: "var(--sx-border)" }}>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(155,124,255,0.75)" }}>
                 Chat history
               </span>
               <button
@@ -595,7 +597,7 @@ export function DashboardNav({
             <button
               type="button"
               onClick={() => { handleNewChat(); setDrawerOpen(false); }}
-              className="m-3 flex items-center gap-2 rounded-lg border border-violet-400/30 bg-violet-400/[0.08] px-3 py-2.5 text-sm font-semibold text-violet-200 transition hover:border-violet-400/60 hover:bg-violet-400/[0.16]"
+              className="sx-btn sx-btn--workshop m-3 w-[calc(100%-24px)] justify-center py-2.5 text-sm font-semibold"
             >
               <span aria-hidden className="text-base leading-none">＋</span>
               <span>New chat</span>

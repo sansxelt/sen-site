@@ -7,7 +7,7 @@ const EASE = [0.16, 1, 0.3, 1] as [number, number, number, number];
 const WAVE_BARS = Array.from({ length: 24 });
 
 const FEATURES = [
-  { icon: "◉", title: "Real-time voice responses", body: "Low-latency AI voice in your ear — answers, summaries, and guidance without looking at a screen." },
+  { icon: "◉", title: "Real-time voice responses", body: "Low-latency AI voice in your ear. Answers, summaries, and guidance without looking at a screen." },
   { icon: "◎", title: "Live translation",           body: "Spoken translation as conversations happen. Works in both directions." },
   { icon: "○", title: "Reminders and alerts",       body: "Context-aware nudges delivered at the right moment, not whenever your phone buzzes." },
   { icon: "◌", title: "Adaptive privacy modes",     body: "Whisper scales from discreet guidance to full conversation. You control what it says and when." },
@@ -88,7 +88,7 @@ export function WhisperSection() {
               Private AI audio.
             </h2>
             <p className="landing-body">
-              Whisper is the private audio layer — starting through the
+              Whisper is the private audio layer, starting through the
               earbuds you already own. Voice responses, live translation,
               reminders, and guidance delivered directly to your ear.
             </p>

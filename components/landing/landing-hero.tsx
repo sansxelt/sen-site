@@ -83,8 +83,8 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
           transition={{ duration: 0.7, ease: EASE, delay: 0.55 }}
         >
           Sansxel starts as a powerful AI workspace for thinking, creating,
-          and getting things done — then grows into the help layer across web,
-          desktop, audio, and future vision.
+          and getting things done. Then it grows into the help layer across
+          web, desktop, audio, and future vision.
         </motion.p>
 
         <motion.div
