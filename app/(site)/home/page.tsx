@@ -6,33 +6,12 @@ import { EcosystemSection } from "@/components/landing/ecosystem-section";
 import { FutureHintSection } from "@/components/landing/future-hint-section";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { MemorySection } from "@/components/landing/memory-section";
+import { ProductShowcaseSection } from "@/components/landing/product-showcase-section";
 import { WorkspaceSection } from "@/components/landing/workspace-section";
 import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
 
-const FEATURES = [
-  {
-    icon: "◎",
-    title: "Deep research",
-    body: "Synthesize from multiple web sources and your own files without switching tabs.",
-  },
-  {
-    icon: "◉",
-    title: "Voice mode",
-    body: "Low-latency voice conversations. Talk through complex work hands-free, back and forth.",
-  },
-  {
-    icon: "◻",
-    title: "Image generation",
-    body: "Create diagrams, concepts, and visual references inline. No separate tool needed.",
-  },
-  {
-    icon: "◆",
-    title: "Projects and memory",
-    body: "Organize threads into projects. Memory keeps context across every session in that project.",
-  },
-];
 
 export default async function HomePage() {
   const session  = await auth();
@@ -58,48 +37,8 @@ export default async function HomePage() {
       {/* 4. Copilot and integrations */}
       <CopilotSection />
 
-      {/* 5. Feature strip — 4 highlights */}
-      <section style={{ background: "#040406" }}>
-        <div className="landing-divider" />
-        <div className="landing-section">
-          <div
-            style={{
-              display: "grid",
-              gap: 2,
-              gridTemplateColumns: "repeat(2, 1fr)",
-            }}
-            className="lp-features-grid"
-          >
-            {FEATURES.map((f) => (
-              <div
-                key={f.title}
-                style={{
-                  padding: "28px 28px",
-                  borderRadius: 16,
-                  border: "1px solid rgba(255,255,255,0.05)",
-                  background: "rgba(255,255,255,0.015)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                }}
-              >
-                <span style={{ fontSize: 18, color: "rgba(168,196,255,0.55)" }}>{f.icon}</span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: "#e4e4e7", marginBottom: 5 }}>
-                    {f.title}
-                  </div>
-                  <div style={{ fontSize: 13, color: "#52525b", lineHeight: 1.6 }}>
-                    {f.body}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <style>{`
-          @media (min-width: 768px) { .lp-features-grid { grid-template-columns: repeat(4, 1fr) !important; } }
-        `}</style>
-      </section>
+      {/* 5. Product showcase: Lens, Audio, Copilot */}
+      <ProductShowcaseSection />
 
       {/* 6. Future ecosystem hint: Whisper + Lens */}
       <FutureHintSection />
