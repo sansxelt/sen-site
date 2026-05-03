@@ -4223,6 +4223,20 @@ div[id] {
 }
 .landing-core-float { animation: lp-float 9s ease-in-out infinite; }
 
+/* Physical product hero — object float animations */
+@keyframes obj-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  45%       { transform: translateY(-12px) rotate(-0.5deg); }
+  75%       { transform: translateY(-7px) rotate(0.3deg); }
+}
+@keyframes obj-float-alt {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  40%       { transform: translateY(-9px) rotate(0.5deg); }
+  70%       { transform: translateY(-5px) rotate(-0.2deg); }
+}
+.hero-lens    { animation: obj-float     6.8s ease-in-out infinite; }
+.hero-earbuds { animation: obj-float-alt 7.5s ease-in-out 0.9s infinite; }
+
 /* Scroll hint */
 .landing-scroll-hint {
   position: absolute;

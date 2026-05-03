@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { getSignInPath } from "@/lib/auth-ui";
 import { ProductWorkshopVisual } from "@/components/landing/product-workshop-visual";
+import { ProductComposition } from "@/components/landing/product-composition";
 
 export const metadata: Metadata = {
   title: "Product",
@@ -76,8 +77,16 @@ export default async function ProductPage() {
             that adapts to what you&apos;re building right now.
           </p>
 
-          {/* THE VISUAL — product as the star */}
-          <ProductWorkshopVisual />
+          {/* THE VISUAL — physical product first */}
+          <ProductComposition />
+
+          {/* Workshop software layer — below the physical objects */}
+          <div style={{ marginTop: 64 }}>
+            <div style={{ fontSize: 11, fontFamily: "var(--font-geist-mono), ui-monospace, monospace", letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", textAlign: "center", marginBottom: 16 }}>
+              the software
+            </div>
+            <ProductWorkshopVisual />
+          </div>
 
           {/* CTAs below the visual */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginTop: 36 }}>

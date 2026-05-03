@@ -493,14 +493,6 @@ export function DashboardNav({
           >
             {userEmail}
           </div>
-          <a
-            href="https://discord.gg/WEMgmvtDgG"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="sx-nav-item text-sm"
-          >
-            ◈ Discord
-          </a>
           <Link href="/home" className="sx-nav-item text-sm">
             <HomeIcon />
             Home

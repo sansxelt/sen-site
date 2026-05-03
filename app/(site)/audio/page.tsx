@@ -137,7 +137,7 @@ export default async function AudioPage() {
             ready, you will hear about it in the Discord first.
           </p>
           <a
-            href="https://discord.gg/WEMgmvtDgG"
+            href="https://discord.gg/5sxuuewf3u"
             target="_blank"
             rel="noopener noreferrer"
             style={{

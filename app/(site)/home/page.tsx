@@ -67,7 +67,7 @@ export default async function HomePage() {
             the product gets shaped.
           </p>
           <a
-            href="https://discord.gg/WEMgmvtDgG"
+            href="https://discord.gg/5sxuuewf3u"
             target="_blank"
             rel="noopener noreferrer"
             className="landing-cta-primary"
@@ -270,7 +270,7 @@ export default async function HomePage() {
           </div>
 
           <a
-            href="https://discord.gg/WEMgmvtDgG"
+            href="https://discord.gg/5sxuuewf3u"
             target="_blank"
             rel="noopener noreferrer"
             style={{

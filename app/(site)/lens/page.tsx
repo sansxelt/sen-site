@@ -92,7 +92,7 @@ export default function LensPage() {
           </p>
           <div style={{ display: "flex", gap: 12, marginTop: 28, flexWrap: "wrap" }}>
             <a
-              href="https://discord.gg/WEMgmvtDgG"
+              href="https://discord.gg/5sxuuewf3u"
               target="_blank"
               rel="noopener noreferrer"
               className="landing-cta-primary"

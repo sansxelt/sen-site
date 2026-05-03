@@ -49,7 +49,7 @@ const footerGroups = [
   {
     label: "Community",
     links: [
-      { href: "https://discord.gg/WEMgmvtDgG", label: "Discord" },
+      { href: "https://discord.gg/5sxuuewf3u", label: "Discord" },
     ],
   },
 ];
