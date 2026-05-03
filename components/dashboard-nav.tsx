@@ -449,12 +449,12 @@ export function DashboardNav({
         {/* Logo */}
         <div className="flex shrink-0 items-center justify-between border-b py-3" style={{ borderColor: "var(--sx-border)" }}>
           <Link href="/app" className="flex items-center gap-2.5">
-            <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" priority />
+            <Image src={logoSrc} alt="sansxel" width={36} height={36} className="h-9 w-9 shrink-0 rounded-xl" priority />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-white">sansxel</span>
               <span
-                className="text-[10px] uppercase tracking-[0.18em]"
-                style={{ color: zone === "platform" ? "rgba(255,212,90,0.60)" : "rgba(155,124,255,0.65)" }}
+                className="text-[10px] font-semibold uppercase tracking-[0.18em]"
+                style={{ color: zone === "platform" ? "#FFAC33" : "#A78BFA" }}
               >
                 {zone === "platform" ? "Platform" : "Workshop"}
               </span>
@@ -535,12 +535,12 @@ export function DashboardNav({
             </button>
           )}
           <Link href="/app" className="flex items-center gap-2">
-            <Image src={logoSrc} alt="sansxel" width={28} height={28} className="h-7 w-7 rounded-lg" priority />
+            <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 rounded-xl" priority />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-white">sansxel</span>
               <span
-                className="text-[8.5px] uppercase tracking-[0.18em]"
-                style={{ color: zone === "platform" ? "rgba(255,212,90,0.60)" : "rgba(155,124,255,0.60)" }}
+                className="text-[8.5px] font-semibold uppercase tracking-[0.18em]"
+                style={{ color: zone === "platform" ? "#FFAC33" : "#A78BFA" }}
               >
                 {zone === "platform" ? "Platform" : "Workshop"}
               </span>
