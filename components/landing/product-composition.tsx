@@ -12,12 +12,13 @@ function ContactLens({ size = 290 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox={v} fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        {/* Fresnel body — transparent center, translucent edge (real lens physics) */}
+        {/* Fresnel body — truly transparent center, refractive/glassy edge */}
         <radialGradient id="lensBody" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="rgba(155,220,255,0.03)" />
-          <stop offset="55%"  stopColor="rgba(140,210,255,0.07)" />
-          <stop offset="82%"  stopColor="rgba(120,200,255,0.14)" />
-          <stop offset="100%" stopColor="rgba(100,185,255,0.26)" />
+          <stop offset="0%"   stopColor="rgba(155,220,255,0.00)" />
+          <stop offset="48%"  stopColor="rgba(140,210,255,0.03)" />
+          <stop offset="72%"  stopColor="rgba(128,202,255,0.10)" />
+          <stop offset="88%"  stopColor="rgba(112,192,255,0.22)" />
+          <stop offset="100%" stopColor="rgba(95,178,255,0.38)" />
         </radialGradient>
         {/* Ambient halo — extends beyond the lens */}
         <radialGradient id="lensHalo" cx="50%" cy="50%" r="50%">
@@ -68,19 +69,28 @@ function ContactLens({ size = 290 }: { size?: number }) {
       {/* PRIMARY rim light — upper-left arc — dominant specular */}
       <path
         d={`M ${h - h*0.80} ${h - h*0.48} A ${h*0.88} ${h*0.88} 0 0 1 ${h + h*0.30} ${h - h*0.84}`}
-        stroke="rgba(245,254,255,0.90)"
-        strokeWidth="3.2"
+        stroke="rgba(255,255,255,0.97)"
+        strokeWidth="4.0"
         strokeLinecap="round"
         fill="none"
       />
-      {/* Soft glow pass on main rim light */}
+      {/* Bright inner glow pass — simulates glass edge refraction */}
       <path
-        d={`M ${h - h*0.76} ${h - h*0.54} A ${h*0.86} ${h*0.86} 0 0 1 ${h + h*0.24} ${h - h*0.83}`}
-        stroke="rgba(190,242,255,0.32)"
-        strokeWidth="9"
+        d={`M ${h - h*0.78} ${h - h*0.50} A ${h*0.87} ${h*0.87} 0 0 1 ${h + h*0.26} ${h - h*0.83}`}
+        stroke="rgba(220,248,255,0.55)"
+        strokeWidth="6"
         strokeLinecap="round"
         fill="none"
-        filter="url(#lBlur4)"
+        filter="url(#lBlur2)"
+      />
+      {/* Wide soft glow pass on main rim light */}
+      <path
+        d={`M ${h - h*0.76} ${h - h*0.54} A ${h*0.86} ${h*0.86} 0 0 1 ${h + h*0.24} ${h - h*0.83}`}
+        stroke="rgba(170,235,255,0.38)"
+        strokeWidth="14"
+        strokeLinecap="round"
+        fill="none"
+        filter="url(#lBlur7)"
       />
 
       {/* SECONDARY rim light — lower-right, dim cool */}
@@ -96,15 +106,15 @@ function ContactLens({ size = 290 }: { size?: number }) {
       <ellipse
         cx={h - h*0.27} cy={h - h*0.29}
         rx={h * 0.32} ry={h * 0.17}
-        fill="rgba(255,255,255,0.36)"
+        fill="rgba(255,255,255,0.50)"
         transform={`rotate(-30, ${h - h*0.27}, ${h - h*0.29})`}
         filter="url(#lBlur4)"
       />
       {/* Sharp specular hot-spot inside caustic */}
       <ellipse
         cx={h - h*0.33} cy={h - h*0.33}
-        rx={h * 0.11} ry={h * 0.065}
-        fill="rgba(255,255,255,0.60)"
+        rx={h * 0.12} ry={h * 0.072}
+        fill="rgba(255,255,255,0.82)"
         transform={`rotate(-30, ${h - h*0.33}, ${h - h*0.33})`}
         filter="url(#lBlur1)"
       />
@@ -412,11 +422,11 @@ export function ProductComposition() {
             "drop-shadow(0 32px 52px rgba(0,0,0,0.96)) drop-shadow(0 0 28px rgba(140,215,255,0.14))",
         }}
       >
-        {/* CSS 3D perspective wrapper — makes SVG look like a tilted disc */}
-        <div style={{ perspective: "700px" }}>
+        {/* CSS 3D perspective wrapper — tighter perspective = more dramatic oval */}
+        <div style={{ perspective: "560px" }}>
           <div
             style={{
-              transform: "rotateX(32deg) rotateY(-14deg)",
+              transform: "rotateX(40deg) rotateY(-22deg)",
               transformStyle: "preserve-3d",
             }}
           >
@@ -450,11 +460,11 @@ export function ProductComposition() {
           filter: "drop-shadow(0 20px 36px rgba(0,0,0,0.94))",
         }}
       >
-        {/* Perspective wrapper */}
-        <div style={{ perspective: "560px" }}>
+        {/* Perspective wrapper — tighter for more dramatic foreshortening */}
+        <div style={{ perspective: "420px" }}>
           <div
             style={{
-              transform: "rotateX(10deg) rotateY(7deg)",
+              transform: "rotateX(22deg) rotateY(16deg)",
               transformStyle: "preserve-3d",
               display: "flex",
               gap: 12,
