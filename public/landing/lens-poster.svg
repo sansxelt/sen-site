@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
+  <defs>
+    <radialGradient id="lglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c084fc" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lensGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="60%" stop-color="#a8c4ff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.02"/>
+    </radialGradient>
+  </defs>
+  <circle cx="300" cy="300" r="290" fill="url(#lglow)"/>
+
+  <ellipse cx="300" cy="320" rx="180" ry="60" fill="url(#lensGrad)" stroke="#c084fc" stroke-width="1.5" opacity="0.7"/>
+  <ellipse cx="300" cy="320" rx="180" ry="60" fill="none" stroke="#a8c4ff" stroke-width="0.5" opacity="0.4"/>
+
+  <g opacity="0.85">
+    <circle cx="300" cy="320" r="32" fill="none" stroke="#a8c4ff" stroke-width="1"/>
+    <circle cx="300" cy="320" r="18" fill="#a8c4ff" opacity="0.18"/>
+  </g>
+
+  <g opacity="0.8">
+    <circle cx="120" cy="320" r="3" fill="#c084fc"/>
+    <circle cx="160" cy="276" r="3" fill="#a8c4ff"/>
+    <circle cx="220" cy="252" r="3" fill="#c084fc"/>
+    <circle cx="300" cy="246" r="3" fill="#a8c4ff"/>
+    <circle cx="380" cy="252" r="3" fill="#c084fc"/>
+    <circle cx="440" cy="276" r="3" fill="#a8c4ff"/>
+    <circle cx="480" cy="320" r="3" fill="#c084fc"/>
+  </g>
+
+  <g opacity="0.5">
+    <line x1="120" y1="160" x2="200" y2="160" stroke="#a8c4ff" stroke-width="1.2"/>
+    <line x1="120" y1="180" x2="160" y2="180" stroke="#a8c4ff" stroke-width="1.2"/>
+    <line x1="400" y1="430" x2="480" y2="430" stroke="#a8c4ff" stroke-width="1.2"/>
+    <rect x="100" y="120" width="14" height="14" fill="none" stroke="#a8c4ff" stroke-width="1"/>
+    <rect x="486" y="120" width="14" height="14" fill="none" stroke="#a8c4ff" stroke-width="1"/>
+    <rect x="100" y="466" width="14" height="14" fill="none" stroke="#a8c4ff" stroke-width="1"/>
+    <rect x="486" y="466" width="14" height="14" fill="none" stroke="#a8c4ff" stroke-width="1"/>
+  </g>
+</svg>

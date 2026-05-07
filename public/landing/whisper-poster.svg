@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
+  <defs>
+    <radialGradient id="wglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bud" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1f2e"/>
+      <stop offset="100%" stop-color="#0a0d18"/>
+    </linearGradient>
+  </defs>
+  <circle cx="300" cy="300" r="290" fill="url(#wglow)"/>
+  <ellipse cx="300" cy="300" rx="260" ry="260" stroke="#a8c4ff" stroke-width="0.6" opacity="0.18"/>
+  <ellipse cx="300" cy="300" rx="200" ry="200" stroke="#60a5fa" stroke-width="0.7" opacity="0.32"/>
+  <ellipse cx="300" cy="300" rx="140" ry="140" stroke="#60a5fa" stroke-width="0.8" opacity="0.45"/>
+
+  <g transform="translate(300 300)">
+    <ellipse cx="0" cy="0" rx="50" ry="80" fill="url(#bud)" stroke="rgba(96,165,250,0.3)"/>
+    <circle cx="0" cy="-65" r="55" fill="#a8c4ff" opacity="0.18"/>
+    <circle cx="0" cy="-65" r="45" fill="#a8c4ff" opacity="0.30"/>
+    <circle cx="0" cy="-65" r="22" fill="#60a5fa" opacity="0.85"/>
+    <circle cx="0" cy="60"  r="18" stroke="#22d3ee" stroke-width="2" opacity="0.75"/>
+  </g>
+</svg>

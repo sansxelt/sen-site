@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
+  <defs>
+    <radialGradient id="cglow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a8c4ff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#a8c4ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="caseLid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a1d28"/>
+      <stop offset="100%" stop-color="#0e1018"/>
+    </linearGradient>
+    <linearGradient id="caseBase" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#15171f"/>
+      <stop offset="100%" stop-color="#080a10"/>
+    </linearGradient>
+  </defs>
+  <circle cx="300" cy="300" r="290" fill="url(#cglow)"/>
+
+  <g transform="translate(140 220) skewX(-6)">
+    <rect x="0" y="-30" width="320" height="180" rx="36" fill="url(#caseLid)" stroke="rgba(168,196,255,0.18)"/>
+  </g>
+
+  <g transform="translate(140 360) skewX(-6)">
+    <rect x="0" y="-40" width="320" height="120" rx="36" fill="url(#caseBase)" stroke="rgba(168,196,255,0.22)"/>
+    <ellipse cx="100" cy="-10" rx="36" ry="14" fill="#020308" stroke="rgba(168,196,255,0.15)"/>
+    <ellipse cx="100" cy="-10" rx="32" ry="11" fill="#22d3ee" opacity="0.85"/>
+    <ellipse cx="220" cy="-10" rx="36" ry="14" fill="#020308" stroke="rgba(168,196,255,0.15)"/>
+    <ellipse cx="220" cy="-10" rx="32" ry="11" fill="#c084fc" opacity="0.85"/>
+    <circle cx="160" cy="60" r="3" fill="#22c55e" opacity="0.85"/>
+  </g>
+</svg>

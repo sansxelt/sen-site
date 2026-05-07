@@ -14,6 +14,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
     "@paypal/react-paypal-js": "^8.9.2",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@stripe/react-stripe-js": "^3.0.0",
     "@stripe/stripe-js": "^5.0.0",
     "@supabase/supabase-js": "^2.103.0",
@@ -33,13 +35,15 @@
     "remark-math": "^6.0.0",
     "resend": "^6.10.0",
     "shiki": "^4.0.2",
-    "stripe": "^22.0.1"
+    "stripe": "^22.0.1",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.184.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "tailwindcss": "^4",

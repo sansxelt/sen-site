@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { AuthFlow } from "@/components/auth-flow";
-import { LandingHero } from "@/components/landing/landing-hero";
-import { WorkshopRevealSection } from "@/components/landing/workshop-reveal-section";
-import { ModulesSection, ModuleMockStyles } from "@/components/landing/modules-section";
-import { PlatformTeaserSection } from "@/components/landing/platform-teaser-section";
-import { HowItConnects } from "@/components/landing/how-it-connects";
+import { CinematicHero } from "@/components/landing/cinematic-hero";
+import {
+  CinematicWorkshopSection,
+  CinematicWhisperSection,
+  CinematicLensSection,
+  CinematicLensCaseSection,
+  CinematicEcosystemSection,
+} from "@/components/landing/cinematic-sections";
 import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
@@ -21,30 +24,28 @@ export default async function HomePage() {
 
   return (
     <main style={{ background: "#050507" }}>
-      <ModuleMockStyles />
+      {/* 1. Cinematic hero with 3D ecosystem orbit */}
+      <CinematicHero signedIn={signedIn} />
 
-      {/* 1. Hero */}
-      <LandingHero signedIn={signedIn} />
+      {/* 2. Workshop scene (the brain) */}
+      <CinematicWorkshopSection />
 
-      {/* 2. How it connects */}
-      <HowItConnects />
+      {/* 3. Whisper scene (the voice) */}
+      <CinematicWhisperSection />
 
-      {/* 3. Workshop scroll reveal */}
-      <WorkshopRevealSection />
+      {/* 4. Lens scene (the eye, R&D) */}
+      <CinematicLensSection />
 
-      {/* 3. Modules — Copilot / Audio / Lens */}
-      <ModulesSection />
+      {/* 5. Lens Day Kit (case opening) */}
+      <CinematicLensCaseSection />
 
-      {/* 4. Platform teaser */}
-      <PlatformTeaserSection />
+      {/* 6. Ecosystem connection (one memory) */}
+      <CinematicEcosystemSection />
 
-      {/* 5. Community / Discord */}
+      {/* 7. Community / Discord */}
       <section style={{ background: "#040406" }}>
         <div className="landing-divider" />
-        <div
-          className="landing-section"
-          style={{ maxWidth: 720, textAlign: "center" }}
-        >
+        <div className="landing-section" style={{ maxWidth: 720, textAlign: "center" }}>
           <div
             style={{
               display: "inline-flex",
@@ -82,7 +83,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 6. Pricing */}
+      {/* 8. Pricing preview */}
       <section id="pricing" style={{ background: "#040406" }}>
         <div className="landing-divider" />
         <div className="landing-section" style={{ maxWidth: 1280, margin: "0 auto" }}>
@@ -206,13 +207,10 @@ export default async function HomePage() {
         `}</style>
       </section>
 
-      {/* 7. Final CTA */}
+      {/* 9. Final CTA */}
       <section id="get-started" style={{ background: "#040406", paddingBottom: 80 }}>
         <div className="landing-divider" style={{ marginBottom: 0 }} />
-        <div
-          className="landing-section"
-          style={{ maxWidth: 1600, margin: "0 auto", paddingTop: 64 }}
-        >
+        <div className="landing-section" style={{ maxWidth: 1600, margin: "0 auto", paddingTop: 64 }}>
           {signedIn ? (
             <div className="landing-glass" style={{ padding: "40px 40px" }}>
               <div className="landing-kicker landing-kicker--dim">welcome back</div>
@@ -225,7 +223,7 @@ export default async function HomePage() {
                   Open workspace
                 </Link>
                 <Link
-                  href="/account/billing"
+                  href="/account/plan"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
@@ -238,7 +236,7 @@ export default async function HomePage() {
                     textDecoration: "none",
                   }}
                 >
-                  Manage billing
+                  Manage plan
                 </Link>
               </div>
             </div>
@@ -251,10 +249,10 @@ export default async function HomePage() {
             className="landing-quick-nav"
           >
             {[
-              ["/workshop",  "Workshop",  "Chat · Projects · Files · Memory · Voice"],
-              ["/pricing",   "Pricing",   "Free, Plus, Pro, Teams"],
-              ["/learn",     "Learn",     "Short reads, real examples"],
-              ["/contact",   "Contact",   "Talk to the team"],
+              ["/workshop", "Workshop", "Chat · Projects · Files · Memory · Voice"],
+              ["/whisper",  "Whisper",  "Speak. Listen. Heads-up."],
+              ["/lens",     "Lens",     "Visual interface direction · R&D"],
+              ["/pricing",  "Pricing",  "Free, Plus, Pro, Teams"],
             ].map(([href, label, desc]) => (
               <Link
                 key={href}

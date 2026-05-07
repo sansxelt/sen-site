@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
+  <defs>
+    <radialGradient id="eglow" cx="50%" cy="60%" r="60%">
+      <stop offset="0%" stop-color="#5eaaff" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#5eaaff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="memPlate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0c1426"/>
+      <stop offset="100%" stop-color="#040614"/>
+    </linearGradient>
+  </defs>
+  <circle cx="300" cy="300" r="290" fill="url(#eglow)"/>
+
+  <g>
+    <rect x="100" y="200" width="80" height="80" rx="14" fill="#0a0a14" stroke="rgba(34,211,238,0.4)"/>
+    <circle cx="140" cy="226" r="6" fill="#22d3ee"/>
+    <text x="140" y="265" font-family="ui-monospace, monospace" font-size="11" fill="#22d3ee" text-anchor="middle" opacity="0.85">WORKSHOP</text>
+
+    <rect x="260" y="200" width="80" height="80" rx="14" fill="#0a0a14" stroke="rgba(96,165,250,0.4)"/>
+    <circle cx="300" cy="226" r="6" fill="#60a5fa"/>
+    <text x="300" y="265" font-family="ui-monospace, monospace" font-size="11" fill="#60a5fa" text-anchor="middle" opacity="0.85">WHISPER</text>
+
+    <rect x="420" y="200" width="80" height="80" rx="14" fill="#0a0a14" stroke="rgba(192,132,252,0.4)"/>
+    <circle cx="460" cy="226" r="6" fill="#c084fc"/>
+    <text x="460" y="265" font-family="ui-monospace, monospace" font-size="11" fill="#c084fc" text-anchor="middle" opacity="0.85">LENS</text>
+  </g>
+
+  <g opacity="0.6">
+    <line x1="140" y1="280" x2="280" y2="430" stroke="#22d3ee" stroke-width="1.2"/>
+    <line x1="300" y1="280" x2="300" y2="430" stroke="#60a5fa" stroke-width="1.2"/>
+    <line x1="460" y1="280" x2="320" y2="430" stroke="#c084fc" stroke-width="1.2"/>
+  </g>
+
+  <g transform="translate(80 420)">
+    <rect width="440" height="80" rx="8" fill="url(#memPlate)" stroke="rgba(168,196,255,0.35)"/>
+    <text x="220" y="46" font-family="ui-monospace, monospace" font-size="13" fill="#a8c4ff" text-anchor="middle" letter-spacing="3">MEMORY · CONTEXT · PROJECTS</text>
+  </g>
+</svg>

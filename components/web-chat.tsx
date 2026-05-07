@@ -3027,12 +3027,28 @@ export function WebChat({
         )}
         {showEmpty ? (
           <div className="webchat-empty">
-            <div className="webchat-empty-mark">sansxel-1</div>
+            <div className="webchat-empty-mark">sansxel · workshop</div>
             <h2>What are you making?</h2>
             <p>
               Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
               working on, code, design, research, a half-baked idea at 2am.
             </p>
+            <div className="webchat-empty-modules" aria-label="Active modules">
+              <span className="webchat-empty-module">
+                <span className="webchat-empty-module-dot webchat-empty-module-dot--on" />
+                workshop
+              </span>
+              <span className="webchat-empty-module-sep">·</span>
+              <span className="webchat-empty-module">
+                <span className="webchat-empty-module-dot webchat-empty-module-dot--ready" />
+                whisper
+              </span>
+              <span className="webchat-empty-module-sep">·</span>
+              <span className="webchat-empty-module">
+                <span className="webchat-empty-module-dot webchat-empty-module-dot--future" />
+                lens · soon
+              </span>
+            </div>
             {attachedProject && (
               <div className="webchat-empty-project-note">
                 <span className="webchat-empty-project-note-icon">◇</span>

@@ -23,6 +23,8 @@ const nextConfig: NextConfig = {
       // Legacy single-page billing was split into Plan / Addons /
       // Credits under Shop. Old bookmarks land on Plan.
       { source: "/account/billing", destination: "/account/plan", permanent: true },
+      // Audio rebranded to Whisper, the speaking + hearing layer.
+      { source: "/audio", destination: "/whisper", permanent: true },
     ];
   },
 };

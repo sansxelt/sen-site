@@ -4,6 +4,7 @@ import { ComparePlans } from "@/components/compare-plans";
 import { DotGrid } from "@/components/dot-grid";
 import { HeistCard } from "@/components/heist-card";
 import { PricingPacks } from "@/components/pricing-packs";
+import { WaitlistForm } from "@/components/landing/waitlist-form";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -108,6 +109,73 @@ export default function PricingPage() {
               </p>
             </HeistCard>
           ))}
+        </div>
+
+        {/* Workshop compute explainer */}
+        <div className="mt-16 sm:mt-20 rounded-[24px] border border-white/10 bg-white/[0.02] p-6 sm:p-8">
+          <div className="text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "rgba(168,196,255,0.75)" }}>
+            Workshop compute
+          </div>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            What you actually pay for.
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-neutral-300 sm:text-base">
+            Free covers everyday use. Paid plans buy you headroom on the things
+            that get expensive: long context windows, large file ingestion, deep
+            research jobs, and high-volume voice.
+          </p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            {[
+              { label: "Context",  desc: "How much memory and how many files Workshop holds active per thread.",  glyph: "◈" },
+              { label: "Research", desc: "Multi-step web research, citations, deep crawls, document parses.",     glyph: "◬" },
+              { label: "Creation", desc: "Image generation, voice synthesis, on-the-fly diagram generation.",      glyph: "◆" },
+            ].map((row) => (
+              <div key={row.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="text-lg" style={{ color: "rgba(168,196,255,0.85)" }}>{row.glyph}</div>
+                <div className="mt-1 text-sm font-semibold text-white">{row.label}</div>
+                <div className="mt-1 text-xs text-neutral-400 leading-relaxed">{row.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Lens + Whisper early access */}
+        <div
+          className="mt-12 sm:mt-16 rounded-[24px] p-6 sm:p-8"
+          style={{
+            border: "1px solid rgba(192,132,252,0.22)",
+            background: "linear-gradient(180deg, rgba(192,132,252,0.06), rgba(192,132,252,0.02))",
+          }}
+        >
+          <div className="text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "rgba(192,132,252,0.85)" }}>
+            Hardware · early access
+          </div>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            Lens, Whisper, Day Kit.
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-neutral-300 sm:text-base">
+            Future Sansxel hardware is sold separately, not bundled into a
+            software plan. Join the waitlists below for early access pricing
+            when each opens.
+          </p>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="text-sm font-semibold text-white mb-1">Lens</div>
+              <div className="text-xs text-neutral-400 mb-4">Visual interface · concept</div>
+              <WaitlistForm product="lens" accent="#c084fc" cta="Join" />
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="text-sm font-semibold text-white mb-1">Whisper hardware</div>
+              <div className="text-xs text-neutral-400 mb-4">Dedicated voice earbud · concept</div>
+              <WaitlistForm product="whisper" accent="#60a5fa" cta="Join" />
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="text-sm font-semibold text-white mb-1">Lens Day Kit</div>
+              <div className="text-xs text-neutral-400 mb-4">Two pairs + smart case · concept</div>
+              <WaitlistForm product="lens-day-kit" accent="#c084fc" cta="Join" />
+            </div>
+          </div>
         </div>
       </section>
     </>

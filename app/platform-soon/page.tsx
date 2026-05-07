@@ -2,27 +2,113 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { WaitlistForm } from "@/components/landing/waitlist-form";
 
-// Placeholder served at platform.sansxel.ai/ until the real
-// developer console + docs land. Distinct visual identity from
-// sansxel.ai (marketing) and chat.sansxel.ai (workshop), terminal/
-// console aesthetic, mono type, amber accent (matches the platform
-// pinwheel favicon). Each subdomain feels like its own surface,
-// not the same site three times.
+// Served at platform.sansxel.ai/. Developer console preview, terminal
+// aesthetic with mono type and amber accent. Each card represents a
+// surface of the future console: keys, usage, request inspector,
+// webhooks, SDKs, MCP. Waitlist captures intent for early access.
 
 export const metadata: Metadata = {
   title: "sansxel platform",
-  description: "API docs and developer console for sansxel, coming soon.",
+  description: "Sansxel developer console: keys, usage, request inspector, webhooks, SDKs, MCP.",
 };
+
+const STATUS = [
+  { label: "API",            state: "live"    },
+  { label: "Console",        state: "preview" },
+  { label: "SDKs",           state: "preview" },
+  { label: "Request inspector", state: "soon" },
+  { label: "Webhooks",       state: "soon"    },
+  { label: "MCP registry",   state: "soon"    },
+];
+
+const STATE_COLOR: Record<string, string> = {
+  live:    "#22c55e",
+  preview: "#fbbf24",
+  soon:    "#52525b",
+};
+
+const COMMANDS = [
+  {
+    cmd: "get-api-key",
+    desc: "Generate a bearer token for the REST API.",
+    href: "https://chat.sansxel.ai/account/keys",
+    state: "live",
+  },
+  {
+    cmd: "read-quickstart",
+    desc: "Auth, first request, streaming. JS + Python.",
+    href: "https://sansxel.ai/learn/sansxel-rest-api-quickstart",
+    state: "live",
+  },
+  {
+    cmd: "open-workshop",
+    desc: "Try the product first if you haven't already.",
+    href: "https://chat.sansxel.ai",
+    state: "live",
+  },
+  {
+    cmd: "view-usage",
+    desc: "Per-key usage, real-time tail. Coming with v1 console.",
+    href: null,
+    state: "soon",
+  },
+  {
+    cmd: "inspect-request",
+    desc: "Live request/response inspector. View latency, tokens, tool calls.",
+    href: null,
+    state: "soon",
+  },
+  {
+    cmd: "configure-webhook",
+    desc: "Per-project webhooks for events and completions.",
+    href: null,
+    state: "soon",
+  },
+  {
+    cmd: "browse-mcp",
+    desc: "First-class MCP server registry. Connect or publish.",
+    href: null,
+    state: "soon",
+  },
+  {
+    cmd: "view-docs",
+    desc: "Full API surface + SDK reference + cookbook.",
+    href: null,
+    state: "soon",
+  },
+];
 
 export default function PlatformSoonPage() {
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-200">
-      {/* Top zone bar matches the marketing site nav: pinwheel +
-          wordmark + tagline on the left edge, back link on the
-          right edge. Scaling padding so the chrome rhythm is the
-          same on every surface (apex, chat workshop, this). */}
-      <header className="border-b border-white/[0.06]">
+    <main className="min-h-screen bg-neutral-950 text-neutral-200" style={{ position: "relative", overflow: "hidden" }}>
+      {/* Code-environment background grid */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "linear-gradient(rgba(251,191,36,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(251,191,36,0.03) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+          maskImage: "radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 80%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 80%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(ellipse 60% 50% at 50% 30%, rgba(251,191,36,0.08) 0%, transparent 60%), radial-gradient(ellipse 40% 30% at 80% 70%, rgba(168,196,255,0.05) 0%, transparent 55%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <header className="relative border-b border-white/[0.06]">
         <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-10 xl:px-14 2xl:px-20">
           <Link
             href="https://platform.sansxel.ai"
@@ -57,93 +143,124 @@ export default function PlatformSoonPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl px-6 py-20 sm:px-8 sm:py-28">
-        {/* Terminal-style status block */}
-        <div className="mb-10 inline-flex items-center gap-3 rounded-md border border-amber-400/20 bg-amber-400/[0.04] px-3 py-1.5 font-mono text-[11px] text-amber-300">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
-          status: building
+      <div className="relative mx-auto max-w-5xl px-6 py-20 sm:px-8 sm:py-28">
+        {/* Status row */}
+        <div className="mb-10 flex flex-wrap gap-2">
+          {STATUS.map((s) => (
+            <span
+              key={s.label}
+              className="inline-flex items-center gap-2 rounded-md border px-2.5 py-1 font-mono text-[10px]"
+              style={{
+                borderColor: `${STATE_COLOR[s.state]}33`,
+                background: `${STATE_COLOR[s.state]}0d`,
+                color: STATE_COLOR[s.state],
+              }}
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{ background: STATE_COLOR[s.state], boxShadow: `0 0 6px ${STATE_COLOR[s.state]}` }}
+              />
+              {s.label.toLowerCase()} · {s.state}
+            </span>
+          ))}
         </div>
 
-        <h1 className="font-mono text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl">
+        <h1 className="font-mono text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl">
           $ sansxel build
         </h1>
         <p className="mt-6 max-w-2xl text-base leading-7 text-neutral-400 sm:text-lg sm:leading-8">
-          Developer console + full API docs land here. SDKs, quickstarts,
-          live request inspector, usage dashboards, key management. Until
-          then, grab a key + read the REST quickstart on the main site.
+          Developer console + full API. SDKs, quickstarts, live request
+          inspector, usage dashboards, key management, MCP registry. Until
+          the v1 console lands, grab a key and read the REST quickstart.
         </p>
 
-        {/* Two-column action grid that reads like a CLI menu */}
+        {/* Command cards */}
         <div className="mt-12 grid gap-3 sm:grid-cols-2 sm:gap-4">
-          <Link
-            href="https://chat.sansxel.ai/account/keys"
-            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-amber-400/30 hover:bg-amber-400/[0.03]"
-          >
-            <span className="mt-0.5 font-mono text-xs text-amber-400">$</span>
-            <div className="flex-1">
-              <div className="font-mono text-sm text-white">get-api-key</div>
-              <div className="mt-1 text-xs text-neutral-500">
-                Generate a bearer token for the REST API.
-              </div>
-            </div>
-            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-amber-300">→</span>
-          </Link>
-          <Link
-            href="https://sansxel.ai/learn/sansxel-rest-api-quickstart"
-            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-amber-400/30 hover:bg-amber-400/[0.03]"
-          >
-            <span className="mt-0.5 font-mono text-xs text-amber-400">$</span>
-            <div className="flex-1">
-              <div className="font-mono text-sm text-white">read-quickstart</div>
-              <div className="mt-1 text-xs text-neutral-500">
-                Auth + first request + streaming, in JS &amp; Python.
-              </div>
-            </div>
-            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-amber-300">→</span>
-          </Link>
-          <Link
-            href="https://chat.sansxel.ai"
-            className="group flex items-start gap-3 rounded-md border border-white/10 bg-white/[0.02] px-5 py-4 transition hover:border-amber-400/30 hover:bg-amber-400/[0.03]"
-          >
-            <span className="mt-0.5 font-mono text-xs text-amber-400">$</span>
-            <div className="flex-1">
-              <div className="font-mono text-sm text-white">open-workshop</div>
-              <div className="mt-1 text-xs text-neutral-500">
-                Try the product first if you haven&apos;t already.
-              </div>
-            </div>
-            <span className="font-mono text-xs text-neutral-600 transition group-hover:text-amber-300">→</span>
-          </Link>
-          <div className="flex items-start gap-3 rounded-md border border-white/[0.06] bg-white/[0.01] px-5 py-4 opacity-60">
-            <span className="mt-0.5 font-mono text-xs text-neutral-600">$</span>
-            <div className="flex-1">
-              <div className="font-mono text-sm text-neutral-400">view-docs</div>
-              <div className="mt-1 text-xs text-neutral-600">
-                Coming soon. Full API surface + SDK reference.
-              </div>
-            </div>
-            <span className="font-mono text-xs text-neutral-700">—</span>
-          </div>
+          {COMMANDS.map((c) => {
+            const live = c.state === "live";
+            const inner = (
+              <>
+                <span className="mt-0.5 font-mono text-xs" style={{ color: live ? "#fbbf24" : "#52525b" }}>$</span>
+                <div className="flex-1">
+                  <div className="font-mono text-sm" style={{ color: live ? "#fff" : "#a1a1aa" }}>
+                    {c.cmd}
+                  </div>
+                  <div className="mt-1 text-xs" style={{ color: live ? "#71717a" : "#52525b" }}>
+                    {c.desc}
+                  </div>
+                </div>
+                <span className="font-mono text-xs" style={{ color: live ? "#71717a" : "#3f3f46" }}>
+                  {live ? "→" : "—"}
+                </span>
+              </>
+            );
+            const baseStyle: React.CSSProperties = {
+              borderRadius: 8,
+              border: `1px solid ${live ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.06)"}`,
+              background: live ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.01)",
+              padding: "16px 20px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12,
+              opacity: live ? 1 : 0.6,
+              transition: "background 200ms, border-color 200ms",
+            };
+            return c.href ? (
+              <Link key={c.cmd} href={c.href} style={baseStyle} className="hover:!border-amber-400/40">
+                {inner}
+              </Link>
+            ) : (
+              <div key={c.cmd} style={baseStyle}>{inner}</div>
+            );
+          })}
         </div>
 
-        {/* Quick code preview, sets developer tone */}
+        {/* Code preview */}
         <div className="mt-14">
           <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-neutral-600">
             preview · POST /api/v1/chat
           </div>
-          <pre className="overflow-x-auto rounded-lg border border-white/10 bg-black/60 p-4 font-mono text-[12px] leading-6 text-neutral-200">
+          <pre className="overflow-x-auto rounded-lg border border-white/10 bg-black/70 p-4 font-mono text-[12px] leading-6 text-neutral-200">
 {`curl https://sansxel.ai/api/v1/chat \\
   -H "Authorization: Bearer $SANSXEL_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"messages":[{"role":"user","content":"hello"}],"stream":true}'`}
           </pre>
         </div>
+
+        {/* Developer waitlist */}
+        <div
+          className="mt-14 rounded-lg p-6 sm:p-8"
+          style={{
+            border: "1px solid rgba(251,191,36,0.22)",
+            background: "linear-gradient(180deg, rgba(251,191,36,0.05), rgba(251,191,36,0.01))",
+          }}
+        >
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] mb-2" style={{ color: "rgba(251,191,36,0.85)" }}>
+            developer waitlist
+          </div>
+          <div className="font-mono text-xl font-semibold text-white mb-2">
+            $ sansxel notify --me
+          </div>
+          <p className="text-sm text-neutral-400 mb-5">
+            Get notified when the v1 console, MCP registry, or SDK packages
+            land. No spam, just commit-log-style updates.
+          </p>
+          <div className="max-w-md">
+            <WaitlistForm
+              product="platform"
+              accent="#fbbf24"
+              cta="$ join"
+              placeholder="dev@yourdomain.com"
+            />
+          </div>
+        </div>
       </div>
 
-      <footer className="border-t border-white/[0.06]">
+      <footer className="relative border-t border-white/[0.06]">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-6 py-5 font-mono text-[11px] text-neutral-600 sm:px-8">
           <span>platform.sansxel.ai</span>
-          <span>v0 · placeholder</span>
+          <span>v0 · preview</span>
         </div>
       </footer>
     </main>

@@ -441,12 +441,12 @@ export function ModulesSection() {
       />
 
       <ModuleBlock
-        kicker="audio"
+        kicker="whisper"
         headline="Sansxel in your ear."
-        body={<>Use Sansxel through your AirPods, headphones, or any audio device you already own. Voice is a first-class interface in Workshop today. Sansxel Audio is the direction: purpose-built hardware designed around how the AI actually works.</>}
+        body={<>Use Sansxel through your AirPods, headphones, or any audio device you already own. Voice is a first-class interface in Workshop today. Whisper is the direction: purpose-built hardware designed around how the AI actually works.</>}
         chips={["AirPods", "Headphones", "Bluetooth", "Third-party audio", "Future hardware"]}
-        cta="Learn about Audio"
-        ctaHref="/audio"
+        cta="Learn about Whisper"
+        ctaHref="/whisper"
         accent="rgba(100,180,255,0.85)"
         visual={<EarbudObject />}
         flip
