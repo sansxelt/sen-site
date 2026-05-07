@@ -6,21 +6,27 @@ import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { StudioRig } from "./studio-rig";
 import { ModelOrFallback } from "./use-gltf-or-fallback";
+import { BrandMark } from "./brand-mark";
+import { LensHudProjection } from "./lens-hud-projection";
 
 // Sansxel Lens. Medical-grade transparent contact with embedded
-// electronics, not sci-fi fantasy. Composition:
-//   - Lathe-curved acrylic disc (anti-reflective coating)
-//   - Outer electronics ring: precision anodized track
-//   - 24 sub-millimetre LEDs (tiny, restrained emissive)
-//   - 6 gold pad contacts at the ring (charge + data interface)
-//   - Iris reticle: hairline ring, no glowing centre
-//   - Concentric trace pattern: faint copper-blue at low opacity
-//   - Laser-etched lot number on the carrier ring (text via Drei
-//     not used here to keep bundle small — simulated as a thin
-//     ring of small dots)
+// electronics. Layered procedurally to fake real product realism:
 //
-// If /models/lens-v1.glb exists it takes over. Until then this
-// procedural geometry is what renders.
+//   shell        Lathe-curved acrylic disc (transmission, low rough)
+//   AR coating   Faint blue-violet ring catches the rim light
+//   rim bevel    Thin torus at the disc edge — implies real thickness
+//                via a crisp highlight where glass meets air
+//   carrier ring Anodized navy track holding the electronics
+//   chip layer   Inner secondary metal ring (PCB mount surface)
+//   24 LEDs      Sub-mm spheres, low emissive, mostly off-tinted
+//   12 chips     Tiny rectangular ICs scattered around the ring
+//   8 capacitors Smaller cylindrical SMD parts
+//   6 contacts   Gold pads (charge + data interface)
+//   etched mark  Sansxel triangles laser-etched into the carrier ring
+//   serial       32 microscopic notches around the outer edge
+//   iris reticle Hairline ring over the pupil (no glow centre)
+//   traces       Concentric copper-blue lines at low opacity
+//   HUD          Faint forward projection — caption + crosshair
 
 function ProceduralLens() {
   const groupRef = useRef<THREE.Group>(null);
@@ -28,8 +34,7 @@ function ProceduralLens() {
     if (groupRef.current) groupRef.current.rotation.y += delta * 0.08;
   });
 
-  // Lathe profile: gentle convex outer + a faint inner step where
-  // the electronics ring sits.
+  // Lathe profile: gentle convex outer, shallow centre.
   const lensProfile = useMemo(() => {
     const pts: THREE.Vector2[] = [];
     const segments = 64;
@@ -45,15 +50,12 @@ function ProceduralLens() {
   return (
     <Float speed={0.55} floatIntensity={0.08} rotationIntensity={0.05}>
       <group ref={groupRef} rotation={[Math.PI * 0.18, 0, 0]}>
-        {/* Lens body: medical-grade hydrogel acrylic.
-            transmission 1, ior 1.43, very low chromatic aberration.
-            Anti-reflective coating simulated by a clearcoat with
-            faint blue tint. */}
+        {/* SHELL — medical-grade acrylic */}
         <mesh>
           <latheGeometry args={[lensProfile, 128]} />
           <MeshTransmissionMaterial
             transmission={1}
-            thickness={0.16}
+            thickness={0.18}
             roughness={0.02}
             ior={1.43}
             chromaticAberration={0.008}
@@ -65,8 +67,24 @@ function ProceduralLens() {
           />
         </mesh>
 
-        {/* Anti-reflective coating sheen — a faint blue-violet tint
-            that catches a sliver of the rim light */}
+        {/* RIM BEVEL — a thin torus right at the disc edge that
+            catches a sharp highlight from the rim light. Implies
+            the lens has real thickness rather than reading as a
+            zero-depth disc. */}
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.022, 0]}>
+          <torusGeometry args={[1.0, 0.018, 24, 256]} />
+          <meshPhysicalMaterial
+            color="#dde6fa"
+            transmission={0.6}
+            thickness={0.05}
+            roughness={0.05}
+            ior={1.45}
+            transparent
+            metalness={0}
+          />
+        </mesh>
+
+        {/* AR COATING — faint blue-violet sheen on the outer ring */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.001, 0]}>
           <ringGeometry args={[0.94, 1.0, 128]} />
           <meshStandardMaterial
@@ -79,7 +97,7 @@ function ProceduralLens() {
           />
         </mesh>
 
-        {/* Outer electronics carrier ring: anodized dark navy */}
+        {/* CARRIER RING — anodized navy aluminum */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.005, 0]}>
           <torusGeometry args={[0.95, 0.011, 24, 256]} />
           <meshPhysicalMaterial
@@ -91,13 +109,20 @@ function ProceduralLens() {
           />
         </mesh>
 
-        {/* Inner secondary ring (chip layer) */}
+        {/* CARRIER OUTER CHAMFER — a marginally larger ring, slightly
+            brighter, gives the carrier a CNC bevel illusion */}
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.0035, 0]}>
+          <torusGeometry args={[0.962, 0.004, 12, 192]} />
+          <meshStandardMaterial color="#2c303a" metalness={1} roughness={0.45} />
+        </mesh>
+
+        {/* CHIP LAYER — inner secondary ring */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.0035, 0]}>
           <torusGeometry args={[0.92, 0.005, 12, 192]} />
           <meshStandardMaterial color="#22242c" metalness={1} roughness={0.45} />
         </mesh>
 
-        {/* 24 sub-mm LEDs — tiny, low intensity, mostly off-tinted */}
+        {/* 24 SUB-MM LEDs */}
         {Array.from({ length: 24 }).map((_, i) => {
           const a = (i / 24) * Math.PI * 2;
           const isPrimary = i % 8 === 0;
@@ -117,11 +142,57 @@ function ProceduralLens() {
           );
         })}
 
-        {/* 6 gold chip contacts (charge + data pads). These are the
-            single most "real product" detail — flat anodized brass
-            squares around the ring. */}
+        {/* 12 IC CHIPS — tiny black rectangles around the ring with
+            faint silver pin marks (offset between LED positions) */}
+        {Array.from({ length: 12 }).map((_, i) => {
+          const a = (i / 12) * Math.PI * 2 + Math.PI / 24;
+          return (
+            <group
+              key={`chip-${i}`}
+              position={[Math.cos(a) * 0.92, -0.001, Math.sin(a) * 0.92]}
+              rotation={[-Math.PI / 2, 0, -a]}
+            >
+              <mesh>
+                <planeGeometry args={[0.018, 0.012]} />
+                <meshPhysicalMaterial
+                  color="#080a10"
+                  metalness={0.4}
+                  roughness={0.55}
+                  clearcoat={0.6}
+                  clearcoatRoughness={0.3}
+                />
+              </mesh>
+              {/* Pin marks: 2 thin silver bands on the chip ends */}
+              <mesh position={[-0.007, 0, 0.0001]}>
+                <planeGeometry args={[0.002, 0.012]} />
+                <meshStandardMaterial color="#5a6378" metalness={1} roughness={0.4} />
+              </mesh>
+              <mesh position={[0.007, 0, 0.0001]}>
+                <planeGeometry args={[0.002, 0.012]} />
+                <meshStandardMaterial color="#5a6378" metalness={1} roughness={0.4} />
+              </mesh>
+            </group>
+          );
+        })}
+
+        {/* 8 SMD CAPACITORS — tiny cylinders between the chips */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const a = (i / 8) * Math.PI * 2 + Math.PI / 16;
+          return (
+            <mesh
+              key={`cap-${i}`}
+              position={[Math.cos(a) * 0.905, -0.001, Math.sin(a) * 0.905]}
+              rotation={[Math.PI / 2, 0, -a]}
+            >
+              <cylinderGeometry args={[0.0045, 0.0045, 0.005, 12]} />
+              <meshStandardMaterial color="#ddd2a3" metalness={0.95} roughness={0.4} />
+            </mesh>
+          );
+        })}
+
+        {/* 6 GOLD CONTACT PADS */}
         {Array.from({ length: 6 }).map((_, i) => {
-          const a = (i / 6) * Math.PI * 2 + Math.PI / 24;
+          const a = (i / 6) * Math.PI * 2 + Math.PI / 12;
           return (
             <mesh
               key={`pad-${i}`}
@@ -140,15 +211,23 @@ function ProceduralLens() {
           );
         })}
 
-        {/* Iris reticle — fine hairline only, no glow centre. Reads
-            as the optical axis of the device, not a HUD. */}
+        {/* ETCHED SANSXEL MARK — laser etched on the carrier ring
+            inner face, visible only when light grazes it */}
+        <BrandMark
+          size={0.05}
+          position={[0, 0.001, 0.84]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          color="#1a2030"
+          opacity={0.85}
+        />
+
+        {/* IRIS RETICLE — hairline ring */}
         <mesh position={[0, 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.18, 0.184, 128]} />
           <meshStandardMaterial color="#a8c4ff" emissive="#a8c4ff" emissiveIntensity={0.3} side={THREE.DoubleSide} />
         </mesh>
 
-        {/* Concentric electrical traces — very faint, like you'd see
-            on a flexible PCB under glass */}
+        {/* CONCENTRIC TRACES — copper-blue display routing */}
         <mesh position={[0, 0.0011, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.55, 0.553, 128]} />
           <meshBasicMaterial color="#7ab5ff" transparent opacity={0.12} side={THREE.DoubleSide} />
@@ -162,9 +241,23 @@ function ProceduralLens() {
           <meshBasicMaterial color="#7ab5ff" transparent opacity={0.07} side={THREE.DoubleSide} />
         </mesh>
 
-        {/* Laser-etched lot number — 32 microscopic notches on the
-            outermost ring. Reads as "this is a manufactured part",
-            not "this is concept art". */}
+        {/* RADIAL TRACE STUBS — short lines connecting the iris ring
+            to the carrier (the actual signal path) */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const a = (i / 8) * Math.PI * 2;
+          return (
+            <mesh
+              key={`trace-${i}`}
+              position={[Math.cos(a) * 0.55, 0.0014, Math.sin(a) * 0.55]}
+              rotation={[-Math.PI / 2, 0, -a]}
+            >
+              <planeGeometry args={[0.36, 0.0015]} />
+              <meshBasicMaterial color="#7ab5ff" transparent opacity={0.18} />
+            </mesh>
+          );
+        })}
+
+        {/* LASER-ETCHED LOT NUMBER — 32 microscopic notches */}
         {Array.from({ length: 32 }).map((_, i) => {
           const a = (i / 32) * Math.PI * 2;
           return (
@@ -177,6 +270,9 @@ function ProceduralLens() {
             </mesh>
           );
         })}
+
+        {/* HUD PROJECTION — faint forward-facing UI */}
+        <LensHudProjection accent="#a8c4ff" />
       </group>
     </Float>
   );

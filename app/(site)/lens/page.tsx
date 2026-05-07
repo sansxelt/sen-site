@@ -346,6 +346,25 @@ export default function LensPage() {
         scene={<LensObject />}
       />
 
+      {/* MACRO DETAIL: MICRO-COMPONENTS */}
+      <ProductMacro
+        kicker="detail · micro-components"
+        title="Twelve ICs, eight capacitors"
+        body="Surface-mount integrated circuits and tantalum capacitors sit between the LEDs on the inner ring, driving the display layer and managing power. Hand-placed on a 0402 footprint."
+        specs={[
+          { label: "ICS",       value: "12 × SMD" },
+          { label: "CAPS",      value: "8 × tantalum" },
+          { label: "TRACES",    value: "Cu-blue, 8 radial" },
+          { label: "POWER",     value: "0.4 W typical" },
+        ]}
+        poster="/landing/lens-poster.svg"
+        posterAlt="Lens electronics ring micro-detail"
+        cameraPosition={[1.4, 0.2, 2.0]}
+        cameraFov={28}
+        accent="#7ab5ff"
+        scene={<LensObject />}
+      />
+
       {/* DAY KIT */}
       <section
         id="day-kit"

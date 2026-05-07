@@ -265,7 +265,7 @@ export default function WhisperPage() {
         reverse
         kicker="detail · stem"
         title="Capacitive touch + mic vents"
-        body="Hairline brushed band on the stem reads taps without raising surface texture. Three milled mic slits at the base sample your voice, not the room."
+        body="Hairline brushed band on the stem reads taps without raising surface texture. Three milled mic holes at the base sample your voice, not the room."
         specs={[
           { label: "STEM",       value: "Aluminum 6063" },
           { label: "FINISH",     value: "Anodized matte" },
@@ -277,6 +277,25 @@ export default function WhisperPage() {
         cameraPosition={[1.6, 0, 2.4]}
         cameraFov={32}
         accent="#22d3ee"
+        scene={<WhisperEarbud />}
+      />
+
+      {/* MACRO: HEX GRILLE */}
+      <ProductMacro
+        kicker="detail · grille"
+        title="Hex-pattern speaker mesh"
+        body="Thirty-five precision-cut perforations arranged in three concentric rings. Each hole is sized for a specific frequency band so the driver fires evenly across the spectrum."
+        specs={[
+          { label: "PERFS",      value: "35 holes" },
+          { label: "RINGS",      value: "4 concentric" },
+          { label: "BEZEL",      value: "Stainless 316L" },
+          { label: "TIP",        value: "Soft silicone" },
+        ]}
+        poster="/landing/whisper-poster.svg"
+        posterAlt="Whisper hex grille close-up"
+        cameraPosition={[0, 1.6, 1.6]}
+        cameraFov={28}
+        accent="#a8c4ff"
         scene={<WhisperEarbud />}
       />
 
