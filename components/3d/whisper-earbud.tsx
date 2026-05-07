@@ -5,73 +5,150 @@ import { Float, MeshTransmissionMaterial } from "@react-three/drei";
 import { useRef } from "react";
 import * as THREE from "three";
 import { StudioRig } from "./studio-rig";
+import { ModelOrFallback } from "./use-gltf-or-fallback";
 
-// Whisper earbud. Engineered silhouette: aluminum stem with glass
-// driver dome, mesh speaker grille, mic ring at the base. The
-// surrounding "waveform" is now three precise concentric rings (like
-// equipotential lines on a CAD diagram), not particle smoke.
+// Whisper. Premium earbud silhouette: anodized aluminum stem, glass
+// driver dome with soft-touch ear-tip ring, capacitive touch panel
+// at the stem base, milled mic vents. Reads as something Bose or
+// Apple would manufacture, not a glowing concept render.
+//
+// Material strategy:
+//   stem:        anodized aluminum, 0.95 metalness, gentle clearcoat
+//   tip:         soft-touch dark grey rubber, no clearcoat
+//   dome:        anti-reflective transmission glass, low chromatic
+//   grille:      precision torus + radial slits (mic+driver vents)
+//   touch ring:  hairline brushed metal capacitive band
+//   mic vents:   3 milled slits at the base
+//
+// Drop /models/whisper-v1.glb to override.
 
-function Earbud() {
+function ProceduralEarbud() {
   const groupRef = useRef<THREE.Group>(null);
   useFrame((_, delta) => {
-    if (groupRef.current) groupRef.current.rotation.y += delta * 0.16;
+    if (groupRef.current) groupRef.current.rotation.y += delta * 0.12;
   });
 
   return (
     <group ref={groupRef}>
-      <Float speed={0.9} floatIntensity={0.18} rotationIntensity={0.06}>
-        {/* Stem: precision aluminum */}
-        <mesh position={[0, -0.1, 0]}>
-          <capsuleGeometry args={[0.30, 0.62, 14, 28]} />
+      <Float speed={0.7} floatIntensity={0.12} rotationIntensity={0.05}>
+        {/* Stem — anodized aluminum capsule */}
+        <mesh position={[0, -0.12, 0]}>
+          <capsuleGeometry args={[0.28, 0.62, 16, 32]} />
           <meshPhysicalMaterial
-            color="#15171f"
-            roughness={0.32}
-            metalness={0.95}
-            clearcoat={0.85}
-            clearcoatRoughness={0.20}
+            color="#10121a"
+            roughness={0.30}
+            metalness={0.96}
+            clearcoat={0.8}
+            clearcoatRoughness={0.16}
           />
         </mesh>
 
-        {/* Brushed metal seam at the join */}
-        <mesh position={[0, 0.18, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.305, 0.0035, 8, 64]} />
-          <meshStandardMaterial color="#3a3d49" metalness={1} roughness={0.55} />
+        {/* Soft-touch ear-tip — sits on top of the stem where the
+            dome connects. Different material to read as 2 parts. */}
+        <mesh position={[0, 0.18, 0]}>
+          <cylinderGeometry args={[0.30, 0.27, 0.06, 48]} />
+          <meshStandardMaterial color="#1a1c20" roughness={0.92} metalness={0} />
         </mesh>
 
-        {/* Glass driver dome */}
-        <mesh position={[0, 0.55, 0]}>
-          <sphereGeometry args={[0.36, 64, 64]} />
+        {/* Brushed metal seam at the join — hairline detail */}
+        <mesh position={[0, 0.21, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.30, 0.0025, 8, 96]} />
+          <meshStandardMaterial color="#3a3d49" metalness={1} roughness={0.5} />
+        </mesh>
+
+        {/* Glass driver dome — anti-reflective tint */}
+        <mesh position={[0, 0.5, 0]}>
+          <sphereGeometry args={[0.34, 64, 64]} />
           <MeshTransmissionMaterial
             transmission={1}
-            thickness={0.4}
-            roughness={0.04}
+            thickness={0.32}
+            roughness={0.06}
             ior={1.45}
-            chromaticAberration={0.015}
-            color="#cfdfff"
+            chromaticAberration={0.008}
+            color="#dde4f5"
             transparent
+            anisotropy={0.2}
           />
         </mesh>
 
-        {/* Speaker mesh: precise hex/torus pattern */}
-        <mesh position={[0, 0.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.21, 0.008, 12, 48]} />
-          <meshStandardMaterial color="#60a5fa" emissive="#60a5fa" emissiveIntensity={0.85} />
+        {/* Driver grille — precision torus + radial perforation pattern.
+            Smaller, more restrained than before. */}
+        <mesh position={[0, 0.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.20, 0.005, 12, 64]} />
+          <meshStandardMaterial color="#a8c4ff" emissive="#a8c4ff" emissiveIntensity={0.4} />
         </mesh>
-        <mesh position={[0, 0.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.13, 0.005, 8, 32]} />
-          <meshStandardMaterial color="#60a5fa" emissive="#60a5fa" emissiveIntensity={0.55} />
+        <mesh position={[0, 0.5, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.13, 0.0035, 8, 48]} />
+          <meshStandardMaterial color="#a8c4ff" emissive="#a8c4ff" emissiveIntensity={0.28} />
         </mesh>
 
-        {/* Mic ring at base */}
-        <mesh position={[0, -0.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.20, 0.006, 8, 48]} />
-          <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.7} />
+        {/* 12 perforation dots in the grille — mesh holes */}
+        {Array.from({ length: 12 }).map((_, i) => {
+          const a = (i / 12) * Math.PI * 2;
+          return (
+            <mesh
+              key={`perf-${i}`}
+              position={[Math.cos(a) * 0.165, 0.5, Math.sin(a) * 0.165]}
+            >
+              <sphereGeometry args={[0.006, 8, 8]} />
+              <meshBasicMaterial color="#06080e" />
+            </mesh>
+          );
+        })}
+
+        {/* Capacitive touch ring — hairline brushed band on the
+            stem, reads as the tap-to-skip surface */}
+        <mesh position={[0, -0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.282, 0.0035, 8, 64]} />
+          <meshStandardMaterial color="#5a6378" metalness={1} roughness={0.4} />
         </mesh>
-        {/* Mic single dot */}
+        {/* Two faint dot indicators on the touch ring */}
+        {[0, Math.PI].map((a, i) => (
+          <mesh
+            key={`tap-${i}`}
+            position={[Math.cos(a) * 0.282, -0.05, Math.sin(a) * 0.282]}
+          >
+            <sphereGeometry args={[0.008, 12, 12]} />
+            <meshStandardMaterial color="#a8c4ff" emissive="#a8c4ff" emissiveIntensity={0.5} />
+          </mesh>
+        ))}
+
+        {/* Mic vents — 3 milled slits at the base */}
+        {Array.from({ length: 3 }).map((_, i) => {
+          const a = (i / 3) * Math.PI * 2 + Math.PI / 6;
+          return (
+            <mesh
+              key={`vent-${i}`}
+              position={[Math.cos(a) * 0.281, -0.62, Math.sin(a) * 0.281]}
+              rotation={[0, -a, 0]}
+            >
+              <planeGeometry args={[0.012, 0.04]} />
+              <meshStandardMaterial color="#02030a" />
+            </mesh>
+          );
+        })}
+
+        {/* Mic ring + dot at the very tip */}
         <mesh position={[0, -0.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[0.04, 24]} />
-          <meshStandardMaterial color="#06121f" />
+          <torusGeometry args={[0.18, 0.0035, 8, 48]} />
+          <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.5} />
         </mesh>
+        <mesh position={[0, -0.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.03, 24]} />
+          <meshStandardMaterial color="#04060e" />
+        </mesh>
+
+        {/* Laser-etched serial — 4 microscopic notches on the side */}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <mesh
+            key={`serial-${i}`}
+            position={[0.281, -0.32 + i * 0.04, 0]}
+            rotation={[0, Math.PI / 2, 0]}
+          >
+            <planeGeometry args={[0.012, 0.0015]} />
+            <meshBasicMaterial color="#3b4358" />
+          </mesh>
+        ))}
       </Float>
     </group>
   );
@@ -80,7 +157,7 @@ function Earbud() {
 function FieldRing({ radius, color, opacity = 0.45 }: { radius: number; color: string; opacity?: number }) {
   return (
     <mesh rotation={[Math.PI / 2, 0, 0]}>
-      <torusGeometry args={[radius, 0.004, 8, 192]} />
+      <torusGeometry args={[radius, 0.0035, 8, 256]} />
       <meshBasicMaterial color={color} transparent opacity={opacity} />
     </mesh>
   );
@@ -89,14 +166,20 @@ function FieldRing({ radius, color, opacity = 0.45 }: { radius: number; color: s
 export function WhisperEarbud() {
   return (
     <>
-      <StudioRig contactShadowY={-1.0} contactShadowOpacity={0.55} />
+      <StudioRig
+        contactShadowY={-1.0}
+        contactShadowOpacity={0.55}
+        fogNear={5}
+        fogFar={13}
+      />
 
-      <Earbud />
+      <ModelOrFallback url="/models/whisper-v1.glb" fallback={<ProceduralEarbud />} />
 
-      {/* Concentric field rings (no particles, no random motion) */}
-      <FieldRing radius={1.30} color="#60a5fa" opacity={0.55} />
-      <FieldRing radius={1.75} color="#a8c4ff" opacity={0.32} />
-      <FieldRing radius={2.20} color="#7ab5ff" opacity={0.20} />
+      {/* Concentric field rings — restrained, like equipotentials on
+          a CAD diagram. No particles. */}
+      <FieldRing radius={1.30} color="#60a5fa" opacity={0.42} />
+      <FieldRing radius={1.75} color="#a8c4ff" opacity={0.24} />
+      <FieldRing radius={2.20} color="#7ab5ff" opacity={0.14} />
     </>
   );
 }

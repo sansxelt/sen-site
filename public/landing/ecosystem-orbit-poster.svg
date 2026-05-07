@@ -1,33 +1,76 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
   <defs>
-    <radialGradient id="core" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#a8c4ff" stop-opacity="0.95"/>
-      <stop offset="40%" stop-color="#5eaaff" stop-opacity="0.55"/>
-      <stop offset="80%" stop-color="#1e3a8a" stop-opacity="0.0"/>
-    </radialGradient>
-    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#a8c4ff" stop-opacity="0.18"/>
+    <radialGradient id="orbitGlow" cx="50%" cy="50%" r="55%">
+      <stop offset="0%" stop-color="#a8c4ff" stop-opacity="0.06"/>
       <stop offset="100%" stop-color="#a8c4ff" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#a8c4ff" stop-opacity="0.05"/>
-      <stop offset="50%" stop-color="#a8c4ff" stop-opacity="0.5"/>
-      <stop offset="100%" stop-color="#a8c4ff" stop-opacity="0.05"/>
-    </linearGradient>
+    <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7ab5ff" stop-opacity="0.5"/>
+      <stop offset="55%" stop-color="#1e3a8a" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0a1530" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
-  <circle cx="300" cy="300" r="290" fill="url(#halo)"/>
-  <ellipse cx="300" cy="300" rx="220" ry="60" stroke="url(#ring)" stroke-width="1.2" opacity="0.55"/>
-  <ellipse cx="300" cy="300" rx="180" ry="180" stroke="#a8c4ff" stroke-width="0.8" opacity="0.18"/>
-  <ellipse cx="300" cy="300" rx="240" ry="100" stroke="url(#ring)" stroke-width="0.9" opacity="0.45" transform="rotate(-25 300 300)"/>
+  <rect x="0" y="0" width="600" height="600" fill="url(#orbitGlow)"/>
 
-  <circle cx="300" cy="300" r="120" fill="url(#core)"/>
-  <circle cx="300" cy="300" r="58"  fill="#a8c4ff" opacity="0.85"/>
-  <circle cx="300" cy="300" r="34"  fill="#ffffff" opacity="0.95"/>
+  <!-- Crosshair guides -->
+  <g stroke="#3a4358" stroke-width="0.6" stroke-dasharray="2 4" opacity="0.55">
+    <line x1="0" y1="300" x2="600" y2="300"/>
+    <line x1="300" y1="0" x2="300" y2="600"/>
+  </g>
 
-  <circle cx="80"  cy="290" r="9"  fill="#22d3ee" opacity="0.95"/>
-  <circle cx="500" cy="240" r="7"  fill="#c084fc" opacity="0.95"/>
-  <circle cx="430" cy="430" r="7"  fill="#60a5fa" opacity="0.95"/>
-  <circle cx="170" cy="430" r="5"  fill="#fbbf24" opacity="0.85"/>
-  <circle cx="540" cy="360" r="5"  fill="#e0e7ff" opacity="0.85"/>
+  <!-- Three orbit rings (different inclinations) -->
+  <ellipse cx="300" cy="300" rx="190" ry="60" stroke="#7ab5ff" stroke-width="0.6" opacity="0.35" fill="none"/>
+  <ellipse cx="300" cy="300" rx="220" ry="100" stroke="#7ab5ff" stroke-width="0.6" opacity="0.30" transform="rotate(20 300 300)" fill="none"/>
+  <ellipse cx="300" cy="300" rx="160" ry="160" stroke="#a8c4ff" stroke-width="0.5" opacity="0.20" fill="none"/>
+
+  <!-- Memory core: housing + glass dome + indicator rings -->
+  <circle cx="300" cy="300" r="80" stroke="#a8c4ff" stroke-width="1.2" opacity="0.85" fill="url(#coreGrad)"/>
+  <circle cx="300" cy="300" r="74" stroke="#7ab5ff" stroke-width="0.5" opacity="0.4" fill="none"/>
+  <!-- Equatorial cut -->
+  <ellipse cx="300" cy="300" rx="80" ry="3" stroke="#a8c4ff" stroke-width="0.6" opacity="0.6" fill="none"/>
+  <!-- Polar cut -->
+  <ellipse cx="300" cy="300" rx="3" ry="80" stroke="#a8c4ff" stroke-width="0.6" opacity="0.5" fill="none"/>
+  <!-- Inner glass dome -->
+  <circle cx="300" cy="300" r="58" stroke="#a8c4ff" stroke-width="0.5" opacity="0.5" fill="none"/>
+  <!-- Indicator rings around the housing -->
+  <ellipse cx="300" cy="300" rx="92" ry="92" stroke="#a8c4ff" stroke-width="0.5" opacity="0.35" fill="none"/>
+  <ellipse cx="300" cy="300" rx="106" ry="106" stroke="#7ab5ff" stroke-width="0.4" opacity="0.25" transform="rotate(35 300 300)" fill="none"/>
+
+  <!-- Orbiting modules (small disc icons with LED ring) -->
+  <g>
+    <circle cx="115" cy="276" r="9" stroke="#22d3ee" stroke-width="1" opacity="0.85" fill="#0c0d12"/>
+    <circle cx="115" cy="276" r="6" stroke="#22d3ee" stroke-width="0.5" opacity="0.6" fill="none"/>
+    <circle cx="115" cy="276" r="2" fill="#22d3ee" opacity="0.95"/>
+  </g>
+  <g>
+    <circle cx="492" cy="220" r="8" stroke="#c084fc" stroke-width="1" opacity="0.85" fill="#0c0d12"/>
+    <circle cx="492" cy="220" r="5" stroke="#c084fc" stroke-width="0.5" opacity="0.6" fill="none"/>
+    <circle cx="492" cy="220" r="2" fill="#c084fc" opacity="0.95"/>
+  </g>
+  <g>
+    <circle cx="450" cy="438" r="8" stroke="#60a5fa" stroke-width="1" opacity="0.85" fill="#0c0d12"/>
+    <circle cx="450" cy="438" r="5" stroke="#60a5fa" stroke-width="0.5" opacity="0.6" fill="none"/>
+    <circle cx="450" cy="438" r="2" fill="#60a5fa" opacity="0.95"/>
+  </g>
+  <g>
+    <rect x="158" y="436" width="14" height="9" rx="1" stroke="#dbeafe" stroke-width="0.7" opacity="0.7" fill="#0c0d12"/>
+  </g>
+  <g>
+    <rect x="528" y="350" width="14" height="9" rx="1" stroke="#caa56a" stroke-width="0.7" opacity="0.7" fill="#0c0d12"/>
+  </g>
+
+  <!-- Corner registration marks -->
+  <g stroke="#7ab5ff" stroke-width="0.8" opacity="0.5">
+    <path d="M 60 60 L 80 60 M 60 60 L 60 80"/>
+    <path d="M 540 60 L 520 60 M 540 60 L 540 80"/>
+    <path d="M 60 540 L 80 540 M 60 540 L 60 520"/>
+    <path d="M 540 540 L 520 540 M 540 540 L 540 520"/>
+  </g>
+
+  <!-- Footer -->
+  <g font-family="ui-monospace, monospace" fill="#7ab5ff" opacity="0.65" letter-spacing="2">
+    <text x="60" y="572" font-size="9">SANSXEL · ecosystem · memory core + orbits</text>
+    <text x="540" y="572" font-size="9" text-anchor="end">SCHEMATIC</text>
+  </g>
 </svg>

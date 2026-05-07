@@ -5,153 +5,263 @@ import { Float, RoundedBox, Text } from "@react-three/drei";
 import { useRef } from "react";
 import * as THREE from "three";
 import { StudioRig } from "./studio-rig";
+import { ModelOrFallback } from "./use-gltf-or-fallback";
 
-// Workshop = the brain. Three engineered glass dashboard panels
-// (chat, workshop, files) arranged in 3D space. Each panel is a
-// precise rounded box with brushed aluminum bezel and a faintly
-// emissive content area. No particle systems, no neon glow, just
-// product hardware.
+// Workshop. Redesigned around an anchored hardware silhouette: one
+// premium tablet device on a CNC stand at centre, two thin satellite
+// tiles flanking it. Reads as workspace hardware on a desk, not as
+// floating sci-fi panels.
+//
+// Composition:
+//   base:        perforated CNC plate (echoes the ecosystem-connection
+//                base, ties Workshop to the rest of the family)
+//   tablet:      single rounded-bezel device, 16:10 screen, anodized
+//                aluminum frame, glass front, integrated stand
+//   screen UI:   chat-style row layout (bezel-respecting), one accent
+//                stripe for the active app, three suggestion rows,
+//                "WORKSHOP · CONTEXT" header
+//   satellites:  two thinner side tiles (chat history, projects)
+//                anchored to the same base, slightly offset for depth
+//   memory bus:  4 small drives sliding underneath (slow loop) — the
+//                detail that says "this is a real machine"
+//
+// Drop /models/workshop-tablet-v1.glb to override the central device.
 
-type PanelProps = {
+function CncBase() {
+  return (
+    <group position={[0, -1.0, 0]}>
+      {/* Perforated plate */}
+      <RoundedBox args={[5.4, 0.06, 2.4]} radius={0.04} smoothness={4} position={[0, 0, 0]}>
+        <meshPhysicalMaterial
+          color="#0c0d12"
+          metalness={0.95}
+          roughness={0.42}
+          clearcoat={0.4}
+          clearcoatRoughness={0.4}
+        />
+      </RoundedBox>
+      {/* Top edge chamfer */}
+      <mesh position={[0, 0.031, 0]}>
+        <ringGeometry args={[1.3, 1.32, 4, 1, 0, Math.PI * 2]} />
+        <meshStandardMaterial color="#2c303a" metalness={1} roughness={0.45} />
+      </mesh>
+      {/* Perforation grid — restrained, only on the upper face */}
+      {Array.from({ length: 9 }).map((_, i) =>
+        Array.from({ length: 4 }).map((__, j) => (
+          <mesh
+            key={`perf-${i}-${j}`}
+            position={[-2.4 + i * 0.6, 0.032, -0.9 + j * 0.6]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <circleGeometry args={[0.022, 16]} />
+            <meshStandardMaterial color="#040508" />
+          </mesh>
+        ))
+      )}
+    </group>
+  );
+}
+
+type ScreenProps = {
   position: [number, number, number];
+  rotation?: [number, number, number];
   size: [number, number];
   label: string;
-  accent?: string;
-  rotation?: [number, number, number];
+  accent: string;
+  rows?: number;
+  scale?: number;
 };
 
-function GlassPanel({ position, size, label, accent = "#a8c4ff", rotation = [0, 0, 0] }: PanelProps) {
+function ScreenDevice({ position, rotation = [0, 0, 0], size, label, accent, rows = 4, scale = 1 }: ScreenProps) {
   const groupRef = useRef<THREE.Group>(null);
   useFrame((state) => {
     if (!groupRef.current) return;
+    // Very subtle breathing, not the previous big float
     const t = state.clock.elapsedTime;
-    groupRef.current.position.y = position[1] + Math.sin(t * 0.45 + position[0]) * 0.04;
+    groupRef.current.position.y = position[1] + Math.sin(t * 0.4 + position[0]) * 0.01;
   });
 
   const w = size[0], h = size[1];
 
   return (
-    <Float speed={0.85} floatIntensity={0.16} rotationIntensity={0.08}>
-      <group ref={groupRef} position={position} rotation={rotation}>
-        {/* Bezel: brushed aluminum frame */}
-        <RoundedBox args={[w + 0.04, h + 0.04, 0.05]} radius={0.04} smoothness={4}>
-          <meshPhysicalMaterial
-            color="#1a1c24"
-            roughness={0.45}
-            metalness={0.95}
-            clearcoat={0.6}
-            clearcoatRoughness={0.3}
-          />
-        </RoundedBox>
+    <group ref={groupRef} position={position} rotation={rotation} scale={scale}>
+      {/* Bezel frame — anodized aluminum */}
+      <RoundedBox args={[w + 0.08, h + 0.08, 0.04]} radius={0.04} smoothness={5}>
+        <meshPhysicalMaterial
+          color="#15171f"
+          roughness={0.32}
+          metalness={0.95}
+          clearcoat={0.85}
+          clearcoatRoughness={0.18}
+        />
+      </RoundedBox>
 
-        {/* Display: dark glass with subtle blue tint */}
-        <mesh position={[0, 0, 0.027]}>
-          <planeGeometry args={[w - 0.02, h - 0.02]} />
-          <meshPhysicalMaterial
-            color="#04060c"
-            roughness={0.18}
-            metalness={0.1}
-            clearcoat={1}
-            clearcoatRoughness={0.06}
-            emissive="#1d2540"
-            emissiveIntensity={0.55}
-          />
-        </mesh>
+      {/* Inner bezel highlight — chamfer ring */}
+      <mesh position={[0, 0, 0.022]}>
+        <ringGeometry args={[Math.min(w, h) * 0.32, Math.min(w, h) * 0.34, 4, 1, 0, Math.PI * 2]} />
+        <meshStandardMaterial color="#2c303a" metalness={1} roughness={0.5} />
+      </mesh>
 
-        {/* Top accent stripe (active app) */}
-        <mesh position={[-(w / 2) + 0.08, h / 2 - 0.10, 0.029]}>
-          <planeGeometry args={[0.10, 0.012]} />
-          <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={1.4} />
-        </mesh>
+      {/* Display surface — dark glass with subtle blue tint */}
+      <mesh position={[0, 0, 0.024]}>
+        <planeGeometry args={[w, h]} />
+        <meshPhysicalMaterial
+          color="#03050a"
+          roughness={0.14}
+          metalness={0.05}
+          clearcoat={1}
+          clearcoatRoughness={0.04}
+          emissive="#101a30"
+          emissiveIntensity={0.42}
+        />
+      </mesh>
 
-        {/* Three "rows" — UI suggestion */}
-        {[0, 1, 2].map((i) => (
-          <mesh key={i} position={[0, 0.04 - i * 0.10, 0.029]}>
-            <planeGeometry args={[w - 0.20 - i * 0.06, 0.018]} />
-            <meshStandardMaterial color={accent} transparent opacity={0.16 - i * 0.04} />
+      {/* Header bar — accent stripe */}
+      <mesh position={[-(w / 2) + 0.08, h / 2 - 0.07, 0.026]}>
+        <planeGeometry args={[0.10, 0.008]} />
+        <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={1.2} />
+      </mesh>
+
+      <Text
+        position={[-(w / 2) + 0.20, h / 2 - 0.07, 0.026]}
+        fontSize={0.055}
+        color={accent}
+        anchorX="left"
+        anchorY="middle"
+        letterSpacing={0.06}
+      >
+        {label}
+      </Text>
+
+      {/* Header divider */}
+      <mesh position={[0, h / 2 - 0.13, 0.026]}>
+        <planeGeometry args={[w - 0.12, 0.0015]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.25} />
+      </mesh>
+
+      {/* Content rows */}
+      {Array.from({ length: rows }).map((_, i) => (
+        <group key={i} position={[0, h / 2 - 0.20 - i * 0.10, 0.026]}>
+          <mesh position={[-(w / 2) + 0.13, 0, 0]}>
+            <circleGeometry args={[0.012, 16]} />
+            <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.55} />
           </mesh>
-        ))}
+          <mesh position={[0.04, 0, 0]}>
+            <planeGeometry args={[w - 0.30 - i * 0.08, 0.014]} />
+            <meshStandardMaterial color={accent} transparent opacity={0.18 - i * 0.025} />
+          </mesh>
+        </group>
+      ))}
 
-        <Text
-          position={[-(w / 2) + 0.20, h / 2 - 0.10, 0.030]}
-          fontSize={0.075}
-          color={accent}
-          anchorX="left"
-          anchorY="middle"
-          letterSpacing={0.06}
-        >
-          {label}
-        </Text>
-      </group>
-    </Float>
+      {/* Bottom status bar */}
+      <mesh position={[(w / 2) - 0.10, -h / 2 + 0.06, 0.026]}>
+        <planeGeometry args={[0.06, 0.008]} />
+        <meshStandardMaterial color={accent} transparent opacity={0.6} />
+      </mesh>
+    </group>
   );
 }
 
-function MemoryCard({ angle, radius, speed, label }: { angle: number; radius: number; speed: number; label: string }) {
-  const groupRef = useRef<THREE.Group>(null);
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
-    groupRef.current.rotation.y += delta * speed;
+function CentralTablet() {
+  return (
+    <group position={[0, 0.05, 0]}>
+      {/* Stand — thin metal arm anchoring the tablet to the base */}
+      <mesh position={[0, -0.55, -0.18]}>
+        <boxGeometry args={[0.28, 0.06, 0.02]} />
+        <meshStandardMaterial color="#1a1c24" metalness={1} roughness={0.45} />
+      </mesh>
+      <mesh position={[0, -0.30, -0.10]} rotation={[0.4, 0, 0]}>
+        <boxGeometry args={[0.04, 0.55, 0.02]} />
+        <meshStandardMaterial color="#1a1c24" metalness={1} roughness={0.4} />
+      </mesh>
+
+      {/* The tablet itself */}
+      <ScreenDevice
+        position={[0, 0.1, 0]}
+        rotation={[-0.06, 0, 0]}
+        size={[1.7, 1.1]}
+        label="WORKSHOP"
+        accent="#a8c4ff"
+        rows={5}
+      />
+    </group>
+  );
+}
+
+function MemoryDrive({ x, phase, color }: { x: number; phase: number; color: string }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame((state) => {
+    if (!ref.current) return;
+    const t = state.clock.elapsedTime;
+    ref.current.position.x = x + Math.sin(t * 0.4 + phase) * 0.18;
   });
   return (
-    <group ref={groupRef} rotation={[0, angle, 0]}>
-      <Float speed={1.0} floatIntensity={0.12}>
-        <group position={[radius, 0.3, 0]}>
-          <RoundedBox args={[0.6, 0.36, 0.025]} radius={0.04} smoothness={4}>
-            <meshPhysicalMaterial
-              color="#0a0c14"
-              roughness={0.22}
-              metalness={0.5}
-              clearcoat={1}
-              clearcoatRoughness={0.08}
-            />
-          </RoundedBox>
-          <mesh position={[0, 0.10, 0.014]}>
-            <planeGeometry args={[0.45, 0.012]} />
-            <meshStandardMaterial color="#a8c4ff" emissive="#a8c4ff" emissiveIntensity={0.55} />
-          </mesh>
-          <mesh position={[0, 0.045, 0.014]}>
-            <planeGeometry args={[0.36, 0.01]} />
-            <meshBasicMaterial color="#a8c4ff" transparent opacity={0.4} />
-          </mesh>
-          <mesh position={[0, -0.01, 0.014]}>
-            <planeGeometry args={[0.40, 0.01]} />
-            <meshBasicMaterial color="#a8c4ff" transparent opacity={0.3} />
-          </mesh>
-          <Text
-            position={[-0.24, -0.10, 0.014]}
-            fontSize={0.04}
-            color="#a8c4ff"
-            anchorX="left"
-            anchorY="middle"
-            letterSpacing={0.05}
-          >
-            {label}
-          </Text>
-        </group>
-      </Float>
+    <group position={[0, -0.92, 0]}>
+      <mesh ref={ref} position={[x, 0, 0]}>
+        <boxGeometry args={[0.32, 0.05, 0.18]} />
+        <meshPhysicalMaterial
+          color="#0c0d12"
+          metalness={0.95}
+          roughness={0.4}
+          clearcoat={0.7}
+        />
+      </mesh>
+      <mesh position={[x, 0.026, 0.07]}>
+        <planeGeometry args={[0.12, 0.004]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.7} />
+      </mesh>
     </group>
+  );
+}
+
+function ProceduralWorkshop() {
+  return (
+    <>
+      <CncBase />
+      <CentralTablet />
+
+      {/* Two satellite tiles — chat history (left), projects (right) */}
+      <ScreenDevice
+        position={[-1.85, 0.05, 0.05]}
+        rotation={[-0.06, 0.32, 0]}
+        size={[0.95, 0.78]}
+        label="CHAT"
+        accent="#7ab5ff"
+        rows={4}
+        scale={0.95}
+      />
+      <ScreenDevice
+        position={[1.85, 0.05, 0.05]}
+        rotation={[-0.06, -0.32, 0]}
+        size={[0.95, 0.78]}
+        label="FILES"
+        accent="#22d3ee"
+        rows={4}
+        scale={0.95}
+      />
+
+      {/* Memory drives sliding underneath the tablet */}
+      <MemoryDrive x={-0.6} phase={0.0} color="#a8c4ff" />
+      <MemoryDrive x={ 0.0} phase={1.4} color="#7ab5ff" />
+      <MemoryDrive x={ 0.6} phase={2.8} color="#22d3ee" />
+    </>
   );
 }
 
 export function WorkshopBrain() {
   return (
     <>
-      <StudioRig contactShadowY={-1.4} contactShadowOpacity={0.45} />
-
-      <GlassPanel position={[-1.5, 0.2, 0]}    size={[1.4, 0.95]} label="CHAT"     accent="#a8c4ff" rotation={[0, 0.18, 0]} />
-      <GlassPanel position={[ 0.0, -0.15, -0.3]} size={[1.5, 1.10]} label="WORKSHOP" accent="#60a5fa" />
-      <GlassPanel position={[ 1.5, 0.30, -0.05]} size={[1.2, 0.85]} label="FILES"    accent="#22d3ee" rotation={[0, -0.25, 0]} />
-
-      {["mem · plan", "mem · prefs", "mem · facts", "mem · notes"].map((m, i) => (
-        <MemoryCard
-          key={i}
-          angle={(i * Math.PI * 2) / 4}
-          radius={2.7}
-          speed={0.10 + i * 0.012}
-          label={m}
-        />
-      ))}
+      <StudioRig
+        contactShadowY={-1.0}
+        contactShadowOpacity={0.55}
+        contactShadowBlur={3.4}
+        fogNear={6}
+        fogFar={14}
+      />
+      <ModelOrFallback
+        url="/models/workshop-tablet-v1.glb"
+        fallback={<ProceduralWorkshop />}
+      />
     </>
   );
 }

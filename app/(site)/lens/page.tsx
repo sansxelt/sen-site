@@ -6,6 +6,9 @@ import { useRef } from "react";
 import { Lazy3DScene } from "@/components/3d/lazy-scene";
 import { LensObject } from "@/components/3d/lens-object";
 import { LensCase } from "@/components/3d/lens-case";
+import { LensOSOverlay } from "@/components/3d/lens-os-overlay";
+import { ProductMacro } from "@/components/3d/product-macro";
+import { ProductExploded } from "@/components/3d/product-exploded";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -200,6 +203,7 @@ export default function LensPage() {
             >
               <LensObject />
             </Lazy3DScene>
+            <LensOSOverlay align="bottom-left" />
           </motion.div>
         </motion.div>
       </section>
@@ -299,6 +303,48 @@ export default function LensPage() {
           `}</style>
         </div>
       </section>
+
+      {/* EXPLODED VIEW */}
+      <ProductExploded product="lens" />
+
+      {/* MACRO DETAIL: ELECTRONICS RING */}
+      <ProductMacro
+        kicker="detail · electronics ring"
+        title="The carrier ring"
+        body="Anodized navy aluminum, 18mm outer diameter. Holds twenty-four sub-millimetre LEDs and six gold contact pads — the charge and data interface."
+        specs={[
+          { label: "MATERIAL",  value: "Aluminum 6063-T6" },
+          { label: "FINISH",    value: "Anodized matte" },
+          { label: "LEDS",      value: "24 × 0.4 mm" },
+          { label: "CONTACTS",  value: "6 × Au-plated" },
+        ]}
+        poster="/landing/lens-poster.svg"
+        posterAlt="Lens electronics ring close-up"
+        cameraPosition={[0.8, 0.4, 2.4]}
+        cameraFov={32}
+        accent="#c084fc"
+        scene={<LensObject />}
+      />
+
+      {/* MACRO DETAIL: ACRYLIC SHELL */}
+      <ProductMacro
+        reverse
+        kicker="detail · acrylic shell"
+        title="Hydrogel-equivalent acrylic"
+        body="Medical-grade transmission acrylic with anti-reflective coating. The display layer routes underneath without bleed-through to the wearer's eye."
+        specs={[
+          { label: "BASE",        value: "PMMA hydrogel" },
+          { label: "IOR",         value: "1.43" },
+          { label: "COATING",     value: "AR multilayer" },
+          { label: "THICKNESS",   value: "180 µm" },
+        ]}
+        poster="/landing/lens-poster.svg"
+        posterAlt="Lens acrylic shell close-up"
+        cameraPosition={[0, 1.2, 2.6]}
+        cameraFov={32}
+        accent="#a8c4ff"
+        scene={<LensObject />}
+      />
 
       {/* DAY KIT */}
       <section

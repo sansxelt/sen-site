@@ -5,6 +5,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import { useRef } from "react";
 import { Lazy3DScene } from "@/components/3d/lazy-scene";
 import { WhisperEarbud } from "@/components/3d/whisper-earbud";
+import { ProductMacro } from "@/components/3d/product-macro";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -239,6 +240,45 @@ export default function WhisperPage() {
           `}</style>
         </div>
       </section>
+
+      {/* MACRO: DRIVER ASSEMBLY */}
+      <ProductMacro
+        kicker="detail · driver"
+        title="Glass dome driver"
+        body="Anti-reflective transmission glass over a 12-perforation precision grille. Sized to seal at the ear canal without active noise pressure."
+        specs={[
+          { label: "DRIVER",     value: "10 mm dynamic" },
+          { label: "DOME",       value: "Glass IOR 1.45" },
+          { label: "GRILLE",     value: "12-hole CNC" },
+          { label: "FREQ",       value: "20 Hz – 22 kHz" },
+        ]}
+        poster="/landing/whisper-poster.svg"
+        posterAlt="Whisper driver close-up"
+        cameraPosition={[0, 1.4, 2.6]}
+        cameraFov={32}
+        accent="#60a5fa"
+        scene={<WhisperEarbud />}
+      />
+
+      {/* MACRO: STEM + TOUCH RING */}
+      <ProductMacro
+        reverse
+        kicker="detail · stem"
+        title="Capacitive touch + mic vents"
+        body="Hairline brushed band on the stem reads taps without raising surface texture. Three milled mic slits at the base sample your voice, not the room."
+        specs={[
+          { label: "STEM",       value: "Aluminum 6063" },
+          { label: "FINISH",     value: "Anodized matte" },
+          { label: "TOUCH",      value: "Capacitive band" },
+          { label: "MICS",       value: "3 × beamforming" },
+        ]}
+        poster="/landing/whisper-poster.svg"
+        posterAlt="Whisper stem close-up"
+        cameraPosition={[1.6, 0, 2.4]}
+        cameraFov={32}
+        accent="#22d3ee"
+        scene={<WhisperEarbud />}
+      />
 
       {/* TODAY: works with what you own */}
       <section style={{ background: "#050507", padding: "clamp(80px, 12vh, 120px) clamp(20px, 5vw, 80px)" }}>

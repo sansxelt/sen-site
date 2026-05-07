@@ -142,7 +142,13 @@ function MemoryBus() {
 export function EcosystemConnection() {
   return (
     <>
-      <StudioRig contactShadowY={-1.05} contactShadowOpacity={0.4} />
+      <StudioRig
+        contactShadowY={-1.05}
+        contactShadowOpacity={0.45}
+        contactShadowBlur={3}
+        fogNear={6}
+        fogFar={14}
+      />
 
       {NODES.map((n) => <ProductNode key={n.label} node={n} />)}
 
