@@ -3,8 +3,8 @@
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { useRef } from "react";
-import { Lazy3DScene } from "./three/lazy-scene";
-import { EcosystemOrbit } from "./three/ecosystem-orbit";
+import { Lazy3DScene } from "@/components/3d/lazy-scene";
+import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 

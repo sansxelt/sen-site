@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { Lazy3DScene } from "@/components/landing/three/lazy-scene";
-import { LensObject } from "@/components/landing/three/lens-object";
-import { LensCase } from "@/components/landing/three/lens-case";
+import { Lazy3DScene } from "@/components/3d/lazy-scene";
+import { LensObject } from "@/components/3d/lens-object";
+import { LensCase } from "@/components/3d/lens-case";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
 const EASE = [0.16, 1, 0.3, 1] as const;

@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { Lazy3DScene } from "@/components/landing/three/lazy-scene";
-import { EcosystemOrbit } from "@/components/landing/three/ecosystem-orbit";
-import { WorkshopBrain } from "@/components/landing/three/workshop-brain";
-import { WhisperEarbud } from "@/components/landing/three/whisper-earbud";
-import { LensObject } from "@/components/landing/three/lens-object";
-import { LensCase } from "@/components/landing/three/lens-case";
-import { EcosystemConnection } from "@/components/landing/three/ecosystem-connection";
+import { Lazy3DScene } from "@/components/3d/lazy-scene";
+import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
+import { WorkshopBrain } from "@/components/3d/workshop-brain";
+import { WhisperEarbud } from "@/components/3d/whisper-earbud";
+import { LensObject } from "@/components/3d/lens-object";
+import { LensCase } from "@/components/3d/lens-case";
+import { EcosystemConnection } from "@/components/3d/ecosystem-connection";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 

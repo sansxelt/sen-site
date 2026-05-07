@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
-import { Lazy3DScene } from "@/components/landing/three/lazy-scene";
-import { WorkshopBrain } from "@/components/landing/three/workshop-brain";
+import { Lazy3DScene } from "@/components/3d/lazy-scene";
+import { WorkshopBrain } from "@/components/3d/workshop-brain";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
