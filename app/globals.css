@@ -4818,3 +4818,50 @@ div[id] {
   .landing-wave-bar { animation: none !important; }
   .landing-wave-bar { height: 12px !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CINEMATIC REVEAL TYPOGRAPHY
+   Used by the homepage acts/slabs and the Lens reel. Sizes scale from
+   "section headline" to "studio title card" via modifier classes. */
+.cinematic-display {
+  font-weight: 600;
+  font-size: clamp(2.4rem, 6vw, 5.4rem);
+  line-height: 0.94;
+  letter-spacing: -0.045em;
+  margin: 0;
+}
+.cinematic-display--xl   { font-size: clamp(3rem, 9vw, 8.5rem); line-height: 0.92; letter-spacing: -0.05em; }
+.cinematic-display--mega { font-size: clamp(4.4rem, 18vw, 16rem); line-height: 0.88; letter-spacing: -0.06em; font-weight: 700; }
+
+.cinematic-display--white {
+  color: #ffffff;
+}
+.cinematic-display--gradient {
+  background: linear-gradient(180deg, #ffffff 0%, #cdd6f4 55%, #6e85b8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.cinematic-display--etched {
+  color: rgba(168,196,255,0.18);
+  font-weight: 500;
+}
+
+/* Mono "tag" for act markers and kickers when used outside the act
+   primitive (e.g. ad-hoc placements). */
+.cinematic-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(168,196,255,0.65);
+}
+
+/* Body text inside the cinematic context — softer than landing-body */
+.cinematic-body {
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  line-height: 1.55;
+  color: rgba(245,245,247,0.72);
+  letter-spacing: -0.005em;
+}

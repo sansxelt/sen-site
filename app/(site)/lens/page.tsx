@@ -1,15 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
-import { Lazy3DScene } from "@/components/3d/lazy-scene";
+import { motion, useReducedMotion } from "framer-motion";
 import { LensObject } from "@/components/3d/lens-object";
 import { LensCase } from "@/components/3d/lens-case";
-import { LensOSOverlay } from "@/components/3d/lens-os-overlay";
 import { ProductMacro } from "@/components/3d/product-macro";
 import { ProductExploded } from "@/components/3d/product-exploded";
+import { CinematicAct } from "@/components/landing/cinematic-act";
+import { CinematicTypeSlab } from "@/components/landing/cinematic-type-slab";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
+
+// The Lens reel. Five-act cinematic narrative for the visual product
+// concept, intercut with macro detail sections that show the
+// engineering. Closes with a quiet waitlist screen.
+//
+// Acts:
+//   01 — Hardware reveal: the lens itself (full-bleed)
+//   02 — Architecture: where compute lives (lens-as-render-only)
+//   03 — Day Kit: the smart case, two-pair workflow
+//
+// Detail sections between/after the acts:
+//   - Exploded view (scroll-driven layer separation)
+//   - Macro: electronics ring
+//   - Macro: acrylic shell
+//   - Macro: micro-components
+//   - Three render modes (existing card grid)
+//
+// Closing: Waitlist outro.
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -50,192 +67,210 @@ const MODES = [
 ];
 
 export default function LensPage() {
-  const heroRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroY  = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const sceneY = useTransform(scrollYProgress, [0, 1], [0, 120]);
-  const heroOp = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <main style={{ background: "#050507", overflowX: "hidden" }}>
-      {/* HERO */}
-      <section
-        ref={heroRef}
-        style={{
-          position: "relative",
-          minHeight: "100vh",
-          padding: "clamp(80px, 12vh, 140px) clamp(20px, 5vw, 80px) 80px",
-          overflow: "hidden",
-        }}
+    <main style={{ background: "#000000", overflowX: "hidden" }}>
+      {/* ─────────────  TITLE SLAB · LENS  ─────────────────────────── */}
+      <CinematicTypeSlab
+        kicker="lens · the eye · concept"
+        treatment="gradient"
+        align="center"
+        height="100vh"
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(192,132,252,0.12) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 80% 80%, rgba(168,196,255,0.07) 0%, transparent 55%)",
-            pointerEvents: "none",
-          }}
-        />
+        <span style={{ fontSize: "clamp(7rem, 22vw, 22rem)", letterSpacing: "-0.07em", display: "block" }}>
+          LENS
+        </span>
+      </CinematicTypeSlab>
 
-        <motion.div
-          style={{
-            position: "relative",
-            maxWidth: 1500,
-            margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: 40,
-            alignItems: "center",
-            ...(reduce ? {} : { y: heroY, opacity: heroOp }),
-          }}
-          className="cinematic-hero-grid"
-        >
-          {/* Copy */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: EASE, delay: 0.05 }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "5px 12px",
-                borderRadius: 100,
-                border: "1px solid rgba(192,132,252,0.3)",
-                background: "rgba(192,132,252,0.07)",
-                fontSize: 11,
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "rgba(192,132,252,0.9)",
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-                marginBottom: 28,
-              }}
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "#c084fc",
-                  boxShadow: "0 0 10px #c084fc",
-                }}
-              />
-              concept · R&amp;D
-            </motion.div>
+      {/* ─────────────  ACT 01 · transparent precision  ─────────────── */}
+      <CinematicAct
+        index={1}
+        total={3}
+        marker="HARDWARE · TRANSPARENT PRECISION"
+        accent="#c084fc"
+        anchor="bottom-left"
+        cameraPosition={[0, 0.4, 4.4]}
+        cameraFov={36}
+        scene={<LensObject />}
+        poster="/landing/lens-poster.svg"
+        posterAlt="Lens hardware close"
+        headline={<>A transparent<br/>visual interface.</>}
+        body={
+          <>
+            Medical-grade acrylic, an electronics ring you can almost
+            see-through, three render modes, and an iris reticle that
+            sits over the pupil. No HUD glow. No fantasy.
+          </>
+        }
+      />
 
-            <motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.85, ease: EASE, delay: 0.18 }}
-              style={{
-                fontSize: "clamp(4rem, 14vw, 11rem)",
-                fontWeight: 700,
-                lineHeight: 0.85,
-                letterSpacing: "-0.06em",
-                marginBottom: 28,
-                background:
-                  "linear-gradient(180deg, #ffffff 0%, #cdb6f5 60%, #6b3fa0 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              LENS
-            </motion.h1>
+      {/* ─────────────  EXPLODED VIEW DETAIL  ───────────────────────── */}
+      <ProductExploded product="lens" />
 
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, ease: EASE, delay: 0.32 }}
-              style={{
-                fontSize: "clamp(1.05rem, 1.6vw, 1.3rem)",
-                lineHeight: 1.55,
-                color: "rgba(255,255,255,0.62)",
-                maxWidth: 540,
-                marginBottom: 34,
-              }}
-            >
-              Lens is our visual interface direction. A transparent contact lens
-              with three render modes, paired with Workshop on your phone or PC
-              for compute.
-            </motion.p>
+      {/* ─────────────  MACRO · ELECTRONICS RING  ───────────────────── */}
+      <ProductMacro
+        kicker="detail · electronics ring"
+        title="The carrier ring"
+        body="Anodized navy aluminum, 18 mm outer diameter. Holds twenty-four sub-millimetre LEDs and six gold contact pads — the charge and data interface."
+        specs={[
+          { label: "MATERIAL",  value: "Aluminum 6063-T6" },
+          { label: "FINISH",    value: "Anodized matte" },
+          { label: "LEDS",      value: "24 × 0.4 mm" },
+          { label: "CONTACTS",  value: "6 × Au-plated" },
+        ]}
+        poster="/landing/lens-poster.svg"
+        posterAlt="Lens electronics ring close-up"
+        cameraPosition={[0.8, 0.4, 2.4]}
+        cameraFov={32}
+        accent="#c084fc"
+        scene={<LensObject />}
+      />
 
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: EASE, delay: 0.45 }}
-            >
-              <WaitlistForm
-                product="lens"
-                accent="#c084fc"
-                cta="Join Lens waitlist"
-                size="large"
-              />
-            </motion.div>
-          </div>
+      {/* ─────────────  SLAB · the architecture promise  ────────────── */}
+      <CinematicTypeSlab
+        kicker="the architecture"
+        treatment="white"
+        align="left"
+      >
+        Lens does not run heavy AI.<br/>Workshop does.
+      </CinematicTypeSlab>
 
-          {/* 3D scene */}
-          <motion.div
-            style={{
-              position: "relative",
-              aspectRatio: "1 / 1",
-              maxWidth: 640,
-              justifySelf: "center",
-              width: "100%",
-              ...(reduce ? {} : { y: sceneY }),
-            }}
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: EASE, delay: 0.4 }}
-          >
-            <Lazy3DScene
-              poster="/landing/lens-poster.svg"
-              alt="Transparent contact lens"
-              cameraPosition={[0, 0.6, 5.5]}
-              cameraFov={40}
-              style={{ width: "100%", height: "100%" }}
-            >
-              <LensObject />
-            </Lazy3DScene>
-            <LensOSOverlay align="bottom-left" />
-          </motion.div>
-        </motion.div>
-      </section>
+      {/* ─────────────  ACT 02 · the architecture  ──────────────────── */}
+      <CinematicAct
+        index={2}
+        total={3}
+        marker="ARCHITECTURE · RENDER + SENSE"
+        accent="#a8c4ff"
+        anchor="bottom-left"
+        cameraPosition={[0, 0.6, 5.2]}
+        cameraFov={38}
+        scene={<LensObject />}
+        poster="/landing/lens-poster.svg"
+        posterAlt="Lens architecture"
+        headline={<>Compute lives<br/>where it can breathe.</>}
+        body={
+          <>
+            The phone or PC handles the model. The lens renders the
+            result. That keeps the optic itself thin, cool, and
+            battery-conscious.
+          </>
+        }
+      />
 
-      {/* MODES */}
+      {/* ─────────────  ARCHITECTURE TRIPLET CHIP  ──────────────────── */}
       <section
         style={{
           background: "#040406",
           padding: "clamp(80px, 12vh, 140px) clamp(20px, 5vw, 80px)",
         }}
       >
-        <div className="landing-divider" />
+        <div style={{ maxWidth: 880, margin: "0 auto", textAlign: "center" }}>
+          <div className="cinematic-mono" style={{ marginBottom: 14 }}>
+            three nodes · one bus
+          </div>
+          <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 36 }}>
+            Render. Compute. Memory.
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gap: 14,
+              gridTemplateColumns: "repeat(3, 1fr)",
+              maxWidth: 720,
+              margin: "0 auto",
+            }}
+            className="lens-arch-grid"
+          >
+            {[
+              { name: "LENS",       color: "#c084fc", role: "render + sense" },
+              { name: "PHONE / PC", color: "#a8c4ff", role: "compute + memory" },
+              { name: "WORKSHOP",   color: "#22d3ee", role: "AI + context" },
+            ].map((n) => (
+              <div
+                key={n.name}
+                style={{
+                  padding: "18px 14px",
+                  borderRadius: 14,
+                  border: `1px solid ${n.color}30`,
+                  background: `linear-gradient(180deg, ${n.color}08, transparent)`,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.color, boxShadow: `0 0 8px ${n.color}` }} />
+                  <div style={{ fontSize: 11, fontFamily: "var(--font-geist-mono), ui-monospace, monospace", letterSpacing: "0.1em", color: n.color }}>
+                    {n.name}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: "#71717a", textAlign: "center" }}>{n.role}</div>
+              </div>
+            ))}
+          </div>
+          <style>{`
+            @media (max-width: 720px) { .lens-arch-grid { grid-template-columns: 1fr !important; } }
+          `}</style>
+        </div>
+      </section>
+
+      {/* ─────────────  MACRO · ACRYLIC SHELL  ──────────────────────── */}
+      <ProductMacro
+        reverse
+        kicker="detail · acrylic shell"
+        title="Hydrogel-equivalent acrylic"
+        body="Medical-grade transmission acrylic with anti-reflective coating. The display layer routes underneath without bleed-through to the wearer's eye."
+        specs={[
+          { label: "BASE",        value: "PMMA hydrogel" },
+          { label: "IOR",         value: "1.43" },
+          { label: "COATING",     value: "AR multilayer" },
+          { label: "THICKNESS",   value: "180 µm" },
+        ]}
+        poster="/landing/lens-poster.svg"
+        posterAlt="Lens acrylic shell close-up"
+        cameraPosition={[0, 1.2, 2.6]}
+        cameraFov={32}
+        accent="#a8c4ff"
+        scene={<LensObject />}
+      />
+
+      {/* ─────────────  MACRO · MICRO-COMPONENTS  ───────────────────── */}
+      <ProductMacro
+        kicker="detail · micro-components"
+        title="Twelve ICs, eight capacitors"
+        body="Surface-mount integrated circuits and tantalum capacitors sit between the LEDs on the inner ring, driving the display layer and managing power. Hand-placed on a 0402 footprint."
+        specs={[
+          { label: "ICS",       value: "12 × SMD" },
+          { label: "CAPS",      value: "8 × tantalum" },
+          { label: "TRACES",    value: "Cu-blue, 8 radial" },
+          { label: "POWER",     value: "0.4 W typical" },
+        ]}
+        poster="/landing/lens-poster.svg"
+        posterAlt="Lens micro-components close-up"
+        cameraPosition={[1.4, 0.2, 2.0]}
+        cameraFov={28}
+        accent="#7ab5ff"
+        scene={<LensObject />}
+      />
+
+      {/* ─────────────  THREE MODES (CARD GRID)  ────────────────────── */}
+      <section
+        style={{
+          background: "#040406",
+          padding: "clamp(80px, 12vh, 140px) clamp(20px, 5vw, 80px)",
+        }}
+      >
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div style={{ maxWidth: 640, marginBottom: 56 }}>
-            <div
-              style={{
-                fontSize: 11,
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "rgba(192,132,252,0.7)",
-                marginBottom: 12,
-              }}
-            >
+            <div className="cinematic-mono" style={{ marginBottom: 14 }}>
               three modes
             </div>
-            <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 14 }}>
+            <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 18 }}>
               Quiet by default.<br/>Powerful when summoned.
             </h2>
-            <p className="landing-body">
-              Lens shifts between three render modes throughout your day. Ambient
-              for context, Mainframe for deep work, Minimal for battery and focus.
+            <p className="cinematic-body" style={{ maxWidth: 540 }}>
+              Lens shifts between three render modes throughout your day.
+              Ambient for context, Mainframe for deep work, Minimal for
+              battery and focus.
             </p>
           </div>
 
@@ -304,300 +339,120 @@ export default function LensPage() {
         </div>
       </section>
 
-      {/* EXPLODED VIEW */}
-      <ProductExploded product="lens" />
+      {/* ─────────────  SLAB · day kit preface  ─────────────────────── */}
+      <CinematicTypeSlab
+        kicker="lens day kit · concept"
+        treatment="gradient"
+        align="left"
+      >
+        Two pairs.<br/>One smart case.
+      </CinematicTypeSlab>
 
-      {/* MACRO DETAIL: ELECTRONICS RING */}
-      <ProductMacro
-        kicker="detail · electronics ring"
-        title="The carrier ring"
-        body="Anodized navy aluminum, 18mm outer diameter. Holds twenty-four sub-millimetre LEDs and six gold contact pads — the charge and data interface."
-        specs={[
-          { label: "MATERIAL",  value: "Aluminum 6063-T6" },
-          { label: "FINISH",    value: "Anodized matte" },
-          { label: "LEDS",      value: "24 × 0.4 mm" },
-          { label: "CONTACTS",  value: "6 × Au-plated" },
-        ]}
-        poster="/landing/lens-poster.svg"
-        posterAlt="Lens electronics ring close-up"
-        cameraPosition={[0.8, 0.4, 2.4]}
-        cameraFov={32}
+      {/* ─────────────  ACT 03 · day kit  ───────────────────────────── */}
+      <CinematicAct
+        index={3}
+        total={3}
+        marker="DAY KIT · CASE"
         accent="#c084fc"
-        scene={<LensObject />}
+        anchor="bottom-left"
+        cameraPosition={[2.4, 1.5, 4.2]}
+        cameraFov={36}
+        scene={<LensCase />}
+        poster="/landing/lens-case-poster.svg"
+        posterAlt="Lens charging case"
+        headline={<>Pair A by day.<br/>Pair B by night.</>}
+        body={
+          <>
+            One charges while the other runs. Quick swap, milled gold
+            contacts in each well, four-LED charge arc per pair.
+            Targeting all-day usage when you alternate.
+          </>
+        }
+        cta={{ href: "#waitlist", label: "Join the Lens waitlist" }}
+        meta={
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {[
+              { label: "Pair A", color: "#22d3ee", desc: "morning + afternoon" },
+              { label: "Pair B", color: "#c084fc", desc: "evening + travel" },
+            ].map((p) => (
+              <div
+                key={p.label}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(0,0,0,0.30)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  minWidth: 180,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color, boxShadow: `0 0 10px ${p.color}` }} />
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                      color: "rgba(255,255,255,0.62)",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    {p.label}
+                  </div>
+                </div>
+                <div style={{ fontSize: 11, color: "#a1a1aa", lineHeight: 1.4 }}>
+                  {p.desc}
+                </div>
+              </div>
+            ))}
+          </div>
+        }
       />
 
-      {/* MACRO DETAIL: ACRYLIC SHELL */}
-      <ProductMacro
-        reverse
-        kicker="detail · acrylic shell"
-        title="Hydrogel-equivalent acrylic"
-        body="Medical-grade transmission acrylic with anti-reflective coating. The display layer routes underneath without bleed-through to the wearer's eye."
-        specs={[
-          { label: "BASE",        value: "PMMA hydrogel" },
-          { label: "IOR",         value: "1.43" },
-          { label: "COATING",     value: "AR multilayer" },
-          { label: "THICKNESS",   value: "180 µm" },
-        ]}
-        poster="/landing/lens-poster.svg"
-        posterAlt="Lens acrylic shell close-up"
-        cameraPosition={[0, 1.2, 2.6]}
-        cameraFov={32}
-        accent="#a8c4ff"
-        scene={<LensObject />}
-      />
-
-      {/* MACRO DETAIL: MICRO-COMPONENTS */}
-      <ProductMacro
-        kicker="detail · micro-components"
-        title="Twelve ICs, eight capacitors"
-        body="Surface-mount integrated circuits and tantalum capacitors sit between the LEDs on the inner ring, driving the display layer and managing power. Hand-placed on a 0402 footprint."
-        specs={[
-          { label: "ICS",       value: "12 × SMD" },
-          { label: "CAPS",      value: "8 × tantalum" },
-          { label: "TRACES",    value: "Cu-blue, 8 radial" },
-          { label: "POWER",     value: "0.4 W typical" },
-        ]}
-        poster="/landing/lens-poster.svg"
-        posterAlt="Lens electronics ring micro-detail"
-        cameraPosition={[1.4, 0.2, 2.0]}
-        cameraFov={28}
-        accent="#7ab5ff"
-        scene={<LensObject />}
-      />
-
-      {/* DAY KIT */}
+      {/* ─────────────  WAITLIST OUTRO  ─────────────────────────────── */}
       <section
-        id="day-kit"
+        id="waitlist"
         style={{
-          background: "#050507",
-          padding: "clamp(80px, 12vh, 140px) clamp(20px, 5vw, 80px)",
+          background: "#040406",
+          padding: "clamp(100px, 16vh, 200px) clamp(20px, 5vw, 80px)",
           position: "relative",
           overflow: "hidden",
         }}
       >
         <div
+          aria-hidden
           style={{
             position: "absolute",
             inset: 0,
-            background:
-              "radial-gradient(ellipse 60% 50% at 30% 50%, rgba(192,132,252,0.10) 0%, transparent 55%)",
+            background: "radial-gradient(ellipse 50% 40% at 50% 50%, rgba(192,132,252,0.06) 0%, transparent 60%)",
             pointerEvents: "none",
           }}
         />
-        <div
+        <motion.div
+          initial={reduce ? false : { opacity: 0, y: 20 }}
+          whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: EASE }}
           style={{
             position: "relative",
-            maxWidth: 1500,
-            margin: "0 auto",
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: 60,
-            alignItems: "center",
-          }}
-          className="lens-day-grid"
-        >
-          <div
-            style={{
-              position: "relative",
-              aspectRatio: "1 / 1",
-              maxWidth: 560,
-              width: "100%",
-              justifySelf: "center",
-            }}
-          >
-            <Lazy3DScene
-              poster="/landing/lens-case-poster.svg"
-              alt="Lens charging case"
-              cameraPosition={[2.2, 1.6, 4]}
-              cameraFov={38}
-              style={{ width: "100%", height: "100%" }}
-            >
-              <LensCase />
-            </Lazy3DScene>
-          </div>
-
-          <div>
-            <div
-              style={{
-                fontSize: 11,
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-                letterSpacing: "0.18em",
-                textTransform: "uppercase",
-                color: "rgba(192,132,252,0.7)",
-                marginBottom: 14,
-              }}
-            >
-              lens day kit
-            </div>
-            <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 18 }}>
-              Two pairs.<br/>One smart case.
-            </h2>
-            <p className="landing-body" style={{ maxWidth: 480, marginBottom: 26 }}>
-              The Day Kit pairs two Lens with a smart charging case. Quick swap
-              between Pair A and Pair B; one charges while the other runs.
-              Targeting all-day usage when you alternate.
-            </p>
-
-            <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
-              {[
-                { label: "Pair A", color: "#22d3ee", desc: "morning + afternoon" },
-                { label: "Pair B", color: "#c084fc", desc: "evening + travel" },
-              ].map((p) => (
-                <div
-                  key={p.label}
-                  style={{
-                    flex: 1,
-                    padding: "14px 16px",
-                    borderRadius: 14,
-                    border: "1px solid rgba(255,255,255,0.07)",
-                    background: "rgba(255,255,255,0.025)",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                    <span style={{ width: 9, height: 9, borderRadius: "50%", background: p.color, boxShadow: `0 0 12px ${p.color}` }} />
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-                        color: "rgba(255,255,255,0.6)",
-                        letterSpacing: "0.06em",
-                      }}
-                    >
-                      {p.label}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 12, color: "#71717a", lineHeight: 1.5 }}>
-                    {p.desc}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 10,
-                fontSize: 12,
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-                color: "rgba(255,255,255,0.5)",
-              }}
-            >
-              <span style={chip()}>quick swap</span>
-              <span style={chip()}>case tops up in minutes</span>
-              <span style={chip()}>battery target: full day alternating</span>
-            </div>
-          </div>
-        </div>
-        <style>{`
-          @media (min-width: 980px) { .lens-day-grid { grid-template-columns: 1fr 1fr !important; } }
-        `}</style>
-      </section>
-
-      {/* WORKSHOP CONNECTION */}
-      <section
-        style={{
-          background: "#040406",
-          padding: "clamp(80px, 12vh, 140px) clamp(20px, 5vw, 80px)",
-        }}
-      >
-        <div className="landing-divider" />
-        <div style={{ maxWidth: 880, margin: "0 auto", textAlign: "center" }}>
-          <div
-            style={{
-              fontSize: 11,
-              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "rgba(168,196,255,0.7)",
-              marginBottom: 14,
-            }}
-          >
-            architecture
-          </div>
-          <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 18 }}>
-            Lens does not run heavy AI.<br/>Workshop does.
-          </h2>
-          <p className="landing-body" style={{ maxWidth: 620, margin: "0 auto 32px" }}>
-            Compute lives on your phone or PC where there is power and thermal
-            headroom. Lens renders the result. That keeps the lens itself thin,
-            cool, and battery-conscious.
-          </p>
-
-          <div
-            style={{
-              display: "grid",
-              gap: 14,
-              gridTemplateColumns: "repeat(3, 1fr)",
-              maxWidth: 720,
-              margin: "0 auto",
-            }}
-            className="lens-arch-grid"
-          >
-            {[
-              { name: "LENS", color: "#c084fc", role: "render + sense" },
-              { name: "PHONE / PC", color: "#a8c4ff", role: "compute + memory" },
-              { name: "WORKSHOP", color: "#22d3ee", role: "AI + context" },
-            ].map((n) => (
-              <div
-                key={n.name}
-                style={{
-                  padding: "18px 14px",
-                  borderRadius: 14,
-                  border: `1px solid ${n.color}30`,
-                  background: `linear-gradient(180deg, ${n.color}08, transparent)`,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 8 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: n.color, boxShadow: `0 0 8px ${n.color}` }} />
-                  <div style={{ fontSize: 11, fontFamily: "var(--font-geist-mono), ui-monospace, monospace", letterSpacing: "0.1em", color: n.color }}>
-                    {n.name}
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: "#71717a", textAlign: "center" }}>{n.role}</div>
-              </div>
-            ))}
-          </div>
-          <style>{`
-            @media (max-width: 720px) { .lens-arch-grid { grid-template-columns: 1fr !important; } }
-          `}</style>
-        </div>
-      </section>
-
-      {/* WAITLIST FOOTER */}
-      <section
-        style={{
-          background: "#050507",
-          padding: "100px clamp(20px, 5vw, 80px) 100px",
-        }}
-      >
-        <div
-          style={{
             maxWidth: 720,
             margin: "0 auto",
             textAlign: "center",
-            padding: "48px 32px",
+            padding: "56px 32px",
             borderRadius: 24,
             border: "1px solid rgba(192,132,252,0.22)",
             background: "linear-gradient(180deg, rgba(192,132,252,0.06), rgba(192,132,252,0.02))",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
           }}
         >
-          <div
-            style={{
-              fontSize: 11,
-              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: "rgba(192,132,252,0.75)",
-              marginBottom: 14,
-            }}
-          >
+          <div className="cinematic-mono" style={{ marginBottom: 14, color: "rgba(192,132,252,0.75)" }}>
             join the waitlist
           </div>
-          <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 14 }}>
+          <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 16 }}>
             Be first to try Lens.
           </h2>
-          <p className="landing-body" style={{ maxWidth: 480, margin: "0 auto 28px" }}>
+          <p className="cinematic-body" style={{ maxWidth: 480, margin: "0 auto 32px" }}>
             We will email when there is an early-access window or
             development-kit signup. No spam, no marketing pollution.
           </p>
@@ -610,7 +465,7 @@ export default function LensPage() {
             />
           </div>
 
-          <div style={{ marginTop: 28, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+          <div style={{ marginTop: 32 }}>
             <Link
               href="/product"
               style={{
@@ -623,15 +478,8 @@ export default function LensPage() {
               See the full ecosystem →
             </Link>
           </div>
-        </div>
+        </motion.div>
       </section>
     </main>
   );
 }
-
-const chip = (): React.CSSProperties => ({
-  padding: "5px 11px",
-  borderRadius: 100,
-  border: "1px solid rgba(192,132,252,0.18)",
-  background: "rgba(192,132,252,0.05)",
-});
