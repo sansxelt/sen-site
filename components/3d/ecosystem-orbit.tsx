@@ -2,9 +2,12 @@
 
 import { useFrame } from "@react-three/fiber";
 import { Float } from "@react-three/drei";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import * as THREE from "three";
 import { StudioRig } from "./studio-rig";
+import { CinematicEffects } from "./cinematic-effects";
+import { CameraDrift } from "./camera-drift";
+import { NebulaBackdrop } from "./nebula-backdrop";
 
 // Cinematic ecosystem orbit. Central memory core (engineered sphere
 // in a brushed-metal housing with a glass dome interior); five product
@@ -27,15 +30,6 @@ type NodeProps = {
   size?: number;
   variant?: "module" | "device";
 };
-
-function OrbitRing({ radius, inclination }: { radius: number; inclination: number }) {
-  return (
-    <mesh rotation={[Math.PI / 2 + inclination, 0, 0]}>
-      <torusGeometry args={[radius, 0.0025, 6, 192]} />
-      <meshBasicMaterial color="#7ab5ff" transparent opacity={0.16} />
-    </mesh>
-  );
-}
 
 function OrbitingNode({
   radius,
@@ -189,29 +183,11 @@ const NODES: NodeProps[] = [
   { radius: 4.0, speed: 0.07, inclination:  0.32, phase: 5.5, color: "#caa56a", size: 0.13, variant: "device" },
 ];
 
-// Deduplicate orbit rings: some nodes share radius/inclination, but
-// we only want one circle drawn per orbit.
-function uniqueOrbits(nodes: NodeProps[]) {
-  const seen = new Set<string>();
-  const out: { radius: number; inclination: number }[] = [];
-  for (const n of nodes) {
-    const key = `${n.radius.toFixed(2)}-${n.inclination.toFixed(2)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push({ radius: n.radius, inclination: n.inclination });
-  }
-  return out;
-}
-
-const ORBIT_RINGS = uniqueOrbits(NODES);
-
-export function EcosystemOrbit() {
+export function EcosystemOrbit({ effects = true }: { effects?: boolean } = {}) {
   const groupRef = useRef<THREE.Group>(null);
   useFrame((_, delta) => {
     if (groupRef.current) groupRef.current.rotation.y -= delta * 0.028;
   });
-
-  const orbits = useMemo(() => ORBIT_RINGS, []);
 
   return (
     <>
@@ -220,17 +196,23 @@ export function EcosystemOrbit() {
         contactShadowOpacity={0.30}
         contactShadowBlur={3.5}
         fogNear={7}
-        fogFar={20}
+        fogFar={22}
         dust
       />
+      <CameraDrift amplitudeX={0.32} amplitudeY={0.18} amplitudeZ={0.22} periodSeconds={14} />
+
+      {/* Atmospheric depth — replaces the schematic orbit ring lines.
+          A faint additive sphere reads as deep-space haze; the
+          motion of the modules implies the orbit instead of drawing
+          it. */}
+      <NebulaBackdrop colorA="#1a3870" colorB="#0a0a14" intensity={0.55} />
 
       <group ref={groupRef}>
         <MemoryCore />
-        {orbits.map((o, i) => (
-          <OrbitRing key={`orbit-${i}`} radius={o.radius} inclination={o.inclination} />
-        ))}
         {NODES.map((n, i) => <OrbitingNode key={i} {...n} />)}
       </group>
+
+      {effects && <CinematicEffects intensity="atmospheric" />}
     </>
   );
 }

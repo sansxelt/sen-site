@@ -103,11 +103,20 @@ export function CinematicAct({
         background: bg,
       }}
     >
-      {/* 3D scene fills viewport */}
+      {/* 3D scene fills viewport. Subject offset is derived from the
+          headline anchor: when text sits bottom-left, we push the
+          subject toward the right edge so the eye reads across the
+          frame instead of stacking copy on top of the product. */}
       <motion.div
         style={{
           position: "absolute",
           inset: 0,
+          x:
+            anchor === "bottom-left"
+              ? "14vw"
+              : anchor === "top-right"
+              ? "-14vw"
+              : "0",
           ...(reduce ? {} : { scale: sceneScale, y: sceneY }),
         }}
       >

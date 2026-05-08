@@ -4,13 +4,14 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
 
-// The faint UI Lens projects forward. NOT a sci-fi floating hologram.
-// It's a small set of partially-transparent mesh quads sitting just
-// in front of the lens body, sized like a pair of caption lines and
-// a status pill. It catches a sliver of the rim light and breathes.
+// The faint UI Lens projects forward. NOT a sci-fi hologram, NOT a
+// blueprint crosshair. A soft set of caption bars and corner dots
+// that read as ambient HUD light spilling off the lens surface.
+// Additive blending so the lens body still reads transparent
+// through it.
 //
-// All geometry is additive blending so the lens body still reads
-// transparent through it.
+// Construction-line crosshair was removed — it pushed the scene
+// toward "engineering schematic" instead of "luxury hardware".
 
 export function LensHudProjection({ accent = "#a8c4ff" }: { accent?: string }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -22,96 +23,65 @@ export function LensHudProjection({ accent = "#a8c4ff" }: { accent?: string }) {
       const mesh = child as THREE.Mesh;
       const m = mesh.material as THREE.MeshStandardMaterial;
       if (!m.emissiveIntensity && m.emissiveIntensity !== 0) return;
-      m.emissiveIntensity = 0.5 + Math.sin(t * 1.1 + i * 0.6) * 0.15;
+      m.emissiveIntensity = 0.32 + Math.sin(t * 0.9 + i * 0.6) * 0.10;
     });
   });
 
-  // All elements live on a thin plane just above the lens centre,
-  // angled like a HUD seen from the wearer's POV (slight tilt
-  // toward camera).
   return (
     <group ref={groupRef} position={[0, 0.06, 0.05]} rotation={[-0.2, 0, 0]}>
-      {/* Caption line — two stacked thin bars */}
+      {/* Caption line — two stacked thin bars, very soft */}
       <mesh position={[0, 0.30, 0]}>
-        <planeGeometry args={[0.34, 0.012]} />
+        <planeGeometry args={[0.30, 0.010]} />
         <meshStandardMaterial
           color={accent}
           emissive={accent}
-          emissiveIntensity={0.55}
+          emissiveIntensity={0.35}
           transparent
-          opacity={0.5}
+          opacity={0.32}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
       <mesh position={[-0.06, 0.27, 0]}>
-        <planeGeometry args={[0.22, 0.010]} />
+        <planeGeometry args={[0.18, 0.008]} />
         <meshStandardMaterial
           color={accent}
           emissive={accent}
-          emissiveIntensity={0.4}
+          emissiveIntensity={0.25}
           transparent
-          opacity={0.35}
+          opacity={0.22}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
 
-      {/* Status pill — small rounded rectangle implied by a frame */}
-      <mesh position={[0.20, 0.34, 0]}>
-        <planeGeometry args={[0.10, 0.026]} />
+      {/* Status pill — tiny rounded rectangle implied by a frame */}
+      <mesh position={[0.18, 0.34, 0]}>
+        <planeGeometry args={[0.09, 0.022]} />
         <meshStandardMaterial
           color={accent}
           emissive={accent}
-          emissiveIntensity={0.3}
+          emissiveIntensity={0.18}
           transparent
-          opacity={0.18}
+          opacity={0.12}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
 
-      {/* Crosshair guide marker — directly under the iris reticle */}
-      <mesh position={[0, -0.04, 0]}>
-        <planeGeometry args={[0.08, 0.0015]} />
-        <meshStandardMaterial
-          color={accent}
-          emissive={accent}
-          emissiveIntensity={0.7}
-          transparent
-          opacity={0.55}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-      <mesh position={[0, -0.04, 0]}>
-        <planeGeometry args={[0.0015, 0.05]} />
-        <meshStandardMaterial
-          color={accent}
-          emissive={accent}
-          emissiveIntensity={0.7}
-          transparent
-          opacity={0.55}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Tiny indicator dots at corners */}
+      {/* Two ambient corner dots — subtle, no crosshair */}
       {[
-        [-0.30,  0.28],
-        [ 0.30,  0.28],
-        [-0.30, -0.10],
-        [ 0.30, -0.10],
+        [-0.26,  0.26],
+        [ 0.26, -0.06],
       ].map(([x, y], i) => (
         <mesh key={i} position={[x, y, 0]}>
-          <circleGeometry args={[0.004, 12]} />
+          <circleGeometry args={[0.0035, 12]} />
           <meshStandardMaterial
             color={accent}
             emissive={accent}
-            emissiveIntensity={0.85}
+            emissiveIntensity={0.55}
             transparent
-            opacity={0.7}
+            opacity={0.45}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
           />

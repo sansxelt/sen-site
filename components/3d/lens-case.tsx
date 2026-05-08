@@ -7,6 +7,8 @@ import * as THREE from "three";
 import { StudioRig } from "./studio-rig";
 import { ModelOrFallback } from "./use-gltf-or-fallback";
 import { BrandMark } from "./brand-mark";
+import { CinematicEffects } from "./cinematic-effects";
+import { CameraDrift } from "./camera-drift";
 
 // Lens charging case. Reads as a real product you could hold:
 // chamfered aluminum body, soft-touch interior, two CNC-milled wells
@@ -292,16 +294,9 @@ function Case() {
           <meshStandardMaterial color="#22c55e" emissive="#22c55e" emissiveIntensity={1.6} />
         </mesh>
 
-        {/* FRONT LASER-ETCHED PRODUCT CODE */}
-        {Array.from({ length: 6 }).map((_, i) => (
-          <mesh
-            key={`mark-${i}`}
-            position={[-0.36 + i * 0.04, -h / 2 + 0.06, d / 2 + 0.001]}
-          >
-            <planeGeometry args={[0.012, 0.004]} />
-            <meshBasicMaterial color="#2c303a" />
-          </mesh>
-        ))}
+        {/* Product-code rectangles removed — they read as a printed
+            label, not as etched typography on metal. Future GLB will
+            carry a real serial in normal-mapped relief. */}
 
         {/* LID */}
         <CaseLid open={open} w={w} d={d} h={h} />
@@ -318,7 +313,7 @@ function Case() {
   );
 }
 
-export function LensCase() {
+export function LensCase({ effects = true }: { effects?: boolean } = {}) {
   return (
     <>
       <StudioRig
@@ -327,8 +322,11 @@ export function LensCase() {
         contactShadowBlur={3.2}
         fogNear={5}
         fogFar={12}
+        dust
       />
+      <CameraDrift amplitudeX={0.20} amplitudeY={0.10} amplitudeZ={0.14} periodSeconds={10} />
       <ModelOrFallback url="/models/lens-case-v1.glb" fallback={<Case />} />
+      {effects && <CinematicEffects intensity="product" />}
     </>
   );
 }

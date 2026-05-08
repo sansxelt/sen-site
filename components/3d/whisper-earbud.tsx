@@ -7,6 +7,8 @@ import * as THREE from "three";
 import { StudioRig } from "./studio-rig";
 import { ModelOrFallback } from "./use-gltf-or-fallback";
 import { BrandMark } from "./brand-mark";
+import { CinematicEffects } from "./cinematic-effects";
+import { CameraDrift } from "./camera-drift";
 
 // Whisper. Premium earbud silhouette, layered procedurally for
 // concept-render realism:
@@ -215,16 +217,7 @@ function ProceduralEarbud() {
   );
 }
 
-function FieldRing({ radius, color, opacity = 0.45 }: { radius: number; color: string; opacity?: number }) {
-  return (
-    <mesh rotation={[Math.PI / 2, 0, 0]}>
-      <torusGeometry args={[radius, 0.0035, 8, 256]} />
-      <meshBasicMaterial color={color} transparent opacity={opacity} />
-    </mesh>
-  );
-}
-
-export function WhisperEarbud() {
+export function WhisperEarbud({ effects = true }: { effects?: boolean } = {}) {
   return (
     <>
       <StudioRig
@@ -232,15 +225,14 @@ export function WhisperEarbud() {
         contactShadowOpacity={0.55}
         fogNear={5}
         fogFar={13}
+        dust
       />
-
+      <CameraDrift amplitudeX={0.16} amplitudeY={0.10} amplitudeZ={0.12} periodSeconds={9} />
       <ModelOrFallback url="/models/whisper-v1.glb" fallback={<ProceduralEarbud />} />
-
-      {/* Concentric field rings — restrained, like equipotentials on
-          a CAD diagram. No particles. */}
-      <FieldRing radius={1.30} color="#60a5fa" opacity={0.42} />
-      <FieldRing radius={1.75} color="#a8c4ff" opacity={0.24} />
-      <FieldRing radius={2.20} color="#7ab5ff" opacity={0.14} />
+      {/* Equipotential field rings removed — they read as a
+          schematic diagram. Atmospheric dust + fog from StudioRig
+          carries the depth instead. */}
+      {effects && <CinematicEffects intensity="product" />}
     </>
   );
 }

@@ -5,6 +5,9 @@ import { Float, RoundedBox, Text } from "@react-three/drei";
 import { useRef, useMemo } from "react";
 import * as THREE from "three";
 import { StudioRig } from "./studio-rig";
+import { CinematicEffects } from "./cinematic-effects";
+import { CameraDrift } from "./camera-drift";
+import { NebulaBackdrop } from "./nebula-backdrop";
 
 // Ecosystem connection. Three product nodes (Workshop, Whisper,
 // Lens) sit on a CNC-style perforated base plate, each connected
@@ -110,19 +113,13 @@ function MemoryBus() {
         />
       </mesh>
 
-      {/* Grid lines: subtle PCB trace pattern */}
-      {Array.from({ length: 12 }).map((_, i) => (
-        <mesh key={`v${i}`} position={[-2.5 + i * 0.5, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[0.004, 3]} />
-          <meshBasicMaterial color="#a8c4ff" transparent opacity={0.20} />
-        </mesh>
-      ))}
-      {Array.from({ length: 7 }).map((_, i) => (
-        <mesh key={`h${i}`} position={[0, 0, -1.4 + i * 0.5]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[6, 0.004]} />
-          <meshBasicMaterial color="#a8c4ff" transparent opacity={0.20} />
-        </mesh>
-      ))}
+      {/* Faint surface reflections — replaced the explicit PCB grid
+          which read as a blueprint. Just two ambient plate-edge
+          highlights now. */}
+      <mesh position={[0, 0.001, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[2.95, 2.97, 64]} />
+        <meshBasicMaterial color="#a8c4ff" transparent opacity={0.10} side={THREE.DoubleSide} />
+      </mesh>
 
       <Text
         position={[0, 0.005, 1.32]}
@@ -147,8 +144,11 @@ export function EcosystemConnection() {
         contactShadowOpacity={0.45}
         contactShadowBlur={3}
         fogNear={6}
-        fogFar={14}
+        fogFar={16}
+        dust
       />
+      <CameraDrift amplitudeX={0.20} amplitudeY={0.10} amplitudeZ={0.14} periodSeconds={11} />
+      <NebulaBackdrop colorA="#2a4080" colorB="#0a0a14" intensity={0.4} radius={14} />
 
       {NODES.map((n) => <ProductNode key={n.label} node={n} />)}
 
@@ -157,6 +157,8 @@ export function EcosystemConnection() {
       ))}
 
       <MemoryBus />
+
+      <CinematicEffects intensity="atmospheric" />
     </>
   );
 }

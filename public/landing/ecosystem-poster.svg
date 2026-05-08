@@ -1,68 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
   <defs>
-    <radialGradient id="eglow" cx="50%" cy="60%" r="55%">
-      <stop offset="0%" stop-color="#5eaaff" stop-opacity="0.06"/>
-      <stop offset="100%" stop-color="#5eaaff" stop-opacity="0"/>
+    <radialGradient id="archBg" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.45"/>
+      <stop offset="40%" stop-color="#0a1226" stop-opacity="0.40"/>
+      <stop offset="100%" stop-color="#040406" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="memBus" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#15183a"/>
+      <stop offset="100%" stop-color="#06070d"/>
+    </linearGradient>
+    <filter id="softBlur"><feGaussianBlur stdDeviation="1.8"/></filter>
   </defs>
 
-  <rect x="0" y="0" width="600" height="600" fill="url(#eglow)"/>
+  <rect x="0" y="0" width="600" height="600" fill="url(#archBg)"/>
 
-  <!-- Crosshair guides -->
-  <g stroke="#3a4358" stroke-width="0.6" stroke-dasharray="2 4" opacity="0.55">
-    <line x1="0" y1="300" x2="600" y2="300"/>
-    <line x1="300" y1="0" x2="300" y2="600"/>
-  </g>
+  <!-- Memory bus plate, soft -->
+  <rect x="80" y="430" width="440" height="60" rx="14" fill="url(#memBus)" filter="url(#softBlur)"/>
+  <rect x="80" y="430" width="440" height="60" rx="14" fill="none" stroke="#a8c4ff" stroke-width="0.5" opacity="0.32"/>
 
-  <!-- Three product nodes (rounded square outlines) -->
-  <g>
-    <rect x="100" y="200" width="80" height="80" rx="12" stroke="#22d3ee" stroke-width="1" opacity="0.85" fill="none"/>
-    <circle cx="140" cy="226" r="4" fill="#22d3ee" opacity="0.95"/>
-    <text x="140" y="263" font-family="ui-monospace, monospace" font-size="9" fill="#22d3ee" text-anchor="middle" letter-spacing="2" opacity="0.85">WORKSHOP</text>
-  </g>
-  <g>
-    <rect x="260" y="200" width="80" height="80" rx="12" stroke="#60a5fa" stroke-width="1" opacity="0.85" fill="none"/>
-    <circle cx="300" cy="226" r="4" fill="#60a5fa" opacity="0.95"/>
-    <text x="300" y="263" font-family="ui-monospace, monospace" font-size="9" fill="#60a5fa" text-anchor="middle" letter-spacing="2" opacity="0.85">WHISPER</text>
+  <!-- Three product nodes — bokeh-glow squares -->
+  <g filter="url(#softBlur)">
+    <rect x="100" y="200" width="80" height="80" rx="14" fill="#0a0a14" opacity="0.95"/>
+    <circle cx="140" cy="226" r="6" fill="#22d3ee"/>
+
+    <rect x="260" y="200" width="80" height="80" rx="14" fill="#0a0a14" opacity="0.95"/>
+    <circle cx="300" cy="226" r="6" fill="#60a5fa"/>
+
+    <rect x="420" y="200" width="80" height="80" rx="14" fill="#0a0a14" opacity="0.95"/>
+    <circle cx="460" cy="226" r="6" fill="#c084fc"/>
   </g>
   <g>
-    <rect x="420" y="200" width="80" height="80" rx="12" stroke="#c084fc" stroke-width="1" opacity="0.85" fill="none"/>
-    <circle cx="460" cy="226" r="4" fill="#c084fc" opacity="0.95"/>
-    <text x="460" y="263" font-family="ui-monospace, monospace" font-size="9" fill="#c084fc" text-anchor="middle" letter-spacing="2" opacity="0.85">LENS</text>
+    <rect x="100" y="200" width="80" height="80" rx="14" fill="none" stroke="#22d3ee" stroke-width="0.6" opacity="0.42"/>
+    <rect x="260" y="200" width="80" height="80" rx="14" fill="none" stroke="#60a5fa" stroke-width="0.6" opacity="0.42"/>
+    <rect x="420" y="200" width="80" height="80" rx="14" fill="none" stroke="#c084fc" stroke-width="0.6" opacity="0.42"/>
   </g>
 
-  <!-- Trace lines down to the bus -->
-  <g opacity="0.55">
-    <line x1="140" y1="280" x2="220" y2="430" stroke="#22d3ee" stroke-width="0.9"/>
-    <line x1="300" y1="280" x2="300" y2="430" stroke="#60a5fa" stroke-width="0.9"/>
-    <line x1="460" y1="280" x2="380" y2="430" stroke="#c084fc" stroke-width="0.9"/>
-  </g>
-
-  <!-- Memory bus plate (perforated CNC) -->
-  <rect x="80" y="430" width="440" height="60" rx="6" stroke="#a8c4ff" stroke-width="1" opacity="0.85" fill="none"/>
-  <g fill="#7ab5ff" opacity="0.4">
-    <circle cx="120" cy="450" r="2"/><circle cx="160" cy="450" r="2"/><circle cx="200" cy="450" r="2"/>
-    <circle cx="240" cy="450" r="2"/><circle cx="280" cy="450" r="2"/><circle cx="320" cy="450" r="2"/>
-    <circle cx="360" cy="450" r="2"/><circle cx="400" cy="450" r="2"/><circle cx="440" cy="450" r="2"/>
-    <circle cx="480" cy="450" r="2"/>
-    <circle cx="120" cy="470" r="2"/><circle cx="160" cy="470" r="2"/><circle cx="200" cy="470" r="2"/>
-    <circle cx="240" cy="470" r="2"/><circle cx="280" cy="470" r="2"/><circle cx="320" cy="470" r="2"/>
-    <circle cx="360" cy="470" r="2"/><circle cx="400" cy="470" r="2"/><circle cx="440" cy="470" r="2"/>
-    <circle cx="480" cy="470" r="2"/>
-  </g>
-  <text x="300" y="476" font-family="ui-monospace, monospace" font-size="9" fill="#a8c4ff" text-anchor="middle" letter-spacing="3" opacity="0.7">MEMORY · CONTEXT · PROJECTS</text>
-
-  <!-- Corner registration marks -->
-  <g stroke="#7ab5ff" stroke-width="0.8" opacity="0.5">
-    <path d="M 60 60 L 80 60 M 60 60 L 60 80"/>
-    <path d="M 540 60 L 520 60 M 540 60 L 540 80"/>
-    <path d="M 60 540 L 80 540 M 60 540 L 60 520"/>
-    <path d="M 540 540 L 520 540 M 540 540 L 540 520"/>
-  </g>
-
-  <!-- Footer -->
-  <g font-family="ui-monospace, monospace" fill="#7ab5ff" opacity="0.65" letter-spacing="2">
-    <text x="60" y="572" font-size="9">SANSXEL · architecture · single memory bus</text>
-    <text x="540" y="572" font-size="9" text-anchor="end">SCHEMATIC</text>
+  <!-- Soft trace lines down to the bus, faded -->
+  <g opacity="0.35" filter="url(#softBlur)" stroke-width="1.2">
+    <line x1="140" y1="285" x2="220" y2="430" stroke="#22d3ee"/>
+    <line x1="300" y1="285" x2="300" y2="430" stroke="#60a5fa"/>
+    <line x1="460" y1="285" x2="380" y2="430" stroke="#c084fc"/>
   </g>
 </svg>

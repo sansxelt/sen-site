@@ -8,6 +8,8 @@ import { StudioRig } from "./studio-rig";
 import { ModelOrFallback } from "./use-gltf-or-fallback";
 import { BrandMark } from "./brand-mark";
 import { LensHudProjection } from "./lens-hud-projection";
+import { CinematicEffects } from "./cinematic-effects";
+import { CameraDrift } from "./camera-drift";
 
 // Sansxel Lens. Medical-grade transparent contact with embedded
 // electronics. Layered procedurally to fake real product realism:
@@ -227,35 +229,21 @@ function ProceduralLens() {
           <meshStandardMaterial color="#a8c4ff" emissive="#a8c4ff" emissiveIntensity={0.3} side={THREE.DoubleSide} />
         </mesh>
 
-        {/* CONCENTRIC TRACES — copper-blue display routing */}
+        {/* CONCENTRIC TRACES — barely-visible display routing under
+            the acrylic. Halved opacity from the previous pass so they
+            stop dominating as line-art. */}
         <mesh position={[0, 0.0011, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.55, 0.553, 128]} />
-          <meshBasicMaterial color="#7ab5ff" transparent opacity={0.12} side={THREE.DoubleSide} />
+          <meshBasicMaterial color="#7ab5ff" transparent opacity={0.06} side={THREE.DoubleSide} />
         </mesh>
         <mesh position={[0, 0.0012, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[0.72, 0.722, 128]} />
-          <meshBasicMaterial color="#7ab5ff" transparent opacity={0.10} side={THREE.DoubleSide} />
-        </mesh>
-        <mesh position={[0, 0.0013, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.83, 0.831, 128]} />
-          <meshBasicMaterial color="#7ab5ff" transparent opacity={0.07} side={THREE.DoubleSide} />
+          <meshBasicMaterial color="#7ab5ff" transparent opacity={0.04} side={THREE.DoubleSide} />
         </mesh>
 
-        {/* RADIAL TRACE STUBS — short lines connecting the iris ring
-            to the carrier (the actual signal path) */}
-        {Array.from({ length: 8 }).map((_, i) => {
-          const a = (i / 8) * Math.PI * 2;
-          return (
-            <mesh
-              key={`trace-${i}`}
-              position={[Math.cos(a) * 0.55, 0.0014, Math.sin(a) * 0.55]}
-              rotation={[-Math.PI / 2, 0, -a]}
-            >
-              <planeGeometry args={[0.36, 0.0015]} />
-              <meshBasicMaterial color="#7ab5ff" transparent opacity={0.18} />
-            </mesh>
-          );
-        })}
+        {/* Radial trace stubs and outer trace ring removed — they
+            read as a wiring diagram, not as embedded electronics
+            seen through medical-grade acrylic. */}
 
         {/* LASER-ETCHED LOT NUMBER — 32 microscopic notches */}
         {Array.from({ length: 32 }).map((_, i) => {
@@ -278,7 +266,7 @@ function ProceduralLens() {
   );
 }
 
-export function LensObject() {
+export function LensObject({ effects = true }: { effects?: boolean } = {}) {
   return (
     <>
       <StudioRig
@@ -288,7 +276,9 @@ export function LensObject() {
         fogNear={4}
         fogFar={10}
       />
+      <CameraDrift amplitudeX={0.15} amplitudeY={0.08} amplitudeZ={0.10} periodSeconds={9} />
       <ModelOrFallback url="/models/lens-v1.glb" fallback={<ProceduralLens />} />
+      {effects && <CinematicEffects intensity="product" />}
     </>
   );
 }

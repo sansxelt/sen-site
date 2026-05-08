@@ -6,6 +6,8 @@ import { useRef } from "react";
 import * as THREE from "three";
 import { StudioRig } from "./studio-rig";
 import { ModelOrFallback } from "./use-gltf-or-fallback";
+import { CinematicEffects } from "./cinematic-effects";
+import { CameraDrift } from "./camera-drift";
 
 // Workshop. Redesigned around an anchored hardware silhouette: one
 // premium tablet device on a CNC stand at centre, two thin satellite
@@ -248,7 +250,7 @@ function ProceduralWorkshop() {
   );
 }
 
-export function WorkshopBrain() {
+export function WorkshopBrain({ effects = true }: { effects?: boolean } = {}) {
   return (
     <>
       <StudioRig
@@ -257,11 +259,14 @@ export function WorkshopBrain() {
         contactShadowBlur={3.4}
         fogNear={6}
         fogFar={14}
+        dust
       />
+      <CameraDrift amplitudeX={0.22} amplitudeY={0.10} amplitudeZ={0.14} periodSeconds={11} />
       <ModelOrFallback
         url="/models/workshop-tablet-v1.glb"
         fallback={<ProceduralWorkshop />}
       />
+      {effects && <CinematicEffects intensity="atmospheric" />}
     </>
   );
 }
