@@ -143,8 +143,8 @@ export function CinematicAct({
         }}
       >
         <motion.h2
-          initial={reduce ? false : { y: 30, filter: "blur(6px)" }}
-          animate={reduce ? undefined : { y: 0, filter: "blur(0px)" }}
+          initial={reduce ? false : { y: 28 }}
+          animate={reduce ? undefined : { y: 0 }}
           transition={{ duration: 0.9, ease: EASE, delay: 0.1 }}
           className="cinematic-display"
           style={{ marginBottom: 22 }}
