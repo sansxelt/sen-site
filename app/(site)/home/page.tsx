@@ -5,7 +5,6 @@ import { CinematicAct } from "@/components/landing/cinematic-act";
 import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
 import { WorkshopBrain } from "@/components/3d/workshop-brain";
 import { WhisperEarbud } from "@/components/3d/whisper-earbud";
-import { LensObject } from "@/components/3d/lens-object";
 import { LensCase } from "@/components/3d/lens-case";
 import { EcosystemConnection } from "@/components/3d/ecosystem-connection";
 import { getSignInPath } from "@/lib/auth-ui";
@@ -93,9 +92,8 @@ export default async function HomePage() {
       <CinematicAct
         accent="#c084fc"
         anchor="bottom-left"
-        cameraPosition={[0, 0.6, 5.0]}
-        cameraFov={38}
-        scene={<LensObject />}
+        imageUrl="/landing/lens-hero.png"
+        transparent
         poster="/landing/lens-poster.svg"
         posterAlt="Lens"
         headline={<>Lens.<br/>In concept and R&amp;D.</>}

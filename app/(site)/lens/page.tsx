@@ -61,9 +61,8 @@ export default function LensPage() {
       <CinematicAct
         accent="#c084fc"
         anchor="bottom-left"
-        cameraPosition={[0, 0.4, 4.4]}
-        cameraFov={36}
-        scene={<LensObject />}
+        imageUrl="/landing/lens-hero.png"
+        transparent
         poster="/landing/lens-poster.svg"
         posterAlt="Lens hardware"
         headline={<>Lens.<br/>Concept and R&amp;D.</>}
