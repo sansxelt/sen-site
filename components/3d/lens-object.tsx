@@ -57,15 +57,18 @@ function ProceduralLens() {
           <latheGeometry args={[lensProfile, 128]} />
           <MeshTransmissionMaterial
             transmission={1}
-            thickness={0.18}
-            roughness={0.02}
-            ior={1.43}
-            chromaticAberration={0.008}
+            thickness={0.22}
+            roughness={0.015}
+            ior={1.46}
+            chromaticAberration={0.022}
             color="#e6ecfa"
             transparent
             attenuationColor="#a8c4ff"
-            attenuationDistance={6}
-            anisotropy={0.15}
+            attenuationDistance={4.5}
+            anisotropy={0.25}
+            distortion={0.08}
+            distortionScale={0.4}
+            temporalDistortion={0.1}
           />
         </mesh>
 
@@ -275,6 +278,7 @@ export function LensObject({ effects = true }: { effects?: boolean } = {}) {
         contactShadowBlur={3}
         fogNear={4}
         fogFar={10}
+        reflectiveFloor
       />
       <CameraDrift amplitudeX={0.15} amplitudeY={0.08} amplitudeZ={0.10} periodSeconds={9} />
       <ModelOrFallback url="/models/lens-v1.glb" fallback={<ProceduralLens />} />

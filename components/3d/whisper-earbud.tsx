@@ -67,11 +67,11 @@ function ProceduralEarbud() {
         <mesh position={[0, -0.12, 0]}>
           <capsuleGeometry args={[0.28, 0.62, 16, 32]} />
           <meshPhysicalMaterial
-            color="#10121a"
-            roughness={0.30}
-            metalness={0.96}
-            clearcoat={0.8}
-            clearcoatRoughness={0.16}
+            color="#06080e"
+            roughness={0.26}
+            metalness={0.98}
+            clearcoat={0.95}
+            clearcoatRoughness={0.10}
           />
         </mesh>
 
@@ -126,13 +126,15 @@ function ProceduralEarbud() {
           <sphereGeometry args={[0.34, 64, 64]} />
           <MeshTransmissionMaterial
             transmission={1}
-            thickness={0.32}
-            roughness={0.06}
-            ior={1.45}
-            chromaticAberration={0.008}
+            thickness={0.4}
+            roughness={0.04}
+            ior={1.48}
+            chromaticAberration={0.018}
             color="#dde4f5"
             transparent
-            anisotropy={0.2}
+            anisotropy={0.3}
+            distortion={0.05}
+            distortionScale={0.3}
           />
         </mesh>
 
@@ -226,6 +228,7 @@ export function WhisperEarbud({ effects = true }: { effects?: boolean } = {}) {
         fogNear={5}
         fogFar={13}
         dust
+        reflectiveFloor
       />
       <CameraDrift amplitudeX={0.16} amplitudeY={0.10} amplitudeZ={0.12} periodSeconds={9} />
       <ModelOrFallback url="/models/whisper-v1.glb" fallback={<ProceduralEarbud />} />

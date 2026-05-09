@@ -260,6 +260,7 @@ export function WorkshopBrain({ effects = true }: { effects?: boolean } = {}) {
         fogNear={6}
         fogFar={14}
         dust
+        reflectiveFloor
       />
       <CameraDrift amplitudeX={0.22} amplitudeY={0.10} amplitudeZ={0.14} periodSeconds={11} />
       <ModelOrFallback

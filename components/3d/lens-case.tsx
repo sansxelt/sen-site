@@ -46,12 +46,12 @@ function CaseLid({ open, w, d, h }: { open: number; w: number; d: number; h: num
         position={[0, h / 2, d / 2]}
       >
         <meshPhysicalMaterial
-          color="#0a0a10"
-          roughness={0.32}
-          metalness={0.92}
+          color="#04050a"
+          roughness={0.28}
+          metalness={0.96}
           clearcoat={1}
-          clearcoatRoughness={0.06}
-          reflectivity={0.95}
+          clearcoatRoughness={0.04}
+          reflectivity={0.98}
         />
       </RoundedBox>
 
@@ -323,6 +323,7 @@ export function LensCase({ effects = true }: { effects?: boolean } = {}) {
         fogNear={5}
         fogFar={12}
         dust
+        reflectiveFloor
       />
       <CameraDrift amplitudeX={0.20} amplitudeY={0.10} amplitudeZ={0.14} periodSeconds={10} />
       <ModelOrFallback url="/models/lens-case-v1.glb" fallback={<Case />} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useFrame, useThree } from "@react-three/fiber";
-import { Environment, ContactShadows } from "@react-three/drei";
+import { Environment, ContactShadows, MeshReflectorMaterial } from "@react-three/drei";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
@@ -36,6 +36,11 @@ type Props = {
   fogFar?: number;
   dust?: boolean;
   intensity?: number;
+  // Reflective floor under the subject (drei MeshReflectorMaterial).
+  // Off by default; turn on for hero shots where you want the
+  // product to sit on a glossy black surface like a real photo.
+  reflectiveFloor?: boolean;
+  floorY?: number;
 };
 
 function Dust({ count = 60, radius = 6 }: { count?: number; radius?: number }) {
@@ -94,6 +99,8 @@ export function StudioRig({
   fogFar = 16,
   dust = false,
   intensity = 1,
+  reflectiveFloor = false,
+  floorY,
 }: Props) {
   const { scene } = useThree();
   const reducedMotion = typeof window !== "undefined"
@@ -161,6 +168,31 @@ export function StudioRig({
         resolution={1024}
         color="#000000"
       />
+
+      {/* Reflective floor — gives the subject a glossy black surface
+          to sit on with real (raytraced) reflections, the single
+          biggest "premium product photo" upgrade. */}
+      {reflectiveFloor && (
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, floorY ?? contactShadowY, 0]}
+        >
+          <planeGeometry args={[20, 20]} />
+          <MeshReflectorMaterial
+            blur={[300, 80]}
+            resolution={512}
+            mixBlur={1.2}
+            mixStrength={5}
+            roughness={0.85}
+            depthScale={1.1}
+            minDepthThreshold={0.4}
+            maxDepthThreshold={1.4}
+            color="#06070a"
+            metalness={0.6}
+            mirror={0.45}
+          />
+        </mesh>
+      )}
 
       {dust && !reducedMotion && <Dust />}
     </>
