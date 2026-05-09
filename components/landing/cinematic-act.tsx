@@ -27,9 +27,6 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 type Anchor = "bottom-left" | "bottom-center" | "top-right";
 
 type Props = {
-  index: number;
-  total: number;
-  marker: string;
   headline: ReactNode;
   body?: ReactNode;
   cta?: { href: string; label: string };
@@ -47,9 +44,6 @@ type Props = {
 };
 
 export function CinematicAct({
-  index,
-  total,
-  marker,
   headline,
   body,
   cta,
@@ -133,46 +127,6 @@ export function CinematicAct({
 
       {/* Atmosphere */}
       <Scrim bg={bg} />
-
-      {/* Act marker chip — small monospaced "chapter card" in the
-          top-left, the only persistent UI through the reel */}
-      <motion.div
-        initial={reduce ? false : { opacity: 0, y: -8 }}
-        whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.6, ease: EASE }}
-        style={{
-          position: "absolute",
-          top: "clamp(20px, 4vh, 40px)",
-          left: "clamp(20px, 5vw, 80px)",
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "5px 12px",
-          borderRadius: 100,
-          border: `1px solid ${accent}26`,
-          background: "rgba(0,0,0,0.30)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-          fontSize: 10,
-          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: `${accent}d9`,
-          zIndex: 3,
-        }}
-      >
-        <span
-          style={{
-            width: 5,
-            height: 5,
-            borderRadius: "50%",
-            background: accent,
-            boxShadow: `0 0 8px ${accent}`,
-          }}
-        />
-        ACT {String(index).padStart(2, "0")} / {String(total).padStart(2, "0")} · {marker}
-      </motion.div>
 
       {/* Foreground typography slab */}
       <motion.div

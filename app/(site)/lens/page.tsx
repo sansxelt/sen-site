@@ -7,26 +7,12 @@ import { LensCase } from "@/components/3d/lens-case";
 import { ProductMacro } from "@/components/3d/product-macro";
 import { ProductExploded } from "@/components/3d/product-exploded";
 import { CinematicAct } from "@/components/landing/cinematic-act";
-import { CinematicTypeSlab } from "@/components/landing/cinematic-type-slab";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
-// The Lens reel. Five-act cinematic narrative for the visual product
-// concept, intercut with macro detail sections that show the
-// engineering. Closes with a quiet waitlist screen.
-//
-// Acts:
-//   01 — Hardware reveal: the lens itself (full-bleed)
-//   02 — Architecture: where compute lives (lens-as-render-only)
-//   03 — Day Kit: the smart case, two-pair workflow
-//
-// Detail sections between/after the acts:
-//   - Exploded view (scroll-driven layer separation)
-//   - Macro: electronics ring
-//   - Macro: acrylic shell
-//   - Macro: micro-components
-//   - Three render modes (existing card grid)
-//
-// Closing: Waitlist outro.
+// Lens product page. Three product scenes (hardware, architecture,
+// day kit) intercut with engineering detail (exploded view + three
+// macros) and a modes card grid. Closes with a waitlist outro.
+// No title slabs, no chapter chips.
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -70,49 +56,34 @@ export default function LensPage() {
   const reduce = useReducedMotion();
 
   return (
-    <main style={{ background: "#000000", overflowX: "hidden" }}>
-      {/* ─────────────  TITLE SLAB · LENS  ─────────────────────────── */}
-      <CinematicTypeSlab
-        kicker="lens · the eye · concept"
-        treatment="gradient"
-        align="center"
-        height="100vh"
-      >
-        <span style={{ fontSize: "clamp(7rem, 22vw, 22rem)", letterSpacing: "-0.07em", display: "block" }}>
-          LENS
-        </span>
-      </CinematicTypeSlab>
-
-      {/* ─────────────  ACT 01 · transparent precision  ─────────────── */}
+    <main style={{ background: "#050507", overflowX: "hidden" }}>
+      {/* Hardware */}
       <CinematicAct
-        index={1}
-        total={3}
-        marker="HARDWARE · TRANSPARENT PRECISION"
         accent="#c084fc"
         anchor="bottom-left"
         cameraPosition={[0, 0.4, 4.4]}
         cameraFov={36}
         scene={<LensObject />}
         poster="/landing/lens-poster.svg"
-        posterAlt="Lens hardware close"
-        headline={<>A transparent<br/>visual interface.</>}
+        posterAlt="Lens hardware"
+        headline={<>Lens.<br/>Concept and R&amp;D.</>}
         body={
           <>
-            Medical-grade acrylic, an electronics ring you can almost
-            see-through, three render modes, and an iris reticle that
-            sits over the pupil. No HUD glow. No fantasy.
+            A transparent contact lens with three render modes, paired
+            with Workshop on your phone or PC for compute. Medical-grade
+            acrylic, an electronics ring you can almost see through, an
+            iris reticle that sits over the pupil.
           </>
         }
       />
 
-      {/* ─────────────  EXPLODED VIEW DETAIL  ───────────────────────── */}
+      {/* Engineering detail */}
       <ProductExploded product="lens" />
 
-      {/* ─────────────  MACRO · ELECTRONICS RING  ───────────────────── */}
       <ProductMacro
-        kicker="detail · electronics ring"
+        kicker="electronics ring"
         title="The carrier ring"
-        body="Anodized navy aluminum, 18 mm outer diameter. Holds twenty-four sub-millimetre LEDs and six gold contact pads — the charge and data interface."
+        body="Anodized navy aluminum, 18 mm outer diameter. Holds twenty-four sub-millimetre LEDs and six gold contact pads (the charge and data interface)."
         specs={[
           { label: "MATERIAL",  value: "Aluminum 6063-T6" },
           { label: "FINISH",    value: "Anodized matte" },
@@ -127,20 +98,8 @@ export default function LensPage() {
         scene={<LensObject />}
       />
 
-      {/* ─────────────  SLAB · the architecture promise  ────────────── */}
-      <CinematicTypeSlab
-        kicker="the architecture"
-        treatment="white"
-        align="left"
-      >
-        Lens does not run heavy AI.<br/>Workshop does.
-      </CinematicTypeSlab>
-
-      {/* ─────────────  ACT 02 · the architecture  ──────────────────── */}
+      {/* Architecture */}
       <CinematicAct
-        index={2}
-        total={3}
-        marker="ARCHITECTURE · RENDER + SENSE"
         accent="#a8c4ff"
         anchor="bottom-left"
         cameraPosition={[0, 0.6, 5.2]}
@@ -148,31 +107,23 @@ export default function LensPage() {
         scene={<LensObject />}
         poster="/landing/lens-poster.svg"
         posterAlt="Lens architecture"
-        headline={<>Compute lives<br/>where it can breathe.</>}
+        headline={<>Lens does not run heavy AI.<br/>Workshop does.</>}
         body={
           <>
-            The phone or PC handles the model. The lens renders the
-            result. That keeps the optic itself thin, cool, and
-            battery-conscious.
+            Compute lives on your phone or PC where there is power and
+            thermal headroom. Lens renders the result. That keeps the
+            optic itself thin, cool, and battery-conscious.
           </>
         }
       />
 
-      {/* ─────────────  ARCHITECTURE TRIPLET CHIP  ──────────────────── */}
       <section
         style={{
           background: "#040406",
-          padding: "clamp(80px, 12vh, 140px) clamp(20px, 5vw, 80px)",
+          padding: "clamp(64px, 10vh, 120px) clamp(20px, 5vw, 80px)",
         }}
       >
         <div style={{ maxWidth: 880, margin: "0 auto", textAlign: "center" }}>
-          <div className="cinematic-mono" style={{ marginBottom: 14 }}>
-            three nodes · one bus
-          </div>
-          <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 36 }}>
-            Render. Compute. Memory.
-          </h2>
-
           <div
             style={{
               display: "grid",
@@ -213,10 +164,9 @@ export default function LensPage() {
         </div>
       </section>
 
-      {/* ─────────────  MACRO · ACRYLIC SHELL  ──────────────────────── */}
       <ProductMacro
         reverse
-        kicker="detail · acrylic shell"
+        kicker="acrylic shell"
         title="Hydrogel-equivalent acrylic"
         body="Medical-grade transmission acrylic with anti-reflective coating. The display layer routes underneath without bleed-through to the wearer's eye."
         specs={[
@@ -233,11 +183,10 @@ export default function LensPage() {
         scene={<LensObject />}
       />
 
-      {/* ─────────────  MACRO · MICRO-COMPONENTS  ───────────────────── */}
       <ProductMacro
-        kicker="detail · micro-components"
+        kicker="micro-components"
         title="Twelve ICs, eight capacitors"
-        body="Surface-mount integrated circuits and tantalum capacitors sit between the LEDs on the inner ring, driving the display layer and managing power. Hand-placed on a 0402 footprint."
+        body="Surface-mount integrated circuits and tantalum capacitors sit between the LEDs on the inner ring, driving the display layer and managing power."
         specs={[
           { label: "ICS",       value: "12 × SMD" },
           { label: "CAPS",      value: "8 × tantalum" },
@@ -252,7 +201,7 @@ export default function LensPage() {
         scene={<LensObject />}
       />
 
-      {/* ─────────────  THREE MODES (CARD GRID)  ────────────────────── */}
+      {/* Three modes */}
       <section
         style={{
           background: "#040406",
@@ -261,11 +210,8 @@ export default function LensPage() {
       >
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
           <div style={{ maxWidth: 640, marginBottom: 56 }}>
-            <div className="cinematic-mono" style={{ marginBottom: 14 }}>
-              three modes
-            </div>
             <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 18 }}>
-              Quiet by default.<br/>Powerful when summoned.
+              Three render modes.
             </h2>
             <p className="cinematic-body" style={{ maxWidth: 540 }}>
               Lens shifts between three render modes throughout your day.
@@ -339,20 +285,8 @@ export default function LensPage() {
         </div>
       </section>
 
-      {/* ─────────────  SLAB · day kit preface  ─────────────────────── */}
-      <CinematicTypeSlab
-        kicker="lens day kit · concept"
-        treatment="gradient"
-        align="left"
-      >
-        Two pairs.<br/>One smart case.
-      </CinematicTypeSlab>
-
-      {/* ─────────────  ACT 03 · day kit  ───────────────────────────── */}
+      {/* Day Kit */}
       <CinematicAct
-        index={3}
-        total={3}
-        marker="DAY KIT · CASE"
         accent="#c084fc"
         anchor="bottom-left"
         cameraPosition={[2.4, 1.5, 4.2]}
@@ -360,15 +294,15 @@ export default function LensPage() {
         scene={<LensCase />}
         poster="/landing/lens-case-poster.svg"
         posterAlt="Lens charging case"
-        headline={<>Pair A by day.<br/>Pair B by night.</>}
+        headline={<>Two pairs.<br/>One smart case.</>}
         body={
           <>
             One charges while the other runs. Quick swap, milled gold
-            contacts in each well, four-LED charge arc per pair.
-            Targeting all-day usage when you alternate.
+            contacts in each well, four-LED charge arc per pair. Targeting
+            all-day usage when you alternate.
           </>
         }
-        cta={{ href: "#waitlist", label: "Join the Lens waitlist" }}
+        cta={{ href: "#waitlist", label: "Join the waitlist" }}
         meta={
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {[
@@ -409,7 +343,7 @@ export default function LensPage() {
         }
       />
 
-      {/* ─────────────  WAITLIST OUTRO  ─────────────────────────────── */}
+      {/* Waitlist outro */}
       <section
         id="waitlist"
         style={{
@@ -446,9 +380,6 @@ export default function LensPage() {
             WebkitBackdropFilter: "blur(20px)",
           }}
         >
-          <div className="cinematic-mono" style={{ marginBottom: 14, color: "rgba(192,132,252,0.75)" }}>
-            join the waitlist
-          </div>
           <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 16 }}>
             Be first to try Lens.
           </h2>

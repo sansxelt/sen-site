@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { AuthFlow } from "@/components/auth-flow";
-import { CinematicOpeningTitle } from "@/components/landing/cinematic-opening-title";
 import { CinematicAct } from "@/components/landing/cinematic-act";
-import { CinematicTypeSlab } from "@/components/landing/cinematic-type-slab";
 import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
 import { WorkshopBrain } from "@/components/3d/workshop-brain";
 import { WhisperEarbud } from "@/components/3d/whisper-earbud";
@@ -14,13 +12,9 @@ import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
 
-// The home reel. Seven acts flanked by three quiet typography slabs
-// + a quiet outro. The opening title holds before the first act.
-//
-// Pacing principle: loud (act) → silent (slab) → loud → silent. The
-// site reads like a film, not a marketing page.
-
-const TOTAL_ACTS = 7;
+// Home page. Six full-bleed product scenes, then a quiet outro
+// with pricing, quick nav, and sign-in. No opening title, no
+// chapter chips, no manifesto type slabs between scenes.
 
 export default async function HomePage() {
   const session  = await auth();
@@ -32,135 +26,91 @@ export default async function HomePage() {
   );
 
   return (
-    <main style={{ background: "#000000" }}>
-      {/* ─────────────  OPENING TITLE  ──────────────────────────────── */}
-      <CinematicOpeningTitle kicker="an operating system" />
-
-      {/* ─────────────  ACT 01  · the system  ───────────────────────── */}
+    <main style={{ background: "#050507" }}>
+      {/* Hero: the ecosystem at distance */}
       <CinematicAct
-        index={1}
-        total={TOTAL_ACTS}
-        marker="THE SYSTEM"
         accent="#a8c4ff"
         anchor="bottom-left"
         cameraPosition={[0, 0.5, 8.0]}
         cameraFov={42}
         scene={<EcosystemOrbit />}
         poster="/landing/ecosystem-orbit-poster.svg"
-        posterAlt="Sansxel ecosystem orbit"
-        headline={<>One AI.<br/>Every surface.</>}
+        posterAlt="Sansxel ecosystem"
+        headline={<>Workshop, Whisper, Lens.<br/>One memory.</>}
         body={
           <>
-            Workshop is the brain. Whisper is the voice. Lens is the eye.
-            One memory core, three surfaces, all connected.
+            A workspace, a voice layer, and a visual interface direction.
+            Different surfaces, the same context.
           </>
         }
         cta={{
           href: signedIn ? "/app" : "/signin?callbackUrl=/app",
-          label: signedIn ? "Open Workshop" : "Open Workshop",
+          label: "Open Workshop",
         }}
       />
 
-      {/* ─────────────  SLAB  · the promise  ────────────────────────── */}
-      <CinematicTypeSlab
-        kicker="the operating layer"
-        treatment="gradient"
-        align="left"
-      >
-        An operating system<br/>that remembers.
-      </CinematicTypeSlab>
-
-      {/* ─────────────  ACT 02  · workshop  ─────────────────────────── */}
+      {/* Workshop */}
       <CinematicAct
-        index={2}
-        total={TOTAL_ACTS}
-        marker="WORKSHOP · THE BRAIN"
         accent="#a8c4ff"
         anchor="bottom-left"
         cameraPosition={[0, 0.4, 6.5]}
         cameraFov={40}
         scene={<WorkshopBrain />}
         poster="/landing/workshop-poster.svg"
-        posterAlt="Workshop spatial dashboard"
-        headline={<>The workspace<br/>that holds your context.</>}
+        posterAlt="Workshop"
+        headline={<>Workshop holds<br/>your context.</>}
         body={
           <>
-            Chat, projects, files, memory, voice. Every action writes to
-            one persistent context layer, so the next prompt picks up
-            where the last one left off.
+            Chat, projects, files, memory, and voice in one workspace.
+            Every action writes to the same context layer, so the next
+            prompt picks up where the last one left off.
           </>
         }
         cta={{ href: "/workshop", label: "Open Workshop" }}
       />
 
-      {/* ─────────────  SLAB  · whisper preface  ────────────────────── */}
-      <CinematicTypeSlab
-        kicker="the speaking layer"
-        treatment="white"
-        align="center"
-      >
-        Speak. Listen.<br/>Stay heads-up.
-      </CinematicTypeSlab>
-
-      {/* ─────────────  ACT 03  · whisper  ──────────────────────────── */}
+      {/* Whisper */}
       <CinematicAct
-        index={3}
-        total={TOTAL_ACTS}
-        marker="WHISPER · THE VOICE"
         accent="#60a5fa"
         anchor="bottom-left"
         cameraPosition={[0, 0.4, 6.5]}
         cameraFov={40}
         scene={<WhisperEarbud />}
         poster="/landing/whisper-poster.svg"
-        posterAlt="Whisper earbud"
-        headline={<>Sub-second<br/>from voice to answer.</>}
+        posterAlt="Whisper"
+        headline={<>Whisper, the<br/>voice layer.</>}
         body={
           <>
-            Low-latency voice in, natural voice out. Works with the earbuds
-            you already wear today; dedicated Sansxel hardware later.
+            Low-latency voice in, natural voice out. Works with the
+            earbuds you already wear today; dedicated Sansxel hardware
+            later.
           </>
         }
         cta={{ href: "/whisper", label: "Explore Whisper" }}
       />
 
-      {/* ─────────────  SLAB  · lens preface  ───────────────────────── */}
-      <CinematicTypeSlab
-        kicker="the visual layer · concept"
-        treatment="gradient"
-        align="left"
-      >
-        The interface,<br/>embedded.
-      </CinematicTypeSlab>
-
-      {/* ─────────────  ACT 04  · lens  ─────────────────────────────── */}
+      {/* Lens */}
       <CinematicAct
-        index={4}
-        total={TOTAL_ACTS}
-        marker="LENS · THE EYE · CONCEPT"
         accent="#c084fc"
         anchor="bottom-left"
         cameraPosition={[0, 0.6, 5.0]}
         cameraFov={38}
         scene={<LensObject />}
         poster="/landing/lens-poster.svg"
-        posterAlt="Transparent contact lens with HUD"
-        headline={<>A transparent<br/>visual interface.</>}
+        posterAlt="Lens"
+        headline={<>Lens.<br/>In concept and R&amp;D.</>}
         body={
           <>
-            Lens is our visual interface direction, currently in concept
-            and R&amp;D. Three render modes — Ambient, Mainframe, Minimal —
-            paired with Workshop on your phone or PC for compute.
+            A transparent contact lens with three render modes, paired
+            with Workshop on your phone or PC for compute. Quiet by
+            default, summoned when you need it.
           </>
         }
-        cta={{ href: "/lens", label: "Join the Lens waitlist" }}
+        cta={{ href: "/lens", label: "See Lens" }}
       />
 
-      {/* ─────────────  ACT 05  · day kit case  ─────────────────────── */}
+      {/* Day Kit case */}
       <CinematicAct
-        index={5}
-        total={TOTAL_ACTS}
-        marker="LENS DAY KIT · CONCEPT"
         accent="#c084fc"
         anchor="bottom-left"
         cameraPosition={[2.4, 1.5, 4.2]}
@@ -171,7 +121,6 @@ export default async function HomePage() {
         headline={<>Two pairs.<br/>One smart case.</>}
         body={
           <>
-            The Day Kit pairs two Lens with a smart charging case.
             Quick swap between Pair A and Pair B; one charges while
             the other runs. Targeting all-day usage when you alternate.
           </>
@@ -179,61 +128,26 @@ export default async function HomePage() {
         cta={{ href: "/lens#day-kit", label: "See the Day Kit" }}
       />
 
-      {/* ─────────────  SLAB  · architecture preface  ───────────────── */}
-      <CinematicTypeSlab
-        kicker="the architecture"
-        treatment="white"
-        align="center"
-      >
-        All of it,<br/>one memory.
-      </CinematicTypeSlab>
-
-      {/* ─────────────  ACT 06  · ecosystem  ────────────────────────── */}
+      {/* Architecture */}
       <CinematicAct
-        index={6}
-        total={TOTAL_ACTS}
-        marker="ARCHITECTURE · ONE BUS"
         accent="#a8c4ff"
         anchor="bottom-center"
         cameraPosition={[0, 1.2, 5.5]}
         cameraFov={42}
         scene={<EcosystemConnection />}
         poster="/landing/ecosystem-poster.svg"
-        posterAlt="Sansxel ecosystem architecture"
-        headline={<>Every surface writes<br/>to the same memory.</>}
+        posterAlt="Sansxel architecture"
+        headline={<>One memory bus.<br/>Every surface reads from it.</>}
         body={
           <>
             What you said to Whisper this morning is in Workshop tonight,
-            on Lens tomorrow. No imports, no syncs, no context loss.
+            on Lens tomorrow. No imports, no syncs.
           </>
         }
         cta={{ href: "/product", label: "See the architecture" }}
       />
 
-      {/* ─────────────  ACT 07  · the platform  ─────────────────────── */}
-      <CinematicAct
-        index={7}
-        total={TOTAL_ACTS}
-        marker="THE PLATFORM"
-        accent="#7ab5ff"
-        anchor="bottom-left"
-        cameraPosition={[0, 0.8, 9.0]}
-        cameraFov={48}
-        scene={<EcosystemOrbit />}
-        poster="/landing/ecosystem-orbit-poster.svg"
-        posterAlt="Sansxel platform"
-        headline={<>An ecosystem,<br/>not a product.</>}
-        body={
-          <>
-            Sansxel is the operating layer. Free to start, deeper memory
-            and creation tools when the work gets serious. Build with the
-            early community on Discord.
-          </>
-        }
-        cta={{ href: "#pricing", label: "See pricing" }}
-      />
-
-      {/* ─────────────  QUIET OUTRO  ─ pricing + community + cta  ──── */}
+      {/* Outro: pricing + community + final CTA */}
       <section
         style={{
           position: "relative",
@@ -255,9 +169,6 @@ export default async function HomePage() {
           {/* PRICING */}
           <div id="pricing" style={{ marginBottom: 96 }}>
             <div style={{ maxWidth: 640, marginBottom: 56 }}>
-              <div className="cinematic-mono" style={{ marginBottom: 16 }}>
-                pricing
-              </div>
               <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 18 }}>
                 Free to start.<br/>Upgrade when the work gets serious.
               </h2>
@@ -373,7 +284,6 @@ export default async function HomePage() {
           <div id="get-started" style={{ marginTop: 96 }}>
             {signedIn ? (
               <div className="landing-glass" style={{ padding: "40px 40px" }}>
-                <div className="cinematic-mono" style={{ marginBottom: 16 }}>welcome back</div>
                 <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 16 }}>
                   Pick up where you left off.
                 </h2>
@@ -411,9 +321,9 @@ export default async function HomePage() {
               className="landing-quick-nav"
             >
               {[
-                ["/workshop", "Workshop", "Chat · Projects · Files · Memory · Voice"],
-                ["/whisper",  "Whisper",  "Speak. Listen. Heads-up."],
-                ["/lens",     "Lens",     "Visual interface direction · R&D"],
+                ["/workshop", "Workshop", "Chat, projects, files, memory, voice"],
+                ["/whisper",  "Whisper",  "Voice in. Voice out."],
+                ["/lens",     "Lens",     "Visual interface direction (R&D)"],
                 ["/pricing",  "Pricing",  "Free, Plus, Pro, Teams"],
               ].map(([href, label, desc]) => (
                 <Link
