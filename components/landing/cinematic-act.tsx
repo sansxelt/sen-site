@@ -30,7 +30,15 @@ type Props = {
   headline: ReactNode;
   body?: ReactNode;
   cta?: { href: string; label: string };
-  scene: ReactNode;
+  // Either an R3F scene (procedural 3D) OR a 2D hero image. Mutually
+  // exclusive. If `imageUrl` is set, the 3D path is skipped entirely
+  // and the act renders as a cinematic still with Ken-Burns slow zoom.
+  scene?: ReactNode;
+  imageUrl?: string;
+  // For the static-image path: where the subject sits inside the
+  // image so the asymmetric framing knows which direction to drift.
+  // Default "center" -> object-position center.
+  imageObjectPosition?: string;
   poster: string;
   posterAlt: string;
   cameraPosition?: [number, number, number];
@@ -48,6 +56,8 @@ export function CinematicAct({
   body,
   cta,
   scene,
+  imageUrl,
+  imageObjectPosition = "center",
   poster,
   posterAlt,
   cameraPosition = [0, 0, 6],
@@ -101,10 +111,11 @@ export function CinematicAct({
         background: bg,
       }}
     >
-      {/* 3D scene fills viewport. Subject offset is derived from the
-          headline anchor: when text sits bottom-left, we push the
+      {/* Scene layer fills viewport. Subject offset is derived from
+          the headline anchor: when text sits bottom-left, we push the
           subject toward the right edge so the eye reads across the
-          frame instead of stacking copy on top of the product. */}
+          frame instead of stacking copy on top of the product.
+          imageUrl wins over scene when both are provided. */}
       <motion.div
         style={{
           position: "absolute",
@@ -118,15 +129,31 @@ export function CinematicAct({
           ...(reduce ? {} : { scale: sceneScale, y: sceneY }),
         }}
       >
-        <Lazy3DScene
-          poster={poster}
-          alt={posterAlt}
-          cameraPosition={cameraPosition}
-          cameraFov={cameraFov}
-          style={{ width: "100%", height: "100%" }}
-        >
-          {scene}
-        </Lazy3DScene>
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={posterAlt}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: imageObjectPosition,
+              display: "block",
+            }}
+            loading="eager"
+            decoding="async"
+          />
+        ) : (
+          <Lazy3DScene
+            poster={poster}
+            alt={posterAlt}
+            cameraPosition={cameraPosition}
+            cameraFov={cameraFov}
+            style={{ width: "100%", height: "100%" }}
+          >
+            {scene}
+          </Lazy3DScene>
+        )}
       </motion.div>
 
       {/* Atmosphere */}
