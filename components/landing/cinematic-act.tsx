@@ -35,10 +35,15 @@ type Props = {
   // and the act renders as a cinematic still with Ken-Burns slow zoom.
   scene?: ReactNode;
   imageUrl?: string;
-  // For the static-image path: where the subject sits inside the
-  // image so the asymmetric framing knows which direction to drift.
-  // Default "center" -> object-position center.
+  // For full-bleed AI environments (cover): where the subject sits.
+  // For transparent product shots (contain): unused; positioning is
+  // derived from the headline anchor.
   imageObjectPosition?: string;
+  // True when imageUrl points at a transparent PNG (just the product,
+  // no background). Switches object-fit from cover to contain so the
+  // whole product shows and the page background reads through the
+  // transparency.
+  transparent?: boolean;
   poster: string;
   posterAlt: string;
   cameraPosition?: [number, number, number];
@@ -58,6 +63,7 @@ export function CinematicAct({
   scene,
   imageUrl,
   imageObjectPosition = "center",
+  transparent = false,
   poster,
   posterAlt,
   cameraPosition = [0, 0, 6],
@@ -120,8 +126,13 @@ export function CinematicAct({
         style={{
           position: "absolute",
           inset: 0,
+          // Asymmetric x-offset only applies to the full-bleed paths
+          // (cover image + 3D scene). For transparent contain images
+          // we drive the bias via objectPosition instead.
           x:
-            anchor === "bottom-left"
+            transparent
+              ? 0
+              : anchor === "bottom-left"
               ? "14vw"
               : anchor === "top-right"
               ? "-14vw"
@@ -136,8 +147,14 @@ export function CinematicAct({
             style={{
               width: "100%",
               height: "100%",
-              objectFit: "cover",
-              objectPosition: imageObjectPosition,
+              objectFit: transparent ? "contain" : "cover",
+              objectPosition: transparent
+                ? anchor === "bottom-left"
+                  ? "75% center"
+                  : anchor === "top-right"
+                  ? "25% center"
+                  : "center"
+                : imageObjectPosition,
               display: "block",
             }}
             loading="eager"
