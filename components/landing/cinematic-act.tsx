@@ -4,6 +4,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion
 import Link from "next/link";
 import { useRef, type ReactNode } from "react";
 import { Lazy3DScene } from "@/components/3d/lazy-scene";
+import { SplineScene } from "@/components/3d/spline-scene";
 import { Scrim } from "./cinematic-scrim";
 
 // CinematicAct. One full-bleed scene of the page.
@@ -30,7 +31,11 @@ type Props = {
   headline: ReactNode;
   body?: ReactNode;
   cta?: { href: string; label: string };
-  scene: ReactNode;
+  // Either an R3F scene (procedural) OR a Spline scene URL. Mutually
+  // exclusive: if `splineUrl` is provided it wins; otherwise `scene`
+  // is required and rendered into Lazy3DScene's Canvas.
+  scene?: ReactNode;
+  splineUrl?: string;
   poster: string;
   posterAlt: string;
   cameraPosition?: [number, number, number];
@@ -48,6 +53,7 @@ export function CinematicAct({
   body,
   cta,
   scene,
+  splineUrl,
   poster,
   posterAlt,
   cameraPosition = [0, 0, 6],
@@ -118,15 +124,24 @@ export function CinematicAct({
           ...(reduce ? {} : { scale: sceneScale, y: sceneY }),
         }}
       >
-        <Lazy3DScene
-          poster={poster}
-          alt={posterAlt}
-          cameraPosition={cameraPosition}
-          cameraFov={cameraFov}
-          style={{ width: "100%", height: "100%" }}
-        >
-          {scene}
-        </Lazy3DScene>
+        {splineUrl ? (
+          <SplineScene
+            url={splineUrl}
+            poster={poster}
+            alt={posterAlt}
+            style={{ width: "100%", height: "100%" }}
+          />
+        ) : (
+          <Lazy3DScene
+            poster={poster}
+            alt={posterAlt}
+            cameraPosition={cameraPosition}
+            cameraFov={cameraFov}
+            style={{ width: "100%", height: "100%" }}
+          >
+            {scene}
+          </Lazy3DScene>
+        )}
       </motion.div>
 
       {/* Atmosphere */}
