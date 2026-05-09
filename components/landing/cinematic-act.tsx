@@ -6,20 +6,20 @@ import { useRef, type ReactNode } from "react";
 import { Lazy3DScene } from "@/components/3d/lazy-scene";
 import { Scrim } from "./cinematic-scrim";
 
-// CinematicAct. One full-bleed "scene" of the reveal film.
+// CinematicAct. One full-bleed scene of the page.
 //
 // Layers, back to front:
-//   - 3D scene fills the viewport
+//   - 3D scene fills the viewport, offset toward one third of the
+//     frame based on the headline anchor (asymmetric framing)
 //   - Scrim (top + bottom + vignette) softens the scene into the page
-//   - Act marker chip in the top-left ("ACT 02 / 07 — WHISPER")
 //   - Headline slab (massive type, bottom-left or chosen anchor)
 //   - Body line (smaller, sits beneath the headline)
 //   - CTA (one ghost link, optional)
 //
 // Scroll behaviour:
-//   - 3D wrapper scales 1 → 1.06 over the section (slow push-in)
-//   - Headline rises 30px from below as the act enters
-//   - Marker, body, CTA fade in on a stagger
+//   - 3D wrapper scales 1.0 to 1.12 (slow dolly push)
+//   - Text slab parallaxes vertically at a slower rate
+//   - Each headline / body / CTA fades in via whileInView
 //   - All motion gated by prefers-reduced-motion
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -71,9 +71,13 @@ export function CinematicAct({
   const sceneY     = useTransform(scrollYProgress, [0, 1], [40, -40]);
 
   // Foreground typography parallax — moves slightly slower than the
-  // scene so the layers feel decoupled.
-  const textY  = useTransform(scrollYProgress, [0, 1], [80, -40]);
-  const textOp = useTransform(scrollYProgress, [0, 0.18, 0.85, 1], [0, 1, 1, 0.4]);
+  // scene so the layers feel decoupled. No opacity transform on the
+  // wrapper: with `target` pointing at the section, the first hero
+  // act mounts before Framer measures scroll progress, so an
+  // opacity-on-progress transform reads 0 during that gap and the
+  // wrapper hides everything inside it. Each child's whileInView
+  // handles its own entrance.
+  const textY = useTransform(scrollYProgress, [0, 1], [80, -40]);
 
   const anchorStyle: React.CSSProperties = (() => {
     switch (anchor) {
@@ -135,7 +139,7 @@ export function CinematicAct({
           maxWidth: "min(900px, 80vw)",
           zIndex: 2,
           ...anchorStyle,
-          ...(reduce ? {} : { y: textY, opacity: textOp }),
+          ...(reduce ? {} : { y: textY }),
         }}
       >
         <motion.h2
