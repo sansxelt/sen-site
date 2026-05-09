@@ -143,10 +143,10 @@ export function CinematicAct({
         }}
       >
         <motion.h2
-          initial={reduce ? false : { opacity: 0, y: 30, filter: "blur(8px)" }}
-          whileInView={reduce ? undefined : { opacity: 1, y: 0, filter: "blur(0px)" }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 1.0, ease: EASE }}
+          initial={reduce ? false : { y: 30, filter: "blur(6px)" }}
+          whileInView={reduce ? undefined : { y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, amount: 0.1 }}
+          transition={{ duration: 0.9, ease: EASE }}
           className="cinematic-display"
           style={{ marginBottom: 22 }}
         >
@@ -155,10 +155,10 @@ export function CinematicAct({
 
         {body && (
           <motion.p
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.8, ease: EASE, delay: 0.18 }}
+            initial={reduce ? false : { y: 16 }}
+            whileInView={reduce ? undefined : { y: 0 }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ duration: 0.7, ease: EASE, delay: 0.15 }}
             style={{
               fontSize: "clamp(1rem, 1.4vw, 1.25rem)",
               lineHeight: 1.55,
@@ -174,10 +174,10 @@ export function CinematicAct({
 
         {meta && (
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 12 }}
-            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.7, ease: EASE, delay: 0.28 }}
+            initial={reduce ? false : { y: 12 }}
+            whileInView={reduce ? undefined : { y: 0 }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ duration: 0.6, ease: EASE, delay: 0.22 }}
             style={{ marginBottom: cta ? 24 : 0 }}
           >
             {meta}
@@ -186,10 +186,10 @@ export function CinematicAct({
 
         {cta && (
           <motion.div
-            initial={reduce ? false : { opacity: 0, y: 8 }}
-            whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.36 }}
+            initial={reduce ? false : { y: 8 }}
+            whileInView={reduce ? undefined : { y: 0 }}
+            viewport={{ once: true, amount: 0.1 }}
+            transition={{ duration: 0.5, ease: EASE, delay: 0.30 }}
           >
             <Link
               href={cta.href}
