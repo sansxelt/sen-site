@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
 // Served at platform.sansxel.ai/. Developer console preview, terminal
@@ -132,7 +131,6 @@ export default function PlatformSoonPage() {
             </div>
           </Link>
           <div className="flex items-center gap-3">
-            <ThemeToggle />
             <Link
               href="https://sansxel.ai"
               className="font-mono text-[11px] text-neutral-500 transition hover:text-neutral-200"

@@ -6,7 +6,6 @@ import { auth } from "../auth";
 import { CommandPalette } from "../components/command-palette";
 import { CopilotBar } from "../components/copilot-bar";
 import { RevealOnScroll } from "../components/reveal-on-scroll";
-import { ThemeProvider } from "../components/theme-provider";
 import { InflightBackToChat } from "../components/inflight-back-to-chat";
 
 const BASE = "https://www.sansxel.ai";
@@ -77,6 +76,8 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
+      data-theme="dark"
+      style={{ colorScheme: "dark" }}
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-neutral-950 font-sans text-neutral-100">
@@ -107,7 +108,6 @@ export default async function RootLayout({
             }),
           }}
         />
-        <ThemeProvider />
         {children}
         <InflightBackToChat />
         <CommandPalette />

@@ -6,7 +6,6 @@ import { signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Zone } from "../lib/zone";
-import { ThemeToggle } from "./theme-toggle";
 
 // Pinwheel mark per host. Same geometry, different accent triangle.
 // next/image auto-applies `unoptimized` for .svg sources in v16.
@@ -460,7 +459,6 @@ export function DashboardNav({
               </span>
             </div>
           </Link>
-          <ThemeToggle compact />
         </div>
 
         {/* Chat — pinned below logo */}
@@ -546,7 +544,6 @@ export function DashboardNav({
               {userEmail}
             </span>
           )}
-          <ThemeToggle compact />
           {isAdmin && (
             <Link
               href="/account/content"

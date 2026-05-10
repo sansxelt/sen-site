@@ -3,7 +3,6 @@ import { auth } from "../../../auth";
 import { readSessionState } from "../../../lib/account-session";
 import { getUserProfileByEmail } from "../../../lib/user-profile";
 import { SettingsPanel } from "./settings-panel";
-import { ThemePicker } from "../../../components/theme-picker";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -23,7 +22,6 @@ export default async function SettingsPage() {
       </p>
 
       <div className="mt-8 space-y-6">
-        <ThemePicker />
         <SettingsPanel initialSessionState={initialSessionState} />
       </div>
     </div>
