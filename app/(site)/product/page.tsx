@@ -3,13 +3,9 @@
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef, useState } from "react";
-import { Lazy3DScene } from "@/components/3d/lazy-scene";
-import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
-import { WorkshopBrain } from "@/components/3d/workshop-brain";
 import { WhisperEarbud } from "@/components/3d/whisper-earbud";
 import { LensObject } from "@/components/3d/lens-object";
 import { LensCase } from "@/components/3d/lens-case";
-import { EcosystemConnection } from "@/components/3d/ecosystem-connection";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -72,7 +68,11 @@ const PRODUCTS: ProductDef[] = [
     cta: { href: "/workshop", label: "Open Workshop" },
     poster: "/landing/workshop-poster.svg",
     posterAlt: "Workshop dashboard panels",
-    scene: <WorkshopBrain />,
+    // Visual deliberately absent — procedural geometry was reading
+    // as a placeholder render alongside the real product photos.
+    // Solo layout will center this entry until a real Workshop
+    // hero PNG arrives.
+    scene: null,
     accent: "#a8c4ff",
     cameraPosition: [0, 0.4, 6.5],
     cameraFov: 42,
@@ -203,7 +203,7 @@ const PRODUCTS: ProductDef[] = [
     cta: { href: "/copilot", label: "See Copilot" },
     poster: "/landing/ecosystem-orbit-poster.svg",
     posterAlt: "Copilot acting across tools",
-    scene: <EcosystemOrbit />,
+    scene: null,
     accent: "#22d3ee",
     cameraPosition: [0, 0.5, 7.5],
     cameraFov: 42,
@@ -235,7 +235,7 @@ const PRODUCTS: ProductDef[] = [
     cta: { href: "https://platform.sansxel.ai", label: "Open Platform" },
     poster: "/landing/ecosystem-poster.svg",
     posterAlt: "Sansxel platform connection diagram",
-    scene: <EcosystemConnection />,
+    scene: null,
     accent: "#fbbf24",
     cameraPosition: [0, 1.2, 5.5],
     cameraFov: 45,
@@ -409,7 +409,7 @@ function ProductSection({ product, reverse }: { product: ProductDef; reverse: bo
           gap: 56,
           alignItems: "center",
         }}
-        className={reverse ? "product-row reverse" : "product-row"}
+        className={`product-row${reverse ? " reverse" : ""}${product.imageUrl ? "" : " product-row--solo"}`}
       >
         <div className="product-copy">
           <motion.div
@@ -519,18 +519,18 @@ function ProductSection({ product, reverse }: { product: ProductDef; reverse: bo
           </Link>
         </div>
 
-        <motion.div
-          style={{
-            position: "relative",
-            aspectRatio: "1 / 1",
-            maxWidth: 560,
-            justifySelf: "center",
-            width: "100%",
-            ...(reduce ? {} : { y: sceneY }),
-          }}
-          className="product-stage"
-        >
-          {product.imageUrl ? (
+        {product.imageUrl && (
+          <motion.div
+            style={{
+              position: "relative",
+              aspectRatio: "1 / 1",
+              maxWidth: 560,
+              justifySelf: "center",
+              width: "100%",
+              ...(reduce ? {} : { y: sceneY }),
+            }}
+            className="product-stage"
+          >
             <img
               src={product.imageUrl}
               alt={product.posterAlt}
@@ -541,18 +541,8 @@ function ProductSection({ product, reverse }: { product: ProductDef; reverse: bo
                 display: "block",
               }}
             />
-          ) : (
-            <Lazy3DScene
-              poster={product.poster}
-              alt={product.posterAlt}
-              cameraPosition={product.cameraPosition || [0, 0, 6]}
-              cameraFov={product.cameraFov || 45}
-              style={{ width: "100%", height: "100%" }}
-            >
-              {product.scene}
-            </Lazy3DScene>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
       </div>
     </section>
   );
@@ -638,6 +628,13 @@ export default function ProductPage() {
           }
           .product-row.reverse .product-copy { order: 2; }
           .product-row.reverse .product-stage { order: 1; }
+          /* Solo (no image): single column, copy centered with a
+             reasonable max-width so it doesn't sprawl across the
+             full 1500px container. */
+          .product-row--solo {
+            grid-template-columns: minmax(0, 720px) !important;
+            justify-content: center !important;
+          }
         }
       `}</style>
     </main>

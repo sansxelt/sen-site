@@ -125,7 +125,11 @@ export function CinematicAct({
           the headline anchor: when text sits bottom-left, we push the
           subject toward the right edge so the eye reads across the
           frame instead of stacking copy on top of the product.
-          imageUrl wins over scene when both are provided. */}
+          imageUrl wins over scene when both are provided. When neither
+          is provided, the section renders as a quiet text-only act
+          with just the atmospheric backdrop (no fake-looking
+          procedural geometry standing in as a placeholder). */}
+      {(imageUrl || scene) && (
       <motion.div
         style={{
           position: "absolute",
@@ -176,6 +180,22 @@ export function CinematicAct({
           </Lazy3DScene>
         )}
       </motion.div>
+      )}
+
+      {/* Atmospheric backdrop for text-only acts. A radial accent
+          glow on a dark field, no scene, no image. Renders only when
+          neither imageUrl nor scene is present. */}
+      {!imageUrl && !scene && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${accent}14 0%, transparent 60%)`,
+            pointerEvents: "none",
+          }}
+        />
+      )}
 
       {/* Atmosphere */}
       <Scrim bg={bg} />

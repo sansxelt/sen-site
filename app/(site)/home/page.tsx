@@ -2,8 +2,6 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { AuthFlow } from "@/components/auth-flow";
 import { CinematicAct } from "@/components/landing/cinematic-act";
-import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
-import { WorkshopBrain } from "@/components/3d/workshop-brain";
 import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
@@ -23,13 +21,12 @@ export default async function HomePage() {
 
   return (
     <main style={{ background: "#050507" }}>
-      {/* Hero: the ecosystem at distance */}
+      {/* Hero — text-only with atmospheric backdrop. Procedural
+          orbit was the most visible placeholder visual; the page
+          now opens on the typography itself. */}
       <CinematicAct
         accent="#a8c4ff"
-        anchor="bottom-left"
-        cameraPosition={[0, 0.5, 8.0]}
-        cameraFov={42}
-        scene={<EcosystemOrbit />}
+        anchor="bottom-center"
         poster="/landing/ecosystem-orbit-poster.svg"
         posterAlt="Sansxel ecosystem"
         headline={<>Workshop, Whisper, Lens.<br/>One memory.</>}
@@ -45,13 +42,14 @@ export default async function HomePage() {
         }}
       />
 
-      {/* Workshop */}
+      {/* Workshop — text-only act with atmospheric backdrop. The
+          procedural tablet+satellites geometry was reading as a
+          placeholder render alongside the real product photos in
+          the other acts; quieter to drop the visual entirely until
+          a real Workshop hero arrives. */}
       <CinematicAct
         accent="#a8c4ff"
-        anchor="bottom-left"
-        cameraPosition={[0, 0.4, 6.5]}
-        cameraFov={40}
-        scene={<WorkshopBrain />}
+        anchor="bottom-center"
         poster="/landing/workshop-poster.svg"
         posterAlt="Workshop"
         headline={<>Workshop holds<br/>your context.</>}
@@ -123,17 +121,13 @@ export default async function HomePage() {
         cta={{ href: "/lens#day-kit", label: "See the Day Kit" }}
       />
 
-      {/* Architecture — atmospheric orbit instead of the diagrammatic
-          connection scene with explicit boxes + trace lines. The copy
-          carries the architecture story; the visual is a quiet
-          callback to the hero so the page closes on the same image
-          it opened on. */}
+      {/* Architecture — text-only. Same reasoning as Workshop:
+          the procedural orbit was a placeholder visual; quieter to
+          carry the architecture story in copy alone with an
+          atmospheric backdrop. */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-center"
-        cameraPosition={[0, 0.8, 9.0]}
-        cameraFov={48}
-        scene={<EcosystemOrbit />}
         poster="/landing/ecosystem-orbit-poster.svg"
         posterAlt="Sansxel architecture"
         headline={<>One memory.<br/>Every surface reads from it.</>}
