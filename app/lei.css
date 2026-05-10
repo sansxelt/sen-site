@@ -1674,18 +1674,18 @@ html[data-theme="light"] .project-picker-empty {
 
 .webchat-cost {
   font-size: 11px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
-  color: rgba(229,231,235,0.65);
+  color: rgba(229,231,235,0.55);
   font-variant-numeric: tabular-nums;
+  font-weight: 500;
 }
 .webchat-cost--covered {
-  background: rgba(34,197,94,0.10);
-  border-color: rgba(34,197,94,0.30);
+  background: rgba(34,197,94,0.08);
+  border-color: rgba(34,197,94,0.24);
   color: #86efac;
-  font-weight: 600;
 }
 
 /* "+" / Add dropdown, replaces the separate Attach + Image buttons
@@ -1700,8 +1700,10 @@ html[data-theme="light"] .project-picker-empty {
   background: rgba(167,139,250,0.18) !important;
   border-color: rgba(167,139,250,0.5) !important;
 }
-.webchat-plus-glyph { font-size: 14px; line-height: 1; }
-.webchat-plus-label { font-size: 12px; }
+/* Match the plus glyph + label weight to the rest of the action
+   row so + Add does not visually outweigh Voice and Duel. */
+.webchat-plus-glyph { font-size: 13px; line-height: 1; opacity: 0.85; }
+.webchat-plus-label { font-size: 13px; font-weight: 500; }
 
 .webchat-plus-menu {
   position: absolute;
