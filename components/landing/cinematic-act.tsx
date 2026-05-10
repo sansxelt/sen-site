@@ -162,17 +162,20 @@ export function CinematicAct({
         style={{
           position: "absolute",
           inset: 0,
-          // Asymmetric x-offset only applies to the full-bleed paths
-          // (cover image + 3D scene). For transparent contain images
-          // we drive the bias via objectPosition instead.
+          // Asymmetric x-offset is only useful for procedural 3D
+          // scenes where the subject would otherwise sit dead-centre.
+          // For photos (cover or contain) the subject placement is
+          // already driven by objectPosition, and the offset just
+          // leaves a black gutter on one side. Only apply when there
+          // is a `scene` (3D) and no imageUrl.
           x:
-            transparent
-              ? 0
-              : anchor === "bottom-left"
-              ? "14vw"
-              : anchor === "top-right"
-              ? "-14vw"
-              : "0",
+            scene && !imageUrl
+              ? anchor === "bottom-left"
+                ? "14vw"
+                : anchor === "top-right"
+                ? "-14vw"
+                : "0"
+              : 0,
           ...(reduce ? {} : { scale: sceneScale, y: sceneY }),
         }}
       >
