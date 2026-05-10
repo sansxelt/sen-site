@@ -56,15 +56,15 @@ export default function LensPage() {
   return (
     <main style={{ background: "#050507", overflowX: "hidden" }}>
       {/* Hardware. Lifestyle hero (real photo, no cutout) so the
-          opening feels human; the model wearing it then runs on the
-          architecture beat below. Crop biased to the right so the
-          lens-on-fingertip is the focal point, leaving the softer
-          left side as the text bed. */}
+          opening feels human; the transparent product cutout then
+          runs on the architecture beat below. Crop biased so the
+          lens-on-fingertip sits in the upper-right third without the
+          finger sticking off the top edge. */}
       <CinematicAct
         accent="#c084fc"
         anchor="bottom-left"
         imageUrl="/landing/fingertip-hero.png"
-        imageObjectPosition="72% 35%"
+        imageObjectPosition="65% 55%"
         poster="/landing/lens-poster.svg"
         posterAlt="Lens on a fingertip"
         headline={<>Lens.<br/>Concept and R&amp;D.</>}
@@ -78,16 +78,17 @@ export default function LensPage() {
         }
       />
 
-      {/* Architecture. Model wearing the lens, full-bleed cover so
-          the eye + lens read at scale. Text anchors bottom-left over
-          the darker side of the photo. */}
+      {/* Architecture. Back to the transparent product cutout so the
+          beat reads as a quiet object shot under the headline.
+          model-hero.png turned out to be a saline-bottle + specs
+          composition, which lives further down the page instead. */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-left"
-        imageUrl="/landing/model-hero.png"
-        imageObjectPosition="65% center"
+        imageUrl="/landing/lens-hero.png"
+        transparent
         poster="/landing/lens-poster.svg"
-        posterAlt="Model wearing the Lens"
+        posterAlt="Lens architecture"
         headline={<>Lens does not run heavy AI.<br/>Workshop does.</>}
         body={
           <>
