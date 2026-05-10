@@ -2966,7 +2966,9 @@ export function WebChat({
             onChange={lei.setVoiceStyle}
           />
           <CreditChip balance={lei.creditBalance} plan={plan} />
-          <span className="webchat-plan">Plan: {planDisplayName(plan)}</span>
+          {/* "Plan: Free" standalone label removed; the credit chip
+              + the cost preview already convey plan state, the bare
+              text was redundant chrome. */}
         </div>
       </div>
 
@@ -3075,8 +3077,6 @@ export function WebChat({
                 "Help me debug this React state issue",
                 "Summarize what's in this PDF",
                 "Brainstorm 5 names for my side project",
-                "Humanize this essay so it doesn't sound AI",
-                "Plan my day from these 6 tasks",
                 "Generate an image of a neon sansxel logo",
               ].map((suggestion) => (
                 <button
