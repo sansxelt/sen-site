@@ -191,7 +191,7 @@ export function ModeSwitcher({
     // an explicit gap the rounded-[16px] corners of the inactive
     // button left a tiny notch where the wrapper bg leaked through
     // between the two pills, reading as a stray grey square.
-    <div className="inline-flex shrink-0 gap-1 rounded-[20px] border border-white/10 p-1 text-sm">
+    <div className="inline-flex shrink-0 self-start gap-1 rounded-[20px] border border-white/10 p-1 text-sm">
       <button
         type="button"
         onClick={() => onModeChange("signup")}
