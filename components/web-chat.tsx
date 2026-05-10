@@ -247,6 +247,17 @@ export function WebChat({
   // Same ref is reused by the textarea element itself further down.
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // Auto-grow the composer as the user types. Reset height to auto
+  // so we measure the natural scrollHeight, then set to that. CSS
+  // caps via max-height; once the content exceeds that the textarea
+  // becomes scrollable instead of taller.
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [input]);
+
   // v0.1.16, Ctrl+V / Cmd+V paste support, three modes:
   //   1. Clipboard has FILES (image, video, doc): route to LEI
   //      attachments same as drag-drop, preventDefault.
