@@ -536,7 +536,7 @@ export default function ProductPage() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(140px, 100%), 1fr))", gap: 10 }}>
             {INTEGRATIONS.map((integration, idx) => (
               <Reveal
                 key={integration.name}

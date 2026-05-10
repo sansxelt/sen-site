@@ -26,16 +26,23 @@ export default async function HomePage() {
           the image so headline + body + chips + CTA all sit on a
           legible dark field, not bright skin tones. */}
       <section
+        className="home-hero"
         style={{
           position: "relative",
-          minHeight: "100vh",
+          // svh on mobile so the address bar doesn't push the CTA off
+          // the bottom; 100vh on desktop where there's no chrome.
+          minHeight: "100svh",
           background: "#050507",
           overflow: "hidden",
         }}
       >
-        {/* Photo */}
+        {/* Photo. Center on desktop; on portrait phones we shift to
+            "70% center" so the eye + lens (the right side of the
+            landscape photo) stays in frame instead of getting cropped
+            out by cover-scale. */}
         <div
           aria-hidden
+          className="home-hero__photo"
           style={{
             position: "absolute",
             inset: 0,
@@ -113,6 +120,7 @@ export default async function HomePage() {
             style={{
               display: "inline-flex",
               alignItems: "center",
+              justifyContent: "center",
               gap: 14,
               padding: "8px 16px",
               borderRadius: 999,
@@ -125,6 +133,8 @@ export default async function HomePage() {
               letterSpacing: "0.06em",
               color: "rgba(229,231,235,0.86)",
               marginBottom: 24,
+              flexWrap: "wrap",
+              maxWidth: "100%",
             }}
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -164,6 +174,17 @@ export default async function HomePage() {
             <span aria-hidden style={{ fontSize: 13 }}>→</span>
           </Link>
         </div>
+
+        <style>{`
+          /* Phones: shift the cover photo so the eye + lens (right
+             side of the landscape source) stays visible after the
+             portrait crop. Push the bottom anchor closer to the
+             viewport edge so the CTA stays reachable. */
+          @media (max-width: 640px) {
+            .home-hero__photo { background-position: 72% center !important; }
+            .home-hero { min-height: 100svh; }
+          }
+        `}</style>
       </section>
 
       {/* Order: Lens > Audio (Whisper) > Day Kit > Workshop. Lens
@@ -300,7 +321,7 @@ export default async function HomePage() {
                     background: plan.featured
                       ? "rgba(168,196,255,0.04)"
                       : "rgba(255,255,255,0.02)",
-                    padding: "28px 28px",
+                    padding: "clamp(18px, 4vw, 28px)",
                     display: "flex",
                     flexDirection: "column",
                   }}

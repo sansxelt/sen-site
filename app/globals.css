@@ -4869,13 +4869,20 @@ div[id] {
    "section headline" to "studio title card" via modifier classes. */
 .cinematic-display {
   font-weight: 600;
-  font-size: clamp(2.4rem, 6vw, 5.4rem);
-  line-height: 0.94;
-  letter-spacing: -0.045em;
+  font-size: clamp(1.85rem, 6vw, 5.4rem);
+  line-height: 1.0;
+  letter-spacing: -0.04em;
   margin: 0;
 }
-.cinematic-display--xl   { font-size: clamp(3rem, 9vw, 8.5rem); line-height: 0.92; letter-spacing: -0.05em; }
-.cinematic-display--mega { font-size: clamp(4.4rem, 18vw, 16rem); line-height: 0.88; letter-spacing: -0.06em; font-weight: 700; }
+@media (min-width: 640px) {
+  .cinematic-display { line-height: 0.94; letter-spacing: -0.045em; }
+}
+.cinematic-display--xl   { font-size: clamp(2.2rem, 9vw, 8.5rem); line-height: 0.96; letter-spacing: -0.045em; }
+.cinematic-display--mega { font-size: clamp(2.8rem, 18vw, 16rem); line-height: 0.92; letter-spacing: -0.05em; font-weight: 700; }
+@media (min-width: 640px) {
+  .cinematic-display--xl   { line-height: 0.92; letter-spacing: -0.05em; }
+  .cinematic-display--mega { line-height: 0.88; letter-spacing: -0.06em; }
+}
 
 .cinematic-display--white {
   color: #ffffff;

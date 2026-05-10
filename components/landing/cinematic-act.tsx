@@ -98,15 +98,17 @@ export function CinematicAct({
   const anchorStyle: React.CSSProperties = (() => {
     switch (anchor) {
       case "bottom-left":
-        return { left: "clamp(20px, 5vw, 80px)", bottom: "clamp(80px, 14vh, 160px)", textAlign: "left" };
+        // Tighter bottom inset on phones so the CTA stays above the
+        // address bar; loosens on tablets/desktop.
+        return { left: "clamp(16px, 5vw, 80px)", right: "clamp(16px, 5vw, 80px)", bottom: "clamp(48px, 12vh, 160px)", textAlign: "left" };
       case "bottom-center":
         // Center via left:0 / right:0 / margin auto rather than
         // translateX(-50%). Framer combines `y` into a single
         // transform string and clobbers the inline translateX, which
         // shifts the text off-center and clips it on the right edge.
-        return { left: 0, right: 0, marginInline: "auto", bottom: "clamp(80px, 14vh, 160px)", textAlign: "center" };
+        return { left: 0, right: 0, marginInline: "auto", paddingInline: "clamp(16px, 5vw, 80px)", bottom: "clamp(48px, 12vh, 160px)", textAlign: "center" };
       case "top-right":
-        return { right: "clamp(20px, 5vw, 80px)", top: "clamp(120px, 16vh, 200px)", textAlign: "right" };
+        return { right: "clamp(16px, 5vw, 80px)", left: "clamp(16px, 5vw, 80px)", top: "clamp(96px, 14vh, 200px)", textAlign: "right" };
       case "center":
         // Vertically + horizontally centered. Wrapper fills the
         // section (inset: 0) and uses flex to center its children.
@@ -128,10 +130,14 @@ export function CinematicAct({
   return (
     <section
       ref={sectionRef}
+      className="cinematic-act"
       style={{
         position: "relative",
-        height: "100vh",
-        minHeight: 720,
+        // svh = small viewport height, never grows with the address bar
+        // so phones don't end up with the CTA below the fold. Falls
+        // back to vh on browsers that don't support svh.
+        height: "100svh",
+        minHeight: 560,
         overflow: "hidden",
         background: bg,
       }}
@@ -219,7 +225,7 @@ export function CinematicAct({
       <motion.div
         style={{
           position: "absolute",
-          maxWidth: "min(900px, 80vw)",
+          maxWidth: "min(900px, 92vw)",
           zIndex: 2,
           ...anchorStyle,
           ...(reduce ? {} : { y: textY }),
