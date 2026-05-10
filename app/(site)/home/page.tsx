@@ -21,12 +21,13 @@ export default async function HomePage() {
 
   return (
     <main style={{ background: "#050507" }}>
-      {/* Hero — text-only with atmospheric backdrop, plus a small
-          product chip row so the section has visual structure
-          without re-introducing a procedural scene. */}
+      {/* Hero — real cover photo (eye + lens). Bottom-center anchor
+          puts the headline + chips + CTA over the scrim-darkened
+          bottom of the photo so the text remains legible. */}
       <CinematicAct
         accent="#a8c4ff"
-        anchor="center"
+        anchor="bottom-center"
+        imageUrl="/landing/mainimage.png"
         poster="/landing/ecosystem-orbit-poster.svg"
         posterAlt="Sansxel ecosystem"
         headline={<>One memory.<br/>Three surfaces.</>}
