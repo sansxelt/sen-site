@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { LensObject } from "@/components/3d/lens-object";
-import { ProductMacro } from "@/components/3d/product-macro";
-import { ProductExploded } from "@/components/3d/product-exploded";
 import { CinematicAct } from "@/components/landing/cinematic-act";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
-// Lens product page. Three product scenes (hardware, architecture,
-// day kit) intercut with engineering detail (exploded view + three
-// macros) and a modes card grid. Closes with a waitlist outro.
-// No title slabs, no chapter chips.
+// Lens product page. Hero, architecture, modes, day kit, waitlist.
+// All product visuals are real PNGs (lens-hero, case-hero) so the
+// surface is consistent with /home and /product. Procedural macros +
+// exploded view were dropped; they only made sense when the hero was
+// procedural too and the captions called out detail the photo cannot
+// show.
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -75,34 +74,12 @@ export default function LensPage() {
         }
       />
 
-      {/* Engineering detail */}
-      <ProductExploded product="lens" />
-
-      <ProductMacro
-        kicker="electronics ring"
-        title="The carrier ring"
-        body="Anodized navy aluminum, 18 mm outer diameter. Holds twenty-four sub-millimetre LEDs and six gold contact pads (the charge and data interface)."
-        specs={[
-          { label: "MATERIAL",  value: "Aluminum 6063-T6" },
-          { label: "FINISH",    value: "Anodized matte" },
-          { label: "LEDS",      value: "24 × 0.4 mm" },
-          { label: "CONTACTS",  value: "6 × Au-plated" },
-        ]}
-        poster="/landing/lens-poster.svg"
-        posterAlt="Lens electronics ring close-up"
-        cameraPosition={[0.8, 0.4, 2.4]}
-        cameraFov={32}
-        accent="#c084fc"
-        scene={<LensObject />}
-      />
-
       {/* Architecture */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-left"
-        cameraPosition={[0, 0.6, 5.2]}
-        cameraFov={38}
-        scene={<LensObject />}
+        imageUrl="/landing/lens-hero.png"
+        transparent
         poster="/landing/lens-poster.svg"
         posterAlt="Lens architecture"
         headline={<>Lens does not run heavy AI.<br/>Workshop does.</>}
@@ -161,43 +138,6 @@ export default function LensPage() {
           `}</style>
         </div>
       </section>
-
-      <ProductMacro
-        reverse
-        kicker="acrylic shell"
-        title="Hydrogel-equivalent acrylic"
-        body="Medical-grade transmission acrylic with anti-reflective coating. The display layer routes underneath without bleed-through to the wearer's eye."
-        specs={[
-          { label: "BASE",        value: "PMMA hydrogel" },
-          { label: "IOR",         value: "1.43" },
-          { label: "COATING",     value: "AR multilayer" },
-          { label: "THICKNESS",   value: "180 µm" },
-        ]}
-        poster="/landing/lens-poster.svg"
-        posterAlt="Lens acrylic shell close-up"
-        cameraPosition={[0, 1.2, 2.6]}
-        cameraFov={32}
-        accent="#a8c4ff"
-        scene={<LensObject />}
-      />
-
-      <ProductMacro
-        kicker="micro-components"
-        title="Twelve ICs, eight capacitors"
-        body="Surface-mount integrated circuits and tantalum capacitors sit between the LEDs on the inner ring, driving the display layer and managing power."
-        specs={[
-          { label: "ICS",       value: "12 × SMD" },
-          { label: "CAPS",      value: "8 × tantalum" },
-          { label: "TRACES",    value: "Cu-blue, 8 radial" },
-          { label: "POWER",     value: "0.4 W typical" },
-        ]}
-        poster="/landing/lens-poster.svg"
-        posterAlt="Lens micro-components close-up"
-        cameraPosition={[1.4, 0.2, 2.0]}
-        cameraFov={28}
-        accent="#7ab5ff"
-        scene={<LensObject />}
-      />
 
       {/* Three modes */}
       <section
@@ -291,20 +231,22 @@ export default function LensPage() {
         transparent
         poster="/landing/lens-case-poster.svg"
         posterAlt="Lens charging case"
-        headline={<>Two pairs.<br/>One smart case.</>}
+        headline={<>Lens, audio,<br/>one case.</>}
         body={
           <>
-            One charges while the other runs. Quick swap, milled gold
-            contacts in each well, four-LED charge arc per pair. Targeting
-            all-day usage when you alternate.
+            The case holds both your Sansxel Lens pairs and the audio
+            earbuds in one piece of hardware. Quick swap between Pair A
+            and Pair B; one charges while the other runs. The earbuds
+            sit alongside, charging when you set them down.
           </>
         }
         cta={{ href: "#waitlist", label: "Join the waitlist" }}
         meta={
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {[
-              { label: "Pair A", color: "#22d3ee", desc: "morning + afternoon" },
-              { label: "Pair B", color: "#c084fc", desc: "evening + travel" },
+              { label: "Pair A · Lens",  color: "#22d3ee", desc: "morning + afternoon" },
+              { label: "Pair B · Lens",  color: "#c084fc", desc: "evening + travel" },
+              { label: "Audio · earbuds", color: "#60a5fa", desc: "voice in, voice out" },
             ].map((p) => (
               <div
                 key={p.label}

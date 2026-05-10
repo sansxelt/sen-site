@@ -111,12 +111,14 @@ export default async function HomePage() {
         imageUrl="/landing/case-hero.png"
         transparent
         poster="/landing/lens-case-poster.svg"
-        posterAlt="Lens charging case"
-        headline={<>Two pairs.<br/>One smart case.</>}
+        posterAlt="Lens and audio charging case"
+        headline={<>Lens, audio,<br/>one case.</>}
         body={
           <>
-            Quick swap between Pair A and Pair B; one charges while
-            the other runs. Targeting all-day usage when you alternate.
+            Charges both your Sansxel Lens pairs and the audio earbuds
+            in one piece of hardware. Quick swap between pairs; one
+            charges while the other runs. Targeting all-day usage when
+            you alternate.
           </>
         }
         cta={{ href: "/lens#day-kit", label: "See the Day Kit" }}
