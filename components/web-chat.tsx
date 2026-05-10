@@ -2983,32 +2983,9 @@ export function WebChat({
         </div>
       )}
 
-      {/* Web is the trial. Desktop is where the real workshop lives.
-          Only shown on the empty state; once a conversation starts
-          the card disappears so it doesn't crowd the chat. */}
-      {showEmpty && (
-        <div className="webchat-desktop-cta">
-          <div className="webchat-desktop-cta-copy">
-            <span className="webchat-desktop-cta-kicker">
-              The real workshop runs on desktop
-            </span>
-            <p>
-              File edits, MCP tools, the full voice loop without browser permissions.
-              Web is great for a taste, desktop is where you ship.
-            </p>
-          </div>
-          <div className="webchat-desktop-cta-actions">
-            <div className="webchat-desktop-cta-badges" aria-hidden="true">
-              <span className="webchat-desktop-chip">Touches your files</span>
-              <span className="webchat-desktop-chip">MCP servers</span>
-              <span className="webchat-desktop-chip">No mic prompts</span>
-            </div>
-            <a href="/download" className="webchat-desktop-cta-link">
-              Get sansxel desktop →
-            </a>
-          </div>
-        </div>
-      )}
+      {/* Desktop CTA card removed from the empty state, it dominated
+          the page before the user even reached the chat. The desktop
+          link still lives in the dashboard nav (Bench / Desktop). */}
 
       <div className="webchat-scroll" ref={scrollRef} onScroll={onScroll}>
         {/* Phase H — project-attached strip. Shows whether the
@@ -3298,15 +3275,32 @@ export function WebChat({
           </div>
         )}
         {showJumpToBottom && (
-          <button
-            type="button"
-            onClick={jumpToBottom}
-            className="webchat-jump-bottom"
-            aria-label="Jump to latest"
-          >
-            <span aria-hidden>↓</span>
-            <span>Jump to latest</span>
-          </button>
+          <div className="webchat-jump-bottom">
+            <button
+              type="button"
+              onClick={jumpToBottom}
+              aria-label="Jump to latest"
+              style={{
+                all: "unset",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span aria-hidden>↓</span>
+              <span>Latest</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowJumpToBottom(false)}
+              aria-label="Dismiss"
+              className="webchat-jump-bottom-x"
+              title="Dismiss"
+            >
+              ×
+            </button>
+          </div>
         )}
       </div>
 

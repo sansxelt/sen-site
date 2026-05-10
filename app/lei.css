@@ -1796,31 +1796,50 @@ html[data-theme="light"] .project-picker-empty {
    click. ChatGPT/Claude pattern. */
 .webchat-jump-bottom {
   position: absolute;
-  left: 50%;
+  right: 16px;
   bottom: 16px;
-  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
+  gap: 4px;
+  padding: 5px 5px 5px 9px;
   border-radius: 999px;
-  background: rgba(15,12,28,0.95);
-  border: 1px solid rgba(167,139,250,0.45);
+  background: rgba(15,12,28,0.92);
+  border: 1px solid rgba(167,139,250,0.40);
   color: #ede9fe;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 500;
   cursor: pointer;
   z-index: 10;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.40);
   animation: webchat-jump-in 200ms ease-out;
 }
 .webchat-jump-bottom:hover {
   background: rgba(20,16,36,0.98);
   border-color: rgba(167,139,250,0.7);
 }
+.webchat-jump-bottom-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(237,233,254,0.65);
+  font-size: 13px;
+  line-height: 1;
+  margin-left: 4px;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.webchat-jump-bottom-x:hover {
+  background: rgba(255,255,255,0.10);
+  color: #fff;
+}
 @keyframes webchat-jump-in {
-  from { opacity: 0; transform: translate(-50%, 6px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Live transcript styling, make it visually distinct from typed
@@ -1866,19 +1885,15 @@ textarea.is-live-transcript::after {
   border-color: rgba(251,146,60,0.65);
 }
 .webchat-credit-chip--empty {
-  background: linear-gradient(135deg, rgba(239,68,68,0.20), rgba(217,70,239,0.16));
-  border-color: rgba(239,68,68,0.55);
-  color: #fff;
-  box-shadow: 0 0 0 0 rgba(239,68,68,0.5);
-  animation: webchat-credit-pulse 2.4s ease-in-out infinite;
+  /* Quieter than the previous pulsing gradient. Still amber to
+     signal action needed, no glow / pulse / colour-shift. */
+  background: rgba(251,146,60,0.18);
+  border-color: rgba(251,146,60,0.55);
+  color: #fed7aa;
 }
 .webchat-credit-chip--empty:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(239,68,68,0.35);
-}
-@keyframes webchat-credit-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
-  50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0.18); }
+  background: rgba(251,146,60,0.26);
+  border-color: rgba(251,146,60,0.70);
 }
 
 .webchat-vstyle {
