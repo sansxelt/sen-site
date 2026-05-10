@@ -186,11 +186,12 @@ export function ModeSwitcher({
   onModeChange: (mode: AuthMode) => void;
 }) {
   return (
-    // Sized to content (not w-full) so the active 'Create account'
-    // pill never clips. Heading flex-row above shrinks the ModeSwitcher
-    // when w-full was set; sizing to content + a wrap-friendly heading
-    // row fixes the 'Create acco…' clipping.
-    <div className="inline-flex shrink-0 rounded-[20px] border border-white/10 bg-white/5 p-1 text-sm">
+    // Sized to content (not w-full) so the active pill never clips.
+    // Wrapper bg removed (was bg-white/5) and gap-1 added — without
+    // an explicit gap the rounded-[16px] corners of the inactive
+    // button left a tiny notch where the wrapper bg leaked through
+    // between the two pills, reading as a stray grey square.
+    <div className="inline-flex shrink-0 gap-1 rounded-[20px] border border-white/10 p-1 text-sm">
       <button
         type="button"
         onClick={() => onModeChange("signup")}
