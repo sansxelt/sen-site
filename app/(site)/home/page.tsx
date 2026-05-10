@@ -4,7 +4,6 @@ import { AuthFlow } from "@/components/auth-flow";
 import { CinematicAct } from "@/components/landing/cinematic-act";
 import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
 import { WorkshopBrain } from "@/components/3d/workshop-brain";
-import { WhisperEarbud } from "@/components/3d/whisper-earbud";
 import { LensCase } from "@/components/3d/lens-case";
 import { EcosystemConnection } from "@/components/3d/ecosystem-connection";
 import { getSignInPath } from "@/lib/auth-ui";
@@ -72,9 +71,8 @@ export default async function HomePage() {
       <CinematicAct
         accent="#60a5fa"
         anchor="bottom-left"
-        cameraPosition={[0, 0.4, 6.5]}
-        cameraFov={40}
-        scene={<WhisperEarbud />}
+        imageUrl="/landing/whisper-hero.png"
+        transparent
         poster="/landing/whisper-poster.svg"
         posterAlt="Whisper"
         headline={<>Whisper, the<br/>voice layer.</>}
