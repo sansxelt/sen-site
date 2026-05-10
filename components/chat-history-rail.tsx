@@ -523,7 +523,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
               title="Start a new chat"
             >
               <span aria-hidden className="pill-glyph">＋</span>
-              <span>New</span>
+              <span>New chat</span>
             </button>
           </div>
         </div>
