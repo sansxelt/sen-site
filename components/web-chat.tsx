@@ -250,14 +250,16 @@ export function WebChat({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Auto-grow the composer as the user types. Reset height to auto
-  // so we measure the natural scrollHeight, then set to that. CSS
-  // caps via max-height; once the content exceeds that the textarea
-  // becomes scrollable instead of taller.
+  // so we measure the natural scrollHeight, then set to that —
+  // capped at MAX_COMPOSER_HEIGHT. Past the cap the textarea becomes
+  // internally scrollable (the cursor stays visible because the
+  // browser keeps the caret in view inside a scrollable textarea).
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
+    const MAX_COMPOSER_HEIGHT = 200;
     el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
+    el.style.height = `${Math.min(el.scrollHeight, MAX_COMPOSER_HEIGHT)}px`;
   }, [input]);
 
   // v0.1.16, Ctrl+V / Cmd+V paste support, three modes:
@@ -3303,34 +3305,10 @@ export function WebChat({
             )}
           </div>
         )}
-        {showJumpToBottom && (
-          <div className="webchat-jump-bottom">
-            <button
-              type="button"
-              onClick={jumpToBottom}
-              aria-label="Jump to latest"
-              style={{
-                all: "unset",
-                cursor: "pointer",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              <span aria-hidden>↓</span>
-              <span>Latest</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowJumpToBottom(false)}
-              aria-label="Dismiss"
-              className="webchat-jump-bottom-x"
-              title="Dismiss"
-            >
-              ×
-            </button>
-          </div>
-        )}
+        {/* Latest pill moved out of .webchat-scroll into the form
+            wrapper so it sits above the composer instead of at the
+            bottom of the scroll area. Renders inside .webchat-input
+            now, see below. */}
       </div>
 
       {lei.attachments.length > 0 && (
@@ -3383,6 +3361,39 @@ export function WebChat({
           void send();
         }}
       >
+        {/* Latest pill — anchored to the top edge of the composer
+            so it sits just above the input regardless of how tall
+            the textarea has grown. Slides into place; fades after
+            3s of scroll idle (logic in onScroll above). */}
+        {showJumpToBottom && (
+          <div className="webchat-jump-bottom">
+            <button
+              type="button"
+              onClick={jumpToBottom}
+              aria-label="Jump to latest"
+              style={{
+                all: "unset",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span aria-hidden>↓</span>
+              <span>Latest</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowJumpToBottom(false)}
+              aria-label="Dismiss"
+              className="webchat-jump-bottom-x"
+              title="Dismiss"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {voiceState === "recording" && <WebVoiceWave mode="listening" />}
         {voiceState === "speaking" && <WebVoiceWave mode="speaking" />}
 
