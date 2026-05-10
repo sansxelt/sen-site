@@ -21,20 +21,50 @@ export default async function HomePage() {
 
   return (
     <main style={{ background: "#050507" }}>
-      {/* Hero — text-only with atmospheric backdrop. Procedural
-          orbit was the most visible placeholder visual; the page
-          now opens on the typography itself. */}
+      {/* Hero — text-only with atmospheric backdrop, plus a small
+          product chip row so the section has visual structure
+          without re-introducing a procedural scene. */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-center"
         poster="/landing/ecosystem-orbit-poster.svg"
         posterAlt="Sansxel ecosystem"
-        headline={<>Lens, Whisper, Workshop.<br/>One memory.</>}
+        headline={<>One memory.<br/>Three surfaces.</>}
         body={
           <>
             A visual interface, a voice layer, and a workspace. Different
             surfaces, the same context.
           </>
+        }
+        meta={
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 14,
+              padding: "8px 16px",
+              borderRadius: 999,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.03)",
+              fontSize: 12,
+              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              letterSpacing: "0.06em",
+              color: "rgba(229,231,235,0.78)",
+            }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#c084fc", boxShadow: "0 0 8px #c084fc" }} />
+              Lens
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60a5fa", boxShadow: "0 0 8px #60a5fa" }} />
+              Whisper
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a8c4ff", boxShadow: "0 0 8px #a8c4ff" }} />
+              Workshop
+            </span>
+          </div>
         }
         cta={{
           href: signedIn ? "/app" : "/signin?callbackUrl=/app",
@@ -124,24 +154,11 @@ export default async function HomePage() {
         cta={{ href: "/workshop", label: "Open Workshop" }}
       />
 
-      {/* Architecture — text-only. Same reasoning as Workshop:
-          the procedural orbit was a placeholder visual; quieter to
-          carry the architecture story in copy alone with an
-          atmospheric backdrop. */}
-      <CinematicAct
-        accent="#a8c4ff"
-        anchor="bottom-center"
-        poster="/landing/ecosystem-orbit-poster.svg"
-        posterAlt="Sansxel architecture"
-        headline={<>One memory.<br/>Every surface reads from it.</>}
-        body={
-          <>
-            What you said to Whisper this morning is in Workshop tonight,
-            on Lens tomorrow. No imports, no syncs.
-          </>
-        }
-        cta={{ href: "/product", label: "See the architecture" }}
-      />
+      {/* Architecture act removed — was a duplicate of the Hero
+          (both text-only, both centered on black, both leading with
+          "One memory"). The single-bus story already lives in the
+          Hero headline + the Day Kit body. /product carries the
+          longer architecture explanation for users who want it. */}
 
       {/* Outro: pricing + community + final CTA */}
       <section
