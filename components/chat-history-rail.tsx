@@ -779,7 +779,16 @@ function ThreadRow({
             if (e.key === "Enter") onSubmitRename();
             else if (e.key === "Escape") onCancelRename();
           }}
-          onBlur={onSubmitRename}
+          onBlur={(e) => {
+            // If focus moved to the auto-rename toggle (checkbox or
+            // its label), do NOT submit. Submitting would call
+            // submitRename which optimistically forces auto_rename:false
+            // and unmounts the checkbox before the click registers,
+            // making the checkbox appear to revert immediately.
+            const next = e.relatedTarget as HTMLElement | null;
+            if (next && next.closest(".chat-history-auto-rename-toggle")) return;
+            onSubmitRename();
+          }}
           className="chat-history-edit-input"
         />
         {/* Phase H — opt-in to continuous AI rename. When checked,

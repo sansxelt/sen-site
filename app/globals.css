@@ -3987,6 +3987,14 @@ div[id] {
 .sx-nav-item--active-platform  { border-left-color: var(--sx-yellow); }
 .sx-nav-item--active-marketing { border-left-color: var(--sx-blue); }
 
+/* Coming-soon nav row: muted, not clickable, no hover state */
+.sx-nav-item--soon {
+  color: rgba(255,255,255,0.32);
+  cursor: not-allowed;
+  user-select: none;
+}
+.sx-nav-item--soon:hover { background: transparent; color: rgba(255,255,255,0.32); }
+
 /* ── Panel ──────────────────────────────────────────────────── */
 .sx-panel {
   border-radius: 12px;

@@ -19,6 +19,10 @@ type NavItem = {
   href: string;
   label: string;
   icon: React.ReactNode;
+  // True for hardware surfaces that exist on the marketing site but
+  // do not have a real configuration page yet. Renders as a muted
+  // non-clickable row with a "soon" pill instead of a link.
+  soon?: boolean;
 };
 
 type NavGroup = {
@@ -296,6 +300,24 @@ function BillingIcon() {
   );
 }
 
+function LensIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function AudioIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
+      <path d="M3 5h2l3-2.5v11L5 11H3V5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M11 6c.8.6 1.3 1.4 1.3 2s-.5 1.4-1.3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // Workshop stations. Chat moved out, it lives in the dedicated
 // right-side history rail next to the canvas. Make group dropped
 // because it had only one item that no longer belongs here.
@@ -324,6 +346,13 @@ const navGroups: NavGroup[] = [
       { href: "/account/settings",     label: "Settings",     icon: <SettingsIcon /> },
       { href: "/account/updates",      label: "Updates",      icon: <UpdatesIcon /> },
       { href: "/account/download",     label: "Desktop",      icon: <DownloadIcon /> },
+    ],
+  },
+  {
+    label: "Hardware",
+    items: [
+      { href: "/lens",    label: "Lens",  icon: <LensIcon />,  soon: true },
+      { href: "/whisper", label: "Audio", icon: <AudioIcon />, soon: true },
     ],
   },
 ];
@@ -420,22 +449,52 @@ export function DashboardNav({
       ]
     : navGroups;
 
-  const navLink = (item: NavItem) => (
-    <Link
-      key={item.href}
-      href={item.href}
-      className={`sx-nav-item${
-        isActive(item.href)
-          ? zone === "platform"
-            ? " sx-nav-item--active sx-nav-item--active-platform"
-            : " sx-nav-item--active"
-          : ""
-      }`}
-    >
-      {item.icon}
-      {item.label}
-    </Link>
-  );
+  const navLink = (item: NavItem) => {
+    if (item.soon) {
+      return (
+        <span
+          key={item.href}
+          className="sx-nav-item sx-nav-item--soon"
+          aria-disabled="true"
+          title="Coming soon"
+        >
+          {item.icon}
+          <span style={{ flex: 1 }}>{item.label}</span>
+          <span
+            style={{
+              fontSize: 9,
+              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              padding: "2px 6px",
+              borderRadius: 100,
+              border: "1px solid rgba(168,196,255,0.20)",
+              background: "rgba(168,196,255,0.06)",
+              color: "rgba(168,196,255,0.70)",
+            }}
+          >
+            soon
+          </span>
+        </span>
+      );
+    }
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`sx-nav-item${
+          isActive(item.href)
+            ? zone === "platform"
+              ? " sx-nav-item--active sx-nav-item--active-platform"
+              : " sx-nav-item--active"
+            : ""
+        }`}
+      >
+        {item.icon}
+        {item.label}
+      </Link>
+    );
+  };
 
   return (
     <>
