@@ -100,7 +100,11 @@ export function CinematicAct({
       case "bottom-left":
         return { left: "clamp(20px, 5vw, 80px)", bottom: "clamp(80px, 14vh, 160px)", textAlign: "left" };
       case "bottom-center":
-        return { left: "50%", transform: "translateX(-50%)", bottom: "clamp(80px, 14vh, 160px)", textAlign: "center" };
+        // Center via left:0 / right:0 / margin auto rather than
+        // translateX(-50%). Framer combines `y` into a single
+        // transform string and clobbers the inline translateX, which
+        // shifts the text off-center and clips it on the right edge.
+        return { left: 0, right: 0, marginInline: "auto", bottom: "clamp(80px, 14vh, 160px)", textAlign: "center" };
       case "top-right":
         return { right: "clamp(20px, 5vw, 80px)", top: "clamp(120px, 16vh, 200px)", textAlign: "right" };
     }

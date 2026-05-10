@@ -4,7 +4,6 @@ import { AuthFlow } from "@/components/auth-flow";
 import { CinematicAct } from "@/components/landing/cinematic-act";
 import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
 import { WorkshopBrain } from "@/components/3d/workshop-brain";
-import { EcosystemConnection } from "@/components/3d/ecosystem-connection";
 import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
@@ -124,16 +123,20 @@ export default async function HomePage() {
         cta={{ href: "/lens#day-kit", label: "See the Day Kit" }}
       />
 
-      {/* Architecture */}
+      {/* Architecture — atmospheric orbit instead of the diagrammatic
+          connection scene with explicit boxes + trace lines. The copy
+          carries the architecture story; the visual is a quiet
+          callback to the hero so the page closes on the same image
+          it opened on. */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-center"
-        cameraPosition={[0, 1.2, 5.5]}
-        cameraFov={42}
-        scene={<EcosystemConnection />}
-        poster="/landing/ecosystem-poster.svg"
+        cameraPosition={[0, 0.8, 9.0]}
+        cameraFov={48}
+        scene={<EcosystemOrbit />}
+        poster="/landing/ecosystem-orbit-poster.svg"
         posterAlt="Sansxel architecture"
-        headline={<>One memory bus.<br/>Every surface reads from it.</>}
+        headline={<>One memory.<br/>Every surface reads from it.</>}
         body={
           <>
             What you said to Whisper this morning is in Workshop tonight,
