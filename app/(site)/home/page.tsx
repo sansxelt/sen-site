@@ -106,12 +106,13 @@ export default async function HomePage() {
         cta={{ href: "/lens#day-kit", label: "See the Day Kit" }}
       />
 
-      {/* Workshop — text-only, no real PNG yet */}
+      {/* Workshop */}
       <CinematicAct
         accent="#a8c4ff"
-        anchor="bottom-center"
+        anchor="bottom-left"
+        imageUrl="/landing/workshop-hero.png"
         poster="/landing/workshop-poster.svg"
-        posterAlt="Workshop"
+        posterAlt="Workshop UI"
         headline={<>Workshop holds<br/>your context.</>}
         body={
           <>

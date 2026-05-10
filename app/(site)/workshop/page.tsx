@@ -229,15 +229,18 @@ export default function WorkshopPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, ease: EASE, delay: 0.4 }}
           >
-            <Lazy3DScene
-              poster="/landing/workshop-poster.svg"
-              alt="Workshop dashboard panels"
-              cameraPosition={[0, 0.4, 6.5]}
-              cameraFov={42}
-              style={{ width: "100%", height: "100%" }}
-            >
-              <WorkshopBrain />
-            </Lazy3DScene>
+            <img
+              src="/landing/workshop-hero.png"
+              alt="Workshop UI"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,0.06)",
+                display: "block",
+              }}
+            />
           </motion.div>
         </motion.div>
       </section>

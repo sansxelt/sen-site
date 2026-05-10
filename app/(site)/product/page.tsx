@@ -35,6 +35,10 @@ type ProductDef = {
   // R3F scene. The page's CinematicAct equivalent will object-fit:
   // contain so the dark page background reads through transparency.
   imageUrl?: string;
+  // "contain" (default) for transparent product PNGs — preserves
+  // aspect, dark page bg shows through. "cover" for rectangular UI
+  // screenshots that should fill the frame.
+  imageFit?: "contain" | "cover";
   accent: string;
   cameraPosition?: [number, number, number];
   cameraFov?: number;
@@ -67,12 +71,10 @@ const PRODUCTS: ProductDef[] = [
     ],
     cta: { href: "/workshop", label: "Open Workshop" },
     poster: "/landing/workshop-poster.svg",
-    posterAlt: "Workshop dashboard panels",
-    // Visual deliberately absent — procedural geometry was reading
-    // as a placeholder render alongside the real product photos.
-    // Solo layout will center this entry until a real Workshop
-    // hero PNG arrives.
+    posterAlt: "Workshop UI",
     scene: null,
+    imageUrl: "/landing/workshop-hero.png",
+    imageFit: "cover",
     accent: "#a8c4ff",
     cameraPosition: [0, 0.4, 6.5],
     cameraFov: 42,
@@ -537,7 +539,9 @@ function ProductSection({ product, reverse }: { product: ProductDef; reverse: bo
               style={{
                 width: "100%",
                 height: "100%",
-                objectFit: "contain",
+                objectFit: product.imageFit ?? "contain",
+                borderRadius: product.imageFit === "cover" ? 14 : 0,
+                border: product.imageFit === "cover" ? "1px solid rgba(255,255,255,0.06)" : "none",
                 display: "block",
               }}
             />
