@@ -33,6 +33,10 @@ type Spec = {
   y?: string | string[];
   stacked?: boolean;
   colors?: string[];
+  // Y-axis scale. Use "log" when the ratio between the largest and
+  // smallest series is > 10x — without it, smaller series flatten
+  // to the baseline. Linear is the default.
+  yScale?: "linear" | "log";
 };
 
 const DEFAULT_COLORS = ["#a8c4ff", "#c084fc", "#22d3ee", "#60a5fa", "#fbbf24", "#22c55e", "#f87171", "#7ab5ff"];
@@ -112,6 +116,32 @@ export function ChartRenderer({ source }: { source: string }) {
       : Object.keys(data[0]).filter((k) => k !== xKey);
   const colors = spec.colors ?? DEFAULT_COLORS;
 
+  // Log-scale support. Recharts needs scale="log" + an explicit
+  // numeric domain; "auto" breaks because log(0) is -Infinity. Find
+  // the smallest positive value across all series for the lower
+  // bound (or fall back to 1 if everything is 0).
+  const isLog = spec.yScale === "log";
+  const yAxisProps = isLog
+    ? (() => {
+        let minPositive = Infinity;
+        let maxValue = 0;
+        for (const row of data) {
+          for (const k of yKeys) {
+            const v = Number(row[k]);
+            if (!Number.isFinite(v)) continue;
+            if (v > 0 && v < minPositive) minPositive = v;
+            if (v > maxValue) maxValue = v;
+          }
+        }
+        if (!Number.isFinite(minPositive)) minPositive = 1;
+        return {
+          scale: "log" as const,
+          domain: [minPositive, Math.max(maxValue, minPositive * 10)] as [number, number],
+          allowDataOverflow: true,
+        };
+      })()
+    : {};
+
   switch (spec.type) {
     case "line":
       return (
@@ -120,7 +150,7 @@ export function ChartRenderer({ source }: { source: string }) {
             <LineChart data={data} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
               <CartesianGrid {...GRID} />
               <XAxis dataKey={xKey} {...AXIS} />
-              <YAxis {...AXIS} />
+              <YAxis {...AXIS} {...yAxisProps} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               {yKeys.length > 1 && <Legend wrapperStyle={{ fontSize: 11, color: "#a1a1aa" }} />}
               {yKeys.map((k, i) => (
@@ -145,7 +175,7 @@ export function ChartRenderer({ source }: { source: string }) {
             <BarChart data={data} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
               <CartesianGrid {...GRID} />
               <XAxis dataKey={xKey} {...AXIS} />
-              <YAxis {...AXIS} />
+              <YAxis {...AXIS} {...yAxisProps} />
               <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(168,196,255,0.06)" }} />
               {yKeys.length > 1 && <Legend wrapperStyle={{ fontSize: 11, color: "#a1a1aa" }} />}
               {yKeys.map((k, i) => (
@@ -168,7 +198,7 @@ export function ChartRenderer({ source }: { source: string }) {
             <AreaChart data={data} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
               <CartesianGrid {...GRID} />
               <XAxis dataKey={xKey} {...AXIS} />
-              <YAxis {...AXIS} />
+              <YAxis {...AXIS} {...yAxisProps} />
               <Tooltip contentStyle={TOOLTIP_STYLE} />
               {yKeys.length > 1 && <Legend wrapperStyle={{ fontSize: 11, color: "#a1a1aa" }} />}
               {yKeys.map((k, i) => (
