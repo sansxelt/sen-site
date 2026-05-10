@@ -610,15 +610,22 @@ export default function ProductPage() {
             transition={{ duration: 0.7, ease: EASE, delay: 0.3 }}
             style={{ fontSize: "clamp(1rem, 1.5vw, 1.25rem)", color: "rgba(255,255,255,0.62)", maxWidth: 580, margin: "0 auto", lineHeight: 1.55 }}
           >
-            Workshop is the brain. Whisper is the voice. Lens is the eye.
+            Lens is the eye. Whisper is the voice. Workshop is the brain.
             Copilot acts. Platform builds. All on one persistent memory layer.
           </motion.p>
         </div>
       </section>
 
-      {PRODUCTS.map((p, i) => (
-        <ProductSection key={p.key} product={p} reverse={i % 2 === 1} />
-      ))}
+      {/* Render order: hardware first (Lens, Whisper, Day Kit),
+          then platform / software surfaces (Workshop, Copilot,
+          Platform). Lens leads because it is the flagship visual
+          product. */}
+      {(["lens", "whisper", "lens-day-kit", "workshop", "copilot", "platform"] as const)
+        .map((key) => PRODUCTS.find((p) => p.key === key))
+        .filter((p): p is ProductDef => Boolean(p))
+        .map((p, i) => (
+          <ProductSection key={p.key} product={p} reverse={i % 2 === 1} />
+        ))}
 
       <style>{`
         @media (min-width: 980px) {

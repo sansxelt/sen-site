@@ -29,11 +29,11 @@ export default async function HomePage() {
         anchor="bottom-center"
         poster="/landing/ecosystem-orbit-poster.svg"
         posterAlt="Sansxel ecosystem"
-        headline={<>Workshop, Whisper, Lens.<br/>One memory.</>}
+        headline={<>Lens, Whisper, Workshop.<br/>One memory.</>}
         body={
           <>
-            A workspace, a voice layer, and a visual interface direction.
-            Different surfaces, the same context.
+            A visual interface, a voice layer, and a workspace. Different
+            surfaces, the same context.
           </>
         }
         cta={{
@@ -42,45 +42,11 @@ export default async function HomePage() {
         }}
       />
 
-      {/* Workshop — text-only act with atmospheric backdrop. The
-          procedural tablet+satellites geometry was reading as a
-          placeholder render alongside the real product photos in
-          the other acts; quieter to drop the visual entirely until
-          a real Workshop hero arrives. */}
-      <CinematicAct
-        accent="#a8c4ff"
-        anchor="bottom-center"
-        poster="/landing/workshop-poster.svg"
-        posterAlt="Workshop"
-        headline={<>Workshop holds<br/>your context.</>}
-        body={
-          <>
-            Chat, projects, files, memory, and voice in one workspace.
-            Every action writes to the same context layer, so the next
-            prompt picks up where the last one left off.
-          </>
-        }
-        cta={{ href: "/workshop", label: "Open Workshop" }}
-      />
-
-      {/* Whisper */}
-      <CinematicAct
-        accent="#60a5fa"
-        anchor="bottom-left"
-        imageUrl="/landing/whisper-hero.png"
-        transparent
-        poster="/landing/whisper-poster.svg"
-        posterAlt="Whisper"
-        headline={<>Whisper, the<br/>voice layer.</>}
-        body={
-          <>
-            Low-latency voice in, natural voice out. Works with the
-            earbuds you already wear today; dedicated Sansxel hardware
-            later.
-          </>
-        }
-        cta={{ href: "/whisper", label: "Explore Whisper" }}
-      />
+      {/* Order: Lens > Audio (Whisper) > Day Kit > Workshop. Lens
+          first because it is the flagship visual product; audio
+          second because it is the wearable companion; case third
+          because it is the accessory; workshop last because it is
+          the platform / software surface. */}
 
       {/* Lens */}
       <CinematicAct
@@ -101,6 +67,25 @@ export default async function HomePage() {
         cta={{ href: "/lens", label: "See Lens" }}
       />
 
+      {/* Whisper (audio) */}
+      <CinematicAct
+        accent="#60a5fa"
+        anchor="bottom-left"
+        imageUrl="/landing/whisper-hero.png"
+        transparent
+        poster="/landing/whisper-poster.svg"
+        posterAlt="Whisper"
+        headline={<>Whisper, the<br/>voice layer.</>}
+        body={
+          <>
+            Low-latency voice in, natural voice out. Works with the
+            earbuds you already wear today; dedicated Sansxel hardware
+            later.
+          </>
+        }
+        cta={{ href: "/whisper", label: "Explore Whisper" }}
+      />
+
       {/* Day Kit case */}
       <CinematicAct
         accent="#c084fc"
@@ -119,6 +104,23 @@ export default async function HomePage() {
           </>
         }
         cta={{ href: "/lens#day-kit", label: "See the Day Kit" }}
+      />
+
+      {/* Workshop — text-only, no real PNG yet */}
+      <CinematicAct
+        accent="#a8c4ff"
+        anchor="bottom-center"
+        poster="/landing/workshop-poster.svg"
+        posterAlt="Workshop"
+        headline={<>Workshop holds<br/>your context.</>}
+        body={
+          <>
+            Chat, projects, files, memory, and voice in one workspace.
+            Every action writes to the same context layer, so the next
+            prompt picks up where the last one left off.
+          </>
+        }
+        cta={{ href: "/workshop", label: "Open Workshop" }}
       />
 
       {/* Architecture — text-only. Same reasoning as Workshop:
