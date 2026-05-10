@@ -24,7 +24,7 @@ import { Scrim } from "./cinematic-scrim";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-type Anchor = "bottom-left" | "bottom-center" | "top-right";
+type Anchor = "bottom-left" | "bottom-center" | "top-right" | "center";
 
 type Props = {
   headline: ReactNode;
@@ -107,6 +107,21 @@ export function CinematicAct({
         return { left: 0, right: 0, marginInline: "auto", bottom: "clamp(80px, 14vh, 160px)", textAlign: "center" };
       case "top-right":
         return { right: "clamp(20px, 5vw, 80px)", top: "clamp(120px, 16vh, 200px)", textAlign: "right" };
+      case "center":
+        // Vertically + horizontally centered. Wrapper fills the
+        // section (inset: 0) and uses flex to center its children.
+        // We can't translateY(-50%) here because Framer's y parallax
+        // shares the transform string and would overwrite our manual
+        // translate.
+        return {
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          padding: "clamp(40px, 8vh, 100px) clamp(20px, 5vw, 80px)",
+        };
     }
   })();
 

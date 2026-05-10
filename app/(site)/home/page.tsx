@@ -26,7 +26,7 @@ export default async function HomePage() {
           without re-introducing a procedural scene. */}
       <CinematicAct
         accent="#a8c4ff"
-        anchor="bottom-center"
+        anchor="center"
         poster="/landing/ecosystem-orbit-poster.svg"
         posterAlt="Sansxel ecosystem"
         headline={<>One memory.<br/>Three surfaces.</>}
@@ -192,7 +192,7 @@ export default async function HomePage() {
             </div>
 
             <div
-              style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(2, 1fr)" }}
+              style={{ display: "grid", gap: 18, gridTemplateColumns: "1fr" }}
               className="lp-pricing-grid"
             >
               {pricingPreview.map((plan) => (
@@ -395,8 +395,12 @@ export default async function HomePage() {
         </div>
 
         <style>{`
-          @media (min-width: 768px)  { .lp-pricing-grid { grid-template-columns: repeat(2, 1fr) !important; } }
-          @media (min-width: 1024px) { .lp-pricing-grid { grid-template-columns: repeat(4, 1fr) !important; } }
+          /* Phone: stacked. Tablet: 2-up. Desktop: 4-up with more
+             breathing room. Card paddings + gap together give the
+             pricing block the space it was missing on mid-size
+             viewports. */
+          @media (min-width: 640px)  { .lp-pricing-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 20px !important; } }
+          @media (min-width: 1180px) { .lp-pricing-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 22px !important; } }
           @media (min-width: 640px)  { .landing-quick-nav { grid-template-columns: repeat(4, 1fr) !important; } }
         `}</style>
       </section>
