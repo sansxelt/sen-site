@@ -24,6 +24,10 @@ type ProductDef = {
   poster: string;
   posterAlt: string;
   scene: React.ReactNode;
+  // When present, render a real product PNG instead of the procedural
+  // R3F scene. The page's CinematicAct equivalent will object-fit:
+  // contain so the dark page background reads through transparency.
+  imageUrl?: string;
   accent: string;
   cameraPosition?: [number, number, number];
   cameraFov?: number;
@@ -66,6 +70,7 @@ const PRODUCTS: ProductDef[] = [
     poster: "/landing/whisper-poster.svg",
     posterAlt: "Whisper earbud with voice waveform",
     scene: <WhisperEarbud />,
+    imageUrl: "/landing/whisper-hero.png",
     accent: "#60a5fa",
     cameraPosition: [0, 0.4, 6.5],
     cameraFov: 42,
@@ -86,6 +91,7 @@ const PRODUCTS: ProductDef[] = [
     poster: "/landing/lens-poster.svg",
     posterAlt: "Transparent contact lens",
     scene: <LensObject />,
+    imageUrl: "/landing/lens-hero.png",
     accent: "#c084fc",
     cameraPosition: [0, 0.6, 5.5],
     cameraFov: 40,
@@ -106,6 +112,7 @@ const PRODUCTS: ProductDef[] = [
     poster: "/landing/lens-case-poster.svg",
     posterAlt: "Lens charging case",
     scene: <LensCase />,
+    imageUrl: "/landing/case-hero.png",
     accent: "#c084fc",
     cameraPosition: [2.2, 1.6, 4],
     cameraFov: 38,
@@ -337,15 +344,28 @@ function ProductSection({ product, reverse }: { product: ProductDef; reverse: bo
           }}
           className="product-stage"
         >
-          <Lazy3DScene
-            poster={product.poster}
-            alt={product.posterAlt}
-            cameraPosition={product.cameraPosition || [0, 0, 6]}
-            cameraFov={product.cameraFov || 45}
-            style={{ width: "100%", height: "100%" }}
-          >
-            {product.scene}
-          </Lazy3DScene>
+          {product.imageUrl ? (
+            <img
+              src={product.imageUrl}
+              alt={product.posterAlt}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                display: "block",
+              }}
+            />
+          ) : (
+            <Lazy3DScene
+              poster={product.poster}
+              alt={product.posterAlt}
+              cameraPosition={product.cameraPosition || [0, 0, 6]}
+              cameraFov={product.cameraFov || 45}
+              style={{ width: "100%", height: "100%" }}
+            >
+              {product.scene}
+            </Lazy3DScene>
+          )}
         </motion.div>
       </div>
     </section>

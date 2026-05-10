@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { LensObject } from "@/components/3d/lens-object";
-import { LensCase } from "@/components/3d/lens-case";
 import { ProductMacro } from "@/components/3d/product-macro";
 import { ProductExploded } from "@/components/3d/product-exploded";
 import { CinematicAct } from "@/components/landing/cinematic-act";
@@ -288,9 +287,8 @@ export default function LensPage() {
       <CinematicAct
         accent="#c084fc"
         anchor="bottom-left"
-        cameraPosition={[2.4, 1.5, 4.2]}
-        cameraFov={36}
-        scene={<LensCase />}
+        imageUrl="/landing/case-hero.png"
+        transparent
         poster="/landing/lens-case-poster.svg"
         posterAlt="Lens charging case"
         headline={<>Two pairs.<br/>One smart case.</>}

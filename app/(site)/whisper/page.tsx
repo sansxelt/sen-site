@@ -165,15 +165,16 @@ export default function WhisperPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, ease: EASE, delay: 0.4 }}
           >
-            <Lazy3DScene
-              poster="/landing/whisper-poster.svg"
-              alt="Whisper earbud with voice waveform"
-              cameraPosition={[0, 0.4, 6.5]}
-              cameraFov={42}
-              style={{ width: "100%", height: "100%" }}
-            >
-              <WhisperEarbud />
-            </Lazy3DScene>
+            <img
+              src="/landing/whisper-hero.png"
+              alt="Whisper earbud"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                display: "block",
+              }}
+            />
           </motion.div>
         </motion.div>
       </section>

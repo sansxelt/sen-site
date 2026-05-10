@@ -4,7 +4,6 @@ import { AuthFlow } from "@/components/auth-flow";
 import { CinematicAct } from "@/components/landing/cinematic-act";
 import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
 import { WorkshopBrain } from "@/components/3d/workshop-brain";
-import { LensCase } from "@/components/3d/lens-case";
 import { EcosystemConnection } from "@/components/3d/ecosystem-connection";
 import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
@@ -109,9 +108,8 @@ export default async function HomePage() {
       <CinematicAct
         accent="#c084fc"
         anchor="bottom-left"
-        cameraPosition={[2.4, 1.5, 4.2]}
-        cameraFov={36}
-        scene={<LensCase />}
+        imageUrl="/landing/case-hero.png"
+        transparent
         poster="/landing/lens-case-poster.svg"
         posterAlt="Lens charging case"
         headline={<>Two pairs.<br/>One smart case.</>}
