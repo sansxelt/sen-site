@@ -54,6 +54,12 @@ type Props = {
   // a row of pills or specs.
   meta?: ReactNode;
   bg?: string;
+  // Adds a strong left-to-right dark gradient over the image, which
+  // gives bottom-left or top-left text a guaranteed legible bed even
+  // when the photo's left side is bright. No-op for `bottom-center`
+  // and `center` anchors, where a centered dark scrim would just look
+  // like the image is broken.
+  leftScrim?: boolean;
 };
 
 export function CinematicAct({
@@ -72,6 +78,7 @@ export function CinematicAct({
   anchor = "bottom-left",
   meta,
   bg = "#050507",
+  leftScrim = false,
 }: Props) {
   const sectionRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
@@ -214,6 +221,25 @@ export function CinematicAct({
             inset: 0,
             background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${accent}14 0%, transparent 60%)`,
             pointerEvents: "none",
+          }}
+        />
+      )}
+
+      {/* Optional left-side dark scrim. Pushes the bright photo into
+          shadow on the left third so bottom-left / top-left text has
+          a legible bed no matter what the source photo looks like. */}
+      {leftScrim && (anchor === "bottom-left" || anchor === "top-right") && (
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              anchor === "top-right"
+                ? "linear-gradient(270deg, rgba(5,5,7,0.92) 0%, rgba(5,5,7,0.55) 30%, rgba(5,5,7,0) 60%)"
+                : "linear-gradient(90deg, rgba(5,5,7,0.92) 0%, rgba(5,5,7,0.55) 30%, rgba(5,5,7,0) 60%)",
+            pointerEvents: "none",
+            zIndex: 1,
           }}
         />
       )}

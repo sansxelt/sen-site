@@ -56,15 +56,15 @@ export default function LensPage() {
   return (
     <main style={{ background: "#050507", overflowX: "hidden" }}>
       {/* Hardware. Lifestyle hero (real photo, no cutout) so the
-          opening feels human; the transparent product cutout then
-          runs on the architecture beat below. Crop biased so the
-          lens-on-fingertip sits in the upper-right third without the
-          finger sticking off the top edge. */}
+          opening feels human. Crop biased to the right so the
+          lens-on-fingertip is the focal point; leftScrim darkens the
+          bright shirt area so the bottom-left text reads clean. */}
       <CinematicAct
         accent="#c084fc"
         anchor="bottom-left"
         imageUrl="/landing/fingertip-hero.png"
         imageObjectPosition="65% 55%"
+        leftScrim
         poster="/landing/lens-poster.svg"
         posterAlt="Lens on a fingertip"
         headline={<>Lens.<br/>Concept and R&amp;D.</>}
@@ -78,17 +78,17 @@ export default function LensPage() {
         }
       />
 
-      {/* Architecture. Back to the transparent product cutout so the
-          beat reads as a quiet object shot under the headline.
-          model-hero.png turned out to be a saline-bottle + specs
-          composition, which lives further down the page instead. */}
+      {/* Architecture. Model wearing the lens. leftScrim guarantees
+          the bottom-left text reads against whatever the photo's
+          left side looks like. */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-left"
-        imageUrl="/landing/lens-hero.png"
-        transparent
+        imageUrl="/landing/model-hero.png"
+        imageObjectPosition="65% center"
+        leftScrim
         poster="/landing/lens-poster.svg"
-        posterAlt="Lens architecture"
+        posterAlt="Model wearing the Lens"
         headline={<>Lens does not run heavy AI.<br/>Workshop does.</>}
         body={
           <>
