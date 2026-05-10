@@ -216,6 +216,28 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     });
   };
 
+  // Whole-rail collapse. Persisted in localStorage; mirrored to a
+  // data-attribute on <html> so the lei-shell grid can shrink the
+  // rail column to a thin strip via CSS without prop drilling.
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("sansxel.rail.collapsed") === "true";
+  });
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (collapsed) document.documentElement.dataset.railCollapsed = "true";
+    else delete document.documentElement.dataset.railCollapsed;
+  }, [collapsed]);
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("sansxel.rail.collapsed", String(next));
+      }
+      return next;
+    });
+  };
+
   // Live in-flight thread set, refreshed on every flight:changed
   // event from WebChat (write side).
   const [flightIds, setFlightIds] = useState<Set<string>>(() => readFlightIds());
@@ -391,6 +413,40 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     }
   };
 
+  // When fully collapsed the rail renders as a thin strip with two
+  // icon buttons: expand and new-chat. Everything else is hidden.
+  if (collapsed) {
+    return (
+      <aside className="chat-history-rail chat-history-rail--collapsed" aria-label="Chat history (collapsed)">
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          className="chat-history-collapse-toggle"
+          title="Expand chat history"
+          aria-label="Expand chat history"
+        >
+          <span aria-hidden>›</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.localStorage.removeItem("sansxel.activeProjectId");
+              window.dispatchEvent(new CustomEvent("sansxel:project:changed", { detail: null }));
+              window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
+            }
+            router.replace("/app?new=1");
+          }}
+          className="chat-history-collapsed-new"
+          title="Start a new chat"
+          aria-label="Start a new chat"
+        >
+          <span aria-hidden>＋</span>
+        </button>
+      </aside>
+    );
+  }
+
   return (
     <aside className={`chat-history-rail chat-history-rail--${density}`}>
       <div className="chat-history-head">
@@ -402,6 +458,15 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             </div>
           </div>
           <div className="chat-history-head-actions">
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              className="chat-history-density-toggle"
+              title="Collapse chat history"
+              aria-label="Collapse chat history"
+            >
+              ‹
+            </button>
             <button
               type="button"
               onClick={toggleDensity}
