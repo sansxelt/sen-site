@@ -981,10 +981,15 @@ export function WebChat({
 
   // rAF-batched scroll handler. Without this, fast wheel input
   // fires onScroll dozens of times per frame and the duel layout
-  // (two streams growing in parallel) reads as jittery — every
-  // tick re-evaluates near-bottom + dispatches a setState. One
-  // rAF tick = ~16ms, matches frame rate, kills the duplicates.
+  // (two streams growing in parallel) reads as jittery.
+  //
+  // Latest pill behaviour: appears only on a real upward scroll
+  // gesture (not just whenever distance-from-bottom > 60). Fades
+  // 3s after the last scroll event so it does not sit static over
+  // chart / image content. Scrolling again resets the timer.
   const scrollRafRef = useRef<number | null>(null);
+  const lastScrollTopRef = useRef(0);
+  const hideTimerRef = useRef<number | null>(null);
   const onScroll = useCallback(() => {
     if (scrollRafRef.current !== null) return;
     scrollRafRef.current = requestAnimationFrame(() => {
@@ -994,14 +999,38 @@ export function WebChat({
       const distanceFromBottom =
         el.scrollHeight - el.scrollTop - el.clientHeight;
       const nearBottom = distanceFromBottom < 60;
+      const direction = el.scrollTop < lastScrollTopRef.current ? "up" : "down";
+      lastScrollTopRef.current = el.scrollTop;
       stickToBottomRef.current = nearBottom;
-      setShowJumpToBottom(!nearBottom);
+
+      if (nearBottom) {
+        setShowJumpToBottom(false);
+        if (hideTimerRef.current !== null) {
+          window.clearTimeout(hideTimerRef.current);
+          hideTimerRef.current = null;
+        }
+        return;
+      }
+
+      if (direction === "up") {
+        setShowJumpToBottom(true);
+        if (hideTimerRef.current !== null) {
+          window.clearTimeout(hideTimerRef.current);
+        }
+        hideTimerRef.current = window.setTimeout(() => {
+          setShowJumpToBottom(false);
+          hideTimerRef.current = null;
+        }, 3000);
+      }
     });
   }, []);
   useEffect(() => {
     return () => {
       if (scrollRafRef.current !== null) {
         cancelAnimationFrame(scrollRafRef.current);
+      }
+      if (hideTimerRef.current !== null) {
+        window.clearTimeout(hideTimerRef.current);
       }
     };
   }, []);
