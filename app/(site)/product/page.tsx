@@ -1,565 +1,201 @@
 "use client";
 
 import Link from "next/link";
-import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { useRef, useState } from "react";
-import { WhisperEarbud } from "@/components/3d/whisper-earbud";
-import { LensObject } from "@/components/3d/lens-object";
-import { LensCase } from "@/components/3d/lens-case";
+import { motion, useReducedMotion } from "framer-motion";
+
+// /product is the builder-facing catalog. The consumer story lives on
+// the home page (cinematic walkthrough of Lens, Whisper, Day Kit,
+// Workshop). This page tells the same audience what is shipping today
+// vs what is in concept, what surface API exposes which surface, and
+// how to integrate. No marketing rephrasing of the home page.
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-type Feature = {
-  icon: string;
-  label: string;
-  desc: string;
-  // Optional: when present, the feature card is clickable and expands
-  // inline to show this longer copy + an optional image. Cards
-  // without details remain static.
-  details?: string;
-  imageUrl?: string;
+type Status = "live" | "beta" | "alpha" | "concept" | "rnd";
+
+const STATUS_META: Record<Status, { label: string; color: string }> = {
+  live:    { label: "LIVE",    color: "#34d399" },
+  beta:    { label: "BETA",    color: "#a8c4ff" },
+  alpha:   { label: "ALPHA",   color: "#c084fc" },
+  concept: { label: "CONCEPT", color: "#fbbf24" },
+  rnd:     { label: "R&D",     color: "#71717a" },
 };
 
-type ProductDef = {
+type Surface = {
   key: string;
-  kicker: string;
   name: string;
-  tagline: string;
-  body: string;
-  features: Feature[];
-  cta: { href: string; label: string };
-  poster: string;
-  posterAlt: string;
-  scene: React.ReactNode;
-  // When present, render a real product PNG instead of the procedural
-  // R3F scene. The page's CinematicAct equivalent will object-fit:
-  // contain so the dark page background reads through transparency.
-  imageUrl?: string;
-  // "contain" (default) for transparent product PNGs — preserves
-  // aspect, dark page bg shows through. "cover" for rectangular UI
-  // screenshots that should fill the frame.
-  imageFit?: "contain" | "cover";
-  accent: string;
-  cameraPosition?: [number, number, number];
-  cameraFov?: number;
+  category: "Workspace" | "Voice" | "Optics" | "Hardware" | "Actions" | "Developer";
+  status: Status;
+  version?: string;
+  oneLine: string;
+  // Which surfaces of the system back this. Populates the dependency
+  // chip strip beneath each row.
+  depends: string[];
+  // Where to read more (consumer-facing page or external).
+  href: string;
 };
 
-const PRODUCTS: ProductDef[] = [
+const SURFACES: Surface[] = [
   {
     key: "workshop",
-    kicker: "the brain",
     name: "Workshop",
-    tagline: "The AI workspace.",
-    body: "Chat, projects, files, memory, voice, creation, integrations. Workshop is where the work actually happens, with persistent context across every session.",
-    features: [
-      {
-        icon: "◎", label: "Chat", desc: "Threads with full context, file references, memory pulls.",
-        details: "Every thread carries the full context of your project: the files you have referenced, the facts memory has stored, the project you are working in. Drop a PDF, paste a screenshot, mention a URL. The model has access to all of it without you re-explaining.",
-      },
-      {
-        icon: "◇", label: "Projects", desc: "Group work into focused workspaces with their own memory.",
-        details: "Projects scope memory and context. The chat that lives in your Q3 launch project never bleeds into your side hustle project. Each project has its own files, its own goals, its own facts the AI remembers.",
-      },
-      {
-        icon: "◈", label: "Memory", desc: "Preferences and facts persist; you don't re-explain yourself.",
-        details: "Sansxel learns your name, your role, the tools you use, and the way you write. After a few sessions you stop introducing yourself. Memory is editable from the settings page; nothing is hidden, everything is reversible.",
-      },
-      {
-        icon: "◬", label: "Research", desc: "Web search, citations, deep multi-step research jobs.",
-        details: "Ask for a deep dive and the model spawns a research job: searches the web, reads sources, follows links, returns a structured answer with citations. Cancel any time. Saved to the project for future reference.",
-      },
-    ],
-    cta: { href: "/workshop", label: "Open Workshop" },
-    poster: "/landing/workshop-poster.svg",
-    posterAlt: "Workshop UI",
-    scene: null,
-    imageUrl: "/landing/workshop-hero.png",
-    imageFit: "cover",
-    accent: "#a8c4ff",
-    cameraPosition: [0, 0.4, 6.5],
-    cameraFov: 42,
+    category: "Workspace",
+    status: "live",
+    version: "v0.1.15",
+    oneLine: "Chat, projects, files, memory, voice. Web + desktop.",
+    depends: ["Chat API", "Memory API", "Files API", "MCP runtime"],
+    href: "/workshop",
+  },
+  {
+    key: "copilot-desktop",
+    name: "Copilot (desktop)",
+    category: "Actions",
+    status: "alpha",
+    version: "v0.1.15",
+    oneLine: "Floating bar, hotkey, screen-aware. macOS + Windows.",
+    depends: ["Workshop session", "Tool use API", "Screen capture"],
+    href: "/desktop",
   },
   {
     key: "whisper",
-    kicker: "the voice",
     name: "Whisper",
-    tagline: "Speak. Listen. Stay heads-up.",
-    body: "Voice in and voice out, low latency, interruptable. Works with your existing earbuds today; dedicated Sansxel hardware later.",
-    features: [
-      {
-        icon: "◉", label: "Voice in", desc: "Sub-200ms transcription, on-device when available.",
-        details: "Voice in uses on-device transcription on Mac and iPhone, falling back to cloud for older devices. Sub-200ms is target latency for the first word, end-to-end. Background noise suppression is automatic.",
-      },
-      {
-        icon: "◐", label: "Voice out", desc: "Natural TTS, interruptable mid-sentence.",
-        details: "When the model speaks back, you can interrupt mid-sentence. Talk over it; it stops, listens, picks up the new thread. The voice is consistent across sessions; pick from a small palette in settings.",
-      },
-      {
-        icon: "◫", label: "Any device", desc: "AirPods, headphones, built-in mic, all supported now.",
-        details: "Whisper runs through whatever you already wear. AirPods, Bose, Sony, wired earbuds, even the laptop's built-in mic. No special hardware required to start. Open Workshop, hold the voice key, talk.",
-      },
-      {
-        icon: "◆", label: "Future hardware", desc: "Sansxel-built earbud designed around how the AI works.",
-        details: "We are designing a dedicated Sansxel earbud (matte black aluminum, brushed steel accent ring) that lives in the Day Kit case alongside your Lens. Concept and R&D, no ship date yet. Joining the waitlist gets you the dev kit when one exists.",
-      },
-    ],
-    cta: { href: "/whisper", label: "Explore Whisper" },
-    poster: "/landing/whisper-poster.svg",
-    posterAlt: "Whisper earbud with voice waveform",
-    scene: <WhisperEarbud />,
-    imageUrl: "/landing/whisper-hero.png",
-    accent: "#60a5fa",
-    cameraPosition: [0, 0.4, 6.5],
-    cameraFov: 42,
+    category: "Voice",
+    status: "beta",
+    oneLine: "Voice in / voice out, sub-200ms target. Browser + desktop.",
+    depends: ["WebRTC", "STT (whisper-large-v3)", "TTS"],
+    href: "/whisper",
   },
   {
-    key: "lens",
-    kicker: "the eye · concept",
-    name: "Lens",
-    tagline: "The visual interface direction.",
-    body: "A transparent contact lens with three render modes (Ambient, Mainframe, Minimal), paired with Workshop on your phone or PC for compute. Currently in concept and R&D.",
-    features: [
-      {
-        icon: "◎", label: "Ambient", desc: "Captions, arrows, tiny answer snippets, always-on.",
-        details: "Ambient mode is the default daily view. Captions for live speech in your environment. Subtle navigation arrows when you are walking somewhere. Small answer cards from Workshop when you ask. Nothing in the centre of your view; everything in the periphery.",
-      },
-      {
-        icon: "▣", label: "Mainframe", desc: "Floating windows and dashboards in your field of view.",
-        details: "Mainframe is for deep work. Floating windows you place around the room: chat thread on the left, file viewer on the right, code in the centre. Pinned panels stay where you put them. Designed for sit-down sessions, not walking around.",
-      },
-      {
-        icon: "◌", label: "Minimal", desc: "Reduced UI, blink-controlled, battery-saving.",
-        details: "Minimal pares Lens down to a single pinpoint indicator. Battery target: hours of additional uptime per pair. Summon the next answer with a deliberate double blink; everything else stays silent. For long days where you want presence, not interface.",
-      },
-      {
-        icon: "◈", label: "Workshop", desc: "Heavy compute lives on your phone or PC, not the lens.",
-        details: "Lens is the render and sensing layer; the heavy AI lives in Workshop on your phone or PC. That keeps the optic itself thin, cool, and battery-conscious. The phone or PC is the bridge; Lens shows the result.",
-      },
-    ],
-    cta: { href: "/lens", label: "Join Lens waitlist" },
-    poster: "/landing/lens-poster.svg",
-    posterAlt: "Transparent contact lens",
-    scene: <LensObject />,
-    imageUrl: "/landing/lens-hero.png",
-    accent: "#c084fc",
-    cameraPosition: [0, 0.6, 5.5],
-    cameraFov: 40,
-  },
-  {
-    key: "lens-day-kit",
-    kicker: "lens day kit · concept",
-    name: "Lens Day Kit",
-    tagline: "Lens, audio, one case.",
-    body: "The Day Kit case holds both your Sansxel Lens pairs and the audio earbuds. Quick swap between Pair A and Pair B; one charges while the other runs. The earbuds sit alongside, charging when you set them down.",
-    features: [
-      {
-        icon: "◇", label: "Two Lens", desc: "Pair A and Pair B, alternate through the day.",
-        details: "The Day Kit ships with two Lens. Wear Pair A in the morning, swap to Pair B at the gym or before dinner; the first pair tops up while the second runs. Targeting a full day of usage when you alternate.",
-      },
-      {
-        icon: "◐", label: "Audio earbuds", desc: "Whisper voice in / voice out, charging in the same case.",
-        details: "The case has dedicated wells for the Sansxel audio earbuds alongside the contact lens slots. One piece of hardware to carry, two product lines charging in parallel.",
-      },
-      {
-        icon: "▢", label: "Smart case", desc: "Tops up in minutes, status LED on the base.",
-        details: "USB-C in, fast-charge in. A small status LED on the base shows charge level: green for full, amber for mid, red for low. Anodized matte black aluminum body with chamfered edges.",
-      },
-      {
-        icon: "↻", label: "Hot swap", desc: "Pull one out, slot the other in, conversation continues.",
-        details: "Pair A and Pair B share the same paired session. Pull one out, slot the other in; whatever the model was saying continues without re-handshake. The swap is instant from the wearer's perspective.",
-      },
-    ],
-    cta: { href: "/lens#day-kit", label: "See the Day Kit" },
-    poster: "/landing/lens-case-poster.svg",
-    posterAlt: "Lens charging case",
-    scene: <LensCase />,
-    imageUrl: "/landing/case-hero.png",
-    accent: "#c084fc",
-    cameraPosition: [2.2, 1.6, 4],
-    cameraFov: 38,
-  },
-  {
-    key: "copilot",
-    kicker: "actions",
-    name: "Copilot",
-    tagline: "The AI that takes action.",
-    body: "Copilot acts across your tools. Compose, schedule, post, refactor, analyze. From Workshop, with your context, on your behalf.",
-    features: [
-      {
-        icon: "✦", label: "Cross-tool", desc: "Notion, GitHub, Figma, Gmail, Stripe, more.",
-        details: "Copilot acts across the tools you already pay for. First-party connectors for Notion, GitHub, Figma, Gmail, Stripe, Linear, Slack. New ones added monthly based on what users ask for in Discord.",
-      },
-      {
-        icon: "✧", label: "Confirm-first", desc: "Reads first, asks before writing or sending.",
-        details: "Copilot defaults to read-only. Any write action (sending an email, posting a message, deleting a row) prompts you for confirmation with a diff of what will change. Approve once or set a per-tool whitelist.",
-      },
-      {
-        icon: "✺", label: "MCP", desc: "Connect any MCP server, your own tools and data.",
-        details: "If a tool does not have a first-party connector, you can connect it via MCP (Model Context Protocol). Run an MCP server locally or self-hosted; Copilot picks up its tools the same way it uses ours.",
-      },
-      {
-        icon: "✷", label: "Audited", desc: "Every action logged, replayable, undoable.",
-        details: "Every Copilot action writes to an audit log: what tool, what input, what output, what time. Replayable from the audit page; most actions are undoable for 24 hours after they happen.",
-      },
-    ],
-    cta: { href: "/copilot", label: "See Copilot" },
-    poster: "/landing/ecosystem-orbit-poster.svg",
-    posterAlt: "Copilot floating action bar",
-    scene: null,
-    imageUrl: "/landing/copilot-hero.png",
-    imageFit: "contain",
-    accent: "#22d3ee",
-    cameraPosition: [0, 0.5, 7.5],
-    cameraFov: 42,
+    key: "memory",
+    name: "Memory",
+    category: "Workspace",
+    status: "beta",
+    oneLine: "Persistent facts and preferences scoped per project.",
+    depends: ["Memory API", "Vector store"],
+    href: "/workshop#memory",
   },
   {
     key: "platform",
-    kicker: "developers",
     name: "Platform",
-    tagline: "API, SDKs, console.",
-    body: "Build with Sansxel. API keys, request inspector, usage dashboard, webhooks, SDKs, MCP connections.",
-    features: [
-      {
-        icon: "⚡", label: "API", desc: "OpenAI-compatible chat + tool use endpoints.",
-        details: "The Sansxel API mirrors the OpenAI chat completions schema, plus tool use, streaming, and our own context fields. Drop-in replacement for openai-sdk in JavaScript and Python. Bearer-token auth, no special middleware needed.",
-      },
-      {
-        icon: "⌗", label: "Keys + usage", desc: "Per-key limits, per-project usage, real-time tail.",
-        details: "Generate per-project API keys from the console. Set per-key spend limits, request rate limits, expiry dates. The dashboard shows real-time usage per key, per project, per endpoint, with token-level cost breakdown.",
-      },
-      {
-        icon: "⊕", label: "Webhooks", desc: "Per-project webhooks for events and completions.",
-        details: "Subscribe to events: completion finished, tool call invoked, key used, project usage exceeded. Webhooks deliver to your endpoint with HMAC signatures and configurable retry policy.",
-      },
-      {
-        icon: "✧", label: "MCP", desc: "First-class MCP server registry and runtime.",
-        details: "Connect MCP servers to your project from the registry, or publish your own. The runtime handles auth, rate limiting, and tool discovery. Supported in both Workshop and via the API.",
-      },
-    ],
-    cta: { href: "https://platform.sansxel.ai", label: "Open Platform" },
-    poster: "/landing/ecosystem-poster.svg",
-    posterAlt: "Sansxel platform connection diagram",
-    scene: null,
-    accent: "#fbbf24",
-    cameraPosition: [0, 1.2, 5.5],
-    cameraFov: 45,
+    category: "Developer",
+    status: "alpha",
+    oneLine: "API keys, request inspector, usage dashboard, webhooks.",
+    depends: ["Chat API", "MCP registry", "Webhooks"],
+    href: "https://platform.sansxel.ai",
+  },
+  {
+    key: "lens",
+    name: "Lens",
+    category: "Optics",
+    status: "concept",
+    oneLine: "Transparent contact lens. Three render modes, off-board compute.",
+    depends: ["Workshop bridge", "Render protocol", "Optical stack"],
+    href: "/lens",
+  },
+  {
+    key: "lens-day-kit",
+    name: "Lens Day Kit",
+    category: "Hardware",
+    status: "concept",
+    oneLine: "Charges two Lens pairs and the Whisper earbuds in one case.",
+    depends: ["Lens pairing", "Whisper hardware"],
+    href: "/lens#day-kit",
+  },
+  {
+    key: "whisper-hw",
+    name: "Whisper hardware",
+    category: "Hardware",
+    status: "rnd",
+    oneLine: "Sansxel-built earbud, lives in the Day Kit case.",
+    depends: ["Whisper protocol", "Lens Day Kit"],
+    href: "/whisper#hardware",
   },
 ];
 
-// Clickable expandable feature card. Click to reveal extended copy +
-// optional image. Cards without `details` are static (no click target,
-// no chevron). One card open at a time within a section is enforced by
-// the parent ProductSection's openIdx state.
-function FeatureCard({
-  feature,
-  accent,
-  open,
-  onToggle,
-}: {
-  feature: Feature;
-  accent: string;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  const expandable = Boolean(feature.details || feature.imageUrl);
+type Endpoint = {
+  method: "GET" | "POST" | "DELETE";
+  path: string;
+  desc: string;
+  status: Status;
+};
 
+const ENDPOINTS: Endpoint[] = [
+  { method: "POST", path: "/v1/chat/completions",      desc: "Streaming chat with tool use. OpenAI-compatible.", status: "alpha" },
+  { method: "POST", path: "/v1/projects",              desc: "Create a project (scopes memory + files).",        status: "alpha" },
+  { method: "GET",  path: "/v1/projects/{id}/memory",  desc: "List facts the model has stored.",                  status: "alpha" },
+  { method: "POST", path: "/v1/projects/{id}/files",   desc: "Upload a file referenced by chat.",                 status: "alpha" },
+  { method: "POST", path: "/v1/voice/transcribe",      desc: "Streaming STT, sub-200ms first-word target.",       status: "beta"  },
+  { method: "POST", path: "/v1/voice/speak",           desc: "Streaming TTS, interruptable.",                     status: "beta"  },
+  { method: "POST", path: "/v1/mcp/servers",           desc: "Register an MCP server with your project.",         status: "alpha" },
+  { method: "POST", path: "/v1/webhooks",              desc: "Subscribe to events (HMAC-signed delivery).",       status: "alpha" },
+  { method: "POST", path: "/v1/lens/render",           desc: "Push a render frame to a paired Lens session.",     status: "concept" },
+];
+
+type Integration = { name: string; status: Status; via: "first-party" | "MCP" };
+
+const INTEGRATIONS: Integration[] = [
+  { name: "GitHub",   status: "beta",    via: "first-party" },
+  { name: "Notion",   status: "beta",    via: "first-party" },
+  { name: "Linear",   status: "alpha",   via: "first-party" },
+  { name: "Slack",    status: "alpha",   via: "first-party" },
+  { name: "Gmail",    status: "alpha",   via: "first-party" },
+  { name: "Figma",    status: "concept", via: "first-party" },
+  { name: "Stripe",   status: "concept", via: "first-party" },
+  { name: "Filesystem", status: "live",  via: "MCP" },
+  { name: "Postgres",   status: "live",  via: "MCP" },
+  { name: "Custom MCP", status: "live",  via: "MCP" },
+];
+
+const SDK_SNIPPET = `import Sansxel from "@sansxel/sdk";
+
+const sx = new Sansxel({ apiKey: process.env.SANSXEL_API_KEY });
+
+const stream = await sx.chat.completions.create({
+  model: "sansxel-1",
+  project: "proj_5g7",
+  stream: true,
+  messages: [{ role: "user", content: "summarize my open PRs" }],
+  tools: [{ type: "mcp", server: "github" }],
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.delta.text ?? "");
+}`;
+
+function StatusPill({ status, small = false }: { status: Status; small?: boolean }) {
+  const meta = STATUS_META[status];
   return (
-    <div
+    <span
       style={{
-        borderRadius: 12,
-        border: open
-          ? `1px solid ${accent}55`
-          : "1px solid rgba(255,255,255,0.06)",
-        background: open
-          ? `${accent}0c`
-          : "rgba(255,255,255,0.02)",
-        transition: "background 200ms, border-color 200ms",
-        overflow: "hidden",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5,
+        padding: small ? "2px 7px" : "3px 9px",
+        borderRadius: 100,
+        border: `1px solid ${meta.color}40`,
+        background: `${meta.color}12`,
+        fontSize: small ? 9.5 : 10,
+        fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+        letterSpacing: "0.10em",
+        color: meta.color,
+        whiteSpace: "nowrap",
       }}
     >
-      <button
-        type="button"
-        onClick={expandable ? onToggle : undefined}
-        disabled={!expandable}
-        style={{
-          all: "unset",
-          width: "100%",
-          padding: "12px 14px",
-          display: "flex",
-          gap: 10,
-          alignItems: "flex-start",
-          cursor: expandable ? "pointer" : "default",
-          boxSizing: "border-box",
-        }}
-      >
-        <div
-          style={{
-            width: 26,
-            height: 26,
-            borderRadius: 7,
-            background: `${accent}12`,
-            border: `1px solid ${accent}26`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 13,
-            color: `${accent}cc`,
-            flexShrink: 0,
-          }}
-        >
-          {feature.icon}
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 500, color: "#e4e4e7", marginBottom: 2 }}>
-            {feature.label}
-          </div>
-          <div style={{ fontSize: 11.5, color: "#71717a", lineHeight: 1.45 }}>
-            {feature.desc}
-          </div>
-        </div>
-        {expandable && (
-          <span
-            aria-hidden
-            style={{
-              fontSize: 11,
-              color: open ? accent : "rgba(255,255,255,0.35)",
-              flexShrink: 0,
-              marginTop: 4,
-              transition: "transform 220ms, color 200ms",
-              transform: open ? "rotate(180deg)" : "rotate(0deg)",
-              display: "inline-block",
-            }}
-          >
-            ▾
-          </span>
-        )}
-      </button>
-
-      <AnimatePresence initial={false}>
-        {open && expandable && (
-          <motion.div
-            key="details"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.32, ease: EASE }}
-            style={{ overflow: "hidden" }}
-          >
-            <div style={{ padding: "0 14px 14px 50px" }}>
-              {feature.imageUrl && (
-                <img
-                  src={feature.imageUrl}
-                  alt={feature.label}
-                  style={{
-                    width: "100%",
-                    maxWidth: 480,
-                    aspectRatio: "16 / 9",
-                    objectFit: "cover",
-                    borderRadius: 10,
-                    marginBottom: 12,
-                    border: `1px solid ${accent}1a`,
-                    background: "rgba(0,0,0,0.30)",
-                  }}
-                />
-              )}
-              {feature.details && (
-                <p style={{ fontSize: 12.5, color: "#a1a1aa", lineHeight: 1.6, margin: 0 }}>
-                  {feature.details}
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function ProductSection({ product, reverse }: { product: ProductDef; reverse: boolean }) {
-  const [openIdx, setOpenIdx] = useState<number | null>(null);
-  const ref = useRef<HTMLElement>(null);
-  const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const sceneY = useTransform(scrollYProgress, [0, 1], [60, -60]);
-
-  return (
-    <section
-      ref={ref}
-      style={{
-        position: "relative",
-        padding: "clamp(80px, 12vh, 140px) clamp(20px, 5vw, 80px)",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `radial-gradient(ellipse 60% 50% at ${reverse ? "20%" : "80%"} 50%, ${product.accent}14 0%, transparent 55%)`,
-          pointerEvents: "none",
-        }}
-      />
-
-      <div
-        style={{
-          position: "relative",
-          maxWidth: 1500,
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "1fr",
-          gap: 56,
-          alignItems: "center",
-        }}
-        className={`product-row${reverse ? " reverse" : ""}${product.imageUrl ? "" : " product-row--solo"}`}
-      >
-        <div className="product-copy">
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.5, ease: EASE }}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "4px 11px",
-              borderRadius: 100,
-              border: `1px solid ${product.accent}33`,
-              background: `${product.accent}0d`,
-              fontSize: 11,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: `${product.accent}cc`,
-              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-              marginBottom: 18,
-            }}
-          >
-            <span style={{ width: 5, height: 5, borderRadius: "50%", background: product.accent, boxShadow: `0 0 8px ${product.accent}` }} />
-            {product.kicker}
-          </motion.div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.7, ease: EASE, delay: 0.05 }}
-            style={{
-              fontSize: "clamp(2rem, 4.5vw, 3.4rem)",
-              fontWeight: 600,
-              lineHeight: 1.05,
-              letterSpacing: "-0.025em",
-              marginBottom: 8,
-              color: "#f5f5f7",
-            }}
-          >
-            {product.name}
-          </motion.h2>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
-            style={{
-              fontSize: "clamp(1.1rem, 1.5vw, 1.4rem)",
-              color: product.accent,
-              marginBottom: 18,
-              fontWeight: 500,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {product.tagline}
-          </motion.div>
-
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.7, ease: EASE, delay: 0.2 }}
-            style={{
-              fontSize: 15,
-              color: "rgba(255,255,255,0.6)",
-              lineHeight: 1.6,
-              maxWidth: 520,
-              marginBottom: 28,
-            }}
-          >
-            {product.body}
-          </motion.p>
-
-          <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 1fr", marginBottom: 28 }}>
-            {product.features.map((f, i) => (
-              <FeatureCard
-                key={f.label}
-                feature={f}
-                accent={product.accent}
-                open={openIdx === i}
-                onToggle={() => setOpenIdx(openIdx === i ? null : i)}
-              />
-            ))}
-          </div>
-
-          <Link
-            href={product.cta.href}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "11px 20px",
-              borderRadius: 100,
-              border: `1px solid ${product.accent}55`,
-              background: `${product.accent}18`,
-              color: product.accent,
-              fontSize: 14,
-              fontWeight: 500,
-              textDecoration: "none",
-            }}
-          >
-            {product.cta.label}
-            <span aria-hidden style={{ fontSize: 13 }}>→</span>
-          </Link>
-        </div>
-
-        {product.imageUrl && (
-          <motion.div
-            style={{
-              position: "relative",
-              aspectRatio: "1 / 1",
-              maxWidth: 560,
-              justifySelf: "center",
-              width: "100%",
-              ...(reduce ? {} : { y: sceneY }),
-            }}
-            className="product-stage"
-          >
-            <img
-              src={product.imageUrl}
-              alt={product.posterAlt}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: product.imageFit ?? "contain",
-                borderRadius: product.imageFit === "cover" ? 14 : 0,
-                border: product.imageFit === "cover" ? "1px solid rgba(255,255,255,0.06)" : "none",
-                display: "block",
-              }}
-            />
-          </motion.div>
-        )}
-      </div>
-    </section>
+      <span style={{ width: 5, height: 5, borderRadius: "50%", background: meta.color, boxShadow: `0 0 6px ${meta.color}` }} />
+      {meta.label}
+    </span>
   );
 }
 
 export default function ProductPage() {
+  const reduce = useReducedMotion();
+
   return (
     <main style={{ background: "#050507", overflowX: "hidden" }}>
-      {/* HERO */}
+      {/* HERO — builder framing, separate from home's consumer hero */}
       <section style={{ position: "relative", padding: "clamp(80px, 14vh, 160px) clamp(20px, 5vw, 80px) 60px" }}>
         <div
+          aria-hidden
           style={{
             position: "absolute",
             inset: 0,
@@ -570,8 +206,8 @@ export default function ProductPage() {
         />
         <div style={{ position: "relative", maxWidth: 880, margin: "0 auto", textAlign: "center" }}>
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={reduce ? false : { opacity: 0, y: 8 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE }}
             style={{
               display: "inline-flex",
@@ -590,14 +226,14 @@ export default function ProductPage() {
             }}
           >
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#a8c4ff", boxShadow: "0 0 10px #a8c4ff" }} />
-            the system
+            for builders
           </motion.div>
           <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.85, ease: EASE, delay: 0.15 }}
             style={{
-              fontSize: "clamp(2.4rem, 6.5vw, 4.8rem)",
+              fontSize: "clamp(2.4rem, 6.5vw, 4.6rem)",
               fontWeight: 600,
               lineHeight: 1.0,
               letterSpacing: "-0.035em",
@@ -608,46 +244,428 @@ export default function ProductPage() {
               backgroundClip: "text",
             }}
           >
-            One AI. Six surfaces.<br/>One memory.
+            What ships, what's next, and what to integrate against.
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
+            animate={reduce ? undefined : { opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: EASE, delay: 0.3 }}
-            style={{ fontSize: "clamp(1rem, 1.5vw, 1.25rem)", color: "rgba(255,255,255,0.62)", maxWidth: 580, margin: "0 auto", lineHeight: 1.55 }}
+            style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)", color: "rgba(255,255,255,0.62)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}
           >
-            Lens is the eye. Whisper is the voice. Workshop is the brain.
-            Copilot acts. Platform builds. All on one persistent memory layer.
+            The technical view of every Sansxel surface. Status, version,
+            what it depends on, and how the API exposes it. For the
+            consumer walkthrough, see the home page.
           </motion.p>
+
+          <div style={{ marginTop: 28, display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            <Link
+              href="https://platform.sansxel.ai"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "10px 18px", borderRadius: 100,
+                border: "1px solid rgba(168,196,255,0.55)",
+                background: "rgba(168,196,255,0.18)",
+                color: "rgba(168,196,255,0.96)",
+                fontSize: 13, fontWeight: 500, textDecoration: "none",
+              }}
+            >
+              Open Platform
+              <span aria-hidden style={{ fontSize: 13 }}>→</span>
+            </Link>
+            <Link
+              href="#api"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "10px 18px", borderRadius: 100,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: "rgba(255,255,255,0.03)",
+                color: "#d4d4d8",
+                fontSize: 13, fontWeight: 500, textDecoration: "none",
+              }}
+            >
+              Jump to API
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Render order: hardware first (Lens, Whisper, Day Kit),
-          then platform / software surfaces (Workshop, Copilot,
-          Platform). Lens leads because it is the flagship visual
-          product. */}
-      {(["lens", "whisper", "lens-day-kit", "workshop", "copilot", "platform"] as const)
-        .map((key) => PRODUCTS.find((p) => p.key === key))
-        .filter((p): p is ProductDef => Boolean(p))
-        .map((p, i) => (
-          <ProductSection key={p.key} product={p} reverse={i % 2 === 1} />
-        ))}
+      {/* SURFACE STATUS MATRIX */}
+      <section id="surfaces" style={{ position: "relative", padding: "60px clamp(20px, 5vw, 80px) 80px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ marginBottom: 32, display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 600, color: "#f5f5f7", letterSpacing: "-0.02em" }}>
+              Surfaces
+            </h2>
+            <div style={{ display: "inline-flex", gap: 10, flexWrap: "wrap" }}>
+              {(["live","beta","alpha","concept","rnd"] as const).map((s) => (
+                <StatusPill key={s} status={s} small />
+              ))}
+            </div>
+          </div>
+
+          <div
+            style={{
+              borderRadius: 14,
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: "rgba(255,255,255,0.015)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Column headers */}
+            <div
+              className="surface-row surface-row--head"
+              style={{
+                padding: "12px 16px",
+                borderBottom: "1px solid rgba(255,255,255,0.04)",
+                fontSize: 10.5,
+                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.4)",
+              }}
+            >
+              <div>Surface</div>
+              <div>Category</div>
+              <div>Status</div>
+              <div>Depends on</div>
+              <div />
+            </div>
+            {SURFACES.map((s) => (
+              <div
+                key={s.key}
+                className="surface-row"
+                style={{
+                  padding: "16px",
+                  borderBottom: "1px solid rgba(255,255,255,0.04)",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "#e4e4e7" }}>
+                    {s.name}
+                    {s.version && (
+                      <span style={{ marginLeft: 8, fontSize: 11, fontFamily: "var(--font-geist-mono), ui-monospace, monospace", color: "#52525b" }}>
+                        {s.version}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#71717a", marginTop: 2 }}>{s.oneLine}</div>
+                </div>
+                <div style={{ fontSize: 12, color: "#a1a1aa" }}>{s.category}</div>
+                <div><StatusPill status={s.status} /></div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {s.depends.map((d) => (
+                    <span
+                      key={d}
+                      style={{
+                        fontSize: 10.5,
+                        fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                        padding: "2px 7px",
+                        borderRadius: 4,
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        color: "#a1a1aa",
+                      }}
+                    >
+                      {d}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <Link
+                    href={s.href}
+                    style={{
+                      fontSize: 12,
+                      color: "#a1a1aa",
+                      textDecoration: "none",
+                      borderBottom: "1px solid rgba(255,255,255,0.10)",
+                      paddingBottom: 1,
+                    }}
+                  >
+                    open →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* API SURFACE */}
+      <section id="api" style={{ position: "relative", padding: "80px clamp(20px, 5vw, 80px)", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gap: 56 }} className="api-grid">
+          <div>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "3px 10px", borderRadius: 100,
+              border: "1px solid rgba(168,196,255,0.25)",
+              background: "rgba(168,196,255,0.06)",
+              fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+              color: "rgba(168,196,255,0.8)",
+              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              marginBottom: 16,
+            }}>API</div>
+
+            <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 600, color: "#f5f5f7", letterSpacing: "-0.02em", marginBottom: 16 }}>
+              OpenAI-compatible chat, plus the parts that aren't OpenAI.
+            </h2>
+            <p style={{ fontSize: 14.5, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: 24, maxWidth: 520 }}>
+              Drop-in replacement for the OpenAI SDK. Chat, streaming,
+              tool use, function calling — same shape. Beyond that:
+              project-scoped memory, file uploads, voice in / out, and
+              an MCP runtime that picks up any server you point at it.
+            </p>
+
+            <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+              {ENDPOINTS.map((e) => (
+                <div
+                  key={e.path}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "auto 1fr auto",
+                    gap: 14,
+                    alignItems: "center",
+                    padding: "10px 14px",
+                    borderBottom: "1px solid rgba(255,255,255,0.04)",
+                    background: "rgba(0,0,0,0.20)",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      background:
+                        e.method === "POST"   ? "rgba(96,165,250,0.12)" :
+                        e.method === "DELETE" ? "rgba(248,113,113,0.12)" :
+                                                "rgba(52,211,153,0.12)",
+                      color:
+                        e.method === "POST"   ? "#60a5fa" :
+                        e.method === "DELETE" ? "#f87171" :
+                                                "#34d399",
+                      fontWeight: 600,
+                      letterSpacing: "0.05em",
+                      width: 50, textAlign: "center",
+                    }}
+                  >
+                    {e.method}
+                  </span>
+                  <div>
+                    <code style={{ fontSize: 12.5, color: "#e4e4e7", fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}>
+                      {e.path}
+                    </code>
+                    <div style={{ fontSize: 11.5, color: "#71717a", marginTop: 2 }}>{e.desc}</div>
+                  </div>
+                  <StatusPill status={e.status} small />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "3px 10px", borderRadius: 100,
+              border: "1px solid rgba(168,196,255,0.25)",
+              background: "rgba(168,196,255,0.06)",
+              fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+              color: "rgba(168,196,255,0.8)",
+              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              marginBottom: 16,
+            }}>SDK</div>
+
+            <h3 style={{ fontSize: 18, fontWeight: 500, color: "#f5f5f7", marginBottom: 16 }}>
+              TypeScript / Python, identical surface
+            </h3>
+
+            <pre
+              style={{
+                background: "rgba(0,0,0,0.45)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 12,
+                padding: 18,
+                fontSize: 12.5,
+                lineHeight: 1.6,
+                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                color: "#cbd5e1",
+                overflow: "auto",
+                margin: 0,
+              }}
+            >
+              <code>{SDK_SNIPPET}</code>
+            </pre>
+
+            <div style={{ marginTop: 16, fontSize: 12, color: "#71717a", lineHeight: 1.6 }}>
+              Bearer-token auth. Per-project keys with spend caps and
+              rate limits set in the Platform console. Streaming uses
+              SSE; the Python SDK exposes the same async iterator
+              shape.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INTEGRATIONS / MCP */}
+      <section id="integrations" style={{ padding: "80px clamp(20px, 5vw, 80px)", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ marginBottom: 32 }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "3px 10px", borderRadius: 100,
+              border: "1px solid rgba(168,196,255,0.25)",
+              background: "rgba(168,196,255,0.06)",
+              fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase",
+              color: "rgba(168,196,255,0.8)",
+              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              marginBottom: 16,
+            }}>Integrations</div>
+            <h2 style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 600, color: "#f5f5f7", letterSpacing: "-0.02em", marginBottom: 8 }}>
+              First-party connectors and any MCP server.
+            </h2>
+            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", maxWidth: 560 }}>
+              First-party connectors handle auth + rate limiting for the
+              tools we ship. Anything else, point at an MCP server and
+              the runtime picks it up automatically.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
+            {INTEGRATIONS.map((i) => (
+              <div
+                key={i.name}
+                style={{
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  background: "rgba(255,255,255,0.02)",
+                  padding: "14px 14px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "#e4e4e7" }}>{i.name}</div>
+                  <StatusPill status={i.status} small />
+                </div>
+                <div style={{
+                  fontSize: 10,
+                  fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                  color: i.via === "MCP" ? "rgba(192,132,252,0.7)" : "rgba(255,255,255,0.4)",
+                  letterSpacing: "0.10em",
+                }}>
+                  {i.via === "MCP" ? "VIA MCP" : "FIRST-PARTY"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* WEBHOOKS + AUDIT */}
+      <section style={{ padding: "80px clamp(20px, 5vw, 80px)", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr", gap: 24 }} className="ops-grid">
+          {[
+            {
+              kicker: "Webhooks",
+              title: "Subscribe to anything that happens.",
+              body: "Completion finished, tool call invoked, key spend exceeded, project usage cap hit. HMAC-signed delivery, configurable retry, per-project endpoints.",
+            },
+            {
+              kicker: "Audit log",
+              title: "Every Copilot action, replayable.",
+              body: "What tool, what input, what output, what time. Replayable from the audit page. Most write actions are reversible for 24 hours.",
+            },
+            {
+              kicker: "Console",
+              title: "Keys, usage, rate limits.",
+              body: "Per-project keys with spend caps, request rate limits, expiry dates. Real-time tail of every request the model is handling for you.",
+            },
+          ].map((b) => (
+            <div
+              key={b.kicker}
+              style={{
+                borderRadius: 14,
+                border: "1px solid rgba(255,255,255,0.06)",
+                background: "rgba(255,255,255,0.02)",
+                padding: "28px 26px",
+              }}
+            >
+              <div style={{
+                fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase",
+                color: "rgba(168,196,255,0.7)",
+                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                marginBottom: 12,
+              }}>{b.kicker}</div>
+              <div style={{ fontSize: 17, fontWeight: 500, color: "#f5f5f7", marginBottom: 10, letterSpacing: "-0.01em" }}>
+                {b.title}
+              </div>
+              <p style={{ fontSize: 13, color: "#a1a1aa", lineHeight: 1.55, margin: 0 }}>
+                {b.body}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FOOTER CTA */}
+      <section style={{ padding: "80px clamp(20px, 5vw, 80px) 120px", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+          <h3 style={{ fontSize: "clamp(1.4rem, 2.6vw, 2rem)", fontWeight: 500, color: "#f5f5f7", letterSpacing: "-0.02em", marginBottom: 16 }}>
+            Build on it before it ships everywhere.
+          </h3>
+          <p style={{ fontSize: 14, color: "#71717a", marginBottom: 24, lineHeight: 1.6 }}>
+            The Platform is alpha. API surface is stable enough to
+            integrate against; behavior may shift before v1. Get a key
+            and start.
+          </p>
+          <div style={{ display: "inline-flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            <Link
+              href="https://platform.sansxel.ai"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "12px 22px", borderRadius: 100,
+                border: "1px solid rgba(168,196,255,0.55)",
+                background: "rgba(168,196,255,0.18)",
+                color: "rgba(168,196,255,0.96)",
+                fontSize: 14, fontWeight: 500, textDecoration: "none",
+              }}
+            >
+              Get an API key
+              <span aria-hidden style={{ fontSize: 13 }}>→</span>
+            </Link>
+            <Link
+              href="/"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                padding: "12px 22px", borderRadius: 100,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: "rgba(255,255,255,0.03)",
+                color: "#d4d4d8",
+                fontSize: 14, fontWeight: 500, textDecoration: "none",
+              }}
+            >
+              See the consumer story
+            </Link>
+          </div>
+        </div>
+      </section>
 
       <style>{`
+        .surface-row {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        .surface-row--head { display: none; }
         @media (min-width: 980px) {
-          .product-row {
-            grid-template-columns: 1fr 1fr !important;
-            gap: 80px !important;
+          .surface-row {
+            grid-template-columns: 2fr 1fr 0.7fr 2fr 0.6fr;
+            gap: 18px;
           }
-          .product-row.reverse .product-copy { order: 2; }
-          .product-row.reverse .product-stage { order: 1; }
-          /* Solo (no image): single column, copy centered with a
-             reasonable max-width so it doesn't sprawl across the
-             full 1500px container. */
-          .product-row--solo {
-            grid-template-columns: minmax(0, 720px) !important;
-            justify-content: center !important;
-          }
+          .surface-row--head { display: grid; }
+          .api-grid { grid-template-columns: 1.3fr 1fr; gap: 64px; }
+          .ops-grid { grid-template-columns: repeat(3, 1fr); }
         }
       `}</style>
     </main>
