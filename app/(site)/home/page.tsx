@@ -21,21 +21,19 @@ export default async function HomePage() {
 
   return (
     <main style={{ background: "#050507" }}>
-      {/* Hero — split layout. Image bleeds in from the right with a
-          strong left-side dark gradient so the headline never sits on
-          bright skin tones. On narrow viewports the image drops behind
-          a darker scrim so text wins. */}
+      {/* Hero — full-bleed cover photo with text anchored bottom-
+          center. Strong, tall bottom scrim darkens the lower half of
+          the image so headline + body + chips + CTA all sit on a
+          legible dark field, not bright skin tones. */}
       <section
         style={{
           position: "relative",
           minHeight: "100vh",
           background: "#050507",
           overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
         }}
       >
-        {/* Photo, pinned right */}
+        {/* Photo */}
         <div
           aria-hidden
           style={{
@@ -43,51 +41,58 @@ export default async function HomePage() {
             inset: 0,
             backgroundImage: "url(/landing/mainimage.png)",
             backgroundSize: "cover",
-            backgroundPosition: "right center",
+            backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
           }}
         />
-        {/* Strong dark gradient on the left. Holds text contrast even
-            when the photo's skin tones extend across most of the
-            viewport. Darker on phones (right-heavy gradient narrows). */}
+        {/* Tall bottom scrim. Goes ~65% of the way up the frame and
+            ramps from solid bg to fully transparent so the text block
+            always sits on dark, but the top half of the photo stays
+            untouched. */}
         <div
           aria-hidden
           style={{
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(90deg, #050507 0%, rgba(5,5,7,0.92) 30%, rgba(5,5,7,0.55) 55%, rgba(5,5,7,0) 75%)",
+              "linear-gradient(180deg, transparent 0%, transparent 35%, rgba(5,5,7,0.55) 55%, rgba(5,5,7,0.88) 75%, #050507 92%)",
             pointerEvents: "none",
           }}
         />
-        {/* Soft top + bottom seal so the section dissolves into the
-            page without a hard seam. */}
+        {/* Top fade so the photo dissolves cleanly into the page. */}
         <div
           aria-hidden
           style={{
             position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, #050507 0%, transparent 140px, transparent calc(100% - 200px), #050507 100%)",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 160,
+            background: "linear-gradient(180deg, #050507 0%, transparent 100%)",
             pointerEvents: "none",
           }}
         />
 
-        {/* Text block — pinned left. Wide max-width so the headline
-            elongates instead of stacking. */}
+        {/* Text block — bottom-center */}
         <div
           style={{
-            position: "relative",
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: "clamp(60px, 10vh, 120px)",
             zIndex: 2,
-            maxWidth: "min(1100px, 92vw)",
-            padding: "clamp(40px, 8vh, 100px) clamp(24px, 6vw, 96px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+            padding: "0 clamp(24px, 5vw, 80px)",
           }}
         >
           <h1
             className="cinematic-display cinematic-display--gradient"
             style={{
-              maxWidth: "min(1000px, 88vw)",
-              marginBottom: 28,
+              maxWidth: "min(1100px, 92vw)",
+              marginBottom: 24,
             }}
           >
             One memory. Three surfaces.
@@ -95,8 +100,8 @@ export default async function HomePage() {
           <p
             className="cinematic-body"
             style={{
-              maxWidth: 640,
-              marginBottom: 32,
+              maxWidth: 620,
+              marginBottom: 28,
               color: "rgba(245,245,247,0.82)",
             }}
           >
@@ -119,7 +124,7 @@ export default async function HomePage() {
               fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
               letterSpacing: "0.06em",
               color: "rgba(229,231,235,0.86)",
-              marginBottom: 28,
+              marginBottom: 24,
             }}
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -136,30 +141,28 @@ export default async function HomePage() {
             </span>
           </div>
 
-          <div>
-            <Link
-              href={signedIn ? "/app" : "/signin?callbackUrl=/app"}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "12px 22px",
-                borderRadius: 100,
-                border: "1px solid rgba(168,196,255,0.33)",
-                background: "rgba(0,0,0,0.45)",
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
-                color: "rgba(168,196,255,0.94)",
-                fontSize: 14,
-                fontWeight: 500,
-                textDecoration: "none",
-                letterSpacing: "-0.005em",
-              }}
-            >
-              Open Workshop
-              <span aria-hidden style={{ fontSize: 13 }}>→</span>
-            </Link>
-          </div>
+          <Link
+            href={signedIn ? "/app" : "/signin?callbackUrl=/app"}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "12px 22px",
+              borderRadius: 100,
+              border: "1px solid rgba(168,196,255,0.33)",
+              background: "rgba(0,0,0,0.45)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+              color: "rgba(168,196,255,0.94)",
+              fontSize: 14,
+              fontWeight: 500,
+              textDecoration: "none",
+              letterSpacing: "-0.005em",
+            }}
+          >
+            Open Workshop
+            <span aria-hidden style={{ fontSize: 13 }}>→</span>
+          </Link>
         </div>
       </section>
 
