@@ -21,23 +21,89 @@ export default async function HomePage() {
 
   return (
     <main style={{ background: "#050507" }}>
-      {/* Hero — real cover photo (eye + lens). Bottom-center anchor
-          puts the headline + chips + CTA over the scrim-darkened
-          bottom of the photo so the text remains legible. */}
-      <CinematicAct
-        accent="#a8c4ff"
-        anchor="bottom-center"
-        imageUrl="/landing/mainimage.png"
-        poster="/landing/ecosystem-orbit-poster.svg"
-        posterAlt="Sansxel ecosystem"
-        headline={<>One memory.<br/>Three surfaces.</>}
-        body={
-          <>
+      {/* Hero — split layout. Image bleeds in from the right with a
+          strong left-side dark gradient so the headline never sits on
+          bright skin tones. On narrow viewports the image drops behind
+          a darker scrim so text wins. */}
+      <section
+        style={{
+          position: "relative",
+          minHeight: "100vh",
+          background: "#050507",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        {/* Photo, pinned right */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: "url(/landing/mainimage.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "right center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        {/* Strong dark gradient on the left. Holds text contrast even
+            when the photo's skin tones extend across most of the
+            viewport. Darker on phones (right-heavy gradient narrows). */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(90deg, #050507 0%, rgba(5,5,7,0.92) 30%, rgba(5,5,7,0.55) 55%, rgba(5,5,7,0) 75%)",
+            pointerEvents: "none",
+          }}
+        />
+        {/* Soft top + bottom seal so the section dissolves into the
+            page without a hard seam. */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(180deg, #050507 0%, transparent 140px, transparent calc(100% - 200px), #050507 100%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Text block — pinned left. Wide max-width so the headline
+            elongates instead of stacking. */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 2,
+            maxWidth: "min(1100px, 92vw)",
+            padding: "clamp(40px, 8vh, 100px) clamp(24px, 6vw, 96px)",
+          }}
+        >
+          <h1
+            className="cinematic-display cinematic-display--gradient"
+            style={{
+              maxWidth: "min(1000px, 88vw)",
+              marginBottom: 28,
+            }}
+          >
+            One memory. Three surfaces.
+          </h1>
+          <p
+            className="cinematic-body"
+            style={{
+              maxWidth: 640,
+              marginBottom: 32,
+              color: "rgba(245,245,247,0.82)",
+            }}
+          >
             A visual interface, a voice layer, and a workspace. Different
             surfaces, the same context.
-          </>
-        }
-        meta={
+          </p>
+
           <div
             style={{
               display: "inline-flex",
@@ -46,11 +112,14 @@ export default async function HomePage() {
               padding: "8px 16px",
               borderRadius: 999,
               border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.03)",
+              background: "rgba(0,0,0,0.45)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)",
               fontSize: 12,
               fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
               letterSpacing: "0.06em",
-              color: "rgba(229,231,235,0.78)",
+              color: "rgba(229,231,235,0.86)",
+              marginBottom: 28,
             }}
           >
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -66,12 +135,33 @@ export default async function HomePage() {
               Workshop
             </span>
           </div>
-        }
-        cta={{
-          href: signedIn ? "/app" : "/signin?callbackUrl=/app",
-          label: "Open Workshop",
-        }}
-      />
+
+          <div>
+            <Link
+              href={signedIn ? "/app" : "/signin?callbackUrl=/app"}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "12px 22px",
+                borderRadius: 100,
+                border: "1px solid rgba(168,196,255,0.33)",
+                background: "rgba(0,0,0,0.45)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                color: "rgba(168,196,255,0.94)",
+                fontSize: 14,
+                fontWeight: 500,
+                textDecoration: "none",
+                letterSpacing: "-0.005em",
+              }}
+            >
+              Open Workshop
+              <span aria-hidden style={{ fontSize: 13 }}>→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Order: Lens > Audio (Whisper) > Day Kit > Workshop. Lens
           first because it is the flagship visual product; audio
@@ -182,11 +272,11 @@ export default async function HomePage() {
         <div style={{ position: "relative", maxWidth: 1500, margin: "0 auto" }}>
           {/* PRICING */}
           <div id="pricing" style={{ marginBottom: 96 }}>
-            <div style={{ maxWidth: 640, marginBottom: 56 }}>
-              <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 18 }}>
-                Free to start.<br/>Upgrade when the work gets serious.
+            <div style={{ maxWidth: 1200, marginBottom: 56 }}>
+              <h2 className="cinematic-display cinematic-display--gradient" style={{ marginBottom: 18, maxWidth: "100%" }}>
+                Free to start. Upgrade when the work gets serious.
               </h2>
-              <p className="cinematic-body" style={{ maxWidth: 520 }}>
+              <p className="cinematic-body" style={{ maxWidth: 820 }}>
                 Start with the workspace today. Upgrade for more usage,
                 deeper memory, creation tools, and team workflows.
               </p>
