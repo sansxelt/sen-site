@@ -5,6 +5,7 @@ import { DotGrid } from "@/components/dot-grid";
 import { HeistCard } from "@/components/heist-card";
 import { PricingPacks } from "@/components/pricing-packs";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
+import { Reveal } from "@/components/landing/reveal";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -21,32 +22,36 @@ export default function PricingPage() {
         <div className="relative isolate overflow-hidden rounded-[28px] px-6 py-7 sm:px-10 sm:py-9">
           <DotGrid opacity={0.07} />
           <div className="relative max-w-3xl">
-            <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-              Pricing
-            </div>
-            <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
-              Plans that grow with how much you turn into output.
-            </h1>
-            <p className="mt-4 text-base leading-7 text-neutral-200">
-              Start free for everyday use, then scale into heavier create and build
-              workflows. Every paid tier expands how far Sansxel can go with you.
-            </p>
+            <Reveal>
+              <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
+                Pricing
+              </div>
+              <h1 className="hx-gradient-text mt-3 text-3xl font-semibold tracking-tight sm:text-5xl">
+                Plans that grow with how much you turn into output.
+              </h1>
+            </Reveal>
+            <Reveal delay={0.12}>
+              <p className="mt-4 text-base leading-7 text-neutral-200">
+                Start free for everyday use, then scale into heavier create and build
+                workflows. Every paid tier expands how far Sansxel can go with you.
+              </p>
 
-            {/* Guided comparison, sits under the hero copy, tuned to match
-                the surrounding text tone (muted grey, soft underline). */}
-            <div className="mt-4 text-sm text-neutral-500">
-              Not sure which one? <ComparePlans />
-            </div>
+              {/* Guided comparison, sits under the hero copy, tuned to match
+                  the surrounding text tone (muted grey, soft underline). */}
+              <div className="mt-4 text-sm text-neutral-500">
+                Not sure which one? <ComparePlans />
+              </div>
+            </Reveal>
           </div>
         </div>
 
         {/* ── Full plan cards, single source of truth (Personal + Team) */}
-        <div className="mt-5 sm:mt-6">
+        <Reveal delay={0.22} className="mt-5 sm:mt-6">
           <PricingPacks />
-        </div>
+        </Reveal>
 
         {/* ── Credit explainer, demystify how charges actually work. */}
-        <div className="mt-12 sm:mt-16 rounded-[24px] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+        <Reveal as="div" className="mt-12 sm:mt-16 rounded-[24px] border border-white/10 bg-white/[0.03] p-6 sm:p-8">
           <div className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">
             How credits work
           </div>
@@ -85,7 +90,7 @@ export default function PricingPage() {
             <span className="text-neutral-500">·</span>
             <span>Auto top-up optional</span>
           </div>
-        </div>
+        </Reveal>
 
         <div className="mt-16 grid gap-4 sm:mt-[4.5rem] sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
           {[
@@ -101,18 +106,20 @@ export default function PricingPage() {
               "Enterprise rollout",
               "Manual by design for organizations that need more capacity, governance, onboarding help, and custom deployment shape.",
             ],
-          ].map(([title, description]) => (
-            <HeistCard key={title} className="p-6 sm:p-7">
-              <div className="text-lg font-medium text-white">{title}</div>
-              <p className="mt-3 text-sm leading-6 text-neutral-300">
-                {description}
-              </p>
-            </HeistCard>
+          ].map(([title, description], i) => (
+            <Reveal key={title} delay={i * 0.08}>
+              <HeistCard className="p-6 sm:p-7">
+                <div className="text-lg font-medium text-white">{title}</div>
+                <p className="mt-3 text-sm leading-6 text-neutral-300">
+                  {description}
+                </p>
+              </HeistCard>
+            </Reveal>
           ))}
         </div>
 
         {/* Workshop compute explainer */}
-        <div className="mt-16 sm:mt-20 rounded-[24px] border border-white/10 bg-white/[0.02] p-6 sm:p-8">
+        <Reveal as="div" className="mt-16 sm:mt-20 rounded-[24px] border border-white/10 bg-white/[0.02] p-6 sm:p-8">
           <div className="text-xs font-medium uppercase tracking-[0.2em]" style={{ color: "rgba(168,196,255,0.75)" }}>
             Workshop compute
           </div>
@@ -137,10 +144,11 @@ export default function PricingPage() {
               </div>
             ))}
           </div>
-        </div>
+        </Reveal>
 
         {/* Lens + Whisper early access */}
-        <div
+        <Reveal
+          as="div"
           className="mt-12 sm:mt-16 rounded-[24px] p-6 sm:p-8"
           style={{
             border: "1px solid rgba(192,132,252,0.22)",
@@ -176,7 +184,7 @@ export default function PricingPage() {
               <WaitlistForm product="lens-day-kit" accent="#c084fc" cta="Join" />
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
     </>
   );

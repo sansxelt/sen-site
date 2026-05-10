@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getSignInPath } from "@/lib/auth-ui";
+import { Reveal } from "@/components/landing/reveal";
 
 const FEATURES = [
   { icon: "◎", label: "Team memory",       desc: "Shared memory libraries that all team members can reference. Context does not live in one person's chat history." },
@@ -22,19 +23,22 @@ export default async function PlatformPage() {
       <section style={{ background: "#050507" }}>
         <div className="landing-divider" />
         <div className="landing-section" style={{ maxWidth: 760, paddingTop: 80, paddingBottom: 72 }}>
-          <div className="landing-kicker" style={{ color: "rgba(255,172,51,0.70)" }}>platform</div>
-          <h1
-            className="landing-gradient-text"
-            style={{ fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.08, marginBottom: 20 }}
-          >
-            Sansxel for teams.
-          </h1>
-          <p className="landing-body" style={{ maxWidth: 520, marginBottom: 36 }}>
-            Platform brings Workshop to your whole team. Shared workspaces,
-            team memory, admin controls, and billing built for organizations.
-            Everyone gets access to the same context.
-          </p>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Reveal>
+            <div className="landing-kicker" style={{ color: "rgba(255,172,51,0.70)" }}>platform</div>
+            <h1
+              className="landing-gradient-text"
+              style={{ fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.08, marginBottom: 20 }}
+            >
+              Sansxel for teams.
+            </h1>
+          </Reveal>
+          <Reveal delay={0.12}>
+            <p className="landing-body" style={{ maxWidth: 520, marginBottom: 36 }}>
+              Platform brings Workshop to your whole team. Shared workspaces,
+              team memory, admin controls, and billing built for organizations.
+              Everyone gets access to the same context.
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link
               href="/contact"
               className="landing-cta-primary"
@@ -58,7 +62,8 @@ export default async function PlatformPage() {
             >
               {signedIn ? "Open Workshop" : "Start with personal plan"}
             </Link>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -66,17 +71,20 @@ export default async function PlatformPage() {
       <section style={{ background: "#040406" }}>
         <div className="landing-divider" />
         <div className="landing-section">
-          <div style={{ maxWidth: 540, marginBottom: 48 }}>
-            <div className="landing-kicker" style={{ color: "rgba(255,172,51,0.65)" }}>what you get</div>
-            <h2 className="landing-h2 landing-gradient-text">Built for how teams actually work.</h2>
-          </div>
+          <Reveal>
+            <div style={{ maxWidth: 540, marginBottom: 48 }}>
+              <div className="landing-kicker" style={{ color: "rgba(255,172,51,0.65)" }}>what you get</div>
+              <h2 className="landing-h2 landing-gradient-text">Built for how teams actually work.</h2>
+            </div>
+          </Reveal>
           <div
             style={{ display: "grid", gap: 2, gridTemplateColumns: "repeat(1, 1fr)" }}
             className="platform-grid"
           >
-            {FEATURES.map((f) => (
-              <div
+            {FEATURES.map((f, i) => (
+              <Reveal
                 key={f.label}
+                delay={i * 0.06}
                 style={{
                   padding: "28px 28px",
                   borderRadius: 14,
@@ -108,7 +116,7 @@ export default async function PlatformPage() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#e4e4e7", marginBottom: 6 }}>{f.label}</div>
                   <div style={{ fontSize: 13, color: "#52525b", lineHeight: 1.65 }}>{f.desc}</div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
           <style>{`
@@ -122,21 +130,23 @@ export default async function PlatformPage() {
       <section style={{ background: "#050507" }}>
         <div className="landing-divider" />
         <div className="landing-section" style={{ maxWidth: 680 }}>
-          <div className="landing-kicker" style={{ color: "rgba(255,172,51,0.65)" }}>pricing</div>
-          <h2 className="landing-h2 landing-gradient-text">Teams plan.</h2>
-          <p className="landing-body" style={{ marginBottom: 16 }}>
-            Platform is available on the Teams plan. Pricing is per seat, billed
-            monthly or annually. Talk to us for larger deployments or custom
-            requirements.
-          </p>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 28 }}>
+          <Reveal>
+            <div className="landing-kicker" style={{ color: "rgba(255,172,51,0.65)" }}>pricing</div>
+            <h2 className="landing-h2 landing-gradient-text">Teams plan.</h2>
+            <p className="landing-body" style={{ marginBottom: 16 }}>
+              Platform is available on the Teams plan. Pricing is per seat, billed
+              monthly or annually. Talk to us for larger deployments or custom
+              requirements.
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 28 }}>
             <Link href="/pricing" style={{ fontSize: 13, color: "rgba(255,172,51,0.75)", textDecoration: "none", borderBottom: "1px solid rgba(255,172,51,0.28)", paddingBottom: 2 }}>
               View pricing details →
             </Link>
             <Link href="/contact" style={{ fontSize: 13, color: "rgba(255,172,51,0.75)", textDecoration: "none", borderBottom: "1px solid rgba(255,172,51,0.28)", paddingBottom: 2 }}>
               Talk to the team →
             </Link>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AuroraBackground } from "@/components/aurora-background";
 import { LearnShell } from "@/components/learn/learn-shell";
+import { Reveal } from "@/components/landing/reveal";
 import {
   ARTICLES,
   LEVEL_TONE,
@@ -70,7 +71,7 @@ export default async function LearnIndexPage() {
       <LearnShell>
         <section className="pt-6 pb-16 sm:pt-8 sm:pb-24">
           {/* Hero */}
-          <div className="max-w-2xl">
+          <Reveal as="div" className="max-w-2xl">
             <div className="text-sm font-medium uppercase tracking-[0.2em] text-emerald-200/80">
               Learn
             </div>
@@ -81,34 +82,37 @@ export default async function LearnIndexPage() {
               Pick a topic, ship something by the end. Short reads, real
               code, no fluff.
             </p>
-          </div>
+          </Reveal>
 
           {/* Topic grid, text-first, no big emojis */}
           <section className="mt-12">
-            <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-              Topics
-            </div>
+            <Reveal>
+              <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+                Topics
+              </div>
+            </Reveal>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-              {TOPICS.map((topic) => {
+              {TOPICS.map((topic, i) => {
                 const count = totalCountForTopic(topic.key);
                 return (
-                  <Link
-                    key={topic.key}
-                    href={`/learn/topics/${topic.key}`}
-                    className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:border-white/20 hover:bg-white/[0.04]"
-                  >
-                    <div className="flex items-baseline justify-between gap-3">
-                      <h3 className="text-base font-semibold text-white transition group-hover:text-violet-200">
-                        {topic.label}
-                      </h3>
-                      <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-500">
-                        {count > 0 ? `${count} article${count === 1 ? "" : "s"}` : "Coming soon"}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-xs leading-5 text-neutral-400">
-                      {topic.description}
-                    </p>
-                  </Link>
+                  <Reveal key={topic.key} delay={i * 0.05}>
+                    <Link
+                      href={`/learn/topics/${topic.key}`}
+                      className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:border-white/20 hover:bg-white/[0.04]"
+                    >
+                      <div className="flex items-baseline justify-between gap-3">
+                        <h3 className="text-base font-semibold text-white transition group-hover:text-violet-200">
+                          {topic.label}
+                        </h3>
+                        <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-500">
+                          {count > 0 ? `${count} article${count === 1 ? "" : "s"}` : "Coming soon"}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs leading-5 text-neutral-400">
+                        {topic.description}
+                      </p>
+                    </Link>
+                  </Reveal>
                 );
               })}
             </div>
@@ -116,50 +120,53 @@ export default async function LearnIndexPage() {
 
           {/* Featured articles */}
           <section className="mt-14">
-            <div className="flex items-baseline justify-between gap-4">
-              <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
-                Latest
-              </div>
-              <Link href="/learn/all" className="text-xs text-neutral-500 transition hover:text-neutral-300">
-                See all →
-              </Link>
-            </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
-              {featured.map((article) => (
-                <Link
-                  key={article.href}
-                  href={article.href}
-                  className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:border-white/20 hover:bg-white/[0.04]"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    {article.level ? (
-                      <span
-                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] ${LEVEL_TONE[article.level]}`}
-                      >
-                        {article.level}
-                      </span>
-                    ) : (
-                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400">
-                        New
-                      </span>
-                    )}
-                    {article.readMinutes && (
-                      <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
-                    )}
-                  </div>
-                  <h3 className="mt-3 text-lg font-semibold text-white transition group-hover:text-violet-200">
-                    {article.title}
-                  </h3>
-                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-neutral-400">
-                    {article.excerpt}
-                  </p>
+            <Reveal>
+              <div className="flex items-baseline justify-between gap-4">
+                <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-400">
+                  Latest
+                </div>
+                <Link href="/learn/all" className="text-xs text-neutral-500 transition hover:text-neutral-300">
+                  See all →
                 </Link>
+              </div>
+            </Reveal>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4">
+              {featured.map((article, i) => (
+                <Reveal key={article.href} delay={i * 0.05}>
+                  <Link
+                    href={article.href}
+                    className="group flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition hover:border-white/20 hover:bg-white/[0.04]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      {article.level ? (
+                        <span
+                          className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] ${LEVEL_TONE[article.level]}`}
+                        >
+                          {article.level}
+                        </span>
+                      ) : (
+                        <span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400">
+                          New
+                        </span>
+                      )}
+                      {article.readMinutes && (
+                        <span className="text-xs text-neutral-500">{article.readMinutes} min</span>
+                      )}
+                    </div>
+                    <h3 className="mt-3 text-lg font-semibold text-white transition group-hover:text-violet-200">
+                      {article.title}
+                    </h3>
+                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-neutral-400">
+                      {article.excerpt}
+                    </p>
+                  </Link>
+                </Reveal>
               ))}
             </div>
           </section>
 
           {/* CTA */}
-          <div className="mt-16 rounded-3xl border border-violet-400/20 bg-gradient-to-br from-violet-500/[0.08] to-fuchsia-500/[0.05] p-6 sm:p-8">
+          <Reveal as="div" className="mt-16 rounded-3xl border border-violet-400/20 bg-gradient-to-br from-violet-500/[0.08] to-fuchsia-500/[0.05] p-6 sm:p-8">
             <div className="text-xs font-medium uppercase tracking-[0.2em] text-violet-300">
               Done reading?
             </div>
@@ -176,7 +183,7 @@ export default async function LearnIndexPage() {
             >
               Open the workshop <span aria-hidden>→</span>
             </Link>
-          </div>
+          </Reveal>
         </section>
       </LearnShell>
     </>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/auth";
 import { getSignInPath } from "@/lib/auth-ui";
+import { Reveal } from "@/components/landing/reveal";
 
 const CAPABILITIES = [
   { icon: "◎", label: "Acts in context",     desc: "Copilot reads your current thread, project, and files before doing anything. It never starts from scratch." },
@@ -22,25 +23,29 @@ export default async function CopilotPage() {
       <section style={{ background: "#050507" }}>
         <div className="landing-divider" />
         <div className="landing-section" style={{ maxWidth: 760, paddingTop: 80, paddingBottom: 72 }}>
-          <div className="landing-kicker" style={{ color: "rgba(65,214,155,0.75)" }}>copilot</div>
-          <h1
-            className="landing-gradient-text"
-            style={{ fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.08, marginBottom: 20 }}
-          >
-            Your AI acts, not just answers.
-          </h1>
-          <p className="landing-body" style={{ maxWidth: 520, marginBottom: 36 }}>
-            Copilot is the agentic layer inside Sansxel. It reads context,
-            acts across connected tools, and handles multi-step tasks. You
-            describe the outcome. It handles the steps.
-          </p>
-          <Link
-            href={signedIn ? "/app" : getSignInPath()}
-            className="landing-cta-primary"
-            style={{ display: "inline-flex" }}
-          >
-            {signedIn ? "Open Workshop" : "Start free"}
-          </Link>
+          <Reveal>
+            <div className="landing-kicker" style={{ color: "rgba(65,214,155,0.75)" }}>copilot</div>
+            <h1
+              className="landing-gradient-text"
+              style={{ fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.08, marginBottom: 20 }}
+            >
+              Your AI acts, not just answers.
+            </h1>
+          </Reveal>
+          <Reveal delay={0.12}>
+            <p className="landing-body" style={{ maxWidth: 520, marginBottom: 36 }}>
+              Copilot is the agentic layer inside Sansxel. It reads context,
+              acts across connected tools, and handles multi-step tasks. You
+              describe the outcome. It handles the steps.
+            </p>
+            <Link
+              href={signedIn ? "/app" : getSignInPath()}
+              className="landing-cta-primary"
+              style={{ display: "inline-flex" }}
+            >
+              {signedIn ? "Open Workshop" : "Start free"}
+            </Link>
+          </Reveal>
         </div>
       </section>
 
@@ -48,17 +53,20 @@ export default async function CopilotPage() {
       <section style={{ background: "#040406" }}>
         <div className="landing-divider" />
         <div className="landing-section">
-          <div style={{ maxWidth: 540, marginBottom: 48 }}>
-            <div className="landing-kicker" style={{ color: "rgba(65,214,155,0.65)" }}>capabilities</div>
-            <h2 className="landing-h2 landing-gradient-text">What Copilot can do.</h2>
-          </div>
+          <Reveal>
+            <div style={{ maxWidth: 540, marginBottom: 48 }}>
+              <div className="landing-kicker" style={{ color: "rgba(65,214,155,0.65)" }}>capabilities</div>
+              <h2 className="landing-h2 landing-gradient-text">What Copilot can do.</h2>
+            </div>
+          </Reveal>
           <div
             style={{ display: "grid", gap: 2, gridTemplateColumns: "repeat(1, 1fr)" }}
             className="copilot-grid"
           >
-            {CAPABILITIES.map((c) => (
-              <div
+            {CAPABILITIES.map((c, i) => (
+              <Reveal
                 key={c.label}
+                delay={i * 0.06}
                 style={{
                   padding: "28px 28px",
                   borderRadius: 14,
@@ -90,7 +98,7 @@ export default async function CopilotPage() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: "#e4e4e7", marginBottom: 6 }}>{c.label}</div>
                   <div style={{ fontSize: 13, color: "#52525b", lineHeight: 1.65 }}>{c.desc}</div>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
           <style>{`
@@ -104,19 +112,23 @@ export default async function CopilotPage() {
       <section style={{ background: "#050507" }}>
         <div className="landing-divider" />
         <div className="landing-section" style={{ maxWidth: 680 }}>
-          <div className="landing-kicker" style={{ color: "rgba(65,214,155,0.65)" }}>the difference</div>
-          <h2 className="landing-h2 landing-gradient-text">Not automation. Agency.</h2>
-          <p className="landing-body" style={{ marginBottom: 20 }}>
-            Most AI is reactive. You ask, it answers. Copilot is active.
-            It understands your current project, checks what tools say, makes
-            decisions, and takes action. It is not a workflow builder. You talk
-            to it like you would a colleague who has full context and can get
-            things done.
-          </p>
-          <p className="landing-body">
-            Every action runs inside your connected integrations. You review
-            before anything sensitive is sent.
-          </p>
+          <Reveal>
+            <div className="landing-kicker" style={{ color: "rgba(65,214,155,0.65)" }}>the difference</div>
+            <h2 className="landing-h2 landing-gradient-text">Not automation. Agency.</h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="landing-body" style={{ marginBottom: 20 }}>
+              Most AI is reactive. You ask, it answers. Copilot is active.
+              It understands your current project, checks what tools say, makes
+              decisions, and takes action. It is not a workflow builder. You talk
+              to it like you would a colleague who has full context and can get
+              things done.
+            </p>
+            <p className="landing-body">
+              Every action runs inside your connected integrations. You review
+              before anything sensitive is sent.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -124,19 +136,21 @@ export default async function CopilotPage() {
       <section style={{ background: "#040406", paddingBottom: 80 }}>
         <div className="landing-divider" />
         <div className="landing-section" style={{ maxWidth: 600, textAlign: "center" }}>
-          <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 14 }}>
-            Put Copilot to work.
-          </h2>
-          <p className="landing-body" style={{ marginBottom: 32 }}>
-            Connect your tools and describe what you need done. Workshop handles the rest.
-          </p>
-          <Link
-            href={signedIn ? "/app" : getSignInPath()}
-            className="landing-cta-primary"
-            style={{ display: "inline-flex" }}
-          >
-            {signedIn ? "Open Workshop" : "Start free"}
-          </Link>
+          <Reveal>
+            <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 14 }}>
+              Put Copilot to work.
+            </h2>
+            <p className="landing-body" style={{ marginBottom: 32 }}>
+              Connect your tools and describe what you need done. Workshop handles the rest.
+            </p>
+            <Link
+              href={signedIn ? "/app" : getSignInPath()}
+              className="landing-cta-primary"
+              style={{ display: "inline-flex" }}
+            >
+              {signedIn ? "Open Workshop" : "Start free"}
+            </Link>
+          </Reveal>
         </div>
       </section>
 

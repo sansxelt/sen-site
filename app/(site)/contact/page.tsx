@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { AuroraBackground } from "@/components/aurora-background";
+import { Reveal } from "@/components/landing/reveal";
 import { ContactForm } from "./contact-form";
 import { ContactChannels } from "./contact-channels";
 
@@ -31,7 +32,7 @@ export default async function ContactPage({
     <>
       <AuroraBackground />
       <section className="mx-auto max-w-5xl px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
-      <div className="max-w-3xl">
+      <Reveal as="div" className="max-w-3xl">
         <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
           Contact / Support
         </div>
@@ -42,35 +43,37 @@ export default async function ContactPage({
           Use the right channel below without leaving the site. Every path here
           leads somewhere real.
         </p>
-      </div>
+      </Reveal>
 
-      <ContactChannels />
+      <Reveal delay={0.1}>
+        <ContactChannels />
+      </Reveal>
 
-      <div className="mt-14 flex items-center gap-4">
+      <Reveal as="div" delay={0.05} className="mt-14 flex items-center gap-4">
         <div className="h-px flex-1 bg-white/[0.06]" />
         <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-600">
           Not covered above?
         </span>
         <div className="h-px flex-1 bg-white/[0.06]" />
-      </div>
+      </Reveal>
 
-      <div className="mt-8">
+      <Reveal as="div" className="mt-8">
         <ContactForm
           initialMessage={initialMessage}
           initialSubject={initialSubject}
         />
-      </div>
+      </Reveal>
 
-      <div className="mt-5 flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
+      <Reveal as="div" className="mt-5 flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5">
         <div className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-600" />
         <p className="text-xs leading-relaxed text-neutral-600">
           This form is for genuine enquiries only. Spam, abuse, or bad-faith
           submissions will result in immediate account termination and may be
           subject to IP-level access restrictions.
         </p>
-      </div>
+      </Reveal>
 
-      <div className="mt-10 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
+      <Reveal as="div" className="mt-10 rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
         <div className="grid gap-5 lg:grid-cols-2">
           <div>
             <div className="text-lg font-medium text-white">
@@ -108,7 +111,7 @@ export default async function ContactPage({
             </div>
           </div>
         </div>
-      </div>
+      </Reveal>
       </section>
     </>
   );

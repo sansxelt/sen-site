@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { EarlyAccessForm } from "@/components/early-access-form";
+import { Reveal } from "@/components/landing/reveal";
 import { readAccountContext } from "@/lib/account-session";
 import { getUserProfileByEmail } from "@/lib/user-profile";
 
@@ -30,20 +31,22 @@ export default async function DownloadPage() {
     <section className="mx-auto max-w-[1600px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 lg:px-8 lg:pt-10 lg:pb-24">
       <div className="grid gap-8 lg:grid-cols-[1.05fr_.95fr]">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-200">
-            <span className="h-2 w-2 rounded-full bg-emerald-300" />
-            Early access open
-          </div>
-          <h1 className="mt-6 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-            Get early access to Sansxel.
-          </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
-            Start with one chat surface and get the real product from day one:
-            responses that can expand from quick clarity into structure,
-            visuals, systems, and next actions.
-          </p>
+          <Reveal>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-neutral-200">
+              <span className="h-2 w-2 rounded-full bg-emerald-300" />
+              Early access open
+            </div>
+            <h1 className="mt-6 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+              Get early access to Sansxel.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
+              Start with one chat surface and get the real product from day one:
+              responses that can expand from quick clarity into structure,
+              visuals, systems, and next actions.
+            </p>
+          </Reveal>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Reveal as="div" delay={0.12} className="mt-8 flex flex-col gap-3 sm:flex-row">
             <span
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/[0.06] bg-white/[0.02] px-5 py-2.5 text-sm font-medium text-neutral-500"
               aria-disabled="true"
@@ -58,28 +61,29 @@ export default async function DownloadPage() {
               Request invite
               <span aria-hidden>→</span>
             </Link>
-          </div>
+          </Reveal>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {[
               ["Status", "Early access with invite-based onboarding."],
               ["Platform", "Windows first today, with broader surfaces coming later."],
               ["What you get", "The full Sansxel layered response experience from your first session."],
-            ].map(([title, description]) => (
-              <div
+            ].map(([title, description], i) => (
+              <Reveal
                 key={title}
+                delay={i * 0.06}
                 className="rounded-2xl border border-white/10 bg-white/5 p-4"
               >
                 <div className="text-sm font-medium text-white">{title}</div>
                 <div className="mt-2 text-sm leading-6 text-neutral-200">
                   {description}
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
+        <Reveal as="div" delay={0.1} className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             What is included
           </div>
@@ -92,25 +96,28 @@ export default async function DownloadPage() {
               "Export and sharing controls",
               "Direct support channel during rollout",
             ].map((item) => (
-              <div
+              <Reveal
                 key={item}
+                delay={0.04 * Math.min(6, item.length % 6)}
                 className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-neutral-200"
               >
                 <div className="mt-1 h-2.5 w-2.5 rounded-full bg-white" />
                 <span>{item}</span>
-              </div>
+              </Reveal>
             ))}
           </div>
-        </div>
+        </Reveal>
       </div>
 
       <div
         id="early-access"
         className="mt-10 grid gap-6 lg:grid-cols-[1fr_.95fr] sm:mt-12"
       >
-        <EarlyAccessForm initialAccountContext={initialAccountContext} />
+        <Reveal>
+          <EarlyAccessForm initialAccountContext={initialAccountContext} />
+        </Reveal>
 
-        <div className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
+        <Reveal as="div" delay={0.1} className="rounded-[32px] border border-white/10 bg-white/5 p-6 sm:p-8">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
             What happens next
           </div>
@@ -145,7 +152,7 @@ export default async function DownloadPage() {
               </Link>
             ))}
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

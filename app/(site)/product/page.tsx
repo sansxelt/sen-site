@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
+import { Reveal } from "@/components/landing/reveal";
 
 // /product is the builder-facing catalog. The consumer story lives on
 // the home page (cinematic walkthrough of Lens, Whisper, Day Kit,
@@ -329,9 +330,12 @@ export default function ProductPage() {
               <div>Depends on</div>
               <div />
             </div>
-            {SURFACES.map((s) => (
-              <div
+            {SURFACES.map((s, i) => (
+              <Reveal
                 key={s.key}
+                delay={i * 0.04}
+                amount={0.05}
+                y={10}
                 className="surface-row"
                 style={{
                   padding: "16px",
@@ -384,7 +388,7 @@ export default function ProductPage() {
                     open →
                   </Link>
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -416,9 +420,12 @@ export default function ProductPage() {
             </p>
 
             <div style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
-              {ENDPOINTS.map((e) => (
-                <div
+              {ENDPOINTS.map((e, i) => (
+                <Reveal
                   key={e.path}
+                  delay={i * 0.035}
+                  amount={0.05}
+                  y={8}
                   style={{
                     display: "grid",
                     gridTemplateColumns: "auto 1fr auto",
@@ -457,7 +464,7 @@ export default function ProductPage() {
                     <div style={{ fontSize: 11.5, color: "#71717a", marginTop: 2 }}>{e.desc}</div>
                   </div>
                   <StatusPill status={e.status} small />
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -530,9 +537,12 @@ export default function ProductPage() {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
-            {INTEGRATIONS.map((i) => (
-              <div
-                key={i.name}
+            {INTEGRATIONS.map((integration, idx) => (
+              <Reveal
+                key={integration.name}
+                delay={idx * 0.04}
+                amount={0.1}
+                y={10}
                 style={{
                   borderRadius: 10,
                   border: "1px solid rgba(255,255,255,0.06)",
@@ -544,18 +554,18 @@ export default function ProductPage() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: "#e4e4e7" }}>{i.name}</div>
-                  <StatusPill status={i.status} small />
+                  <div style={{ fontSize: 13, fontWeight: 500, color: "#e4e4e7" }}>{integration.name}</div>
+                  <StatusPill status={integration.status} small />
                 </div>
                 <div style={{
                   fontSize: 10,
                   fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-                  color: i.via === "MCP" ? "rgba(192,132,252,0.7)" : "rgba(255,255,255,0.4)",
+                  color: integration.via === "MCP" ? "rgba(192,132,252,0.7)" : "rgba(255,255,255,0.4)",
                   letterSpacing: "0.10em",
                 }}>
-                  {i.via === "MCP" ? "VIA MCP" : "FIRST-PARTY"}
+                  {integration.via === "MCP" ? "VIA MCP" : "FIRST-PARTY"}
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -580,9 +590,10 @@ export default function ProductPage() {
               title: "Keys, usage, rate limits.",
               body: "Per-project keys with spend caps, request rate limits, expiry dates. Real-time tail of every request the model is handling for you.",
             },
-          ].map((b) => (
-            <div
+          ].map((b, idx) => (
+            <Reveal
               key={b.kicker}
+              delay={idx * 0.08}
               style={{
                 borderRadius: 14,
                 border: "1px solid rgba(255,255,255,0.06)",
@@ -602,7 +613,7 @@ export default function ProductPage() {
               <p style={{ fontSize: 13, color: "#a1a1aa", lineHeight: 1.55, margin: 0 }}>
                 {b.body}
               </p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>
