@@ -55,14 +55,16 @@ export default function LensPage() {
 
   return (
     <main style={{ background: "#050507", overflowX: "hidden" }}>
-      {/* Hardware */}
+      {/* Hardware. Lifestyle hero (real photo, no cutout) so the
+          opening feels human; the transparent product shot then runs
+          on the architecture beat below. */}
       <CinematicAct
         accent="#c084fc"
         anchor="bottom-left"
-        imageUrl="/landing/lens-hero.png"
-        transparent
+        imageUrl="/landing/fingertip-hero.png"
+        imageObjectPosition="55% center"
         poster="/landing/lens-poster.svg"
-        posterAlt="Lens hardware"
+        posterAlt="Lens on a fingertip"
         headline={<>Lens.<br/>Concept and R&amp;D.</>}
         body={
           <>
