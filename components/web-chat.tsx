@@ -7,6 +7,8 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { CodeBlock } from "./code-block";
+import { ChartRenderer } from "./chart-renderer";
+import { CanvasRenderer } from "./canvas-renderer";
 import { useLei } from "./lei-shell";
 import { previewCreditCost } from "@/lib/lei";
 import { planDisplayName } from "@/lib/pricing";
@@ -3899,6 +3901,17 @@ function WebAssistantBubble({
                         {children}
                       </code>
                     );
+                  }
+                  // Special-case ```chart and ```canvas blocks: render
+                  // via the dedicated component instead of a code box.
+                  // This is the contract that lets the model produce
+                  // real charts / designs via a structured spec
+                  // instead of hand-rolling fake SVG.
+                  if (className?.includes("language-chart")) {
+                    return <ChartRenderer source={text} />;
+                  }
+                  if (className?.includes("language-canvas")) {
+                    return <CanvasRenderer source={text} />;
                   }
                   return (
                     <CodeBlock
