@@ -3,9 +3,6 @@
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { Lazy3DScene } from "@/components/3d/lazy-scene";
-import { WhisperEarbud } from "@/components/3d/whisper-earbud";
-import { ProductMacro } from "@/components/3d/product-macro";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -22,6 +19,45 @@ const FLOW = [
   { step: "01", label: "You speak", body: "Sub-200ms transcription, on-device when available." },
   { step: "02", label: "Workshop thinks", body: "Pulls your context, projects, files, memory." },
   { step: "03", label: "Whisper answers", body: "Natural voice out, interruptable, fast." },
+];
+
+const DETAILS = [
+  {
+    kicker: "driver",
+    title: "Glass dome driver",
+    body: "Anti-reflective transmission glass over a 12-perforation precision grille. Sized to seal at the ear canal without active noise pressure.",
+    accent: "#60a5fa",
+    specs: [
+      { label: "DRIVER", value: "10 mm dynamic" },
+      { label: "DOME",   value: "Glass IOR 1.45" },
+      { label: "GRILLE", value: "12-hole CNC" },
+      { label: "FREQ",   value: "20 Hz – 22 kHz" },
+    ],
+  },
+  {
+    kicker: "stem",
+    title: "Capacitive touch + mic vents",
+    body: "Hairline brushed band on the stem reads taps without raising surface texture. Three milled mic holes at the base sample your voice, not the room.",
+    accent: "#22d3ee",
+    specs: [
+      { label: "STEM",   value: "Aluminum 6063" },
+      { label: "FINISH", value: "Anodized matte" },
+      { label: "TOUCH",  value: "Capacitive band" },
+      { label: "MICS",   value: "3 × beamforming" },
+    ],
+  },
+  {
+    kicker: "grille",
+    title: "Hex-pattern speaker mesh",
+    body: "Thirty-five precision-cut perforations arranged in three concentric rings. Each hole is sized for a specific frequency band so the driver fires evenly across the spectrum.",
+    accent: "#a8c4ff",
+    specs: [
+      { label: "PERFS",  value: "35 holes" },
+      { label: "RINGS",  value: "4 concentric" },
+      { label: "BEZEL",  value: "Stainless 316L" },
+      { label: "TIP",    value: "Soft silicone" },
+    ],
+  },
 ];
 
 export default function WhisperPage() {
@@ -242,63 +278,123 @@ export default function WhisperPage() {
         </div>
       </section>
 
-      {/* MACRO: DRIVER ASSEMBLY */}
-      <ProductMacro
-        kicker="detail · driver"
-        title="Glass dome driver"
-        body="Anti-reflective transmission glass over a 12-perforation precision grille. Sized to seal at the ear canal without active noise pressure."
-        specs={[
-          { label: "DRIVER",     value: "10 mm dynamic" },
-          { label: "DOME",       value: "Glass IOR 1.45" },
-          { label: "GRILLE",     value: "12-hole CNC" },
-          { label: "FREQ",       value: "20 Hz – 22 kHz" },
-        ]}
-        poster="/landing/whisper-poster.svg"
-        posterAlt="Whisper driver close-up"
-        cameraPosition={[0, 1.4, 2.6]}
-        cameraFov={32}
-        accent="#60a5fa"
-        scene={<WhisperEarbud />}
-      />
+      {/* DETAILS — three spec callouts, no procedural 3D. The earlier
+          ProductMacro versions paired each block with a synthetic
+          earbud render that read as placeholder; spec cards alone
+          carry the same engineering story without that smell. */}
+      <section style={{ background: "#040406", padding: "clamp(80px, 12vh, 120px) clamp(20px, 5vw, 80px)" }}>
+        <div className="landing-divider" />
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <div style={{ maxWidth: 640, marginBottom: 48 }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "rgba(96,165,250,0.7)",
+                marginBottom: 12,
+              }}
+            >
+              the details
+            </div>
+            <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 14 }}>
+              Built around the parts that matter.
+            </h2>
+            <p className="landing-body">
+              Driver, stem, and grille — the three places where audio
+              fidelity is won or lost. Each spec is chosen to make
+              voice clear and sustained over hours of use.
+            </p>
+          </div>
 
-      {/* MACRO: STEM + TOUCH RING */}
-      <ProductMacro
-        reverse
-        kicker="detail · stem"
-        title="Capacitive touch + mic vents"
-        body="Hairline brushed band on the stem reads taps without raising surface texture. Three milled mic holes at the base sample your voice, not the room."
-        specs={[
-          { label: "STEM",       value: "Aluminum 6063" },
-          { label: "FINISH",     value: "Anodized matte" },
-          { label: "TOUCH",      value: "Capacitive band" },
-          { label: "MICS",       value: "3 × beamforming" },
-        ]}
-        poster="/landing/whisper-poster.svg"
-        posterAlt="Whisper stem close-up"
-        cameraPosition={[1.6, 0, 2.4]}
-        cameraFov={32}
-        accent="#22d3ee"
-        scene={<WhisperEarbud />}
-      />
-
-      {/* MACRO: HEX GRILLE */}
-      <ProductMacro
-        kicker="detail · grille"
-        title="Hex-pattern speaker mesh"
-        body="Thirty-five precision-cut perforations arranged in three concentric rings. Each hole is sized for a specific frequency band so the driver fires evenly across the spectrum."
-        specs={[
-          { label: "PERFS",      value: "35 holes" },
-          { label: "RINGS",      value: "4 concentric" },
-          { label: "BEZEL",      value: "Stainless 316L" },
-          { label: "TIP",        value: "Soft silicone" },
-        ]}
-        poster="/landing/whisper-poster.svg"
-        posterAlt="Whisper hex grille close-up"
-        cameraPosition={[0, 1.6, 1.6]}
-        cameraFov={28}
-        accent="#a8c4ff"
-        scene={<WhisperEarbud />}
-      />
+          <div style={{ display: "grid", gap: 18, gridTemplateColumns: "1fr" }} className="whisper-detail-grid">
+            {DETAILS.map((d) => (
+              <div
+                key={d.kicker}
+                style={{
+                  padding: "28px 26px",
+                  borderRadius: 18,
+                  border: `1px solid ${d.accent}28`,
+                  background: `linear-gradient(180deg, ${d.accent}08, transparent 80%)`,
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 10.5,
+                    fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: d.accent,
+                    marginBottom: 14,
+                  }}
+                >
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: d.accent, boxShadow: `0 0 8px ${d.accent}` }} />
+                  detail · {d.kicker}
+                </div>
+                <h3
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 600,
+                    color: "#f5f5f7",
+                    letterSpacing: "-0.02em",
+                    marginBottom: 12,
+                    lineHeight: 1.15,
+                  }}
+                >
+                  {d.title}
+                </h3>
+                <p style={{ fontSize: 13.5, color: "#a1a1aa", lineHeight: 1.55, marginBottom: 22 }}>
+                  {d.body}
+                </p>
+                <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 1fr", marginTop: "auto" }}>
+                  {d.specs.map((s) => (
+                    <div
+                      key={s.label}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        background: "rgba(0,0,0,0.30)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 9.5,
+                          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                          letterSpacing: "0.14em",
+                          color: "rgba(255,255,255,0.40)",
+                          marginBottom: 3,
+                        }}
+                      >
+                        {s.label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 12.5,
+                          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+                          color: d.accent,
+                          letterSpacing: "-0.005em",
+                        }}
+                      >
+                        {s.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <style>{`
+            @media (min-width: 980px) { .whisper-detail-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+          `}</style>
+        </div>
+      </section>
 
       {/* TODAY: works with what you own */}
       <section style={{ background: "#050507", padding: "clamp(80px, 12vh, 120px) clamp(20px, 5vw, 80px)" }}>
