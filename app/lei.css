@@ -14,13 +14,14 @@
   grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
 }
 .lei-shell--with-history {
-  grid-template-columns: minmax(0, 1fr) 240px;
+  /* Width comes from the rail itself via --rail-width set on <html>.
+     Default 240px when nothing is set yet (first paint pre-hydration). */
+  grid-template-columns: minmax(0, 1fr) var(--rail-width, 240px);
 }
-/* Collapsed rail: shrink the right column to a thin icon strip.
-   Driven by the data attribute the rail writes to <html> so we
-   don't need prop drilling. */
+/* Collapsed rail wins over the resize variable: when the user
+   collapses, force the column to 44px regardless of saved width. */
 html[data-rail-collapsed="true"] .lei-shell--with-history {
-  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-template-columns: minmax(0, 1fr) 44px !important;
 }
 @media (max-width: 900px) {
   .lei-shell--split,
@@ -84,6 +85,30 @@ html[data-rail-collapsed="true"] .lei-shell--with-history {
 .chat-history-collapsed-new:hover {
   background: rgba(155,124,255,0.20);
   border-color: rgba(155,124,255,0.45);
+}
+
+/* Resize handle on the rail's left edge. Sits inside the rail
+   (left:0) at 6px wide so it isn't clipped by overflow:hidden.
+   Hover reveals a faint accent line so the user sees the affordance. */
+.chat-history-resize-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 4;
+  background: transparent;
+  transition: background 160ms;
+}
+.chat-history-resize-handle:hover,
+.chat-history-resize-handle:active {
+  background: linear-gradient(
+    to right,
+    rgba(168,196,255,0.42) 0%,
+    rgba(168,196,255,0.18) 60%,
+    transparent 100%
+  );
 }
 
 /* ── Chat history rail (right side of /app workspace) ─────────── */

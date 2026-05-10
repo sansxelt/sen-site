@@ -196,25 +196,9 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     }
   };
 
-  // Density toggle, persists to localStorage so the user's choice
-  // sticks across reloads. Default is "compact" because the original
-  // size felt overweight for a sidebar of titles ("the titles are
-  // too big" feedback). Click the icon in the rail header to flip.
-  const [density, setDensity] = useState<"compact" | "comfy">(() => {
-    if (typeof window === "undefined") return "compact";
-    return window.localStorage.getItem("sansxel.rail.density") === "comfy"
-      ? "comfy"
-      : "compact";
-  });
-  const toggleDensity = () => {
-    setDensity((d) => {
-      const next = d === "compact" ? "comfy" : "compact";
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("sansxel.rail.density", next);
-      }
-      return next;
-    });
-  };
+  // Density was a toggle; users only ever wanted compact, so it's
+  // hardcoded now. Class kept so existing CSS selectors still match.
+  const density = "compact" as const;
 
   // Whole-rail collapse. Persisted in localStorage; mirrored to a
   // data-attribute on <html> so the lei-shell grid can shrink the
@@ -236,6 +220,47 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
       }
       return next;
     });
+  };
+
+  // Resizable rail width. Drag the left edge between MIN_W and MAX_W
+  // to resize. Width is mirrored to a CSS variable on <html> so the
+  // parent grid template can read it without prop drilling. Persisted
+  // in localStorage. Held in a ref during drag for stale-closure-safe
+  // localStorage write on mouseup.
+  const MIN_W = 180;
+  const MAX_W = 480;
+  const DEFAULT_W = 240;
+  const [railWidth, setRailWidth] = useState<number>(() => {
+    if (typeof window === "undefined") return DEFAULT_W;
+    const stored = Number(window.localStorage.getItem("sansxel.rail.width"));
+    if (!Number.isFinite(stored) || stored < MIN_W || stored > MAX_W) return DEFAULT_W;
+    return stored;
+  });
+  const widthRef = useRef(railWidth);
+  useEffect(() => {
+    widthRef.current = railWidth;
+    if (typeof document === "undefined") return;
+    document.documentElement.style.setProperty("--rail-width", `${railWidth}px`);
+  }, [railWidth]);
+
+  const onResizeStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (typeof document === "undefined" || typeof window === "undefined") return;
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "ew-resize";
+    const onMove = (mv: MouseEvent) => {
+      const next = Math.min(MAX_W, Math.max(MIN_W, window.innerWidth - mv.clientX));
+      setRailWidth(next);
+    };
+    const onUp = () => {
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.localStorage.setItem("sansxel.rail.width", String(widthRef.current));
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
   };
 
   // Live in-flight thread set, refreshed on every flight:changed
@@ -449,6 +474,19 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
 
   return (
     <aside className={`chat-history-rail chat-history-rail--${density}`}>
+      {/* Drag handle on the left edge — drag to resize the whole
+          rail between MIN_W and MAX_W. Cursor changes on hover via
+          CSS. ARIA exposes it as a vertical separator. */}
+      <div
+        className="chat-history-resize-handle"
+        onMouseDown={onResizeStart}
+        role="separator"
+        aria-orientation="vertical"
+        aria-valuemin={MIN_W}
+        aria-valuemax={MAX_W}
+        aria-valuenow={railWidth}
+        aria-label="Resize chat history"
+      />
       <div className="chat-history-head">
         <div className="chat-history-head-row">
           <div>
@@ -466,15 +504,6 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
               aria-label="Collapse chat history"
             >
               ‹
-            </button>
-            <button
-              type="button"
-              onClick={toggleDensity}
-              className="chat-history-density-toggle"
-              title={density === "compact" ? "Switch to comfy size" : "Switch to compact size"}
-              aria-label="Toggle thread row density"
-            >
-              {density === "compact" ? "↕" : "↔"}
             </button>
             <button
               type="button"
