@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { useRef, useState } from "react";
 import { Lazy3DScene } from "@/components/3d/lazy-scene";
 import { EcosystemOrbit } from "@/components/3d/ecosystem-orbit";
 import { WorkshopBrain } from "@/components/3d/workshop-brain";
@@ -13,13 +13,24 @@ import { EcosystemConnection } from "@/components/3d/ecosystem-connection";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
+type Feature = {
+  icon: string;
+  label: string;
+  desc: string;
+  // Optional: when present, the feature card is clickable and expands
+  // inline to show this longer copy + an optional image. Cards
+  // without details remain static.
+  details?: string;
+  imageUrl?: string;
+};
+
 type ProductDef = {
   key: string;
   kicker: string;
   name: string;
   tagline: string;
   body: string;
-  features: { icon: string; label: string; desc: string }[];
+  features: Feature[];
   cta: { href: string; label: string };
   poster: string;
   posterAlt: string;
@@ -41,10 +52,22 @@ const PRODUCTS: ProductDef[] = [
     tagline: "The AI workspace.",
     body: "Chat, projects, files, memory, voice, creation, integrations. Workshop is where the work actually happens, with persistent context across every session.",
     features: [
-      { icon: "◎", label: "Chat",       desc: "Threads with full context, file references, memory pulls." },
-      { icon: "◇", label: "Projects",   desc: "Group work into focused workspaces with their own memory." },
-      { icon: "◈", label: "Memory",     desc: "Preferences and facts persist; you don't re-explain yourself." },
-      { icon: "◬", label: "Research",   desc: "Web search, citations, deep multi-step research jobs." },
+      {
+        icon: "◎", label: "Chat", desc: "Threads with full context, file references, memory pulls.",
+        details: "Every thread carries the full context of your project: the files you have referenced, the facts memory has stored, the project you are working in. Drop a PDF, paste a screenshot, mention a URL. The model has access to all of it without you re-explaining.",
+      },
+      {
+        icon: "◇", label: "Projects", desc: "Group work into focused workspaces with their own memory.",
+        details: "Projects scope memory and context. The chat that lives in your Q3 launch project never bleeds into your side hustle project. Each project has its own files, its own goals, its own facts the AI remembers.",
+      },
+      {
+        icon: "◈", label: "Memory", desc: "Preferences and facts persist; you don't re-explain yourself.",
+        details: "Sansxel learns your name, your role, the tools you use, and the way you write. After a few sessions you stop introducing yourself. Memory is editable from the settings page; nothing is hidden, everything is reversible.",
+      },
+      {
+        icon: "◬", label: "Research", desc: "Web search, citations, deep multi-step research jobs.",
+        details: "Ask for a deep dive and the model spawns a research job: searches the web, reads sources, follows links, returns a structured answer with citations. Cancel any time. Saved to the project for future reference.",
+      },
     ],
     cta: { href: "/workshop", label: "Open Workshop" },
     poster: "/landing/workshop-poster.svg",
@@ -61,10 +84,22 @@ const PRODUCTS: ProductDef[] = [
     tagline: "Speak. Listen. Stay heads-up.",
     body: "Voice in and voice out, low latency, interruptable. Works with your existing earbuds today; dedicated Sansxel hardware later.",
     features: [
-      { icon: "◉", label: "Voice in",      desc: "Sub-200ms transcription, on-device when available." },
-      { icon: "◐", label: "Voice out",     desc: "Natural TTS, interruptable mid-sentence." },
-      { icon: "◫", label: "Any device",    desc: "AirPods, headphones, built-in mic, all supported now." },
-      { icon: "◆", label: "Future hardware", desc: "Sansxel-built earbud designed around how the AI works." },
+      {
+        icon: "◉", label: "Voice in", desc: "Sub-200ms transcription, on-device when available.",
+        details: "Voice in uses on-device transcription on Mac and iPhone, falling back to cloud for older devices. Sub-200ms is target latency for the first word, end-to-end. Background noise suppression is automatic.",
+      },
+      {
+        icon: "◐", label: "Voice out", desc: "Natural TTS, interruptable mid-sentence.",
+        details: "When the model speaks back, you can interrupt mid-sentence. Talk over it; it stops, listens, picks up the new thread. The voice is consistent across sessions; pick from a small palette in settings.",
+      },
+      {
+        icon: "◫", label: "Any device", desc: "AirPods, headphones, built-in mic, all supported now.",
+        details: "Whisper runs through whatever you already wear. AirPods, Bose, Sony, wired earbuds, even the laptop's built-in mic. No special hardware required to start. Open Workshop, hold the voice key, talk.",
+      },
+      {
+        icon: "◆", label: "Future hardware", desc: "Sansxel-built earbud designed around how the AI works.",
+        details: "We are designing a dedicated Sansxel earbud (matte black aluminum, brushed steel accent ring) that lives in the Day Kit case alongside your Lens. Concept and R&D, no ship date yet. Joining the waitlist gets you the dev kit when one exists.",
+      },
     ],
     cta: { href: "/whisper", label: "Explore Whisper" },
     poster: "/landing/whisper-poster.svg",
@@ -82,10 +117,22 @@ const PRODUCTS: ProductDef[] = [
     tagline: "The visual interface direction.",
     body: "A transparent contact lens with three render modes (Ambient, Mainframe, Minimal), paired with Workshop on your phone or PC for compute. Currently in concept and R&D.",
     features: [
-      { icon: "◎", label: "Ambient",   desc: "Captions, arrows, tiny answer snippets, always-on." },
-      { icon: "▣", label: "Mainframe", desc: "Floating windows and dashboards in your field of view." },
-      { icon: "◌", label: "Minimal",   desc: "Reduced UI, blink-controlled, battery-saving." },
-      { icon: "◈", label: "Workshop",  desc: "Heavy compute lives on your phone or PC, not the lens." },
+      {
+        icon: "◎", label: "Ambient", desc: "Captions, arrows, tiny answer snippets, always-on.",
+        details: "Ambient mode is the default daily view. Captions for live speech in your environment. Subtle navigation arrows when you are walking somewhere. Small answer cards from Workshop when you ask. Nothing in the centre of your view; everything in the periphery.",
+      },
+      {
+        icon: "▣", label: "Mainframe", desc: "Floating windows and dashboards in your field of view.",
+        details: "Mainframe is for deep work. Floating windows you place around the room: chat thread on the left, file viewer on the right, code in the centre. Pinned panels stay where you put them. Designed for sit-down sessions, not walking around.",
+      },
+      {
+        icon: "◌", label: "Minimal", desc: "Reduced UI, blink-controlled, battery-saving.",
+        details: "Minimal pares Lens down to a single pinpoint indicator. Battery target: hours of additional uptime per pair. Summon the next answer with a deliberate double blink; everything else stays silent. For long days where you want presence, not interface.",
+      },
+      {
+        icon: "◈", label: "Workshop", desc: "Heavy compute lives on your phone or PC, not the lens.",
+        details: "Lens is the render and sensing layer; the heavy AI lives in Workshop on your phone or PC. That keeps the optic itself thin, cool, and battery-conscious. The phone or PC is the bridge; Lens shows the result.",
+      },
     ],
     cta: { href: "/lens", label: "Join Lens waitlist" },
     poster: "/landing/lens-poster.svg",
@@ -103,10 +150,22 @@ const PRODUCTS: ProductDef[] = [
     tagline: "Lens, audio, one case.",
     body: "The Day Kit case holds both your Sansxel Lens pairs and the audio earbuds. Quick swap between Pair A and Pair B; one charges while the other runs. The earbuds sit alongside, charging when you set them down.",
     features: [
-      { icon: "◇", label: "Two Lens",     desc: "Pair A and Pair B, alternate through the day." },
-      { icon: "◐", label: "Audio earbuds", desc: "Whisper voice in / voice out, charging in the same case." },
-      { icon: "▢", label: "Smart case",   desc: "Tops up in minutes, status LED on the base." },
-      { icon: "↻", label: "Hot swap",     desc: "Pull one out, slot the other in, conversation continues." },
+      {
+        icon: "◇", label: "Two Lens", desc: "Pair A and Pair B, alternate through the day.",
+        details: "The Day Kit ships with two Lens. Wear Pair A in the morning, swap to Pair B at the gym or before dinner; the first pair tops up while the second runs. Targeting a full day of usage when you alternate.",
+      },
+      {
+        icon: "◐", label: "Audio earbuds", desc: "Whisper voice in / voice out, charging in the same case.",
+        details: "The case has dedicated wells for the Sansxel audio earbuds alongside the contact lens slots. One piece of hardware to carry, two product lines charging in parallel.",
+      },
+      {
+        icon: "▢", label: "Smart case", desc: "Tops up in minutes, status LED on the base.",
+        details: "USB-C in, fast-charge in. A small status LED on the base shows charge level: green for full, amber for mid, red for low. Anodized matte black aluminum body with chamfered edges.",
+      },
+      {
+        icon: "↻", label: "Hot swap", desc: "Pull one out, slot the other in, conversation continues.",
+        details: "Pair A and Pair B share the same paired session. Pull one out, slot the other in; whatever the model was saying continues without re-handshake. The swap is instant from the wearer's perspective.",
+      },
     ],
     cta: { href: "/lens#day-kit", label: "See the Day Kit" },
     poster: "/landing/lens-case-poster.svg",
@@ -124,10 +183,22 @@ const PRODUCTS: ProductDef[] = [
     tagline: "The AI that takes action.",
     body: "Copilot acts across your tools. Compose, schedule, post, refactor, analyze. From Workshop, with your context, on your behalf.",
     features: [
-      { icon: "✦", label: "Cross-tool",   desc: "Notion, GitHub, Figma, Gmail, Stripe, more." },
-      { icon: "✧", label: "Confirm-first", desc: "Reads first, asks before writing or sending." },
-      { icon: "✺", label: "MCP",          desc: "Connect any MCP server, your own tools and data." },
-      { icon: "✷", label: "Audited",      desc: "Every action logged, replayable, undoable." },
+      {
+        icon: "✦", label: "Cross-tool", desc: "Notion, GitHub, Figma, Gmail, Stripe, more.",
+        details: "Copilot acts across the tools you already pay for. First-party connectors for Notion, GitHub, Figma, Gmail, Stripe, Linear, Slack. New ones added monthly based on what users ask for in Discord.",
+      },
+      {
+        icon: "✧", label: "Confirm-first", desc: "Reads first, asks before writing or sending.",
+        details: "Copilot defaults to read-only. Any write action (sending an email, posting a message, deleting a row) prompts you for confirmation with a diff of what will change. Approve once or set a per-tool whitelist.",
+      },
+      {
+        icon: "✺", label: "MCP", desc: "Connect any MCP server, your own tools and data.",
+        details: "If a tool does not have a first-party connector, you can connect it via MCP (Model Context Protocol). Run an MCP server locally or self-hosted; Copilot picks up its tools the same way it uses ours.",
+      },
+      {
+        icon: "✷", label: "Audited", desc: "Every action logged, replayable, undoable.",
+        details: "Every Copilot action writes to an audit log: what tool, what input, what output, what time. Replayable from the audit page; most actions are undoable for 24 hours after they happen.",
+      },
     ],
     cta: { href: "/copilot", label: "See Copilot" },
     poster: "/landing/ecosystem-orbit-poster.svg",
@@ -144,10 +215,22 @@ const PRODUCTS: ProductDef[] = [
     tagline: "API, SDKs, console.",
     body: "Build with Sansxel. API keys, request inspector, usage dashboard, webhooks, SDKs, MCP connections.",
     features: [
-      { icon: "⚡", label: "API",          desc: "OpenAI-compatible chat + tool use endpoints." },
-      { icon: "⌗", label: "Keys + usage", desc: "Per-key limits, per-project usage, real-time tail." },
-      { icon: "⊕", label: "Webhooks",     desc: "Per-project webhooks for events and completions." },
-      { icon: "✧", label: "MCP",          desc: "First-class MCP server registry and runtime." },
+      {
+        icon: "⚡", label: "API", desc: "OpenAI-compatible chat + tool use endpoints.",
+        details: "The Sansxel API mirrors the OpenAI chat completions schema, plus tool use, streaming, and our own context fields. Drop-in replacement for openai-sdk in JavaScript and Python. Bearer-token auth, no special middleware needed.",
+      },
+      {
+        icon: "⌗", label: "Keys + usage", desc: "Per-key limits, per-project usage, real-time tail.",
+        details: "Generate per-project API keys from the console. Set per-key spend limits, request rate limits, expiry dates. The dashboard shows real-time usage per key, per project, per endpoint, with token-level cost breakdown.",
+      },
+      {
+        icon: "⊕", label: "Webhooks", desc: "Per-project webhooks for events and completions.",
+        details: "Subscribe to events: completion finished, tool call invoked, key used, project usage exceeded. Webhooks deliver to your endpoint with HMAC signatures and configurable retry policy.",
+      },
+      {
+        icon: "✧", label: "MCP", desc: "First-class MCP server registry and runtime.",
+        details: "Connect MCP servers to your project from the registry, or publish your own. The runtime handles auth, rate limiting, and tool discovery. Supported in both Workshop and via the API.",
+      },
     ],
     cta: { href: "https://platform.sansxel.ai", label: "Open Platform" },
     poster: "/landing/ecosystem-poster.svg",
@@ -159,7 +242,137 @@ const PRODUCTS: ProductDef[] = [
   },
 ];
 
+// Clickable expandable feature card. Click to reveal extended copy +
+// optional image. Cards without `details` are static (no click target,
+// no chevron). One card open at a time within a section is enforced by
+// the parent ProductSection's openIdx state.
+function FeatureCard({
+  feature,
+  accent,
+  open,
+  onToggle,
+}: {
+  feature: Feature;
+  accent: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const expandable = Boolean(feature.details || feature.imageUrl);
+
+  return (
+    <div
+      style={{
+        borderRadius: 12,
+        border: open
+          ? `1px solid ${accent}55`
+          : "1px solid rgba(255,255,255,0.06)",
+        background: open
+          ? `${accent}0c`
+          : "rgba(255,255,255,0.02)",
+        transition: "background 200ms, border-color 200ms",
+        overflow: "hidden",
+      }}
+    >
+      <button
+        type="button"
+        onClick={expandable ? onToggle : undefined}
+        disabled={!expandable}
+        style={{
+          all: "unset",
+          width: "100%",
+          padding: "12px 14px",
+          display: "flex",
+          gap: 10,
+          alignItems: "flex-start",
+          cursor: expandable ? "pointer" : "default",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 7,
+            background: `${accent}12`,
+            border: `1px solid ${accent}26`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 13,
+            color: `${accent}cc`,
+            flexShrink: 0,
+          }}
+        >
+          {feature.icon}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 500, color: "#e4e4e7", marginBottom: 2 }}>
+            {feature.label}
+          </div>
+          <div style={{ fontSize: 11.5, color: "#71717a", lineHeight: 1.45 }}>
+            {feature.desc}
+          </div>
+        </div>
+        {expandable && (
+          <span
+            aria-hidden
+            style={{
+              fontSize: 11,
+              color: open ? accent : "rgba(255,255,255,0.35)",
+              flexShrink: 0,
+              marginTop: 4,
+              transition: "transform 220ms, color 200ms",
+              transform: open ? "rotate(180deg)" : "rotate(0deg)",
+              display: "inline-block",
+            }}
+          >
+            ▾
+          </span>
+        )}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && expandable && (
+          <motion.div
+            key="details"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.32, ease: EASE }}
+            style={{ overflow: "hidden" }}
+          >
+            <div style={{ padding: "0 14px 14px 50px" }}>
+              {feature.imageUrl && (
+                <img
+                  src={feature.imageUrl}
+                  alt={feature.label}
+                  style={{
+                    width: "100%",
+                    maxWidth: 480,
+                    aspectRatio: "16 / 9",
+                    objectFit: "cover",
+                    borderRadius: 10,
+                    marginBottom: 12,
+                    border: `1px solid ${accent}1a`,
+                    background: "rgba(0,0,0,0.30)",
+                  }}
+                />
+              )}
+              {feature.details && (
+                <p style={{ fontSize: 12.5, color: "#a1a1aa", lineHeight: 1.6, margin: 0 }}>
+                  {feature.details}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function ProductSection({ product, reverse }: { product: ProductDef; reverse: boolean }) {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
@@ -274,41 +487,14 @@ function ProductSection({ product, reverse }: { product: ProductDef; reverse: bo
           </motion.p>
 
           <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr 1fr", marginBottom: 28 }}>
-            {product.features.map((f) => (
-              <div
+            {product.features.map((f, i) => (
+              <FeatureCard
                 key={f.label}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  background: "rgba(255,255,255,0.02)",
-                  display: "flex",
-                  gap: 10,
-                  alignItems: "flex-start",
-                }}
-              >
-                <div
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 7,
-                    background: `${product.accent}12`,
-                    border: `1px solid ${product.accent}26`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 13,
-                    color: `${product.accent}cc`,
-                    flexShrink: 0,
-                  }}
-                >
-                  {f.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 500, color: "#e4e4e7", marginBottom: 2 }}>{f.label}</div>
-                  <div style={{ fontSize: 11.5, color: "#71717a", lineHeight: 1.45 }}>{f.desc}</div>
-                </div>
-              </div>
+                feature={f}
+                accent={product.accent}
+                open={openIdx === i}
+                onToggle={() => setOpenIdx(openIdx === i ? null : i)}
+              />
             ))}
           </div>
 
