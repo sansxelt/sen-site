@@ -248,7 +248,6 @@ export default async function HomePage() {
             you alternate.
           </>
         }
-        cta={{ href: "/lens#day-kit", label: "See the Day Kit" }}
       />
 
       {/* Workshop. leftScrim is essential here: the screenshot is

@@ -233,19 +233,22 @@ export function CinematicAct({
         />
       )}
 
-      {/* Optional left-side dark scrim. Pushes the bright photo into
-          shadow on the left third so bottom-left / top-left text has
-          a legible bed no matter what the source photo looks like. */}
-      {leftScrim && (anchor === "bottom-left" || anchor === "top-right") && (
+      {/* Optional side dark scrim. Pushes the bright photo into
+          shadow on the text side so bottom-left / bottom-right /
+          top-right text has a legible bed regardless of what the
+          photo looks like. Coverage extends through ~85% so wide
+          bodies (e.g. screenshot heroes with chat UI bleed) still
+          read clearly. */}
+      {leftScrim && (anchor === "bottom-left" || anchor === "bottom-right" || anchor === "top-right") && (
         <div
           aria-hidden
           style={{
             position: "absolute",
             inset: 0,
             background:
-              anchor === "top-right"
-                ? "linear-gradient(270deg, rgba(5,5,7,0.92) 0%, rgba(5,5,7,0.55) 30%, rgba(5,5,7,0) 60%)"
-                : "linear-gradient(90deg, rgba(5,5,7,0.92) 0%, rgba(5,5,7,0.55) 30%, rgba(5,5,7,0) 60%)",
+              anchor === "bottom-right" || anchor === "top-right"
+                ? "linear-gradient(270deg, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.82) 35%, rgba(5,5,7,0.50) 60%, rgba(5,5,7,0) 90%)"
+                : "linear-gradient(90deg, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.82) 35%, rgba(5,5,7,0.50) 60%, rgba(5,5,7,0) 90%)",
             pointerEvents: "none",
             zIndex: 1,
           }}

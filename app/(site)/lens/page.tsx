@@ -57,12 +57,14 @@ export default function LensPage() {
     <main style={{ background: "#050507", overflowX: "hidden" }}>
       {/* Hardware. Lifestyle hero, full-bleed cover so the photo
           reads edge-to-edge. Crop biased so the lens-on-fingertip
-          sits left and the text reads bottom-right. */}
+          sits left and the text reads bottom-right with a
+          right-side scrim for legibility. */}
       <CinematicAct
         accent="#c084fc"
         anchor="bottom-right"
         imageUrl="/landing/fingertip-hero.png"
         imageObjectPosition="35% 55%"
+        leftScrim
         poster="/landing/lens-poster.svg"
         posterAlt="Lens on a fingertip"
         headline={<>Lens.<br/>Concept and R&amp;D.</>}
