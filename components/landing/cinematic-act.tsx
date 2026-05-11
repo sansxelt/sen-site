@@ -109,13 +109,18 @@ export function CinematicAct({
         // address bar; loosens on tablets/desktop.
         return { left: "clamp(16px, 5vw, 80px)", right: "clamp(16px, 5vw, 80px)", bottom: "clamp(48px, 12vh, 160px)", textAlign: "left" };
       case "bottom-right":
-        // Anchor both sides so the wrapper has a guaranteed width
-        // (otherwise on mobile it shrinks to the headline's content
-        // width and squeezes the body paragraph into a narrow column).
-        // Children handle right alignment: textAlign on the wrapper,
-        // marginLeft: auto on the body block, justifyContent: flex-end
-        // on meta + cta wrappers.
-        return { left: "clamp(16px, 5vw, 80px)", right: "clamp(16px, 5vw, 80px)", bottom: "clamp(48px, 12vh, 160px)", textAlign: "right" };
+        // Right inset + explicit width. Setting both left + right
+        // with max-width made the browser anchor the wrapper to the
+        // left instead of the right. Explicit width plus right-only
+        // inset guarantees the wrapper itself sits flush against the
+        // right edge while still being wide enough on phones that
+        // the body paragraph doesn't squeeze.
+        return {
+          right: "clamp(16px, 5vw, 80px)",
+          width: "min(900px, calc(100vw - 32px))",
+          bottom: "clamp(48px, 12vh, 160px)",
+          textAlign: "right",
+        };
       case "bottom-center":
         // Center via left:0 / right:0 / margin auto rather than
         // translateX(-50%). Framer combines `y` into a single
