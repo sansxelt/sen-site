@@ -76,14 +76,16 @@ export default function LensPage() {
         }
       />
 
-      {/* Architecture. Model wearing the lens, full-bleed cover. */}
+      {/* Architecture. Text-only manifesto beat on the atmospheric
+          backdrop. The earlier model-hero.png composition (saline +
+          case + spec callouts) read as ordinary contact-lens care,
+          which is exactly the confusion to avoid: this lens is a
+          render device, not an eye-care product. */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-left"
-        imageUrl="/landing/model-hero.png"
-        imageObjectPosition="65% center"
         poster="/landing/lens-poster.svg"
-        posterAlt="Model wearing the Lens"
+        posterAlt="Lens architecture"
         headline={<>Lens does not run heavy AI.<br/>Workshop does.</>}
         body={
           <>
