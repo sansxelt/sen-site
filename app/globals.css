@@ -4867,6 +4867,17 @@ div[id] {
    CINEMATIC REVEAL TYPOGRAPHY
    Used by the homepage acts/slabs and the Lens reel. Sizes scale from
    "section headline" to "studio title card" via modifier classes. */
+/* CinematicAct section fallback. Inline style sets height: 100svh
+   which the vast majority of browsers support, but a tiny tail of
+   older versions don't recognise svh and would compute nothing.
+   Lay down a vh fallback first so they get sensible height. */
+.cinematic-act {
+  height: 100vh;
+}
+@supports (height: 100svh) {
+  .cinematic-act { height: 100svh; }
+}
+
 .cinematic-display {
   font-weight: 600;
   font-size: clamp(1.85rem, 6vw, 5.4rem);
