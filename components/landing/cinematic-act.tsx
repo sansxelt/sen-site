@@ -287,6 +287,11 @@ export function CinematicAct({
               maxWidth: 540,
               letterSpacing: "-0.005em",
               marginBottom: meta || cta ? 24 : 0,
+              // Push the constrained body block to the right edge of
+              // the wrapper when the anchor is on the right side, so
+              // the paragraph block lines up with the headline rather
+              // than starting from the wrapper's left edge.
+              marginLeft: anchor === "bottom-right" || anchor === "top-right" ? "auto" : undefined,
             }}
           >
             {body}
@@ -298,7 +303,16 @@ export function CinematicAct({
             initial={reduce ? false : { y: 12 }}
             animate={reduce ? undefined : { y: 0 }}
             transition={{ duration: 0.6, ease: EASE, delay: 0.32 }}
-            style={{ marginBottom: cta ? 24 : 0 }}
+            style={{
+              marginBottom: cta ? 24 : 0,
+              display: "flex",
+              justifyContent:
+                anchor === "bottom-right" || anchor === "top-right"
+                  ? "flex-end"
+                  : anchor === "bottom-center" || anchor === "center"
+                  ? "center"
+                  : "flex-start",
+            }}
           >
             {meta}
           </motion.div>
@@ -309,6 +323,15 @@ export function CinematicAct({
             initial={reduce ? false : { y: 8 }}
             animate={reduce ? undefined : { y: 0 }}
             transition={{ duration: 0.5, ease: EASE, delay: 0.40 }}
+            style={{
+              display: "flex",
+              justifyContent:
+                anchor === "bottom-right" || anchor === "top-right"
+                  ? "flex-end"
+                  : anchor === "bottom-center" || anchor === "center"
+                  ? "center"
+                  : "flex-start",
+            }}
           >
             <Link
               href={cta.href}

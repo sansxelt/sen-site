@@ -251,11 +251,14 @@ export default async function HomePage() {
         cta={{ href: "/lens#day-kit", label: "See the Day Kit" }}
       />
 
-      {/* Workshop */}
+      {/* Workshop. leftScrim is essential here: the screenshot is
+          full of bright UI text that would otherwise bleed into the
+          headline at bottom-left. */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-left"
         imageUrl="/landing/workshop-hero.png"
+        leftScrim
         poster="/landing/workshop-poster.svg"
         posterAlt="Workshop UI"
         headline={<>Workshop holds<br/>your context.</>}

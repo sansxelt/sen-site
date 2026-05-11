@@ -76,14 +76,15 @@ export default function LensPage() {
         }
       />
 
-      {/* Architecture. Text-only manifesto beat on the atmospheric
-          backdrop. The earlier model-hero.png composition (saline +
-          case + spec callouts) read as ordinary contact-lens care,
-          which is exactly the confusion to avoid: this lens is a
-          render device, not an eye-care product. */}
+      {/* Architecture. Model-hero spec composition behind the
+          headline (kept on user request). leftScrim guarantees the
+          bottom-left text reads against the bright callouts. */}
       <CinematicAct
         accent="#a8c4ff"
         anchor="bottom-left"
+        imageUrl="/landing/model-hero.png"
+        imageObjectPosition="65% center"
+        leftScrim
         poster="/landing/lens-poster.svg"
         posterAlt="Lens architecture"
         headline={<>Lens does not run heavy AI.<br/>Workshop does.</>}
@@ -227,64 +228,9 @@ export default function LensPage() {
         </div>
       </section>
 
-      {/* Day Kit */}
-      <CinematicAct
-        accent="#c084fc"
-        anchor="bottom-left"
-        imageUrl="/landing/case-hero.png"
-        transparent
-        poster="/landing/lens-case-poster.svg"
-        posterAlt="Lens charging case"
-        headline={<>Lens, audio,<br/>one case.</>}
-        body={
-          <>
-            The case holds both your Sansxel Lens pairs and the audio
-            earbuds in one piece of hardware. Quick swap between Pair A
-            and Pair B; one charges while the other runs. The earbuds
-            sit alongside, charging when you set them down.
-          </>
-        }
-        cta={{ href: "#waitlist", label: "Join the waitlist" }}
-        meta={
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            {[
-              { label: "Pair A · Lens",  color: "#22d3ee", desc: "morning + afternoon" },
-              { label: "Pair B · Lens",  color: "#c084fc", desc: "evening + travel" },
-              { label: "Audio · earbuds", color: "#60a5fa", desc: "voice in, voice out" },
-            ].map((p) => (
-              <div
-                key={p.label}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  background: "rgba(0,0,0,0.30)",
-                  backdropFilter: "blur(10px)",
-                  WebkitBackdropFilter: "blur(10px)",
-                  minWidth: 180,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.color, boxShadow: `0 0 10px ${p.color}` }} />
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-                      color: "rgba(255,255,255,0.62)",
-                      letterSpacing: "0.06em",
-                    }}
-                  >
-                    {p.label}
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: "#a1a1aa", lineHeight: 1.4 }}>
-                  {p.desc}
-                </div>
-              </div>
-            ))}
-          </div>
-        }
-      />
+      {/* Day Kit dropped — duplicates the case story already told on
+          /home and /product. The Lens page stays focused on the lens
+          itself. */}
 
       {/* Waitlist outro */}
       <section
