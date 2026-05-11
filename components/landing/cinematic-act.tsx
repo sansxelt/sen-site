@@ -109,7 +109,10 @@ export function CinematicAct({
         // address bar; loosens on tablets/desktop.
         return { left: "clamp(16px, 5vw, 80px)", right: "clamp(16px, 5vw, 80px)", bottom: "clamp(48px, 12vh, 160px)", textAlign: "left" };
       case "bottom-right":
-        return { right: "clamp(16px, 5vw, 80px)", left: "clamp(16px, 5vw, 80px)", bottom: "clamp(48px, 12vh, 160px)", textAlign: "right", marginInlineStart: "auto" };
+        // Anchor only to the right so the wrapper's maxWidth actually
+        // constrains the block — setting both left + right would
+        // stretch it full width and only text-align right inside.
+        return { right: "clamp(16px, 5vw, 80px)", bottom: "clamp(48px, 12vh, 160px)", textAlign: "right" };
       case "bottom-center":
         // Center via left:0 / right:0 / margin auto rather than
         // translateX(-50%). Framer combines `y` into a single
