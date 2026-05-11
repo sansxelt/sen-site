@@ -233,22 +233,27 @@ export function CinematicAct({
         />
       )}
 
-      {/* Optional side dark scrim. Pushes the bright photo into
-          shadow on the text side so bottom-left / bottom-right /
-          top-right text has a legible bed regardless of what the
-          photo looks like. Coverage extends through ~85% so wide
-          bodies (e.g. screenshot heroes with chat UI bleed) still
-          read clearly. */}
+      {/* Optional corner scrim. Two stacked linear gradients (one
+          horizontal, one vertical) compound to darken only the
+          corner where the text anchors — leaves the opposite corner
+          and the diagonally opposite half of the photo clear. */}
       {leftScrim && (anchor === "bottom-left" || anchor === "bottom-right" || anchor === "top-right") && (
         <div
           aria-hidden
           style={{
             position: "absolute",
             inset: 0,
-            background:
-              anchor === "bottom-right" || anchor === "top-right"
-                ? "linear-gradient(270deg, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.82) 35%, rgba(5,5,7,0.50) 60%, rgba(5,5,7,0) 90%)"
-                : "linear-gradient(90deg, rgba(5,5,7,0.95) 0%, rgba(5,5,7,0.82) 35%, rgba(5,5,7,0.50) 60%, rgba(5,5,7,0) 90%)",
+            background: (() => {
+              const horiz =
+                anchor === "bottom-right" || anchor === "top-right"
+                  ? "linear-gradient(to left, rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 35%, rgba(5,5,7,0) 75%)"
+                  : "linear-gradient(to right, rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 35%, rgba(5,5,7,0) 75%)";
+              const vert =
+                anchor === "top-right"
+                  ? "linear-gradient(to bottom, rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 35%, rgba(5,5,7,0) 70%)"
+                  : "linear-gradient(to top, rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 35%, rgba(5,5,7,0) 70%)";
+              return `${vert}, ${horiz}`;
+            })(),
             pointerEvents: "none",
             zIndex: 1,
           }}
