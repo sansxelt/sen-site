@@ -4,7 +4,7 @@ export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
 function vChevronSvg(): string {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#000000"/><path fill="#ffffff" d="M 18,19 L 36,19 L 30,29 L 50,61 L 70,29 L 64,19 L 82,19 L 50,79 Z"/></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#000000"/><path fill="#ffffff" d="M 14,23 L 17,19 L 33,19 L 25,32 L 50,55 L 75,32 L 67,19 L 83,19 L 86,23 L 50,82 Z"/></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
