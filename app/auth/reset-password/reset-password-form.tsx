@@ -103,7 +103,7 @@ export function ResetPasswordForm() {
         <button
           type="submit"
           disabled={loading}
-          className="sansxel-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+          className="VRAELIS-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
         >
           {loading ? "Sending..." : "Send reset link"}
         </button>

@@ -24,7 +24,7 @@ export type LearnPiece = {
   read_minutes: number | null;
   author_email: string | null;
   // Hardlocked byline snapshot for non-admin contributors. Null for
-  // admin-authored pieces (the renderer falls back to "Sansxel
+  // admin-authored pieces (the renderer falls back to "VRAELIS
   // (OWNER)") and legacy pieces seeded before v0.2.0-contributors.
   author_display_name: string | null;
   created_at: string;

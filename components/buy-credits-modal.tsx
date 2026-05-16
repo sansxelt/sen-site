@@ -165,7 +165,7 @@ export function BuyCreditsModal({ onClose, onSuccess, publishableKey }: Props) {
               type="button"
               onClick={handleContinue}
               disabled={!parsedDollars || busy}
-              className="sansxel-white-button w-full rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="VRAELIS-white-button w-full rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {busy ? "Preparing…" : parsedDollars ? `Continue to pay $${parsedDollars}` : "Enter an amount"}
             </button>
@@ -241,7 +241,7 @@ function PayForm({
       <button
         type="submit"
         disabled={!stripe || busy}
-        className="sansxel-white-button w-full rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="VRAELIS-white-button w-full rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy ? "Charging…" : `Pay $${dollars}`}
       </button>

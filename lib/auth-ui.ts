@@ -20,13 +20,13 @@ export const oauthProviders: Array<{
   provider: OauthProvider;
 }> = [
   {
-    description: "Use your Google account to continue with sansxel.",
+    description: "Use your Google account to continue with VRAELIS.",
     enabled: true,
     label: "Google",
     provider: "google",
   },
   {
-    description: "Use your GitHub account to continue with sansxel.",
+    description: "Use your GitHub account to continue with VRAELIS.",
     enabled: true,
     label: "GitHub",
     provider: "github",
@@ -86,10 +86,10 @@ export function getAuthErrorMessage(
   }
 
   if (
-    message.includes("already has a sansxel account") ||
+    message.includes("already has a VRAELIS account") ||
     message.includes("already exists")
   ) {
-    return "That email already has a sansxel account. Sign in instead.";
+    return "That email already has a VRAELIS account. Sign in instead.";
   }
 
   if (message.includes("at least 8 characters")) {

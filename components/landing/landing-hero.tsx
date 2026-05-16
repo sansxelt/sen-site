@@ -51,7 +51,7 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
           transition={{ duration: 0.7, ease: EASE, delay: 0.10 }}
         >
           <span className="landing-eyebrow-dot" aria-hidden />
-          sansxel · one system
+          VRAELIS · one system
         </motion.div>
 
         {/* H1 */}
@@ -85,7 +85,7 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
           initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.70, ease: EASE, delay: 0.42 }}
         >
-          Sansxel connects workspace, private audio, and future visual interfaces
+          VRAELIS connects workspace, private audio, and future visual interfaces
           in one system.
         </motion.p>
 

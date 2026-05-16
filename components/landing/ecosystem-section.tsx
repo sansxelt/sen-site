@@ -196,7 +196,7 @@ export function EcosystemSection({ signedIn }: { signedIn: boolean }) {
             className="landing-cta-primary"
             style={{ display: "inline-flex" }}
           >
-            {signedIn ? "Open workspace" : "Start with Sansxel today"}
+            {signedIn ? "Open workspace" : "Start with VRAELIS today"}
           </Link>
           <p
             style={{

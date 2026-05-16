@@ -1,6 +1,6 @@
 // Server-side helper that resolves the current request's host into
-// a "zone", sansxel.ai (apex), chat.sansxel.ai (workshop), or
-// platform.sansxel.ai (developer console).
+// a "zone", VRAELIS.ai (apex), chat.VRAELIS.ai (workshop), or
+// platform.VRAELIS.ai (developer console).
 //
 // Used by ZoneShell + auth pages to render zone-specific chrome,
 // copy, and accents so each subdomain feels native instead of
@@ -37,17 +37,17 @@ export const ZONE_THEME: Record<Zone, {
                         // triangle changes per zone.
 }> = {
   apex: {
-    label: "sansxel",
+    label: "VRAELIS",
     tagline: "The AI workshop for makers",
     accent: "text-purple-400",
     accentSoft: "bg-purple-400/[0.08]",
     bg: "bg-[#080809]",
     font: "",
-    signInLabel: "Sign in to sansxel",
+    signInLabel: "Sign in to VRAELIS",
     logoSrc: "/logo-violet.svg",
   },
   chat: {
-    label: "sansxel",
+    label: "VRAELIS",
     tagline: "Workshop · pick up where you left off",
     accent: "text-purple-400",
     accentSoft: "bg-purple-400/[0.08]",
@@ -57,7 +57,7 @@ export const ZONE_THEME: Record<Zone, {
     logoSrc: "/logo-emerald.svg",
   },
   platform: {
-    label: "sansxel",
+    label: "VRAELIS",
     tagline: "Platform · developer console",
     accent: "text-amber-300",
     accentSoft: "bg-amber-400/[0.06]",

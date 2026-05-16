@@ -10,7 +10,7 @@ import { Reveal } from "@/components/landing/reveal";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Sansxel pricing for Free, Core, Plus, Pro, Teams, and Enterprise plans.",
+    "VRAELIS pricing for Free, Core, Plus, Pro, Teams, and Enterprise plans.",
 };
 
 export default function PricingPage() {
@@ -33,7 +33,7 @@ export default function PricingPage() {
             <Reveal delay={0.12}>
               <p className="mt-4 text-base leading-7 text-neutral-200">
                 Start free for everyday use, then scale into heavier create and build
-                workflows. Every paid tier expands how far Sansxel can go with you.
+                workflows. Every paid tier expands how far VRAELIS can go with you.
               </p>
 
               {/* Guided comparison, sits under the hero copy, tuned to match
@@ -162,7 +162,7 @@ export default function PricingPage() {
             Lens, Whisper, Day Kit.
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-neutral-300 sm:text-base">
-            Future Sansxel hardware is sold separately, not bundled into a
+            Future VRAELIS hardware is sold separately, not bundled into a
             software plan. Join the waitlists below for early access pricing
             when each opens.
           </p>

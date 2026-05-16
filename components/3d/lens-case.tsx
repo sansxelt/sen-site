@@ -14,7 +14,7 @@ import { CameraDrift } from "./camera-drift";
 // chamfered aluminum body, soft-touch interior, two CNC-milled wells
 // with gold pin contacts and a 4-LED charging arc each. Lid hinges
 // open on a slow loop; status LED is a single warm pinpoint;
-// Sansxel mark etched into the lid.
+// VRAELIS mark etched into the lid.
 //
 // Layered procedural realism:
 //   exterior     anodized matte black aluminum
@@ -27,7 +27,7 @@ import { CameraDrift } from "./camera-drift";
 //   hinge        seam line + brushed steel pin
 //   vent         milled slot with thin ribs on the back face
 //   status LED   single pinpoint on the bottom front edge
-//   etched mark  Sansxel triangles on the lid centre
+//   etched mark  VRAELIS triangles on the lid centre
 //   serial       6 microscopic notches on the front face
 
 function CaseLid({ open, w, d, h }: { open: number; w: number; d: number; h: number }) {
@@ -62,7 +62,7 @@ function CaseLid({ open, w, d, h }: { open: number; w: number; d: number; h: num
         <meshStandardMaterial color="#2c303a" metalness={1} roughness={0.45} />
       </mesh>
 
-      {/* Etched Sansxel mark on the lid centre */}
+      {/* Etched VRAELIS mark on the lid centre */}
       <BrandMark
         size={0.08}
         position={[0, h - 0.002, d / 2]}

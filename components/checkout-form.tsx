@@ -229,7 +229,7 @@ function PaymentForm({ cycle, plan, seats, userEmail }: {
       <button
         type="submit"
         disabled={!stripe || submitting}
-        className="sansxel-white-button w-full rounded-2xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5"
+        className="VRAELIS-white-button w-full rounded-2xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 sm:px-5"
       >
         <span className="block truncate">
           {submitting ? "Processing…" : `Subscribe to ${plan.name}, ${amount}`}
@@ -242,7 +242,7 @@ function PaymentForm({ cycle, plan, seats, userEmail }: {
           <StripeWordmark className="h-[14px] w-auto text-neutral-300" />
         </div>
         <p className="max-w-xs text-center text-[10px] leading-relaxed text-neutral-600 sm:text-[11px]">
-          Card details are sent directly to Stripe and never touch sansxel servers.
+          Card details are sent directly to Stripe and never touch VRAELIS servers.
         </p>
       </div>
     </form>

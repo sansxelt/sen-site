@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         dollars: String(dollars),
         surface: "desktop",
       },
-      description: `sansxel credits, $${dollars}`,
+      description: `VRAELIS credits, $${dollars}`,
     });
 
     if (!intent.client_secret) {

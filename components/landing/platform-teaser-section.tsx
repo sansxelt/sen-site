@@ -8,8 +8,8 @@ const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 /* Mini developer terminal mockup */
 function PlatformVisual() {
   const lines = [
-    { label: "key",    val: "sk-sxl-••••••••••••4f9a", color: "rgba(255,172,51,0.70)" },
-    { label: "model",  val: "sansxel-workshop-v1",      color: "rgba(100,200,255,0.65)" },
+    { label: "key",    val: "sk-vrl-••••••••••••4f9a", color: "rgba(255,172,51,0.70)" },
+    { label: "model",  val: "VRAELIS-workshop-v1",      color: "rgba(100,200,255,0.65)" },
     { label: "stream", val: "true",                     color: "rgba(100,200,130,0.65)" },
     { label: "prompt", val: '"Build the scaffold for…"', color: "rgba(210,210,210,0.45)" },
   ];
@@ -42,7 +42,7 @@ function PlatformVisual() {
             ))}
           </div>
           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.24)", fontFamily: "var(--font-geist-mono), monospace", letterSpacing: "0.06em" }}>
-            sansxel api · v1
+            VRAELIS api · v1
           </span>
           <div style={{ width: 44 }} />
         </div>
@@ -140,7 +140,7 @@ export function PlatformTeaserSection() {
           </div>
 
           <h2 className="landing-h2 landing-gradient-text">
-            Build on Sansxel.
+            Build on VRAELIS.
           </h2>
           <p className="landing-body" style={{ marginBottom: 22 }}>
             Full API access. Request inspector, usage dashboard, API keys,

@@ -19,13 +19,13 @@ const client = new Anthropic();
 //   1. Run a Brave web search via the internal /api/ai/web-search route.
 //   2. For the top 3 results, fetch the page and strip HTML to plain text.
 //   3. Compose a synthesis prompt with the gathered context.
-//   4. Stream the synthesis from sansxel-1 (Sonnet/balanced tier).
+//   4. Stream the synthesis from VRAELIS-1 (Sonnet/balanced tier).
 
 const MAX_PAGES = 3;
 const MAX_PAGE_CHARS = 3000;
 const FETCH_TIMEOUT_MS = 8000;
 
-const SYSTEM_PROMPT = `You are sansxel-1's deep research mode.
+const SYSTEM_PROMPT = `You are VRAELIS-1's deep research mode.
 
 You are given a topic and several short excerpts pulled from web pages.
 Synthesize a clear, well-structured briefing on the topic.
@@ -61,8 +61,8 @@ async function runWebSearch(
   if (authHeader) headers.Authorization = authHeader;
   const cookie = request.headers.get("cookie");
   if (cookie) headers.cookie = cookie;
-  const surface = request.headers.get("x-sansxel-surface");
-  if (surface) headers["x-sansxel-surface"] = surface;
+  const surface = request.headers.get("x-VRAELIS-surface");
+  if (surface) headers["x-VRAELIS-surface"] = surface;
 
   const res = await fetch(`${origin}/api/ai/web-search`, {
     method: "POST",
@@ -103,7 +103,7 @@ async function fetchPageText(url: string): Promise<string> {
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; sansxel-deep-research/1.0; +https://sansxel.ai)",
+          "Mozilla/5.0 (compatible; VRAELIS-deep-research/1.0; +https://VRAELIS.ai)",
         Accept: "text/html,application/xhtml+xml",
       },
     });
@@ -161,7 +161,7 @@ export async function POST(request: Request) {
   }
 
   const surface =
-    request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+    request.headers.get("x-VRAELIS-surface") === "desktop" ? "desktop" : "web";
 
   // 1) Web search
   let searchResults: SearchResult[] = [];
@@ -252,8 +252,8 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-store",
-        "x-sansxel-plan": plan,
-        "x-sansxel-sources": String(top.length),
+        "x-VRAELIS-plan": plan,
+        "x-VRAELIS-sources": String(top.length),
       },
     });
   } catch (err) {

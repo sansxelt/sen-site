@@ -18,8 +18,8 @@ export const desktopCurrentCodeVersion = "0.1.15";
 export const desktopLatestShippedVersion = "0.1.14";
 export const desktopLatestShippedDateLabel = "Apr 19, 2026";
 export const desktopLatestShippedDateIso = "2026-04-20T00:45:00Z";
-export const desktopWindowsInstallerPath = "/desktop/sansxel_0.1.14_x64-setup.exe";
-export const desktopWindowsInstallerFilename = "sansxel_0.1.14_x64-setup.exe";
+export const desktopWindowsInstallerPath = "/desktop/VRAELIS_0.1.14_x64-setup.exe";
+export const desktopWindowsInstallerFilename = "VRAELIS_0.1.14_x64-setup.exe";
 export const desktopPlatformLabel = "Windows 10 / 11 · x64";
 export const desktopCurrentReleaseChannel: DesktopReleaseChannel = "alpha";
 export const desktopNextVersion = "0.2.0";
@@ -30,7 +30,7 @@ export const desktopNextVersionHighlights = [
 ];
 
 export const desktopLatestUpdaterNotes =
-  "v0.1.15, polish pass before v0.2.0. Images AND videos are now drag-droppable into the chat: drop a video and sansxel extracts a poster frame so vision still works; the inline chip plays a muted preview. Dedicated image-generate button is back next to the mic (gpt-image-1, plan-gated server-side). Memory view's \"Clear all\" is honestly disabled until the memory engine ships (v0.2.0). Integrations view's placeholder cards now say \"Coming soon\" on the button itself instead of a misleading \"Connect\".";
+  "v0.1.15, polish pass before v0.2.0. Images AND videos are now drag-droppable into the chat: drop a video and VRAELIS extracts a poster frame so vision still works; the inline chip plays a muted preview. Dedicated image-generate button is back next to the mic (gpt-image-1, plan-gated server-side). Memory view's \"Clear all\" is honestly disabled until the memory engine ships (v0.2.0). Integrations view's placeholder cards now say \"Coming soon\" on the button itself instead of a misleading \"Connect\".";
 
 export const desktopShippedReleases: DesktopRelease[] = [
   {
@@ -105,7 +105,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "fix",
-        text: "Updates view (desktop) was showing \"Couldn't load release notes \u2014 Failed to fetch\" because regular fetch from a Tauri webview to sansxel.ai was getting blocked by WebView2 CORS. Switched to tauriFetch (Tauri HTTP plugin) which bypasses the gate.",
+        text: "Updates view (desktop) was showing \"Couldn't load release notes \u2014 Failed to fetch\" because regular fetch from a Tauri webview to VRAELIS.ai was getting blocked by WebView2 CORS. Switched to tauriFetch (Tauri HTTP plugin) which bypasses the gate.",
       },
       {
         type: "fix",
@@ -186,11 +186,11 @@ export const desktopShippedReleases: DesktopRelease[] = [
       // ─── Toolbar mode kill ───────────────────────────────────────
       {
         type: "fix",
-        text: "Removed Toolbar mode entirely \u2014 it never worked properly outside full-window scale (header text overlapped, buttons collided), and the floating Sansxel Copilot covers the same use case. Chat header no longer has the toggle; Settings page Window mode setting is gone; window-mode auto-resets to normal on launch.",
+        text: "Removed Toolbar mode entirely \u2014 it never worked properly outside full-window scale (header text overlapped, buttons collided), and the floating VRAELIS Copilot covers the same use case. Chat header no longer has the toggle; Settings page Window mode setting is gone; window-mode auto-resets to normal on launch.",
       },
       {
         type: "improve",
-        text: "Renamed the floating-copilot launcher in the nav rail from \"Capsule Rail\" (internal codename) to \"Sansxel Copilot\" with a clearer \"Always on, anywhere\" subtitle.",
+        text: "Renamed the floating-copilot launcher in the nav rail from \"Capsule Rail\" (internal codename) to \"VRAELIS Copilot\" with a clearer \"Always on, anywhere\" subtitle.",
       },
       {
         type: "improve",
@@ -199,7 +199,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       // ─── Ctrl+Q force-quit ───────────────────────────────────────
       {
         type: "fix",
-        text: "Ctrl+Q now actually quits cleanly (was leaving a zombie Tauri process alive because close() on the main webview kept the splash + copilot windows holding the process open). Reopening sansxel after Ctrl+Q used to require killing sansxel.exe in Task Manager. plugin-process exit() terminates the entire process now.",
+        text: "Ctrl+Q now actually quits cleanly (was leaving a zombie Tauri process alive because close() on the main webview kept the splash + copilot windows holding the process open). Reopening VRAELIS after Ctrl+Q used to require killing VRAELIS.exe in Task Manager. plugin-process exit() terminates the entire process now.",
       },
       // ─── AI quality ──────────────────────────────────────────────
       {
@@ -237,7 +237,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "fix",
-        text: "Recent invoices now show ONLY paid invoices. Was listing every invoice including draft/open/uncollectible/void, which produced a wall of \"$X.XX \u00b7 void\" rows from failed-to-finalize tests \u2014 read as \"sansxel is showing me charges that didn't go through\". Filter applied in the data layer so both web and desktop billing panels are clean.",
+        text: "Recent invoices now show ONLY paid invoices. Was listing every invoice including draft/open/uncollectible/void, which produced a wall of \"$X.XX \u00b7 void\" rows from failed-to-finalize tests \u2014 read as \"VRAELIS is showing me charges that didn't go through\". Filter applied in the data layer so both web and desktop billing panels are clean.",
       },
       {
         type: "fix",
@@ -290,7 +290,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
     changes: [
       {
         type: "fix",
-        text: "Ctrl+Q was leaving a zombie Tauri process alive (it called close() on the main webview, but the splash + copilot windows kept the process running). Reopening sansxel hit the single-instance guard but found no window to focus, leaving the user stuck until they killed sansxel.exe in Task Manager. Now uses plugin-process exit() to terminate the entire process cleanly.",
+        text: "Ctrl+Q was leaving a zombie Tauri process alive (it called close() on the main webview, but the splash + copilot windows kept the process running). Reopening VRAELIS hit the single-instance guard but found no window to focus, leaving the user stuck until they killed VRAELIS.exe in Task Manager. Now uses plugin-process exit() to terminate the entire process cleanly.",
       },
       {
         type: "fix",
@@ -298,7 +298,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "improve",
-        text: "X close button title now spells out the hide-vs-quit distinction (\"Hides window \u2014 sansxel keeps running. Ctrl+Q to fully quit\u2026\"), and the Update Available banner explicitly tells users to Ctrl+Q + relaunch if they hit Later. People shouldn't have to guess that closing the window doesn't apply updates.",
+        text: "X close button title now spells out the hide-vs-quit distinction (\"Hides window \u2014 VRAELIS keeps running. Ctrl+Q to fully quit\u2026\"), and the Update Available banner explicitly tells users to Ctrl+Q + relaunch if they hit Later. People shouldn't have to guess that closing the window doesn't apply updates.",
       },
       {
         type: "improve",
@@ -320,7 +320,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
     changes: [
       {
         type: "new",
-        text: "Activity-state engine on the Capsule. The rail now has 5 explicit states (idle / listening / thinking / streaming / ready) each with its own pulse, glow, and color cue. The dot pulses gently when idle, brightens when you start typing, glows fast while sansxel thinks, shows a flowing gradient while tokens stream, and holds a brief cyan highlight when a reply lands before decaying back to idle. UI surface can no longer lie about activity.",
+        text: "Activity-state engine on the Capsule. The rail now has 5 explicit states (idle / listening / thinking / streaming / ready) each with its own pulse, glow, and color cue. The dot pulses gently when idle, brightens when you start typing, glows fast while VRAELIS thinks, shows a flowing gradient while tokens stream, and holds a brief cyan highlight when a reply lands before decaying back to idle. UI surface can no longer lie about activity.",
       },
       {
         type: "new",
@@ -332,11 +332,11 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "new",
-        text: "Live Mode foreground-window watcher. When enabled, sansxel reads ONLY the title (never contents) of the window you have focused, every 800ms, and surfaces a one-tap contextual hint chip in the rail \u2014 \"Summarize page\" in a browser, \"Explain selection\" in your editor, \"Critique design\" in Figma, \"Tighten this\" in a doc, etc. Consent-first: a clear dialog asks the first time you open the rail; localStorage answer, never re-asked. Works only on Windows (Win32 GetForegroundWindow + GetWindowText, our-process-skipped).",
+        text: "Live Mode foreground-window watcher. When enabled, VRAELIS reads ONLY the title (never contents) of the window you have focused, every 800ms, and surfaces a one-tap contextual hint chip in the rail \u2014 \"Summarize page\" in a browser, \"Explain selection\" in your editor, \"Critique design\" in Figma, \"Tighten this\" in a doc, etc. Consent-first: a clear dialog asks the first time you open the rail; localStorage answer, never re-asked. Works only on Windows (Win32 GetForegroundWindow + GetWindowText, our-process-skipped).",
       },
       {
         type: "new",
-        text: "MCP tool status dots on the rail. Tools in flight render as small color-coded dots inside the capsule (yellow=running, green=done, red=error) so you always know what sansxel is doing. The state shape is in place for v0.1.12 to wire real MCP tools end-to-end through the copilot route.",
+        text: "MCP tool status dots on the rail. Tools in flight render as small color-coded dots inside the capsule (yellow=running, green=done, red=error) so you always know what VRAELIS is doing. The state shape is in place for v0.1.12 to wire real MCP tools end-to-end through the copilot route.",
       },
       {
         type: "new",
@@ -404,7 +404,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
     changes: [
       {
         type: "new",
-        text: "Voice + MCP tools \u2014 sansxel-1 can now call 12 client-side tools mid-conversation (navigate, search threads, create/revoke API keys, query sources, change tier/persona, more). Voice turns get a TTS ack before each tool runs. Settings toggle 'Let sansxel-1 take actions' (default on).",
+        text: "Voice + MCP tools \u2014 VRAELIS-1 can now call 12 client-side tools mid-conversation (navigate, search threads, create/revoke API keys, query sources, change tier/persona, more). Voice turns get a TTS ack before each tool runs. Settings toggle 'Let VRAELIS-1 take actions' (default on).",
       },
       {
         type: "new",
@@ -454,7 +454,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "fix",
-        text: "Floating Copilot was dumping the raw HTML of /api/ai/copilot's 401 page as a chat reply. Now uses absolute sansxel.ai URL + Bearer token from the restored desktop session + content-type guard. Surfaces 'Sign in to sansxel...' if no session, never raw HTML.",
+        text: "Floating Copilot was dumping the raw HTML of /api/ai/copilot's 401 page as a chat reply. Now uses absolute VRAELIS.ai URL + Bearer token from the restored desktop session + content-type guard. Surfaces 'Sign in to VRAELIS...' if no session, never raw HTML.",
       },
       {
         type: "fix",
@@ -488,7 +488,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "new",
-        text: "Splash mini-hop game: a small sansxel orb sits in a play strip above the loader bar. Tap Space to hop it over scrolling obstacles. Best score persists across launches. Same Space press still boosts the loader.",
+        text: "Splash mini-hop game: a small VRAELIS orb sits in a play strip above the loader bar. Tap Space to hop it over scrolling obstacles. Best score persists across launches. Same Space press still boosts the loader.",
       },
       {
         type: "improve",
@@ -496,7 +496,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "improve",
-        text: "Floating Copilot edge bar redesigned splash-style: vertical SANSXEL mark + stronger purple halo so the collapsed strip reads as a sansxel surface, not a generic glow line.",
+        text: "Floating Copilot edge bar redesigned splash-style: vertical VRAELIS mark + stronger purple halo so the collapsed strip reads as a VRAELIS surface, not a generic glow line.",
       },
       {
         type: "improve",
@@ -580,7 +580,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "new",
-        text: "Window mode shortcuts: Ctrl+Shift+N/T/L/R for normal/toolbar-top/left/right. Snap sansxel into a side bar without opening Preferences.",
+        text: "Window mode shortcuts: Ctrl+Shift+N/T/L/R for normal/toolbar-top/left/right. Snap VRAELIS into a side bar without opening Preferences.",
       },
       {
         type: "new",
@@ -592,7 +592,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "improve",
-        text: "Borderless main window: title bar with logo + 'sansxel' on top-left, custom min/max/close on top-right. Native chrome disabled.",
+        text: "Borderless main window: title bar with logo + 'VRAELIS' on top-left, custom min/max/close on top-right. Native chrome disabled.",
       },
       {
         type: "improve",
@@ -661,7 +661,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "improve",
-        text: "Other Sansxel windows minimize while the updater runs so the desktop stays clean during the swap.",
+        text: "Other VRAELIS windows minimize while the updater runs so the desktop stays clean during the swap.",
       },
       {
         type: "fix",
@@ -690,7 +690,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "new",
-        text: "v0.1.2 installer uploaded to the public desktop download bucket served from sansxel.ai.",
+        text: "v0.1.2 installer uploaded to the public desktop download bucket served from VRAELIS.ai.",
       },
       {
         type: "improve",
@@ -711,7 +711,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "new",
-        text: "Updater manifest started serving the signed installer URL and signature inline from the Sansxel backend.",
+        text: "Updater manifest started serving the signed installer URL and signature inline from the VRAELIS backend.",
       },
       {
         type: "improve",

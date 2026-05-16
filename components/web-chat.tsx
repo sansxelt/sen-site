@@ -61,9 +61,9 @@ type ChatMessage = {
 // Cross-component "thread is generating" tracker. WebChat writes;
 // chat-history rail + the floating back-to-chat pill read. Lives in
 // localStorage so a page reload doesn't lose state, and a
-// 'sansxel:flight:changed' event fires on every write so listeners
+// 'VRAELIS:flight:changed' event fires on every write so listeners
 // re-render without polling.
-const FLIGHT_KEY = "sansxel.inflight.threads";
+const FLIGHT_KEY = "VRAELIS.inflight.threads";
 type FlightMap = Record<string, { startedAt: number }>;
 function readFlight(): FlightMap {
   if (typeof window === "undefined") return {};
@@ -213,17 +213,17 @@ const ALL_TIERS: ReadonlyArray<{
 }> = [
   {
     tier: "fast",
-    display_name: "sansxel-1 fast",
+    display_name: "VRAELIS-1 fast",
     blurb: "Quick replies. Free for everyone.",
   },
   {
     tier: "balanced",
-    display_name: "sansxel-1",
+    display_name: "VRAELIS-1",
     blurb: "Default. Core and up.",
   },
   {
     tier: "smart",
-    display_name: "sansxel-1 deep",
+    display_name: "VRAELIS-1 deep",
     blurb: "Heaviest. Pro and up.",
   },
 ];
@@ -449,7 +449,7 @@ export function WebChat({
     [],
   );
   // Re-evaluate when the active thread changes (loaded a different
-  // chat) or when the picker fires sansxel:project:changed for the
+  // chat) or when the picker fires VRAELIS:project:changed for the
   // current thread.
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -462,9 +462,9 @@ export function WebChat({
       const detail = (e as CustomEvent<string | null>).detail ?? null;
       void fetchAttachedProject(detail);
     };
-    window.addEventListener("sansxel:project:changed", onProjectChanged);
+    window.addEventListener("VRAELIS:project:changed", onProjectChanged);
     return () =>
-      window.removeEventListener("sansxel:project:changed", onProjectChanged);
+      window.removeEventListener("VRAELIS:project:changed", onProjectChanged);
   }, [fetchAttachedProject]);
 
   // v0.1.16, Pre-fill input from ?prompt= so the home page teaser
@@ -499,8 +499,8 @@ export function WebChat({
       setInput("");
       setChatError(null);
     };
-    window.addEventListener("sansxel:new-chat", onNewChat);
-    return () => window.removeEventListener("sansxel:new-chat", onNewChat);
+    window.addEventListener("VRAELIS:new-chat", onNewChat);
+    return () => window.removeEventListener("VRAELIS:new-chat", onNewChat);
   }, []);
 
   // v0.2.0 phase H — when the user picks a project mid-thread,
@@ -522,13 +522,13 @@ export function WebChat({
         body: JSON.stringify({ project_id: detail }),
       }).catch(() => {});
     };
-    window.addEventListener("sansxel:project:changed", onProjectChanged);
+    window.addEventListener("VRAELIS:project:changed", onProjectChanged);
     return () =>
-      window.removeEventListener("sansxel:project:changed", onProjectChanged);
+      window.removeEventListener("VRAELIS:project:changed", onProjectChanged);
   }, []);
 
   // v0.2.0 phase G+ — pinned-prompt run-as-Duel. The project panel
-  // dispatches sansxel:duel-prompt with the prompt content; we
+  // dispatches VRAELIS:duel-prompt with the prompt content; we
   // force duel mode on (so the toggle visibly reflects what's
   // running) and fire the duel immediately, no confirmation step.
   useEffect(() => {
@@ -542,9 +542,9 @@ export function WebChat({
       });
       void sendDuelRef.current?.(prompt);
     };
-    window.addEventListener("sansxel:duel-prompt", onDuelPrompt);
+    window.addEventListener("VRAELIS:duel-prompt", onDuelPrompt);
     return () =>
-      window.removeEventListener("sansxel:duel-prompt", onDuelPrompt);
+      window.removeEventListener("VRAELIS:duel-prompt", onDuelPrompt);
   }, []);
 
   useEffect(() => {
@@ -726,12 +726,12 @@ export function WebChat({
   // was overkill for 95% of conversations. The compare flow is
   // valuable when the user actually wants to compare; otherwise
   // it's just two replies + a Pick UI on a one-line answer.
-  // The old localStorage key (sansxel.duelMode) is left orphaned;
+  // The old localStorage key (VRAELIS.duelMode) is left orphaned;
   // browsers clean stale keys, no migration needed.
 
   // v0.2.0 phase G+ — weekly usage snapshot for monetization hooks
   // (low-chat banner, winner-moment upsell, "Liking Duel?" copy).
-  // Refreshes at mount + on every sansxel:threads:changed event,
+  // Refreshes at mount + on every VRAELIS:threads:changed event,
   // which fires after each send/duel — so the numbers stay close
   // to live without us building a separate refresh path.
   type WeeklyBucket = { used: number; cap: number | null; lifted: boolean };
@@ -766,10 +766,10 @@ export function WebChat({
     };
     void refresh();
     const onChanged = () => void refresh();
-    window.addEventListener("sansxel:threads:changed", onChanged);
+    window.addEventListener("VRAELIS:threads:changed", onChanged);
     return () => {
       cancelled = true;
-      window.removeEventListener("sansxel:threads:changed", onChanged);
+      window.removeEventListener("VRAELIS:threads:changed", onChanged);
     };
   }, []);
 
@@ -1123,7 +1123,7 @@ export function WebChat({
               // convert instead of waiting on a response that never
               // comes.
               attachmentBlocks.push(
-                `\n\n[Skipped image: ${att.name}. Format ${mt} is not supported by sansxel-1 vision yet, please use PNG, JPEG, WEBP, or GIF.]`,
+                `\n\n[Skipped image: ${att.name}. Format ${mt} is not supported by VRAELIS-1 vision yet, please use PNG, JPEG, WEBP, or GIF.]`,
               );
             }
           }
@@ -1148,7 +1148,7 @@ export function WebChat({
     //      The noun list is INTENTIONALLY narrow now: graph /
     //      chart / plot / diagram / figure / visualization /
     //      map / etc. were removed because those map to text
-    //      sansxel-card output (stat-grid, comparison) NOT to
+    //      VRAELIS-card output (stat-grid, comparison) NOT to
     //      image generation. Letting the chat model decide
     //      whether to render a card vs. fire image gen yields
     //      better answers than my regex pre-classifying.
@@ -1229,7 +1229,7 @@ export function WebChat({
     // knows the user was active recently and shouldn't get auto-
     // bumped to a new chat.
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("sansxel.lastActivity", String(Date.now()));
+      window.localStorage.setItem("VRAELIS.lastActivity", String(Date.now()));
     }
     // v0.1.16 r3+, track the sending-thread context. Tricky case:
     // first send in a NEW chat captures threadId=null, then the
@@ -1362,7 +1362,7 @@ export function WebChat({
       // v0.1.16, Capture the resolved server-side thread id so
       // follow-up turns continue the same conversation (and show in
       // the sidebar).
-      const echoedThreadId = res.headers.get("x-sansxel-thread-id");
+      const echoedThreadId = res.headers.get("x-VRAELIS-thread-id");
       if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
         setThreadId(echoedThreadId);
         // Sync the project strip to what was ACTUALLY saved. On first
@@ -1380,7 +1380,7 @@ export function WebChat({
           url.searchParams.set("thread", echoedThreadId);
           url.searchParams.delete("new");
           window.history.replaceState({}, "", url.pathname + url.search);
-          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+          window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
         }
       }
 
@@ -1393,12 +1393,12 @@ export function WebChat({
         const flight = readFlight();
         flight[flightThreadId] = { startedAt: Date.now() };
         window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-        window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+        window.dispatchEvent(new CustomEvent("VRAELIS:flight:changed"));
       }
 
       // Surface plan downgrade if the server picked a lower tier
-      const requested = res.headers.get("x-sansxel-tier-requested");
-      const resolved = res.headers.get("x-sansxel-tier");
+      const requested = res.headers.get("x-VRAELIS-tier-requested");
+      const resolved = res.headers.get("x-VRAELIS-tier");
       if (requested && resolved && requested !== resolved) {
         setPlanNotice(
           `Your plan doesn't include ${requested}, replied with ${resolved} instead.`,
@@ -1774,7 +1774,7 @@ export function WebChat({
       const isNetworkErr =
         err instanceof TypeError && /failed to fetch|networkerror/i.test(err.message);
       const msg = isNetworkErr
-        ? "Couldn't reach sansxel. Check your connection and try again."
+        ? "Couldn't reach VRAELIS. Check your connection and try again."
         : err instanceof Error
         ? err.message
         : "Chat failed.";
@@ -1809,15 +1809,15 @@ export function WebChat({
           const flight = readFlight();
           delete flight[flightId];
           window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-          window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+          window.dispatchEvent(new CustomEvent("VRAELIS:flight:changed"));
         }
-        window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+        window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
         // The server-side AI title regen runs AFTER the stream ends
         // (cheap Haiku call). Fire a second refetch a few seconds
         // later so the rail picks up the new title without the user
         // having to reload or refocus the tab.
         window.setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+          window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
         }, 3500);
       }
     }
@@ -2062,7 +2062,7 @@ export function WebChat({
           }),
           signal: ac.signal,
         });
-        const echoedThreadId = res.headers.get("x-sansxel-thread-id");
+        const echoedThreadId = res.headers.get("x-VRAELIS-thread-id");
         if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
           setThreadId(echoedThreadId);
           if (typeof window !== "undefined") {
@@ -2070,7 +2070,7 @@ export function WebChat({
             url.searchParams.set("thread", echoedThreadId);
             url.searchParams.delete("new");
             window.history.replaceState({}, "", url.pathname + url.search);
-            window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+            window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
           }
         }
         if (!res.ok || !res.body) {
@@ -2180,7 +2180,7 @@ export function WebChat({
             err instanceof TypeError &&
             /failed to fetch|networkerror/i.test(err.message);
           const msg = isNetworkErr
-            ? "Couldn't reach sansxel. Check your connection and try again."
+            ? "Couldn't reach VRAELIS. Check your connection and try again."
             : err instanceof Error
               ? err.message
               : "Duel failed.";
@@ -2204,7 +2204,7 @@ export function WebChat({
         // of how we exited (clean finish, abort, network drop, server
         // forgot to emit 'done'). Without this, a side that never got
         // its 'done' event leaves payload.done=false, which keeps
-        // CodeBlock's streaming prop true and the SansxelCardSkeleton
+        // CodeBlock's streaming prop true and the VRAELISCardSkeleton
         // ("Building card…") hangs around forever on any code-block
         // or card-shaped JSON the model emitted.
         setMessages((prev) => {
@@ -2235,7 +2235,7 @@ export function WebChat({
         setPhaseLabel(null);
         void lei.refreshBalance();
         if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+          window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
         }
       }
     },
@@ -2261,18 +2261,18 @@ export function WebChat({
   const DUEL_UPSELL_AFTER = 3;
   const [duelPickCount, setDuelPickCount] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
-    const raw = window.sessionStorage.getItem("sansxel.duelPickCount");
+    const raw = window.sessionStorage.getItem("VRAELIS.duelPickCount");
     const n = raw ? Number.parseInt(raw, 10) : 0;
     return Number.isFinite(n) ? n : 0;
   });
   const [duelUpsellDismissed, setDuelUpsellDismissed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem("sansxel.duelUpsellDismissed") === "1";
+    return window.sessionStorage.getItem("VRAELIS.duelUpsellDismissed") === "1";
   });
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.sessionStorage.setItem(
-      "sansxel.duelPickCount",
+      "VRAELIS.duelPickCount",
       String(duelPickCount),
     );
   }, [duelPickCount]);
@@ -2293,7 +2293,7 @@ export function WebChat({
   const dismissDuelUpsell = () => {
     setDuelUpsellDismissed(true);
     if (typeof window !== "undefined") {
-      window.sessionStorage.setItem("sansxel.duelUpsellDismissed", "1");
+      window.sessionStorage.setItem("VRAELIS.duelUpsellDismissed", "1");
     }
     trackClientEvent("duel_upsell_dismissed");
   };
@@ -2326,7 +2326,7 @@ export function WebChat({
       // for OTHER projects don't increment by accident.
       if (typeof window !== "undefined") {
         window.dispatchEvent(
-          new CustomEvent("sansxel:duel-pick", {
+          new CustomEvent("VRAELIS:duel-pick", {
             detail: { side, projectId: getActiveProjectId() },
           }),
         );
@@ -2462,7 +2462,7 @@ export function WebChat({
           const flight = readFlight();
           delete flight[tid];
           window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-          window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+          window.dispatchEvent(new CustomEvent("VRAELIS:flight:changed"));
         }
       }
     }
@@ -2536,7 +2536,7 @@ export function WebChat({
     setChatError(null);
     setImageRetry(null);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("sansxel.lastActivity", String(Date.now()));
+      window.localStorage.setItem("VRAELIS.lastActivity", String(Date.now()));
     }
 
     // Mark the thread (or the to-be-created one) as in-flight so the
@@ -2548,14 +2548,14 @@ export function WebChat({
       const flight = readFlight();
       flight[id] = { startedAt: Date.now() };
       window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-      window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+      window.dispatchEvent(new CustomEvent("VRAELIS:flight:changed"));
     };
     const clearFlight = (id: string | null) => {
       if (typeof window === "undefined" || !id) return;
       const flight = readFlight();
       delete flight[id];
       window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-      window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+      window.dispatchEvent(new CustomEvent("VRAELIS:flight:changed"));
     };
     if (tidAtStart) writeFlight(tidAtStart);
 
@@ -2587,7 +2587,7 @@ export function WebChat({
       // Server resolves / creates the thread + persists user prompt
       // immediately. Capture the echoed id so follow-up chat turns
       // continue the same conversation, and so the rail picks it up.
-      const echoedThreadId = res.headers.get("x-sansxel-thread-id");
+      const echoedThreadId = res.headers.get("x-VRAELIS-thread-id");
       if (echoedThreadId && echoedThreadId !== threadIdRef.current) {
         setThreadId(echoedThreadId);
         if (typeof window !== "undefined") {
@@ -2595,7 +2595,7 @@ export function WebChat({
           url.searchParams.set("thread", echoedThreadId);
           url.searchParams.delete("new");
           window.history.replaceState({}, "", url.pathname + url.search);
-          window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+          window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
           // Hop the in-flight flag onto the now-known id.
           writeFlight(echoedThreadId);
         }
@@ -2636,7 +2636,7 @@ export function WebChat({
       // Server already persisted the assistant turn, fire the rail
       // refresh so the title gen / sidebar count picks it up.
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+        window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
       }
     } catch (err) {
       const aborted =
@@ -2948,7 +2948,7 @@ export function WebChat({
 
       <div className="webchat-bar">
         <div className="webchat-bar-left">
-          <span className="webchat-eyebrow">sansxel-1</span>
+          <span className="webchat-eyebrow">VRAELIS-1</span>
           <span className="webchat-account">{email}</span>
         </div>
         <div className="webchat-bar-right">
@@ -2959,7 +2959,7 @@ export function WebChat({
               className="webchat-picker-trigger"
             >
               {ALL_TIERS.find((t) => t.tier === tier)?.display_name ??
-                "sansxel-1"}
+                "VRAELIS-1"}
               <span className="webchat-picker-caret">▾</span>
             </button>
             {pickerOpen && (
@@ -3050,7 +3050,7 @@ export function WebChat({
         )}
         {showEmpty ? (
           <div className="webchat-empty">
-            <div className="webchat-empty-mark">sansxel · workshop</div>
+            <div className="webchat-empty-mark">VRAELIS · workshop</div>
             <h2>What are you making?</h2>
             <p>
               Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
@@ -3108,7 +3108,7 @@ export function WebChat({
                 "Help me debug this React state issue",
                 "Summarize what's in this PDF",
                 "Brainstorm 5 names for my side project",
-                "Generate an image of a neon sansxel logo",
+                "Generate an image of a neon VRAELIS logo",
               ].map((suggestion) => (
                 <button
                   key={suggestion}
@@ -3435,7 +3435,7 @@ export function WebChat({
                 ? "Transcribing…"
                 : voiceState === "speaking"
                   ? "Speaking…"
-                  : "Message sansxel-1…"
+                  : "Message VRAELIS-1…"
           }
           rows={1}
           disabled={voiceState === "recording" || voiceState === "transcribing"}
@@ -3489,7 +3489,7 @@ export function WebChat({
                 </button>
                 <div className="webchat-plus-hint">
                   <strong>Tip: </strong> Just type what you want, &ldquo;gen an image of a cat&rdquo;,
-                  &ldquo;draw me a logo&rdquo;, etc., and Send. sansxel-1 routes it automatically.
+                  &ldquo;draw me a logo&rdquo;, etc., and Send. VRAELIS-1 routes it automatically.
                 </div>
               </div>
             )}
@@ -3651,7 +3651,7 @@ function VoiceButton({
       type="button"
       onClick={onStart}
       className="webchat-voice-btn"
-      title="Talk to sansxel-1"
+      title="Talk to VRAELIS-1"
     >
       🎙 Voice
     </button>
@@ -3704,7 +3704,7 @@ function WebVoiceOverlay({
     }
   } else {
     status = "Tap the orb to start";
-    subStatus = "Sansxel will listen, then talk back. Tap again to interrupt.";
+    subStatus = "VRAELIS will listen, then talk back. Tap again to interrupt.";
   }
 
   // Reactive scale for the orb based on real audio level. Capped so
@@ -4170,7 +4170,7 @@ function WebImageResultCard({
           <a
             key={`dl-${u}-${i}`}
             href={u}
-            download={`sansxel-image-${i + 1}.png`}
+            download={`VRAELIS-image-${i + 1}.png`}
             target="_blank"
             rel="noreferrer"
             className="webchat-img-btn"

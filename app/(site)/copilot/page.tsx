@@ -34,7 +34,7 @@ export default async function CopilotPage() {
           </Reveal>
           <Reveal delay={0.12}>
             <p className="landing-body" style={{ maxWidth: 520, marginBottom: 36 }}>
-              Copilot is the agentic layer inside Sansxel. It reads context,
+              Copilot is the agentic layer inside VRAELIS. It reads context,
               acts across connected tools, and handles multi-step tasks. You
               describe the outcome. It handles the steps.
             </p>

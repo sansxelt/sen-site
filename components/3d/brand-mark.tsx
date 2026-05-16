@@ -3,15 +3,9 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 
-// Etched Sansxel brand mark. The logo is three triangles around a
-// pivot (see /public/logo-cyan.svg). Rendered as flat thin geometry
-// so it reads as a laser-etched mark on a metal surface, not a
-// floating UI element.
-//
-// Use anywhere a real product would carry the brand: lid centre,
-// stem side, ring inner face. Default colour is a low-contrast
-// graphite — the etch is supposed to hide and reveal under the rim
-// light, not announce itself.
+// V chevron brand mark etched onto 3D product surfaces.
+// Rendered as flat thin geometry so it reads as a laser-etched mark
+// on a metal surface — not a floating UI element.
 
 type Props = {
   size?: number;
@@ -32,49 +26,43 @@ export function BrandMark({
   emissiveIntensity = 0,
   opacity = 1,
 }: Props) {
-  // Triangle shapes mirror the polygons in the SVG, normalized to
-  // a unit-ish bounding box, then scaled by `size`.
-  const shapes = useMemo(() => {
-    const make = (pts: [number, number][]) => {
-      const s = new THREE.Shape();
-      s.moveTo(pts[0][0], pts[0][1]);
-      for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
-      s.closePath();
-      return s;
-    };
-
-    // SVG centre is at (340, 340), normalize to centre at origin and
-    // a half-extent ≈ 0.5
+  const shape = useMemo(() => {
+    // V chevron points from logo-*.svg, normalized to centre at origin.
+    // SVG coords (680×680 grid, centre 340): polygon points 109,102
+    // 224,102 340,388 456,102 571,102 340,564
     const norm = (x: number, y: number): [number, number] =>
       [(x - 340) / 600, -(y - 340) / 600];
 
-    const tri1 = make([norm(340, 340), norm(116, 116), norm(340, 60)]);
-    const tri2 = make([norm(340, 340), norm(564, 116), norm(620, 340)]);
-    const tri3 = make([norm(340, 340), norm(396, 620), norm(144, 564)]);
-    return [tri1, tri2, tri3];
+    const pts: [number, number][] = [
+      norm(109, 102),
+      norm(224, 102),
+      norm(340, 388),
+      norm(456, 102),
+      norm(571, 102),
+      norm(340, 564),
+    ];
+
+    const s = new THREE.Shape();
+    s.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
+    s.closePath();
+    return s;
   }, []);
 
   return (
     <group position={position} rotation={rotation} scale={[size, size, size]}>
-      {shapes.map((shape, i) => (
-        <mesh key={i}>
-          <shapeGeometry args={[shape]} />
-          <meshStandardMaterial
-            color={color}
-            metalness={1}
-            roughness={0.55}
-            emissive={emissive ?? color}
-            emissiveIntensity={emissiveIntensity}
-            transparent={opacity < 1}
-            opacity={opacity}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
-      {/* Centre pivot dot — punched through */}
-      <mesh position={[0, 0, 0.001]}>
-        <circleGeometry args={[0.022, 16]} />
-        <meshBasicMaterial color="#020308" transparent={opacity < 1} opacity={opacity} />
+      <mesh>
+        <shapeGeometry args={[shape]} />
+        <meshStandardMaterial
+          color={color}
+          metalness={1}
+          roughness={0.55}
+          emissive={emissive ?? color}
+          emissiveIntensity={emissiveIntensity}
+          transparent={opacity < 1}
+          opacity={opacity}
+          side={THREE.DoubleSide}
+        />
       </mesh>
     </group>
   );

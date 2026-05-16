@@ -282,7 +282,7 @@ export function AccountPanel({
           Account
         </div>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Sign in to open your sansxel workspace.
+          Sign in to open your VRAELIS workspace.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
           Your account gives you a place to manage identity, tune workspace
@@ -300,7 +300,7 @@ export function AccountPanel({
         <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
           <Link
             href={getSignInPath("/account")}
-            className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+            className="VRAELIS-white-button rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
           >
             Sign in
           </Link>
@@ -324,10 +324,10 @@ export function AccountPanel({
           Workspace Setup
         </div>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Your sansxel workspace is live on this device.
+          Your VRAELIS workspace is live on this device.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
-          Save how you work, what you want sansxel to remember, and which
+          Save how you work, what you want VRAELIS to remember, and which
           release track you want to follow.
         </p>
 
@@ -362,7 +362,7 @@ export function AccountPanel({
               type="text"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="How should sansxel address you?"
+              placeholder="How should VRAELIS address you?"
               disabled={savingProfile || signingOut}
               className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
             />
@@ -384,7 +384,7 @@ export function AccountPanel({
 
           <div>
             <label className="block text-sm font-medium text-white">
-              What should sansxel help you recover?
+              What should VRAELIS help you recover?
             </label>
             <textarea
               value={focusArea}
@@ -457,7 +457,7 @@ export function AccountPanel({
               {sessionState.email}
             </div>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
-              sansxel keeps sign-in and return routes on the same account
+              VRAELIS keeps sign-in and return routes on the same account
               surface, whether you use email, Google, or GitHub.
             </p>
           </div>
@@ -467,7 +467,7 @@ export function AccountPanel({
               type="button"
               onClick={() => void handleProfileSave()}
               disabled={savingProfile || signingOut}
-              className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+              className="VRAELIS-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
             >
               {savingProfile ? "Saving workspace..." : "Save workspace"}
             </button>
@@ -541,7 +541,7 @@ export function AccountPanel({
               [
                 "/privacy",
                 "Review privacy",
-                "Read how sansxel handles account details, context, deletion, and support.",
+                "Read how VRAELIS handles account details, context, deletion, and support.",
               ],
               [
                 "/contact",
@@ -590,7 +590,7 @@ export function AccountPanel({
                     {provider.label}
                   </div>
                   <div className="mt-1 text-sm text-neutral-200">
-                    Live now through the sansxel-hosted Auth.js flow.
+                    Live now through the VRAELIS-hosted Auth.js flow.
                   </div>
                 </div>
                 <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-100">
@@ -696,7 +696,7 @@ export function AccountPanel({
                 type="button"
                 onClick={() => void handlePasswordChange()}
                 disabled={changingPassword || !currentPassword || !newPassword}
-                className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+                className="VRAELIS-white-button rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
               >
                 {changingPassword ? "Updating..." : "Update password"}
               </button>

@@ -8,19 +8,19 @@ import { CopilotBar } from "../components/copilot-bar";
 import { RevealOnScroll } from "../components/reveal-on-scroll";
 import { InflightBackToChat } from "../components/inflight-back-to-chat";
 
-const BASE = "https://www.sansxel.ai";
+const BASE = "https://www.VRAELIS.ai";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
-    default: "sansxel, AI with persistent project memory",
-    template: "%s | sansxel",
+    default: "VRAELIS, AI with persistent project memory",
+    template: "%s | VRAELIS",
   },
   description:
-    "Stop re-explaining yourself to AI. Every chatbot forgets you between sessions. Sansxel remembers your projects, your context, your goals. Every session picks up where the last one left off.",
+    "Stop re-explaining yourself to AI. Every chatbot forgets you between sessions. VRAELIS remembers your projects, your context, your goals. Every session picks up where the last one left off.",
   keywords: [
-    "sansxel",
-    "sansxel ai",
+    "VRAELIS",
+    "VRAELIS ai",
     "ai with memory",
     "persistent memory ai",
     "ai project memory",
@@ -32,27 +32,27 @@ export const metadata: Metadata = {
     "ai with web search",
     "multimodal ai",
   ],
-  authors: [{ name: "sansxel", url: BASE }],
-  creator: "sansxel",
-  publisher: "sansxel",
+  authors: [{ name: "VRAELIS", url: BASE }],
+  creator: "VRAELIS",
+  publisher: "VRAELIS",
   alternates: { canonical: BASE },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: BASE,
-    siteName: "sansxel",
+    siteName: "VRAELIS",
     title: "Stop re-explaining yourself to AI.",
     description:
-      "Every chatbot forgets you between sessions. Sansxel remembers your projects, your context, your goals. Every session picks up where the last one left off.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
+      "Every chatbot forgets you between sessions. VRAELIS remembers your projects, your context, your goals. Every session picks up where the last one left off.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "VRAELIS" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Stop re-explaining yourself to AI.",
     description:
-      "Sansxel remembers your projects, context, and goals. Every session picks up where the last one left off.",
+      "VRAELIS remembers your projects, context, and goals. Every session picks up where the last one left off.",
     images: ["/og-image.png"],
-    creator: "@sansxel",
+    creator: "@VRAELIS",
   },
   robots: {
     index: true,
@@ -87,12 +87,12 @@ export default async function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "sansxel",
-              url: "https://www.sansxel.ai",
+              name: "VRAELIS",
+              url: "https://www.VRAELIS.ai",
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "AI with persistent project memory. Sansxel remembers your projects, context, and goals; every session picks up where the last one left off. Chat, voice, drag-drop, image generation, live web search, all in one workspace.",
+                "AI with persistent project memory. VRAELIS remembers your projects, context, and goals; every session picks up where the last one left off. Chat, voice, drag-drop, image generation, live web search, all in one workspace.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",
@@ -102,8 +102,8 @@ export default async function RootLayout({
               },
               creator: {
                 "@type": "Organization",
-                name: "sansxel",
-                url: "https://www.sansxel.ai",
+                name: "VRAELIS",
+                url: "https://www.VRAELIS.ai",
               },
             }),
           }}

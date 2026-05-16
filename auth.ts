@@ -11,8 +11,8 @@ import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials
 
 // v0.1.16 — AUTH_URL env var forces NextAuth to generate provider
 // signinUrl / callbackUrl strings against the configured hostname
-// (https://www.sansxel.ai), even when the request comes in on
-// chat.sansxel.ai or platform.sansxel.ai. The signin form ends up
+// (https://www.VRAELIS.ai), even when the request comes in on
+// chat.VRAELIS.ai or platform.VRAELIS.ai. The signin form ends up
 // posting cross-origin → browser blocks it → 'Configuration' error
 // page. Stripping AUTH_URL at module load forces NextAuth to fall
 // back to its trustHost-based per-request URL detection.
@@ -20,9 +20,9 @@ delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
 
 // v0.2.0 phase H — cross-subdomain cookie. Set AUTH_COOKIE_DOMAIN
-// to ".sansxel.ai" (with the leading dot) in prod env so the
+// to ".VRAELIS.ai" (with the leading dot) in prod env so the
 // session cookie is scoped to all subdomains. Without this, the
-// apex marketing site (sansxel.ai) couldn't see chat.sansxel.ai's
+// apex marketing site (VRAELIS.ai) couldn't see chat.VRAELIS.ai's
 // session and showed "Log in" to already-signed-in users.
 //
 // Local dev / preview deploys: leave AUTH_COOKIE_DOMAIN unset, so
@@ -246,12 +246,12 @@ const authResult = NextAuth({
         const parsed = new URL(url);
 
         // Allow redirects to the same origin or anywhere within the
-        // sansxel.ai family (apex + subdomains) so sign-out from
+        // VRAELIS.ai family (apex + subdomains) so sign-out from
         // chat/platform can land back on the apex marketing site.
         const isSameOrigin = parsed.origin === baseUrl;
-        const isSansxelHost = /^https:\/\/([\w-]+\.)?sansxel\.ai$/.test(parsed.origin);
+        const isVRAELISHost = /^https:\/\/([\w-]+\.)?VRAELIS\.ai$/.test(parsed.origin);
 
-        if (isSameOrigin || isSansxelHost) {
+        if (isSameOrigin || isVRAELISHost) {
           return url;
         }
       } catch {

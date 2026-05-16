@@ -4,7 +4,7 @@ import type { CopilotEdge, DesktopPreferences } from "./api";
 import { usePreferences } from "./preferences";
 
 // Settings view — app behavior, window, keyboard. This is split from
-// PreferencesView, which owns how sansxel-1 *talks* (persona, voice,
+// PreferencesView, which owns how VRAELIS-1 *talks* (persona, voice,
 // auto-speak). Anything that's about the app itself lives here.
 export function DesktopSettingsView() {
   const { prefs, update, loading } = usePreferences();
@@ -36,7 +36,7 @@ export function DesktopSettingsView() {
         <h1>Settings</h1>
         <p>
           App behavior, window, and keyboard shortcuts. Separate from
-          Preferences (which is about how sansxel-1 talks to you).
+          Preferences (which is about how VRAELIS-1 talks to you).
         </p>
       </div>
 
@@ -47,7 +47,7 @@ export function DesktopSettingsView() {
             because Ctrl+Q is the most-asked-about behavior. */}
         <PrefSection
           label="Keyboard shortcuts"
-          help="The X button HIDES sansxel (it keeps running so reopening is instant). Use the shortcuts below to fully quit or revisit the splash."
+          help="The X button HIDES VRAELIS (it keeps running so reopening is instant). Use the shortcuts below to fully quit or revisit the splash."
         >
           <div className="shortcut-list">
             <div className="shortcut-row">
@@ -58,7 +58,7 @@ export function DesktopSettingsView() {
               </div>
               <div className="shortcut-copy">
                 <strong>Force quit</strong>
-                <span>Closes sansxel entirely. Required to install pending updates.</span>
+                <span>Closes VRAELIS entirely. Required to install pending updates.</span>
               </div>
             </div>
             <div className="shortcut-row">
@@ -126,7 +126,7 @@ export function DesktopSettingsView() {
 
         {/* v0.1.13 \u2014 Window mode setting removed. Toolbar modes never
             worked properly outside full-window scale (header text overlapped,
-            buttons collided), and the floating Sansxel Copilot covers the
+            buttons collided), and the floating VRAELIS Copilot covers the
             same use case. The window_mode preference defaults to "normal"
             and gets force-reset on every launch (chat-view.tsx). */}
         {/* v0.1.8 Capsule Rail — where the floating copilot lives.
@@ -135,7 +135,7 @@ export function DesktopSettingsView() {
             the OS taskbar/dock and is harder to reach. */}
         <PrefSection
           label="Copilot position"
-          help="Where the floating sansxel copilot capsule lives. Vertical edges (Right/Left) overlay your apps; Top docks like a menu bar."
+          help="Where the floating VRAELIS copilot capsule lives. Vertical edges (Right/Left) overlay your apps; Top docks like a menu bar."
         >
           <div className="copilot-pos-wrap">
             <SegmentedControl<CopilotEdge>
@@ -208,7 +208,7 @@ export function DesktopSettingsView() {
 
         <PrefSection
           label="Conversational mode"
-          help="When you finish a voice turn, the mic restarts automatically once sansxel-1 stops talking. Hands-free back-and-forth."
+          help="When you finish a voice turn, the mic restarts automatically once VRAELIS-1 stops talking. Hands-free back-and-forth."
         >
           <Toggle
             value={prefs.conversational}
@@ -220,7 +220,7 @@ export function DesktopSettingsView() {
             tools (navigate, create_api_key, search_threads, …) or is
             limited to text replies. */}
         <PrefSection
-          label="Let sansxel-1 take actions"
+          label="Let VRAELIS-1 take actions"
           help="Allow the assistant to navigate views, manage API keys, search your threads, and run other in-app actions. Turn off for a text-only assistant."
         >
           <Toggle

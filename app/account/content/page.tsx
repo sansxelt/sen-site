@@ -50,7 +50,7 @@ export default async function ContentAdminPage() {
         </div>
         <h1 className="text-3xl font-semibold text-white">Content review</h1>
         <p className="max-w-2xl text-sm leading-relaxed text-neutral-400">
-          Drafts ingested by <code className="text-neutral-300">scripts/ingest-content.mjs</code> land here. Approve before publish, since every page on <code className="text-neutral-300">sansxel.ai</code> shares a domain reputation.
+          Drafts ingested by <code className="text-neutral-300">scripts/ingest-content.mjs</code> land here. Approve before publish, since every page on <code className="text-neutral-300">VRAELIS.ai</code> shares a domain reputation.
         </p>
       </header>
 

@@ -3,11 +3,11 @@
 // v0.2.0 phase F: custom UI inference cards.
 //
 // The model emits structured output as a fenced block:
-//   ```sansxel-card
+//   ```VRAELIS-card
 //   { "type": "stat-grid", ... }
 //   ```
 // CodeBlock detects the language tag, parses the JSON, and
-// hands off to <SansxelCard /> below which dispatches by type.
+// hands off to <VRAELISCard /> below which dispatches by type.
 // Unknown types or malformed JSON fall back to a plain code
 // preview so a bad render never breaks the whole answer.
 
@@ -84,10 +84,10 @@ type CardJSON =
       footer?: string;
     };
 
-// Tries to parse a sansxel-card JSON payload. Strict on type
+// Tries to parse a VRAELIS-card JSON payload. Strict on type
 // presence; lenient on extra fields. Returns null on malformed
 // input so the caller can fall back to a code-block render.
-export function parseSansxelCard(raw: string): CardJSON | null {
+export function parseVRAELISCard(raw: string): CardJSON | null {
   try {
     const obj = JSON.parse(raw) as { type?: string };
     if (!obj || typeof obj !== "object") return null;
@@ -98,29 +98,29 @@ export function parseSansxelCard(raw: string): CardJSON | null {
   }
 }
 
-// Renders while a sansxel-card is still being streamed by the
+// Renders while a VRAELIS-card is still being streamed by the
 // model so the user doesn't see partial JSON typing in. Three
 // shimmer rows + a subtle status line ("Building card…"); the
 // real card swaps in over the top with its own entry animation
 // once the JSON parses. Sized to roughly match a stat-grid so
 // the layout shift is small.
-export function SansxelCardSkeleton() {
+export function VRAELISCardSkeleton() {
   return (
-    <div className="sx-card sx-card--skeleton" aria-hidden>
-      <div className="sx-skeleton-status">
-        <span className="sx-skeleton-pulse" />
+    <div className="vrl-card vrl-card--skeleton" aria-hidden>
+      <div className="vrl-skeleton-status">
+        <span className="vrl-skeleton-pulse" />
         Building card…
       </div>
-      <div className="sx-skeleton-rows">
-        <div className="sx-skeleton-row" />
-        <div className="sx-skeleton-row" />
-        <div className="sx-skeleton-row" />
+      <div className="vrl-skeleton-rows">
+        <div className="vrl-skeleton-row" />
+        <div className="vrl-skeleton-row" />
+        <div className="vrl-skeleton-row" />
       </div>
     </div>
   );
 }
 
-export function SansxelCard({ data }: { data: CardJSON }) {
+export function VRAELISCard({ data }: { data: CardJSON }) {
   switch (data.type) {
     case "stat-grid":
       return <StatGrid data={data} />;
@@ -139,8 +139,8 @@ export function SansxelCard({ data }: { data: CardJSON }) {
       // box so the user sees something but knows it's not what
       // the model intended.
       return (
-        <div className="sx-card sx-card--unknown">
-          <div className="sx-card-warn">
+        <div className="vrl-card vrl-card--unknown">
+          <div className="vrl-card-warn">
             Unknown card type: {(data as { type: string }).type}
           </div>
         </div>
@@ -155,21 +155,21 @@ function StatGrid({
   data: Extract<CardJSON, { type: "stat-grid" }>;
 }) {
   return (
-    <div className="sx-card sx-stat-grid">
+    <div className="vrl-card vrl-stat-grid">
       <CardHeader title={data.title} subtitle={data.subtitle} />
-      <div className="sx-stat-grid-rows">
+      <div className="vrl-stat-grid-rows">
         {data.rows.map((row, i) => (
-          <div key={i} className="sx-stat-row">
-            <div className="sx-stat-row-main">
-              <span className="sx-stat-label">{row.label}</span>
+          <div key={i} className="vrl-stat-row">
+            <div className="vrl-stat-row-main">
+              <span className="vrl-stat-label">{row.label}</span>
               {row.hint && (
-                <span className="sx-stat-hint">{row.hint}</span>
+                <span className="vrl-stat-hint">{row.hint}</span>
               )}
             </div>
-            <div className="sx-stat-row-value">
-              <span className="sx-stat-value">{row.value}</span>
+            <div className="vrl-stat-row-value">
+              <span className="vrl-stat-value">{row.value}</span>
               {row.change && (
-                <span className={`sx-stat-change sx-tone-${row.tone ?? "neutral"}`}>
+                <span className={`vrl-stat-change vrl-tone-${row.tone ?? "neutral"}`}>
                   {row.change}
                 </span>
               )}
@@ -189,23 +189,23 @@ function Comparison({
   data: Extract<CardJSON, { type: "comparison" }>;
 }) {
   return (
-    <div className="sx-card sx-comparison">
+    <div className="vrl-card vrl-comparison">
       <CardHeader title={data.title} subtitle={data.subtitle} />
-      <div className="sx-comparison-cols">
+      <div className="vrl-comparison-cols">
         {data.columns.map((col, i) => (
           <div
             key={i}
-            className={`sx-comparison-col sx-tone-${col.tone ?? "neutral"}`}
+            className={`vrl-comparison-col vrl-tone-${col.tone ?? "neutral"}`}
           >
-            <div className="sx-comparison-eyebrow">
+            <div className="vrl-comparison-eyebrow">
               {col.tone === "us"
                 ? "Us"
                 : col.tone === "them"
                   ? "Them"
                   : null}
             </div>
-            <div className="sx-comparison-heading">{col.heading}</div>
-            <ul className="sx-comparison-points">
+            <div className="vrl-comparison-heading">{col.heading}</div>
+            <ul className="vrl-comparison-points">
               {col.points.map((p, j) => (
                 <li key={j}>{p}</li>
               ))}
@@ -225,19 +225,19 @@ function PlanSteps({
   data: Extract<CardJSON, { type: "plan-steps" }>;
 }) {
   return (
-    <div className="sx-card sx-plan-steps">
+    <div className="vrl-card vrl-plan-steps">
       <CardHeader title={data.title} subtitle={data.subtitle} />
-      <ol className="sx-plan-list">
+      <ol className="vrl-plan-list">
         {data.steps.map((step, i) => (
-          <li key={i} className="sx-plan-step">
-            <div className="sx-plan-step-num">{String(i + 1).padStart(2, "0")}</div>
-            <div className="sx-plan-step-body">
-              <div className="sx-plan-step-title">{step.title}</div>
+          <li key={i} className="vrl-plan-step">
+            <div className="vrl-plan-step-num">{String(i + 1).padStart(2, "0")}</div>
+            <div className="vrl-plan-step-body">
+              <div className="vrl-plan-step-title">{step.title}</div>
               {step.body && (
-                <p className="sx-plan-step-text">{step.body}</p>
+                <p className="vrl-plan-step-text">{step.body}</p>
               )}
               {step.sub && step.sub.length > 0 && (
-                <ul className="sx-plan-step-sub">
+                <ul className="vrl-plan-step-sub">
                   {step.sub.map((s, j) => (
                     <li key={j}>{s}</li>
                   ))}
@@ -259,13 +259,13 @@ function KeyValue({
   data: Extract<CardJSON, { type: "key-value" }>;
 }) {
   return (
-    <div className="sx-card sx-key-value">
+    <div className="vrl-card vrl-key-value">
       <CardHeader title={data.title} subtitle={data.subtitle} />
-      <dl className="sx-kv-list">
+      <dl className="vrl-kv-list">
         {data.items.map((item, i) => (
-          <div key={i} className="sx-kv-row">
-            <dt className="sx-kv-label">{item.label}</dt>
-            <dd className="sx-kv-value">{item.value}</dd>
+          <div key={i} className="vrl-kv-row">
+            <dt className="vrl-kv-label">{item.label}</dt>
+            <dd className="vrl-kv-value">{item.value}</dd>
           </div>
         ))}
       </dl>
@@ -281,22 +281,22 @@ function QuoteCard({
   data: Extract<CardJSON, { type: "quote" }>;
 }) {
   return (
-    <div className="sx-card sx-quote">
-      <div className="sx-quote-mark" aria-hidden>
+    <div className="vrl-card vrl-quote">
+      <div className="vrl-quote-mark" aria-hidden>
         &ldquo;
       </div>
-      <blockquote className="sx-quote-text">{data.text}</blockquote>
+      <blockquote className="vrl-quote-text">{data.text}</blockquote>
       {(data.attribution || data.source) && (
-        <div className="sx-quote-meta">
+        <div className="vrl-quote-meta">
           {data.attribution && (
-            <span className="sx-quote-author">{data.attribution}</span>
+            <span className="vrl-quote-author">{data.attribution}</span>
           )}
           {data.source && (
             <a
               href={data.source}
               target="_blank"
               rel="noreferrer"
-              className="sx-quote-source"
+              className="vrl-quote-source"
             >
               source
             </a>
@@ -314,17 +314,17 @@ function Timeline({
   data: Extract<CardJSON, { type: "timeline" }>;
 }) {
   return (
-    <div className="sx-card sx-timeline">
+    <div className="vrl-card vrl-timeline">
       <CardHeader title={data.title} />
-      <ol className="sx-timeline-list">
+      <ol className="vrl-timeline-list">
         {data.events.map((evt, i) => (
-          <li key={i} className="sx-timeline-event">
-            <div className="sx-timeline-dot" aria-hidden />
-            <div className="sx-timeline-when">{evt.when}</div>
-            <div className="sx-timeline-body">
-              <div className="sx-timeline-title">{evt.title}</div>
+          <li key={i} className="vrl-timeline-event">
+            <div className="vrl-timeline-dot" aria-hidden />
+            <div className="vrl-timeline-when">{evt.when}</div>
+            <div className="vrl-timeline-body">
+              <div className="vrl-timeline-title">{evt.title}</div>
               {evt.body && (
-                <p className="sx-timeline-text">{evt.body}</p>
+                <p className="vrl-timeline-text">{evt.body}</p>
               )}
             </div>
           </li>
@@ -345,14 +345,14 @@ function CardHeader({
 }) {
   if (!title && !subtitle) return null;
   return (
-    <div className="sx-card-head">
-      {title && <div className="sx-card-title">{title}</div>}
-      {subtitle && <div className="sx-card-subtitle">{subtitle}</div>}
+    <div className="vrl-card-head">
+      {title && <div className="vrl-card-title">{title}</div>}
+      {subtitle && <div className="vrl-card-subtitle">{subtitle}</div>}
     </div>
   );
 }
 
 function CardFooter({ footer }: { footer?: string }) {
   if (!footer) return null;
-  return <div className="sx-card-footer">{footer}</div>;
+  return <div className="vrl-card-footer">{footer}</div>;
 }

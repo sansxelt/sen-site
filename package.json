@@ -1,5 +1,5 @@
 {
-  "name": "sansxel-site",
+  "name": "VRAELIS-site",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "lint": "eslint",
     "desktop:dev": "npm --prefix desktop run tauri dev",
     "desktop:build": "npm --prefix desktop run tauri build",
-    "desktop:keygen": "npm --prefix desktop run tauri signer generate -- -w sansxel-updater.key"
+    "desktop:keygen": "npm --prefix desktop run tauri signer generate -- -w VRAELIS-updater.key"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

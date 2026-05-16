@@ -6,17 +6,17 @@ import { EmailComposer } from "./email-composer";
 const channels = [
   {
     title: "General support",
-    email: "help@sansxel.ai",
+    email: "help@VRAELIS.ai",
     description: "Accounts, auth, access, onboarding. Also where you apply to write for Learn. Send your name, past work, and the topics you want to cover. Approved writers get a hardlocked byline.",
   },
   {
     title: "Privacy requests",
-    email: "privacy@sansxel.ai",
+    email: "privacy@VRAELIS.ai",
     description: "Requests related to account data, deletion, export, or policy questions.",
   },
   {
     title: "Teams / sales",
-    email: "sales@sansxel.ai",
+    email: "sales@VRAELIS.ai",
     description: "Workspace rollout, pricing conversations, and private onboarding.",
   },
 ];

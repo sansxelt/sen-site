@@ -64,7 +64,7 @@ const scenarios = [
   {
     word: "creating",
     accent: "sky" as AccentKey,
-    body: "sansxel rebuilds the exact creative moment where you were shaping the work, so returning feels like continuing, not reconstructing from scratch.",
+    body: "VRAELIS rebuilds the exact creative moment where you were shaping the work, so returning feels like continuing, not reconstructing from scratch.",
     layout: "session" as const,
     accentLabel: "Creation recall",
     header: "Workspace",
@@ -80,7 +80,7 @@ const scenarios = [
   {
     word: "debugging",
     accent: "rose" as AccentKey,
-    body: "sansxel traces what you were chasing, the file, the line, the message, so you can pick up the exact thread without rerunning everything.",
+    body: "VRAELIS traces what you were chasing, the file, the line, the message, so you can pick up the exact thread without rerunning everything.",
     layout: "trace" as const,
     accentLabel: "Debug trace",
     header: "Console",
@@ -97,7 +97,7 @@ const scenarios = [
   {
     word: "planning",
     accent: "amber" as AccentKey,
-    body: "sansxel maps where momentum was clear and where it stalled, so the plan stays readable after you step away and come back to it days later.",
+    body: "VRAELIS maps where momentum was clear and where it stalled, so the plan stays readable after you step away and come back to it days later.",
     layout: "roadmap" as const,
     accentLabel: "Planning signals",
     header: "Roadmap",
@@ -117,7 +117,7 @@ const scenarios = [
   {
     word: "analyzing",
     accent: "cyan" as AccentKey,
-    body: "When work turns analytical, sansxel shifts with it, surfacing the signals, retention, and revenue moves that actually changed while you were looking.",
+    body: "When work turns analytical, VRAELIS shifts with it, surfacing the signals, retention, and revenue moves that actually changed while you were looking.",
     layout: "metrics" as const,
     accentLabel: "Analysis signals",
     header: "Signals",
@@ -134,7 +134,7 @@ const scenarios = [
   {
     word: "writing",
     accent: "emerald" as AccentKey,
-    body: "Write live in your browser without losing the thread. sansxel keeps the paragraph, source trail, revision steps, and next sentence moving together in real time.",
+    body: "Write live in your browser without losing the thread. VRAELIS keeps the paragraph, source trail, revision steps, and next sentence moving together in real time.",
     layout: "editor" as const,
     accentLabel: "Draft trail",
     header: "Draft",
@@ -142,9 +142,9 @@ const scenarios = [
     promptLabel: "Resume writing",
     promoEyebrow: "Chrome live session",
     promoTitle: "Write live in your browser",
-    promoText: "Open Sansxel in your browser to keep the draft, sources, and revision trail active while the writing is still happening.",
+    promoText: "Open VRAELIS in your browser to keep the draft, sources, and revision trail active while the writing is still happening.",
     chips: ["Real-time drafting", "Source-aware flow", "Live revision trail"],
-    draft: "Open Sansxel in your browser and the writing keeps moving live. The draft, the source trail, and the next sentence stay in view without forcing you to rebuild momentum. That is what makes the work feel natural instead of reconstructed after the fact.",
+    draft: "Open VRAELIS in your browser and the writing keeps moving live. The draft, the source trail, and the next sentence stay in view without forcing you to rebuild momentum. That is what makes the work feel natural instead of reconstructed after the fact.",
     revisions: [
       { time: "11:08 AM", note: "Locked the opener and kept the live browser draft pinned." },
       { time: "11:21 AM", note: "Pulled two source-backed lines into the CTA while writing stayed live." },
@@ -155,7 +155,7 @@ const scenarios = [
   {
     word: "building",
     accent: "blue" as AccentKey,
-    body: "Build sessions stay readable. sansxel shows what files you touched, why you switched contexts, and exactly where to pick back up, no replaying needed.",
+    body: "Build sessions stay readable. VRAELIS shows what files you touched, why you switched contexts, and exactly where to pick back up, no replaying needed.",
     layout: "codebase" as const,
     accentLabel: "Build recall",
     header: "Workspace",
@@ -177,7 +177,7 @@ const scenarios = [
   {
     word: "designing",
     accent: "violet" as AccentKey,
-    body: "Design work leaves traces too. sansxel logs which frames were active, which tokens changed, and what the layer state looked like before you switched.",
+    body: "Design work leaves traces too. VRAELIS logs which frames were active, which tokens changed, and what the layer state looked like before you switched.",
     layout: "design" as const,
     accentLabel: "Design state",
     header: "Canvas",
@@ -200,7 +200,7 @@ const scenarios = [
   {
     word: "researching",
     accent: "indigo" as AccentKey,
-    body: "Research trails are real work. sansxel captures the tabs, sources, and connections you were building so the context doesn't scatter when you stop.",
+    body: "Research trails are real work. VRAELIS captures the tabs, sources, and connections you were building so the context doesn't scatter when you stop.",
     layout: "research" as const,
     accentLabel: "Research trail",
     header: "Sources",
@@ -217,7 +217,7 @@ const scenarios = [
   {
     word: "shipping",
     accent: "emerald" as AccentKey,
-    body: "Deploy pipelines have state too. sansxel captures where each stage landed so you know whether to watch, wait, or push the next change.",
+    body: "Deploy pipelines have state too. VRAELIS captures where each stage landed so you know whether to watch, wait, or push the next change.",
     layout: "pipeline" as const,
     accentLabel: "Deploy trace",
     header: "Pipeline",
@@ -231,12 +231,12 @@ const scenarios = [
       { name: "Production", status: "waiting" as const },
     ],
     testSummary: "42 passed · 0 failed · 1 skipped",
-    deployTarget: "vercel, main → sansxel.ai",
+    deployTarget: "vercel, main → VRAELIS.ai",
   },
   {
     word: "managing",
     accent: "orange" as AccentKey,
-    body: "Team work is tracked across people, not just tasks. sansxel surfaces what's blocked, what moved, and who needs context, without another standup.",
+    body: "Team work is tracked across people, not just tasks. VRAELIS surfaces what's blocked, what moved, and who needs context, without another standup.",
     layout: "kanban" as const,
     accentLabel: "Task snapshot",
     header: "Board",
@@ -252,7 +252,7 @@ const scenarios = [
   {
     word: "reviewing",
     accent: "violet" as AccentKey,
-    body: "Code review leaves a clear trail. sansxel remembers which PR you were in, what you flagged, and where the conversation left off before you switched.",
+    body: "Code review leaves a clear trail. VRAELIS remembers which PR you were in, what you flagged, and where the conversation left off before you switched.",
     layout: "review" as const,
     accentLabel: "Review state",
     header: "Pull Request",
@@ -269,7 +269,7 @@ const scenarios = [
   {
     word: "selling",
     accent: "violet" as AccentKey,
-    body: "Some moments should feel like getting a sharp answer, not opening another dashboard. sansxel shifts into that mode when the work is about revenue.",
+    body: "Some moments should feel like getting a sharp answer, not opening another dashboard. VRAELIS shifts into that mode when the work is about revenue.",
     layout: "answer" as const,
     accentLabel: "Revenue signals",
     header: "Revenue",
@@ -285,7 +285,7 @@ const scenarios = [
   {
     word: "studying",
     accent: "cyan" as AccentKey,
-    body: "Study sessions leave a trail. sansxel logs what you read, where you paused, and which concepts were forming, so picking back up takes seconds, not rereading.",
+    body: "Study sessions leave a trail. VRAELIS logs what you read, where you paused, and which concepts were forming, so picking back up takes seconds, not rereading.",
     layout: "notes" as const,
     accentLabel: "Study session",
     header: "Notes",
@@ -302,7 +302,7 @@ const scenarios = [
   {
     word: "brainstorming",
     accent: "amber" as AccentKey,
-    body: "Brainstorms scatter fast. sansxel captures the ideas gaining traction, the ones you set aside, and the thread you were about to chase before the session ended.",
+    body: "Brainstorms scatter fast. VRAELIS captures the ideas gaining traction, the ones you set aside, and the thread you were about to chase before the session ended.",
     layout: "cluster" as const,
     accentLabel: "Idea cluster",
     header: "Ideas",
@@ -319,7 +319,7 @@ const scenarios = [
   {
     word: "presenting",
     accent: "blue" as AccentKey,
-    body: "Presentations have live state. sansxel holds the slide you were on, the notes you were pulling from, and the questions that surfaced, so the follow-through stays sharp.",
+    body: "Presentations have live state. VRAELIS holds the slide you were on, the notes you were pulling from, and the questions that surfaced, so the follow-through stays sharp.",
     layout: "deck" as const,
     accentLabel: "Deck state",
     header: "Presentation",
@@ -332,7 +332,7 @@ const scenarios = [
   {
     word: "interviewing",
     accent: "indigo" as AccentKey,
-    body: "Interview signals fade fast. sansxel captures the answers, the gaps, and the reasoning behind the score, so the decision stays grounded when you loop in the team.",
+    body: "Interview signals fade fast. VRAELIS captures the answers, the gaps, and the reasoning behind the score, so the decision stays grounded when you loop in the team.",
     layout: "eval" as const,
     accentLabel: "Eval notes",
     header: "Interview",
@@ -349,7 +349,7 @@ const scenarios = [
   {
     word: "investing",
     accent: "cyan" as AccentKey,
-    body: "Markets move while you work. sansxel captures the signals, position context, and the thesis you were forming, so conviction doesn't scatter between sessions.",
+    body: "Markets move while you work. VRAELIS captures the signals, position context, and the thesis you were forming, so conviction doesn't scatter between sessions.",
     layout: "portfolio" as const,
     accentLabel: "Portfolio signals",
     header: "Portfolio",
@@ -365,7 +365,7 @@ const scenarios = [
   {
     word: "hiring",
     accent: "orange" as AccentKey,
-    body: "Pipelines move fast and lose signal. sansxel keeps the candidate state, the blocker, and the next step visible, so nothing gets dropped between rounds.",
+    body: "Pipelines move fast and lose signal. VRAELIS keeps the candidate state, the blocker, and the next step visible, so nothing gets dropped between rounds.",
     layout: "candidates" as const,
     accentLabel: "Hiring pipeline",
     header: "Candidates",
@@ -383,7 +383,7 @@ const scenarios = [
   {
     word: "onboarding",
     accent: "sky" as AccentKey,
-    body: "Onboarding is context-dense. sansxel tracks who's ahead, what's blocked, and what each person needs next, so the first few weeks stay structured without constant check-ins.",
+    body: "Onboarding is context-dense. VRAELIS tracks who's ahead, what's blocked, and what each person needs next, so the first few weeks stay structured without constant check-ins.",
     layout: "progress" as const,
     accentLabel: "Onboarding state",
     header: "Team progress",
@@ -399,7 +399,7 @@ const scenarios = [
   {
     word: "networking",
     accent: "violet" as AccentKey,
-    body: "Relationship context fades. sansxel remembers who you met where, what you knew when, and what the next move was, so follow-through happens before the window closes.",
+    body: "Relationship context fades. VRAELIS remembers who you met where, what you knew when, and what the next move was, so follow-through happens before the window closes.",
     layout: "contacts" as const,
     accentLabel: "Contact context",
     header: "Connections",
@@ -415,7 +415,7 @@ const scenarios = [
   {
     word: "reading",
     accent: "rose" as AccentKey,
-    body: "Reading is thinking. sansxel holds the passage, the chapter, and the argument you were building around the text, so returning means continuing, not restarting.",
+    body: "Reading is thinking. VRAELIS holds the passage, the chapter, and the argument you were building around the text, so returning means continuing, not restarting.",
     layout: "book" as const,
     accentLabel: "Reading trail",
     header: "Reading",
@@ -430,7 +430,7 @@ const scenarios = [
   {
     word: "testing",
     accent: "emerald" as AccentKey,
-    body: "Test failures have context. sansxel captures which suite was running, what failed, and the fix thread, so debugging picks up with full state intact, not from scratch.",
+    body: "Test failures have context. VRAELIS captures which suite was running, what failed, and the fix thread, so debugging picks up with full state intact, not from scratch.",
     layout: "suite" as const,
     accentLabel: "Test run",
     header: "Test suite",
@@ -447,7 +447,7 @@ const scenarios = [
   {
     word: "configuring",
     accent: "blue" as AccentKey,
-    body: "Config work is detail-dense. sansxel tracks what's wired, what's missing, and the last error, so environment debugging doesn't restart from scratch every time.",
+    body: "Config work is detail-dense. VRAELIS tracks what's wired, what's missing, and the last error, so environment debugging doesn't restart from scratch every time.",
     layout: "config" as const,
     accentLabel: "Config state",
     header: "Environment",
@@ -463,7 +463,7 @@ const scenarios = [
   {
     word: "monitoring",
     accent: "rose" as AccentKey,
-    body: "Incidents have timelines. sansxel keeps the alert sequence, the signals you were watching, and the state you were in, so handoffs and post-mortems start with facts.",
+    body: "Incidents have timelines. VRAELIS keeps the alert sequence, the signals you were watching, and the state you were in, so handoffs and post-mortems start with facts.",
     layout: "alerts" as const,
     accentLabel: "Alert state",
     header: "Monitoring",
@@ -480,7 +480,7 @@ const scenarios = [
   {
     word: "finding",
     accent: "sky" as AccentKey,
-    body: "sansxel searches across everything on your machine, files, repos, open windows, settings panels, so 'where was I?' has a sharp answer in under a second.",
+    body: "VRAELIS searches across everything on your machine, files, repos, open windows, settings panels, so 'where was I?' has a sharp answer in under a second.",
     layout: "spotlight" as const,
     accentLabel: "Ambient search",
     header: "Finder",
@@ -499,7 +499,7 @@ const scenarios = [
         label: "Repos",
         items: [
           { iconType: "git", iconLabel: "GIT", name: "sen-site",     path: "~/Projects/sen-site",         meta: "main ↑3", highlighted: false },
-          { iconType: "git", iconLabel: "GIT", name: "sansxel-app",  path: "~/Projects/sansxel-app",      meta: "feat/auth", highlighted: false },
+          { iconType: "git", iconLabel: "GIT", name: "VRAELIS-app",  path: "~/Projects/VRAELIS-app",      meta: "feat/auth", highlighted: false },
         ],
       },
       {
@@ -514,7 +514,7 @@ const scenarios = [
   {
     word: "locating",
     accent: "blue" as AccentKey,
-    body: "sansxel knows which repositories were active, what branch you were on, and which files you last touched, so you pick up exactly where the session ended.",
+    body: "VRAELIS knows which repositories were active, what branch you were on, and which files you last touched, so you pick up exactly where the session ended.",
     layout: "filetree" as const,
     accentLabel: "Repo finder",
     header: "Repository",
@@ -539,7 +539,7 @@ const scenarios = [
   {
     word: "exploring",
     accent: "violet" as AccentKey,
-    body: "sansxel maps every open app, window, and system panel during your session, so when you come back, the full picture of what was live is already waiting.",
+    body: "VRAELIS maps every open app, window, and system panel during your session, so when you come back, the full picture of what was live is already waiting.",
     layout: "sysfinder" as const,
     accentLabel: "PC context",
     header: "Session map",
@@ -549,7 +549,7 @@ const scenarios = [
       { name: "VS Code",   subtitle: "sen-site · hero-activity.tsx",  icon: "⬡", bg: "#0066B8", last: "3m ago"  },
       { name: "Chrome",    subtitle: "4 tabs · supabase.com active",  icon: "◉", bg: "#4285F4", last: "12m ago" },
       { name: "Terminal",  subtitle: "~/sen-site · npm run dev",       icon: "▸", bg: "#555",    last: "18m ago" },
-      { name: "Figma",     subtitle: "sansxel, landing page v2",      icon: "◈", bg: "#A259FF", last: "1h ago"  },
+      { name: "Figma",     subtitle: "VRAELIS, landing page v2",      icon: "◈", bg: "#A259FF", last: "1h ago"  },
     ],
     openFiles: "12 files · 3 apps",
     activeRepo: "sen-site · main",
@@ -571,7 +571,7 @@ const accentRgb: Record<AccentKey, string> = {
 };
 
 function previewAccentStyle(accentKey: AccentKey): React.CSSProperties {
-  return { ["--sx-accent" as string]: accentRgb[accentKey] };
+  return { ["--vrl-accent" as string]: accentRgb[accentKey] };
 }
 
 function PreviewFrame({
@@ -585,8 +585,8 @@ function PreviewFrame({
 }) {
   return (
     <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-      <div className="sansxel-preview-shell rounded-[30px]" style={previewAccentStyle(accentKey)}>
-        <div className={`sansxel-preview-inner overflow-hidden rounded-[29px] ${innerClassName}`}>
+      <div className="VRAELIS-preview-shell rounded-[30px]" style={previewAccentStyle(accentKey)}>
+        <div className={`VRAELIS-preview-inner overflow-hidden rounded-[29px] ${innerClassName}`}>
           {children}
         </div>
       </div>
@@ -610,7 +610,7 @@ function PreviewHeader({
         <div className="text-xs text-neutral-400">Thursday · 4h 18m tracked</div>
       </div>
       <div
-        className={`sansxel-preview-pill rounded-full border px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] ${badgeCls(accentKey)}`}
+        className={`VRAELIS-preview-pill rounded-full border px-3 py-1 text-[10px] font-medium uppercase tracking-[0.16em] ${badgeCls(accentKey)}`}
       >
         {accent}
       </div>
@@ -632,7 +632,7 @@ function PreviewPromptCard({
   return (
     <Link
       href="/account"
-      className={`sansxel-preview-pressable block rounded-[20px] border border-white/10 bg-black/25 px-4 py-3.5 text-left transition hover:bg-white/[0.06] ${className}`}
+      className={`VRAELIS-preview-pressable block rounded-[20px] border border-white/10 bg-black/25 px-4 py-3.5 text-left transition hover:bg-white/[0.06] ${className}`}
     >
       <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">{label}</div>
       <div className={`mt-2 flex items-center gap-2.5 ${mono ? "font-mono" : ""}`}>
@@ -741,14 +741,14 @@ function TraceLayout({ s }: { s: Extract<Scenario, { layout: "trace" }> }) {
             <div className="h-2.5 w-2.5 rounded-full bg-amber-400/50" />
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/30" />
           </div>
-          <span className="ml-2 font-mono text-[10px] text-neutral-600">sansxel, debug trace</span>
-          <div className="sansxel-preview-pill ml-auto rounded-full border border-rose-400/25 bg-rose-400/10 px-2.5 py-0.5 text-[10px] text-rose-300">
+          <span className="ml-2 font-mono text-[10px] text-neutral-600">VRAELIS, debug trace</span>
+          <div className="VRAELIS-preview-pill ml-auto rounded-full border border-rose-400/25 bg-rose-400/10 px-2.5 py-0.5 text-[10px] text-rose-300">
             {s.accentLabel}
           </div>
         </div>
         {/* Console output */}
         <div className="px-4 pt-4 pb-3 font-mono">
-          <div className="mb-3 text-[10px] text-neutral-700">$ sansxel trace --session=last</div>
+          <div className="mb-3 text-[10px] text-neutral-700">$ VRAELIS trace --session=last</div>
           <div className="space-y-1.5">
             {s.traces.map((t) => (
               <div
@@ -786,10 +786,10 @@ function TraceLayout({ s }: { s: Extract<Scenario, { layout: "trace" }> }) {
 function RoadmapLayout({ s }: { s: Extract<Scenario, { layout: "roadmap" }> }) {
   const statusBadge = (status: "done" | "active" | "next") => {
     if (status === "done")
-      return <span className="sansxel-preview-pill rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] text-emerald-300">Done</span>;
+      return <span className="VRAELIS-preview-pill rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] text-emerald-300">Done</span>;
     if (status === "active")
-      return <span className="sansxel-preview-pill rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[10px] text-amber-300">Active</span>;
-    return <span className="sansxel-preview-pill rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] text-neutral-500">Next</span>;
+      return <span className="VRAELIS-preview-pill rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-1 text-[10px] text-amber-300">Active</span>;
+    return <span className="VRAELIS-preview-pill rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] text-neutral-500">Next</span>;
   };
 
   const rowTone = (status: "done" | "active" | "next") =>
@@ -803,8 +803,8 @@ function RoadmapLayout({ s }: { s: Extract<Scenario, { layout: "roadmap" }> }) {
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
       <div className="mt-4 space-y-2">
         {s.milestones.map((m) => (
-          <div key={m.num} className={`sansxel-preview-pressable flex items-center gap-3 rounded-2xl border p-3.5 ${rowTone(m.status)}`}>
-            <div className="sansxel-preview-pill flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] border border-white/10 bg-black/35 text-xs font-semibold text-white">
+          <div key={m.num} className={`VRAELIS-preview-pressable flex items-center gap-3 rounded-2xl border p-3.5 ${rowTone(m.status)}`}>
+            <div className="VRAELIS-preview-pill flex h-9 w-9 shrink-0 items-center justify-center rounded-[14px] border border-white/10 bg-black/35 text-xs font-semibold text-white">
               {m.num}
             </div>
             <div className="min-w-0 flex-1 text-sm text-neutral-200">{m.title}</div>
@@ -812,7 +812,7 @@ function RoadmapLayout({ s }: { s: Extract<Scenario, { layout: "roadmap" }> }) {
           </div>
         ))}
       </div>
-      <div className="sansxel-preview-pressable mt-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
+      <div className="VRAELIS-preview-pressable mt-3 rounded-2xl border border-white/10 bg-black/20 p-3.5">
         <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">
           Priority queue
         </div>
@@ -903,7 +903,7 @@ function EditorLayout({ s }: { s: Extract<Scenario, { layout: "editor" }> }) {
             </div>
             <div className="px-3 py-1 text-[10px] text-neutral-700">sources.md</div>
           </div>
-          <div className="sansxel-preview-pill ml-auto rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-0.5 text-[10px] text-emerald-300">
+          <div className="VRAELIS-preview-pill ml-auto rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-0.5 text-[10px] text-emerald-300">
             {s.accentLabel}
           </div>
         </div>
@@ -1206,7 +1206,7 @@ function ReviewLayout({ s }: { s: Extract<Scenario, { layout: "review" }> }) {
                 <div className="mt-0.5 text-[10px] text-neutral-500">{s.approvalStatus}</div>
               </div>
             </div>
-            <div className="sansxel-preview-pill shrink-0 rounded-full border border-violet-400/25 bg-violet-400/10 px-2.5 py-0.5 font-mono text-[10px] text-violet-300">
+            <div className="VRAELIS-preview-pill shrink-0 rounded-full border border-violet-400/25 bg-violet-400/10 px-2.5 py-0.5 font-mono text-[10px] text-violet-300">
               {s.changes}
             </div>
           </div>
@@ -1251,7 +1251,7 @@ function AnswerLayout({ s }: { s: Extract<Scenario, { layout: "answer" }> }) {
   return (
     <HeroFrame header={s.header} accent={s.accentLabel} accentKey={s.accent}>
       <div className={`mt-4 rounded-2xl border p-3.5 ${hlCls(s.accent)}`}>
-        <div className="text-[10px] font-medium uppercase tracking-[0.18em]">sansxel response</div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em]">VRAELIS response</div>
         <p className="mt-1.5 text-xs leading-relaxed text-neutral-300">{s.answerText}</p>
       </div>
       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -2097,14 +2097,14 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link
             href="/account"
-            className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+            className="VRAELIS-white-button rounded-2xl bg-white px-6 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
           >
             {isSignedIn ? "Open workspace" : "Get started"}
           </Link>
           {!isSignedIn && (
             <Link
               href="/signin"
-              className="sansxel-preview-pressable rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
+              className="VRAELIS-preview-pressable rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
             >
               Create account
             </Link>
@@ -2129,14 +2129,14 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
       <div className="hidden lg:flex lg:flex-col lg:gap-4">
 
         {/* Callout, context setter above the panel */}
-        <div className="sansxel-preview-pressable flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
+        <div className="VRAELIS-preview-pressable flex items-center justify-between gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
           <div className="min-w-0">
             <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Live preview</span>
             <span className="text-sm text-neutral-400">A fast sweep through writing, research, coding, and resume states. The full in-app flow goes deeper once you are inside.</span>
           </div>
           <Link
             href="/account"
-            className="sansxel-preview-pill shrink-0 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white whitespace-nowrap"
+            className="VRAELIS-preview-pill shrink-0 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-neutral-300 transition hover:bg-white/10 hover:text-white whitespace-nowrap"
           >
             Open full workspace →
           </Link>

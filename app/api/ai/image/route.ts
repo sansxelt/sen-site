@@ -35,7 +35,7 @@ const ALLOWED_SIZES: ImageSize[] = ["1024x1024", "1024x1792", "1792x1024"];
 // Body: { prompt: string, size?: "1024x1024" | "1024x1792" | "1792x1024" }
 // Returns: { url: string, revised_prompt?: string }
 //
-// One-shot image generation for inline rendering in the sansxel chat.
+// One-shot image generation for inline rendering in the VRAELIS chat.
 // Auth is Bearer (desktop) → cookie (web). Plan-gated via
 // decideImageRequest: free is capped weekly, pro/teams/enterprise are
 // uncapped. Returns a data URL when the model gives back base64, or
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       : "1024x1024";
 
   const surface =
-    request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+    request.headers.get("x-VRAELIS-surface") === "desktop" ? "desktop" : "web";
 
   // Plan gate. Power Pack lifts the image cap to unlimited.
   const [plan, weekly, activeAddons] = await Promise.all([
@@ -252,7 +252,7 @@ export async function POST(request: Request) {
       {
         status: 200,
         headers: {
-          "x-sansxel-thread-id": resolvedThreadId ?? "",
+          "x-VRAELIS-thread-id": resolvedThreadId ?? "",
         },
       },
     );

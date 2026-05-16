@@ -32,7 +32,7 @@ const BOOST_KIND_TO_ADDONS: Record<BoostKind, BillingAddonKey[]> = {
   copilot: [],
 };
 
-// Sansxel limit model, our take, not a copy of anyone else's.
+// VRAELIS limit model, our take, not a copy of anyone else's.
 //
 //   - Free / Apprentice / Studio: hard weekly cap on chat requests +
 //     hard weekly cap on voice seconds. Hit it → blocked until the
@@ -370,7 +370,7 @@ export function decideImageRequest(args: {
   if (cap === 0) {
     return {
       kind: "blocked",
-      reason: `Image generation isn't on the Free plan, upgrade to Core or higher to draw with sansxel-1.`,
+      reason: `Image generation isn't on the Free plan, upgrade to Core or higher to draw with VRAELIS-1.`,
       reset: resetIso,
       limit: 0,
       used: args.weekly.image_requests,
@@ -438,7 +438,7 @@ export function decideVoiceRequest(args: {
       kind: "blocked",
       reason:
         limits.weekly_voice_seconds === 0
-          ? `Voice isn't on the Free plan, upgrade to Core or higher to talk with sansxel-1.`
+          ? `Voice isn't on the Free plan, upgrade to Core or higher to talk with VRAELIS-1.`
           : `You've used your ${planDisplayName(args.plan)} weekly voice budget (${Math.round(limits.weekly_voice_seconds / 60)} min). Resets ${formatResetTime(resetIso)}. Top up credits or add Power Pack for unlimited.`,
       reset: resetIso,
       limit: limits.weekly_voice_seconds,

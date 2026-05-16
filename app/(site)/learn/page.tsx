@@ -175,7 +175,7 @@ export default async function LearnIndexPage() {
             </h3>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
               Free plan ships with 50 chats a week, enough to get a real feel
-              for how sansxel works without committing to anything.
+              for how VRAELIS works without committing to anything.
             </p>
             <Link
               href="/app"

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 // Mirror of the FLIGHT_KEY in web-chat.tsx. Read-only here.
-const FLIGHT_KEY = "sansxel.inflight.threads";
+const FLIGHT_KEY = "VRAELIS.inflight.threads";
 type FlightEntry = { startedAt: number };
 
 function readFlight(): Record<string, FlightEntry> {
@@ -35,7 +35,7 @@ function readFlight(): Record<string, FlightEntry> {
  *   2. We're NOT already on the /app workspace (where streaming
  *      progress is visible directly).
  *
- * Updates live via the 'sansxel:flight:changed' event WebChat fires
+ * Updates live via the 'VRAELIS:flight:changed' event WebChat fires
  * on send start + send finally, plus on tab focus + storage events
  * (so a stream started in another tab also surfaces here).
  */
@@ -67,11 +67,11 @@ export function InflightBackToChat() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === FLIGHT_KEY) recompute();
     };
-    window.addEventListener("sansxel:flight:changed", onChanged);
+    window.addEventListener("VRAELIS:flight:changed", onChanged);
     window.addEventListener("focus", onChanged);
     window.addEventListener("storage", onStorage);
     return () => {
-      window.removeEventListener("sansxel:flight:changed", onChanged);
+      window.removeEventListener("VRAELIS:flight:changed", onChanged);
       window.removeEventListener("focus", onChanged);
       window.removeEventListener("storage", onStorage);
     };
@@ -107,7 +107,7 @@ export function InflightBackToChat() {
             const flight = readFlight();
             delete flight[flightId];
             window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-            window.dispatchEvent(new CustomEvent("sansxel:flight:changed"));
+            window.dispatchEvent(new CustomEvent("VRAELIS:flight:changed"));
           }
           setFlightId(null);
         }

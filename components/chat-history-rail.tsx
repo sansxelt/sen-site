@@ -20,7 +20,7 @@ type ProjectLite = { id: string; name: string };
 // Mirror of the FLIGHT_KEY in web-chat.tsx, cross-component shared
 // signal for "this thread is currently being generated". WebChat
 // writes; the rail reads to show a pulsing dot.
-const FLIGHT_KEY = "sansxel.inflight.threads";
+const FLIGHT_KEY = "VRAELIS.inflight.threads";
 function readFlightIds(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
@@ -78,7 +78,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     () => {
       if (typeof window === "undefined") return new Set();
       try {
-        const raw = window.localStorage.getItem("sansxel.rail.collapsedProjects");
+        const raw = window.localStorage.getItem("VRAELIS.rail.collapsedProjects");
         if (!raw) return new Set();
         const parsed = JSON.parse(raw) as string[];
         return new Set(Array.isArray(parsed) ? parsed : []);
@@ -94,7 +94,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
       else next.add(id);
       if (typeof window !== "undefined") {
         window.localStorage.setItem(
-          "sansxel.rail.collapsedProjects",
+          "VRAELIS.rail.collapsedProjects",
           JSON.stringify([...next]),
         );
       }
@@ -190,7 +190,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
         setThreads(previous);
         return;
       }
-      window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+      window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
     } catch {
       setThreads(previous);
     }
@@ -205,7 +205,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   // rail column to a thin strip via CSS without prop drilling.
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("sansxel.rail.collapsed") === "true";
+    return window.localStorage.getItem("VRAELIS.rail.collapsed") === "true";
   });
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -216,7 +216,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     setCollapsed((c) => {
       const next = !c;
       if (typeof window !== "undefined") {
-        window.localStorage.setItem("sansxel.rail.collapsed", String(next));
+        window.localStorage.setItem("VRAELIS.rail.collapsed", String(next));
       }
       return next;
     });
@@ -232,7 +232,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   const DEFAULT_W = 240;
   const [railWidth, setRailWidth] = useState<number>(() => {
     if (typeof window === "undefined") return DEFAULT_W;
-    const stored = Number(window.localStorage.getItem("sansxel.rail.width"));
+    const stored = Number(window.localStorage.getItem("VRAELIS.rail.width"));
     if (!Number.isFinite(stored) || stored < MIN_W || stored > MAX_W) return DEFAULT_W;
     return stored;
   });
@@ -257,7 +257,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
       document.body.style.cursor = "";
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
-      window.localStorage.setItem("sansxel.rail.width", String(widthRef.current));
+      window.localStorage.setItem("VRAELIS.rail.width", String(widthRef.current));
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
@@ -269,12 +269,12 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   useEffect(() => {
     const onChanged = () => setFlightIds(readFlightIds());
     if (typeof window !== "undefined") {
-      window.addEventListener("sansxel:flight:changed", onChanged);
+      window.addEventListener("VRAELIS:flight:changed", onChanged);
       window.addEventListener("focus", onChanged);
     }
     return () => {
       if (typeof window !== "undefined") {
-        window.removeEventListener("sansxel:flight:changed", onChanged);
+        window.removeEventListener("VRAELIS:flight:changed", onChanged);
         window.removeEventListener("focus", onChanged);
       }
     };
@@ -315,7 +315,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     // sessionStorage key prevents the request from firing on every
     // route change in the same tab session.
     if (typeof window !== "undefined") {
-      const key = "sansxel.titles.backfilled";
+      const key = "VRAELIS.titles.backfilled";
       if (!sessionStorage.getItem(key)) {
         sessionStorage.setItem(key, "1");
         void (async () => {
@@ -324,7 +324,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
             if (res.ok) {
               const data = (await res.json()) as { updated?: number };
               if ((data.updated ?? 0) > 0) {
-                window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+                window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
               }
             }
           } catch {
@@ -337,17 +337,17 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
     const onChanged = () => { void load(); };
     const onFocus = () => { void load(); };
     if (typeof window !== "undefined") {
-      window.addEventListener("sansxel:threads:changed", onChanged);
+      window.addEventListener("VRAELIS:threads:changed", onChanged);
       // Re-fetch when a project is created / renamed / picked so
       // the rail's project sections + move-target list stay live.
-      window.addEventListener("sansxel:project:changed", onChanged);
+      window.addEventListener("VRAELIS:project:changed", onChanged);
       window.addEventListener("focus", onFocus);
     }
     return () => {
       cancelled = true;
       if (typeof window !== "undefined") {
-        window.removeEventListener("sansxel:threads:changed", onChanged);
-        window.removeEventListener("sansxel:project:changed", onChanged);
+        window.removeEventListener("VRAELIS:threads:changed", onChanged);
+        window.removeEventListener("VRAELIS:project:changed", onChanged);
         window.removeEventListener("focus", onFocus);
       }
     };
@@ -382,7 +382,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
         setThreads(previous); // revert
       } else {
         // Broadcast so any other rail mounts re-fetch.
-        window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+        window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
       }
     } catch {
       setThreads(previous);
@@ -426,7 +426,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
         setThreads(previous);
         return;
       }
-      window.dispatchEvent(new CustomEvent("sansxel:threads:changed"));
+      window.dispatchEvent(new CustomEvent("VRAELIS:threads:changed"));
       // If we deleted the currently-open thread, bounce to a new chat.
       if (activeThreadId === id) {
         router.replace("/app?new=1");
@@ -456,9 +456,9 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
           type="button"
           onClick={() => {
             if (typeof window !== "undefined") {
-              window.localStorage.removeItem("sansxel.activeProjectId");
-              window.dispatchEvent(new CustomEvent("sansxel:project:changed", { detail: null }));
-              window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
+              window.localStorage.removeItem("VRAELIS.activeProjectId");
+              window.dispatchEvent(new CustomEvent("VRAELIS:project:changed", { detail: null }));
+              window.dispatchEvent(new CustomEvent("VRAELIS:new-chat"));
             }
             router.replace("/app?new=1");
           }}
@@ -513,9 +513,9 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
                   // doesn't silently inherit the last project.
                   // Must dispatch project:changed (not just remove from
                   // storage) so the WebChat strip clears immediately.
-                  window.localStorage.removeItem("sansxel.activeProjectId");
-                  window.dispatchEvent(new CustomEvent("sansxel:project:changed", { detail: null }));
-                  window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
+                  window.localStorage.removeItem("VRAELIS.activeProjectId");
+                  window.dispatchEvent(new CustomEvent("VRAELIS:project:changed", { detail: null }));
+                  window.dispatchEvent(new CustomEvent("VRAELIS:new-chat"));
                 }
                 router.replace("/app?new=1");
               }}
@@ -630,16 +630,16 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
                       // localStorage race.
                       if (typeof window !== "undefined") {
                         window.localStorage.setItem(
-                          "sansxel.activeProjectId",
+                          "VRAELIS.activeProjectId",
                           section.id,
                         );
                         window.dispatchEvent(
-                          new CustomEvent("sansxel:project:changed", {
+                          new CustomEvent("VRAELIS:project:changed", {
                             detail: section.id,
                           }),
                         );
                         window.dispatchEvent(
-                          new CustomEvent("sansxel:new-chat"),
+                          new CustomEvent("VRAELIS:new-chat"),
                         );
                       }
                       router.replace(`/app?new=1&project=${section.id}`);

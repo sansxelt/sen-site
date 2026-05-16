@@ -12,7 +12,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Updates",
-  description: "Follow shipped Sansxel desktop releases and the next build in progress.",
+  description: "Follow shipped VRAELIS desktop releases and the next build in progress.",
 };
 
 const issueReportHref =
@@ -163,11 +163,11 @@ export default function AccountUpdatesPage() {
       <div className="mt-10 border-t border-white/[0.06] pt-6">
         <p className="text-xs text-neutral-600">
           Need the installer instead of the changelog?{" "}
-          <Link href="/account/download" className="sansxel-subtle-link">
+          <Link href="/account/download" className="VRAELIS-subtle-link">
             Open downloads -&gt;
           </Link>{" "}
           If something feels off after an update,{" "}
-          <Link href={issueReportHref} className="sansxel-subtle-link">
+          <Link href={issueReportHref} className="VRAELIS-subtle-link">
             report an issue -&gt;
           </Link>
         </p>

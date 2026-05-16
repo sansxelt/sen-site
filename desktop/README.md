@@ -1,6 +1,6 @@
-# sansxel desktop
+# VRAELIS desktop
 
-Native Windows-first desktop app for sansxel. Tauri 2 + React + TypeScript.
+Native Windows-first desktop app for VRAELIS. Tauri 2 + React + TypeScript.
 
 ## Run locally
 

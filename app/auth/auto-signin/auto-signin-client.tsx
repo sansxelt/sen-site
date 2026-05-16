@@ -101,7 +101,7 @@ export function AutoSigninClient({
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <Link
           href={getSignInPath(email ? `/account?email=${encodeURIComponent(email)}` : "/account")}
-          className="sansxel-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+          className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
         >
           Sign in
         </Link>

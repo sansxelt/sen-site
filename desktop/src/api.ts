@@ -62,17 +62,17 @@ export type ModelOption = {
 export const ALL_MODEL_OPTIONS: ReadonlyArray<ModelOption> = [
   {
     tier: "fast",
-    display_name: "sansxel-1 fast",
+    display_name: "VRAELIS-1 fast",
     blurb: "Quick replies, simple tasks. Free for all plans.",
   },
   {
     tier: "balanced",
-    display_name: "sansxel-1",
+    display_name: "VRAELIS-1",
     blurb: "Default. Strong on writing, code, planning. Apprentice and up.",
   },
   {
     tier: "smart",
-    display_name: "sansxel-1 deep",
+    display_name: "VRAELIS-1 deep",
     blurb: "Heaviest reasoning. Long context. Pro and up.",
   },
 ];
@@ -84,7 +84,7 @@ function authHeaders(token: string): Record<string, string> {
     // Server reads this to log usage events with surface="desktop"
     // instead of falling back to "web". Lets the dashboard split
     // desktop vs web traffic correctly.
-    "x-sansxel-surface": "desktop",
+    "x-VRAELIS-surface": "desktop",
   };
 }
 
@@ -170,7 +170,7 @@ export async function uploadSource(
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
-      "x-sansxel-surface": "desktop",
+      "x-VRAELIS-surface": "desktop",
     },
     body: form,
   });
@@ -238,7 +238,7 @@ export type TtsVoice =
   | "alloy" | "ash" | "ballad" | "coral" | "echo"
   | "fable" | "nova" | "onyx" | "sage" | "shimmer" | "verse";
 
-// Voices are branded with sansxel-original names. The `value` field
+// Voices are branded with VRAELIS-original names. The `value` field
 // (alloy/fable/etc.) is the OpenAI voice ID — kept stable so the
 // server doesn't need to remap. Users only see `label` + `vibe`.
 export const TTS_VOICES: ReadonlyArray<{ value: TtsVoice; label: string; vibe: string }> = [
@@ -293,7 +293,7 @@ export type DesktopPreferences = {
   // v0.1.4 — i18n two-axis: system_language drives UI text. The
   // response language is detected per-message server-side, not stored.
   system_language: string;
-  // v0.1.8 — when true, sansxel-1 may invoke client-side tools
+  // v0.1.8 — when true, VRAELIS-1 may invoke client-side tools
   // (navigate, create_api_key, search_threads, etc.). Off = the AI
   // can only reply with text.
   tools_enabled: boolean;
@@ -707,19 +707,19 @@ export async function* streamChat(
   });
 
   if (options.onMeta) {
-    const personaHeader = res.headers.get("x-sansxel-persona");
-    const delayHeader = res.headers.get("x-sansxel-persona-delay-multiplier");
+    const personaHeader = res.headers.get("x-VRAELIS-persona");
+    const delayHeader = res.headers.get("x-VRAELIS-persona-delay-multiplier");
     options.onMeta({
       tier_requested:
-        (res.headers.get("x-sansxel-tier-requested") as ModelTier | null) ?? null,
+        (res.headers.get("x-VRAELIS-tier-requested") as ModelTier | null) ?? null,
       tier_resolved:
-        (res.headers.get("x-sansxel-tier") as ModelTier | null) ?? null,
+        (res.headers.get("x-VRAELIS-tier") as ModelTier | null) ?? null,
       persona: personaHeader
         ? (personaHeader as Persona | null)
         : null,
       persona_delay_multiplier: delayHeader ? Number(delayHeader) : 1,
-      plan: res.headers.get("x-sansxel-plan"),
-      thread_id: res.headers.get("x-sansxel-thread-id") || null,
+      plan: res.headers.get("x-VRAELIS-plan"),
+      thread_id: res.headers.get("x-VRAELIS-thread-id") || null,
     });
   }
 
@@ -788,17 +788,17 @@ export async function* streamChatWithTools(
   });
 
   if (options.onMeta) {
-    const personaHeader = res.headers.get("x-sansxel-persona");
-    const delayHeader = res.headers.get("x-sansxel-persona-delay-multiplier");
+    const personaHeader = res.headers.get("x-VRAELIS-persona");
+    const delayHeader = res.headers.get("x-VRAELIS-persona-delay-multiplier");
     options.onMeta({
       tier_requested:
-        (res.headers.get("x-sansxel-tier-requested") as ModelTier | null) ?? null,
+        (res.headers.get("x-VRAELIS-tier-requested") as ModelTier | null) ?? null,
       tier_resolved:
-        (res.headers.get("x-sansxel-tier") as ModelTier | null) ?? null,
+        (res.headers.get("x-VRAELIS-tier") as ModelTier | null) ?? null,
       persona: personaHeader ? (personaHeader as Persona | null) : null,
       persona_delay_multiplier: delayHeader ? Number(delayHeader) : 1,
-      plan: res.headers.get("x-sansxel-plan"),
-      thread_id: res.headers.get("x-sansxel-thread-id") || null,
+      plan: res.headers.get("x-VRAELIS-plan"),
+      thread_id: res.headers.get("x-VRAELIS-thread-id") || null,
     });
   }
 
@@ -813,7 +813,7 @@ export async function* streamChatWithTools(
     throw new Error(detail);
   }
 
-  const format = res.headers.get("x-sansxel-stream-format");
+  const format = res.headers.get("x-VRAELIS-stream-format");
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";

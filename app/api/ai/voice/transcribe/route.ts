@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
   const startedAt = Date.now();
   const surface =
-    request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+    request.headers.get("x-VRAELIS-surface") === "desktop" ? "desktop" : "web";
 
   // v0.1.16, Plan gate. Same model the speak route uses: estimate
   // seconds from audio size (worst case ~24 kbps Opus = 3 KB/s, so

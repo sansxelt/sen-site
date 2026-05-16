@@ -43,7 +43,7 @@ const fadeUp = {
 
 function WorkspaceMock() {
   return (
-    <div className="landing-mock" role="img" aria-label="Sansxel workspace interface preview">
+    <div className="landing-mock" role="img" aria-label="VRAELIS workspace interface preview">
       {/* Title bar */}
       <div className="landing-mock-titlebar">
         <div className="landing-mock-dots">
@@ -51,7 +51,7 @@ function WorkspaceMock() {
           <div className="landing-mock-dot" />
           <div className="landing-mock-dot" />
         </div>
-        <span className="landing-mock-title">sansxel · workspace</span>
+        <span className="landing-mock-title">VRAELIS · workspace</span>
         <div style={{ width: 46 }} />
       </div>
 

@@ -42,12 +42,12 @@ export async function ZoneShell({
   const t = ZONE_THEME[zone];
   const defaultHomeHref =
     zone === "chat"
-      ? "https://chat.sansxel.ai"
+      ? "https://chat.VRAELIS.ai"
       : zone === "platform"
-        ? "https://platform.sansxel.ai"
-        : "https://sansxel.ai";
+        ? "https://platform.VRAELIS.ai"
+        : "https://VRAELIS.ai";
   const defaultHomeLabel =
-    zone === "chat" ? "← workshop" : zone === "platform" ? "← platform" : "← sansxel.ai";
+    zone === "chat" ? "← workshop" : zone === "platform" ? "← platform" : "← VRAELIS.ai";
   const homeHref = backHrefOverride ?? defaultHomeHref;
   const homeLabel = backLabelOverride ?? defaultHomeLabel;
 
@@ -60,12 +60,12 @@ export async function ZoneShell({
             wide monitors. Inner content below stays centered. */}
         <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-10 xl:px-14 2xl:px-20">
           <Link
-            href={zone === "platform" ? "https://platform.sansxel.ai" : zone === "chat" ? "https://chat.sansxel.ai" : "/home"}
+            href={zone === "platform" ? "https://platform.VRAELIS.ai" : zone === "chat" ? "https://chat.VRAELIS.ai" : "/home"}
             className="inline-flex shrink-0 items-center gap-2.5"
           >
             <Image
               src={t.logoSrc}
-              alt="sansxel"
+              alt="VRAELIS"
               width={36}
               height={36}
               className="h-9 w-9 rounded-xl"

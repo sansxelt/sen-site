@@ -100,7 +100,7 @@ export function ContactForm({
       </h2>
       <p className="mt-2 text-sm leading-6 text-neutral-200">
         We will reply to your email address. For account issues, include the
-        email tied to your sansxel account.
+        email tied to your VRAELIS account.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -193,7 +193,7 @@ export function ContactForm({
         <button
           type="submit"
           disabled={loading}
-          className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+          className="VRAELIS-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
         >
           {loading ? "Sending..." : "Send message"}
         </button>

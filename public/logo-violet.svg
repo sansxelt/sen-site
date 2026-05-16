@@ -1,7 +1,4 @@
 <svg width="680" height="680" viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg">
-<rect x="0" y="0" width="680" height="680" fill="#0a0a0a" rx="24"/>
-<polygon points="340,340 116,116 340,60" fill="#ffffff"/>
-<polygon points="340,340 564,116 620,340" fill="#A78BFA"/>
-<polygon points="340,340 396,620 144,564" fill="#ffffff"/>
-<circle cx="340" cy="340" r="14" fill="#0a0a0a"/>
+<rect x="0" y="0" width="680" height="680" fill="#000000" rx="24"/>
+<polygon points="109,102 224,102 340,388 456,102 571,102 340,564" fill="#ffffff"/>
 </svg>

@@ -38,7 +38,7 @@ export async function applyAction(formData: FormData): Promise<
     return {
       ok: false,
       error:
-        "Couldn't save your application. The contributor system may not be wired up yet, try help@sansxel.ai for now.",
+        "Couldn't save your application. The contributor system may not be wired up yet, try help@VRAELIS.ai for now.",
     };
   }
 

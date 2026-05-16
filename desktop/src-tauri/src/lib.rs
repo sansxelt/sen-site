@@ -46,7 +46,7 @@ fn revisit_splash(app: tauri::AppHandle) -> Result<(), String> {
         "splash",
         WebviewUrl::App("splash.html".into()),
     )
-    .title("sansxel")
+    .title("VRAELIS")
     .inner_size(720.0, 420.0)
     .decorations(false)
     .resizable(false)
@@ -59,7 +59,7 @@ fn revisit_splash(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-// ── Win32: minimize EVERY top-level window so only sansxel is visible
+// ── Win32: minimize EVERY top-level window so only VRAELIS is visible
 // during boot. v0.1.4 uses a two-pronged approach:
 //   1. EnumWindows + ShowWindow(SW_FORCEMINIMIZE) walks every visible
 //      top-level window, skipping our own. This catches stubborn apps
@@ -194,7 +194,7 @@ mod live_mode {
                 return None;
             }
             // Skip if the foreground window is ours — we don't want
-            // sansxel to suggest "fix sansxel" when the user is just
+            // VRAELIS to suggest "fix VRAELIS" when the user is just
             // looking at the rail itself.
             let mut window_pid: u32 = 0;
             GetWindowThreadProcessId(hwnd, &mut window_pid);
@@ -253,7 +253,7 @@ fn minimize_other_windows(app: tauri::AppHandle) {
     // Fallback: also fire Win+M for shell-managed cases. This minimizes
     // our splash too, so we re-show it below.
     win::send_win_m();
-    eprintln!("[sansxel] minimize-all complete");
+    eprintln!("[VRAELIS] minimize-all complete");
 
     let app_handle = app.clone();
     std::thread::spawn(move || {
@@ -334,7 +334,7 @@ fn position_copilot_window(
         let secondary_count = monitors.len().saturating_sub(1);
         if secondary_count > 0 {
             eprintln!(
-                "[sansxel] copilot: detected {secondary_count} secondary monitor(s)"
+                "[VRAELIS] copilot: detected {secondary_count} secondary monitor(s)"
             );
         }
     }
@@ -411,7 +411,7 @@ fn set_copilot_stream_proof(
 //   toolbar-left — narrow column anchored to the left edge
 //   toolbar-right — narrow column anchored to the right edge
 //
-// Used during interviews / studying / recording when sansxel needs to
+// Used during interviews / studying / recording when VRAELIS needs to
 // stay visible alongside another fullscreen app.
 #[tauri::command]
 fn set_window_mode(app: tauri::AppHandle, mode: String) -> Result<(), String> {
@@ -492,7 +492,7 @@ fn schedule_splash_watchdog(app_handle: tauri::AppHandle) {
     std::thread::spawn(move || {
         std::thread::sleep(Duration::from_secs(15));
         if app_handle.get_webview_window("splash").is_some() {
-            eprintln!("[sansxel] splash watchdog firing — forcing main window");
+            eprintln!("[VRAELIS] splash watchdog firing — forcing main window");
             if let Some(splash) = app_handle.get_webview_window("splash") {
                 let _ = splash.close();
             }
@@ -511,7 +511,7 @@ pub fn run() {
     // Single-instance MUST be the first plugin registered — it
     // intercepts the second launch before any other Tauri code runs.
     // The deep-link feature on this plugin auto-forwards the
-    // sansxel://... URL to the original instance's deep-link handler.
+    // VRAELIS://... URL to the original instance's deep-link handler.
     #[cfg(any(target_os = "windows", target_os = "linux"))]
     {
         builder = builder.plugin(tauri_plugin_single_instance::init(
@@ -554,14 +554,14 @@ pub fn run() {
             get_foreground_window_title
         ])
         .setup(|app| {
-            // Dev/Linux: register the sansxel:// scheme at runtime so the
-            // OS routes sansxel:// URLs back to us. On Windows installers
+            // Dev/Linux: register the VRAELIS:// scheme at runtime so the
+            // OS routes VRAELIS:// URLs back to us. On Windows installers
             // the scheme is registered at install time via the bundle
             // config, so this is a no-op there in production.
             #[cfg(any(windows, target_os = "linux"))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
-                let _ = app.deep_link().register("sansxel");
+                let _ = app.deep_link().register("VRAELIS");
             }
 
             // v0.1.14 \u2014 register the Ctrl+Space global hotkey so the
@@ -583,7 +583,7 @@ pub fn run() {
                         }
                     }
                 }) {
-                    eprintln!("[sansxel] global shortcut register failed: {e}");
+                    eprintln!("[VRAELIS] global shortcut register failed: {e}");
                 }
             }
 

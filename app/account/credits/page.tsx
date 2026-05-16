@@ -12,7 +12,7 @@ import type { PricingPlanKey } from "../../../lib/pricing";
 
 export const metadata: Metadata = {
   title: "Credits",
-  description: "Top up your sansxel credit balance and see what's left this week.",
+  description: "Top up your VRAELIS credit balance and see what's left this week.",
 };
 
 export default async function AccountCreditsPage() {
@@ -65,7 +65,7 @@ export default async function AccountCreditsPage() {
       ) : stripeReady ? (
         <p className="text-sm text-neutral-400">
           Sign in to top up.{" "}
-          <Link href="/pricing" className="sansxel-subtle-link">
+          <Link href="/pricing" className="VRAELIS-subtle-link">
             See pricing
           </Link>
           .

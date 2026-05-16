@@ -10,7 +10,7 @@ import { getStripePublishableKey, isStripeConfigured } from "../../lib/stripe";
 
 export const metadata = {
   title: "Checkout",
-  description: "Complete your sansxel subscription.",
+  description: "Complete your VRAELIS subscription.",
 };
 
 type SearchParams = {

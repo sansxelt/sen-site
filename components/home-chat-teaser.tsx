@@ -41,7 +41,7 @@ export function HomeChatTeaser({ signedIn }: { signedIn: boolean }) {
             submit();
           }
         }}
-        placeholder="Ask sansxel anything, &ldquo;summarize this PDF&rdquo;, &ldquo;build me an app&rdquo;, &ldquo;humanize this essay&rdquo;…"
+        placeholder="Ask VRAELIS anything, &ldquo;summarize this PDF&rdquo;, &ldquo;build me an app&rdquo;, &ldquo;humanize this essay&rdquo;…"
         rows={2}
         className="home-teaser-input"
       />

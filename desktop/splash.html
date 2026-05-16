@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>sansxel — launcher</title>
+    <title>VRAELIS — launcher</title>
     <style>
       *,
       *::before,
@@ -476,7 +476,7 @@
       <div class="launcher-frame"></div>
 
       <div class="brand">
-        <h1 class="brand-wordmark">sansxel</h1>
+        <h1 class="brand-wordmark">VRAELIS</h1>
         <p class="brand-tagline">Build something real.</p>
         <div class="brand-spotlight"></div>
       </div>
@@ -490,7 +490,7 @@
       <div class="footer">
         <div class="footer-status">
           <span class="footer-status-dot"></span>
-          <span class="footer-status-label" id="status-label">Initializing sansxel core</span>
+          <span class="footer-status-label" id="status-label">Initializing VRAELIS core</span>
         </div>
         <div class="footer-build">v0.1.13</div>
       </div>
@@ -500,7 +500,7 @@
       <div class="skip-hint" id="skip-hint" style="display:none" aria-hidden="true"></div>
 
       <!-- v0.1.6 — tiny one-key mini-game while the splash holds.
-           Tap Space to hop the sansxel orb over scrolling obstacles.
+           Tap Space to hop the VRAELIS orb over scrolling obstacles.
            Doubles as the boost key for the progress bar; doubles as
            jump for the game. Score persists across launches. -->
       <div class="mini-game" id="mini-game">
@@ -563,9 +563,9 @@
         // setInterval so [Space] can boost it. Labels swap when
         // progress crosses each step's cumulative threshold.
         var steps = [
-          { label: "Initializing sansxel core", weight: 1 },
+          { label: "Initializing VRAELIS core", weight: 1 },
           { label: "Loading workspace memory", weight: 1.2 },
-          { label: "Connecting sansxel-1", weight: 1.4 },
+          { label: "Connecting VRAELIS-1", weight: 1.4 },
           { label: "Preparing your space", weight: 0.8 },
         ];
         // v0.1.12 splash overhaul — patient by default.
@@ -826,7 +826,7 @@
           spawnEvery: 80, sinceSpawn: 0,
           respawnTimer: null,
           score: 0,
-          best: parseInt(window.localStorage.getItem("sansxel.mg.best") || "0", 10) || 0,
+          best: parseInt(window.localStorage.getItem("VRAELIS.mg.best") || "0", 10) || 0,
           // Game starts in "idle" state \u2014 first Space starts it.
           started: false,
           alive: true,
@@ -938,7 +938,7 @@
                 if (MG.score > MG.best) {
                   MG.best = MG.score;
                   MG.bestEl.textContent = MG.best;
-                  try { window.localStorage.setItem("sansxel.mg.best", String(MG.best)); } catch (_) {}
+                  try { window.localStorage.setItem("VRAELIS.mg.best", String(MG.best)); } catch (_) {}
                 }
               }
 

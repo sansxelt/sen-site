@@ -49,7 +49,7 @@ body,
 /* ── Collapsed state: always-visible floating bar ──────────────────
    v0.1.8 redesign. The thin glow strip from v0.1.7 was too easy to
    miss, so the collapsed copilot now renders as a real capsule with
-   the sansxel mark + "Ask anything\u2026" CTA + position switcher.
+   the VRAELIS mark + "Ask anything\u2026" CTA + position switcher.
    Always visible, click to open the full panel. */
 .fc-bar {
   display: flex;
@@ -279,7 +279,7 @@ body,
 }
 
 /* State-driven glow on the rail itself (composes with the existing
-   .fc--state-* rules). When sansxel is thinking / streaming /
+   .fc--state-* rules). When VRAELIS is thinking / streaming /
    ready, the icon stack picks up a brighter accent so users can
    tell what the rail is doing without opening the panel. */
 .fc--state-thinking .fc-bar--icons,
@@ -1280,7 +1280,7 @@ body,
    Every visual cue on the rail is driven by .fc--state-{name}. The
    states form a single pipeline:
      idle → listening → thinking → streaming → ready → idle
-   so you can always tell at a glance what sansxel is doing — no UI
+   so you can always tell at a glance what VRAELIS is doing — no UI
    surface ever lies about activity. */
 
 /* Base dot transition so state changes animate smoothly */
@@ -1500,7 +1500,7 @@ body,
 
 /* ── v0.1.11 — Live Mode consent dialog ──────────────────────────────
    Shown the FIRST time the rail opens, asking the user whether
-   sansxel can read the foreground-window TITLE (only the title,
+   VRAELIS can read the foreground-window TITLE (only the title,
    never the contents) for context-aware hints. Stored in
    localStorage; never re-asks once answered. */
 .fc-consent {

@@ -6,7 +6,7 @@ import { GithubDisconnectButton } from "../../../components/github-disconnect-bu
 
 export const metadata: Metadata = {
   title: "Integrations",
-  description: "Connect Sansxel to your tools and workflows.",
+  description: "Connect VRAELIS to your tools and workflows.",
 };
 
 type IntegrationStatus = "available" | "coming_soon" | "beta" | "future" | "experimental";
@@ -35,7 +35,7 @@ const CATEGORIES: Category[] = [
         icon: "◉",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Send pages, articles, and research directly into Sansxel for summaries and analysis.",
+        description: "Send pages, articles, and research directly into VRAELIS for summaries and analysis.",
       },
     ],
   },
@@ -47,7 +47,7 @@ const CATEGORIES: Category[] = [
         icon: "⬡",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Use Sansxel inside your editor. Generate plans, explain code, and build outputs without switching context.",
+        description: "Use VRAELIS inside your editor. Generate plans, explain code, and build outputs without switching context.",
       },
     ],
   },
@@ -59,7 +59,7 @@ const CATEGORIES: Category[] = [
         icon: "◈",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Send messages and threads to Sansxel for summaries, action items, and structured follow-ups.",
+        description: "Send messages and threads to VRAELIS for summaries, action items, and structured follow-ups.",
       },
     ],
   },
@@ -71,14 +71,14 @@ const CATEGORIES: Category[] = [
         icon: "◻",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Connect pages and databases so Sansxel can reference your docs when building outputs.",
+        description: "Connect pages and databases so VRAELIS can reference your docs when building outputs.",
       },
       {
         name: "Linear",
         icon: "◆",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Bring issue and project context into Sansxel for roadmap planning and sprint summaries.",
+        description: "Bring issue and project context into VRAELIS for roadmap planning and sprint summaries.",
       },
     ],
   },
@@ -126,15 +126,15 @@ const FUTURE_INTERFACES: Integration[] = [
 ];
 
 const integrationRequestHref =
-  "/contact?subject=Integration%20request&message=Which%20integration%20do%20you%20want%3F%0AHow%20would%20you%20use%20it%20inside%20sansxel%3F%0A#contact-form";
+  "/contact?subject=Integration%20request&message=Which%20integration%20do%20you%20want%3F%0AHow%20would%20you%20use%20it%20inside%20VRAELIS%3F%0A#contact-form";
 
 function SxBadge({ status, connected }: { status: IntegrationStatus; connected: boolean }) {
-  if (connected)       return <span className="sx-badge sx-badge--connected">Connected</span>;
-  if (status === "available")    return <span className="sx-badge sx-badge--available">Available</span>;
-  if (status === "beta")         return <span className="sx-badge sx-badge--beta">Beta</span>;
-  if (status === "future")       return <span className="sx-badge sx-badge--future">Future</span>;
-  if (status === "experimental") return <span className="sx-badge sx-badge--experimental">Experimental</span>;
-  return <span className="sx-badge sx-badge--coming-soon">Coming soon</span>;
+  if (connected)       return <span className="vrl-badge vrl-badge--connected">Connected</span>;
+  if (status === "available")    return <span className="vrl-badge vrl-badge--available">Available</span>;
+  if (status === "beta")         return <span className="vrl-badge vrl-badge--beta">Beta</span>;
+  if (status === "future")       return <span className="vrl-badge vrl-badge--future">Future</span>;
+  if (status === "experimental") return <span className="vrl-badge vrl-badge--experimental">Experimental</span>;
+  return <span className="vrl-badge vrl-badge--coming-soon">Coming soon</span>;
 }
 
 function callbackBanner(github: string | undefined, reason: string | undefined) {
@@ -142,7 +142,7 @@ function callbackBanner(github: string | undefined, reason: string | undefined) 
   if (github === "connected") {
     return (
       <div className="mt-4 rounded-xl border px-4 py-3 text-sm" style={{ borderColor: "rgba(65,214,155,0.25)", background: "rgba(65,214,155,0.05)", color: "#41D69B" }}>
-        GitHub connected. Sansxel can now reference your repos, PRs, and issues.
+        GitHub connected. VRAELIS can now reference your repos, PRs, and issues.
       </div>
     );
   }
@@ -176,15 +176,15 @@ function IntegrationCard({
 
   return (
     <div
-      className={`sx-integration-card${connected ? " sx-integration-card--connected" : ""}${isFuture ? " sx-integration-card--future" : ""}${isDisabled && !isFuture ? " sx-integration-card--disabled" : ""}`}
+      className={`vrl-integration-card${connected ? " vrl-integration-card--connected" : ""}${isFuture ? " vrl-integration-card--future" : ""}${isDisabled && !isFuture ? " vrl-integration-card--disabled" : ""}`}
     >
-      <div className="sx-integration-icon" aria-hidden>
+      <div className="vrl-integration-icon" aria-hidden>
         {item.icon}
       </div>
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium" style={{ color: "var(--sx-text)" }}>{item.name}</span>
+          <span className="text-sm font-medium" style={{ color: "var(--vrl-text)" }}>{item.name}</span>
           <SxBadge status={item.status} connected={connected} />
           {connected && github?.github_login && (
             <span className="text-xs" style={{ color: "rgba(65,214,155,0.75)" }}>
@@ -192,7 +192,7 @@ function IntegrationCard({
             </span>
           )}
         </div>
-        <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--sx-text-dim)" }}>
+        <p className="mt-1 text-xs leading-relaxed" style={{ color: "var(--vrl-text-dim)" }}>
           {item.description}
         </p>
       </div>
@@ -202,14 +202,14 @@ function IntegrationCard({
           <GithubDisconnectButton />
         ) : item.href && !isDisabled ? (
           item.external ? (
-            <a href={item.href} className="sx-btn sx-btn--workshop">{item.cta}</a>
+            <a href={item.href} className="vrl-btn vrl-btn--workshop">{item.cta}</a>
           ) : (
-            <Link href={item.href} className="sx-btn sx-btn--workshop">{item.cta}</Link>
+            <Link href={item.href} className="vrl-btn vrl-btn--workshop">{item.cta}</Link>
           )
         ) : isFuture && item.href ? (
-          <Link href={item.href} className="sx-btn sx-btn--ghost">{item.cta}</Link>
+          <Link href={item.href} className="vrl-btn vrl-btn--ghost">{item.cta}</Link>
         ) : (
-          <span className="sx-btn sx-btn--disabled">{item.cta}</span>
+          <span className="vrl-btn vrl-btn--disabled">{item.cta}</span>
         )}
       </div>
     </div>
@@ -237,19 +237,19 @@ export default async function IntegrationsPage({
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-semibold" style={{ color: "var(--sx-text)" }}>Integrations</h1>
-      <p className="mt-1 text-sm" style={{ color: "var(--sx-text-muted)" }}>
-        Connect Sansxel to your tools and workflows.
+      <h1 className="text-2xl font-semibold" style={{ color: "var(--vrl-text)" }}>Integrations</h1>
+      <p className="mt-1 text-sm" style={{ color: "var(--vrl-text-muted)" }}>
+        Connect VRAELIS to your tools and workflows.
       </p>
 
       {callbackBanner(github, reason)}
 
       {/* Quick links row */}
-      <div className="sx-card mt-5 flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center">
-        <span style={{ color: "var(--sx-text-muted)" }}>Looking for the desktop app or release notes?</span>
+      <div className="vrl-card mt-5 flex flex-col gap-3 px-4 py-3 text-sm sm:flex-row sm:items-center">
+        <span style={{ color: "var(--vrl-text-muted)" }}>Looking for the desktop app or release notes?</span>
         <div className="flex flex-wrap gap-2 sm:ml-auto">
-          <Link href="/account/download" className="sx-btn sx-btn--ghost">Desktop app →</Link>
-          <Link href="/account/updates"  className="sx-btn sx-btn--ghost">Updates →</Link>
+          <Link href="/account/download" className="vrl-btn vrl-btn--ghost">Desktop app →</Link>
+          <Link href="/account/updates"  className="vrl-btn vrl-btn--ghost">Updates →</Link>
         </div>
       </div>
 
@@ -257,7 +257,7 @@ export default async function IntegrationsPage({
       <div className="mt-6 flex flex-col gap-1.5">
         {CATEGORIES.map((cat) => (
           <div key={cat.label}>
-            <div className="sx-category-label">{cat.label}</div>
+            <div className="vrl-category-label">{cat.label}</div>
             <div className="flex flex-col gap-2 mt-2">
               {cat.integrations.map((item) => {
                 const isGithub = item.name === "GitHub";
@@ -278,8 +278,8 @@ export default async function IntegrationsPage({
 
       {/* Future interfaces — clearly separated */}
       <div className="mt-8">
-        <div className="sx-category-label" style={{ color: "rgba(125,183,255,0.50)" }}>Future interfaces</div>
-        <p className="mt-1 mb-3 text-xs" style={{ color: "var(--sx-text-dim)" }}>
+        <div className="vrl-category-label" style={{ color: "rgba(125,183,255,0.50)" }}>Future interfaces</div>
+        <p className="mt-1 mb-3 text-xs" style={{ color: "var(--vrl-text-dim)" }}>
           These are not available integrations. They represent future product directions.
         </p>
         <div className="flex flex-col gap-2">
@@ -294,9 +294,9 @@ export default async function IntegrationsPage({
         </div>
       </div>
 
-      <p className="mt-8 text-xs" style={{ color: "var(--sx-text-dim)" }}>
+      <p className="mt-8 text-xs" style={{ color: "var(--vrl-text-dim)" }}>
         Want an integration that isn&apos;t listed?{" "}
-        <Link href={integrationRequestHref} className="sansxel-subtle-link">
+        <Link href={integrationRequestHref} className="VRAELIS-subtle-link">
           Let us know →
         </Link>
       </p>

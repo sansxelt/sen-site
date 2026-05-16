@@ -9,8 +9,7 @@ import { AccountDropdown } from "./account-dropdown";
 import { MobileNav } from "./mobile-nav";
 import { ZoneDropdown } from "./zone-dropdown";
 
-// Pinwheel mark per host. Same geometry, different accent triangle.
-// next/image auto-applies `unoptimized` for .svg sources in v16.
+// V chevron logo per host zone.
 const ZONE_LOGO: Record<"apex" | "chat" | "platform", string> = {
   apex: "/logo-violet.svg",
   chat: "/logo-cyan.svg",
@@ -89,7 +88,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               <Link href="/home" className="inline-flex shrink-0 items-center gap-2.5">
                 <Image
                   src={logoSrc}
-                  alt="sansxel"
+                  alt="VRAELIS"
                   width={36}
                   height={36}
                   className="h-9 w-9 rounded-xl"
@@ -97,7 +96,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 />
                 <div>
                   <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
-                    sansxel
+                    VRAELIS
                   </div>
                   <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
                     The AI workshop for makers
@@ -154,12 +153,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               <Link href="/home" className="flex items-center gap-2.5">
                 <Image
                   src={logoSrc}
-                  alt="sansxel"
+                  alt="VRAELIS"
                   width={32}
                   height={32}
                   className="h-8 w-8 rounded-lg"
                 />
-                <span className="text-sm font-semibold text-white">sansxel</span>
+                <span className="text-sm font-semibold text-white">VRAELIS</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
                 The adaptive AI platform. One AI, infinite shapes, a contextual
@@ -188,7 +187,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="mt-10 border-t border-white/[0.06] pt-6 text-xs text-neutral-600">
-            © 2026 sansxel. All rights reserved.
+            © 2026 VRAELIS. All rights reserved.
           </div>
         </div>
       </footer>

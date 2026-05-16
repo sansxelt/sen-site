@@ -48,7 +48,7 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
         </p>
         <Link
           href="/signin"
-          className="sansxel-white-button mt-6 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
+          className="VRAELIS-white-button mt-6 inline-block rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
         >
           Sign in
         </Link>
@@ -118,7 +118,7 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
         <button
           type="submit"
           disabled={loading}
-          className="sansxel-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+          className="VRAELIS-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
         >
           {loading ? "Saving..." : "Set new password"}
         </button>

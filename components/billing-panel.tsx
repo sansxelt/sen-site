@@ -282,7 +282,7 @@ export function BillingPanel({ state, publishableKey, sections }: Props) {
           {!hasPlan ? (
             <Link
               href="/pricing"
-              className="sansxel-white-button rounded-2xl bg-white px-5 py-2.5 text-sm font-medium transition hover:opacity-90"
+              className="VRAELIS-white-button rounded-2xl bg-white px-5 py-2.5 text-sm font-medium transition hover:opacity-90"
               style={{ color: "#0a0a0c" }}
             >
               Choose a plan

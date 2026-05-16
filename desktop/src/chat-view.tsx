@@ -341,7 +341,7 @@ function buildMarkdownExport(thread: DesktopThread): string {
   lines.push(`_Exported ${new Date().toLocaleString()}_`);
   lines.push("");
   for (const message of thread.messages) {
-    const speaker = message.role === "user" ? "**You:**" : "**sansxel-1:**";
+    const speaker = message.role === "user" ? "**You:**" : "**VRAELIS-1:**";
     lines.push(speaker);
     lines.push("");
     lines.push(messageContentText(message));
@@ -351,7 +351,7 @@ function buildMarkdownExport(thread: DesktopThread): string {
 }
 
 function draftKey(threadId: string): string {
-  return `sansxel.draft.${threadId}`;
+  return `VRAELIS.draft.${threadId}`;
 }
 
 type DesktopPlanKey =
@@ -517,7 +517,7 @@ const ACTION_META: Record<LauncherActionId, LauncherActionMeta> = {
     eyebrow: "Heavy reasoning",
     description: "Push the launcher toward deep problem solving, stronger tradeoff analysis, and harder code or product questions.",
     preview: "This shifts you onto the deep model lane and frames the ask for deliberate reasoning.",
-    cues: ["Switches to sansxel-1 deep", "Longer reasoning", "Pro feature"],
+    cues: ["Switches to VRAELIS-1 deep", "Longer reasoning", "Pro feature"],
     requiredPlan: "pro",
   },
   "auto-mode": {
@@ -526,7 +526,7 @@ const ACTION_META: Record<LauncherActionId, LauncherActionMeta> = {
     shortLabel: "AU",
     section: "Intelligence",
     eyebrow: "Adaptive",
-    description: "Let Sansxel choose the most useful framing and start from the strongest first move instead of waiting for perfect instructions.",
+    description: "Let VRAELIS choose the most useful framing and start from the strongest first move instead of waiting for perfect instructions.",
     preview: "Good when the ask is messy and you want the assistant to decide whether to plan, write, analyze, or diagnose first.",
     cues: ["Balanced mode", "Good for fuzzy asks", "Apprentice and up"],
     requiredPlan: "apprentice",
@@ -547,7 +547,7 @@ const ACTION_META: Record<LauncherActionId, LauncherActionMeta> = {
     shortLabel: "SC",
     section: "Context",
     eyebrow: "Read what's here",
-    description: "Open the dropped files as working context and tell Sansxel to summarize, compare, or inspect them immediately.",
+    description: "Open the dropped files as working context and tell VRAELIS to summarize, compare, or inspect them immediately.",
     preview: "This is the best first click after dropping docs, code, screenshots, or mixed research into the composer.",
     cues: ["Attachment-aware", "Opens on drop", "Free"],
   },
@@ -969,7 +969,7 @@ function actionRuntimeStatus(
     case "agent-mode":
       return opts.agentMode ? "Agent mode is currently on." : null;
     case "deep-think":
-      return opts.tier === "smart" ? "sansxel-1 deep is selected." : null;
+      return opts.tier === "smart" ? "VRAELIS-1 deep is selected." : null;
     case "auto-mode":
       return opts.tier === "balanced" ? "Adaptive default lane is active." : null;
     case "scan-files":
@@ -1160,7 +1160,7 @@ const EMPTY_STATE_BY_TIER: Record<
     copilotDescription:
       "A balanced desktop copilot for real work: enough context to stay useful without feeling heavy.",
     topbarCopy: "Default mode leans into writing, planning, and back-and-forth iteration.",
-    inputPlaceholder: "Message sansxel-1 with a task, draft, or idea...",
+    inputPlaceholder: "Message VRAELIS-1 with a task, draft, or idea...",
     capabilities: ["Writing + code", "Thread memory", "Voice + desktop flow"],
     starters: [
       {
@@ -1188,7 +1188,7 @@ const EMPTY_STATE_BY_TIER: Record<
     copilotDescription:
       "Use deep mode when the answer needs stronger reasoning, not just a fast reaction.",
     topbarCopy: "Deep mode shifts the UI toward heavier reasoning and more deliberate prompts.",
-    inputPlaceholder: "Give sansxel-1 deep a problem worth thinking through...",
+    inputPlaceholder: "Give VRAELIS-1 deep a problem worth thinking through...",
     capabilities: ["Multi-step reasoning", "Harder code paths", "Longer planning"],
     starters: [
       {
@@ -1356,7 +1356,7 @@ export function DesktopChatView({
   const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
   // v0.1.13 \u2014 Toolbar mode (the "PC copilot" / window-mode feature)
   // was deleted: it never worked well outside normal scale and offered
-  // no value over the floating Sansxel Copilot. Hardcoded to false so
+  // no value over the floating VRAELIS Copilot. Hardcoded to false so
   // any existing isCopilot conditionals collapse to the normal path.
   const isCopilot = false;
   const activeModel = useMemo(
@@ -1777,7 +1777,7 @@ export function DesktopChatView({
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `sansxel-${slugifyTitle(thread.title)}.md`;
+    anchor.download = `VRAELIS-${slugifyTitle(thread.title)}.md`;
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
@@ -2172,7 +2172,7 @@ export function DesktopChatView({
             };
           }
           case "create_api_key": {
-            const keyName = text("name") || "sansxel desktop";
+            const keyName = text("name") || "VRAELIS desktop";
             const created = await createDesktopApiKey(session.token, keyName);
             return {
               result: JSON.stringify({
@@ -2413,7 +2413,7 @@ export function DesktopChatView({
           meta.tier_requested !== meta.tier_resolved
         ) {
           setPlanNotice(
-            `Your plan doesn't include ${meta.tier_requested} yet, so sansxel replied with ${meta.tier_resolved}.`,
+            `Your plan doesn't include ${meta.tier_requested} yet, so VRAELIS replied with ${meta.tier_resolved}.`,
           );
         } else {
           setPlanNotice(null);
@@ -2573,7 +2573,7 @@ export function DesktopChatView({
         ) {
           const fire = () => {
             try {
-              new Notification("sansxel-1 finished", {
+              new Notification("VRAELIS-1 finished", {
                 body: "Your reply is ready",
                 icon: "/icon.png",
               });
@@ -3004,7 +3004,7 @@ export function DesktopChatView({
     ],
   );
 
-  // Reset copilot mode on every launch — sansxel always opens in
+  // Reset copilot mode on every launch — VRAELIS always opens in
   // normal chat mode, never sticky-stuck in toolbar mode from a
   // prior session. Runs once after preferences load.
   const copilotResetRef = useRef(false);
@@ -3184,7 +3184,7 @@ export function DesktopChatView({
             {/* v0.1.13 \u2014 Removed Export and Toolbar mode buttons.
                 Export had no obvious affordance (just dumps a .md file)
                 and Toolbar mode broke the layout at non-full scale plus
-                offered no value over the floating Sansxel Copilot. */}
+                offered no value over the floating VRAELIS Copilot. */}
             <ModelPicker tier={tier} onChange={setTier} allowedTiers={allowedTiers} />
           </div>
         </div>
@@ -3508,7 +3508,7 @@ export function DesktopChatView({
                     onClick={() => void enterVoiceMode()}
                     disabled={voiceState !== "idle"}
                     className="chat-icon-btn"
-                    title="Talk to sansxel-1"
+                    title="Talk to VRAELIS-1"
                   >
                     <MicIcon />
                   </button>

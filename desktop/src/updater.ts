@@ -21,8 +21,8 @@ export type UpdateProgress =
   | { kind: "ready"; version: string; notes: string }
   | { kind: "error"; message: string };
 
-const NEW_VERSION_KEY = "sansxel.update.pending";
-const LAST_SEEN_VERSION_KEY = "sansxel.update.lastSeenVersion";
+const NEW_VERSION_KEY = "VRAELIS.update.pending";
+const LAST_SEEN_VERSION_KEY = "VRAELIS.update.lastSeenVersion";
 
 export type PendingUpdate = {
   version: string;
@@ -95,7 +95,7 @@ export async function applyUpdateAndRestart(): Promise<void> {
     await cachedUpdate.install();
     await relaunch();
   } catch (err) {
-    console.warn("[sansxel-updater] install failed:", err);
+    console.warn("[VRAELIS-updater] install failed:", err);
   }
 }
 

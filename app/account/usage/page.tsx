@@ -21,7 +21,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Usage",
-  description: "API usage for your sansxel account.",
+  description: "API usage for your VRAELIS account.",
 };
 
 const usageSupportHref =
@@ -205,7 +205,7 @@ export default async function UsagePage() {
               <span className="ml-2">
                 Currently serving on{" "}
                 <span className="text-white">
-                  sansxel-1 {currentProTier === "smart" ? "deep" : currentProTier}
+                  VRAELIS-1 {currentProTier === "smart" ? "deep" : currentProTier}
                 </span>
                 .{" "}
                 {proThrottleNext && proThrottleNext > 0 ? (
@@ -363,7 +363,7 @@ export default async function UsagePage() {
             <div className="mt-4 rounded-lg border border-sky-400/15 bg-sky-400/[0.05] p-4 text-xs leading-5 text-sky-100/80">
               You&apos;re on the highest personal plan. Need team seats, shared
               controls, or custom policy?{" "}
-              <Link href="/contact" className="sansxel-subtle-link">
+              <Link href="/contact" className="VRAELIS-subtle-link">
                 Talk to us.
               </Link>
             </div>
@@ -437,7 +437,7 @@ export default async function UsagePage() {
         <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
           {!recent || recent.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-neutral-500">
-              No requests recorded yet. Talk to sansxel-1 and refresh.
+              No requests recorded yet. Talk to VRAELIS-1 and refresh.
             </div>
           ) : (
             <div className="divide-y divide-white/[0.05]">
@@ -451,7 +451,7 @@ export default async function UsagePage() {
 
       <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm text-neutral-400">
         Usage resets on the 1st of each month. Need higher limits?{" "}
-        <Link href={usageSupportHref} className="sansxel-subtle-link">
+        <Link href={usageSupportHref} className="VRAELIS-subtle-link">
           Contact us.
         </Link>
       </div>

@@ -1,8 +1,8 @@
 [package]
-name = "sansxel"
+name = "VRAELIS"
 version = "0.1.14"
-description = "sansxel desktop — the AI that remembers"
-authors = ["sansxel"]
+description = "VRAELIS desktop — the AI that remembers"
+authors = ["VRAELIS"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,7 +11,7 @@ edition = "2021"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "sansxel_lib"
+name = "VRAELIS_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -39,7 +39,7 @@ windows-sys = { version = "0.59", features = [
 ] }
 
 # Single-instance + deep-link forwarding: when the OS opens
-# sansxel://... and a sansxel.exe is already running, route the URL
+# VRAELIS://... and a VRAELIS.exe is already running, route the URL
 # to the existing instance instead of launching a new one.
 [target.'cfg(any(target_os = "windows", target_os = "linux"))'.dependencies]
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }

@@ -197,7 +197,7 @@ export function ModeSwitcher({
         onClick={() => onModeChange("signup")}
         className={`whitespace-nowrap rounded-[16px] px-4 py-2 leading-none transition focus-visible:outline-none sm:px-5 ${
           mode === "signup"
-            ? "sansxel-white-button bg-white text-black"
+            ? "VRAELIS-white-button bg-white text-black"
             : "text-neutral-200 hover:text-white"
         }`}
       >
@@ -208,7 +208,7 @@ export function ModeSwitcher({
         onClick={() => onModeChange("signin")}
         className={`whitespace-nowrap rounded-[16px] px-4 py-2 leading-none transition focus-visible:outline-none sm:px-5 ${
           mode === "signin"
-            ? "sansxel-white-button bg-white text-black"
+            ? "VRAELIS-white-button bg-white text-black"
             : "text-neutral-200 hover:text-white"
         }`}
       >
@@ -356,7 +356,7 @@ export function AuthPanel({
             text clip). */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-4">
           <h3 className="text-2xl font-semibold tracking-tight text-white">
-            Continue into sansxel.
+            Continue into VRAELIS.
           </h3>
           {!onModeChange && <ModeSwitcher mode={mode} onModeChange={setMode} />}
         </div>
@@ -365,7 +365,7 @@ export function AuthPanel({
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href={safeRedirectPath}
-              className="sansxel-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
+              className="VRAELIS-white-button rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90"
             >
               Open workspace
             </Link>
@@ -390,7 +390,7 @@ export function AuthPanel({
           </div>
           <p className="mt-2 text-sm leading-6 text-neutral-400">
             {mode === "signup"
-              ? "Password-based account on sansxel."
+              ? "Password-based account on VRAELIS."
               : "Use your email and password."}
           </p>
 
@@ -429,7 +429,7 @@ export function AuthPanel({
             <button
               type="submit"
               disabled={emailBusy}
-              className="sansxel-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+              className="VRAELIS-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
             >
               {loadingAction === "signup"
                 ? "Creating account..."

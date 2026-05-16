@@ -4,7 +4,7 @@ import { getSignInPath } from "@/lib/auth-ui";
 
 const errorMessages: Record<string, string> = {
   AccessDenied: "That sign-in request was declined before the session could be created.",
-  CallbackRouteError: "The provider returned to sansxel, but the sign-in could not be completed.",
+  CallbackRouteError: "The provider returned to VRAELIS, but the sign-in could not be completed.",
   Configuration: "Authentication is not fully configured yet for this environment.",
   InvalidProvider: "That sign-in option is not available right now.",
   MissingSecret: "The app secret is missing, so secure sessions cannot be created yet.",
@@ -20,7 +20,7 @@ const errorMessages: Record<string, string> = {
 
 export const metadata: Metadata = {
   title: "Auth Error",
-  description: "Review and recover from an authentication error in the sansxel sign-in flow.",
+  description: "Review and recover from an authentication error in the VRAELIS sign-in flow.",
 };
 
 export default async function AuthErrorPage({
@@ -52,7 +52,7 @@ export default async function AuthErrorPage({
           <div className="mt-6 grid gap-3 sm:flex sm:flex-wrap">
             <Link
               href={getSignInPath("/account")}
-              className="sansxel-white-button rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+              className="VRAELIS-white-button rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
             >
               Try again
             </Link>

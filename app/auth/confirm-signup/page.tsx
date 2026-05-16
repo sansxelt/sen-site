@@ -5,7 +5,7 @@ import { ConfirmSignupForm } from "./confirm-form";
 
 export const metadata: Metadata = {
   title: "Confirm signup",
-  description: "Create your sansxel account.",
+  description: "Create your VRAELIS account.",
   robots: { index: false, follow: false },
 };
 
@@ -53,7 +53,7 @@ export default async function ConfirmSignupPage({
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/signin"
-              className="sansxel-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+              className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
             >
               Back to sign in
             </Link>
@@ -78,11 +78,11 @@ export default async function ConfirmSignupPage({
           New account
         </div>
         <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Create a sansxel account?
+          Create a VRAELIS account?
         </h1>
         <p className="mt-3 text-sm leading-6 text-neutral-300">
           You just signed in with <span className="font-medium text-white">{providerLabel}</span> as{" "}
-          <span className="font-medium text-white">{email}</span>, and no sansxel
+          <span className="font-medium text-white">{email}</span>, and no VRAELIS
           account exists for that address yet. Creating one is a one-time step.
         </p>
 

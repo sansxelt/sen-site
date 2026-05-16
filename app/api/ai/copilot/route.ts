@@ -4,7 +4,7 @@ import { auth } from "../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
 import { getPlanForEmail } from "../../../../lib/account-billing";
 import { descriptorForTier, resolveTier } from "../../../../lib/ai-models";
-import { SANSXEL_PRODUCT_BRIEF } from "../../../../lib/sansxel-context";
+import { VRAELIS_PRODUCT_BRIEF } from "../../../../lib/vraelis-context";
 import { recordUsage } from "../../../../lib/usage";
 
 export const runtime = "nodejs";
@@ -13,7 +13,7 @@ const client = new Anthropic();
 
 // Copilot system prompt: open-ended Q&A plus optional navigation via
 // a [go:/path] marker that the frontend intercepts.
-const SITE_ROUTES = `Routes on sansxel.ai:
+const SITE_ROUTES = `Routes on VRAELIS.ai:
 - /            - home
 - /home        - home (alias)
 - /product     - product overview (features + how it works)
@@ -34,11 +34,11 @@ const SITE_ROUTES = `Routes on sansxel.ai:
 - /account/download     - desktop installer + live build status
 - /account/updates      - desktop release notes`;
 
-const SYSTEM_PROMPT = `You are the sansxel copilot - a fast, helpful assistant living in a side panel on sansxel.ai. You answer ANY question the user has, not just questions about the current page.
+const SYSTEM_PROMPT = `You are the VRAELIS copilot - a fast, helpful assistant living in a side panel on VRAELIS.ai. You answer ANY question the user has, not just questions about the current page.
 
 Behavior:
 - Answer in 1-3 short sentences. The copilot is a side panel, not a doc.
-- The current page context is provided as background, but you are NOT limited to it. Answer general questions, sansxel questions, coding questions, anything.
+- The current page context is provided as background, but you are NOT limited to it. Answer general questions, VRAELIS questions, coding questions, anything.
 - If the user asks for current/live info you need to look up (news, prices, recent events, real-time facts), USE the web_search tool when it is available. Don't apologize for not having current data \u2014 just search.
 - If the user asks to go somewhere, take them there: end your reply with a single navigation marker on its own line - \`[go:/path]\` - using one of the routes below. Examples: "Opening pricing now.\n[go:/pricing]" or "Heading to your usage page.\n[go:/account/usage]". Only emit the marker when navigation is the right action; don't emit one for purely informational questions.
 - Never invent routes. Only use paths from the list below.
@@ -47,7 +47,7 @@ Behavior:
 
 ${SITE_ROUTES}
 
-${SANSXEL_PRODUCT_BRIEF}`;
+${VRAELIS_PRODUCT_BRIEF}`;
 
 // v0.1.13 \u2014 Server tools the copilot can use. web_search is
 // Anthropic's hosted search tool: the model decides when to invoke it,
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
   // Without web_search the model declines current-data questions
   // ("knowledge has a cutoff"), which contradicts what the rail
   // advertises about live grounding.
-  const surface = request.headers.get("x-sansxel-surface") === "desktop"
+  const surface = request.headers.get("x-VRAELIS-surface") === "desktop"
     ? "desktop"
     : "web";
   const toolsEnabled = surface === "desktop";
@@ -240,7 +240,7 @@ export async function POST(request: Request) {
           ? "application/x-ndjson; charset=utf-8"
           : "text/plain; charset=utf-8",
         "Cache-Control": "no-store",
-        "x-sansxel-stream-format": toolsEnabled ? "jsonl" : "text",
+        "x-VRAELIS-stream-format": toolsEnabled ? "jsonl" : "text",
       },
     });
   } catch (err) {

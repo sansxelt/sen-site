@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       email,
       kind: "image",
       model: "claude-sonnet-4-6-vision",
-      surface: request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web",
+      surface: request.headers.get("x-VRAELIS-surface") === "desktop" ? "desktop" : "web",
       input_tokens: Math.round(b64.length / 4),
       duration_ms: Date.now() - startedAt,
     });

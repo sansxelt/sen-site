@@ -4,7 +4,7 @@ import { SignupWaitingPoller } from "../../../components/signup-waiting-poller";
 
 export const metadata = {
   title: "Check your email",
-  description: "Confirm your sansxel account by clicking the link we just sent.",
+  description: "Confirm your VRAELIS account by clicking the link we just sent.",
 };
 
 type SearchParams = {
@@ -77,7 +77,7 @@ function PendingState({ email }: { email: string }) {
           <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-neutral-500" />
           <span className="min-w-0 leading-5">
             Not in your inbox? Check your spam folder, the sender is{" "}
-            <span className="text-neutral-300">hello@sansxel.ai</span>.
+            <span className="text-neutral-300">hello@VRAELIS.ai</span>.
           </span>
         </li>
         <li className="flex items-start gap-2">
@@ -134,7 +134,7 @@ function InvalidState() {
       </p>
       <Link
         href="/signin"
-        className="sansxel-white-button mt-5 inline-block rounded-xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
+        className="VRAELIS-white-button mt-5 inline-block rounded-xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90"
       >
         Try signing in
       </Link>
@@ -158,7 +158,7 @@ function ErrorState({ email }: { email: string }) {
         We hit a snag verifying your email.
       </h1>
       <p className="mt-3 text-sm leading-6 text-neutral-300">
-        Try the link again in a minute, if it keeps failing, resend a fresh link below or email <a href="mailto:help@sansxel.ai" className="text-white underline decoration-neutral-600 underline-offset-4">help@sansxel.ai</a> and we&apos;ll sort it out.
+        Try the link again in a minute, if it keeps failing, resend a fresh link below or email <a href="mailto:help@VRAELIS.ai" className="text-white underline decoration-neutral-600 underline-offset-4">help@VRAELIS.ai</a> and we&apos;ll sort it out.
       </p>
       <ResendVerification defaultEmail={email} />
     </>

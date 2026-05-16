@@ -66,7 +66,7 @@ export function ArticleShell({
         </p>
         <div className="mt-4 flex items-center gap-2 text-xs text-neutral-400">
           <span>By</span>
-          <span className="font-medium text-neutral-200">Sansxel (OWNER)</span>
+          <span className="font-medium text-neutral-200">VRAELIS (OWNER)</span>
           {meta.publishedAt && (
             <>
               <span aria-hidden className="text-neutral-600">·</span>

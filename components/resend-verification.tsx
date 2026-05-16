@@ -63,7 +63,7 @@ export function ResendVerification({ defaultEmail = "" }: { defaultEmail?: strin
       <button
         type="submit"
         disabled={status === "loading" || status === "sent"}
-        className="sansxel-white-button w-full rounded-xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="VRAELIS-white-button w-full rounded-xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {status === "loading" ? "Sending…"
         : status === "sent"    ? "Sent, check your inbox"

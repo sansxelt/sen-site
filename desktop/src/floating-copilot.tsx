@@ -11,7 +11,7 @@ import {
   type CopilotEdge,
 } from "./api";
 
-// Floating edge copilot for sansxel v0.1.8 — Capsule Rail spec.
+// Floating edge copilot for VRAELIS v0.1.8 — Capsule Rail spec.
 // Lives in its own Tauri window (label: "copilot"), borderless +
 // transparent + alwaysOnTop.
 //
@@ -58,7 +58,7 @@ const RAIL_ICONS: RailIconDef[] = [
   { intent: "main",     glyph: "\u26a1", label: "Ask",      hint: "Open the copilot \u2014 ask anything", minPlan: "free" },
   { intent: "commands", glyph: "\u2318", label: "Commands", hint: "Quick actions and command palette", minPlan: "free" },
   { intent: "attach",   glyph: "\ud83d\udcce", label: "Attach", hint: "Drag, paste, or pick a file / image / screenshot", minPlan: "apprentice" },
-  { intent: "context",  glyph: "\ud83e\udde0", label: "Context", hint: "What sansxel is using as context (MCP)", minPlan: "free" },
+  { intent: "context",  glyph: "\ud83e\udde0", label: "Context", hint: "What VRAELIS is using as context (MCP)", minPlan: "free" },
   { intent: "voice",    glyph: "\ud83c\udf99\ufe0f", label: "Voice", hint: "Tap to talk \u2014 live transcription", minPlan: "apprentice" },
 ];
 
@@ -83,7 +83,7 @@ function planAllows(userPlan: string | null, minPlan: "free" | "apprentice" | "p
 
 // v0.1.11: Activity-state engine. Drives the "always alive" feel of
 // the rail — every visual cue (pulse, glow, particles) is keyed off
-// this single state so visuals can never lie about what sansxel is
+// this single state so visuals can never lie about what VRAELIS is
 // doing. Auto-derived from existing flags (input/streaming/etc.) plus
 // a short ready-decay timer that holds the "done" highlight before
 // returning to idle.
@@ -106,7 +106,7 @@ type CopilotThread = {
   createdAt: number;
   updatedAt: number;
 };
-const COPILOT_THREADS_KEY = "sansxel.copilot.threads.v1";
+const COPILOT_THREADS_KEY = "VRAELIS.copilot.threads.v1";
 const COPILOT_THREADS_LIMIT = 8;
 
 function loadCopilotThreads(): CopilotThread[] {
@@ -267,7 +267,7 @@ function OutputBlockView({
           type="button"
           className="fc-block-action"
           onClick={() => onRefine(blockText)}
-          title="Ask sansxel to refine this block"
+          title="Ask VRAELIS to refine this block"
         >
           Refine
         </button>
@@ -286,13 +286,13 @@ function OutputBlockView({
   );
 }
 
-const DOCK_KEY = "sansxel.copilot.dock";
-const ALLOW_BOTTOM_KEY = "sansxel.copilot.allowBottom";
+const DOCK_KEY = "VRAELIS.copilot.dock";
+const ALLOW_BOTTOM_KEY = "VRAELIS.copilot.allowBottom";
 
 // v0.1.11: Live Mode consent. Tri-state stored in localStorage so we
 // only ever ask once per machine. Server-side sync deferred to v0.1.12
 // (the deep copilot pass) — for v0.1.11 the answer is purely local.
-const LIVE_MODE_KEY = "sansxel.copilot.liveMode";
+const LIVE_MODE_KEY = "VRAELIS.copilot.liveMode";
 type LiveModeConsent = "unset" | "granted" | "denied";
 
 // v0.1.11: How often the foreground-window watcher polls. 800ms is
@@ -884,7 +884,7 @@ export function FloatingCopilot() {
           { role: "user", content: text },
           {
             role: "assistant",
-            content: "Sign in to sansxel in the main window to use the copilot.",
+            content: "Sign in to VRAELIS in the main window to use the copilot.",
           },
         ]);
         setInput("");
@@ -912,7 +912,7 @@ export function FloatingCopilot() {
       let assistant = "";
       let firstByteSeen = false;
       try {
-        // v0.1.7: use absolute API_BASE (sansxel.ai) + tauriFetch so the
+        // v0.1.7: use absolute API_BASE (VRAELIS.ai) + tauriFetch so the
         // request bypasses the local Tauri origin. Add Bearer auth from
         // the restored session. Defensive content-type check so we never
         // dump an HTML error page as a "message" again.
@@ -921,7 +921,7 @@ export function FloatingCopilot() {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.token}`,
-            "x-sansxel-surface": "desktop",
+            "x-VRAELIS-surface": "desktop",
           },
           body: JSON.stringify({ question: text }),
           signal: ac.signal,
@@ -930,7 +930,7 @@ export function FloatingCopilot() {
           throw new Error(`copilot ${res.status}`);
         }
         const contentType = res.headers.get("content-type") ?? "";
-        const streamFormat = res.headers.get("x-sansxel-stream-format") ?? "";
+        const streamFormat = res.headers.get("x-VRAELIS-stream-format") ?? "";
         const isJsonl =
           streamFormat === "jsonl" ||
           contentType.includes("application/x-ndjson") ||
@@ -1334,9 +1334,9 @@ export function FloatingCopilot() {
         <div className="fc-consent" role="dialog" aria-label="Enable Live Mode">
           <div className="fc-consent-card">
             <div className="fc-consent-eyebrow">Live Mode</div>
-            <h3 className="fc-consent-title">Should sansxel watch what you&rsquo;re working on?</h3>
+            <h3 className="fc-consent-title">Should VRAELIS watch what you&rsquo;re working on?</h3>
             <p className="fc-consent-copy">
-              When enabled, sansxel reads only the <strong>title</strong> of the
+              When enabled, VRAELIS reads only the <strong>title</strong> of the
               window you have focused (never its contents) so it can offer
               context-aware actions &mdash; &ldquo;Summarize this page&rdquo;
               when you&rsquo;re in a browser, &ldquo;Explain selection&rdquo;
@@ -1400,10 +1400,10 @@ export function FloatingCopilot() {
                       // v0.1.14 plan-gating \u2014 first click shows the locked
                       // toast, second click opens /pricing in browser.
                       if (lockedToast === icon.intent) {
-                        void invoke("open_url", { url: "https://sansxel.ai/pricing" }).catch(() => {});
+                        void invoke("open_url", { url: "https://VRAELIS.ai/pricing" }).catch(() => {});
                         // Tauri opener fallback if open_url isn't a registered command.
                         try {
-                          window.open("https://sansxel.ai/pricing", "_blank");
+                          window.open("https://VRAELIS.ai/pricing", "_blank");
                         } catch { /* ignore */ }
                       } else {
                         setLockedToast(icon.intent);
@@ -1508,7 +1508,7 @@ export function FloatingCopilot() {
           <div className="fc-cmdbar-row">
             <div className="fc-panel-title fc-cmdbar-title">
               <span className="fc-panel-dot" />
-              sansxel-1
+              VRAELIS-1
             </div>
             <form
               className="fc-cmdbar-form"
@@ -1627,7 +1627,7 @@ export function FloatingCopilot() {
           <div className="fc-panel-head">
             <div className="fc-panel-title">
               <span className="fc-panel-dot" />
-              <span className="fc-panel-title-text">sansxel copilot</span>
+              <span className="fc-panel-title-text">VRAELIS copilot</span>
               <span className={`fc-panel-state fc-panel-state--${liveState}`}>
                 {liveState === "thinking" ? "thinking" :
                  liveState === "streaming" ? "streaming" :
