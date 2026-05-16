@@ -77,27 +77,6 @@ export function ContactChannels() {
         ))}
       </div>
 
-      {/* Discord card — fastest path for real-time help */}
-      <a
-        href={DISCORD_HREF}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group cursor-pointer rounded-3xl border border-[rgba(88,101,242,0.22)] bg-[rgba(88,101,242,0.06)] p-5 text-left transition hover:border-[rgba(88,101,242,0.40)] hover:bg-[rgba(88,101,242,0.10)] sm:p-6 sm:col-span-2 lg:col-span-1"
-        style={{ display: "block", textDecoration: "none" }}
-      >
-        <div className="text-lg font-medium text-white">Discord community</div>
-        <div className="mt-3 text-sm font-medium" style={{ color: "rgba(148,163,255,0.80)" }}>
-          discord.gg/5sxuuewf3u
-        </div>
-        <p className="mt-3 text-sm leading-6 text-neutral-300">
-          Fastest path to a real answer. Create a ticket in the server — the team monitors it daily.
-          Also where early users, feedback loops, and product updates live.
-        </p>
-        <div className="mt-4 flex items-center gap-1.5 text-[11px] text-neutral-600 transition group-hover:text-[rgba(148,163,255,0.70)]">
-          ◈ &nbsp;Open Discord →
-        </div>
-      </a>
-
       {composing && (
         <EmailComposer
           to={composing.email}
