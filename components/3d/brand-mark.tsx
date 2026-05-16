@@ -28,18 +28,20 @@ export function BrandMark({
 }: Props) {
   const shape = useMemo(() => {
     // V chevron matching logo-*.svg path, normalized to centre at origin.
-    // Source path (100×100): M12,12 L30,12 Q38,38 50,43 Q62,38 70,12 L88,12 L50,84 Z
-    // norm: centre=(50,50), scale=96 → [(x-50)/96, -(y-50)/96]
+    // Source path (100×100): M18,19 L36,19 L30,29 L50,61 L70,29 L64,19 L82,19 L50,79 Z
+    // norm: centre=(50,49), scale=64 → [(x-50)/64, -(y-49)/64]
     const n = (x: number, y: number): [number, number] =>
-      [(x - 50) / 96, -(y - 50) / 96];
+      [(x - 50) / 64, -(y - 49) / 64];
 
     const s = new THREE.Shape();
-    s.moveTo(...n(12, 12));
-    s.lineTo(...n(30, 12));
-    s.quadraticCurveTo(...n(38, 38), ...n(50, 43));
-    s.quadraticCurveTo(...n(62, 38), ...n(70, 12));
-    s.lineTo(...n(88, 12));
-    s.lineTo(...n(50, 84));
+    s.moveTo(...n(18, 19));
+    s.lineTo(...n(36, 19));
+    s.lineTo(...n(30, 29));
+    s.lineTo(...n(50, 61));
+    s.lineTo(...n(70, 29));
+    s.lineTo(...n(64, 19));
+    s.lineTo(...n(82, 19));
+    s.lineTo(...n(50, 79));
     s.closePath();
     return s;
   }, []);
