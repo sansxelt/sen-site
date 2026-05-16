@@ -27,24 +27,19 @@ export function BrandMark({
   opacity = 1,
 }: Props) {
   const shape = useMemo(() => {
-    // V chevron points from logo-*.svg, normalized to centre at origin.
-    // SVG coords (680×680 grid, centre 340): polygon points 109,102
-    // 224,102 340,388 456,102 571,102 340,564
-    const norm = (x: number, y: number): [number, number] =>
-      [(x - 340) / 600, -(y - 340) / 600];
-
-    const pts: [number, number][] = [
-      norm(109, 102),
-      norm(224, 102),
-      norm(340, 388),
-      norm(456, 102),
-      norm(571, 102),
-      norm(340, 564),
-    ];
+    // V chevron matching logo-*.svg path, normalized to centre at origin.
+    // Source path (100×100): M12,12 L30,12 Q38,38 50,43 Q62,38 70,12 L88,12 L50,84 Z
+    // norm: centre=(50,50), scale=96 → [(x-50)/96, -(y-50)/96]
+    const n = (x: number, y: number): [number, number] =>
+      [(x - 50) / 96, -(y - 50) / 96];
 
     const s = new THREE.Shape();
-    s.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
+    s.moveTo(...n(12, 12));
+    s.lineTo(...n(30, 12));
+    s.quadraticCurveTo(...n(38, 38), ...n(50, 43));
+    s.quadraticCurveTo(...n(62, 38), ...n(70, 12));
+    s.lineTo(...n(88, 12));
+    s.lineTo(...n(50, 84));
     s.closePath();
     return s;
   }, []);

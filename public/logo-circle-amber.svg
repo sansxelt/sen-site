@@ -6,6 +6,6 @@
 </defs>
 <g clip-path="url(#circleClip)">
 <rect x="0" y="0" width="680" height="680" fill="#000000"/>
-<polygon points="109,102 224,102 340,388 456,102 571,102 340,564" fill="#ffffff"/>
+<path fill="#ffffff" d="M 82,82 L 204,82 Q 258,258 340,292 Q 422,258 476,82 L 598,82 L 340,571 Z"/>
 </g>
 </svg>
