@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "We couldn't save your request right now. Please try again or contact help@VRAELIS.ai.",
+          "We couldn't save your request right now. Please try again or contact help@vraelis.ai.",
       },
       { status: 400 },
     );

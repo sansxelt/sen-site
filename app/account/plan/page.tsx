@@ -14,7 +14,7 @@ import type { PricingPlanKey } from "../../../lib/pricing";
 
 export const metadata: Metadata = {
   title: "Plan",
-  description: "Subscription plan, payment method, and invoices for your VRAELIS account.",
+  description: "Subscription plan, payment method, and invoices for your vraelis account.",
 };
 
 export default async function AccountPlanPage() {

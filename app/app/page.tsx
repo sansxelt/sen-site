@@ -8,8 +8,8 @@ import { WebChat } from "@/components/web-chat";
 import { LeiShell } from "@/components/lei-shell";
 
 export const metadata: Metadata = {
-  title: "VRAELIS, workspace",
-  description: "Talk to VRAELIS-1 in your browser. Same brain as the desktop.",
+  title: "vraelis, workspace",
+  description: "Talk to vraelis-1 in your browser. Same brain as the desktop.",
 };
 
 export default async function WebAppPage() {

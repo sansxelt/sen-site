@@ -10,10 +10,10 @@ import { CopyReferralLink } from "../../../components/copy-referral-link";
 
 export const metadata: Metadata = {
   title: "Referral & Rewards",
-  description: "Share VRAELIS with friends and earn credits when they upgrade.",
+  description: "Share vraelis with friends and earn credits when they upgrade.",
 };
 
-const BASE_URL = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "https://VRAELIS.ai";
+const BASE_URL = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "https://vraelis.ai";
 
 export default async function AccountReferralPage() {
   const session = await auth();

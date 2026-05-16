@@ -5,7 +5,7 @@ import { KeysPanel } from "./keys-panel";
 
 export const metadata: Metadata = {
   title: "API Keys",
-  description: "Manage your VRAELIS API keys.",
+  description: "Manage your vraelis API keys.",
 };
 
 export default async function KeysPage() {

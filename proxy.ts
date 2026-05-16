@@ -3,8 +3,8 @@ import type { NextRequest } from "next/server";
 
 // Next.js 16 proxy. Single job now: host routing.
 //
-// Host routing splits VRAELIS.ai / chat.VRAELIS.ai /
-// platform.VRAELIS.ai into their own zones (workshop, marketing,
+// Host routing splits vraelis.ai / chat.vraelis.ai /
+// platform.vraelis.ai into their own zones (workshop, marketing,
 // docs).
 //
 // Auth gating used to live here too but moved into route + layout
@@ -16,9 +16,9 @@ import type { NextRequest } from "next/server";
 // Localhost + Vercel preview URLs (random *.vercel.app) skip host
 // routing so dev + previews keep working.
 
-const APEX_HOSTS = new Set(["VRAELIS.ai", "www.VRAELIS.ai"]);
-const CHAT_HOST = "chat.VRAELIS.ai";
-const PLATFORM_HOST = "platform.VRAELIS.ai";
+const APEX_HOSTS = new Set(["vraelis.ai", "www.vraelis.ai"]);
+const CHAT_HOST = "chat.vraelis.ai";
+const PLATFORM_HOST = "platform.vraelis.ai";
 
 const CHAT_PATHS = [
   "/app",
@@ -50,7 +50,7 @@ function hostRoute(req: NextRequest): NextResponse | null {
   const url = req.nextUrl;
   const path = url.pathname;
 
-  // chat.VRAELIS.ai
+  // chat.vraelis.ai
   if (host === CHAT_HOST) {
     if (path === "/") {
       // Root = workshop. Rewrite to /app so the URL bar stays at /
@@ -60,44 +60,44 @@ function hostRoute(req: NextRequest): NextResponse | null {
     }
     if (startsWithAny(path, MARKETING_PATHS)) {
       return NextResponse.redirect(
-        new URL(path + url.search, "https://VRAELIS.ai"),
+        new URL(path + url.search, "https://vraelis.ai"),
         302,
       );
     }
     return null;
   }
 
-  // platform.VRAELIS.ai
+  // platform.vraelis.ai
   if (host === PLATFORM_HOST) {
     if (path === "/") {
       return NextResponse.rewrite(new URL("/platform-soon", url));
     }
     if (startsWithAny(path, MARKETING_PATHS)) {
       return NextResponse.redirect(
-        new URL(path + url.search, "https://VRAELIS.ai"),
+        new URL(path + url.search, "https://vraelis.ai"),
         302,
       );
     }
     if (startsWithAny(path, CHAT_PATHS)) {
       return NextResponse.redirect(
-        new URL(path + url.search, "https://chat.VRAELIS.ai"),
+        new URL(path + url.search, "https://chat.vraelis.ai"),
         302,
       );
     }
     return null;
   }
 
-  // VRAELIS.ai (apex)
+  // vraelis.ai (apex)
   if (APEX_HOSTS.has(host)) {
-    if (host === "www.VRAELIS.ai") {
+    if (host === "www.vraelis.ai") {
       return NextResponse.redirect(
-        new URL(path + url.search, "https://VRAELIS.ai"),
+        new URL(path + url.search, "https://vraelis.ai"),
         308,
       );
     }
     if (startsWithAny(path, CHAT_PATHS)) {
       return NextResponse.redirect(
-        new URL(path + url.search, "https://chat.VRAELIS.ai"),
+        new URL(path + url.search, "https://chat.vraelis.ai"),
         302,
       );
     }

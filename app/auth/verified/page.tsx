@@ -3,7 +3,7 @@ import { getSignInPath } from "../../../lib/auth-ui";
 
 export const metadata = {
   title: "Account verified",
-  description: "Your VRAELIS account is live.",
+  description: "Your vraelis account is live.",
 };
 
 type SearchParams = { email?: string };
@@ -28,7 +28,7 @@ export default async function VerifiedPage({
           You&apos;re in.
         </h1>
         <p className="mt-3 text-sm leading-6 text-neutral-300">
-          Your VRAELIS account{email && <> ({<span className="text-white">{email}</span>})</>} is active. Sign in with the password you chose during signup and you&apos;re ready to go.
+          Your vraelis account{email && <> ({<span className="text-white">{email}</span>})</>} is active. Sign in with the password you chose during signup and you&apos;re ready to go.
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -47,7 +47,7 @@ export default async function VerifiedPage({
         </div>
 
         <p className="mt-6 border-t border-white/10 pt-6 text-xs text-neutral-500">
-          You&apos;ll also get a welcome email from hello@VRAELIS.ai with getting-started tips.
+          You&apos;ll also get a welcome email from hello@vraelis.ai with getting-started tips.
         </p>
       </div>
     </div>

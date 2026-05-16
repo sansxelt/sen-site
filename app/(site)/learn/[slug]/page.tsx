@@ -17,7 +17,7 @@ export async function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
-const CANONICAL_BASE = "https://www.VRAELIS.ai";
+const CANONICAL_BASE = "https://www.vraelis.ai";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -28,15 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${article.title} · Learn`,
     description: article.excerpt,
     alternates: { canonical: url },
-    authors: [{ name: "VRAELIS (OWNER)" }],
+    authors: [{ name: "vraelis (OWNER)" }],
     openGraph: {
       title: article.title,
       description: article.excerpt,
       type: "article",
       url,
-      siteName: "VRAELIS",
+      siteName: "vraelis",
       publishedTime: article.publishedAt,
-      authors: ["VRAELIS (OWNER)"],
+      authors: ["vraelis (OWNER)"],
       tags: [article.topic, article.subtopic ?? ""].filter(Boolean),
     },
     twitter: {
@@ -64,11 +64,11 @@ export default async function ArticlePage({ params }: Props) {
     headline: article.title,
     description: article.excerpt,
     datePublished: article.publishedAt,
-    author: { "@type": "Person", name: "VRAELIS (OWNER)" },
+    author: { "@type": "Person", name: "vraelis (OWNER)" },
     publisher: {
       "@type": "Organization",
-      name: "VRAELIS",
-      url: "https://www.VRAELIS.ai",
+      name: "vraelis",
+      url: "https://www.vraelis.ai",
     },
     mainEntityOfPage: {
       "@type": "WebPage",

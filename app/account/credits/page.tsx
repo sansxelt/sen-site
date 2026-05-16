@@ -12,7 +12,7 @@ import type { PricingPlanKey } from "../../../lib/pricing";
 
 export const metadata: Metadata = {
   title: "Credits",
-  description: "Top up your VRAELIS credit balance and see what's left this week.",
+  description: "Top up your vraelis credit balance and see what's left this week.",
 };
 
 export default async function AccountCreditsPage() {

@@ -163,7 +163,7 @@ export default function WhisperPage() {
                 marginBottom: 34,
               }}
             >
-              Whisper is the speaking and hearing layer of VRAELIS. Low-latency
+              Whisper is the speaking and hearing layer of vraelis. Low-latency
               voice in, natural voice out. Works with your existing earbuds
               today. Dedicated hardware later.
             </motion.p>
@@ -466,13 +466,13 @@ export default function WhisperPage() {
               marginBottom: 14,
             }}
           >
-            future · VRAELIS hardware
+            future · vraelis hardware
           </div>
           <h2 className="landing-h2 landing-gradient-text" style={{ marginBottom: 18 }}>
             Whisper hardware,<br/>built for the system.
           </h2>
           <p className="landing-body" style={{ maxWidth: 540, margin: "0 auto 32px" }}>
-            A dedicated Whisper earbud designed around how VRAELIS actually
+            A dedicated Whisper earbud designed around how vraelis actually
             works. Lower latency, better wake detection, longer battery for
             voice-first use.
           </p>

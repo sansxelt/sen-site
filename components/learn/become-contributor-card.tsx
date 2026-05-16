@@ -11,7 +11,7 @@ export function BecomeContributorCard() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-violet-300/70">
-            Write for VRAELIS
+            Write for vraelis
           </div>
           <p className="max-w-xl text-sm leading-relaxed text-neutral-300">
             Want your work in the Learn library? Apply for a hardlocked byline.

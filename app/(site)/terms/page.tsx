@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "Review the baseline terms for VRAELIS account access, early-access usage, and support expectations.",
+    "Review the baseline terms for vraelis account access, early-access usage, and support expectations.",
 };
 
 const sections = [
   {
     title: "Service scope",
-    body: "VRAELIS currently offers a website experience, account creation, and invite-based early access for a Windows-first desktop product. Features may evolve as the product matures.",
+    body: "vraelis currently offers a website experience, account creation, and invite-based early access for a Windows-first desktop product. Features may evolve as the product matures.",
   },
   {
     title: "Account responsibilities",
@@ -17,15 +17,15 @@ const sections = [
   },
   {
     title: "Early-access availability",
-    body: "Desktop access may be limited, delayed, or adjusted while VRAELIS remains in a pre-release state. Features, timing, and pricing may change before general availability.",
+    body: "Desktop access may be limited, delayed, or adjusted while vraelis remains in a pre-release state. Features, timing, and pricing may change before general availability.",
   },
   {
     title: "Acceptable use",
-    body: "Do not attempt to disrupt the service, bypass access controls, misuse other people's accounts, or use VRAELIS in a way that harms others or violates applicable law.",
+    body: "Do not attempt to disrupt the service, bypass access controls, misuse other people's accounts, or use vraelis in a way that harms others or violates applicable law.",
   },
   {
     title: "Contact",
-    body: "Questions about these terms can be sent to help@VRAELIS.ai.",
+    body: "Questions about these terms can be sent to help@vraelis.ai.",
   },
 ];
 

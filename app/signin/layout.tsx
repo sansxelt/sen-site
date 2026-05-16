@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { ZoneShell } from "@/components/zone-shell";
 
-// /signin gets the zone-aware shell so visiting from chat.VRAELIS.ai
-// shows workshop chrome, platform.VRAELIS.ai shows the dev console
+// /signin gets the zone-aware shell so visiting from chat.vraelis.ai
+// shows workshop chrome, platform.vraelis.ai shows the dev console
 // chrome, etc. Same component, different identity per host.
 //
 // The back link is forced to the apex marketing site instead of
@@ -13,8 +13,8 @@ export default function SignInLayout({ children }: { children: ReactNode }) {
   return (
     <ZoneShell
       wide
-      backHrefOverride="https://VRAELIS.ai/home"
-      backLabelOverride="← VRAELIS.ai"
+      backHrefOverride="https://vraelis.ai/home"
+      backLabelOverride="← vraelis.ai"
     >
       {children}
     </ZoneShell>

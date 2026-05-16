@@ -224,7 +224,7 @@ export default async function HomePage() {
         body={
           <>
             Low-latency voice in, natural voice out. Works with the
-            earbuds you already wear today; dedicated VRAELIS hardware
+            earbuds you already wear today; dedicated vraelis hardware
             later.
           </>
         }
@@ -242,7 +242,7 @@ export default async function HomePage() {
         headline={<>Lens, audio,<br/>one case.</>}
         body={
           <>
-            Charges both your VRAELIS Lens pairs and the audio earbuds
+            Charges both your vraelis Lens pairs and the audio earbuds
             in one piece of hardware. Quick swap between pairs; one
             charges while the other runs. Targeting all-day usage when
             you alternate.

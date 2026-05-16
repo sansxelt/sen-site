@@ -18,7 +18,7 @@ const STATIC_ITEMS: Item[] = [
   { id: "nav-product",   label: "Product",     section: "Navigate", href: "/product" },
   { id: "nav-pricing",   label: "Pricing",     section: "Navigate", href: "/pricing" },
   { id: "nav-contact",   label: "Contact",     section: "Navigate", href: "/contact" },
-  { id: "nav-app",       label: "Open chat",   section: "Navigate", href: "/app", hint: "VRAELIS-1 in browser" },
+  { id: "nav-app",       label: "Open chat",   section: "Navigate", href: "/app", hint: "vraelis-1 in browser" },
   { id: "nav-account",   label: "Account",     section: "Navigate", href: "/account" },
   { id: "nav-download",  label: "Download desktop", section: "Navigate", href: "/download" },
 
@@ -132,7 +132,7 @@ export function CommandPalette() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Search VRAELIS.ai…"
+          placeholder="Search vraelis.ai…"
           className="hx-cp-input"
           autoComplete="off"
         />

@@ -28,7 +28,7 @@ const FEATURES = [
 
 function DesktopMock() {
   return (
-    <div className="landing-desktop-mock" role="img" aria-label="VRAELIS Copilot interface preview">
+    <div className="landing-desktop-mock" role="img" aria-label="vraelis Copilot interface preview">
       <div className="landing-desktop-grid" aria-hidden />
 
       {/* Floating copilot panel */}
@@ -118,7 +118,7 @@ export function CopilotSection() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.65, ease: EASE }}
           >
-            <div className="landing-kicker">── VRAELIS copilot</div>
+            <div className="landing-kicker">── vraelis copilot</div>
             <h2 className="landing-h2 landing-gradient-text">
               From answers to action.
             </h2>

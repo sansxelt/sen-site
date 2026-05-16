@@ -62,17 +62,17 @@ export type ModelOption = {
 export const ALL_MODEL_OPTIONS: ReadonlyArray<ModelOption> = [
   {
     tier: "fast",
-    display_name: "VRAELIS-1 fast",
+    display_name: "vraelis-1 fast",
     blurb: "Quick replies, simple tasks. Free for all plans.",
   },
   {
     tier: "balanced",
-    display_name: "VRAELIS-1",
+    display_name: "vraelis-1",
     blurb: "Default. Strong on writing, code, planning. Apprentice and up.",
   },
   {
     tier: "smart",
-    display_name: "VRAELIS-1 deep",
+    display_name: "vraelis-1 deep",
     blurb: "Heaviest reasoning. Long context. Pro and up.",
   },
 ];
@@ -293,7 +293,7 @@ export type DesktopPreferences = {
   // v0.1.4 — i18n two-axis: system_language drives UI text. The
   // response language is detected per-message server-side, not stored.
   system_language: string;
-  // v0.1.8 — when true, VRAELIS-1 may invoke client-side tools
+  // v0.1.8 — when true, vraelis-1 may invoke client-side tools
   // (navigate, create_api_key, search_threads, etc.). Off = the AI
   // can only reply with text.
   tools_enabled: boolean;

@@ -5,7 +5,7 @@ import { ConfirmSignupForm } from "./confirm-form";
 
 export const metadata: Metadata = {
   title: "Confirm signup",
-  description: "Create your VRAELIS account.",
+  description: "Create your vraelis account.",
   robots: { index: false, follow: false },
 };
 
@@ -78,11 +78,11 @@ export default async function ConfirmSignupPage({
           New account
         </div>
         <h1 className="mt-5 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Create a VRAELIS account?
+          Create a vraelis account?
         </h1>
         <p className="mt-3 text-sm leading-6 text-neutral-300">
           You just signed in with <span className="font-medium text-white">{providerLabel}</span> as{" "}
-          <span className="font-medium text-white">{email}</span>, and no VRAELIS
+          <span className="font-medium text-white">{email}</span>, and no vraelis
           account exists for that address yet. Creating one is a one-time step.
         </p>
 

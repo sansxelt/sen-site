@@ -2,27 +2,27 @@ import type { DesktopSession } from "./auth";
 
 // Memory view — a stub for v0.1.4. Real persistence + auto-pinning lands
 // in a later push. For now the view advertises the surface area so users
-// understand what VRAELIS-1 will remember once the backend ships.
+// understand what vraelis-1 will remember once the backend ships.
 export function DesktopMemoryView({ session: _session }: { session: DesktopSession }) {
   return (
     <div className="view view--memory">
       <div className="view-head">
         <h1>Memory</h1>
-        <p>Saved context VRAELIS-1 references across every conversation.</p>
+        <p>Saved context vraelis-1 references across every conversation.</p>
       </div>
 
       <div className="view-body">
         <div className="memory-empty">
           <div className="memory-empty-head">No memories saved yet</div>
           <p>
-            As you chat, VRAELIS-1 will pin facts here automatically — names,
+            As you chat, vraelis-1 will pin facts here automatically — names,
             projects, preferences, anything worth remembering.
           </p>
 
           <div className="memory-sample-list">
             <div className="memory-sample-row memory-sample-row--placeholder">
               <span className="memory-sample-dot" />
-              <span className="memory-sample-text">Working on the VRAELIS desktop app</span>
+              <span className="memory-sample-text">Working on the vraelis desktop app</span>
               <span className="memory-sample-when">example</span>
             </div>
             <div className="memory-sample-row memory-sample-row--placeholder">

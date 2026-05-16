@@ -21,8 +21,8 @@ export type UpdateProgress =
   | { kind: "ready"; version: string; notes: string }
   | { kind: "error"; message: string };
 
-const NEW_VERSION_KEY = "VRAELIS.update.pending";
-const LAST_SEEN_VERSION_KEY = "VRAELIS.update.lastSeenVersion";
+const NEW_VERSION_KEY = "vraelis.update.pending";
+const LAST_SEEN_VERSION_KEY = "vraelis.update.lastSeenVersion";
 
 export type PendingUpdate = {
   version: string;

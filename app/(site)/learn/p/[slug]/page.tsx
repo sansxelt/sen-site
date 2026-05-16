@@ -14,7 +14,7 @@ import { isAdminEmail } from "@/lib/admin";
 
 export const revalidate = 300; // 5 min, so new pieces propagate without redeploy
 
-const CANONICAL_BASE = "https://www.VRAELIS.ai";
+const CANONICAL_BASE = "https://www.vraelis.ai";
 
 type Params = { slug: string };
 
@@ -25,7 +25,7 @@ function authorName(
   if (authorDisplayName && authorDisplayName.trim().length > 0) {
     return authorDisplayName;
   }
-  if (!authorEmail || isAdminEmail(authorEmail)) return "VRAELIS (OWNER)";
+  if (!authorEmail || isAdminEmail(authorEmail)) return "vraelis (OWNER)";
   return authorEmail;
 }
 
@@ -50,7 +50,7 @@ export async function generateMetadata({
       description: piece.excerpt ?? undefined,
       type: "article",
       url,
-      siteName: "VRAELIS",
+      siteName: "vraelis",
       publishedTime: piece.published_at ?? undefined,
       modifiedTime: piece.updated_at,
       authors: [authorName(piece.author_email, piece.author_display_name)],
@@ -92,8 +92,8 @@ export default async function LearnPiecePage({
     },
     publisher: {
       "@type": "Organization",
-      name: "VRAELIS",
-      url: "https://www.VRAELIS.ai",
+      name: "vraelis",
+      url: "https://www.vraelis.ai",
     },
     mainEntityOfPage: {
       "@type": "WebPage",

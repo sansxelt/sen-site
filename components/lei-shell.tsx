@@ -55,14 +55,14 @@ export function LeiShell({ children }: { children: ReactNode }) {
   // Restore voice style preference
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const saved = window.localStorage.getItem("VRAELIS.lei.voiceStyle");
+    const saved = window.localStorage.getItem("vraelis.lei.voiceStyle");
     if (saved === "v2v" || saved === "v2t") setVoiceStyleState(saved);
   }, []);
 
   const setVoiceStyle = useCallback((s: VoiceModeStyle) => {
     setVoiceStyleState(s);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("VRAELIS.lei.voiceStyle", s);
+      window.localStorage.setItem("vraelis.lei.voiceStyle", s);
     }
   }, []);
 
@@ -244,7 +244,7 @@ function DropOverlay() {
         <div className="lei-drop-mark">⤓</div>
         <div className="lei-drop-title">Drop to react</div>
         <div className="lei-drop-sub">
-          Image · Video · File · Code, VRAELIS-1 morphs the UI to fit
+          Image · Video · File · Code, vraelis-1 morphs the UI to fit
         </div>
         <div className="lei-drop-row">
           <span className="lei-drop-chip">🖼 Image → analysis</span>

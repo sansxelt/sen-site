@@ -3,7 +3,7 @@ import { ResetPasswordForm } from "./reset-password-form";
 
 export const metadata: Metadata = {
   title: "Reset Password",
-  description: "Request a password reset link for your VRAELIS account.",
+  description: "Request a password reset link for your vraelis account.",
 };
 
 export default function ResetPasswordPage() {

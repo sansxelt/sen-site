@@ -13,7 +13,7 @@ const FEATURES = [
   {
     icon: "◎",
     title: "Memory",
-    body: "VRAELIS references past conversations and pinned context as you work. You don't repeat yourself — it already knows.",
+    body: "vraelis references past conversations and pinned context as you work. You don't repeat yourself — it already knows.",
   },
   {
     icon: "◻",
@@ -32,14 +32,14 @@ const MOCK_FILES = ["market-analysis.pdf", "brief-v2.docx", "comp-screenshots.zi
 
 function ProjectMock() {
   return (
-    <div className="landing-mock" role="img" aria-label="VRAELIS projects panel preview">
+    <div className="landing-mock" role="img" aria-label="vraelis projects panel preview">
       <div className="landing-mock-titlebar">
         <div className="landing-mock-dots">
           <div className="landing-mock-dot" />
           <div className="landing-mock-dot" />
           <div className="landing-mock-dot" />
         </div>
-        <span className="landing-mock-title">VRAELIS · projects</span>
+        <span className="landing-mock-title">vraelis · projects</span>
         <div style={{ width: 46 }} />
       </div>
 

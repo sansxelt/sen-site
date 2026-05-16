@@ -26,7 +26,7 @@ export type DesktopPreferences = {
   // v0.1.4, i18n: manual UI language. Response language is detected
   // per-message and never persisted.
   system_language: string;
-  // v0.1.8, let VRAELIS-1 invoke client-side tools (navigate,
+  // v0.1.8, let vraelis-1 invoke client-side tools (navigate,
   // create_api_key, search_threads, …). Off = text-only responses.
   tools_enabled: boolean;
   // v0.1.16, Theme preference, synced cross-device. "system" follows

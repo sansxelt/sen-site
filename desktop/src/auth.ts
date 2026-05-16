@@ -5,7 +5,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 
 // Always hits the live website. We don't run the website locally
 // just to develop the desktop, so there's no localhost fallback.
-export const API_BASE = "https://VRAELIS.ai";
+export const API_BASE = "https://vraelis.ai";
 
 const STORE_FILE = "auth.json";
 const TOKEN_KEY = "session_token";
@@ -101,7 +101,7 @@ export async function beginSignInFlow(): Promise<string> {
   return request_id;
 }
 
-// Pulls request_id out of a VRAELIS://auth?request_id=xxx URL.
+// Pulls request_id out of a vraelis://auth?request_id=xxx URL.
 export function extractRequestId(url: string): string | null {
   try {
     const parsed = new URL(url);
@@ -112,8 +112,8 @@ export function extractRequestId(url: string): string | null {
 }
 
 // Subscribes to deep-link callbacks. The callback runs every time the
-// OS hands VRAELIS:// back to us (one-time per sign-in).
-export async function onVRAELISDeepLink(
+// OS hands vraelis:// back to us (one-time per sign-in).
+export async function onvraelisDeepLink(
   handler: (requestId: string) => void,
 ): Promise<() => void> {
   const unlisten = await onOpenUrl((urls) => {

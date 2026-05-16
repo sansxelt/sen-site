@@ -21,7 +21,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Usage",
-  description: "API usage for your VRAELIS account.",
+  description: "API usage for your vraelis account.",
 };
 
 const usageSupportHref =
@@ -205,7 +205,7 @@ export default async function UsagePage() {
               <span className="ml-2">
                 Currently serving on{" "}
                 <span className="text-white">
-                  VRAELIS-1 {currentProTier === "smart" ? "deep" : currentProTier}
+                  vraelis-1 {currentProTier === "smart" ? "deep" : currentProTier}
                 </span>
                 .{" "}
                 {proThrottleNext && proThrottleNext > 0 ? (
@@ -437,7 +437,7 @@ export default async function UsagePage() {
         <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
           {!recent || recent.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-neutral-500">
-              No requests recorded yet. Talk to VRAELIS-1 and refresh.
+              No requests recorded yet. Talk to vraelis-1 and refresh.
             </div>
           ) : (
             <div className="divide-y divide-white/[0.05]">

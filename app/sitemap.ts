@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { ARTICLES, TOPICS } from "../lib/learn-content";
 import { listPublishedPieces } from "../lib/learn-db";
 
-const BASE = "https://www.VRAELIS.ai";
+const BASE = "https://www.vraelis.ai";
 
 // Sitemap covers marketing surfaces, every Learn topic page, and
 // every published article from both sources (hardcoded ARTICLES +

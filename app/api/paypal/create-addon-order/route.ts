@@ -65,7 +65,7 @@ export async function POST(request: Request) {
   try {
     const order = await createPaypalOrder({
       amountUsd: addon.monthlyValue,
-      description: `VRAELIS · ${addon.name}`,
+      description: `vraelis · ${addon.name}`,
       // custom_id round-trips through PayPal so the capture step can
       // identify which addon + user without trusting client-supplied data.
       customId: JSON.stringify({ email, addonKey }),

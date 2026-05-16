@@ -1,5 +1,5 @@
 // Admin-email gate. Used by /account/content and any other surface
-// that should only be visible to operators of VRAELIS, not to every
+// that should only be visible to operators of vraelis, not to every
 // signed-in user.
 //
 // Source of truth is the ADMIN_EMAILS env var: comma-separated

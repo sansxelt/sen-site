@@ -42,7 +42,7 @@ function PlatformVisual() {
             ))}
           </div>
           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.24)", fontFamily: "var(--font-geist-mono), monospace", letterSpacing: "0.06em" }}>
-            VRAELIS api · v1
+            vraelis api · v1
           </span>
           <div style={{ width: 44 }} />
         </div>
@@ -140,7 +140,7 @@ export function PlatformTeaserSection() {
           </div>
 
           <h2 className="landing-h2 landing-gradient-text">
-            Build on VRAELIS.
+            Build on vraelis.
           </h2>
           <p className="landing-body" style={{ marginBottom: 22 }}>
             Full API access. Request inspector, usage dashboard, API keys,

@@ -282,7 +282,7 @@ export function AccountPanel({
           Account
         </div>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Sign in to open your VRAELIS workspace.
+          Sign in to open your vraelis workspace.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
           Your account gives you a place to manage identity, tune workspace
@@ -324,10 +324,10 @@ export function AccountPanel({
           Workspace Setup
         </div>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-          Your VRAELIS workspace is live on this device.
+          Your vraelis workspace is live on this device.
         </h2>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-200">
-          Save how you work, what you want VRAELIS to remember, and which
+          Save how you work, what you want vraelis to remember, and which
           release track you want to follow.
         </p>
 
@@ -362,7 +362,7 @@ export function AccountPanel({
               type="text"
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="How should VRAELIS address you?"
+              placeholder="How should vraelis address you?"
               disabled={savingProfile || signingOut}
               className="mt-2 w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
             />
@@ -384,7 +384,7 @@ export function AccountPanel({
 
           <div>
             <label className="block text-sm font-medium text-white">
-              What should VRAELIS help you recover?
+              What should vraelis help you recover?
             </label>
             <textarea
               value={focusArea}
@@ -457,7 +457,7 @@ export function AccountPanel({
               {sessionState.email}
             </div>
             <p className="mt-2 text-sm leading-6 text-neutral-200">
-              VRAELIS keeps sign-in and return routes on the same account
+              vraelis keeps sign-in and return routes on the same account
               surface, whether you use email, Google, or GitHub.
             </p>
           </div>
@@ -541,7 +541,7 @@ export function AccountPanel({
               [
                 "/privacy",
                 "Review privacy",
-                "Read how VRAELIS handles account details, context, deletion, and support.",
+                "Read how vraelis handles account details, context, deletion, and support.",
               ],
               [
                 "/contact",

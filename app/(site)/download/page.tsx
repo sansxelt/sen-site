@@ -10,7 +10,7 @@ import { getUserProfileByEmail } from "@/lib/user-profile";
 export const metadata: Metadata = {
   title: "Access",
   description:
-    "Request early access to VRAELIS and try the layered AI response engine first.",
+    "Request early access to vraelis and try the layered AI response engine first.",
 };
 
 export default async function DownloadPage() {
@@ -37,7 +37,7 @@ export default async function DownloadPage() {
               Early access open
             </div>
             <h1 className="mt-6 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              Get early access to VRAELIS.
+              Get early access to vraelis.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-neutral-200">
               Start with one chat surface and get the real product from day one:
@@ -67,7 +67,7 @@ export default async function DownloadPage() {
             {[
               ["Status", "Early access with invite-based onboarding."],
               ["Platform", "Windows first today, with broader surfaces coming later."],
-              ["What you get", "The full VRAELIS layered response experience from your first session."],
+              ["What you get", "The full vraelis layered response experience from your first session."],
             ].map(([title, description], i) => (
               <Reveal
                 key={title}
@@ -127,13 +127,13 @@ export default async function DownloadPage() {
               stays connected to your invite status and future access.
             </p>
             <p>
-              Once approved, you get the full VRAELIS experience - not just an
+              Once approved, you get the full vraelis experience - not just an
               assistant, but a response engine that turns rough input into
               clearer, more usable output.
             </p>
             <p>
               Start on the free tier and expand into stronger personal or team
-              workflows when VRAELIS becomes part of your day-to-day work.
+              workflows when vraelis becomes part of your day-to-day work.
             </p>
           </div>
 

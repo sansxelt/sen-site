@@ -8,7 +8,7 @@ import { getZone, ZONE_THEME } from "@/lib/zone";
 export const metadata: Metadata = {
   title: "Sign In",
   description:
-    "Continue into VRAELIS with app-hosted email, Google, and GitHub sign-in flows.",
+    "Continue into vraelis with app-hosted email, Google, and GitHub sign-in flows.",
 };
 
 export default async function SignInPage({
@@ -41,13 +41,13 @@ export default async function SignInPage({
       ? "Sign in to the workshop."
       : zone === "platform"
         ? "Sign in to platform."
-        : "Sign in to VRAELIS.";
+        : "Sign in to vraelis.";
   const subline =
     zone === "chat"
       ? "Pick up your threads, files, and credits across every device."
       : zone === "platform"
         ? "Manage API keys, usage, and billing from the developer console."
-        : "Email, Google, and GitHub all sign in to the same VRAELIS account.";
+        : "Email, Google, and GitHub all sign in to the same vraelis account.";
 
   return (
     <div className="mx-auto max-w-6xl py-8 sm:py-14">

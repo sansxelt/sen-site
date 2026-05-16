@@ -7,7 +7,7 @@ import {
   beginSignInFlow,
   clearSession,
   type DesktopSession,
-  onVRAELISDeepLink,
+  onvraelisDeepLink,
   redeemRequest,
   restoreSession,
   saveSession,
@@ -51,7 +51,7 @@ function App() {
       // for this before closing itself.
       void invoke("notify_main_ready").catch(() => {});
 
-      unlisten = await onVRAELISDeepLink(async (requestId) => {
+      unlisten = await onvraelisDeepLink(async (requestId) => {
         if (
           pendingRequestId.current &&
           pendingRequestId.current !== requestId
@@ -131,7 +131,7 @@ function App() {
 }
 
 // Custom borderless title bar — drag region across the whole strip,
-// VRAELIS mark + window controls on the right. Native chrome is
+// vraelis mark + window controls on the right. Native chrome is
 // disabled in tauri.conf.json (decorations: false).
 function TitleBar() {
   const [maxed, setMaxed] = useState(false);
@@ -163,7 +163,7 @@ function TitleBar() {
   }, []);
   const close = useCallback(() => {
     // v0.1.9: hide the window instead of destroying it. The app stays
-    // running in the background; re-launching VRAELIS from start menu /
+    // running in the background; re-launching vraelis from start menu /
     // taskbar bumps single-instance which re-shows the same window.
     // If users actually want to quit they Ctrl+Q (handled below).
     void getCurrentWindow().hide();
@@ -173,7 +173,7 @@ function TitleBar() {
   // v0.1.12 fix: getCurrentWindow().close() only destroys the main
   // webview \u2014 the splash and floating-copilot windows kept the Tauri
   // process alive, so re-launching after Ctrl+Q hit the single-instance
-  // guard but found no window to focus, leaving VRAELIS "open" with no
+  // guard but found no window to focus, leaving vraelis "open" with no
   // UI until the user killed it via Task Manager. plugin-process.exit()
   // terminates the entire process cleanly so the next launch starts fresh.
   useEffect(() => {
@@ -218,7 +218,7 @@ function TitleBar() {
     <div className="titlebar" data-tauri-drag-region>
       <div className="titlebar-brand" data-tauri-drag-region>
         <img src="/icon.png" alt="" className="titlebar-brand-icon" />
-        <span className="titlebar-brand-name">VRAELIS</span>
+        <span className="titlebar-brand-name">vraelis</span>
       </div>
       <div className="titlebar-spacer" data-tauri-drag-region />
       <div className="titlebar-controls">
@@ -256,7 +256,7 @@ function TitleBar() {
           className="titlebar-btn titlebar-btn--close"
           onClick={close}
           aria-label="Close"
-          title="Hide window — VRAELIS keeps running in the background. To FORCE QUIT (and install pending updates), press Ctrl+Q on Windows or ⌘Q on Mac."
+          title="Hide window — vraelis keeps running in the background. To FORCE QUIT (and install pending updates), press Ctrl+Q on Windows or ⌘Q on Mac."
         >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M0 0 L10 10 M10 0 L0 10" stroke="currentColor" strokeWidth="1" />
@@ -281,7 +281,7 @@ function SignedOutShell({
           <div className="main-brand-icon">
             <img src="/icon.png" alt="" />
           </div>
-          <span className="main-brand-name">VRAELIS</span>
+          <span className="main-brand-name">vraelis</span>
           <span className="main-brand-sub">desktop</span>
         </div>
         <SignInControl auth={auth} onSignIn={onSignIn} />
@@ -294,8 +294,8 @@ function SignedOutShell({
             {auth.kind === "loading"
               ? "Looking for a saved sign-in on this machine."
               : auth.kind === "signed-out" && auth.signingIn
-                ? "Approve VRAELIS desktop in the browser tab that just opened."
-                : "Sign in to connect this desktop to your VRAELIS.ai account."}
+                ? "Approve vraelis desktop in the browser tab that just opened."
+                : "Sign in to connect this desktop to your vraelis.ai account."}
           </p>
         </div>
       </div>

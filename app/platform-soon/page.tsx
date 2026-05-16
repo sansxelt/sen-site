@@ -3,15 +3,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
-// Served at platform.VRAELIS.ai/. Quiet developer page: the API exists,
+// Served at platform.vraelis.ai/. Quiet developer page: the API exists,
 // here is how to start, more is coming. No terminal cosplay, no eight
 // status badges, no eight command cards. Three live links + one curl
 // snippet + a single waitlist card. Matches the cinematic / restrained
-// tone of the rest of VRAELIS.
+// tone of the rest of vraelis.
 
 export const metadata: Metadata = {
-  title: "VRAELIS platform",
-  description: "The VRAELIS API. Bearer auth, streaming chat, MCP-ready.",
+  title: "vraelis platform",
+  description: "The vraelis API. Bearer auth, streaming chat, MCP-ready.",
 };
 
 export default function PlatformSoonPage() {
@@ -31,27 +31,27 @@ export default function PlatformSoonPage() {
 
       <header className="relative border-b border-white/[0.06]">
         <div className="flex items-center justify-between px-6 py-4 sm:px-10">
-          <Link href="https://platform.VRAELIS.ai" className="inline-flex shrink-0 items-center gap-2.5">
+          <Link href="https://platform.vraelis.ai" className="inline-flex shrink-0 items-center gap-2.5">
             <Image
               src="/logo-amber.svg"
-              alt="VRAELIS"
+              alt="vraelis"
               width={32}
               height={32}
               className="h-8 w-8 rounded-lg"
               priority
             />
             <div>
-              <div className="text-sm font-semibold tracking-tight text-white">VRAELIS</div>
+              <div className="text-sm font-semibold tracking-tight text-white">vraelis</div>
               <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
                 Platform
               </div>
             </div>
           </Link>
           <Link
-            href="https://VRAELIS.ai"
+            href="https://vraelis.ai"
             className="text-[12px] text-neutral-500 transition hover:text-neutral-200"
           >
-            VRAELIS.ai →
+            vraelis.ai →
           </Link>
         </div>
       </header>
@@ -66,7 +66,7 @@ export default function PlatformSoonPage() {
           className="text-5xl font-semibold leading-[0.95] tracking-tight text-white sm:text-7xl"
           style={{ letterSpacing: "-0.04em" }}
         >
-          The VRAELIS API.
+          The vraelis API.
         </h1>
         <p className="mt-7 max-w-xl text-lg leading-7 text-neutral-400">
           Bearer auth, streaming chat, MCP-ready. The full developer
@@ -80,17 +80,17 @@ export default function PlatformSoonPage() {
             {
               label: "Get an API key",
               note: "Bearer token from your account",
-              href: "https://chat.VRAELIS.ai/account/keys",
+              href: "https://chat.vraelis.ai/account/keys",
             },
             {
               label: "Read the REST quickstart",
               note: "Auth, first request, streaming, JS + Python",
-              href: "https://VRAELIS.ai/learn/VRAELIS-rest-api-quickstart",
+              href: "https://vraelis.ai/learn/VRAELIS-rest-api-quickstart",
             },
             {
               label: "Open Workshop",
               note: "Try the product first if you haven't",
-              href: "https://chat.VRAELIS.ai",
+              href: "https://chat.vraelis.ai",
             },
           ].map((item) => (
             <Link
@@ -115,7 +115,7 @@ export default function PlatformSoonPage() {
             POST /api/v1/chat
           </div>
           <pre className="overflow-x-auto rounded-xl border border-white/[0.08] bg-black/60 p-5 font-mono text-[12.5px] leading-7 text-neutral-300">
-{`curl https://VRAELIS.ai/api/v1/chat \\
+{`curl https://vraelis.ai/api/v1/chat \\
   -H "Authorization: Bearer $VRAELIS_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"messages":[{"role":"user","content":"hello"}],"stream":true}'`}
@@ -153,7 +153,7 @@ export default function PlatformSoonPage() {
 
       <footer className="relative border-t border-white/[0.06]">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-6 py-5 text-[11px] text-neutral-600 sm:px-8">
-          <span>platform.VRAELIS.ai</span>
+          <span>platform.vraelis.ai</span>
           <span>preview</span>
         </div>
       </footer>

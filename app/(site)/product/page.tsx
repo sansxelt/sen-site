@@ -81,7 +81,7 @@ const SURFACES: Surface[] = [
     status: "alpha",
     oneLine: "API keys, request inspector, usage dashboard, webhooks.",
     depends: ["Chat API", "MCP registry", "Webhooks"],
-    href: "https://platform.VRAELIS.ai",
+    href: "https://platform.vraelis.ai",
   },
   {
     key: "lens",
@@ -146,12 +146,12 @@ const INTEGRATIONS: Integration[] = [
   { name: "Custom MCP", status: "live",  via: "MCP" },
 ];
 
-const SDK_SNIPPET = `import VRAELIS from "@VRAELIS/sdk";
+const SDK_SNIPPET = `import vraelis from "@vraelis/sdk";
 
-const sx = new VRAELIS({ apiKey: process.env.VRAELIS_API_KEY });
+const sx = new vraelis({ apiKey: process.env.VRAELIS_API_KEY });
 
 const stream = await sx.chat.completions.create({
-  model: "VRAELIS-1",
+  model: "vraelis-1",
   project: "proj_5g7",
   stream: true,
   messages: [{ role: "user", content: "summarize my open PRs" }],
@@ -252,14 +252,14 @@ export default function ProductPage() {
             transition={{ duration: 0.7, ease: EASE, delay: 0.3 }}
             style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)", color: "rgba(255,255,255,0.62)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}
           >
-            The technical view of every VRAELIS surface. Status, version,
+            The technical view of every vraelis surface. Status, version,
             what it depends on, and how the API exposes it. For the
             consumer walkthrough, see the home page.
           </motion.p>
 
           <div style={{ marginTop: 28, display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
-              href="https://platform.VRAELIS.ai"
+              href="https://platform.vraelis.ai"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "10px 18px", borderRadius: 100,
@@ -631,7 +631,7 @@ export default function ProductPage() {
           </p>
           <div style={{ display: "inline-flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
-              href="https://platform.VRAELIS.ai"
+              href="https://platform.vraelis.ai"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "12px 22px", borderRadius: 100,

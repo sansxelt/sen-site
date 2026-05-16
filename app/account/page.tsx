@@ -19,7 +19,7 @@ import { getCreditBalance } from "../../lib/credits";
 
 export const metadata: Metadata = {
   title: "Overview",
-  description: "Your VRAELIS account overview.",
+  description: "Your vraelis account overview.",
 };
 
 export default async function AccountPage() {
@@ -97,7 +97,7 @@ export default async function AccountPage() {
                 : "Welcome back."}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-neutral-300">
-              VRAELIS-1 is ready in your browser, and the desktop app adds toolbar
+              vraelis-1 is ready in your browser, and the desktop app adds toolbar
               modes, MCP, and the full voice loop. Pick a surface to keep going.
             </p>
           </div>
@@ -131,7 +131,7 @@ export default async function AccountPage() {
             Voice
           </div>
           <div className="mt-1 text-sm text-white">Fable · British</div>
-          <div className="mt-1 text-xs text-neutral-500">Pick how VRAELIS-1 sounds →</div>
+          <div className="mt-1 text-xs text-neutral-500">Pick how vraelis-1 sounds →</div>
         </Link>
         <Link
           href="/account/settings#persona"
@@ -151,7 +151,7 @@ export default async function AccountPage() {
             Memory
           </div>
           <div className="mt-1 text-sm text-white">Context retention</div>
-          <div className="mt-1 text-xs text-neutral-500">What VRAELIS-1 remembers →</div>
+          <div className="mt-1 text-xs text-neutral-500">What vraelis-1 remembers →</div>
         </Link>
       </div>
 

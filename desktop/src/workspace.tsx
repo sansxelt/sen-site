@@ -98,7 +98,7 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
 
   // Window mode shortcuts — Ctrl+Shift+N normal, Ctrl+Shift+T top,
   // Ctrl+Shift+L left, Ctrl+Shift+R right. Lets power users snap
-  // VRAELIS into a toolbar position alongside other apps without
+  // vraelis into a toolbar position alongside other apps without
   // opening Preferences.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -194,13 +194,13 @@ function NavRail({
   return (
     <aside className="ws-nav">
       {/* v0.1.13 \u2014 renamed from "Capsule Rail" (internal codename)
-          to the user-facing "VRAELIS Copilot" with a clearer subtitle.
+          to the user-facing "vraelis Copilot" with a clearer subtitle.
           Same prominent CTA \u2014 violet accent, pulsing dot \u2014 so it
           stays discoverable in the nav. */}
       <button
         type="button"
         className="ws-nav-copilot-cta"
-        title="Open the floating VRAELIS copilot \u2014 sits above every other window"
+        title="Open the floating vraelis copilot \u2014 sits above every other window"
         onClick={() => {
           void invoke("show_copilot").catch(() => {});
           void invoke("position_copilot_window", { edge: "right", open: false }).catch(() => {});
@@ -210,7 +210,7 @@ function NavRail({
           <span className="ws-nav-copilot-cta-pulse" />
         </span>
         <span className="ws-nav-copilot-cta-text">
-          <span className="ws-nav-copilot-cta-title">VRAELIS Copilot</span>
+          <span className="ws-nav-copilot-cta-title">vraelis Copilot</span>
           <span className="ws-nav-copilot-cta-sub">Always on, anywhere</span>
         </span>
       </button>
@@ -840,7 +840,7 @@ export function ChatView({ session }: { session: DesktopSession }) {
       <div className="chat-scroll" ref={scrollRef}>
         {showEmpty ? (
           <div className="chat-empty">
-            <div className="chat-empty-mark">VRAELIS-1</div>
+            <div className="chat-empty-mark">vraelis-1</div>
             <h2>Ask anything.</h2>
             <p>Ideas, drafts, code, plans — the AI that remembers what you’re building.</p>
           </div>
@@ -903,8 +903,8 @@ export function ChatView({ session }: { session: DesktopSession }) {
                 : voiceState === "speaking"
                   ? "Speaking…"
                   : prefs.send_on_enter
-                    ? "Message VRAELIS-1…"
-                    : "Message VRAELIS-1… (Ctrl+Enter to send)"
+                    ? "Message vraelis-1…"
+                    : "Message vraelis-1… (Ctrl+Enter to send)"
           }
           rows={1}
           disabled={voiceState === "recording" || voiceState === "transcribing"}
@@ -915,7 +915,7 @@ export function ChatView({ session }: { session: DesktopSession }) {
           {planForGating === "free" ? (
             <button
               type="button"
-              onClick={() => void openUrl("https://VRAELIS.ai/pricing")}
+              onClick={() => void openUrl("https://vraelis.ai/pricing")}
               className="chat-icon-btn chat-icon-btn--locked"
               title="Voice is on paid plans — upgrade to unlock"
             >
@@ -927,7 +927,7 @@ export function ChatView({ session }: { session: DesktopSession }) {
               onClick={() => void enterVoiceMode()}
               disabled={voiceState !== "idle"}
               className="chat-icon-btn"
-              title="Talk to VRAELIS-1"
+              title="Talk to vraelis-1"
             >
               <MicIcon />
             </button>
@@ -1199,7 +1199,7 @@ function AccountView({
     <div className="view view--account">
       <div className="view-head">
         <h1>Account</h1>
-        <p>How VRAELIS knows you. Used to personalize replies and the workspace.</p>
+        <p>How vraelis knows you. Used to personalize replies and the workspace.</p>
       </div>
       <div className="view-body">
         {loading && <div className="view-loading">Loading…</div>}
@@ -1210,7 +1210,7 @@ function AccountView({
               label="Display name"
               value={displayName}
               onChange={setDisplayName}
-              placeholder="What should VRAELIS call you?"
+              placeholder="What should vraelis call you?"
             />
             <EditableField
               label="Focus area"
@@ -1336,7 +1336,7 @@ export function PlanView({ session }: { session: DesktopSession }) {
               <div className="upgrade-cta">
                 <div className="upgrade-cta-head">
                   {sub.plan === "free"
-                    ? "Want VRAELIS-1 (balanced) or VRAELIS-1 deep?"
+                    ? "Want vraelis-1 (balanced) or vraelis-1 deep?"
                     : "Move up a tier"}
                 </div>
                 <p>
@@ -1346,7 +1346,7 @@ export function PlanView({ session }: { session: DesktopSession }) {
                 </p>
                 <button
                   type="button"
-                  onClick={() => void openUrl("https://VRAELIS.ai/pricing")}
+                  onClick={() => void openUrl("https://vraelis.ai/pricing")}
                   className="upgrade-cta-btn"
                 >
                   See plans →
@@ -1484,7 +1484,7 @@ export function UsageView({ session }: { session: DesktopSession }) {
                   <span className="usage-throttle-tag">Pro throttle</span>
                   Currently serving on{" "}
                   <span className="usage-throttle-tier">
-                    VRAELIS-1{" "}
+                    vraelis-1{" "}
                     {data.pro_throttle.current_tier === "smart"
                       ? "deep"
                       : data.pro_throttle.current_tier}
@@ -1706,7 +1706,7 @@ function KeysView({ session }: { session: DesktopSession }) {
         <h1>API keys</h1>
         <p>
           Your active <code>sk_sen_…</code> keys. Create one to call the
-          VRAELIS API from scripts, agents, or other apps. The full secret
+          vraelis API from scripts, agents, or other apps. The full secret
           is shown once at creation — we only store a hash after that.
         </p>
       </div>
@@ -1798,7 +1798,7 @@ function KeysView({ session }: { session: DesktopSession }) {
               <div className="usage-empty">
                 <div className="upgrade-cta-head">No API keys yet</div>
                 <div className="usage-empty-note">
-                  Create one above to start calling the VRAELIS API. Keys
+                  Create one above to start calling the vraelis API. Keys
                   inherit your plan’s rate limits.
                 </div>
               </div>
@@ -1867,7 +1867,7 @@ function PreferencesView() {
       <div className="view view--preferences">
         <div className="view-head">
           <h1>Preferences</h1>
-          <p>How VRAELIS adapts to you.</p>
+          <p>How vraelis adapts to you.</p>
         </div>
         <div className="view-body">
           <div className="view-loading">Loading…</div>
@@ -1889,28 +1889,28 @@ function PreferencesView() {
     <div className="view view--preferences">
       <div className="view-head">
         <h1>Preferences</h1>
-        <p>How VRAELIS adapts to you. Everything autosaves.</p>
+        <p>How vraelis adapts to you. Everything autosaves.</p>
       </div>
 
       <div className="view-body">
         <PrefSectionGroup title="AI">
           <PrefSection
             label="Default model"
-            help="Which VRAELIS-1 you start every chat with. The chat picker still lets you swap per message."
+            help="Which vraelis-1 you start every chat with. The chat picker still lets you swap per message."
           >
             <SegmentedControl<DesktopPreferences["default_tier"]>
               value={prefs.default_tier}
               onChange={(v) => update({ default_tier: v })}
               options={ALL_MODEL_OPTIONS.map((m) => ({
                 value: m.tier,
-                label: m.display_name.replace("VRAELIS-1 ", "") || "default",
+                label: m.display_name.replace("vraelis-1 ", "") || "default",
               }))}
             />
           </PrefSection>
 
           <PrefSection
             label="Persona"
-            help="How VRAELIS-1 talks. Changes voice + sentence rhythm without changing the model."
+            help="How vraelis-1 talks. Changes voice + sentence rhythm without changing the model."
           >
             <select
               value={prefs.persona}
@@ -1939,7 +1939,7 @@ function PreferencesView() {
 
           <PrefSection
             label="Conversational mode"
-            help="When you finish a voice turn, the mic restarts automatically once VRAELIS-1 stops talking. Hands-free back-and-forth."
+            help="When you finish a voice turn, the mic restarts automatically once vraelis-1 stops talking. Hands-free back-and-forth."
           >
             <Toggle
               value={prefs.conversational}
@@ -1949,7 +1949,7 @@ function PreferencesView() {
 
           <PrefSection
             label="Voice"
-            help="Which TTS voice VRAELIS-1 speaks with. Audio-only — only matters when replies are read aloud."
+            help="Which TTS voice vraelis-1 speaks with. Audio-only — only matters when replies are read aloud."
           >
             <select
               value={prefs.voice}
@@ -1982,7 +1982,7 @@ function PreferencesView() {
         <PrefSectionGroup title="Window">
           <PrefSection
             label="Window mode"
-            help="Pin VRAELIS to a screen edge for interviews, recordings, study sessions. Toolbar modes float above other apps."
+            help="Pin vraelis to a screen edge for interviews, recordings, study sessions. Toolbar modes float above other apps."
           >
             <SegmentedControl<DesktopPreferences["window_mode"]>
               value={prefs.window_mode}
@@ -2095,11 +2095,11 @@ function PreferencesView() {
           <div className="about-card">
             <div className="about-row">
               <span className="about-label">Brand</span>
-              <span className="about-value">VRAELIS · pronounced “sans-zul”</span>
+              <span className="about-value">vraelis · pronounced “sans-zul”</span>
             </div>
             <div className="about-row">
               <span className="about-label">Engine</span>
-              <span className="about-value">VRAELIS-1 (3 tiers)</span>
+              <span className="about-value">vraelis-1 (3 tiers)</span>
             </div>
             <div className="about-row">
               <span className="about-label">Voice</span>

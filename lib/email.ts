@@ -12,19 +12,19 @@ function getResend() {
 
 /**
  * Account-flavored sender, welcome, password reset, account-lifecycle
- * confirmations.  Matches the "VRAELIS AI" identity the user set up in
+ * confirmations.  Matches the "vraelis AI" identity the user set up in
  * Gmail's Send-mail-as aliases so replies look visually consistent with
  * what they'd see going the other way.
  */
-const fromAccount = "VRAELIS AI <hello@VRAELIS.ai>";
+const fromAccount = "vraelis AI <hello@vraelis.ai>";
 
 /**
  * Automated system sender, billing events today, newsletters in Phase 2.
- * Kept as plain "VRAELIS AI" since noreply@ handles multiple kinds of
+ * Kept as plain "vraelis AI" since noreply@ handles multiple kinds of
  * automated mail and a narrower "Billing" label would be wrong for
  * newsletters / product updates.
  */
-const fromBilling = "VRAELIS AI <noreply@VRAELIS.ai>";
+const fromBilling = "vraelis AI <noreply@vraelis.ai>";
 
 /**
  * Sender/reply-to policy:
@@ -52,10 +52,10 @@ const fromBilling = "VRAELIS AI <noreply@VRAELIS.ai>";
  */
 function fromForInbox(inbox: SupportInbox): string {
   switch (inbox) {
-    case "sales@VRAELIS.ai":   return "VRAELIS sales <sales@VRAELIS.ai>";
-    case "privacy@VRAELIS.ai": return "VRAELIS privacy <privacy@VRAELIS.ai>";
-    case "help@VRAELIS.ai":
-    default:                   return "VRAELIS <help@VRAELIS.ai>";
+    case "sales@vraelis.ai":   return "vraelis sales <sales@vraelis.ai>";
+    case "privacy@vraelis.ai": return "vraelis privacy <privacy@vraelis.ai>";
+    case "help@vraelis.ai":
+    default:                   return "vraelis <help@vraelis.ai>";
   }
 }
 
@@ -69,7 +69,7 @@ export function isEmailConfigured() {
 
 /**
  * baseHtml, standard email chrome for every transactional message.
- * Header: small VRAELIS wordmark + tagline.
+ * Header: small vraelis wordmark + tagline.
  * Body: the template's own content, rendered inside a white card.
  * Footer: dense contact block (all 3 departmental inboxes), legal
  *         links, copyright.  Sits below the signature so it never
@@ -111,7 +111,7 @@ function baseHtml(content: string) {
 
         <!-- ── Brand header ──────────────────────────────────── -->
         <tr><td style="padding:0 4px 20px;">
-          <span style="font-size:18px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">VRAELIS</span>
+          <span style="font-size:18px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">vraelis</span>
           <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">Build something REAL.</span>
         </td></tr>
 
@@ -127,9 +127,9 @@ function baseHtml(content: string) {
               Reach out
             </td></tr>
             <tr><td style="font-size:13px;color:#525252;line-height:1.7;">
-              General support · <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">help@VRAELIS.ai</a><br>
-              Privacy &amp; data · <a href="mailto:privacy@VRAELIS.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">privacy@VRAELIS.ai</a><br>
-              Teams &amp; sales · <a href="mailto:sales@VRAELIS.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">sales@VRAELIS.ai</a>
+              General support · <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">help@vraelis.ai</a><br>
+              Privacy &amp; data · <a href="mailto:privacy@vraelis.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">privacy@vraelis.ai</a><br>
+              Teams &amp; sales · <a href="mailto:sales@vraelis.ai" style="color:#0a0a0a;text-decoration:none;border-bottom:1px solid #d4d4d4;">sales@vraelis.ai</a>
             </td></tr>
           </table>
         </td></tr>
@@ -137,16 +137,16 @@ function baseHtml(content: string) {
         <!-- ── Legal footer ──────────────────────────────────── -->
         <tr><td style="padding:22px 4px 0;border-top:1px solid #e5e5e5;margin-top:22px;">
           <p class="vrl-footer-links" style="margin:16px 0 0;font-size:11px;line-height:1.9;color:#a3a3a3;word-break:break-word;">
-            <a href="https://VRAELIS.ai" style="color:#737373;text-decoration:none;">VRAELIS.ai</a>
-             · <a href="https://VRAELIS.ai/product" style="color:#737373;text-decoration:none;">Product</a>
-             · <a href="https://VRAELIS.ai/pricing" style="color:#737373;text-decoration:none;">Pricing</a>
-             · <a href="https://VRAELIS.ai/privacy" style="color:#737373;text-decoration:none;">Privacy</a>
-             · <a href="https://VRAELIS.ai/terms" style="color:#737373;text-decoration:none;">Terms</a>
-             · <a href="https://VRAELIS.ai/contact" style="color:#737373;text-decoration:none;">Contact</a>
+            <a href="https://vraelis.ai" style="color:#737373;text-decoration:none;">vraelis.ai</a>
+             · <a href="https://vraelis.ai/product" style="color:#737373;text-decoration:none;">Product</a>
+             · <a href="https://vraelis.ai/pricing" style="color:#737373;text-decoration:none;">Pricing</a>
+             · <a href="https://vraelis.ai/privacy" style="color:#737373;text-decoration:none;">Privacy</a>
+             · <a href="https://vraelis.ai/terms" style="color:#737373;text-decoration:none;">Terms</a>
+             · <a href="https://vraelis.ai/contact" style="color:#737373;text-decoration:none;">Contact</a>
           </p>
           <p style="margin:10px 0 0;font-size:11px;color:#a3a3a3;line-height:1.7;">
-            © ${new Date().getFullYear()} VRAELIS. All rights reserved.<br>
-            You&apos;re receiving this because an account or subscription event happened on VRAELIS.ai.
+            © ${new Date().getFullYear()} vraelis. All rights reserved.<br>
+            You&apos;re receiving this because an account or subscription event happened on vraelis.ai.
           </p>
         </td></tr>
 
@@ -207,20 +207,20 @@ function detailsTable(rows: Array<[string, string]>): string {
 export function welcomeHtml(name?: string) {
   const greeting = name ? `Hi ${escapeHtml(name)},` : "Hi,";
   return baseHtml(`
-    <p style="${KICKER_STYLE}">Welcome to VRAELIS</p>
+    <p style="${KICKER_STYLE}">Welcome to vraelis</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">Your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} your VRAELIS account is set up and ready. VRAELIS is a layered response engine, start with a simple prompt and let the output grow into something you can actually use: a plan, a deliverable, a product shape.</p>
+    <p style="${BODY_STYLE}">${greeting} your vraelis account is set up and ready. vraelis is a layered response engine, start with a simple prompt and let the output grow into something you can actually use: a plan, a deliverable, a product shape.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">What to try first:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>Ask something complex, a question that would normally need research + structure.</li>
       <li>Drop in messy input, a screenshot, rough notes, or a link.</li>
       <li>Push the same thread forward instead of starting over. Keep refining what already works.</li>
     </ul>
-    <a href="https://VRAELIS.ai/account" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
+    <a href="https://vraelis.ai/account" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://VRAELIS.ai/product" class="vrl-btn" style="${BTN_LIGHT}">Tour the product</a>
+    <a href="https://vraelis.ai/product" class="vrl-btn" style="${BTN_LIGHT}">Tour the product</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email, the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a>.
+      <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email, the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a>.
     </div>
   `);
 }
@@ -233,13 +233,13 @@ export function earlyAccessHtml(name: string) {
     <p style="${BODY_STYLE}">${greeting} thanks for requesting early access. We review access requests carefully and roll out in waves so we can actually support everyone who comes in. You&apos;ll get a personal email from the team once your seat is ready.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">While you wait, a few things worth knowing:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Your VRAELIS account exists now, you can sign in any time to manage preferences.</li>
+      <li>Your vraelis account exists now, you can sign in any time to manage preferences.</li>
       <li>Rollout order prioritizes focus-area match, not signup date, so feel free to update your profile.</li>
       <li>If access is urgent (team rollout, deadline, specific integration), reach out, we occasionally expedite.</li>
     </ul>
-    <a href="https://VRAELIS.ai/account" class="vrl-btn" style="${BTN_STYLE}">View your account</a>
+    <a href="https://vraelis.ai/account" class="vrl-btn" style="${BTN_STYLE}">View your account</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Need a different path?</strong> Teams/sales conversations get fast-tracked, email <a href="mailto:sales@VRAELIS.ai" style="color:#0a0a0a;">sales@VRAELIS.ai</a>. General questions go to <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a>.
+      <strong style="color:#0a0a0a;">Need a different path?</strong> Teams/sales conversations get fast-tracked, email <a href="mailto:sales@vraelis.ai" style="color:#0a0a0a;">sales@vraelis.ai</a>. General questions go to <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a>.
     </div>
   `);
 }
@@ -249,14 +249,14 @@ export function verifyAccountHtml(name: string, verifyUrl: string, expiryLabel: 
   return baseHtml(`
     <p style="${KICKER_STYLE}">Confirm your email</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">One click and your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} to finish creating your VRAELIS account, confirm your email address by tapping the button below. This makes sure nobody else signed you up by mistake, and it&apos;s the only thing between you and the full product.</p>
+    <p style="${BODY_STYLE}">${greeting} to finish creating your vraelis account, confirm your email address by tapping the button below. This makes sure nobody else signed you up by mistake, and it&apos;s the only thing between you and the full product.</p>
     <a href="${verifyUrl}" class="vrl-btn" style="${BTN_STYLE}">Confirm email</a>
     <div style="${HR_STYLE}"></div>
     <p style="${META_STYLE}">The link <strong style="color:#0a0a0a;">expires in ${expiryLabel}</strong>. If it does, head back to the signup page and we&apos;ll send a fresh one.</p>
     <p style="${META_STYLE}" style="margin-top:14px;">Link not working? Copy and paste this URL into your browser:</p>
     <p style="margin:4px 0 0;font-size:12px;color:#0a0a0a;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${verifyUrl}</p>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t sign up for VRAELIS?</strong> Ignore this email, without clicking the link, your account never gets created and we won&apos;t message you again. If you&apos;re seeing signup confirmations you didn&apos;t request, email <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a>.
+      <strong style="color:#0a0a0a;">Didn&apos;t sign up for vraelis?</strong> Ignore this email, without clicking the link, your account never gets created and we won&apos;t message you again. If you&apos;re seeing signup confirmations you didn&apos;t request, email <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a>.
     </div>
   `);
 }
@@ -265,13 +265,13 @@ export function passwordResetHtml(resetUrl: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Password Reset</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">Choose a new password.</h1>
-    <p style="${BODY_STYLE}">Someone, hopefully you, asked to reset the password on your VRAELIS account. Click the button below to pick a new one. The link is <strong style="color:#0a0a0a;">single-use</strong> and expires in <strong style="color:#0a0a0a;">one hour</strong>.</p>
+    <p style="${BODY_STYLE}">Someone, hopefully you, asked to reset the password on your vraelis account. Click the button below to pick a new one. The link is <strong style="color:#0a0a0a;">single-use</strong> and expires in <strong style="color:#0a0a0a;">one hour</strong>.</p>
     <a href="${resetUrl}" class="vrl-btn" style="${BTN_STYLE}">Reset password</a>
     <div style="${HR_STYLE}"></div>
     <p style="${META_STYLE}">Link not working? Copy and paste this URL into your browser:</p>
     <p style="margin:4px 0 0;font-size:12px;color:#0a0a0a;word-break:break-all;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">${resetUrl}</p>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t ask for this?</strong> You can safely ignore this email, your password won&apos;t change without someone clicking the link. If you&apos;re seeing repeated reset requests, email <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a> and we&apos;ll lock the account while we investigate.
+      <strong style="color:#0a0a0a;">Didn&apos;t ask for this?</strong> You can safely ignore this email, your password won&apos;t change without someone clicking the link. If you&apos;re seeing repeated reset requests, email <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a> and we&apos;ll lock the account while we investigate.
     </div>
   `);
 }
@@ -285,7 +285,7 @@ export function contactConfirmHtml(name: string, subject: string) {
     <h1 class="vrl-h1" style="${H1_STYLE}">We got your note.</h1>
     <p style="${BODY_STYLE}">${greeting} thanks for reaching out. We received your message about <strong style="color:#0a0a0a;">${safeSubject}</strong> and someone on the team will follow up to your email address directly, usually within one business day.</p>
     <p style="${BODY_STYLE}">If you have more to add, just reply to this email. Your reply lands in the right queue automatically.</p>
-    <a href="https://VRAELIS.ai/contact" class="vrl-btn" style="${BTN_LIGHT}">Back to contact</a>
+    <a href="https://vraelis.ai/contact" class="vrl-btn" style="${BTN_LIGHT}">Back to contact</a>
     <div style="${NOTE_STYLE}">
       <strong style="color:#0a0a0a;">Didn&apos;t submit this form?</strong> You can safely ignore this email, we&apos;ll process it as a mistake if we don&apos;t hear back. No further messages will be sent unless you reach out again.
     </div>
@@ -336,7 +336,7 @@ export async function sendWelcomeEmail(email: string, name?: string) {
     await resend.emails.send({
       from:    fromAccount,
       to:      email,
-      subject: "Welcome to VRAELIS",
+      subject: "Welcome to vraelis",
       html:    welcomeHtml(name),
     });
   } catch (error) {
@@ -352,7 +352,7 @@ export async function sendEarlyAccessEmail(email: string, name: string) {
     await resend.emails.send({
       from:    fromAccount,
       to:      email,
-      subject: "Your VRAELIS invite request is on file",
+      subject: "Your vraelis invite request is on file",
       html:    earlyAccessHtml(name),
     });
   } catch (error) {
@@ -368,7 +368,7 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
     await resend.emails.send({
       from:    fromAccount,
       to:      email,
-      subject: "Reset your VRAELIS password",
+      subject: "Reset your vraelis password",
       html:    passwordResetHtml(resetUrl),
     });
   } catch (error) {
@@ -389,7 +389,7 @@ export async function sendVerifyAccountEmail(opts: {
     await resend.emails.send({
       from:    fromAccount,
       to:      opts.email,
-      subject: "Confirm your VRAELIS account",
+      subject: "Confirm your vraelis account",
       html:    verifyAccountHtml(opts.name ?? "", opts.verifyUrl, opts.expiryLabel),
     });
   } catch (error) {
@@ -403,7 +403,7 @@ export async function sendContactConfirmEmail(
   subject: string,
   /** Inbox the message was routed to, controls the `from` so the
       confirmation comes from the same department the user contacted. */
-  inbox:   SupportInbox = "help@VRAELIS.ai",
+  inbox:   SupportInbox = "help@vraelis.ai",
 ) {
   const resend = getResend();
   if (!resend) return;
@@ -427,15 +427,15 @@ export async function sendContactConfirmEmail(
  * third-party address.
  */
 export const SUPPORT_INBOXES = [
-  "help@VRAELIS.ai",
-  "sales@VRAELIS.ai",
-  "privacy@VRAELIS.ai",
+  "help@vraelis.ai",
+  "sales@vraelis.ai",
+  "privacy@vraelis.ai",
 ] as const;
 export type SupportInbox = (typeof SUPPORT_INBOXES)[number];
 
 export function resolveSupportInbox(candidate: string | null | undefined): SupportInbox {
   const v = (candidate ?? "").trim().toLowerCase();
-  return SUPPORT_INBOXES.find((addr) => addr === v) ?? "help@VRAELIS.ai";
+  return SUPPORT_INBOXES.find((addr) => addr === v) ?? "help@vraelis.ai";
 }
 
 /**
@@ -497,15 +497,15 @@ export function pwResetConfirmHtml(name: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Password Updated</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">Your password was reset.</h1>
-    <p style="${BODY_STYLE}">${greeting} your VRAELIS password was just changed. If that was you, you&apos;re all set, this email is just confirmation. Your active sessions on other devices will need to sign in again the next time you use them.</p>
+    <p style="${BODY_STYLE}">${greeting} your vraelis password was just changed. If that was you, you&apos;re all set, this email is just confirmation. Your active sessions on other devices will need to sign in again the next time you use them.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">While you&apos;re thinking about security:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>Use a password manager if you don&apos;t already, we strongly recommend it.</li>
       <li>If you reused this password elsewhere, change it there too.</li>
-      <li>Turn on two-factor auth on the email tied to your VRAELIS account; that email is the key to everything.</li>
+      <li>Turn on two-factor auth on the email tied to your vraelis account; that email is the key to everything.</li>
     </ul>
     <div style="${NOTE_WARN}">
-      <strong style="color:#9f1239;">If that wasn&apos;t you</strong>, email <a href="mailto:help@VRAELIS.ai" style="color:#9f1239;font-weight:600;">help@VRAELIS.ai</a> immediately. We can lock the account, reverse the change, and walk through how to secure it while we investigate.
+      <strong style="color:#9f1239;">If that wasn&apos;t you</strong>, email <a href="mailto:help@vraelis.ai" style="color:#9f1239;font-weight:600;">help@vraelis.ai</a> immediately. We can lock the account, reverse the change, and walk through how to secure it while we investigate.
     </div>
   `);
 }
@@ -515,7 +515,7 @@ export function accountDeletedHtml(name: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Account Deleted</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">Your account has been removed.</h1>
-    <p style="${BODY_STYLE}">${greeting} your VRAELIS account and associated data have been deleted. Confirming exactly what was removed, so there&apos;s no ambiguity:</p>
+    <p style="${BODY_STYLE}">${greeting} your vraelis account and associated data have been deleted. Confirming exactly what was removed, so there&apos;s no ambiguity:</p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li><strong style="color:#0a0a0a;">Profile and credentials</strong>, your email, password hash, and preferences.</li>
       <li><strong style="color:#0a0a0a;">API keys</strong>, all keys revoked. Any integrations using them will immediately stop working.</li>
@@ -523,9 +523,9 @@ export function accountDeletedHtml(name: string) {
       <li><strong style="color:#0a0a0a;">Active subscriptions</strong>, cancelled. No further charges will hit your card.</li>
     </ul>
     <p style="${BODY_STYLE}">You won&apos;t receive further account or billing emails. Changed your mind? You&apos;re welcome back any time, nothing&apos;s permanent on our side.</p>
-    <a href="https://VRAELIS.ai" class="vrl-btn" style="${BTN_LIGHT}">Visit VRAELIS.ai</a>
+    <a href="https://vraelis.ai" class="vrl-btn" style="${BTN_LIGHT}">Visit vraelis.ai</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Questions about data or privacy?</strong> For anything involving your data, what was stored, what&apos;s in backups, export requests, email <a href="mailto:privacy@VRAELIS.ai" style="color:#0a0a0a;">privacy@VRAELIS.ai</a>. We respond to privacy requests within 72 hours.
+      <strong style="color:#0a0a0a;">Questions about data or privacy?</strong> For anything involving your data, what was stored, what&apos;s in backups, export requests, email <a href="mailto:privacy@vraelis.ai" style="color:#0a0a0a;">privacy@vraelis.ai</a>. We respond to privacy requests within 72 hours.
     </div>
   `);
 }
@@ -535,7 +535,7 @@ export function subscriptionActivatedHtml(name: string, planName: string, cycle:
   const periodLabel = cycle === "yearly" ? "annual" : "monthly";
   return baseHtml(`
     <p style="${KICKER_STYLE}">Subscription Active</p>
-    <h1 class="vrl-h1" style="${H1_STYLE}">Welcome to VRAELIS ${planName}.</h1>
+    <h1 class="vrl-h1" style="${H1_STYLE}">Welcome to vraelis ${planName}.</h1>
     <p style="${BODY_STYLE}">${greeting} your ${periodLabel} subscription is live. Paid features are available immediately, no waiting, no activation step.</p>
 
     ${detailsTable([
@@ -545,11 +545,11 @@ export function subscriptionActivatedHtml(name: string, planName: string, cycle:
       ["Next charge",   cycle === "yearly" ? "In 12 months" : "In 1 month"],
     ])}
 
-    <a href="https://VRAELIS.ai/account" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
+    <a href="https://vraelis.ai/account" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://VRAELIS.ai/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>
+    <a href="https://vraelis.ai/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>
     <div style="${NOTE_STYLE}">
-      A Stripe receipt with the full invoice is on its way separately. For plan changes, cancellations, or downgrades, head to <a href="https://VRAELIS.ai/account/billing" style="color:#0a0a0a;">/account/billing</a>, all changes are self-serve and take effect immediately. For help, email <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a>.
+      A Stripe receipt with the full invoice is on its way separately. For plan changes, cancellations, or downgrades, head to <a href="https://vraelis.ai/account/billing" style="color:#0a0a0a;">/account/billing</a>, all changes are self-serve and take effect immediately. For help, email <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a>.
     </div>
   `);
 }
@@ -575,9 +575,9 @@ export function subscriptionCancellationScheduledHtml(name: string, planName: st
       <li>All your saved outputs, history, and API keys stay exactly where they are.</li>
     </ul>
 
-    <a href="https://VRAELIS.ai/account/billing" class="vrl-btn" style="${BTN_STYLE}">Resume subscription</a>
+    <a href="https://vraelis.ai/account/billing" class="vrl-btn" style="${BTN_STYLE}">Resume subscription</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t schedule this cancellation?</strong> Head to <a href="https://VRAELIS.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> and tap Resume subscription, it&apos;s one click and fully reverses this email. If you suspect your account is compromised, email <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a> immediately.
+      <strong style="color:#0a0a0a;">Didn&apos;t schedule this cancellation?</strong> Head to <a href="https://vraelis.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> and tap Resume subscription, it&apos;s one click and fully reverses this email. If you suspect your account is compromised, email <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a> immediately.
     </div>
   `);
 }
@@ -594,11 +594,11 @@ export function subscriptionEndedHtml(name: string, planName: string) {
       <li><strong style="color:#0a0a0a;">Paused:</strong> paid features (higher API limits, deeper memory, priority generation).</li>
       <li><strong style="color:#0a0a0a;">Charges:</strong> nothing further will be charged unless you pick a plan again.</li>
     </ul>
-    <a href="https://VRAELIS.ai/pricing" class="vrl-btn" style="${BTN_STYLE}">Pick a plan again</a>
+    <a href="https://vraelis.ai/pricing" class="vrl-btn" style="${BTN_STYLE}">Pick a plan again</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://VRAELIS.ai/account" class="vrl-btn" style="${BTN_LIGHT}">Keep using Free</a>
+    <a href="https://vraelis.ai/account" class="vrl-btn" style="${BTN_LIGHT}">Keep using Free</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Was this unexpected?</strong> If your plan ended because a charge failed, it&apos;s usually a card issue (expired, frozen, different bank). Update the card at <a href="https://VRAELIS.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> and resubscribe. For billing concerns, email <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a>.
+      <strong style="color:#0a0a0a;">Was this unexpected?</strong> If your plan ended because a charge failed, it&apos;s usually a card issue (expired, frozen, different bank). Update the card at <a href="https://vraelis.ai/account/billing" style="color:#0a0a0a;">/account/billing</a> and resubscribe. For billing concerns, email <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a>.
     </div>
   `);
 }
@@ -610,7 +610,7 @@ export function paymentFailedHtml(name: string, planName: string) {
     <h1 class="vrl-h1" style="${H1_STYLE}">We couldn&apos;t charge your card.</h1>
     <p style="${BODY_STYLE}">${greeting} a charge for your <strong style="color:#0a0a0a;">${planName}</strong> subscription just failed. Stripe will retry the card automatically a few more times over the next week, but if the card&apos;s expired, blocked, or doesn&apos;t have funds, the retries won&apos;t succeed either.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Fastest fix:</strong> add or switch the payment method now.</p>
-    <a href="https://VRAELIS.ai/account/billing" class="vrl-btn" style="${BTN_STYLE}">Update payment method</a>
+    <a href="https://vraelis.ai/account/billing" class="vrl-btn" style="${BTN_STYLE}">Update payment method</a>
     <p style="${BODY_STYLE}" style="margin-top:22px;"><strong style="color:#0a0a0a;">What happens if retries keep failing:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>After all retries exhaust, your plan drops to Free, paid features pause but nothing is deleted.</li>
@@ -618,7 +618,7 @@ export function paymentFailedHtml(name: string, planName: string) {
       <li>No credit goes unused, Stripe prorates any partial period cleanly.</li>
     </ul>
     <div style="${NOTE_WARN}">
-      <strong style="color:#9f1239;">Common causes to check:</strong> expired card, recent fraud block from your bank, international transaction limit, or an insufficient-funds alert from your bank app. If you need help reading the decline reason, email <a href="mailto:help@VRAELIS.ai" style="color:#9f1239;font-weight:600;">help@VRAELIS.ai</a>.
+      <strong style="color:#9f1239;">Common causes to check:</strong> expired card, recent fraud block from your bank, international transaction limit, or an insufficient-funds alert from your bank app. If you need help reading the decline reason, email <a href="mailto:help@vraelis.ai" style="color:#9f1239;font-weight:600;">help@vraelis.ai</a>.
     </div>
   `);
 }
@@ -636,9 +636,9 @@ export function paymentMethodUpdatedHtml(name: string, brand: string, last4: str
       ["Takes effect", "Immediately"],
     ])}
 
-    <a href="https://VRAELIS.ai/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Review billing</a>
+    <a href="https://vraelis.ai/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Review billing</a>
     <div style="${NOTE_WARN}">
-      <strong style="color:#9f1239;">If you didn&apos;t make this change</strong>, email <a href="mailto:help@VRAELIS.ai" style="color:#9f1239;font-weight:600;">help@VRAELIS.ai</a> immediately. Someone else may have access to your account, we can lock it and revert the card while we investigate.
+      <strong style="color:#9f1239;">If you didn&apos;t make this change</strong>, email <a href="mailto:help@vraelis.ai" style="color:#9f1239;font-weight:600;">help@vraelis.ai</a> immediately. Someone else may have access to your account, we can lock it and revert the card while we investigate.
     </div>
   `);
 }
@@ -659,11 +659,11 @@ export function renewalSucceededHtml(name: string, planName: string, amountLabel
     ])}
 
     ${invoiceUrl
-      ? `<a href="${invoiceUrl}" class="vrl-btn" style="${BTN_STYLE}">View full invoice</a><span class="vrl-btn-spacer">&nbsp;</span><a href="https://VRAELIS.ai/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>`
-      : `<a href="https://VRAELIS.ai/account/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>`
+      ? `<a href="${invoiceUrl}" class="vrl-btn" style="${BTN_STYLE}">View full invoice</a><span class="vrl-btn-spacer">&nbsp;</span><a href="https://vraelis.ai/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>`
+      : `<a href="https://vraelis.ai/account/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>`
     }
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Want to cancel or downgrade?</strong> No hassle, head to <a href="https://VRAELIS.ai/account/billing" style="color:#0a0a0a;">/account/billing</a>. Cancellation stops future charges immediately; downgrades take effect at the next renewal so you keep paid features until then. Questions: <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a>.
+      <strong style="color:#0a0a0a;">Want to cancel or downgrade?</strong> No hassle, head to <a href="https://vraelis.ai/account/billing" style="color:#0a0a0a;">/account/billing</a>. Cancellation stops future charges immediately; downgrades take effect at the next renewal so you keep paid features until then. Questions: <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a>.
     </div>
   `);
 }
@@ -689,9 +689,9 @@ export function renewalUpcomingHtml(name: string, planName: string, amountLabel:
       <li><strong style="color:#0a0a0a;">Update the card</strong> if the one on file is about to expire.</li>
     </ul>
 
-    <a href="https://VRAELIS.ai/account/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>
+    <a href="https://vraelis.ai/account/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Billing questions?</strong> Email <a href="mailto:help@VRAELIS.ai" style="color:#0a0a0a;">help@VRAELIS.ai</a>. For plan / team / enterprise questions, <a href="mailto:sales@VRAELIS.ai" style="color:#0a0a0a;">sales@VRAELIS.ai</a> handles those directly.
+      <strong style="color:#0a0a0a;">Billing questions?</strong> Email <a href="mailto:help@vraelis.ai" style="color:#0a0a0a;">help@vraelis.ai</a>. For plan / team / enterprise questions, <a href="mailto:sales@vraelis.ai" style="color:#0a0a0a;">sales@vraelis.ai</a> handles those directly.
     </div>
   `);
 }
@@ -704,7 +704,7 @@ export async function sendPasswordResetConfirmEmail(email: string, name: string)
   try {
     await resend.emails.send({
       from: fromAccount, to: email,
-      subject: "Your VRAELIS password was reset",
+      subject: "Your vraelis password was reset",
       html: pwResetConfirmHtml(name),
     });
   } catch (err) { console.error("sendPasswordResetConfirmEmail failed:", err); }
@@ -716,7 +716,7 @@ export async function sendAccountDeletedEmail(email: string, name: string) {
   try {
     await resend.emails.send({
       from: fromAccount, to: email,
-      subject: "Your VRAELIS account has been deleted",
+      subject: "Your vraelis account has been deleted",
       html: accountDeletedHtml(name),
     });
   } catch (err) { console.error("sendAccountDeletedEmail failed:", err); }
@@ -730,7 +730,7 @@ export async function sendSubscriptionActivatedEmail(opts: {
   try {
     await resend.emails.send({
       from: fromBilling, to: opts.email,
-      subject: `Welcome to VRAELIS ${opts.planName}`,
+      subject: `Welcome to vraelis ${opts.planName}`,
       html: subscriptionActivatedHtml(opts.name, opts.planName, opts.cycle, opts.amountLabel),
     });
   } catch (err) { console.error("sendSubscriptionActivatedEmail failed:", err); }
@@ -772,7 +772,7 @@ export async function sendPaymentFailedEmail(opts: {
   try {
     await resend.emails.send({
       from: fromBilling, to: opts.email,
-      subject: `Payment failed for your VRAELIS ${opts.planName} plan`,
+      subject: `Payment failed for your vraelis ${opts.planName} plan`,
       html: paymentFailedHtml(opts.name, opts.planName),
     });
   } catch (err) { console.error("sendPaymentFailedEmail failed:", err); }
@@ -824,7 +824,7 @@ export async function sendRenewalUpcomingEmail(opts: {
 // ═══════════════════════════════════════════════════════════════════════════
 // NEWSLETTER / PRODUCT UPDATES
 //
-// Newsletter sends share the billing sender (noreply@VRAELIS.ai), both
+// Newsletter sends share the billing sender (noreply@vraelis.ai), both
 // are automated broadcasts from the company, neither expects replies.
 // `subject` and `bodyHtml` come pre-rendered from the caller (the
 // newsletter composer will live in its own module once it exists).

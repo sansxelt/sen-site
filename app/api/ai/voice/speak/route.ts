@@ -46,12 +46,12 @@ export async function POST(request: Request) {
   const rawText = payload.text.slice(0, 4096);
 
   // Force the TTS model to pronounce the brand correctly. Without
-  // this, "VRAELIS" comes out closer to "san-zell" or "sans-ex-el".
+  // this, "vraelis" comes out closer to "san-zell" or "sans-ex-el".
   // The brand should sound like "sans-zul".
   const text = rawText
-    .replace(/\bVRAELIS-1\b/gi, "sans-zul one")
-    .replace(/\bVRAELIS-?2\b/gi, "sans-zul two")
-    .replace(/\bVRAELIS\b/gi, "sans-zul");
+    .replace(/\bvraelis-1\b/gi, "sans-zul one")
+    .replace(/\bvraelis-?2\b/gi, "sans-zul two")
+    .replace(/\bvraelis\b/gi, "sans-zul");
 
   // Optional voice from client. Default is fable (British, expressive)
   // because that's the brand voice we want when nothing's set.

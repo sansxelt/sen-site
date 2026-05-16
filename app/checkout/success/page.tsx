@@ -7,7 +7,7 @@ import { CheckoutSuccessPoller } from "../../../components/checkout-success-poll
 
 export const metadata = {
   title: "Confirming payment",
-  description: "We're verifying your VRAELIS subscription.",
+  description: "We're verifying your vraelis subscription.",
 };
 
 type SearchParams = {

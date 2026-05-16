@@ -36,7 +36,7 @@ type Props = {
 };
 
 // Recent files live in localStorage under this key. FIFO, capped at 8.
-export const RECENT_FILES_KEY = "VRAELIS.recent-files";
+export const RECENT_FILES_KEY = "vraelis.recent-files";
 export const RECENT_FILES_MAX = 8;
 
 export function loadRecentFiles(): RecentFile[] {

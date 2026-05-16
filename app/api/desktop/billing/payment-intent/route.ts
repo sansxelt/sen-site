@@ -109,7 +109,7 @@ export async function POST(request: Request) {
             surface: "desktop",
             priceId,
           },
-          description: `VRAELIS ${addonKey} top-up`,
+          description: `vraelis ${addonKey} top-up`,
         });
 
         if (!intent.client_secret) {

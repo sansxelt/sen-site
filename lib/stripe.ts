@@ -149,4 +149,4 @@ export async function findUsableSubscription(customerId: string): Promise<Stripe
 export const APP_URL =
   process.env.AUTH_URL ??
   process.env.NEXTAUTH_URL ??
-  "https://VRAELIS.ai";
+  "https://vraelis.ai";

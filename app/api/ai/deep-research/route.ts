@@ -19,13 +19,13 @@ const client = new Anthropic();
 //   1. Run a Brave web search via the internal /api/ai/web-search route.
 //   2. For the top 3 results, fetch the page and strip HTML to plain text.
 //   3. Compose a synthesis prompt with the gathered context.
-//   4. Stream the synthesis from VRAELIS-1 (Sonnet/balanced tier).
+//   4. Stream the synthesis from vraelis-1 (Sonnet/balanced tier).
 
 const MAX_PAGES = 3;
 const MAX_PAGE_CHARS = 3000;
 const FETCH_TIMEOUT_MS = 8000;
 
-const SYSTEM_PROMPT = `You are VRAELIS-1's deep research mode.
+const SYSTEM_PROMPT = `You are vraelis-1's deep research mode.
 
 You are given a topic and several short excerpts pulled from web pages.
 Synthesize a clear, well-structured briefing on the topic.
@@ -103,7 +103,7 @@ async function fetchPageText(url: string): Promise<string> {
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; VRAELIS-deep-research/1.0; +https://VRAELIS.ai)",
+          "Mozilla/5.0 (compatible; VRAELIS-deep-research/1.0; +https://vraelis.ai)",
         Accept: "text/html,application/xhtml+xml",
       },
     });

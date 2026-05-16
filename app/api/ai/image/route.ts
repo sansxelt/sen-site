@@ -35,7 +35,7 @@ const ALLOWED_SIZES: ImageSize[] = ["1024x1024", "1024x1792", "1792x1024"];
 // Body: { prompt: string, size?: "1024x1024" | "1024x1792" | "1792x1024" }
 // Returns: { url: string, revised_prompt?: string }
 //
-// One-shot image generation for inline rendering in the VRAELIS chat.
+// One-shot image generation for inline rendering in the vraelis chat.
 // Auth is Bearer (desktop) → cookie (web). Plan-gated via
 // decideImageRequest: free is capped weekly, pro/teams/enterprise are
 // uncapped. Returns a data URL when the model gives back base64, or

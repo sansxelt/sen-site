@@ -13,11 +13,11 @@ import {
 
 export const metadata: Metadata = {
   title: "Download",
-  description: "Download the current VRAELIS desktop build and see the live release state.",
+  description: "Download the current vraelis desktop build and see the live release state.",
 };
 
 const platformRequestHref =
-  "/contact?subject=Platform%20availability&message=Please%20notify%20me%20when%20macOS%20or%20Linux%20builds%20are%20available.%20I%20plan%20to%20use%20VRAELIS%20for%3A%20#contact-form";
+  "/contact?subject=Platform%20availability&message=Please%20notify%20me%20when%20macOS%20or%20Linux%20builds%20are%20available.%20I%20plan%20to%20use%20vraelis%20for%3A%20#contact-form";
 
 export default function AccountDownloadPage() {
   return (
@@ -36,7 +36,7 @@ export default function AccountDownloadPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="text-lg font-semibold text-white">VRAELIS desktop app</span>
+                <span className="text-lg font-semibold text-white">vraelis desktop app</span>
                 <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-300">
                   Windows live
                 </span>

@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 // /account/memory is the dedicated projects management surface.
 // (Nav still says "Memory" in spots; same concept — a project's
-// pinned context IS what VRAELIS remembers across sessions.)
+// pinned context IS what vraelis remembers across sessions.)
 //
 // User feedback drove a real management page: the chat composer's
 // dropdown was the only entry point, and people hunting through

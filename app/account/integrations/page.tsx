@@ -6,7 +6,7 @@ import { GithubDisconnectButton } from "../../../components/github-disconnect-bu
 
 export const metadata: Metadata = {
   title: "Integrations",
-  description: "Connect VRAELIS to your tools and workflows.",
+  description: "Connect vraelis to your tools and workflows.",
 };
 
 type IntegrationStatus = "available" | "coming_soon" | "beta" | "future" | "experimental";
@@ -35,7 +35,7 @@ const CATEGORIES: Category[] = [
         icon: "◉",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Send pages, articles, and research directly into VRAELIS for summaries and analysis.",
+        description: "Send pages, articles, and research directly into vraelis for summaries and analysis.",
       },
     ],
   },
@@ -47,7 +47,7 @@ const CATEGORIES: Category[] = [
         icon: "⬡",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Use VRAELIS inside your editor. Generate plans, explain code, and build outputs without switching context.",
+        description: "Use vraelis inside your editor. Generate plans, explain code, and build outputs without switching context.",
       },
     ],
   },
@@ -59,7 +59,7 @@ const CATEGORIES: Category[] = [
         icon: "◈",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Send messages and threads to VRAELIS for summaries, action items, and structured follow-ups.",
+        description: "Send messages and threads to vraelis for summaries, action items, and structured follow-ups.",
       },
     ],
   },
@@ -71,14 +71,14 @@ const CATEGORIES: Category[] = [
         icon: "◻",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Connect pages and databases so VRAELIS can reference your docs when building outputs.",
+        description: "Connect pages and databases so vraelis can reference your docs when building outputs.",
       },
       {
         name: "Linear",
         icon: "◆",
         status: "coming_soon",
         cta: "Coming soon",
-        description: "Bring issue and project context into VRAELIS for roadmap planning and sprint summaries.",
+        description: "Bring issue and project context into vraelis for roadmap planning and sprint summaries.",
       },
     ],
   },
@@ -126,7 +126,7 @@ const FUTURE_INTERFACES: Integration[] = [
 ];
 
 const integrationRequestHref =
-  "/contact?subject=Integration%20request&message=Which%20integration%20do%20you%20want%3F%0AHow%20would%20you%20use%20it%20inside%20VRAELIS%3F%0A#contact-form";
+  "/contact?subject=Integration%20request&message=Which%20integration%20do%20you%20want%3F%0AHow%20would%20you%20use%20it%20inside%20vraelis%3F%0A#contact-form";
 
 function SxBadge({ status, connected }: { status: IntegrationStatus; connected: boolean }) {
   if (connected)       return <span className="vrl-badge vrl-badge--connected">Connected</span>;
@@ -142,7 +142,7 @@ function callbackBanner(github: string | undefined, reason: string | undefined) 
   if (github === "connected") {
     return (
       <div className="mt-4 rounded-xl border px-4 py-3 text-sm" style={{ borderColor: "rgba(65,214,155,0.25)", background: "rgba(65,214,155,0.05)", color: "#41D69B" }}>
-        GitHub connected. VRAELIS can now reference your repos, PRs, and issues.
+        GitHub connected. vraelis can now reference your repos, PRs, and issues.
       </div>
     );
   }
@@ -239,7 +239,7 @@ export default async function IntegrationsPage({
     <div className="max-w-3xl">
       <h1 className="text-2xl font-semibold" style={{ color: "var(--vrl-text)" }}>Integrations</h1>
       <p className="mt-1 text-sm" style={{ color: "var(--vrl-text-muted)" }}>
-        Connect VRAELIS to your tools and workflows.
+        Connect vraelis to your tools and workflows.
       </p>
 
       {callbackBanner(github, reason)}

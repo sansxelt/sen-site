@@ -33,7 +33,7 @@ export function DesktopUpdatesView({ session: _session }: { session: DesktopSess
       try {
         // v0.1.14 \u2014 Use tauriFetch (Tauri HTTP plugin) so the request
         // bypasses the WebView2 CORS gate. Regular fetch from
-        // tauri://localhost to https://VRAELIS.ai was failing with
+        // tauri://localhost to https://vraelis.ai was failing with
         // "Failed to fetch" because the route doesn't return
         // Access-Control-Allow-Origin headers.
         const res = await tauriFetch(`${API_BASE}/api/desktop/releases`);
@@ -54,7 +54,7 @@ export function DesktopUpdatesView({ session: _session }: { session: DesktopSess
     <div className="view view--updates">
       <div className="view-head">
         <h1>Updates</h1>
-        <p>What&rsquo;s new in VRAELIS.</p>
+        <p>What&rsquo;s new in vraelis.</p>
       </div>
 
       <div className="view-body">

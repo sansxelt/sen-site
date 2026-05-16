@@ -29,7 +29,7 @@ const CAPABILITIES = [
   { title: "Live translation",           body: "Spoken and written translation displayed as natural overlays without breaking immersion." },
   { title: "Navigation and spatial cues",body: "Directions, distances, and spatial annotations tied to what you're actually looking at." },
   { title: "Gaze-driven UI",             body: "Interface elements that respond to focus, not touch. Less friction, less distraction." },
-  { title: "Memory cues",                body: "Context from VRAELIS Memory surfaced visually when it's relevant to what you see." },
+  { title: "Memory cues",                body: "Context from vraelis Memory surfaced visually when it's relevant to what you see." },
 ];
 
 function LensVisual({ inView }: { inView: boolean }) {
@@ -46,7 +46,7 @@ function LensVisual({ inView }: { inView: boolean }) {
         opacity: 0.92,
       }}
       role="img"
-      aria-label="VRAELIS Lens concept — future visual AI interface"
+      aria-label="vraelis Lens concept — future visual AI interface"
     >
       {/* Lens circle */}
       <motion.div
@@ -105,7 +105,7 @@ export function LensSection() {
               future direction
             </div>
 
-            <div className="landing-kicker landing-kicker--future">── VRAELIS lens</div>
+            <div className="landing-kicker landing-kicker--future">── vraelis lens</div>
             <h2 className="landing-h2 landing-gradient-text">
               The future interface is your field of view.
             </h2>
@@ -186,7 +186,7 @@ function LensVisualInView() {
           opacity: 0.92,
         }}
         role="img"
-        aria-label="VRAELIS Lens concept — future visual AI interface"
+        aria-label="vraelis Lens concept — future visual AI interface"
       >
         <motion.div
           className="landing-lens-circle"

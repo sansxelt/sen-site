@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "Read how VRAELIS handles account access, usage context, support requests, and privacy controls.",
+    "Read how vraelis handles account access, usage context, support requests, and privacy controls.",
 };
 
 const sections = [
   {
-    title: "What VRAELIS collects",
-    body: "VRAELIS may collect the account details you provide, sign-in activity, product usage context, support messages, and early-access requests you explicitly submit.",
+    title: "What vraelis collects",
+    body: "vraelis may collect the account details you provide, sign-in activity, product usage context, support messages, and early-access requests you explicitly submit.",
   },
   {
     title: "Why it is collected",
@@ -17,15 +17,15 @@ const sections = [
   },
   {
     title: "How control stays visible",
-    body: "VRAELIS is designed around clear account access, visible policies, and product controls that make it easier to understand how information is handled over time.",
+    body: "vraelis is designed around clear account access, visible policies, and product controls that make it easier to understand how information is handled over time.",
   },
   {
     title: "Security and trusted infrastructure",
-    body: "We use trusted infrastructure partners to support secure account access and data handling, while keeping the experience branded and managed as VRAELIS.",
+    body: "We use trusted infrastructure partners to support secure account access and data handling, while keeping the experience branded and managed as vraelis.",
   },
   {
     title: "Privacy questions",
-    body: "For privacy questions, export requests, or account deletion inquiries, contact help@VRAELIS.ai from the email address tied to your VRAELIS account.",
+    body: "For privacy questions, export requests, or account deletion inquiries, contact help@vraelis.ai from the email address tied to your vraelis account.",
   },
 ];
 
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
         </h1>
         <p className="mt-5 text-base leading-7 text-neutral-200">
           This policy outlines the baseline expectations for
-          VRAELIS&apos;s website, account system, and early-access
+          vraelis&apos;s website, account system, and early-access
           experience.
         </p>
 
