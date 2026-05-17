@@ -1,10 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { AuthFlow } from "@/components/auth-flow";
 import { CinematicAct } from "@/components/landing/cinematic-act";
 import { getSignInPath } from "@/lib/auth-ui";
 import { getPlanActionHref, pricingPlans } from "@/lib/pricing";
 import { getUserProfileByEmail } from "@/lib/user-profile";
+
+export const metadata: Metadata = {
+  title: "Home",
+};
 
 // Home page. Six full-bleed product scenes, then a quiet outro
 // with pricing, quick nav, and sign-in. No opening title, no
