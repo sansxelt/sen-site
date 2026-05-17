@@ -21,7 +21,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Usage",
-  description: "API usage for your vraelis account.",
+  description: "API usage for your Vraelis account.",
 };
 
 const usageSupportHref =

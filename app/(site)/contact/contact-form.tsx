@@ -100,7 +100,7 @@ export function ContactForm({
       </h2>
       <p className="mt-2 text-sm leading-6 text-neutral-200">
         We will reply to your email address. For account issues, include the
-        email tied to your vraelis account.
+        email tied to your Vraelis account.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">

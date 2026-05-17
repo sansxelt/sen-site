@@ -55,14 +55,14 @@ export function LeiShell({ children }: { children: ReactNode }) {
   // Restore voice style preference
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const saved = window.localStorage.getItem("vraelis.lei.voiceStyle");
+    const saved = window.localStorage.getItem("Vraelis.lei.voiceStyle");
     if (saved === "v2v" || saved === "v2t") setVoiceStyleState(saved);
   }, []);
 
   const setVoiceStyle = useCallback((s: VoiceModeStyle) => {
     setVoiceStyleState(s);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("vraelis.lei.voiceStyle", s);
+      window.localStorage.setItem("Vraelis.lei.voiceStyle", s);
     }
   }, []);
 

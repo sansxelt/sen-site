@@ -54,7 +54,7 @@ export function DesktopUpdatesView({ session: _session }: { session: DesktopSess
     <div className="view view--updates">
       <div className="view-head">
         <h1>Updates</h1>
-        <p>What&rsquo;s new in vraelis.</p>
+        <p>What&rsquo;s new in Vraelis.</p>
       </div>
 
       <div className="view-body">

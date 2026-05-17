@@ -83,7 +83,7 @@ export function WhisperSection() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.65, ease: EASE }}
           >
-            <div className="landing-kicker">── vraelis whisper</div>
+            <div className="landing-kicker">── Vraelis whisper</div>
             <h2 className="landing-h2 landing-gradient-text">
               Private AI audio.
             </h2>

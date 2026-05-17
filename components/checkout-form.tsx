@@ -242,7 +242,7 @@ function PaymentForm({ cycle, plan, seats, userEmail }: {
           <StripeWordmark className="h-[14px] w-auto text-neutral-300" />
         </div>
         <p className="max-w-xs text-center text-[10px] leading-relaxed text-neutral-600 sm:text-[11px]">
-          Card details are sent directly to Stripe and never touch vraelis servers.
+          Card details are sent directly to Stripe and never touch Vraelis servers.
         </p>
       </div>
     </form>

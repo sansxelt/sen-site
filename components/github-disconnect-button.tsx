@@ -14,7 +14,7 @@ export function GithubDisconnectButton() {
 
   async function handleClick() {
     if (busy) return;
-    if (!confirm("Disconnect GitHub from vraelis? You can reconnect any time.")) {
+    if (!confirm("Disconnect GitHub from Vraelis? You can reconnect any time.")) {
       return;
     }
     setBusy(true);

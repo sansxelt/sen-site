@@ -12,7 +12,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Updates",
-  description: "Follow shipped vraelis desktop releases and the next build in progress.",
+  description: "Follow shipped Vraelis desktop releases and the next build in progress.",
 };
 
 const issueReportHref =

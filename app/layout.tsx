@@ -13,14 +13,14 @@ const BASE = "https://www.vraelis.ai";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
-    default: "vraelis, AI with persistent project memory",
-    template: "%s | vraelis",
+    default: "Vraelis, AI with persistent project memory",
+    template: "%s | Vraelis",
   },
   description:
-    "Stop re-explaining yourself to AI. Every chatbot forgets you between sessions. vraelis remembers your projects, your context, your goals. Every session picks up where the last one left off.",
+    "Stop re-explaining yourself to AI. Every chatbot forgets you between sessions. Vraelis remembers your projects, your context, your goals. Every session picks up where the last one left off.",
   keywords: [
-    "vraelis",
-    "vraelis ai",
+    "Vraelis",
+    "Vraelis ai",
     "ai with memory",
     "persistent memory ai",
     "ai project memory",
@@ -32,25 +32,25 @@ export const metadata: Metadata = {
     "ai with web search",
     "multimodal ai",
   ],
-  authors: [{ name: "vraelis", url: BASE }],
-  creator: "vraelis",
-  publisher: "vraelis",
+  authors: [{ name: "Vraelis", url: BASE }],
+  creator: "Vraelis",
+  publisher: "Vraelis",
   alternates: { canonical: BASE },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: BASE,
-    siteName: "vraelis",
+    siteName: "Vraelis",
     title: "Stop re-explaining yourself to AI.",
     description:
-      "Every chatbot forgets you between sessions. vraelis remembers your projects, your context, your goals. Every session picks up where the last one left off.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "vraelis" }],
+      "Every chatbot forgets you between sessions. Vraelis remembers your projects, your context, your goals. Every session picks up where the last one left off.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Vraelis" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Stop re-explaining yourself to AI.",
     description:
-      "vraelis remembers your projects, context, and goals. Every session picks up where the last one left off.",
+      "Vraelis remembers your projects, context, and goals. Every session picks up where the last one left off.",
     images: ["/og-image.png"],
     creator: "@vraelis",
   },
@@ -87,12 +87,12 @@ export default async function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "vraelis",
+              name: "Vraelis",
               url: "https://www.vraelis.ai",
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "AI with persistent project memory. vraelis remembers your projects, context, and goals; every session picks up where the last one left off. Chat, voice, drag-drop, image generation, live web search, all in one workspace.",
+                "AI with persistent project memory. Vraelis remembers your projects, context, and goals; every session picks up where the last one left off. Chat, voice, drag-drop, image generation, live web search, all in one workspace.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",
@@ -102,7 +102,7 @@ export default async function RootLayout({
               },
               creator: {
                 "@type": "Organization",
-                name: "vraelis",
+                name: "Vraelis",
                 url: "https://www.vraelis.ai",
               },
             }),

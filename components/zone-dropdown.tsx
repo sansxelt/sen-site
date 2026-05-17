@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 // Apps-only — account management lives in <AccountDropdown> next to
 // this trigger so the chrome separates "where do I want to go" from
 // "manage me". Used in the marketing site header in place of a
-// single 'Open Workshop' / 'Try vraelis' button.
+// single 'Open Workshop' / 'Try Vraelis' button.
 
 type Props = {
   signedIn: boolean;

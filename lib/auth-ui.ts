@@ -20,13 +20,13 @@ export const oauthProviders: Array<{
   provider: OauthProvider;
 }> = [
   {
-    description: "Use your Google account to continue with vraelis.",
+    description: "Use your Google account to continue with Vraelis.",
     enabled: true,
     label: "Google",
     provider: "google",
   },
   {
-    description: "Use your GitHub account to continue with vraelis.",
+    description: "Use your GitHub account to continue with Vraelis.",
     enabled: true,
     label: "GitHub",
     provider: "github",
@@ -86,10 +86,10 @@ export function getAuthErrorMessage(
   }
 
   if (
-    message.includes("already has a vraelis account") ||
+    message.includes("already has a Vraelis account") ||
     message.includes("already exists")
   ) {
-    return "That email already has a vraelis account. Sign in instead.";
+    return "That email already has a Vraelis account. Sign in instead.";
   }
 
   if (message.includes("at least 8 characters")) {

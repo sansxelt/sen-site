@@ -7,7 +7,7 @@ import { listPublishedPieces } from "@/lib/learn-db";
 
 export const metadata: Metadata = {
   title: "All articles · Learn",
-  description: "Every guide on vraelis Learn, newest first.",
+  description: "Every guide on Vraelis Learn, newest first.",
 };
 
 // 5 min so newly published DB pieces show up without a redeploy.

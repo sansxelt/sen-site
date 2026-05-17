@@ -28,15 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${article.title} · Learn`,
     description: article.excerpt,
     alternates: { canonical: url },
-    authors: [{ name: "vraelis (OWNER)" }],
+    authors: [{ name: "Vraelis (OWNER)" }],
     openGraph: {
       title: article.title,
       description: article.excerpt,
       type: "article",
       url,
-      siteName: "vraelis",
+      siteName: "Vraelis",
       publishedTime: article.publishedAt,
-      authors: ["vraelis (OWNER)"],
+      authors: ["Vraelis (OWNER)"],
       tags: [article.topic, article.subtopic ?? ""].filter(Boolean),
     },
     twitter: {
@@ -64,10 +64,10 @@ export default async function ArticlePage({ params }: Props) {
     headline: article.title,
     description: article.excerpt,
     datePublished: article.publishedAt,
-    author: { "@type": "Person", name: "vraelis (OWNER)" },
+    author: { "@type": "Person", name: "Vraelis (OWNER)" },
     publisher: {
       "@type": "Organization",
-      name: "vraelis",
+      name: "Vraelis",
       url: "https://www.vraelis.ai",
     },
     mainEntityOfPage: {

@@ -37,17 +37,17 @@ export const ZONE_THEME: Record<Zone, {
                         // triangle changes per zone.
 }> = {
   apex: {
-    label: "vraelis",
+    label: "Vraelis",
     tagline: "The AI workshop for makers",
     accent: "text-purple-400",
     accentSoft: "bg-purple-400/[0.08]",
     bg: "bg-[#080809]",
     font: "",
-    signInLabel: "Sign in to vraelis",
+    signInLabel: "Sign in to Vraelis",
     logoSrc: "/logo-violet.svg",
   },
   chat: {
-    label: "vraelis",
+    label: "Vraelis",
     tagline: "Workshop · pick up where you left off",
     accent: "text-purple-400",
     accentSoft: "bg-purple-400/[0.08]",
@@ -57,7 +57,7 @@ export const ZONE_THEME: Record<Zone, {
     logoSrc: "/logo-emerald.svg",
   },
   platform: {
-    label: "vraelis",
+    label: "Vraelis",
     tagline: "Platform · developer console",
     accent: "text-amber-300",
     accentSoft: "bg-amber-400/[0.06]",

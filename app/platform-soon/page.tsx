@@ -7,11 +7,11 @@ import { WaitlistForm } from "@/components/landing/waitlist-form";
 // here is how to start, more is coming. No terminal cosplay, no eight
 // status badges, no eight command cards. Three live links + one curl
 // snippet + a single waitlist card. Matches the cinematic / restrained
-// tone of the rest of vraelis.
+// tone of the rest of Vraelis.
 
 export const metadata: Metadata = {
-  title: "vraelis platform",
-  description: "The vraelis API. Bearer auth, streaming chat, MCP-ready.",
+  title: "Vraelis platform",
+  description: "The Vraelis API. Bearer auth, streaming chat, MCP-ready.",
 };
 
 export default function PlatformSoonPage() {
@@ -34,14 +34,14 @@ export default function PlatformSoonPage() {
           <Link href="https://platform.vraelis.ai" className="inline-flex shrink-0 items-center gap-2.5">
             <Image
               src="/logo-amber.svg"
-              alt="vraelis"
+              alt="Vraelis"
               width={32}
               height={32}
               className="h-8 w-8 rounded-lg"
               priority
             />
             <div>
-              <div className="text-sm font-semibold tracking-tight text-white">vraelis</div>
+              <div className="text-sm font-semibold tracking-tight text-white">Vraelis</div>
               <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
                 Platform
               </div>
@@ -66,7 +66,7 @@ export default function PlatformSoonPage() {
           className="text-5xl font-semibold leading-[0.95] tracking-tight text-white sm:text-7xl"
           style={{ letterSpacing: "-0.04em" }}
         >
-          The vraelis API.
+          The Vraelis API.
         </h1>
         <p className="mt-7 max-w-xl text-lg leading-7 text-neutral-400">
           Bearer auth, streaming chat, MCP-ready. The full developer

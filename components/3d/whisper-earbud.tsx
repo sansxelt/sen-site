@@ -25,7 +25,7 @@ import { CameraDrift } from "./camera-drift";
 //   mic holes       3 milled circular holes on the stem base (visible
 //                   black perforations, not just slits)
 //   capacitive band hairline brushed touch ring with 2 dot indicators
-//   etched mark     vraelis triangles on the stem side
+//   etched mark     Vraelis triangles on the stem side
 //   serial          4 microscopic notches under the touch band
 
 function ProceduralEarbud() {
@@ -194,7 +194,7 @@ function ProceduralEarbud() {
           <meshStandardMaterial color="#04060e" />
         </mesh>
 
-        {/* ETCHED vraelis MARK — on the stem side */}
+        {/* ETCHED Vraelis MARK — on the stem side */}
         <BrandMark
           size={0.045}
           position={[0.281, -0.18, 0]}

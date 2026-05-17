@@ -65,7 +65,7 @@ export async function ZoneShell({
           >
             <Image
               src={t.logoSrc}
-              alt="vraelis"
+              alt="Vraelis"
               width={36}
               height={36}
               className="h-9 w-9 rounded-xl"

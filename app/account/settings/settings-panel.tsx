@@ -98,7 +98,7 @@ export function SettingsPanel({
     <div className="space-y-0 divide-y divide-white/[0.07]">
 
       {/* ── Profile ──────────────────────────────────────────────── */}
-      <Section title="Profile" description="How vraelis identifies and addresses you.">
+      <Section title="Profile" description="How Vraelis identifies and addresses you.">
         <Field label="Display name">
           <input
             type="text"
@@ -119,7 +119,7 @@ export function SettingsPanel({
             className={input}
           />
         </Field>
-        <Field label="What to remember" hint="Context vraelis should prioritise when recalling your work.">
+        <Field label="What to remember" hint="Context Vraelis should prioritise when recalling your work.">
           <textarea
             value={focusArea}
             onChange={(e) => setFocusArea(e.target.value)}
@@ -143,7 +143,7 @@ export function SettingsPanel({
       </Section>
 
       {/* ── Preferences ──────────────────────────────────────────── */}
-      <Section title="Preferences" description="Tune how vraelis surfaces and delivers context.">
+      <Section title="Preferences" description="Tune how Vraelis surfaces and delivers context.">
         <Field label="Summary style">
           <div className="flex gap-2">
             {(["concise", "balanced", "detailed"] as SummaryStyle[]).map((v) => (

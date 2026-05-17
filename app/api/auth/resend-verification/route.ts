@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   const existing = await getUserCredentialByEmail(email);
   if (existing) {
     return NextResponse.json(
-      { error: "That email already has a verified vraelis account. Sign in instead." },
+      { error: "That email already has a verified Vraelis account. Sign in instead." },
       { status: 409 },
     );
   }

@@ -1106,7 +1106,7 @@ function CheckoutModal({
     <BillingModalFrame
       kicker="Secure checkout"
       title={`Start ${plan.name}`}
-      subtitle={`You stay inside vraelis desktop while Stripe handles the payment form.`}
+      subtitle={`You stay inside Vraelis desktop while Stripe handles the payment form.`}
       error={error}
       onClose={onClose}
     >
@@ -1167,7 +1167,7 @@ function PaymentMethodModal({
     <BillingModalFrame
       kicker="Payment method"
       title="Update card"
-      subtitle="Card details go directly to Stripe and never pass through vraelis servers."
+      subtitle="Card details go directly to Stripe and never pass through Vraelis servers."
       error={error}
       onClose={onClose}
     >

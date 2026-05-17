@@ -12,7 +12,7 @@ import { BecomeContributorCard } from "./become-contributor-card";
 // Author label rule, in priority order:
 //   1. Snapshotted display_name on the piece (hardlocked at write
 //      time for approved contributors)
-//   2. Admin email or null author → "vraelis (OWNER)"
+//   2. Admin email or null author → "Vraelis (OWNER)"
 //   3. Bare email fallback (legacy / unapproved authors)
 function authorLabel(
   authorEmail: string | null,
@@ -21,7 +21,7 @@ function authorLabel(
   if (authorDisplayName && authorDisplayName.trim().length > 0) {
     return authorDisplayName;
   }
-  if (!authorEmail || isAdminEmail(authorEmail)) return "vraelis (OWNER)";
+  if (!authorEmail || isAdminEmail(authorEmail)) return "Vraelis (OWNER)";
   return authorEmail;
 }
 

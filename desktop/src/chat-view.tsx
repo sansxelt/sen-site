@@ -351,7 +351,7 @@ function buildMarkdownExport(thread: DesktopThread): string {
 }
 
 function draftKey(threadId: string): string {
-  return `vraelis.draft.${threadId}`;
+  return `Vraelis.draft.${threadId}`;
 }
 
 type DesktopPlanKey =
@@ -526,7 +526,7 @@ const ACTION_META: Record<LauncherActionId, LauncherActionMeta> = {
     shortLabel: "AU",
     section: "Intelligence",
     eyebrow: "Adaptive",
-    description: "Let vraelis choose the most useful framing and start from the strongest first move instead of waiting for perfect instructions.",
+    description: "Let Vraelis choose the most useful framing and start from the strongest first move instead of waiting for perfect instructions.",
     preview: "Good when the ask is messy and you want the assistant to decide whether to plan, write, analyze, or diagnose first.",
     cues: ["Balanced mode", "Good for fuzzy asks", "Apprentice and up"],
     requiredPlan: "apprentice",
@@ -547,7 +547,7 @@ const ACTION_META: Record<LauncherActionId, LauncherActionMeta> = {
     shortLabel: "SC",
     section: "Context",
     eyebrow: "Read what's here",
-    description: "Open the dropped files as working context and tell vraelis to summarize, compare, or inspect them immediately.",
+    description: "Open the dropped files as working context and tell Vraelis to summarize, compare, or inspect them immediately.",
     preview: "This is the best first click after dropping docs, code, screenshots, or mixed research into the composer.",
     cues: ["Attachment-aware", "Opens on drop", "Free"],
   },
@@ -1356,7 +1356,7 @@ export function DesktopChatView({
   const messages = useMemo(() => activeThread?.messages ?? [], [activeThread]);
   // v0.1.13 \u2014 Toolbar mode (the "PC copilot" / window-mode feature)
   // was deleted: it never worked well outside normal scale and offered
-  // no value over the floating vraelis Copilot. Hardcoded to false so
+  // no value over the floating Vraelis Copilot. Hardcoded to false so
   // any existing isCopilot conditionals collapse to the normal path.
   const isCopilot = false;
   const activeModel = useMemo(
@@ -2172,7 +2172,7 @@ export function DesktopChatView({
             };
           }
           case "create_api_key": {
-            const keyName = text("name") || "vraelis desktop";
+            const keyName = text("name") || "Vraelis desktop";
             const created = await createDesktopApiKey(session.token, keyName);
             return {
               result: JSON.stringify({
@@ -2413,7 +2413,7 @@ export function DesktopChatView({
           meta.tier_requested !== meta.tier_resolved
         ) {
           setPlanNotice(
-            `Your plan doesn't include ${meta.tier_requested} yet, so vraelis replied with ${meta.tier_resolved}.`,
+            `Your plan doesn't include ${meta.tier_requested} yet, so Vraelis replied with ${meta.tier_resolved}.`,
           );
         } else {
           setPlanNotice(null);
@@ -3004,7 +3004,7 @@ export function DesktopChatView({
     ],
   );
 
-  // Reset copilot mode on every launch — vraelis always opens in
+  // Reset copilot mode on every launch — Vraelis always opens in
   // normal chat mode, never sticky-stuck in toolbar mode from a
   // prior session. Runs once after preferences load.
   const copilotResetRef = useRef(false);
@@ -3184,7 +3184,7 @@ export function DesktopChatView({
             {/* v0.1.13 \u2014 Removed Export and Toolbar mode buttons.
                 Export had no obvious affordance (just dumps a .md file)
                 and Toolbar mode broke the layout at non-full scale plus
-                offered no value over the floating vraelis Copilot. */}
+                offered no value over the floating Vraelis Copilot. */}
             <ModelPicker tier={tier} onChange={setTier} allowedTiers={allowedTiers} />
           </div>
         </div>

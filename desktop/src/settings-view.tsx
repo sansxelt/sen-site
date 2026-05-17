@@ -47,7 +47,7 @@ export function DesktopSettingsView() {
             because Ctrl+Q is the most-asked-about behavior. */}
         <PrefSection
           label="Keyboard shortcuts"
-          help="The X button HIDES vraelis (it keeps running so reopening is instant). Use the shortcuts below to fully quit or revisit the splash."
+          help="The X button HIDES Vraelis (it keeps running so reopening is instant). Use the shortcuts below to fully quit or revisit the splash."
         >
           <div className="shortcut-list">
             <div className="shortcut-row">
@@ -58,7 +58,7 @@ export function DesktopSettingsView() {
               </div>
               <div className="shortcut-copy">
                 <strong>Force quit</strong>
-                <span>Closes vraelis entirely. Required to install pending updates.</span>
+                <span>Closes Vraelis entirely. Required to install pending updates.</span>
               </div>
             </div>
             <div className="shortcut-row">
@@ -126,7 +126,7 @@ export function DesktopSettingsView() {
 
         {/* v0.1.13 \u2014 Window mode setting removed. Toolbar modes never
             worked properly outside full-window scale (header text overlapped,
-            buttons collided), and the floating vraelis Copilot covers the
+            buttons collided), and the floating Vraelis Copilot covers the
             same use case. The window_mode preference defaults to "normal"
             and gets force-reset on every launch (chat-view.tsx). */}
         {/* v0.1.8 Capsule Rail — where the floating copilot lives.
@@ -135,7 +135,7 @@ export function DesktopSettingsView() {
             the OS taskbar/dock and is harder to reach. */}
         <PrefSection
           label="Copilot position"
-          help="Where the floating vraelis copilot capsule lives. Vertical edges (Right/Left) overlay your apps; Top docks like a menu bar."
+          help="Where the floating Vraelis copilot capsule lives. Vertical edges (Right/Left) overlay your apps; Top docks like a menu bar."
         >
           <div className="copilot-pos-wrap">
             <SegmentedControl<CopilotEdge>

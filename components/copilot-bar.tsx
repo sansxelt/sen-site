@@ -23,7 +23,7 @@ function stripGoMarker(text: string): { display: string; target: string | null }
 type Msg = { role: "user" | "assistant"; content: string };
 type Dock = "right" | "left" | "top" | "float";
 
-const DOCK_KEY = "vraelis.copilot.dock";
+const DOCK_KEY = "Vraelis.copilot.dock";
 
 export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname() ?? "/";
@@ -308,7 +308,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
         {messages.length === 0 ? (
           <div className="copilot-empty">
             <p>
-              Ask anything, about vraelis, this page, or wherever your
+              Ask anything, about Vraelis, this page, or wherever your
               head's at. I can also take you anywhere on the site.
             </p>
             <div className="copilot-mcp-card">

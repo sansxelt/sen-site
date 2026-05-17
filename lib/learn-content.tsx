@@ -13,7 +13,7 @@ import {
 } from "@/components/learn/article-blocks";
 import type { ReactNode } from "react";
 
-// vraelis Learn, content registry. Articles are typed objects with
+// Vraelis Learn, content registry. Articles are typed objects with
 // a render() function returning JSX, so authoring is just composing
 // blocks from components/learn/article-blocks. Schema is hierarchical:
 //
@@ -230,7 +230,7 @@ export const ARTICLES: Article[] = [
         <P>
           When people say <Bold>&quot;AI&quot;</Bold> in 2026, they almost always mean
           one specific thing: a <Bold>large language model</Bold> (LLM). The same
-          tech behind ChatGPT, Claude, Gemini, and yes, vraelis.
+          tech behind ChatGPT, Claude, Gemini, and yes, Vraelis.
         </P>
 
         <Diagram
@@ -290,12 +290,12 @@ export const ARTICLES: Article[] = [
         />
 
         <Callout tone="note" title="Next">
-          New to this? Try a simple prompt on vraelis, &quot;explain X like
+          New to this? Try a simple prompt on Vraelis, &quot;explain X like
           I&apos;m 12&quot;, and see what comes back. That&apos;s the fastest
           way to build intuition for what AI can and can&apos;t do.
         </Callout>
 
-        <TryItCTA text="Try vraelis free" />
+        <TryItCTA text="Try Vraelis free" />
       </>
     ),
   },
@@ -354,7 +354,7 @@ export const ARTICLES: Article[] = [
           latency in half.
         </Callout>
 
-        <H2>What vraelis does differently</H2>
+        <H2>What Vraelis does differently</H2>
         <BulletList
           items={[
             <><Bold>Two voice modes:</Bold> Dictate (talk → AI types) and Talk (full hands-free conversation).</>,
@@ -390,7 +390,7 @@ export const ARTICLES: Article[] = [
 
         <H2>1. Get an API key</H2>
         <P>
-          Sign up for vraelis and head to{" "}
+          Sign up for Vraelis and head to{" "}
           <CodeInline>/account/keys</CodeInline> to make one. Treat it like a
           password, don&apos;t commit it to git.
         </P>
@@ -410,7 +410,7 @@ export const ARTICLES: Article[] = [
   <pre id="reply" style="white-space: pre-wrap;"></pre>
 
   <script>
-    const KEY = "sk_your_api_key_here"; // your vraelis API key
+    const KEY = "sk_your_api_key_here"; // your Vraelis API key
     document.getElementById("send").onclick = async () => {
       const prompt = document.getElementById("prompt").value;
       const out = document.getElementById("reply");
@@ -465,14 +465,14 @@ export const ARTICLES: Article[] = [
           ]}
         />
 
-        <TryItCTA text="See vraelis's API docs" href="/account/keys" />
+        <TryItCTA text="See Vraelis's API docs" href="/account/keys" />
       </>
     ),
   },
 
   {
     slug: "VRAELIS-rest-api-quickstart",
-    title: "vraelis REST API, quickstart",
+    title: "Vraelis REST API, quickstart",
     excerpt:
       "Authenticate, send a chat request, stream a reply. Three steps. Copy-paste examples in JavaScript and Python.",
     topic: "api",
@@ -484,7 +484,7 @@ export const ARTICLES: Article[] = [
     render: () => (
       <>
         <P>
-          The vraelis API is a thin REST surface. One endpoint for chat,
+          The Vraelis API is a thin REST surface. One endpoint for chat,
           one for image generation, one for voice. Everything streams,
           everything uses bearer auth.
         </P>

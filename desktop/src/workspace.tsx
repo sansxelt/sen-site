@@ -98,7 +98,7 @@ export function Workspace({ session, onSignOut }: WorkspaceProps) {
 
   // Window mode shortcuts — Ctrl+Shift+N normal, Ctrl+Shift+T top,
   // Ctrl+Shift+L left, Ctrl+Shift+R right. Lets power users snap
-  // vraelis into a toolbar position alongside other apps without
+  // Vraelis into a toolbar position alongside other apps without
   // opening Preferences.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -194,13 +194,13 @@ function NavRail({
   return (
     <aside className="ws-nav">
       {/* v0.1.13 \u2014 renamed from "Capsule Rail" (internal codename)
-          to the user-facing "vraelis Copilot" with a clearer subtitle.
+          to the user-facing "Vraelis Copilot" with a clearer subtitle.
           Same prominent CTA \u2014 violet accent, pulsing dot \u2014 so it
           stays discoverable in the nav. */}
       <button
         type="button"
         className="ws-nav-copilot-cta"
-        title="Open the floating vraelis copilot \u2014 sits above every other window"
+        title="Open the floating Vraelis copilot \u2014 sits above every other window"
         onClick={() => {
           void invoke("show_copilot").catch(() => {});
           void invoke("position_copilot_window", { edge: "right", open: false }).catch(() => {});
@@ -210,7 +210,7 @@ function NavRail({
           <span className="ws-nav-copilot-cta-pulse" />
         </span>
         <span className="ws-nav-copilot-cta-text">
-          <span className="ws-nav-copilot-cta-title">vraelis Copilot</span>
+          <span className="ws-nav-copilot-cta-title">Vraelis Copilot</span>
           <span className="ws-nav-copilot-cta-sub">Always on, anywhere</span>
         </span>
       </button>
@@ -1199,7 +1199,7 @@ function AccountView({
     <div className="view view--account">
       <div className="view-head">
         <h1>Account</h1>
-        <p>How vraelis knows you. Used to personalize replies and the workspace.</p>
+        <p>How Vraelis knows you. Used to personalize replies and the workspace.</p>
       </div>
       <div className="view-body">
         {loading && <div className="view-loading">Loading…</div>}
@@ -1210,7 +1210,7 @@ function AccountView({
               label="Display name"
               value={displayName}
               onChange={setDisplayName}
-              placeholder="What should vraelis call you?"
+              placeholder="What should Vraelis call you?"
             />
             <EditableField
               label="Focus area"
@@ -1706,7 +1706,7 @@ function KeysView({ session }: { session: DesktopSession }) {
         <h1>API keys</h1>
         <p>
           Your active <code>sk_sen_…</code> keys. Create one to call the
-          vraelis API from scripts, agents, or other apps. The full secret
+          Vraelis API from scripts, agents, or other apps. The full secret
           is shown once at creation — we only store a hash after that.
         </p>
       </div>
@@ -1798,7 +1798,7 @@ function KeysView({ session }: { session: DesktopSession }) {
               <div className="usage-empty">
                 <div className="upgrade-cta-head">No API keys yet</div>
                 <div className="usage-empty-note">
-                  Create one above to start calling the vraelis API. Keys
+                  Create one above to start calling the Vraelis API. Keys
                   inherit your plan’s rate limits.
                 </div>
               </div>
@@ -1867,7 +1867,7 @@ function PreferencesView() {
       <div className="view view--preferences">
         <div className="view-head">
           <h1>Preferences</h1>
-          <p>How vraelis adapts to you.</p>
+          <p>How Vraelis adapts to you.</p>
         </div>
         <div className="view-body">
           <div className="view-loading">Loading…</div>
@@ -1889,7 +1889,7 @@ function PreferencesView() {
     <div className="view view--preferences">
       <div className="view-head">
         <h1>Preferences</h1>
-        <p>How vraelis adapts to you. Everything autosaves.</p>
+        <p>How Vraelis adapts to you. Everything autosaves.</p>
       </div>
 
       <div className="view-body">
@@ -1982,7 +1982,7 @@ function PreferencesView() {
         <PrefSectionGroup title="Window">
           <PrefSection
             label="Window mode"
-            help="Pin vraelis to a screen edge for interviews, recordings, study sessions. Toolbar modes float above other apps."
+            help="Pin Vraelis to a screen edge for interviews, recordings, study sessions. Toolbar modes float above other apps."
           >
             <SegmentedControl<DesktopPreferences["window_mode"]>
               value={prefs.window_mode}
@@ -2095,7 +2095,7 @@ function PreferencesView() {
           <div className="about-card">
             <div className="about-row">
               <span className="about-label">Brand</span>
-              <span className="about-value">vraelis · pronounced “sans-zul”</span>
+              <span className="about-value">Vraelis · pronounced “sans-zul”</span>
             </div>
             <div className="about-row">
               <span className="about-label">Engine</span>

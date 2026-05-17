@@ -154,13 +154,13 @@ export async function setupPaypalPlans(): Promise<PlanIdMap> {
     const plan = getPricingPlan(key);
     // One product per tier, reused for both monthly and yearly plans.
     const product = await createProduct(
-      `vraelis ${plan.name}`,
+      `Vraelis ${plan.name}`,
       plan.description,
     );
 
     const monthly = await createPlan({
       productId: product.id,
-      name:        `vraelis ${plan.name} (monthly)`,
+      name:        `Vraelis ${plan.name} (monthly)`,
       description: plan.description,
       priceUsd:    plan.monthlyValue ?? 0,
       cycle:       "monthly",
@@ -172,7 +172,7 @@ export async function setupPaypalPlans(): Promise<PlanIdMap> {
 
     const yearly = await createPlan({
       productId: product.id,
-      name:        `vraelis ${plan.name} (yearly)`,
+      name:        `Vraelis ${plan.name} (yearly)`,
       description: plan.description,
       priceUsd:    yearlyPrice,
       cycle:       "yearly",
@@ -217,7 +217,7 @@ export async function createPaypalSubscription(args: {
       plan_id: args.planId,
       subscriber: { email_address: args.userEmail },
       application_context: {
-        brand_name: "vraelis",
+        brand_name: "Vraelis",
         locale: "en-US",
         user_action: "SUBSCRIBE_NOW",
         shipping_preference: "NO_SHIPPING",

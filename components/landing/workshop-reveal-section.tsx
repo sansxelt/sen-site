@@ -23,7 +23,7 @@ const TABS = [
     label: "Files",
     accent: [168, 196, 255] as const,
     zone: "center" as const,
-    desc: "Drop PDFs, images, code, and screenshots into the thread. vraelis routes the right tool automatically.",
+    desc: "Drop PDFs, images, code, and screenshots into the thread. Vraelis routes the right tool automatically.",
   },
   {
     label: "Memory",
@@ -315,7 +315,7 @@ function WorkshopPanel({ activeTab }: { activeTab: number }) {
             ))}
           </div>
           <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.30)", fontFamily: "var(--font-geist-mono), monospace", letterSpacing: "0.07em" }}>
-            vraelis workshop
+            Vraelis workshop
           </span>
           <div style={{ display: "flex", gap: 4 }}>
             {TABS.slice(0, 4).map((t, i) => (

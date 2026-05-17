@@ -6,7 +6,7 @@ import {
   desktopWindowsInstallerPath,
 } from "@/lib/desktop-release";
 
-// Tauri updater manifest. Each installed vraelis desktop polls this
+// Tauri updater manifest. Each installed Vraelis desktop polls this
 // endpoint on startup; if the version here is newer than what's
 // installed, the updater downloads and replaces it.
 //
@@ -14,7 +14,7 @@ import {
 //   { version, notes, pub_date, platforms: { "<target>-<arch>": { signature, url } } }
 //
 // Updates ship signed with the matching private key the user generated
-// via `npm run tauri signer generate -- -w vraelis.key`. The pubkey
+// via `npm run tauri signer generate -- -w Vraelis.key`. The pubkey
 // goes into tauri.conf.json; the signature for each .msi.zip / .nsis.zip
 // goes here. Wire this to point at GitHub Releases or Cloudflare R2 once
 // you've uploaded the artifacts there.

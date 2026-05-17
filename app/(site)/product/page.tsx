@@ -146,9 +146,9 @@ const INTEGRATIONS: Integration[] = [
   { name: "Custom MCP", status: "live",  via: "MCP" },
 ];
 
-const SDK_SNIPPET = `import vraelis from "@vraelis/sdk";
+const SDK_SNIPPET = `import Vraelis from "@vraelis/sdk";
 
-const sx = new vraelis({ apiKey: process.env.VRAELIS_API_KEY });
+const sx = new Vraelis({ apiKey: process.env.VRAELIS_API_KEY });
 
 const stream = await sx.chat.completions.create({
   model: "vraelis-1",
@@ -252,7 +252,7 @@ export default function ProductPage() {
             transition={{ duration: 0.7, ease: EASE, delay: 0.3 }}
             style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)", color: "rgba(255,255,255,0.62)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}
           >
-            The technical view of every vraelis surface. Status, version,
+            The technical view of every Vraelis surface. Status, version,
             what it depends on, and how the API exposes it. For the
             consumer walkthrough, see the home page.
           </motion.p>

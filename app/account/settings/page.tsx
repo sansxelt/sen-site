@@ -6,7 +6,7 @@ import { SettingsPanel } from "./settings-panel";
 
 export const metadata: Metadata = {
   title: "Settings",
-  description: "Manage your vraelis account settings.",
+  description: "Manage your Vraelis account settings.",
 };
 
 export default async function SettingsPage() {

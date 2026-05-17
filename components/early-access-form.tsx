@@ -158,7 +158,7 @@ export function EarlyAccessForm({
         <textarea
           value={focusArea}
           onChange={(event) => setFocusArea(event.target.value)}
-          placeholder="What do you want vraelis to help you recover or remember?"
+          placeholder="What do you want Vraelis to help you recover or remember?"
           rows={4}
           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25"
         />

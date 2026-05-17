@@ -11,7 +11,7 @@ import {
   type CopilotEdge,
 } from "./api";
 
-// Floating edge copilot for vraelis v0.1.8 — Capsule Rail spec.
+// Floating edge copilot for Vraelis v0.1.8 — Capsule Rail spec.
 // Lives in its own Tauri window (label: "copilot"), borderless +
 // transparent + alwaysOnTop.
 //
@@ -58,7 +58,7 @@ const RAIL_ICONS: RailIconDef[] = [
   { intent: "main",     glyph: "\u26a1", label: "Ask",      hint: "Open the copilot \u2014 ask anything", minPlan: "free" },
   { intent: "commands", glyph: "\u2318", label: "Commands", hint: "Quick actions and command palette", minPlan: "free" },
   { intent: "attach",   glyph: "\ud83d\udcce", label: "Attach", hint: "Drag, paste, or pick a file / image / screenshot", minPlan: "apprentice" },
-  { intent: "context",  glyph: "\ud83e\udde0", label: "Context", hint: "What vraelis is using as context (MCP)", minPlan: "free" },
+  { intent: "context",  glyph: "\ud83e\udde0", label: "Context", hint: "What Vraelis is using as context (MCP)", minPlan: "free" },
   { intent: "voice",    glyph: "\ud83c\udf99\ufe0f", label: "Voice", hint: "Tap to talk \u2014 live transcription", minPlan: "apprentice" },
 ];
 
@@ -83,7 +83,7 @@ function planAllows(userPlan: string | null, minPlan: "free" | "apprentice" | "p
 
 // v0.1.11: Activity-state engine. Drives the "always alive" feel of
 // the rail — every visual cue (pulse, glow, particles) is keyed off
-// this single state so visuals can never lie about what vraelis is
+// this single state so visuals can never lie about what Vraelis is
 // doing. Auto-derived from existing flags (input/streaming/etc.) plus
 // a short ready-decay timer that holds the "done" highlight before
 // returning to idle.
@@ -106,7 +106,7 @@ type CopilotThread = {
   createdAt: number;
   updatedAt: number;
 };
-const COPILOT_THREADS_KEY = "vraelis.copilot.threads.v1";
+const COPILOT_THREADS_KEY = "Vraelis.copilot.threads.v1";
 const COPILOT_THREADS_LIMIT = 8;
 
 function loadCopilotThreads(): CopilotThread[] {
@@ -267,7 +267,7 @@ function OutputBlockView({
           type="button"
           className="fc-block-action"
           onClick={() => onRefine(blockText)}
-          title="Ask vraelis to refine this block"
+          title="Ask Vraelis to refine this block"
         >
           Refine
         </button>
@@ -286,13 +286,13 @@ function OutputBlockView({
   );
 }
 
-const DOCK_KEY = "vraelis.copilot.dock";
-const ALLOW_BOTTOM_KEY = "vraelis.copilot.allowBottom";
+const DOCK_KEY = "Vraelis.copilot.dock";
+const ALLOW_BOTTOM_KEY = "Vraelis.copilot.allowBottom";
 
 // v0.1.11: Live Mode consent. Tri-state stored in localStorage so we
 // only ever ask once per machine. Server-side sync deferred to v0.1.12
 // (the deep copilot pass) — for v0.1.11 the answer is purely local.
-const LIVE_MODE_KEY = "vraelis.copilot.liveMode";
+const LIVE_MODE_KEY = "Vraelis.copilot.liveMode";
 type LiveModeConsent = "unset" | "granted" | "denied";
 
 // v0.1.11: How often the foreground-window watcher polls. 800ms is
@@ -884,7 +884,7 @@ export function FloatingCopilot() {
           { role: "user", content: text },
           {
             role: "assistant",
-            content: "Sign in to vraelis in the main window to use the copilot.",
+            content: "Sign in to Vraelis in the main window to use the copilot.",
           },
         ]);
         setInput("");
@@ -1334,9 +1334,9 @@ export function FloatingCopilot() {
         <div className="fc-consent" role="dialog" aria-label="Enable Live Mode">
           <div className="fc-consent-card">
             <div className="fc-consent-eyebrow">Live Mode</div>
-            <h3 className="fc-consent-title">Should vraelis watch what you&rsquo;re working on?</h3>
+            <h3 className="fc-consent-title">Should Vraelis watch what you&rsquo;re working on?</h3>
             <p className="fc-consent-copy">
-              When enabled, vraelis reads only the <strong>title</strong> of the
+              When enabled, Vraelis reads only the <strong>title</strong> of the
               window you have focused (never its contents) so it can offer
               context-aware actions &mdash; &ldquo;Summarize this page&rdquo;
               when you&rsquo;re in a browser, &ldquo;Explain selection&rdquo;
@@ -1627,7 +1627,7 @@ export function FloatingCopilot() {
           <div className="fc-panel-head">
             <div className="fc-panel-title">
               <span className="fc-panel-dot" />
-              <span className="fc-panel-title-text">vraelis copilot</span>
+              <span className="fc-panel-title-text">Vraelis copilot</span>
               <span className={`fc-panel-state fc-panel-state--${liveState}`}>
                 {liveState === "thinking" ? "thinking" :
                  liveState === "streaming" ? "streaming" :

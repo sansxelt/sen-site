@@ -249,9 +249,9 @@ const authResult = NextAuth({
         // vraelis.ai family (apex + subdomains) so sign-out from
         // chat/platform can land back on the apex marketing site.
         const isSameOrigin = parsed.origin === baseUrl;
-        const isvraelisHost = /^https:\/\/([\w-]+\.)?vraelis\.ai$/.test(parsed.origin);
+        const isVraelisHost = /^https:\/\/([\w-]+\.)?Vraelis\.ai$/.test(parsed.origin);
 
-        if (isSameOrigin || isvraelisHost) {
+        if (isSameOrigin || isVraelisHost) {
           return url;
         }
       } catch {

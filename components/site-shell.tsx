@@ -88,7 +88,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               <Link href="/home" className="inline-flex shrink-0 items-center gap-2.5">
                 <Image
                   src={logoSrc}
-                  alt="vraelis"
+                  alt="Vraelis"
                   width={36}
                   height={36}
                   className="h-9 w-9 rounded-xl"
@@ -96,7 +96,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
                 />
                 <div>
                   <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
-                    vraelis
+                    Vraelis
                   </div>
                   <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
                     The AI workshop for makers
@@ -153,12 +153,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               <Link href="/home" className="flex items-center gap-2.5">
                 <Image
                   src={logoSrc}
-                  alt="vraelis"
+                  alt="Vraelis"
                   width={32}
                   height={32}
                   className="h-8 w-8 rounded-lg"
                 />
-                <span className="text-sm font-semibold text-white">vraelis</span>
+                <span className="text-sm font-semibold text-white">Vraelis</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
                 The adaptive AI platform. One AI, infinite shapes, a contextual
@@ -187,7 +187,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           </div>
 
           <div className="mt-10 border-t border-white/[0.06] pt-6 text-xs text-neutral-600">
-            © 2026 vraelis. All rights reserved.
+            © 2026 Vraelis. All rights reserved.
           </div>
         </div>
       </footer>

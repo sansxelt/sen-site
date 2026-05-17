@@ -22,7 +22,7 @@ export function DesktopMemoryView({ session: _session }: { session: DesktopSessi
           <div className="memory-sample-list">
             <div className="memory-sample-row memory-sample-row--placeholder">
               <span className="memory-sample-dot" />
-              <span className="memory-sample-text">Working on the vraelis desktop app</span>
+              <span className="memory-sample-text">Working on the Vraelis desktop app</span>
               <span className="memory-sample-when">example</span>
             </div>
             <div className="memory-sample-row memory-sample-row--placeholder">

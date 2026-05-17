@@ -19,7 +19,7 @@ import { getCreditBalance } from "../../lib/credits";
 
 export const metadata: Metadata = {
   title: "Overview",
-  description: "Your vraelis account overview.",
+  description: "Your Vraelis account overview.",
 };
 
 export default async function AccountPage() {

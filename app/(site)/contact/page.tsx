@@ -8,7 +8,7 @@ import { ContactChannels } from "./contact-channels";
 export const metadata: Metadata = {
   title: "Contact / Support",
   description:
-    "Contact vraelis for support, privacy questions, or early-access and team rollout conversations.",
+    "Contact Vraelis for support, privacy questions, or early-access and team rollout conversations.",
 };
 
 function readParam(
@@ -80,7 +80,7 @@ export default async function ContactPage({
               Tips for faster support
             </div>
             <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-200">
-              <p>1. Include the email address tied to your vraelis account.</p>
+              <p>1. Include the email address tied to your Vraelis account.</p>
               <p>
                 2. Mention whether the issue is auth, early access, billing, or
                 privacy-related.

@@ -8,7 +8,7 @@ import { WebChat } from "@/components/web-chat";
 import { LeiShell } from "@/components/lei-shell";
 
 export const metadata: Metadata = {
-  title: "vraelis, workspace",
+  title: "Vraelis, workspace",
   description: "Talk to vraelis-1 in your browser. Same brain as the desktop.",
 };
 

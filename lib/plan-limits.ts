@@ -32,7 +32,7 @@ const BOOST_KIND_TO_ADDONS: Record<BoostKind, BillingAddonKey[]> = {
   copilot: [],
 };
 
-// vraelis limit model, our take, not a copy of anyone else's.
+// Vraelis limit model, our take, not a copy of anyone else's.
 //
 //   - Free / Apprentice / Studio: hard weekly cap on chat requests +
 //     hard weekly cap on voice seconds. Hit it → blocked until the

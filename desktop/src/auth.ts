@@ -101,7 +101,7 @@ export async function beginSignInFlow(): Promise<string> {
   return request_id;
 }
 
-// Pulls request_id out of a vraelis://auth?request_id=xxx URL.
+// Pulls request_id out of a Vraelis://auth?request_id=xxx URL.
 export function extractRequestId(url: string): string | null {
   try {
     const parsed = new URL(url);
@@ -112,8 +112,8 @@ export function extractRequestId(url: string): string | null {
 }
 
 // Subscribes to deep-link callbacks. The callback runs every time the
-// OS hands vraelis:// back to us (one-time per sign-in).
-export async function onvraelisDeepLink(
+// OS hands Vraelis:// back to us (one-time per sign-in).
+export async function onVraelisDeepLink(
   handler: (requestId: string) => void,
 ): Promise<() => void> {
   const unlisten = await onOpenUrl((urls) => {

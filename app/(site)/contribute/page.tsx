@@ -9,15 +9,15 @@ import { ContributeForm } from "./contribute-form";
 
 // Public Learn-contributor application page. The four states:
 //   1. Anonymous → CTA to sign in (then comes back here)
-//   2. Admin → "you're already on the byline as vraelis (OWNER)"
+//   2. Admin → "you're already on the byline as Vraelis (OWNER)"
 //   3. Signed-in, no record (or rejected) → apply form
 //   4. Signed-in, pending → "we're reviewing"
 //   5. Signed-in, approved → byline locked, writing surface notice
 
 export const metadata: Metadata = {
-  title: "Write for vraelis",
+  title: "Write for Vraelis",
   description:
-    "Apply to contribute to the vraelis Learn library. Approved writers get a hardlocked byline.",
+    "Apply to contribute to the Vraelis Learn library. Approved writers get a hardlocked byline.",
 };
 
 export const dynamic = "force-dynamic";
@@ -34,7 +34,7 @@ export default async function ContributePage() {
       <section className="mx-auto max-w-3xl px-4 pt-6 pb-16 sm:px-6 sm:pt-8 sm:pb-24 lg:px-8 lg:pt-10">
         <header className="space-y-4">
           <div className="text-sm font-medium uppercase tracking-[0.2em] text-neutral-300">
-            Write for vraelis
+            Write for Vraelis
           </div>
           <h1 className="hx-gradient-text text-3xl font-semibold tracking-tight sm:text-5xl">
             Pitch a topic, get a hardlocked byline.
@@ -101,7 +101,7 @@ function AdminNotice() {
         You&apos;re an admin
       </div>
       <p className="mt-2 text-sm leading-6 text-neutral-200">
-        Admin pieces publish under the brand byline (vraelis · OWNER), no application needed.
+        Admin pieces publish under the brand byline (Vraelis · OWNER), no application needed.
       </p>
       <Link
         href="/account/content"

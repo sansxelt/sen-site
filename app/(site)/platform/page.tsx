@@ -29,7 +29,7 @@ export default async function PlatformPage() {
               className="landing-gradient-text"
               style={{ fontSize: "clamp(36px, 5vw, 60px)", fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.08, marginBottom: 20 }}
             >
-              vraelis for teams.
+              Vraelis for teams.
             </h1>
           </Reveal>
           <Reveal delay={0.12}>

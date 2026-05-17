@@ -61,9 +61,9 @@ type ChatMessage = {
 // Cross-component "thread is generating" tracker. WebChat writes;
 // chat-history rail + the floating back-to-chat pill read. Lives in
 // localStorage so a page reload doesn't lose state, and a
-// 'vraelis:flight:changed' event fires on every write so listeners
+// 'Vraelis:flight:changed' event fires on every write so listeners
 // re-render without polling.
-const FLIGHT_KEY = "vraelis.inflight.threads";
+const FLIGHT_KEY = "Vraelis.inflight.threads";
 type FlightMap = Record<string, { startedAt: number }>;
 function readFlight(): FlightMap {
   if (typeof window === "undefined") return {};
@@ -449,7 +449,7 @@ export function WebChat({
     [],
   );
   // Re-evaluate when the active thread changes (loaded a different
-  // chat) or when the picker fires vraelis:project:changed for the
+  // chat) or when the picker fires Vraelis:project:changed for the
   // current thread.
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -462,9 +462,9 @@ export function WebChat({
       const detail = (e as CustomEvent<string | null>).detail ?? null;
       void fetchAttachedProject(detail);
     };
-    window.addEventListener("vraelis:project:changed", onProjectChanged);
+    window.addEventListener("Vraelis:project:changed", onProjectChanged);
     return () =>
-      window.removeEventListener("vraelis:project:changed", onProjectChanged);
+      window.removeEventListener("Vraelis:project:changed", onProjectChanged);
   }, [fetchAttachedProject]);
 
   // v0.1.16, Pre-fill input from ?prompt= so the home page teaser
@@ -499,8 +499,8 @@ export function WebChat({
       setInput("");
       setChatError(null);
     };
-    window.addEventListener("vraelis:new-chat", onNewChat);
-    return () => window.removeEventListener("vraelis:new-chat", onNewChat);
+    window.addEventListener("Vraelis:new-chat", onNewChat);
+    return () => window.removeEventListener("Vraelis:new-chat", onNewChat);
   }, []);
 
   // v0.2.0 phase H — when the user picks a project mid-thread,
@@ -522,13 +522,13 @@ export function WebChat({
         body: JSON.stringify({ project_id: detail }),
       }).catch(() => {});
     };
-    window.addEventListener("vraelis:project:changed", onProjectChanged);
+    window.addEventListener("Vraelis:project:changed", onProjectChanged);
     return () =>
-      window.removeEventListener("vraelis:project:changed", onProjectChanged);
+      window.removeEventListener("Vraelis:project:changed", onProjectChanged);
   }, []);
 
   // v0.2.0 phase G+ — pinned-prompt run-as-Duel. The project panel
-  // dispatches vraelis:duel-prompt with the prompt content; we
+  // dispatches Vraelis:duel-prompt with the prompt content; we
   // force duel mode on (so the toggle visibly reflects what's
   // running) and fire the duel immediately, no confirmation step.
   useEffect(() => {
@@ -542,9 +542,9 @@ export function WebChat({
       });
       void sendDuelRef.current?.(prompt);
     };
-    window.addEventListener("vraelis:duel-prompt", onDuelPrompt);
+    window.addEventListener("Vraelis:duel-prompt", onDuelPrompt);
     return () =>
-      window.removeEventListener("vraelis:duel-prompt", onDuelPrompt);
+      window.removeEventListener("Vraelis:duel-prompt", onDuelPrompt);
   }, []);
 
   useEffect(() => {
@@ -726,12 +726,12 @@ export function WebChat({
   // was overkill for 95% of conversations. The compare flow is
   // valuable when the user actually wants to compare; otherwise
   // it's just two replies + a Pick UI on a one-line answer.
-  // The old localStorage key (vraelis.duelMode) is left orphaned;
+  // The old localStorage key (Vraelis.duelMode) is left orphaned;
   // browsers clean stale keys, no migration needed.
 
   // v0.2.0 phase G+ — weekly usage snapshot for monetization hooks
   // (low-chat banner, winner-moment upsell, "Liking Duel?" copy).
-  // Refreshes at mount + on every vraelis:threads:changed event,
+  // Refreshes at mount + on every Vraelis:threads:changed event,
   // which fires after each send/duel — so the numbers stay close
   // to live without us building a separate refresh path.
   type WeeklyBucket = { used: number; cap: number | null; lifted: boolean };
@@ -766,10 +766,10 @@ export function WebChat({
     };
     void refresh();
     const onChanged = () => void refresh();
-    window.addEventListener("vraelis:threads:changed", onChanged);
+    window.addEventListener("Vraelis:threads:changed", onChanged);
     return () => {
       cancelled = true;
-      window.removeEventListener("vraelis:threads:changed", onChanged);
+      window.removeEventListener("Vraelis:threads:changed", onChanged);
     };
   }, []);
 
@@ -1229,7 +1229,7 @@ export function WebChat({
     // knows the user was active recently and shouldn't get auto-
     // bumped to a new chat.
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("vraelis.lastActivity", String(Date.now()));
+      window.localStorage.setItem("Vraelis.lastActivity", String(Date.now()));
     }
     // v0.1.16 r3+, track the sending-thread context. Tricky case:
     // first send in a NEW chat captures threadId=null, then the
@@ -1380,7 +1380,7 @@ export function WebChat({
           url.searchParams.set("thread", echoedThreadId);
           url.searchParams.delete("new");
           window.history.replaceState({}, "", url.pathname + url.search);
-          window.dispatchEvent(new CustomEvent("vraelis:threads:changed"));
+          window.dispatchEvent(new CustomEvent("Vraelis:threads:changed"));
         }
       }
 
@@ -1393,7 +1393,7 @@ export function WebChat({
         const flight = readFlight();
         flight[flightThreadId] = { startedAt: Date.now() };
         window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-        window.dispatchEvent(new CustomEvent("vraelis:flight:changed"));
+        window.dispatchEvent(new CustomEvent("Vraelis:flight:changed"));
       }
 
       // Surface plan downgrade if the server picked a lower tier
@@ -1774,7 +1774,7 @@ export function WebChat({
       const isNetworkErr =
         err instanceof TypeError && /failed to fetch|networkerror/i.test(err.message);
       const msg = isNetworkErr
-        ? "Couldn't reach vraelis. Check your connection and try again."
+        ? "Couldn't reach Vraelis. Check your connection and try again."
         : err instanceof Error
         ? err.message
         : "Chat failed.";
@@ -1809,15 +1809,15 @@ export function WebChat({
           const flight = readFlight();
           delete flight[flightId];
           window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-          window.dispatchEvent(new CustomEvent("vraelis:flight:changed"));
+          window.dispatchEvent(new CustomEvent("Vraelis:flight:changed"));
         }
-        window.dispatchEvent(new CustomEvent("vraelis:threads:changed"));
+        window.dispatchEvent(new CustomEvent("Vraelis:threads:changed"));
         // The server-side AI title regen runs AFTER the stream ends
         // (cheap Haiku call). Fire a second refetch a few seconds
         // later so the rail picks up the new title without the user
         // having to reload or refocus the tab.
         window.setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("vraelis:threads:changed"));
+          window.dispatchEvent(new CustomEvent("Vraelis:threads:changed"));
         }, 3500);
       }
     }
@@ -2070,7 +2070,7 @@ export function WebChat({
             url.searchParams.set("thread", echoedThreadId);
             url.searchParams.delete("new");
             window.history.replaceState({}, "", url.pathname + url.search);
-            window.dispatchEvent(new CustomEvent("vraelis:threads:changed"));
+            window.dispatchEvent(new CustomEvent("Vraelis:threads:changed"));
           }
         }
         if (!res.ok || !res.body) {
@@ -2180,7 +2180,7 @@ export function WebChat({
             err instanceof TypeError &&
             /failed to fetch|networkerror/i.test(err.message);
           const msg = isNetworkErr
-            ? "Couldn't reach vraelis. Check your connection and try again."
+            ? "Couldn't reach Vraelis. Check your connection and try again."
             : err instanceof Error
               ? err.message
               : "Duel failed.";
@@ -2235,7 +2235,7 @@ export function WebChat({
         setPhaseLabel(null);
         void lei.refreshBalance();
         if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("vraelis:threads:changed"));
+          window.dispatchEvent(new CustomEvent("Vraelis:threads:changed"));
         }
       }
     },
@@ -2261,18 +2261,18 @@ export function WebChat({
   const DUEL_UPSELL_AFTER = 3;
   const [duelPickCount, setDuelPickCount] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
-    const raw = window.sessionStorage.getItem("vraelis.duelPickCount");
+    const raw = window.sessionStorage.getItem("Vraelis.duelPickCount");
     const n = raw ? Number.parseInt(raw, 10) : 0;
     return Number.isFinite(n) ? n : 0;
   });
   const [duelUpsellDismissed, setDuelUpsellDismissed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem("vraelis.duelUpsellDismissed") === "1";
+    return window.sessionStorage.getItem("Vraelis.duelUpsellDismissed") === "1";
   });
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.sessionStorage.setItem(
-      "vraelis.duelPickCount",
+      "Vraelis.duelPickCount",
       String(duelPickCount),
     );
   }, [duelPickCount]);
@@ -2293,7 +2293,7 @@ export function WebChat({
   const dismissDuelUpsell = () => {
     setDuelUpsellDismissed(true);
     if (typeof window !== "undefined") {
-      window.sessionStorage.setItem("vraelis.duelUpsellDismissed", "1");
+      window.sessionStorage.setItem("Vraelis.duelUpsellDismissed", "1");
     }
     trackClientEvent("duel_upsell_dismissed");
   };
@@ -2326,7 +2326,7 @@ export function WebChat({
       // for OTHER projects don't increment by accident.
       if (typeof window !== "undefined") {
         window.dispatchEvent(
-          new CustomEvent("vraelis:duel-pick", {
+          new CustomEvent("Vraelis:duel-pick", {
             detail: { side, projectId: getActiveProjectId() },
           }),
         );
@@ -2462,7 +2462,7 @@ export function WebChat({
           const flight = readFlight();
           delete flight[tid];
           window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-          window.dispatchEvent(new CustomEvent("vraelis:flight:changed"));
+          window.dispatchEvent(new CustomEvent("Vraelis:flight:changed"));
         }
       }
     }
@@ -2536,7 +2536,7 @@ export function WebChat({
     setChatError(null);
     setImageRetry(null);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("vraelis.lastActivity", String(Date.now()));
+      window.localStorage.setItem("Vraelis.lastActivity", String(Date.now()));
     }
 
     // Mark the thread (or the to-be-created one) as in-flight so the
@@ -2548,14 +2548,14 @@ export function WebChat({
       const flight = readFlight();
       flight[id] = { startedAt: Date.now() };
       window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-      window.dispatchEvent(new CustomEvent("vraelis:flight:changed"));
+      window.dispatchEvent(new CustomEvent("Vraelis:flight:changed"));
     };
     const clearFlight = (id: string | null) => {
       if (typeof window === "undefined" || !id) return;
       const flight = readFlight();
       delete flight[id];
       window.localStorage.setItem(FLIGHT_KEY, JSON.stringify(flight));
-      window.dispatchEvent(new CustomEvent("vraelis:flight:changed"));
+      window.dispatchEvent(new CustomEvent("Vraelis:flight:changed"));
     };
     if (tidAtStart) writeFlight(tidAtStart);
 
@@ -2595,7 +2595,7 @@ export function WebChat({
           url.searchParams.set("thread", echoedThreadId);
           url.searchParams.delete("new");
           window.history.replaceState({}, "", url.pathname + url.search);
-          window.dispatchEvent(new CustomEvent("vraelis:threads:changed"));
+          window.dispatchEvent(new CustomEvent("Vraelis:threads:changed"));
           // Hop the in-flight flag onto the now-known id.
           writeFlight(echoedThreadId);
         }
@@ -2636,7 +2636,7 @@ export function WebChat({
       // Server already persisted the assistant turn, fire the rail
       // refresh so the title gen / sidebar count picks it up.
       if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("vraelis:threads:changed"));
+        window.dispatchEvent(new CustomEvent("Vraelis:threads:changed"));
       }
     } catch (err) {
       const aborted =
@@ -3050,7 +3050,7 @@ export function WebChat({
         )}
         {showEmpty ? (
           <div className="webchat-empty">
-            <div className="webchat-empty-mark">vraelis · workshop</div>
+            <div className="webchat-empty-mark">Vraelis · workshop</div>
             <h2>What are you making?</h2>
             <p>
               Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
@@ -3108,7 +3108,7 @@ export function WebChat({
                 "Help me debug this React state issue",
                 "Summarize what's in this PDF",
                 "Brainstorm 5 names for my side project",
-                "Generate an image of a neon vraelis logo",
+                "Generate an image of a neon Vraelis logo",
               ].map((suggestion) => (
                 <button
                   key={suggestion}
@@ -3704,7 +3704,7 @@ function WebVoiceOverlay({
     }
   } else {
     status = "Tap the orb to start";
-    subStatus = "vraelis will listen, then talk back. Tap again to interrupt.";
+    subStatus = "Vraelis will listen, then talk back. Tap again to interrupt.";
   }
 
   // Reactive scale for the orb based on real audio level. Capped so

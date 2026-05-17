@@ -16,7 +16,7 @@ const TABLE = "email_broadcasts";
 const PROFILES = "user_profiles";
 const SUBSCRIPTIONS = "account_subscriptions";
 
-const FROM_BROADCAST = "vraelis <hello@vraelis.ai>";
+const FROM_BROADCAST = "Vraelis <hello@vraelis.ai>";
 
 export type BroadcastAudience = "all" | "free" | "paid";
 
@@ -261,7 +261,7 @@ export function broadcastBodyToHtml(md: string): string {
   return `<div style="font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-size:15px;color:#0a0a0a;max-width:580px;margin:0 auto;padding:24px;">
 ${blocks.join("\n")}
 <p style="margin-top:32px;font-size:11px;color:#737373;">
-Sent from vraelis. <a href="https://vraelis.ai" style="color:#737373;">vraelis.ai</a>
+Sent from Vraelis. <a href="https://vraelis.ai" style="color:#737373;">vraelis.ai</a>
 </p>
 </div>`;
 }

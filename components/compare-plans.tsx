@@ -59,7 +59,7 @@ const QUESTIONS = [
     key: "api" as const,
     label: "Need API access for custom builds?",
     options: [
-      { value: "no",    title: "Not really",      desc: "Just using it inside vraelis" },
+      { value: "no",    title: "Not really",      desc: "Just using it inside Vraelis" },
       { value: "maybe", title: "Maybe someday",   desc: "I could see wiring it into things later" },
       { value: "yes",   title: "Yes, essential", desc: "I'm plugging it into my own apps / workflows" },
     ],

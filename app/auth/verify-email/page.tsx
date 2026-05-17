@@ -4,7 +4,7 @@ import { SignupWaitingPoller } from "../../../components/signup-waiting-poller";
 
 export const metadata = {
   title: "Check your email",
-  description: "Confirm your vraelis account by clicking the link we just sent.",
+  description: "Confirm your Vraelis account by clicking the link we just sent.",
 };
 
 type SearchParams = {

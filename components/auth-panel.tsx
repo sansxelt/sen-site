@@ -356,7 +356,7 @@ export function AuthPanel({
             text clip). */}
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-4">
           <h3 className="text-2xl font-semibold tracking-tight text-white">
-            Continue into vraelis.
+            Continue into Vraelis.
           </h3>
           {!onModeChange && <ModeSwitcher mode={mode} onModeChange={setMode} />}
         </div>
@@ -390,7 +390,7 @@ export function AuthPanel({
           </div>
           <p className="mt-2 text-sm leading-6 text-neutral-400">
             {mode === "signup"
-              ? "Password-based account on vraelis."
+              ? "Password-based account on Vraelis."
               : "Use your email and password."}
           </p>
 

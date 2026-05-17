@@ -25,7 +25,7 @@ function authorName(
   if (authorDisplayName && authorDisplayName.trim().length > 0) {
     return authorDisplayName;
   }
-  if (!authorEmail || isAdminEmail(authorEmail)) return "vraelis (OWNER)";
+  if (!authorEmail || isAdminEmail(authorEmail)) return "Vraelis (OWNER)";
   return authorEmail;
 }
 
@@ -50,7 +50,7 @@ export async function generateMetadata({
       description: piece.excerpt ?? undefined,
       type: "article",
       url,
-      siteName: "vraelis",
+      siteName: "Vraelis",
       publishedTime: piece.published_at ?? undefined,
       modifiedTime: piece.updated_at,
       authors: [authorName(piece.author_email, piece.author_display_name)],
@@ -92,7 +92,7 @@ export default async function LearnPiecePage({
     },
     publisher: {
       "@type": "Organization",
-      name: "vraelis",
+      name: "Vraelis",
       url: "https://www.vraelis.ai",
     },
     mainEntityOfPage: {

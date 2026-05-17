@@ -156,18 +156,18 @@ function _RecentChats({ compact = false }: { compact?: boolean }) {
     };
     void load();
 
-    // Refresh signals: chat sends fire 'vraelis:threads:changed';
+    // Refresh signals: chat sends fire 'Vraelis:threads:changed';
     // tab focus picks up threads created on another device.
     const onChanged = () => { void load(); };
     const onFocus = () => { void load(); };
     if (typeof window !== "undefined") {
-      window.addEventListener("vraelis:threads:changed", onChanged);
+      window.addEventListener("Vraelis:threads:changed", onChanged);
       window.addEventListener("focus", onFocus);
     }
     return () => {
       cancelled = true;
       if (typeof window !== "undefined") {
-        window.removeEventListener("vraelis:threads:changed", onChanged);
+        window.removeEventListener("Vraelis:threads:changed", onChanged);
         window.removeEventListener("focus", onFocus);
       }
     };
@@ -408,9 +408,9 @@ export function DashboardNav({
       // inherit the last project from localStorage. Must dispatch
       // project:changed (not just remove from storage) so the strip
       // in WebChat clears immediately without waiting for a remount.
-      window.localStorage.removeItem("vraelis.activeProjectId");
-      window.dispatchEvent(new CustomEvent("vraelis:project:changed", { detail: null }));
-      window.dispatchEvent(new CustomEvent("vraelis:new-chat"));
+      window.localStorage.removeItem("Vraelis.activeProjectId");
+      window.dispatchEvent(new CustomEvent("Vraelis:project:changed", { detail: null }));
+      window.dispatchEvent(new CustomEvent("Vraelis:new-chat"));
     }
     router.replace("/app?new=1");
   };
@@ -506,9 +506,9 @@ export function DashboardNav({
         {/* Logo */}
         <div className="flex shrink-0 items-center justify-between border-b py-3" style={{ borderColor: "var(--vrl-border)" }}>
           <Link href="/app" className="flex items-center gap-2.5">
-            <Image src={logoSrc} alt="vraelis" width={36} height={36} className="h-9 w-9 shrink-0 rounded-xl" priority />
+            <Image src={logoSrc} alt="Vraelis" width={36} height={36} className="h-9 w-9 shrink-0 rounded-xl" priority />
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold text-white">vraelis</span>
+              <span className="text-sm font-semibold text-white">Vraelis</span>
               <span
                 className="text-[10px] font-semibold uppercase tracking-[0.18em]"
                 style={{ color: zone === "platform" ? "#FFAC33" : "#A78BFA" }}
@@ -583,9 +583,9 @@ export function DashboardNav({
             </button>
           )}
           <Link href="/app" className="flex items-center gap-2">
-            <Image src={logoSrc} alt="vraelis" width={32} height={32} className="h-8 w-8 rounded-xl" priority />
+            <Image src={logoSrc} alt="Vraelis" width={32} height={32} className="h-8 w-8 rounded-xl" priority />
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold text-white">vraelis</span>
+              <span className="text-sm font-semibold text-white">Vraelis</span>
               <span
                 className="text-[8.5px] font-semibold uppercase tracking-[0.18em]"
                 style={{ color: zone === "platform" ? "#FFAC33" : "#A78BFA" }}
