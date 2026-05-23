@@ -63,10 +63,8 @@ type SiteNavLink = {
 // drawer for signed-in users). Contact is back in the row by user
 // request.
 const primaryLinks: SiteNavLink[] = [
-  { href: "/product", label: "Product" },
   { href: "/learn", label: "Learn" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Desktop", authOnly: true },
   { href: "/contact", label: "Contact" },
 ];
 

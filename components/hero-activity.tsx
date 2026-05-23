@@ -2111,17 +2111,6 @@ export function HeroActivity({ isSignedIn }: { isSignedIn: boolean }) {
           )}
         </div>
 
-        {/* In-development signal, sits under the CTAs on the left column
-            so it rides with the hero text/buttons, not the preview panel. */}
-        <div className="mt-5 flex">
-          <div className="inline-flex max-w-full items-center gap-2 whitespace-nowrap rounded-full border border-amber-300/20 bg-amber-300/[0.06] px-3 py-1.5 text-[11px] font-medium text-amber-100/90 sm:text-xs">
-            <span className="relative flex h-1.5 w-1.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300/60" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
-            </span>
-            <span className="truncate">In development, being built in the open</span>
-          </div>
-        </div>
 
       </div>
 
