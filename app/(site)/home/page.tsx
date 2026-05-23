@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Glasses3D } from "@/components/glasses/glasses-3d";
-import { SignUpCard } from "@/components/glasses/signup-card";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -253,7 +252,7 @@ export default function HomePage() {
           <rect width="100%" height="100%" fill="url(#grid)" />
         </svg>
 
-        <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(40px,6vw,80px)", alignItems: "center", position: "relative" }} className="vra-hero-grid">
+        <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(40px,6vw,80px)", alignItems: "center", position: "relative", zIndex: 1 }} className="vra-hero-grid">
           {/* left */}
           <div>
             <h1 style={{ fontFamily: T.sans, fontSize: "clamp(2.75rem,5.6vw,5rem)", fontWeight: 500, color: T.fg1, letterSpacing: "-0.035em", lineHeight: 1.02, marginBottom: 28 }}>
@@ -267,16 +266,9 @@ export default function HomePage() {
             </a>
           </div>
 
-          {/* right — signup card */}
-          <div>
-            <SignUpCard />
-          </div>
-        </div>
-
-        {/* glasses 3D behind the hero, blurred */}
-        <div aria-hidden style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.12, filter: "blur(1px)", pointerEvents: "none", zIndex: 0 }}>
-          <div style={{ width: "min(700px, 80vw)" }}>
-            <Glasses3D bare />
+          {/* right — 3D glasses */}
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <Glasses3D />
           </div>
         </div>
       </section>

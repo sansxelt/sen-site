@@ -1,20 +1,11 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { auth } from "../auth";
 import { isAdminEmail } from "../lib/admin";
 import { getSignInPath } from "../lib/auth-ui";
-import { getZone } from "../lib/zone";
 import { AccountDropdown } from "./account-dropdown";
 import { MobileNav } from "./mobile-nav";
 import { ZoneDropdown } from "./zone-dropdown";
-
-// V chevron logo per host zone.
-const ZONE_LOGO: Record<"apex" | "chat" | "platform", string> = {
-  apex: "/logo-violet.svg",
-  chat: "/logo-cyan.svg",
-  platform: "/logo-amber.svg",
-};
 
 const footerGroups = [
   {
@@ -63,19 +54,16 @@ type SiteNavLink = {
 // drawer for signed-in users). Contact is back in the row by user
 // request.
 const primaryLinks: SiteNavLink[] = [
-  { href: "/product", label: "Product" },
   { href: "/learn", label: "Learn" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/download", label: "Desktop", authOnly: true },
   { href: "/contact", label: "Contact" },
 ];
 
 export async function SiteShell({ children }: { children: ReactNode }) {
-  const [session, zone] = await Promise.all([auth(), getZone()]);
+  const session = await auth();
   const userEmail = session?.user?.email ?? "";
   const signedIn = Boolean(userEmail);
   const isAdmin = isAdminEmail(userEmail || null);
-  const logoSrc = ZONE_LOGO[zone];
 
   return (
     <div className="relative flex min-h-screen flex-col bg-neutral-950 text-neutral-100" style={{ overflowX: "clip" }}>
@@ -86,21 +74,11 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between gap-4">
             <div className="flex lg:flex-1 lg:justify-start">
               <Link href="/home" className="inline-flex shrink-0 items-center gap-2.5">
-                <Image
-                  src={logoSrc}
-                  alt="Vraelis"
-                  width={36}
-                  height={36}
-                  className="h-9 w-9 rounded-xl"
-                  priority
-                />
-                <div>
-                  <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
-                    Vraelis
-                  </div>
-                  <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
-                    The AI workshop for makers
-                  </div>
+                <div style={{ width: 36, height: 36, background: "#000", borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+                  <div style={{ width: "100%", height: "100%", background: "#fff", clipPath: "polygon(14% 23%, 17% 19%, 33% 19%, 25% 32%, 50% 55%, 75% 32%, 67% 19%, 83% 19%, 86% 23%, 50% 82%)" }} />
+                </div>
+                <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
+                  Vraelis
                 </div>
               </Link>
             </div>
@@ -151,13 +129,9 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <div className="grid gap-10 sm:grid-cols-[1fr_auto] lg:grid-cols-[1.4fr_repeat(3,auto)] lg:gap-16">
             <div className="flex flex-col gap-4">
               <Link href="/home" className="flex items-center gap-2.5">
-                <Image
-                  src={logoSrc}
-                  alt="Vraelis"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8 rounded-lg"
-                />
+                <div style={{ width: 32, height: 32, background: "#000", borderRadius: 6, flexShrink: 0, overflow: "hidden" }}>
+                  <div style={{ width: "100%", height: "100%", background: "#fff", clipPath: "polygon(14% 23%, 17% 19%, 33% 19%, 25% 32%, 50% 55%, 75% 32%, 67% 19%, 83% 19%, 86% 23%, 50% 82%)" }} />
+                </div>
                 <span className="text-sm font-semibold text-white">Vraelis</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
