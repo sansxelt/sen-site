@@ -116,6 +116,18 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
     }
     glasses.add(makeStemCameras(-1), makeStemCameras(1));
 
+    // Bone-conduction speaker — sits on the inner stem near the temple.
+    // Cyan to distinguish from cameras (white) and mics (no longer shown).
+    function makeSpeaker(sign: number) {
+      const dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.07, 12, 12),
+        new THREE.MeshBasicMaterial({ color: 0x5CE5D5 })
+      );
+      dot.position.set(sign * 2.85, 0.18, -0.2);
+      return dot;
+    }
+    glasses.add(makeSpeaker(-1), makeSpeaker(1));
+
     const grid = new THREE.GridHelper(10, 10, 0x5A6478, 0x3D4659);
     grid.position.y = -2.2;
     (grid.material as THREE.Material).transparent = true;
