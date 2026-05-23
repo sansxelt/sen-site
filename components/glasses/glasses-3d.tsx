@@ -122,23 +122,28 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
         new THREE.SphereGeometry(0.07, 12, 12),
         new THREE.MeshBasicMaterial({ color: 0x5CE5D5 })
       );
-      dot.position.set(sign * 2.85, 0.18, -1.5);
+      dot.position.set(sign * 2.85, 0.16, -1.5);
       return dot;
     }
     glasses.add(makeSpeaker(-1), makeSpeaker(1));
 
-    // Animated sound wave bars — spread along stem z-axis at speaker position.
-    const waveMat = new THREE.MeshBasicMaterial({ color: 0x5CE5D5, transparent: true, opacity: 0.55 });
-    const waveBars: THREE.Mesh[] = [];
-    const WAVE_COUNT = 10;
+    // Animated sound wave — thin vertical Line segments outside each stem,
+    // matching the wireframe/phosphor aesthetic.
+    const waveLineMat = new THREE.LineBasicMaterial({ color: 0x5CE5D5, transparent: true, opacity: 0.55 });
+    const WAVE_COUNT = 9;
+    const waveGeos: THREE.BufferGeometry[] = [];
 
     function makeSoundWave(sign: number) {
       const group = new THREE.Group();
       for (let i = 0; i < WAVE_COUNT; i++) {
-        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.04), waveMat);
-        bar.position.set(sign * 2.85, 0.18, -1.5 + (i - WAVE_COUNT / 2) * 0.13);
-        group.add(bar);
-        waveBars.push(bar);
+        const geo = new THREE.BufferGeometry();
+        const z = -1.5 + (i - (WAVE_COUNT - 1) / 2) * 0.15;
+        const x = sign * 3.15; // float just outside the stem
+        const pos = new Float32Array([x, 0.1, z,  x, 0.28, z]);
+        geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        const line = new THREE.Line(geo, waveLineMat);
+        group.add(line);
+        waveGeos.push(geo);
       }
       return group;
     }
@@ -160,11 +165,13 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
       glasses.rotation.y += (targetRot.y - glasses.rotation.y) * 0.05;
       glasses.rotation.x += (targetRot.x - glasses.rotation.x) * 0.05;
 
-      // Animate wave bars — each bar scales vertically like an audio spectrum.
-      waveBars.forEach((bar, idx) => {
+      // Animate wave — update top vertex y of each Line segment.
+      waveGeos.forEach((geo, idx) => {
         const i = idx % WAVE_COUNT;
-        const h = 0.08 + Math.abs(Math.sin(t * 5 + i * 0.7)) * 0.28 + Math.abs(Math.sin(t * 3.1 + i * 1.3)) * 0.12;
-        bar.scale.y = h / 0.12;
+        const h = 0.06 + Math.abs(Math.sin(t * 5.5 + i * 0.75)) * 0.28 + Math.abs(Math.sin(t * 3.1 + i * 1.5)) * 0.1;
+        const arr = geo.attributes.position.array as Float32Array;
+        arr[4] = 0.1 + h;
+        geo.attributes.position.needsUpdate = true;
       });
 
       renderer.render(scene, camera);
