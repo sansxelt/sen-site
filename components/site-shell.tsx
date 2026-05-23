@@ -54,7 +54,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
       <header style={{
         position: "fixed", inset: "0 0 auto 0", zIndex: 50,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center",
         padding: "0 clamp(20px,4vw,64px)",
         height: 64,
         background: "rgba(10,15,24,0.85)",
@@ -67,7 +67,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           vraelis<span style={{ color: "#5CE5D5" }}>.</span>
         </Link>
 
-        {/* Center nav */}
+        {/* Center nav — truly centered via grid */}
         <nav style={{ display: "flex", alignItems: "center", gap: 24 }} className="vra-nav-desktop">
           {primaryLinks.filter((l) => !l.authOnly || signedIn).map((link) => (
             <Link
@@ -82,7 +82,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         </nav>
 
         {/* Right side */}
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 18, justifyContent: "flex-end" }}>
           <MobileNav
             links={primaryLinks.filter((l) => !l.authOnly || signedIn)}
             signedIn={signedIn}

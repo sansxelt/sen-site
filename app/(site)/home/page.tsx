@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Glasses3D } from "@/components/glasses/glasses-3d";
-import { SignUpCard } from "@/components/glasses/signup-card";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -264,10 +263,9 @@ export default function HomePage() {
         <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 50% 60% at 75% 50%, rgba(92,229,213,0.04) 0%, transparent 70%)" }} />
 
         {/* Foreground */}
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1320, margin: "0 auto", width: "100%", padding: `clamp(80px,11vw,144px) ${gutter}`, display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,0.9fr)", gap: "clamp(40px,6vw,88px)", alignItems: "center" }} className="vra-hero-grid">
-          {/* LEFT — type */}
-          <div>
-            <h1 style={{ fontFamily: T.sans, fontSize: "clamp(2.75rem,5.6vw,5rem)", fontWeight: 500, color: T.fg1, letterSpacing: "-0.035em", lineHeight: 1.02, marginBottom: 28, margin: "0 0 28px" }}>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1320, margin: "0 auto", width: "100%", padding: `clamp(80px,11vw,144px) ${gutter}` }}>
+          <div style={{ maxWidth: 600 }}>
+            <h1 style={{ fontFamily: T.sans, fontSize: "clamp(2.75rem,5.6vw,5rem)", fontWeight: 500, color: T.fg1, letterSpacing: "-0.035em", lineHeight: 1.02, margin: "0 0 28px" }}>
               A pair of glasses<br />that <span className="vra-em">remember</span><br />everything you saw.
             </h1>
             <p style={{ fontSize: "clamp(1rem,1.3vw,1.15rem)", color: T.fg2, marginBottom: 36, maxWidth: 480, lineHeight: 1.55 }}>
@@ -276,11 +274,6 @@ export default function HomePage() {
             <a href="#spec" style={{ fontSize: 14, color: T.fg2, textDecoration: "underline", textUnderlineOffset: 4, letterSpacing: "-0.005em" }}>
               See the full spec
             </a>
-          </div>
-
-          {/* RIGHT — signup card */}
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <SignUpCard />
           </div>
         </div>
       </section>
