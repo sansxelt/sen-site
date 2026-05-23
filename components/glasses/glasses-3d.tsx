@@ -127,27 +127,33 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
     }
     glasses.add(makeSpeaker(-1), makeSpeaker(1));
 
-    // Animated sound wave — thin vertical Line segments outside each stem,
-    // matching the wireframe/phosphor aesthetic.
-    const waveLineMat = new THREE.LineBasicMaterial({ color: 0x5CE5D5, transparent: true, opacity: 0.55 });
-    const WAVE_COUNT = 9;
-    const waveGeos: THREE.BufferGeometry[] = [];
+    // Pulsing concentric arcs radiating outward from each speaker —
+    // looks like the classic audio/bone-conduction wave icon.
+    const ARC_RADII = [0.18, 0.32, 0.48];
+    const arcMats: THREE.LineBasicMaterial[] = [];
 
-    function makeSoundWave(sign: number) {
+    function makeSoundArcs(sign: number) {
       const group = new THREE.Group();
-      for (let i = 0; i < WAVE_COUNT; i++) {
-        const geo = new THREE.BufferGeometry();
-        const z = -1.5 + (i - (WAVE_COUNT - 1) / 2) * 0.15;
-        const x = sign * 3.15; // float just outside the stem
-        const pos = new Float32Array([x, 0.1, z,  x, 0.28, z]);
-        geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-        const line = new THREE.Line(geo, waveLineMat);
-        group.add(line);
-        waveGeos.push(geo);
+      for (let i = 0; i < ARC_RADII.length; i++) {
+        const r = ARC_RADII[i];
+        const segments = 20;
+        const arcSpan = Math.PI * 0.55; // ~100° arc pointing outward
+        const pts: THREE.Vector3[] = [];
+        for (let j = 0; j <= segments; j++) {
+          const a = -arcSpan / 2 + (j / segments) * arcSpan;
+          pts.push(new THREE.Vector3(
+            sign * 2.85 + sign * Math.cos(a) * r,
+            0.16 + Math.sin(a) * r,
+            -1.5
+          ));
+        }
+        const mat = new THREE.LineBasicMaterial({ color: 0x5CE5D5, transparent: true, opacity: 0 });
+        arcMats.push(mat);
+        group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
       }
       return group;
     }
-    glasses.add(makeSoundWave(-1), makeSoundWave(1));
+    glasses.add(makeSoundArcs(-1), makeSoundArcs(1));
 
     const grid = new THREE.GridHelper(10, 10, 0x5A6478, 0x3D4659);
     grid.position.y = -2.2;
@@ -165,13 +171,11 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
       glasses.rotation.y += (targetRot.y - glasses.rotation.y) * 0.05;
       glasses.rotation.x += (targetRot.x - glasses.rotation.x) * 0.05;
 
-      // Animate wave — update top vertex y of each Line segment.
-      waveGeos.forEach((geo, idx) => {
-        const i = idx % WAVE_COUNT;
-        const h = 0.06 + Math.abs(Math.sin(t * 5.5 + i * 0.75)) * 0.28 + Math.abs(Math.sin(t * 3.1 + i * 1.5)) * 0.1;
-        const arr = geo.attributes.position.array as Float32Array;
-        arr[4] = 0.1 + h;
-        geo.attributes.position.needsUpdate = true;
+      // Pulse arcs outward like a bone-conduction audio wave — staggered phases.
+      arcMats.forEach((mat, idx) => {
+        const i = idx % ARC_RADII.length;
+        const phase = ((t * 1.2 - i * 0.35) % 1 + 1) % 1;
+        mat.opacity = Math.sin(phase * Math.PI) * 0.7;
       });
 
       renderer.render(scene, camera);
