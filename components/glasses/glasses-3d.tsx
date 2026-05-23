@@ -116,17 +116,33 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
     }
     glasses.add(makeStemCameras(-1), makeStemCameras(1));
 
-    // Bone-conduction speaker — sits on the inner stem near the temple.
-    // Cyan to distinguish from cameras (white) and mics (no longer shown).
+    // Bone-conduction speaker — near the ear, further back along the stem.
     function makeSpeaker(sign: number) {
       const dot = new THREE.Mesh(
         new THREE.SphereGeometry(0.07, 12, 12),
         new THREE.MeshBasicMaterial({ color: 0x5CE5D5 })
       );
-      dot.position.set(sign * 2.85, 0.18, -0.2);
+      dot.position.set(sign * 2.85, 0.18, -1.5);
       return dot;
     }
     glasses.add(makeSpeaker(-1), makeSpeaker(1));
+
+    // Animated sound wave bars — spread along stem z-axis at speaker position.
+    const waveMat = new THREE.MeshBasicMaterial({ color: 0x5CE5D5, transparent: true, opacity: 0.55 });
+    const waveBars: THREE.Mesh[] = [];
+    const WAVE_COUNT = 10;
+
+    function makeSoundWave(sign: number) {
+      const group = new THREE.Group();
+      for (let i = 0; i < WAVE_COUNT; i++) {
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.04), waveMat);
+        bar.position.set(sign * 2.85, 0.18, -1.5 + (i - WAVE_COUNT / 2) * 0.13);
+        group.add(bar);
+        waveBars.push(bar);
+      }
+      return group;
+    }
+    glasses.add(makeSoundWave(-1), makeSoundWave(1));
 
     const grid = new THREE.GridHelper(10, 10, 0x5A6478, 0x3D4659);
     grid.position.y = -2.2;
@@ -143,6 +159,14 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
       targetRot.x = -0.08 + Math.sin(t * 0.7) * 0.06;
       glasses.rotation.y += (targetRot.y - glasses.rotation.y) * 0.05;
       glasses.rotation.x += (targetRot.x - glasses.rotation.x) * 0.05;
+
+      // Animate wave bars — each bar scales vertically like an audio spectrum.
+      waveBars.forEach((bar, idx) => {
+        const i = idx % WAVE_COUNT;
+        const h = 0.08 + Math.abs(Math.sin(t * 5 + i * 0.7)) * 0.28 + Math.abs(Math.sin(t * 3.1 + i * 1.3)) * 0.12;
+        bar.scale.y = h / 0.12;
+      });
+
       renderer.render(scene, camera);
       frameId = requestAnimationFrame(animate);
     };
