@@ -93,15 +93,6 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
     }
     glasses.add(makeStem(-1), makeStem(1));
 
-    function makeMicPort(x: number) {
-      const mp = new THREE.Mesh(
-        new THREE.SphereGeometry(0.07, 12, 12),
-        new THREE.MeshBasicMaterial({ color: 0xFF3D5E })
-      );
-      mp.position.set(x, 0.1, -2.9);
-      return mp;
-    }
-    glasses.add(makeMicPort(-2.85), makeMicPort(2.85));
 
     // Stem cameras — 3 dots per stem spaced along the length,
     // plus one at the very back end for 360° rear capture.

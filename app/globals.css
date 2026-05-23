@@ -4,7 +4,7 @@
 @import "./theme.css";
 
 :root {
-  --background: #050505;
+  --background: #0A0F18;
   --foreground: #f5f5f5;
   --site-header-height: 66px;
 }
