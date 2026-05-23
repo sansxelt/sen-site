@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Glasses3D } from "@/components/glasses/glasses-3d";
+import { SignUpCard } from "@/components/glasses/signup-card";
 
 export const metadata: Metadata = { title: "Home" };
 
@@ -241,34 +242,45 @@ export default function HomePage() {
       `}</style>
 
       {/* ── HERO ── */}
-      <section style={{ padding: `clamp(80px,11vw,144px) ${gutter}`, borderBottom: `1px solid ${T.line1}`, position: "relative", overflow: "hidden" }}>
-        {/* background grid */}
-        <svg aria-hidden style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", opacity: 0.18 }} xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke={T.fg5} strokeWidth="0.5" />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
-        </svg>
+      <section style={{ position: "relative", minHeight: "calc(100vh - 64px)", borderBottom: `1px solid ${T.line1}`, overflow: "hidden", display: "flex", alignItems: "center" }}>
+        {/* Background grid */}
+        <div aria-hidden style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          backgroundImage: `linear-gradient(to right, ${T.line1} 1px, transparent 1px), linear-gradient(to bottom, ${T.line1} 1px, transparent 1px)`,
+          backgroundSize: "80px 80px",
+          maskImage: "radial-gradient(ellipse 80% 60% at 50% 40%, #000 0%, transparent 75%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 40%, #000 0%, transparent 75%)",
+          opacity: 0.7,
+        }} />
 
-        <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(40px,6vw,80px)", alignItems: "center", position: "relative", zIndex: 1 }} className="vra-hero-grid">
-          {/* left */}
+        {/* Background 3D glasses — full viewport, dimmed */}
+        <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", pointerEvents: "none", opacity: 0.32 }}>
+          <div style={{ width: "min(1200px, 110vw)", aspectRatio: "5/4", maxHeight: "90vh" }}>
+            <Glasses3D bare />
+          </div>
+        </div>
+
+        {/* Subtle cyan radial toward the right */}
+        <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 50% 60% at 75% 50%, rgba(92,229,213,0.04) 0%, transparent 70%)" }} />
+
+        {/* Foreground */}
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 1320, margin: "0 auto", width: "100%", padding: `clamp(80px,11vw,144px) ${gutter}`, display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,0.9fr)", gap: "clamp(40px,6vw,88px)", alignItems: "center" }} className="vra-hero-grid">
+          {/* LEFT — type */}
           <div>
-            <h1 style={{ fontFamily: T.sans, fontSize: "clamp(2.75rem,5.6vw,5rem)", fontWeight: 500, color: T.fg1, letterSpacing: "-0.035em", lineHeight: 1.02, marginBottom: 28 }}>
+            <h1 style={{ fontFamily: T.sans, fontSize: "clamp(2.75rem,5.6vw,5rem)", fontWeight: 500, color: T.fg1, letterSpacing: "-0.035em", lineHeight: 1.02, marginBottom: 28, margin: "0 0 28px" }}>
               A pair of glasses<br />that <span className="vra-em">remember</span><br />everything you saw.
             </h1>
-            <p style={{ fontSize: "1.0625rem", color: T.fg2, marginBottom: 36, maxWidth: 480, lineHeight: 1.5 }}>
+            <p style={{ fontSize: "clamp(1rem,1.3vw,1.15rem)", color: T.fg2, marginBottom: 36, maxWidth: 480, lineHeight: 1.55 }}>
               Eight cameras around the frame. Sound only you can hear. A display at the edge of your vision. It catches your voice — even a whisper — not whoever&apos;s standing next to you.
             </p>
-            <a href="#spec" style={{ fontFamily: T.sans, fontSize: 14, fontWeight: 500, color: T.fg1, textDecoration: "none", borderBottom: `1px solid ${T.lineS}`, paddingBottom: 4, letterSpacing: "-0.005em" }}>
+            <a href="#spec" style={{ fontSize: 14, color: T.fg2, textDecoration: "underline", textUnderlineOffset: 4, letterSpacing: "-0.005em" }}>
               See the full spec
             </a>
           </div>
 
-          {/* right — 3D glasses */}
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <Glasses3D />
+          {/* RIGHT — signup card */}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <SignUpCard />
           </div>
         </div>
       </section>

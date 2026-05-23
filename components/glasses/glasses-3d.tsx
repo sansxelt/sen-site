@@ -66,7 +66,7 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
     }
 
     const leftLens = new THREE.Group();
-    leftLens.add(makeLensRing(), makeIris(), makePupil(), makeCameraRing());
+    leftLens.add(makeLensRing(), makeIris(), makeCameraRing());
     leftLens.position.set(-1.55, 0, 0);
 
     const rightLens = leftLens.clone(true);

@@ -5,26 +5,14 @@ import { isAdminEmail } from "../lib/admin";
 import { getSignInPath } from "../lib/auth-ui";
 import { AccountDropdown } from "./account-dropdown";
 import { MobileNav } from "./mobile-nav";
-import { ZoneDropdown } from "./zone-dropdown";
 
 const footerGroups = [
   {
     label: "Product",
     links: [
-      { href: "/product", label: "Product" },
+      { href: "/home", label: "Home" },
       { href: "/learn", label: "Learn" },
       { href: "/pricing", label: "Pricing" },
-      { href: "/download", label: "Download" },
-    ],
-  },
-  {
-    label: "Account",
-    links: [
-      { href: "/account", label: "Dashboard" },
-      { href: "/account/download", label: "Download" },
-      { href: "/account/updates", label: "Updates" },
-      { href: "/account/integrations", label: "Integrations" },
-      { href: "/account/usage", label: "Usage" },
     ],
   },
   {
@@ -49,10 +37,6 @@ type SiteNavLink = {
   authOnly?: boolean;
 };
 
-// 'Features' and 'How it works' merged into a single Product page;
-// 'Download' hidden from primary nav (still in footer + mobile
-// drawer for signed-in users). Contact is back in the row by user
-// request.
 const primaryLinks: SiteNavLink[] = [
   { href: "/learn", label: "Learn" },
   { href: "/pricing", label: "Pricing" },
@@ -66,88 +50,98 @@ export async function SiteShell({ children }: { children: ReactNode }) {
   const isAdmin = isAdminEmail(userEmail || null);
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-neutral-950 text-neutral-100" style={{ overflowX: "clip" }}>
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(96,165,250,0.12),transparent_22%)]" />
+    <div style={{ position: "relative", display: "flex", minHeight: "100vh", flexDirection: "column", background: "#0A0F18", color: "#C7CDD7", overflowX: "clip", fontFamily: '"Inter Tight", -apple-system, sans-serif' }}>
 
-      <header className="fixed inset-x-0 top-0 z-50">
-        <div className="px-4 py-3 sm:px-6 lg:px-10 xl:px-14 2xl:px-20">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex lg:flex-1 lg:justify-start">
-              <Link href="/home" className="inline-flex shrink-0 items-center gap-2.5">
-                <div style={{ width: 36, height: 36, flexShrink: 0, background: "#fff", clipPath: "polygon(14% 23%, 17% 19%, 33% 19%, 25% 32%, 50% 55%, 75% 32%, 67% 19%, 83% 19%, 86% 23%, 50% 82%)" }} />
-                <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
-                  Vraelis
-                </div>
+      <header style={{
+        position: "fixed", inset: "0 0 auto 0", zIndex: 50,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 clamp(20px,4vw,64px)",
+        height: 64,
+        background: "rgba(10,15,24,0.85)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(199,205,215,0.06)",
+      }}>
+        {/* Wordmark */}
+        <Link href="/home" style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "#ECEFF4", fontSize: 19, fontWeight: 600, letterSpacing: "-0.025em", fontFamily: '"Inter Tight", sans-serif' }}>
+          vraelis<span style={{ color: "#5CE5D5" }}>.</span>
+        </Link>
+
+        {/* Center nav */}
+        <nav style={{ display: "flex", alignItems: "center", gap: 24 }} className="vra-nav-desktop">
+          {primaryLinks.filter((l) => !l.authOnly || signedIn).map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              style={{ fontSize: 14, color: "#C7CDD7", textDecoration: "none", letterSpacing: "-0.005em", transition: "color 0.15s" }}
+              className="vra-nav-link"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Right side */}
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <MobileNav
+            links={primaryLinks.filter((l) => !l.authOnly || signedIn)}
+            signedIn={signedIn}
+            isAdmin={isAdmin}
+            accessHref={signedIn ? "/app" : getSignInPath()}
+          />
+
+          {signedIn ? (
+            <AccountDropdown email={userEmail} isAdmin={isAdmin} />
+          ) : (
+            <>
+              <Link href={getSignInPath()} style={{ fontSize: 14, color: "#C7CDD7", textDecoration: "none", letterSpacing: "-0.005em" }}>
+                Sign in
               </Link>
-            </div>
-
-            <nav className="hidden items-center gap-6 text-sm text-neutral-300 lg:flex">
-              {primaryLinks.filter((link) => !link.authOnly || signedIn).map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-md whitespace-nowrap px-1 py-0.5 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="flex shrink-0 items-center gap-3 lg:flex-1 lg:justify-end">
-              {/* Mobile drawer trigger, only renders on <lg screens */}
-              <MobileNav
-                links={primaryLinks.filter((l) => !l.authOnly || signedIn)}
-                signedIn={signedIn}
-                isAdmin={isAdmin}
-                accessHref={signedIn ? "/app" : getSignInPath()}
-              />
-
-              {/* Dropdown splits the primary CTA into the two real
-                  product surfaces (workshop + platform) so users can
-                  pick instead of being forced to one. */}
-              <ZoneDropdown signedIn={signedIn} />
-
-              {/* Account avatar pinned to the absolute right (signed-in
-                  only). "Manage me" lives at the edge of the chrome,
-                  past the primary CTA. */}
-              {signedIn && (
-                <AccountDropdown email={userEmail} isAdmin={isAdmin} />
-              )}
-            </div>
-          </div>
+              <Link href={getSignInPath()} style={{
+                display: "inline-flex", alignItems: "center",
+                padding: "10px 20px",
+                background: "#ECEFF4", color: "#0A0F18",
+                fontSize: 14, fontWeight: 500, letterSpacing: "-0.005em",
+                textDecoration: "none", borderRadius: 4,
+                fontFamily: '"Inter Tight", sans-serif',
+              }}>
+                Join waitlist
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
-      <main data-page-content className="relative z-10 flex-1 pt-[66px]">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+        .vra-nav-link:hover { color: #ECEFF4 !important; }
+        @media (max-width: 768px) { .vra-nav-desktop { display: none !important; } }
+      `}</style>
+
+      <main style={{ position: "relative", zIndex: 10, flex: 1, paddingTop: 64 }}>
         {children}
       </main>
 
-      <footer className="mt-auto border-t border-white/[0.08]">
-        <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 lg:px-8">
-          <div className="grid gap-10 sm:grid-cols-[1fr_auto] lg:grid-cols-[1.4fr_repeat(3,auto)] lg:gap-16">
-            <div className="flex flex-col gap-4">
-              <Link href="/home" className="flex items-center gap-2.5">
-                <div style={{ width: 32, height: 32, flexShrink: 0, background: "#fff", clipPath: "polygon(14% 23%, 17% 19%, 33% 19%, 25% 32%, 50% 55%, 75% 32%, 67% 19%, 83% 19%, 86% 23%, 50% 82%)" }} />
-                <span className="text-sm font-semibold text-white">Vraelis</span>
+      <footer style={{ marginTop: "auto", borderTop: "1px solid rgba(199,205,215,0.08)" }}>
+        <div style={{ maxWidth: 1320, margin: "0 auto", padding: "40px clamp(20px,4vw,64px)" }}>
+          <div style={{ display: "grid", gap: 40, gridTemplateColumns: "1.4fr repeat(3, auto)" }} className="vra-footer-grid">
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <Link href="/home" style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "#ECEFF4", fontSize: 17, fontWeight: 600, letterSpacing: "-0.025em" }}>
+                vraelis<span style={{ color: "#5CE5D5" }}>.</span>
               </Link>
-              <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
-                The adaptive AI platform. One AI, infinite shapes, a contextual
-                interface that reshapes itself around how you actually work.
+              <p style={{ maxWidth: 280, fontSize: 12, lineHeight: 1.6, color: "#5A6478", margin: 0 }}>
+                A pair of glasses that remember everything you saw.
               </p>
             </div>
 
             {footerGroups.map((group) => (
-              <div key={group.label} className="flex flex-col gap-3">
-                <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-600">
+              <div key={group.label} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase" as const, letterSpacing: "0.18em", color: "#3D4659", fontFamily: '"JetBrains Mono", monospace' }}>
                   {group.label}
                 </div>
-                <div className="flex flex-col gap-2.5">
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {group.links.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="text-sm text-neutral-400 transition hover:text-white"
-                    >
+                    <Link key={link.href} href={link.href} style={{ fontSize: 14, color: "#5A6478", textDecoration: "none", transition: "color 0.15s" }} className="vra-nav-link">
                       {link.label}
                     </Link>
                   ))}
@@ -156,11 +150,16 @@ export async function SiteShell({ children }: { children: ReactNode }) {
             ))}
           </div>
 
-          <div className="mt-10 border-t border-white/[0.06] pt-6 text-xs text-neutral-600">
+          <div style={{ marginTop: 40, borderTop: "1px solid rgba(199,205,215,0.06)", paddingTop: 24, fontSize: 12, color: "#3D4659" }}>
             © 2026 Vraelis. All rights reserved.
           </div>
         </div>
       </footer>
+
+      <style>{`
+        @media (max-width: 980px) { .vra-footer-grid { grid-template-columns: 1fr 1fr !important; } }
+        @media (max-width: 600px) { .vra-footer-grid { grid-template-columns: 1fr !important; } }
+      `}</style>
     </div>
   );
 }
