@@ -103,6 +103,28 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
     }
     glasses.add(makeMicPort(-2.85), makeMicPort(2.85));
 
+    // Stem cameras — 3 dots per stem spaced along the length,
+    // plus one at the very back end for 360° rear capture.
+    function makeStemCameras(sign: number) {
+      const group = new THREE.Group();
+      const stemCamPositions = [
+        { z: -0.6, y: 0.15 },
+        { z: -1.4, y: 0.12 },
+        { z: -2.1, y: 0.1  },
+        { z: -2.9, y: 0.1  }, // rear-facing / back end
+      ];
+      for (const pos of stemCamPositions) {
+        const dot = new THREE.Mesh(
+          new THREE.SphereGeometry(0.045, 8, 8),
+          new THREE.MeshBasicMaterial({ color: 0xECEFF4 })
+        );
+        dot.position.set(sign * 2.85, pos.y, pos.z);
+        group.add(dot);
+      }
+      return group;
+    }
+    glasses.add(makeStemCameras(-1), makeStemCameras(1));
+
     const grid = new THREE.GridHelper(10, 10, 0x5A6478, 0x3D4659);
     grid.position.y = -2.2;
     (grid.material as THREE.Material).transparent = true;

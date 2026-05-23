@@ -69,14 +69,12 @@ export async function SiteShell({ children }: { children: ReactNode }) {
     <div className="relative flex min-h-screen flex-col bg-neutral-950 text-neutral-100" style={{ overflowX: "clip" }}>
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_30%),radial-gradient(circle_at_82%_18%,rgba(96,165,250,0.12),transparent_22%)]" />
 
-      <header className="fixed inset-x-0 top-0 z-50 bg-neutral-950">
+      <header className="fixed inset-x-0 top-0 z-50">
         <div className="px-4 py-3 sm:px-6 lg:px-10 xl:px-14 2xl:px-20">
           <div className="flex items-center justify-between gap-4">
             <div className="flex lg:flex-1 lg:justify-start">
               <Link href="/home" className="inline-flex shrink-0 items-center gap-2.5">
-                <div style={{ width: 36, height: 36, background: "#000", borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-                  <div style={{ width: "100%", height: "100%", background: "#fff", clipPath: "polygon(14% 23%, 17% 19%, 33% 19%, 25% 32%, 50% 55%, 75% 32%, 67% 19%, 83% 19%, 86% 23%, 50% 82%)" }} />
-                </div>
+                <div style={{ width: 36, height: 36, flexShrink: 0, background: "#fff", clipPath: "polygon(14% 23%, 17% 19%, 33% 19%, 25% 32%, 50% 55%, 75% 32%, 67% 19%, 83% 19%, 86% 23%, 50% 82%)" }} />
                 <div className="text-sm font-semibold tracking-tight text-white sm:text-base">
                   Vraelis
                 </div>
@@ -129,9 +127,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           <div className="grid gap-10 sm:grid-cols-[1fr_auto] lg:grid-cols-[1.4fr_repeat(3,auto)] lg:gap-16">
             <div className="flex flex-col gap-4">
               <Link href="/home" className="flex items-center gap-2.5">
-                <div style={{ width: 32, height: 32, background: "#000", borderRadius: 6, flexShrink: 0, overflow: "hidden" }}>
-                  <div style={{ width: "100%", height: "100%", background: "#fff", clipPath: "polygon(14% 23%, 17% 19%, 33% 19%, 25% 32%, 50% 55%, 75% 32%, 67% 19%, 83% 19%, 86% 23%, 50% 82%)" }} />
-                </div>
+                <div style={{ width: 32, height: 32, flexShrink: 0, background: "#fff", clipPath: "polygon(14% 23%, 17% 19%, 33% 19%, 25% 32%, 50% 55%, 75% 32%, 67% 19%, 83% 19%, 86% 23%, 50% 82%)" }} />
                 <span className="text-sm font-semibold text-white">Vraelis</span>
               </Link>
               <p className="max-w-xs text-xs leading-relaxed text-neutral-500">
