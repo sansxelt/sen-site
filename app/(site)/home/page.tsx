@@ -259,7 +259,7 @@ export default function HomePage() {
               A pair of glasses<br />that <span className="vra-em">remember</span><br />everything you saw.
             </h1>
             <p style={{ fontSize: "1.0625rem", color: T.fg2, marginBottom: 36, maxWidth: 480, lineHeight: 1.5 }}>
-              Eight cameras ring the frame. Stereo audio reaches only the wearer. An ambient display rests over your sight. Voice and whisper recognition tuned to you — not the room.
+              Eight cameras around the frame. Sound only you can hear. A display at the edge of your vision. It catches your voice — even a whisper — not whoever&apos;s standing next to you.
             </p>
             <a href="#spec" style={{ fontFamily: T.sans, fontSize: 14, fontWeight: 500, color: T.fg1, textDecoration: "none", borderBottom: `1px solid ${T.lineS}`, paddingBottom: 4, letterSpacing: "-0.005em" }}>
               See the full spec
@@ -277,9 +277,9 @@ export default function HomePage() {
       <section style={{ padding: `clamp(80px,11vw,144px) ${gutter}`, borderBottom: `1px solid ${T.line1}` }}>
         <div style={{ maxWidth: 920, margin: "0 auto" }}>
           <p style={{ fontSize: "clamp(1.5rem,2.4vw,1.875rem)", lineHeight: 1.35, color: T.fg1, letterSpacing: "-0.02em", fontWeight: 400 }}>
-            Vraelis is a tool you wear. It has a camera, a microphone, a speaker, an indicator.{" "}
-            <span className="vra-em" style={{ fontSize: "1.05em" }}>It earns its place on your face</span>
-            {" "}by remembering what you saw — every angle, every word, every quiet thought you whispered into it.
+            Vraelis is something you wear. It has a camera, a mic, a speaker, and a light.{" "}
+            <span className="vra-em" style={{ fontSize: "1.05em" }}>It remembers what you saw</span>
+            {" "}— every angle, every word, every thought you whispered into it.
           </p>
         </div>
       </section>
@@ -288,7 +288,7 @@ export default function HomePage() {
       <FeatureRow
         index={1} label="Record"
         headline={<>Eight cameras.<br />One memory.</>}
-        body="A ring of micro-cameras captures the room — not just the frame. Replay any angle later. Who was on your left, what was behind you, what the speaker pointed at."
+        body="Eight cameras cover the full room, not just what you were facing. Go back to any angle later — who was to your left, what was behind you, what the person up front pointed at."
         specs={[{ label: "Array", value: "8 × micro-camera" }, { label: "Coverage", value: "360° horizontal" }, { label: "Resolution", value: "4K per stream" }]}
         diagram={<RecordDiagram />}
       />
@@ -296,7 +296,7 @@ export default function HomePage() {
       <FeatureRow
         index={2} label="Listen" reverse
         headline={<>Stereo audio.<br />Only <span className="vra-em">you</span> hear it.</>}
-        body="Near-field bone-conducted audio delivers directional stereo to the wearer and the wearer alone. No earbuds. No leakage. The person across from you hears nothing."
+        body="It plays audio through bone conduction — only you hear it. No earbuds. Nothing leaking out. The person sitting across from you has no idea."
         specs={[{ label: "Output", value: "Bone-conducted stereo" }, { label: "Leakage", value: "Inaudible @ 30 cm" }, { label: "Latency", value: "< 20 ms" }]}
         diagram={<ListenDiagram />}
       />
@@ -304,7 +304,7 @@ export default function HomePage() {
       <FeatureRow
         index={3} label="Speak"
         headline={<>Talk to it.<br />Or just whisper.</>}
-        body="A four-mic array tuned to your voice picks up sub-vocal speech and full speech alike. Reply to a message in a meeting without making a sound. Vraelis recognizes you, not the room."
+        body="Four mics focused on your voice. It catches a full whisper even in a loud room. You can send a message in a meeting without saying anything out loud. It learns your voice, not the noise around you."
         specs={[{ label: "Microphones", value: "4 × beamformed array" }, { label: "Threshold", value: "26 dB SPL · whisper" }, { label: "Identity", value: "Voiceprint-locked" }]}
         diagram={<SpeakDiagram />}
       />
@@ -312,7 +312,7 @@ export default function HomePage() {
       <FeatureRow
         index={4} label="See" reverse
         headline={<>An ambient display<br /><span className="vra-em">over your sight.</span></>}
-        body="A transparent waveguide layers a soft heads-up display in your peripheral. Captions, directions, replies. Big enough to read, quiet enough to ignore."
+        body="A transparent overlay sits just outside your line of sight. Captions, directions, quick replies. It&apos;s there when you want it and easy to tune out when you don&apos;t."
         specs={[{ label: "Type", value: "Transparent waveguide" }, { label: "Field", value: "28° diagonal" }, { label: "Brightness", value: "3,500 nits peak" }]}
         diagram={<SeeDiagram />}
       />
