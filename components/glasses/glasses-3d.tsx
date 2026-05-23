@@ -20,93 +20,107 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     mount.appendChild(renderer.domElement);
 
-    const wireFg  = new THREE.LineBasicMaterial({ color: 0xC7CDD7, transparent: true, opacity: 0.88 });
-    const wireAcc = new THREE.LineBasicMaterial({ color: 0x5CE5D5, transparent: true, opacity: 0.92 });
+    const matFg    = new THREE.LineBasicMaterial({ color: 0xC7CDD7, transparent: true, opacity: 0.88 });
+    const matFgDim = new THREE.LineBasicMaterial({ color: 0xC7CDD7, transparent: true, opacity: 0.25 });
+    const matAcc   = new THREE.LineBasicMaterial({ color: 0x5CE5D5, transparent: true, opacity: 0.80 });
 
     const glasses = new THREE.Group();
 
+    // Smooth elliptical lens outline — looks like actual glasses
     function makeLensRing() {
-      const geo = new THREE.TorusGeometry(1.25, 0.045, 8, 56);
-      geo.scale(1, 0.82, 1);
-      return new THREE.LineSegments(new THREE.WireframeGeometry(geo), wireFg);
-    }
-
-    function makeIris() {
-      const segments = 56;
-      const radius = 0.40;
-      const points: THREE.Vector3[] = [];
-      for (let i = 0; i < segments; i++) {
-        const a0 = (i / segments) * Math.PI * 2;
-        const a1 = ((i + 0.6) / segments) * Math.PI * 2;
-        points.push(new THREE.Vector3(Math.cos(a0) * radius, Math.sin(a0) * radius * 0.82, 0));
-        points.push(new THREE.Vector3(Math.cos(a1) * radius, Math.sin(a1) * radius * 0.82, 0));
+      const rx = 1.28, ry = 1.02;
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i <= 80; i++) {
+        const a = (i / 80) * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.cos(a) * rx, Math.sin(a) * ry, 0));
       }
-      return new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(points), wireAcc);
+      return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matFg);
     }
 
-    function makePupil() {
-      return new THREE.Mesh(
-        new THREE.SphereGeometry(0.06, 12, 12),
-        new THREE.MeshBasicMaterial({ color: 0x5CE5D5 })
-      );
+    // Inner frame rim for depth
+    function makeLensInner() {
+      const rx = 1.16, ry = 0.92;
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i <= 80; i++) {
+        const a = (i / 80) * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.cos(a) * rx, Math.sin(a) * ry, 0));
+      }
+      return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matFgDim);
     }
 
-    function makeCameraRing(radiusX = 1.34, radiusY = 1.10) {
+    // Dashed iris — smart-lens indicator
+    function makeIris() {
+      const segs = 48;
+      const rx = 0.36, ry = 0.28;
+      const pts: THREE.Vector3[] = [];
+      for (let i = 0; i < segs; i++) {
+        const a0 = (i / segs) * Math.PI * 2;
+        const a1 = ((i + 0.52) / segs) * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.cos(a0) * rx, Math.sin(a0) * ry, 0));
+        pts.push(new THREE.Vector3(Math.cos(a1) * rx, Math.sin(a1) * ry, 0));
+      }
+      return new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), matAcc);
+    }
+
+    // Camera dots sitting on the outer frame edge
+    function makeCameraRing() {
       const group = new THREE.Group();
+      const rx = 1.34, ry = 1.08;
       for (let i = 0; i < 8; i++) {
         const a = (i / 8) * Math.PI * 2 - Math.PI / 2;
         const dot = new THREE.Mesh(
-          new THREE.SphereGeometry(0.045, 8, 8),
+          new THREE.SphereGeometry(0.042, 8, 8),
           new THREE.MeshBasicMaterial({ color: 0xECEFF4 })
         );
-        dot.position.set(Math.cos(a) * radiusX, Math.sin(a) * radiusY, 0.04);
+        dot.position.set(Math.cos(a) * rx, Math.sin(a) * ry, 0.02);
         group.add(dot);
       }
       return group;
     }
 
     const leftLens = new THREE.Group();
-    leftLens.add(makeLensRing(), makeIris(), makeCameraRing());
-    leftLens.position.set(-1.55, 0, 0);
+    leftLens.add(makeLensRing(), makeLensInner(), makeIris(), makeCameraRing());
+    leftLens.position.set(-1.52, 0, 0);
 
     const rightLens = leftLens.clone(true);
-    rightLens.position.set(1.55, 0, 0);
+    rightLens.position.set(1.52, 0, 0);
     glasses.add(leftLens, rightLens);
 
-    const bridge = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.035, 0.035, 1.4, 8),
-      new THREE.MeshBasicMaterial({ color: 0xC7CDD7 })
-    );
-    bridge.rotation.z = Math.PI / 2;
-    bridge.position.set(0, 0.55, 0);
-    glasses.add(bridge);
+    // Curved nose bridge
+    const bridgePts: THREE.Vector3[] = [];
+    for (let i = 0; i <= 24; i++) {
+      const s = i / 24;
+      const x = (s - 0.5) * 1.08;
+      const y = 0.56 + Math.sin(s * Math.PI) * 0.14;
+      bridgePts.push(new THREE.Vector3(x, y, 0));
+    }
+    glasses.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(bridgePts), matFg));
 
+    // Stems
     function makeStem(sign: number) {
       const stem = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.035, 0.025, 3.2, 8),
+        new THREE.CylinderGeometry(0.030, 0.020, 3.2, 8),
         new THREE.MeshBasicMaterial({ color: 0xC7CDD7 })
       );
       stem.rotation.x = Math.PI / 2;
-      stem.rotation.z = sign * 0.07;
-      stem.position.set(sign * 2.85, 0.1, -1.4);
+      stem.rotation.z = sign * 0.06;
+      stem.position.set(sign * 2.85, 0.08, -1.4);
       return stem;
     }
     glasses.add(makeStem(-1), makeStem(1));
 
-
-    // Stem cameras — 3 dots per stem spaced along the length,
-    // plus one at the very back end for 360° rear capture.
+    // Stem cameras — 4 white dots along each arm including rear
     function makeStemCameras(sign: number) {
       const group = new THREE.Group();
-      const stemCamPositions = [
-        { z: -0.6, y: 0.15 },
-        { z: -1.4, y: 0.12 },
-        { z: -2.1, y: 0.1  },
-        { z: -2.9, y: 0.1  }, // rear-facing / back end
+      const positions = [
+        { z: -0.6, y: 0.13 },
+        { z: -1.4, y: 0.10 },
+        { z: -2.1, y: 0.08 },
+        { z: -2.9, y: 0.08 },
       ];
-      for (const pos of stemCamPositions) {
+      for (const pos of positions) {
         const dot = new THREE.Mesh(
-          new THREE.SphereGeometry(0.045, 8, 8),
+          new THREE.SphereGeometry(0.042, 8, 8),
           new THREE.MeshBasicMaterial({ color: 0xECEFF4 })
         );
         dot.position.set(sign * 2.85, pos.y, pos.z);
@@ -116,34 +130,33 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
     }
     glasses.add(makeStemCameras(-1), makeStemCameras(1));
 
-    // Bone-conduction speaker — near the ear, further back along the stem.
+    // Bone-conduction speaker dot
     function makeSpeaker(sign: number) {
       const dot = new THREE.Mesh(
         new THREE.SphereGeometry(0.07, 12, 12),
         new THREE.MeshBasicMaterial({ color: 0x5CE5D5 })
       );
-      dot.position.set(sign * 2.85, 0.16, -1.5);
+      dot.position.set(sign * 2.85, 0.08, -1.5);
       return dot;
     }
     glasses.add(makeSpeaker(-1), makeSpeaker(1));
 
-    // Pulsing concentric arcs radiating outward from each speaker —
-    // looks like the classic audio/bone-conduction wave icon.
-    const ARC_RADII = [0.18, 0.32, 0.48];
+    // Pulsing arcs pointing DOWNWARD from speaker — toward the ear/skull
+    const ARC_RADII = [0.17, 0.30, 0.45];
     const arcMats: THREE.LineBasicMaterial[] = [];
 
     function makeSoundArcs(sign: number) {
       const group = new THREE.Group();
       for (let i = 0; i < ARC_RADII.length; i++) {
         const r = ARC_RADII[i];
-        const segments = 20;
-        const arcSpan = Math.PI * 0.55; // ~100° arc pointing outward
+        const arcSpan = Math.PI * 0.65;
         const pts: THREE.Vector3[] = [];
-        for (let j = 0; j <= segments; j++) {
-          const a = -arcSpan / 2 + (j / segments) * arcSpan;
+        for (let j = 0; j <= 20; j++) {
+          // -π/2 centers the arc pointing straight down
+          const a = -Math.PI / 2 - arcSpan / 2 + (j / 20) * arcSpan;
           pts.push(new THREE.Vector3(
-            sign * 2.85 + sign * Math.cos(a) * r,
-            0.16 + Math.sin(a) * r,
+            sign * 2.85 + Math.cos(a) * r,
+            0.08 + Math.sin(a) * r,
             -1.5
           ));
         }
@@ -171,7 +184,6 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
       glasses.rotation.y += (targetRot.y - glasses.rotation.y) * 0.05;
       glasses.rotation.x += (targetRot.x - glasses.rotation.x) * 0.05;
 
-      // Pulse arcs outward like a bone-conduction audio wave — staggered phases.
       arcMats.forEach((mat, idx) => {
         const i = idx % ARC_RADII.length;
         const phase = ((t * 1.2 - i * 0.35) % 1 + 1) % 1;
