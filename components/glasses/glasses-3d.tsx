@@ -152,8 +152,9 @@ export function Glasses3D({ bare = false }: { bare?: boolean }) {
         const arcSpan = Math.PI * 0.45;
         const pts: THREE.Vector3[] = [];
         for (let j = 0; j <= 20; j++) {
-          // Point straight down toward the ear/skull
-          const a = -Math.PI / 2 - arcSpan / 2 + (j / 20) * arcSpan;
+          // Point inward toward center — right arcs go left, left arcs go right
+          const center = sign > 0 ? Math.PI : 0;
+          const a = center - arcSpan / 2 + (j / 20) * arcSpan;
           pts.push(new THREE.Vector3(
             sign * 2.85 + Math.cos(a) * r,
             0.08 + Math.sin(a) * r,
