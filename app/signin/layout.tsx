@@ -13,8 +13,8 @@ export default function SignInLayout({ children }: { children: ReactNode }) {
   return (
     <ZoneShell
       wide
-      backHrefOverride="https://vraelis.ai/home"
-      backLabelOverride="← vraelis.ai"
+      backHrefOverride="https://vraelis.com/home"
+      backLabelOverride="← Go back"
     >
       {children}
     </ZoneShell>
