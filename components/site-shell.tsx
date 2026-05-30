@@ -5,6 +5,7 @@ import { isAdminEmail } from "../lib/admin";
 import { getSignInPath } from "../lib/auth-ui";
 import { AccountDropdown } from "./account-dropdown";
 import { MobileNav } from "./mobile-nav";
+import { SiteNavLinks } from "./site-nav-links";
 import { ZoneDropdown } from "./zone-dropdown";
 
 const footerGroups = [
@@ -71,16 +72,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
         {/* Center nav — truly centered via grid */}
         <nav style={{ display: "flex", alignItems: "center", gap: 24 }} className="vra-nav-desktop">
-          {primaryLinks.filter((l) => !l.authOnly || signedIn).map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              style={{ fontSize: 14, color: "#C7CDD7", textDecoration: "none", letterSpacing: "-0.005em", transition: "color 0.15s" }}
-              className="vra-nav-link"
-            >
-              {link.label}
-            </Link>
-          ))}
+          <SiteNavLinks links={primaryLinks.filter((l) => !l.authOnly || signedIn)} />
         </nav>
 
         {/* Right side */}
@@ -107,7 +99,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
-        .vra-nav-link:hover { color: #ECEFF4 !important; }
+        .vra-nav-link:hover { color: #C7CDD7 !important; }
         @media (max-width: 768px) { .vra-nav-desktop { display: none !important; } }
       `}</style>
 
