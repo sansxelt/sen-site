@@ -24,10 +24,13 @@ const CHAT_PATHS = [
   "/app",
   "/account",
   "/checkout",
-  "/signin",
-  "/auth",
   "/desktop-auth",
 ];
+
+// Auth paths stay on vraelis.com so OAuth redirect_uri is always
+// https://vraelis.com/api/auth/callback/[provider] — only one domain
+// needs to be registered in Google / GitHub consoles.
+const AUTH_PATHS = ["/signin", "/auth"];
 
 const MARKETING_PATHS = [
   "/home",
@@ -53,12 +56,10 @@ function hostRoute(req: NextRequest): NextResponse | null {
   // chat.vraelis.com
   if (host === CHAT_HOST) {
     if (path === "/") {
-      // Root = workshop. Rewrite to /app so the URL bar stays at /
-      // and the workshop renders. /app's page.tsx now handles its
-      // own auth gate via auth() (avoids the proxy getToken mismatch).
       return NextResponse.rewrite(new URL("/app", url));
     }
-    if (startsWithAny(path, MARKETING_PATHS)) {
+    // Auth and marketing both live on vraelis.com — redirect there.
+    if (startsWithAny(path, MARKETING_PATHS) || startsWithAny(path, AUTH_PATHS)) {
       return NextResponse.redirect(
         new URL(path + url.search, "https://vraelis.com"),
         302,
