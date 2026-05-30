@@ -1,4 +1,5 @@
-import { cache } from "react";
+// cache() removed — it deduplicated within a React render pass but caused
+// stale null returns in auth callbacks where the profile is created mid-flow.
 import type { ReleaseChannel, SummaryStyle } from "./account-session";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 
@@ -58,9 +59,9 @@ function normalizeProfileRecord(data: Partial<UserProfileRecord> & { email: stri
   } satisfies UserProfileRecord;
 }
 
-export const getUserProfileByEmail = cache(async function getUserProfileByEmail(
+export async function getUserProfileByEmail(
   email: string | null | undefined,
-) {
+): Promise<UserProfileRecord | null> {
   if (!email || !isDatabaseConfigured()) {
     return null;
   }
@@ -85,7 +86,7 @@ export const getUserProfileByEmail = cache(async function getUserProfileByEmail(
     console.error("Profile lookup threw:", error);
     return null;
   }
-});
+}
 
 export async function upsertUserProfile(
   email: string,
