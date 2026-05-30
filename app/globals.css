@@ -276,22 +276,6 @@ body {
   }
 }
 
-@keyframes route-exit {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-  }
-
-  62% {
-    opacity: 0.98;
-    transform: translate3d(0, -8px, 0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translate3d(0, -26px, 0);
-  }
-}
 
 @keyframes section-rise {
   from {
@@ -322,17 +306,12 @@ body {
   will-change: opacity, transform;
 }
 
-[data-route-transition]:not([data-is-home]):not([data-exiting]) {
-  animation: route-enter 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+[data-route-transition]:not([data-is-home]) {
+  animation: route-enter 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-[data-route-transition][data-exiting] {
-  animation: route-exit 220ms cubic-bezier(0.4, 0, 1, 1) forwards;
-  pointer-events: none;
-}
-
-[data-route-transition][data-is-home]:not([data-exiting]) {
-  animation: route-enter 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+[data-route-transition][data-is-home] {
+  animation: route-enter 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 [data-route-transition][data-is-home] [data-stagger] {

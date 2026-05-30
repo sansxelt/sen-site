@@ -111,7 +111,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         @media (max-width: 768px) { .vra-nav-desktop { display: none !important; } }
       `}</style>
 
-      <main data-route-transition style={{ position: "relative", zIndex: 10, flex: 1, paddingTop: 64 }}>
+      <main style={{ position: "relative", zIndex: 10, flex: 1, paddingTop: 64 }}>
         {children}
       </main>
 
