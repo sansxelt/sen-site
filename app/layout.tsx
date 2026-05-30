@@ -80,7 +80,7 @@ export default async function RootLayout({
       style={{ colorScheme: "dark" }}
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-neutral-950 font-sans text-neutral-100">
+      <body className="flex min-h-full flex-col bg-background font-sans text-neutral-100">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
