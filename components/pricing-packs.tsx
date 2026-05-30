@@ -30,36 +30,36 @@ function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle
   }
 
   return (
-    <div className="flex h-full flex-col rounded-[28px] border border-white/[0.12] bg-neutral-950 p-6">
+    <div className="flex h-full flex-col p-6" style={{ borderRadius: 28, border: "1px solid rgba(199,205,215,0.10)", background: "rgba(14,20,33,0.95)" }}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-white">{plan.name}</div>
-          <div className="mt-0.5 text-xs text-neutral-500">{plan.note}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "#ECEFF4", fontFamily: '"Inter Tight", sans-serif', letterSpacing: "-0.01em" }}>{plan.name}</div>
+          <div style={{ marginTop: 2, fontSize: 11, color: "#5A6478", fontFamily: '"Inter Tight", sans-serif' }}>{plan.note}</div>
         </div>
         {plan.badge && (
-          <span className="shrink-0 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-semibold text-black">
+          <span style={{ flexShrink: 0, borderRadius: 100, background: "#ECEFF4", padding: "2px 10px", fontSize: 10, fontWeight: 600, color: "#0A0F18", fontFamily: '"Inter Tight", sans-serif', letterSpacing: "0.01em" }}>
             {plan.badge}
           </span>
         )}
       </div>
 
-      <div className="mt-5">
-        <div className="text-2xl font-semibold tracking-tight text-white transition-all duration-300">
+      <div style={{ marginTop: 20 }}>
+        <div style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.025em", color: "#ECEFF4", transition: "all 300ms", fontFamily: '"Inter Tight", sans-serif' }}>
           {mainLabel}
         </div>
         {subLabel && (
-          <div className={`mt-0.5 text-xs text-neutral-600 transition-all duration-300 ${subAlign === "right" ? "text-right" : ""}`}>
+          <div style={{ marginTop: 2, fontSize: 11, color: "#5A6478", textAlign: subAlign === "right" ? "right" : "left", transition: "all 300ms", fontFamily: '"Inter Tight", sans-serif' }}>
             {showYearly ? `or ${subLabel}` : subLabel}
           </div>
         )}
       </div>
 
-      <p className="mt-3 text-xs leading-relaxed text-neutral-500">{plan.description}</p>
+      <p style={{ marginTop: 12, fontSize: 12, lineHeight: 1.6, color: "#5A6478", fontFamily: '"Inter Tight", sans-serif' }}>{plan.description}</p>
 
-      <ul className="mt-4 space-y-2">
+      <ul style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
         {plan.points.map((point) => (
-          <li key={point} className="flex items-center gap-2.5 text-xs text-neutral-300">
-            <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/30" />
+          <li key={point} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "#C7CDD7", fontFamily: '"Inter Tight", sans-serif' }}>
+            <div style={{ width: 5, height: 5, flexShrink: 0, borderRadius: "50%", background: "rgba(199,205,215,0.25)" }} />
             {point}
           </li>
         ))}
@@ -68,7 +68,7 @@ function PlanCard({ plan, cycle, subAlign = "left" }: { plan: PricingPlan; cycle
       <button
         onClick={handleCta}
         disabled={loading}
-        className="mt-auto block w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-xs font-medium text-white transition hover:bg-white/10 disabled:opacity-50"
+        style={{ marginTop: "auto", display: "block", width: "100%", borderRadius: 12, border: "1px solid rgba(199,205,215,0.12)", background: "rgba(199,205,215,0.05)", padding: "10px 16px", textAlign: "center", fontSize: 12, fontWeight: 500, color: "#ECEFF4", cursor: loading ? "wait" : "pointer", opacity: loading ? 0.5 : 1, transition: "background 150ms", fontFamily: '"Inter Tight", sans-serif' }}
       >
         {loading ? "Redirecting…" : showYearly ? `${plan.ctaLabel} · Yearly` : plan.ctaLabel}
       </button>
@@ -143,11 +143,11 @@ function CardPack({
 
   return (
     <div className="flex flex-col gap-3.5" style={{ width: 336 }}>
-      <div className={`flex flex-col gap-1 ${labelAlign === "right" ? "items-end text-right" : "items-start text-left"}`}>
-        <span className="text-xs font-medium uppercase tracking-[0.2em] text-neutral-400">
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: labelAlign === "right" ? "flex-end" : "flex-start", textAlign: labelAlign === "right" ? "right" : "left" }}>
+        <span style={{ fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.18em", color: "#5A6478", fontFamily: '"JetBrains Mono", monospace' }}>
           {label}
         </span>
-        <p className="text-[11px] text-neutral-400">
+        <p style={{ fontSize: 11, color: "#5A6478", fontFamily: '"Inter Tight", sans-serif' }}>
           {labelAlign === "right"
             ? `${plans.length} total · Click any card to browse`
             : `Click any card to browse · ${plans.length} total`}
@@ -172,9 +172,12 @@ function CardPack({
           <button
             key={i}
             onClick={() => setActiveIdx(i)}
-            className={`h-1 rounded-full transition-all duration-300 ${
-              i === activeIdx ? "w-5 bg-white/60" : "w-1.5 bg-white/15 hover:bg-white/30"
-            }`}
+            style={{
+              height: 4, borderRadius: 100, border: "none", cursor: "pointer",
+              transition: "all 300ms",
+              width: i === activeIdx ? 20 : 6,
+              background: i === activeIdx ? "rgba(199,205,215,0.60)" : "rgba(199,205,215,0.15)",
+            }}
           />
         ))}
       </div>
@@ -192,17 +195,20 @@ function CycleToggle({ cycle, onChange }: { cycle: Cycle; onChange: (c: Cycle) =
         Save ~17%
       </span>
 
-      <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-1">
+      <div style={{ display: "flex", alignItems: "center", borderRadius: 100, border: "1px solid rgba(199,205,215,0.10)", background: "rgba(199,205,215,0.04)", padding: 4 }}>
         {(["monthly", "yearly"] as Cycle[]).map((c) => (
           <button
             key={c}
             onClick={() => onChange(c)}
-            className="rounded-full px-4 py-1.5 text-xs font-medium transition-all duration-200"
-            style={
-              cycle === c
-                ? { background: "#fff", color: "#000" }
-                : { color: "rgba(255,255,255,0.45)" }
-            }
+            style={{
+              borderRadius: 100, padding: "6px 16px", border: "none",
+              fontSize: 12, fontWeight: 500, cursor: "pointer",
+              fontFamily: '"Inter Tight", sans-serif',
+              transition: "all 200ms",
+              ...(cycle === c
+                ? { background: "#ECEFF4", color: "#0A0F18" }
+                : { background: "transparent", color: "rgba(199,205,215,0.45)" }),
+            }}
           >
             {c.charAt(0).toUpperCase() + c.slice(1)}
           </button>

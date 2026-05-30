@@ -75,15 +75,6 @@ const SURFACES: Surface[] = [
     href: "/workshop#memory",
   },
   {
-    key: "platform",
-    name: "Platform",
-    category: "Developer",
-    status: "alpha",
-    oneLine: "API keys, request inspector, usage dashboard, webhooks.",
-    depends: ["Chat API", "MCP registry", "Webhooks"],
-    href: "https://vraelis.com/platform",
-  },
-  {
     key: "lens",
     name: "Lens",
     category: "Optics",
@@ -259,7 +250,7 @@ export default function ProductPage() {
 
           <div style={{ marginTop: 28, display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
-              href="https://vraelis.com/platform"
+              href="/account/keys"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "10px 18px", borderRadius: 100,
@@ -269,7 +260,7 @@ export default function ProductPage() {
                 fontSize: 13, fontWeight: 500, textDecoration: "none",
               }}
             >
-              Open Platform
+              Get API keys
               <span aria-hidden style={{ fontSize: 13 }}>→</span>
             </Link>
             <Link
@@ -625,13 +616,12 @@ export default function ProductPage() {
             Build on it before it ships everywhere.
           </h3>
           <p style={{ fontSize: 14, color: "#71717a", marginBottom: 24, lineHeight: 1.6 }}>
-            The Platform is alpha. API surface is stable enough to
-            integrate against; behavior may shift before v1. Get a key
-            and start.
+            The API is in alpha. Surface is stable enough to integrate
+            against; behavior may shift before v1. Get a key and start.
           </p>
           <div style={{ display: "inline-flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
-              href="https://vraelis.com/platform"
+              href="/account/keys"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "12px 22px", borderRadius: 100,
@@ -641,11 +631,11 @@ export default function ProductPage() {
                 fontSize: 14, fontWeight: 500, textDecoration: "none",
               }}
             >
-              Get an API key
+              Get API keys
               <span aria-hidden style={{ fontSize: 13 }}>→</span>
             </Link>
             <Link
-              href="/"
+              href="/home"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "12px 22px", borderRadius: 100,
@@ -655,7 +645,7 @@ export default function ProductPage() {
                 fontSize: 14, fontWeight: 500, textDecoration: "none",
               }}
             >
-              See the consumer story
+              See the product
             </Link>
           </div>
         </div>

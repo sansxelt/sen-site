@@ -3050,28 +3050,11 @@ export function WebChat({
         )}
         {showEmpty ? (
           <div className="webchat-empty">
-            <div className="webchat-empty-mark">Vraelis · workshop</div>
-            <h2>What are you making?</h2>
+            <div className="webchat-empty-mark">Vraelis</div>
+            <h2>How can I help?</h2>
             <p>
-              Type, talk, or drop something in. The shop adapts to whatever you&rsquo;re
-              working on, code, design, research, a half-baked idea at 2am.
+              Type, talk, or drop something in. Chat, files, memory, voice — all in one place.
             </p>
-            <div className="webchat-empty-modules" aria-label="Active modules">
-              <span className="webchat-empty-module">
-                <span className="webchat-empty-module-dot webchat-empty-module-dot--on" />
-                workshop
-              </span>
-              <span className="webchat-empty-module-sep">·</span>
-              <span className="webchat-empty-module">
-                <span className="webchat-empty-module-dot webchat-empty-module-dot--ready" />
-                whisper
-              </span>
-              <span className="webchat-empty-module-sep">·</span>
-              <span className="webchat-empty-module">
-                <span className="webchat-empty-module-dot webchat-empty-module-dot--future" />
-                lens · soon
-              </span>
-            </div>
             {attachedProject && (
               <div className="webchat-empty-project-note">
                 <span className="webchat-empty-project-note-icon">◇</span>
@@ -3103,23 +3086,6 @@ export function WebChat({
                 </div>
               </div>
             )}
-            <div className="webchat-empty-suggestions">
-              {[
-                "Help me debug this React state issue",
-                "Summarize what's in this PDF",
-                "Brainstorm 5 names for my side project",
-                "Generate an image of a neon Vraelis logo",
-              ].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  className="webchat-empty-suggestion"
-                  onClick={() => setInput(suggestion)}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
           </div>
         ) : (
           <div className="webchat-list">

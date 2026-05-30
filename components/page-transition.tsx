@@ -12,10 +12,10 @@ const HEADER_OFFSET = "var(--site-header-height, 66px)";
 // blackout tight makes route changes feel snappier without touching
 // the actual animation feel. In ≈ cover mount, out ≈ reveal, total
 // visible blackout time ≈ 260ms.
-const BLACKOUT_IN_MS = 130;
-const BLACKOUT_SETTLE_MS = 15;
-const BLACKOUT_HOLD_MS = 20;
-const BLACKOUT_OUT_MS = 160;
+const BLACKOUT_IN_MS = 80;
+const BLACKOUT_SETTLE_MS = 10;
+const BLACKOUT_HOLD_MS = 10;
+const BLACKOUT_OUT_MS = 200;
 
 function getTransitionNode(): HTMLElement | null {
   return document.querySelector("[data-route-transition]") as HTMLElement | null;
@@ -144,16 +144,16 @@ export function PageTransition({ children }: { children: ReactNode }) {
             animate={{ opacity: blackout }}
             transition={{
               duration: blackout === 1 ? BLACKOUT_IN_MS / 1000 : BLACKOUT_OUT_MS / 1000,
-              ease: blackout === 1 ? [0.16, 1, 0.3, 1] : [0.22, 1, 0.36, 1],
+              ease: blackout === 1 ? [0.4, 0, 0.2, 1] : [0.22, 1, 0.36, 1],
             }}
             style={{
               position: "fixed",
-              top: HEADER_OFFSET,
+              top: 0,
               right: 0,
               bottom: 0,
               left: 0,
               zIndex: 40,
-              background: "#000",
+              background: "#0A0F18",
               pointerEvents: "none",
             }}
           />,

@@ -47,6 +47,7 @@ const primaryLinks: SiteNavLink[] = [
 export async function SiteShell({ children }: { children: ReactNode }) {
   const session = await auth();
   const userEmail = session?.user?.email ?? "";
+  const userImage = session?.user?.image ?? null;
   const signedIn = Boolean(userEmail);
   const isAdmin = isAdminEmail(userEmail || null);
 
@@ -92,7 +93,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
           />
 
           {signedIn ? (
-            <AccountDropdown email={userEmail} isAdmin={isAdmin} />
+            <AccountDropdown email={userEmail} image={userImage} isAdmin={isAdmin} />
           ) : (
             <>
               <Link href={getSignInPath()} style={{ fontSize: 14, color: "#C7CDD7", textDecoration: "none", letterSpacing: "-0.005em" }}>
