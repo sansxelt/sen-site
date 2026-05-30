@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -192,7 +192,7 @@ export function EcosystemSection({ signedIn }: { signedIn: boolean }) {
           transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}
         >
           <Link
-            href={signedIn ? "/app" : "/signin?callbackUrl=/app"}
+            href={signedIn ? "/chat" : "/signin?callbackUrl=/app"}
             className="landing-cta-primary"
             style={{ display: "inline-flex" }}
           >

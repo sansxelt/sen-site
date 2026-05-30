@@ -1,8 +1,8 @@
 ﻿import type { ReactNode } from "react";
 import { ZoneShell } from "@/components/zone-shell";
 
-// /signin gets the zone-aware shell so visiting from chat.vraelis.com
-// shows workshop chrome, platform.vraelis.com shows the dev console
+// /signin gets the zone-aware shell so visiting from vraelis.com
+// shows workshop chrome, vraelis.com shows the dev console
 // chrome, etc. Same component, different identity per host.
 //
 // The back link is forced to the apex marketing site instead of

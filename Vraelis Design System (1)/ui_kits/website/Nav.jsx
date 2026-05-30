@@ -1,4 +1,4 @@
-// Nav.jsx
+﻿// Nav.jsx
 // Sits below the InstrumentBar.
 // Just text wordmark (no decorative icon). Contextual section links
 // that hide when you're already in that section. Sign-in surfaced as
@@ -31,12 +31,12 @@ function Nav({ onJoin }) {
         {!inProduct && <NavLink href="#top">Product</NavLink>}
         <NavLink href="#spec">Specifications</NavLink>
         <span style={{ width: 1, height: 14, background: "var(--line-2)" }} />
-        <NavLink href="https://chat.vraelis.com" external>Chat</NavLink>
-        <NavLink href="https://platform.vraelis.com" external>Platform</NavLink>
+        <NavLink href="https://vraelis.com/chat" external>Chat</NavLink>
+        <NavLink href="https://vraelis.com/platform" external>Platform</NavLink>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-        <a href="https://chat.vraelis.com" style={{
+        <a href="https://vraelis.com/chat" style={{
           fontSize: 14,
           color: "var(--fg-2)",
           textDecoration: "none",

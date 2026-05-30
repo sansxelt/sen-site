@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
@@ -96,7 +96,7 @@ export function LandingHero({ signedIn }: { signedIn: boolean }) {
           transition={{ duration: 0.70, ease: EASE, delay: 0.54 }}
         >
           <Link
-            href={signedIn ? "/app" : "/signin?callbackUrl=/app"}
+            href={signedIn ? "/chat" : "/signin?callbackUrl=/app"}
             className="landing-cta-primary"
           >
             Open workspace

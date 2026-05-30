@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "../../auth";
 import { listApiKeys } from "../../lib/api-keys";
@@ -103,7 +103,7 @@ export default async function AccountPage() {
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <Link
-              href="/app"
+              href="/chat"
               className="hx-press inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold transition hover:opacity-95"
               style={{ color: "#0a0a0c" }}
             >

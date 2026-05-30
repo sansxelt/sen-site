@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -130,7 +130,7 @@ export function InflightBackToChat() {
   if (!flightId) return null;
   // On /app the user is already in the workspace and can see the
   // active generation directly, no need for the floating pill.
-  if (pathname === "/app" || pathname.startsWith("/app/")) return null;
+  if (pathname === "/chat" || pathname.startsWith("/chat/")) return null;
 
   return (
     <Link

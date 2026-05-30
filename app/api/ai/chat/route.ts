@@ -702,7 +702,7 @@ export async function POST(request: Request) {
   let tFirstToken: number | null = null;
 
   // Two ways to authenticate this endpoint: a Bearer token (desktop)
-  // or a NextAuth session cookie (browser at vraelis.com/app). Either
+  // or a NextAuth session cookie (browser at vraelis.com/chat). Either
   // one identifies a user; the rest of the route is identical.
   let email = await getDesktopUserEmailFromRequest(request);
   if (!email) {

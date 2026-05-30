@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -114,7 +114,7 @@ export function ChatHistoryRail({ panelOpen }: { panelOpen: boolean }) {
   // message even gets sent, so the user can see + click off and
   // back without losing their place.
   const isOnNewChat =
-    (pathname === "/app" || pathname.startsWith("/app/")) &&
+    (pathname === "/chat" || pathname.startsWith("/chat/")) &&
     !activeThreadId;
 
   const visibleThreads = useMemo(() => {

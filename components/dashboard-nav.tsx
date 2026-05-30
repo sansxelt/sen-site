@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -395,7 +395,7 @@ export function DashboardNav({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const inWorkshop = pathname === "/app" || pathname.startsWith("/app/");
+  const inWorkshop = pathname === "/chat" || pathname.startsWith("/chat/");
   const logoSrc = ZONE_LOGO[zone];
   // ChatGPT-style mobile drawer for chat history.
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -417,7 +417,7 @@ export function DashboardNav({
 
   function isActive(href: string) {
     if (href === "/account") return pathname === "/account";
-    if (href === "/app") return pathname === "/app";
+    if (href === "/chat") return pathname === "/chat";
     return pathname.startsWith(href);
   }
 
@@ -425,7 +425,7 @@ export function DashboardNav({
   // don't waste space on redundant pages (Overview + Billing both
   // being Shop items felt like duplicates on portrait phones).
   const mobileBarItems: NavItem[] = [
-    { href: "/app",                  label: "Chat",     icon: <ChatIcon /> },
+    { href: "/chat",                  label: "Chat",     icon: <ChatIcon /> },
     navGroups[0].items[0],          // Brain  → Memory
     navGroups[1].items[1],          // Shop   → Billing
     navGroups[2].items[0],          // Bench  → Settings
@@ -505,7 +505,7 @@ export function DashboardNav({
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
         {/* Logo */}
         <div className="flex shrink-0 items-center justify-between border-b py-3" style={{ borderColor: "var(--vrl-border)" }}>
-          <Link href="/app" className="flex items-center gap-2.5">
+          <Link href="/chat" className="flex items-center gap-2.5">
             <Image src={logoSrc} alt="Vraelis" width={36} height={36} className="h-9 w-9 shrink-0 rounded-xl" priority />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-white">Vraelis</span>
@@ -522,9 +522,9 @@ export function DashboardNav({
         {/* Chat — pinned below logo */}
         <div className="shrink-0 border-b py-2" style={{ borderColor: "var(--vrl-border)" }}>
           <Link
-            href="/app"
+            href="/chat"
             onClick={(e) => { if (inWorkshop) e.preventDefault(); }}
-            className={`vrl-nav-item font-medium${isActive("/app") ? " vrl-nav-item--active" : ""}`}
+            className={`vrl-nav-item font-medium${isActive("/chat") ? " vrl-nav-item--active" : ""}`}
           >
             <ChatIcon />
             Chat
@@ -582,7 +582,7 @@ export function DashboardNav({
               <HamburgerIcon />
             </button>
           )}
-          <Link href="/app" className="flex items-center gap-2">
+          <Link href="/chat" className="flex items-center gap-2">
             <Image src={logoSrc} alt="Vraelis" width={32} height={32} className="h-8 w-8 rounded-xl" priority />
             <div className="flex flex-col leading-tight">
               <span className="text-sm font-semibold text-white">Vraelis</span>
@@ -683,7 +683,7 @@ export function DashboardNav({
                 // Same guard as the desktop sidebar: tapping Chat
                 // while already in /app should NOT drop ?thread=
                 // and start a phantom new chat.
-                if (item.href === "/app" && inWorkshop) e.preventDefault();
+                if (item.href === "/chat" && inWorkshop) e.preventDefault();
               }}
               className={`flex min-w-[68px] flex-1 flex-col items-center justify-center gap-1 py-2.5 text-center transition-colors ${
                 isActive(item.href)

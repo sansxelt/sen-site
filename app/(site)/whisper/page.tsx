@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
@@ -174,7 +174,7 @@ export default function WhisperPage() {
               transition={{ duration: 0.6, ease: EASE, delay: 0.45 }}
               style={{ display: "flex", flexWrap: "wrap", gap: 12 }}
             >
-              <Link href="/app" className="landing-cta-primary">
+              <Link href="/chat" className="landing-cta-primary">
                 Try voice in Workshop
               </Link>
               <Link

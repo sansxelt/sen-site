@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { auth } from "@/auth";
 import { getSignInPath } from "@/lib/auth-ui";
 import { Reveal } from "@/components/landing/reveal";
@@ -39,7 +39,7 @@ export default async function CopilotPage() {
               describe the outcome. It handles the steps.
             </p>
             <Link
-              href={signedIn ? "/app" : getSignInPath()}
+              href={signedIn ? "/chat" : getSignInPath()}
               className="landing-cta-primary"
               style={{ display: "inline-flex" }}
             >
@@ -144,7 +144,7 @@ export default async function CopilotPage() {
               Connect your tools and describe what you need done. Workshop handles the rest.
             </p>
             <Link
-              href={signedIn ? "/app" : getSignInPath()}
+              href={signedIn ? "/chat" : getSignInPath()}
               className="landing-cta-primary"
               style={{ display: "inline-flex" }}
             >

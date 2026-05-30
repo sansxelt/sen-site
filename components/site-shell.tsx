@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { ReactNode } from "react";
 import { auth } from "../auth";
 import { isAdminEmail } from "../lib/admin";
@@ -87,7 +87,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
             links={primaryLinks.filter((l) => !l.authOnly || signedIn)}
             signedIn={signedIn}
             isAdmin={isAdmin}
-            accessHref={signedIn ? "/app" : getSignInPath()}
+            accessHref={signedIn ? "/chat" : getSignInPath()}
           />
 
           {signedIn ? (

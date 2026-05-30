@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { LearnShell } from "@/components/learn/learn-shell";
 import {
@@ -214,7 +214,7 @@ export default async function LearnIndexPage() {
             for how Vraelis works without committing to anything.
           </p>
           <Link
-            href="/app"
+            href="/chat"
             className="mt-5 inline-flex items-center gap-2 px-5 py-3 text-sm font-medium transition"
             style={{ background: "#5CE5D5", color: "#0A0F18" }}
           >

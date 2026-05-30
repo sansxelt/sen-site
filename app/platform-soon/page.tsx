@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { WaitlistForm } from "@/components/landing/waitlist-form";
 
-// Served at platform.vraelis.com/. Quiet developer page: the API exists,
+// Served at vraelis.com/. Quiet developer page: the API exists,
 // here is how to start, more is coming. No terminal cosplay, no eight
 // status badges, no eight command cards. Three live links + one curl
 // snippet + a single waitlist card. Matches the cinematic / restrained
@@ -31,7 +31,7 @@ export default function PlatformSoonPage() {
 
       <header className="relative border-b border-white/[0.06]">
         <div className="flex items-center justify-between px-6 py-4 sm:px-10">
-          <Link href="https://platform.vraelis.com" className="inline-flex shrink-0 items-center gap-2.5">
+          <Link href="https://vraelis.com/platform" className="inline-flex shrink-0 items-center gap-2.5">
             <Image
               src="/logo-amber.svg"
               alt="Vraelis"
@@ -80,7 +80,7 @@ export default function PlatformSoonPage() {
             {
               label: "Get an API key",
               note: "Bearer token from your account",
-              href: "https://chat.vraelis.com/account/keys",
+              href: "https://vraelis.com/account/keys",
             },
             {
               label: "Read the REST quickstart",
@@ -90,7 +90,7 @@ export default function PlatformSoonPage() {
             {
               label: "Open Workshop",
               note: "Try the product first if you haven't",
-              href: "https://chat.vraelis.com",
+              href: "https://vraelis.com/chat",
             },
           ].map((item) => (
             <Link
@@ -153,7 +153,7 @@ export default function PlatformSoonPage() {
 
       <footer className="relative border-t border-white/[0.06]">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-6 py-5 text-[11px] text-neutral-600 sm:px-8">
-          <span>platform.vraelis.com</span>
+          <span>vraelis.com</span>
           <span>preview</span>
         </div>
       </footer>

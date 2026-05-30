@@ -1,40 +1,27 @@
-﻿// Server-side helper that resolves the current request's host into
-// a "zone", vraelis.com (apex), chat.vraelis.com (workshop), or
-// platform.vraelis.com (developer console).
+// Single-domain architecture — vraelis.com hosts everything.
+// Zone is now path-based rather than host-based:
+//   /chat/*      → "chat"  (workshop)
+//   /platform/*  → "platform" (developer console)
+//   everything else → "apex" (marketing)
 //
-// Used by ZoneShell + auth pages to render zone-specific chrome,
-// copy, and accents so each subdomain feels native instead of
-// stamped with the same marketing brand.
-
-import { headers } from "next/headers";
+// getZone() always returns "apex" from the host (there's only one host now).
+// Layouts that want chat/platform theming pass zoneOverride to ZoneShell.
 
 export type Zone = "apex" | "chat" | "platform";
 
 export async function getZone(): Promise<Zone> {
-  try {
-    const h = await headers();
-    const host = (h.get("host") ?? "").toLowerCase();
-    if (host.startsWith("chat.")) return "chat";
-    if (host.startsWith("platform.")) return "platform";
-    // localhost + Vercel previews + apex/www all fall here.
-    return "apex";
-  } catch {
-    return "apex";
-  }
+  return "apex";
 }
 
-// Small per-zone identity bundle so a single shell component can
-// adapt without reinventing colors / labels each time.
 export const ZONE_THEME: Record<Zone, {
-  label: string;        // Brand wordmark suffix shown in the shell
-  tagline: string;      // Subtitle under the wordmark
-  accent: string;       // Tailwind accent for buttons + dots
-  accentSoft: string;   // Lighter accent for backgrounds
-  bg: string;           // Page bg (Tailwind class)
-  font: string;         // Tailwind font class for headings
-  signInLabel: string;  // "Sign in to ___" verb destination
-  logoSrc: string;      // Pinwheel SVG path. One geometry, accent
-                        // triangle changes per zone.
+  label: string;
+  tagline: string;
+  accent: string;
+  accentSoft: string;
+  bg: string;
+  font: string;
+  signInLabel: string;
+  logoSrc: string;
 }> = {
   apex: {
     label: "Vraelis",

@@ -1,4 +1,4 @@
-// SiteFooter.jsx
+﻿// SiteFooter.jsx
 // Big inverted wordmark, three columns, mono colophon.
 
 function SiteFooter() {
@@ -44,8 +44,8 @@ function SiteFooter() {
             { label: "Waitlist", href: "#waitlist" },
           ]} />
           <FooterCol title="Apps" items={[
-            { label: "Chat", href: "https://chat.vraelis.com", external: true },
-            { label: "Platform", href: "https://platform.vraelis.com", external: true },
+            { label: "Chat", href: "https://vraelis.com/chat", external: true },
+            { label: "Platform", href: "https://vraelis.com/platform", external: true },
           ]} />
           <FooterCol title="Company" items={[
             { label: "Contact", href: "mailto:hello@vraelis.com" },

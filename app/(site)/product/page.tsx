@@ -81,7 +81,7 @@ const SURFACES: Surface[] = [
     status: "alpha",
     oneLine: "API keys, request inspector, usage dashboard, webhooks.",
     depends: ["Chat API", "MCP registry", "Webhooks"],
-    href: "https://platform.vraelis.com",
+    href: "https://vraelis.com/platform",
   },
   {
     key: "lens",
@@ -259,7 +259,7 @@ export default function ProductPage() {
 
           <div style={{ marginTop: 28, display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
-              href="https://platform.vraelis.com"
+              href="https://vraelis.com/platform"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "10px 18px", borderRadius: 100,
@@ -631,7 +631,7 @@ export default function ProductPage() {
           </p>
           <div style={{ display: "inline-flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
-              href="https://platform.vraelis.com"
+              href="https://vraelis.com/platform"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "12px 22px", borderRadius: 100,

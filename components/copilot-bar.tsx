@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   useCallback,
@@ -64,7 +64,7 @@ export function CopilotBar({ signedIn }: { signedIn: boolean }) {
   // On /app, snap to float mode the first time the user opens it so
   // the side-dock doesn't crash into the LEI panel stage.
   useEffect(() => {
-    if (pathname === "/app" && (dock === "left" || dock === "right")) {
+    if (pathname === "/chat" && (dock === "left" || dock === "right")) {
       setDock("float");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

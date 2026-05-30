@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+﻿import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -20,11 +20,13 @@ const nextConfig: NextConfig = {
     return [
       { source: "/features", destination: "/product", permanent: true },
       { source: "/function", destination: "/product", permanent: true },
-      // Legacy single-page billing was split into Plan / Addons /
-      // Credits under Shop. Old bookmarks land on Plan.
       { source: "/account/billing", destination: "/account/plan", permanent: true },
-      // Audio rebranded to Whisper, the speaking + hearing layer.
       { source: "/audio", destination: "/whisper", permanent: true },
+      // Single-domain migration: /app → /chat, /platform-soon → /platform
+      { source: "/app", destination: "/chat", permanent: false },
+      { source: "/app/:path*", destination: "/chat/:path*", permanent: false },
+      { source: "/platform-soon", destination: "/platform", permanent: false },
+      { source: "/platform-soon/:path*", destination: "/platform/:path*", permanent: false },
     ];
   },
 };

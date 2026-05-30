@@ -1,16 +1,7 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-
-// Header dropdown, primary product CTA that splits into the two
-// real surfaces (workshop + platform). Click the button to open;
-// click outside or hit Escape to close. Click the link to navigate.
-//
-// Apps-only — account management lives in <AccountDropdown> next to
-// this trigger so the chrome separates "where do I want to go" from
-// "manage me". Used in the marketing site header in place of a
-// single 'Open Workshop' / 'Try Vraelis' button.
 
 type Props = {
   signedIn: boolean;
@@ -72,15 +63,7 @@ export function ZoneDropdown({ signedIn }: Props) {
           className="absolute right-0 top-[calc(100%+8px)] z-50 w-72 overflow-hidden rounded-xl border border-white/10 bg-neutral-950 shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
         >
           <Link
-            // Always send users to chat.vraelis.com. The apex
-            // marketing site can't see chat's session cookie
-            // (auth.ts intentionally doesn't span subdomains), so
-            // its `signedIn` is always false here. Sending people
-            // to /signin on apex would set a cookie on the wrong
-            // domain. chat.vraelis.com handles its own auth gate:
-            // signed-in users land at the workshop, signed-out
-            // get bounced to /signin on the right domain.
-            href="https://chat.vraelis.com"
+            href={signedIn ? "/chat" : "/signin?callbackUrl=%2Fchat"}
             role="menuitem"
             onClick={() => setOpen(false)}
             className="flex items-start gap-3 border-b border-white/[0.06] px-4 py-3.5 transition hover:bg-white/[0.04]"
@@ -91,17 +74,16 @@ export function ZoneDropdown({ signedIn }: Props) {
                 Open Workshop
               </div>
               <div className="mt-0.5 font-mono text-[11px] text-neutral-500">
-                chat.vraelis.com
+                vraelis.com/chat
               </div>
               <div className="mt-1 text-xs leading-5 text-neutral-400">
                 The product itself, chat, voice, files, image gen.
               </div>
             </div>
-            <span aria-hidden className="mt-1 text-xs text-neutral-600">↗</span>
           </Link>
 
           <Link
-            href="https://platform.vraelis.com"
+            href="/platform"
             role="menuitem"
             onClick={() => setOpen(false)}
             className="flex items-start gap-3 px-4 py-3.5 transition hover:bg-white/[0.04]"
@@ -112,13 +94,12 @@ export function ZoneDropdown({ signedIn }: Props) {
                 Open Platform
               </div>
               <div className="mt-0.5 font-mono text-[11px] text-neutral-500">
-                platform.vraelis.com
+                vraelis.com/platform
               </div>
               <div className="mt-1 text-xs leading-5 text-neutral-400">
                 Developer console, API keys, docs, usage.
               </div>
             </div>
-            <span aria-hidden className="mt-1 text-xs text-neutral-600">↗</span>
           </Link>
         </div>
       )}

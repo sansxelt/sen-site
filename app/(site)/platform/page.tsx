@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { auth } from "@/auth";
 import { getSignInPath } from "@/lib/auth-ui";
 import { Reveal } from "@/components/landing/reveal";
@@ -47,7 +47,7 @@ export default async function PlatformPage() {
               Talk to us
             </Link>
             <Link
-              href={signedIn ? "/app" : getSignInPath()}
+              href={signedIn ? "/chat" : getSignInPath()}
               style={{
                 display: "inline-flex",
                 alignItems: "center",

@@ -9,70 +9,11 @@ import { signOAuthSignupToken } from "./lib/oauth-signup-token";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
-// v0.1.16 — AUTH_URL env var forces NextAuth to generate provider
-// signinUrl / callbackUrl strings against the configured hostname
-// (https://www.vraelis.com), even when the request comes in on
-// chat.vraelis.com or platform.vraelis.com. The signin form ends up
-// posting cross-origin → browser blocks it → 'Configuration' error
-// page. Stripping AUTH_URL at module load forces NextAuth to fall
-// back to its trustHost-based per-request URL detection.
+// Single-domain architecture — vraelis.com only.
+// Strip AUTH_URL/NEXTAUTH_URL so NextAuth infers the base URL from the
+// incoming request via trustHost, preventing mismatched callback URLs.
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
-
-// v0.2.0 phase H — cross-subdomain cookie. Set AUTH_COOKIE_DOMAIN
-// to ".vraelis.com" (with the leading dot) in prod env so the
-// session cookie is scoped to all subdomains. Without this, the
-// apex marketing site (vraelis.com) couldn't see chat.vraelis.com's
-// session and showed "Log in" to already-signed-in users.
-//
-// Local dev / preview deploys: leave AUTH_COOKIE_DOMAIN unset, so
-// NextAuth uses its per-request default (single-host cookie) and
-// localhost / preview URLs keep working.
-//
-// Migration cost: existing chat-only cookies stay valid for now,
-// but new sign-ins will get the spanning cookie. Users who want
-// the apex to recognize them need to sign out + back in once.
-const cookieDomain = (process.env.AUTH_COOKIE_DOMAIN ?? "").trim() || undefined;
-const cookieOptions = cookieDomain
-  ? {
-      sessionToken: {
-        // NextAuth picks the secure-prefixed name automatically
-        // for HTTPS; matching that here so existing logic still
-        // works.
-        name: "__Secure-authjs.session-token",
-        options: {
-          httpOnly: true,
-          sameSite: "lax" as const,
-          path: "/",
-          secure: true,
-          domain: cookieDomain,
-        },
-      },
-      callbackUrl: {
-        name: "__Secure-authjs.callback-url",
-        options: {
-          httpOnly: true,
-          sameSite: "lax" as const,
-          path: "/",
-          secure: true,
-          domain: cookieDomain,
-        },
-      },
-      csrfToken: {
-        name: "__Host-authjs.csrf-token",
-        options: {
-          httpOnly: true,
-          sameSite: "lax" as const,
-          path: "/",
-          secure: true,
-          // __Host- prefix forbids a domain attribute, so we
-          // intentionally OMIT domain on the csrf cookie. The
-          // CSRF check still fires per-host; only the session
-          // needs to span subdomains for SSO to work.
-        },
-      },
-    }
-  : undefined;
 
 const authResult = NextAuth({
   trustHost: true,
@@ -145,7 +86,6 @@ const authResult = NextAuth({
   session: {
     strategy: "jwt",
   },
-  ...(cookieOptions ? { cookies: cookieOptions } : {}),
   callbacks: {
     async signIn({ user, account }) {
       const tag = `[auth:signIn][${account?.provider ?? "?"}]`;

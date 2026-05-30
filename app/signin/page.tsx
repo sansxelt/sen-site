@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AuthPanel, OAuthSection } from "@/components/auth-panel";
@@ -30,7 +30,7 @@ export default async function SignInPage({
   // were going. Default to /app since the chat host is signin's
   // home zone.
   if (session?.user?.email) {
-    redirect(getSafeRedirectPath(callbackUrl) || "/app");
+    redirect(getSafeRedirectPath(callbackUrl) || "/chat");
   }
 
   const t = ZONE_THEME[zone];
