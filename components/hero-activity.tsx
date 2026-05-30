@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -231,7 +231,7 @@ const scenarios = [
       { name: "Production", status: "waiting" as const },
     ],
     testSummary: "42 passed · 0 failed · 1 skipped",
-    deployTarget: "vercel, main → vraelis.ai",
+    deployTarget: "vercel, main → vraelis.com",
   },
   {
     word: "managing",

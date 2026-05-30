@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { getZone, ZONE_THEME, type Zone } from "@/lib/zone";
@@ -42,12 +42,12 @@ export async function ZoneShell({
   const t = ZONE_THEME[zone];
   const defaultHomeHref =
     zone === "chat"
-      ? "https://chat.vraelis.ai"
+      ? "https://chat.vraelis.com"
       : zone === "platform"
-        ? "https://platform.vraelis.ai"
-        : "https://vraelis.ai";
+        ? "https://platform.vraelis.com"
+        : "https://vraelis.com";
   const defaultHomeLabel =
-    zone === "chat" ? "← workshop" : zone === "platform" ? "← platform" : "← vraelis.ai";
+    zone === "chat" ? "← workshop" : zone === "platform" ? "← platform" : "← vraelis.com";
   const homeHref = backHrefOverride ?? defaultHomeHref;
   const homeLabel = backLabelOverride ?? defaultHomeLabel;
 
@@ -60,7 +60,7 @@ export async function ZoneShell({
             wide monitors. Inner content below stays centered. */}
         <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-10 xl:px-14 2xl:px-20">
           <Link
-            href={zone === "platform" ? "https://platform.vraelis.ai" : zone === "chat" ? "https://chat.vraelis.ai" : "/home"}
+            href={zone === "platform" ? "https://platform.vraelis.com" : zone === "chat" ? "https://chat.vraelis.com" : "/home"}
             className="inline-flex shrink-0 items-center gap-2.5"
           >
             <Image

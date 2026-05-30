@@ -1,4 +1,4 @@
-import {
+﻿import {
   Bold,
   BulletList,
   Callout,
@@ -416,7 +416,7 @@ export const ARTICLES: Article[] = [
       const out = document.getElementById("reply");
       out.textContent = "";
 
-      const res = await fetch("https://vraelis.ai/api/v1/chat", {
+      const res = await fetch("https://vraelis.com/api/v1/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -509,7 +509,7 @@ export const ARTICLES: Article[] = [
         <P>JavaScript:</P>
         <CodeBlock
           lang="javascript"
-          code={`const res = await fetch("https://vraelis.ai/api/v1/chat", {
+          code={`const res = await fetch("https://vraelis.com/api/v1/chat", {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -537,7 +537,7 @@ while (true) {
           code={`import os, requests
 
 with requests.post(
-    "https://vraelis.ai/api/v1/chat",
+    "https://vraelis.com/api/v1/chat",
     headers={
         "Content-Type": "application/json",
         "Authorization": f"Bearer {os.environ['VRAELIS_KEY']}",

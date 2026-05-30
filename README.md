@@ -1,4 +1,4 @@
-This is the marketing and onboarding site for `VRAELIS`, built with Next.js, Auth.js, and Supabase as the database layer.
+﻿This is the marketing and onboarding site for `VRAELIS`, built with Next.js, Auth.js, and Supabase as the database layer.
 
 ## Run Locally
 
@@ -37,14 +37,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 ```text
 http://localhost:3000/api/auth/callback/google
-https://VRAELIS.ai/api/auth/callback/google
+https://vraelis.com/api/auth/callback/google
 ```
 
 - GitHub uses Auth.js with the callback URL:
 
 ```text
 http://localhost:3000/api/auth/callback/github
-https://VRAELIS.ai/api/auth/callback/github
+https://vraelis.com/api/auth/callback/github
 ```
 
 ### App-hosted auth routes
@@ -72,7 +72,7 @@ insert policies are no longer required for the auth or early-access flow.
 
 - Auth.js email/password credentials flow with bcrypt password hashing
 - Auth.js OAuth flow for Google and GitHub
-- App-hosted sign-in and error routes on `VRAELIS.ai`
+- App-hosted sign-in and error routes on `vraelis.com`
 - JWT-based secure session handling through Auth.js
 - Protected account routes through `proxy.ts`
 - Supabase-backed workspace profile storage in `public.user_profiles`

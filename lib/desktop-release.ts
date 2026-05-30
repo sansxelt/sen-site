@@ -1,4 +1,4 @@
-export type DesktopReleaseChangeType = "new" | "fix" | "improve";
+﻿export type DesktopReleaseChangeType = "new" | "fix" | "improve";
 export type DesktopReleaseChannel = "stable" | "beta" | "alpha";
 
 export type DesktopRelease = {
@@ -105,7 +105,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "fix",
-        text: "Updates view (desktop) was showing \"Couldn't load release notes \u2014 Failed to fetch\" because regular fetch from a Tauri webview to vraelis.ai was getting blocked by WebView2 CORS. Switched to tauriFetch (Tauri HTTP plugin) which bypasses the gate.",
+        text: "Updates view (desktop) was showing \"Couldn't load release notes \u2014 Failed to fetch\" because regular fetch from a Tauri webview to vraelis.com was getting blocked by WebView2 CORS. Switched to tauriFetch (Tauri HTTP plugin) which bypasses the gate.",
       },
       {
         type: "fix",
@@ -454,7 +454,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "fix",
-        text: "Floating Copilot was dumping the raw HTML of /api/ai/copilot's 401 page as a chat reply. Now uses absolute vraelis.ai URL + Bearer token from the restored desktop session + content-type guard. Surfaces 'Sign in to Vraelis...' if no session, never raw HTML.",
+        text: "Floating Copilot was dumping the raw HTML of /api/ai/copilot's 401 page as a chat reply. Now uses absolute vraelis.com URL + Bearer token from the restored desktop session + content-type guard. Surfaces 'Sign in to Vraelis...' if no session, never raw HTML.",
       },
       {
         type: "fix",
@@ -690,7 +690,7 @@ export const desktopShippedReleases: DesktopRelease[] = [
       },
       {
         type: "new",
-        text: "v0.1.2 installer uploaded to the public desktop download bucket served from vraelis.ai.",
+        text: "v0.1.2 installer uploaded to the public desktop download bucket served from vraelis.com.",
       },
       {
         type: "improve",

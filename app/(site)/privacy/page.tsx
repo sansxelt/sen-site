@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -25,7 +25,7 @@ const sections = [
   },
   {
     title: "Privacy questions",
-    body: "For privacy questions, export requests, or account deletion inquiries, contact help@vraelis.ai from the email address tied to your Vraelis account.",
+    body: "For privacy questions, export requests, or account deletion inquiries, contact help@vraelis.com from the email address tied to your Vraelis account.",
   },
 ];
 

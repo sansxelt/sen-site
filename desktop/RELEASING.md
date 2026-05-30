@@ -1,4 +1,4 @@
-# Releasing the VRAELIS desktop
+﻿# Releasing the VRAELIS desktop
 
 End-to-end: from dev binary → signed Windows installer → users get it
 automatically.
@@ -102,7 +102,7 @@ launch. They'll find the new version, download the signed bundle in
 the background, and relaunch into it. Silent — no permission prompt,
 no install wizard.
 
-New users go to `https://VRAELIS.ai/download` and grab the MSI.
+New users go to `https://vraelis.com/download` and grab the MSI.
 
 ## Code signing (Windows "unrecognized publisher" warning)
 

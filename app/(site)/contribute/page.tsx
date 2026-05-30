@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "../../../auth";
 import { AuroraBackground } from "@/components/aurora-background";
@@ -165,7 +165,7 @@ function ApprovedNotice({ displayName }: { displayName: string }) {
         <span className="font-semibold text-white">{displayName}</span>. Every piece you publish from here on out ships with that name.
       </p>
       <p className="mt-3 text-sm leading-6 text-neutral-400">
-        We&apos;ll email you when the contributor writing surface is ready. In the meantime, send drafts to help@vraelis.ai and an admin will seed them for you.
+        We&apos;ll email you when the contributor writing surface is ready. In the meantime, send drafts to help@vraelis.com and an admin will seed them for you.
       </p>
     </div>
   );

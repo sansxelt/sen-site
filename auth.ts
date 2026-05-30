@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+﻿import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
@@ -11,8 +11,8 @@ import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials
 
 // v0.1.16 — AUTH_URL env var forces NextAuth to generate provider
 // signinUrl / callbackUrl strings against the configured hostname
-// (https://www.vraelis.ai), even when the request comes in on
-// chat.vraelis.ai or platform.vraelis.ai. The signin form ends up
+// (https://www.vraelis.com), even when the request comes in on
+// chat.vraelis.com or platform.vraelis.com. The signin form ends up
 // posting cross-origin → browser blocks it → 'Configuration' error
 // page. Stripping AUTH_URL at module load forces NextAuth to fall
 // back to its trustHost-based per-request URL detection.
@@ -20,9 +20,9 @@ delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
 
 // v0.2.0 phase H — cross-subdomain cookie. Set AUTH_COOKIE_DOMAIN
-// to ".vraelis.ai" (with the leading dot) in prod env so the
+// to ".vraelis.com" (with the leading dot) in prod env so the
 // session cookie is scoped to all subdomains. Without this, the
-// apex marketing site (vraelis.ai) couldn't see chat.vraelis.ai's
+// apex marketing site (vraelis.com) couldn't see chat.vraelis.com's
 // session and showed "Log in" to already-signed-in users.
 //
 // Local dev / preview deploys: leave AUTH_COOKIE_DOMAIN unset, so
@@ -246,7 +246,7 @@ const authResult = NextAuth({
         const parsed = new URL(url);
 
         // Allow redirects to the same origin or anywhere within the
-        // vraelis.ai family (apex + subdomains) so sign-out from
+        // vraelis.com family (apex + subdomains) so sign-out from
         // chat/platform can land back on the apex marketing site.
         const isSameOrigin = parsed.origin === baseUrl;
         const isVraelisHost = /^https:\/\/([\w-]+\.)?Vraelis\.ai$/.test(parsed.origin);

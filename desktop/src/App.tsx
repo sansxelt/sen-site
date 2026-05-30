@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { exit } from "@tauri-apps/plugin-process";
@@ -295,7 +295,7 @@ function SignedOutShell({
               ? "Looking for a saved sign-in on this machine."
               : auth.kind === "signed-out" && auth.signingIn
                 ? "Approve Vraelis desktop in the browser tab that just opened."
-                : "Sign in to connect this desktop to your vraelis.ai account."}
+                : "Sign in to connect this desktop to your vraelis.com account."}
           </p>
         </div>
       </div>

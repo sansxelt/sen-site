@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AuroraBackground } from "@/components/aurora-background";
@@ -17,7 +17,7 @@ export async function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
-const CANONICAL_BASE = "https://www.vraelis.ai";
+const CANONICAL_BASE = "https://www.vraelis.com";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -68,7 +68,7 @@ export default async function ArticlePage({ params }: Props) {
     publisher: {
       "@type": "Organization",
       name: "Vraelis",
-      url: "https://www.vraelis.ai",
+      url: "https://www.vraelis.com",
     },
     mainEntityOfPage: {
       "@type": "WebPage",

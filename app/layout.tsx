@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
@@ -88,7 +88,7 @@ export default async function RootLayout({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
               name: "Vraelis",
-              url: "https://www.vraelis.ai",
+              url: "https://www.vraelis.com",
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
@@ -103,7 +103,7 @@ export default async function RootLayout({
               creator: {
                 "@type": "Organization",
                 name: "Vraelis",
-                url: "https://www.vraelis.ai",
+                url: "https://www.vraelis.com",
               },
             }),
           }}

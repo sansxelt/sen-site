@@ -1,4 +1,4 @@
-// v0.2.0 phase G — side-by-side model duel route.
+﻿// v0.2.0 phase G — side-by-side model duel route.
 //
 // One user prompt → two parallel assistant streams (Claude + GPT)
 // multiplexed into a single newline-delimited JSON event stream.
@@ -87,7 +87,7 @@ type DuelBody = {
 // explicitly comparing raw model intelligence. Project context +
 // time + language lock are appended just like /api/ai/chat so both
 // sides have identical grounding.
-const DUEL_SYSTEM_PROMPT = `You are answering inside vraelis.ai's side-by-side model duel. The user is comparing your raw intelligence against another model on the exact same prompt. Be yourself, answer directly in your natural voice.
+const DUEL_SYSTEM_PROMPT = `You are answering inside vraelis.com's side-by-side model duel. The user is comparing your raw intelligence against another model on the exact same prompt. Be yourself, answer directly in your natural voice.
 
 Hard rules:
 - MIRROR the user's energy and length. One word in, one word out. Casual in, casual out. "wsg" / "yo" / "hi" / "w" are greetings, NOT requests for clarification, treat them as openers and reply naturally ("hey, what's up?", "yo", "wsg"), never ask for "more details" or "could you clarify".

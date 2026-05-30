@@ -1,6 +1,6 @@
-// Server-side helper that resolves the current request's host into
-// a "zone", vraelis.ai (apex), chat.vraelis.ai (workshop), or
-// platform.vraelis.ai (developer console).
+﻿// Server-side helper that resolves the current request's host into
+// a "zone", vraelis.com (apex), chat.vraelis.com (workshop), or
+// platform.vraelis.com (developer console).
 //
 // Used by ZoneShell + auth pages to render zone-specific chrome,
 // copy, and accents so each subdomain feels native instead of

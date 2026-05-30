@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+﻿import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   resolveSupportInbox,
@@ -12,7 +12,7 @@ type ContactPayload = {
   name?: string;
   subject?: string;
   message?: string;
-  /** Target inbox, help@, sales@, or privacy@vraelis.ai.  Validated server-side. */
+  /** Target inbox, help@, sales@, or privacy@vraelis.com.  Validated server-side. */
   to?: string;
   /** Human-readable channel ("General support", "Teams / sales", etc.).  Surfaced inside the email body. */
   channel?: string;
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          `We couldn't send your message. ${detail}. If this keeps happening, email us directly at help@vraelis.ai.`,
+          `We couldn't send your message. ${detail}. If this keeps happening, email us directly at help@vraelis.com.`,
       },
       { status: 502 },
     );

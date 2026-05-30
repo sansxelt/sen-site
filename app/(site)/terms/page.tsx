@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -25,7 +25,7 @@ const sections = [
   },
   {
     title: "Contact",
-    body: "Questions about these terms can be sent to help@vraelis.ai.",
+    body: "Questions about these terms can be sent to help@vraelis.com.",
   },
 ];
 

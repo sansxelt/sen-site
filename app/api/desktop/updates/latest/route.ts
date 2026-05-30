@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import {
   desktopLatestShippedDateIso,
   desktopLatestShippedVersion,
@@ -28,7 +28,7 @@ const RELEASE_DATE = desktopLatestShippedDateIso;
 // on this same Vercel app, which keeps the GitHub repo private.
 const PLATFORMS: Record<string, { url: string; signature: string }> = {
   "windows-x86_64": {
-    url: `https://vraelis.ai${desktopWindowsInstallerPath}`,
+    url: `https://vraelis.com${desktopWindowsInstallerPath}`,
     signature:
       "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUaTF3Z0Z6OHUrWURieU9tMkErcW5qYm1CK2o1c1c5OXhDMiszZE9tNEp3bmJ3WnBJQ09RY3psYTBadkx0bmt0aVhkdkdFQ1hkano1ZlBUMnUwZXNVNmE4RHo3MDdDUHcwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzc2NjY3OTE5CWZpbGU6c2Fuc3hlbF8wLjEuMTRfeDY0LXNldHVwLmV4ZQpCZTF4clNxWk1ZWXB3MHVDYVRxOExrNmFMWGdjZmdiU2NxcFRSMmRjUGc1Z29vVEJhOWZDM1pTbGxTakdrekJOcDR0OWRLYVF6ZU01UGx3TGl5SWxEZz09Cg==",
   },

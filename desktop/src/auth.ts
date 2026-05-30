@@ -1,11 +1,11 @@
-import { fetch } from "@tauri-apps/plugin-http";
+﻿import { fetch } from "@tauri-apps/plugin-http";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 // Always hits the live website. We don't run the website locally
 // just to develop the desktop, so there's no localhost fallback.
-export const API_BASE = "https://vraelis.ai";
+export const API_BASE = "https://vraelis.com";
 
 const STORE_FILE = "auth.json";
 const TOKEN_KEY = "session_token";

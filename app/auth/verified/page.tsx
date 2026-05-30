@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { getSignInPath } from "../../../lib/auth-ui";
 
 export const metadata = {
@@ -47,7 +47,7 @@ export default async function VerifiedPage({
         </div>
 
         <p className="mt-6 border-t border-white/10 pt-6 text-xs text-neutral-500">
-          You&apos;ll also get a welcome email from hello@vraelis.ai with getting-started tips.
+          You&apos;ll also get a welcome email from hello@vraelis.com with getting-started tips.
         </p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+﻿import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
@@ -103,7 +103,7 @@ async function fetchPageText(url: string): Promise<string> {
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; VRAELIS-deep-research/1.0; +https://vraelis.ai)",
+          "Mozilla/5.0 (compatible; VRAELIS-deep-research/1.0; +https://vraelis.com)",
         Accept: "text/html,application/xhtml+xml",
       },
     });

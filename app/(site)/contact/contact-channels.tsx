@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { EmailComposer } from "./email-composer";
@@ -6,17 +6,17 @@ import { EmailComposer } from "./email-composer";
 const channels = [
   {
     title: "General support",
-    email: "help@vraelis.ai",
+    email: "help@vraelis.com",
     description: "Accounts, auth, access, onboarding. Also where you apply to write for Learn. Send your name, past work, and the topics you want to cover. Approved writers get a hardlocked byline.",
   },
   {
     title: "Privacy requests",
-    email: "privacy@vraelis.ai",
+    email: "privacy@vraelis.com",
     description: "Requests related to account data, deletion, export, or policy questions.",
   },
   {
     title: "Teams / sales",
-    email: "sales@vraelis.ai",
+    email: "sales@vraelis.com",
     description: "Workspace rollout, pricing conversations, and private onboarding.",
   },
 ];

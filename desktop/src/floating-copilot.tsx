@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -912,7 +912,7 @@ export function FloatingCopilot() {
       let assistant = "";
       let firstByteSeen = false;
       try {
-        // v0.1.7: use absolute API_BASE (vraelis.ai) + tauriFetch so the
+        // v0.1.7: use absolute API_BASE (vraelis.com) + tauriFetch so the
         // request bypasses the local Tauri origin. Add Bearer auth from
         // the restored session. Defensive content-type check so we never
         // dump an HTML error page as a "message" again.
@@ -1400,10 +1400,10 @@ export function FloatingCopilot() {
                       // v0.1.14 plan-gating \u2014 first click shows the locked
                       // toast, second click opens /pricing in browser.
                       if (lockedToast === icon.intent) {
-                        void invoke("open_url", { url: "https://vraelis.ai/pricing" }).catch(() => {});
+                        void invoke("open_url", { url: "https://vraelis.com/pricing" }).catch(() => {});
                         // Tauri opener fallback if open_url isn't a registered command.
                         try {
-                          window.open("https://vraelis.ai/pricing", "_blank");
+                          window.open("https://vraelis.com/pricing", "_blank");
                         } catch { /* ignore */ }
                       } else {
                         setLockedToast(icon.intent);

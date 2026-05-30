@@ -1,4 +1,4 @@
-import {
+﻿import {
   useCallback,
   useEffect,
   useRef,
@@ -915,7 +915,7 @@ export function ChatView({ session }: { session: DesktopSession }) {
           {planForGating === "free" ? (
             <button
               type="button"
-              onClick={() => void openUrl("https://vraelis.ai/pricing")}
+              onClick={() => void openUrl("https://vraelis.com/pricing")}
               className="chat-icon-btn chat-icon-btn--locked"
               title="Voice is on paid plans — upgrade to unlock"
             >
@@ -1346,7 +1346,7 @@ export function PlanView({ session }: { session: DesktopSession }) {
                 </p>
                 <button
                   type="button"
-                  onClick={() => void openUrl("https://vraelis.ai/pricing")}
+                  onClick={() => void openUrl("https://vraelis.com/pricing")}
                   className="upgrade-cta-btn"
                 >
                   See plans →

@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+﻿import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
 import { getSupabaseAdminClient } from "../../../../lib/supabase-admin";
@@ -11,7 +11,7 @@ type SharePayload = {
   messages?: unknown;
 };
 
-const PUBLIC_SHARE_BASE = "https://vraelis.ai/s";
+const PUBLIC_SHARE_BASE = "https://vraelis.com/s";
 
 function makePublicId(): string {
   // 9 bytes of base64url ≈ 12 chars, plenty of entropy + readable URL.
@@ -29,7 +29,7 @@ function isShareMessage(value: unknown): value is ShareMessage {
 
 // POST /api/threads/share, accept a snapshot of a thread, persist it,
 // return a stable share URL the desktop can copy to the clipboard.
-// The public viewing page (https://vraelis.ai/s/{id}) ships in v0.1.5.
+// The public viewing page (https://vraelis.com/s/{id}) ships in v0.1.5.
 export async function POST(request: Request) {
   const email = await getDesktopUserEmailFromRequest(request);
   if (!email) {

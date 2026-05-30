@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+﻿import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
@@ -13,7 +13,7 @@ const client = new Anthropic();
 
 // Copilot system prompt: open-ended Q&A plus optional navigation via
 // a [go:/path] marker that the frontend intercepts.
-const SITE_ROUTES = `Routes on vraelis.ai:
+const SITE_ROUTES = `Routes on vraelis.com:
 - /            - home
 - /home        - home (alias)
 - /product     - product overview (features + how it works)
@@ -34,7 +34,7 @@ const SITE_ROUTES = `Routes on vraelis.ai:
 - /account/download     - desktop installer + live build status
 - /account/updates      - desktop release notes`;
 
-const SYSTEM_PROMPT = `You are the Vraelis copilot - a fast, helpful assistant living in a side panel on vraelis.ai. You answer ANY question the user has, not just questions about the current page.
+const SYSTEM_PROMPT = `You are the Vraelis copilot - a fast, helpful assistant living in a side panel on vraelis.com. You answer ANY question the user has, not just questions about the current page.
 
 Behavior:
 - Answer in 1-3 short sentences. The copilot is a side panel, not a doc.

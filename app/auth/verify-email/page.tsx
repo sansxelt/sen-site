@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { ResendVerification } from "../../../components/resend-verification";
 import { SignupWaitingPoller } from "../../../components/signup-waiting-poller";
 
@@ -77,7 +77,7 @@ function PendingState({ email }: { email: string }) {
           <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-neutral-500" />
           <span className="min-w-0 leading-5">
             Not in your inbox? Check your spam folder, the sender is{" "}
-            <span className="text-neutral-300">hello@vraelis.ai</span>.
+            <span className="text-neutral-300">hello@vraelis.com</span>.
           </span>
         </li>
         <li className="flex items-start gap-2">
@@ -158,7 +158,7 @@ function ErrorState({ email }: { email: string }) {
         We hit a snag verifying your email.
       </h1>
       <p className="mt-3 text-sm leading-6 text-neutral-300">
-        Try the link again in a minute, if it keeps failing, resend a fresh link below or email <a href="mailto:help@vraelis.ai" className="text-white underline decoration-neutral-600 underline-offset-4">help@vraelis.ai</a> and we&apos;ll sort it out.
+        Try the link again in a minute, if it keeps failing, resend a fresh link below or email <a href="mailto:help@vraelis.com" className="text-white underline decoration-neutral-600 underline-offset-4">help@vraelis.com</a> and we&apos;ll sort it out.
       </p>
       <ResendVerification defaultEmail={email} />
     </>

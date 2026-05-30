@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AuroraBackground } from "@/components/aurora-background";
 import { LearnShell } from "@/components/learn/learn-shell";
@@ -14,7 +14,7 @@ import { isAdminEmail } from "@/lib/admin";
 
 export const revalidate = 300; // 5 min, so new pieces propagate without redeploy
 
-const CANONICAL_BASE = "https://www.vraelis.ai";
+const CANONICAL_BASE = "https://www.vraelis.com";
 
 type Params = { slug: string };
 
@@ -93,7 +93,7 @@ export default async function LearnPiecePage({
     publisher: {
       "@type": "Organization",
       name: "Vraelis",
-      url: "https://www.vraelis.ai",
+      url: "https://www.vraelis.com",
     },
     mainEntityOfPage: {
       "@type": "WebPage",
