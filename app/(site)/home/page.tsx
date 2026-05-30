@@ -188,7 +188,7 @@ function FeatureRow({
 }) {
   const gutter = "clamp(20px,4vw,64px)";
   return (
-    <section style={{ padding: `clamp(80px,11vw,144px) ${gutter}`, borderBottom: `1px solid ${T.line1}` }}>
+    <section data-reveal style={{ padding: `clamp(80px,11vw,144px) ${gutter}`, borderBottom: `1px solid ${T.line1}` }}>
       <div style={{ maxWidth: 1320, margin: "0 auto", display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.1fr)", gap: "clamp(40px,6vw,88px)", alignItems: "center" }} className={`vra-feature-grid${reverse ? " vra-feature-reverse" : ""}`}>
         <div style={{ order: reverse ? 2 : 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 24 }}>
@@ -238,6 +238,8 @@ export default function HomePage() {
           .vra-hero-grid { grid-template-columns:1fr !important; gap:48px !important; }
         }
         .vra-em { font-family:"Instrument Serif",Georgia,serif; font-style:italic; font-weight:400; letter-spacing:-0.005em; font-size:1.04em; }
+        .vra-spec-link { transition: color 150ms, opacity 150ms; }
+        .vra-spec-link:hover { color: #ECEFF4; opacity: 0.85; }
       `}</style>
 
       {/* ── HERO ── */}
@@ -271,15 +273,15 @@ export default function HomePage() {
             <p style={{ fontSize: "clamp(1rem,1.3vw,1.15rem)", color: T.fg2, marginBottom: 36, maxWidth: 480, lineHeight: 1.55 }}>
               Eight cameras around the frame. Sound only you can hear. A display at the edge of your vision. It catches your voice — even a whisper — not whoever&apos;s standing next to you.
             </p>
-            <a href="#spec" style={{ fontSize: 14, color: T.fg2, textDecoration: "underline", textUnderlineOffset: 4, letterSpacing: "-0.005em" }}>
-              See the full spec
+            <a href="#spec" className="vra-spec-link" style={{ fontSize: 14, color: T.fg2, textDecoration: "underline", textUnderlineOffset: 4, letterSpacing: "-0.005em", display: "inline-block" }}>
+              See the full spec ↓
             </a>
           </div>
         </div>
       </section>
 
       {/* ── MANIFESTO ── */}
-      <section style={{ padding: `clamp(80px,11vw,144px) ${gutter}`, borderBottom: `1px solid ${T.line1}` }}>
+      <section data-reveal style={{ padding: `clamp(80px,11vw,144px) ${gutter}`, borderBottom: `1px solid ${T.line1}` }}>
         <div style={{ maxWidth: 920, margin: "0 auto" }}>
           <p style={{ fontSize: "clamp(1.5rem,2.4vw,1.875rem)", lineHeight: 1.35, color: T.fg1, letterSpacing: "-0.02em", fontWeight: 400 }}>
             Vraelis is something you wear. It has a camera, a mic, a speaker, and a light.{" "}
@@ -323,7 +325,7 @@ export default function HomePage() {
       />
 
       {/* ── SPEC ── */}
-      <section id="spec" style={{ padding: `clamp(80px,11vw,144px) ${gutter}`, borderBottom: `1px solid ${T.line1}` }}>
+      <section id="spec" data-reveal style={{ padding: `clamp(80px,11vw,144px) ${gutter}`, borderBottom: `1px solid ${T.line1}` }}>
         <div style={{ maxWidth: 1320, margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 56, flexWrap: "wrap", gap: 24 }}>
             <h2 style={{ fontFamily: T.sans, fontSize: "clamp(1.875rem,3vw,2.75rem)", fontWeight: 500, color: T.fg1, letterSpacing: "-0.03em", margin: 0 }}>Specifications</h2>

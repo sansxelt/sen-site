@@ -6,6 +6,7 @@ import { getSignInPath } from "../lib/auth-ui";
 import { AccountDropdown } from "./account-dropdown";
 import { MobileNav } from "./mobile-nav";
 import { SiteNavLinks } from "./site-nav-links";
+import { SiteTransition } from "./site-transition";
 import { ZoneDropdown } from "./zone-dropdown";
 
 const footerGroups = [
@@ -104,7 +105,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
       `}</style>
 
       <main style={{ position: "relative", zIndex: 10, flex: 1, paddingTop: 64 }}>
-        {children}
+        <SiteTransition>{children}</SiteTransition>
       </main>
 
       <footer style={{ marginTop: "auto", borderTop: "1px solid rgba(199,205,215,0.08)" }}>
