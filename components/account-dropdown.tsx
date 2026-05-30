@@ -9,6 +9,12 @@ type Props = {
   isAdmin?: boolean;
 };
 
+const menuItems = [
+  { href: "/account",          label: "Account",  icon: "◉" },
+  { href: "/account/settings", label: "Settings", icon: "⊙" },
+  { href: "/account/usage",    label: "Usage",    icon: "◈" },
+];
+
 export function AccountDropdown({ email, isAdmin = false }: Props) {
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -17,13 +23,9 @@ export function AccountDropdown({ email, isAdmin = false }: Props) {
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -33,6 +35,7 @@ export function AccountDropdown({ email, isAdmin = false }: Props) {
   }, [open]);
 
   const initial = email.trim().charAt(0).toUpperCase() || "?";
+  const name    = email.split("@")[0].replace(/[._-]/g, " ");
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -46,7 +49,8 @@ export function AccountDropdown({ email, isAdmin = false }: Props) {
   }
 
   return (
-    <div ref={wrapRef} className="relative">
+    <div ref={wrapRef} style={{ position: "relative" }}>
+      {/* Avatar trigger */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -54,12 +58,29 @@ export function AccountDropdown({ email, isAdmin = false }: Props) {
         aria-expanded={open}
         title={email}
         disabled={signingOut}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-sm font-semibold text-neutral-100 transition hover:border-white/25 hover:bg-white/[0.12] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60 disabled:opacity-50"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 34,
+          height: 34,
+          borderRadius: "50%",
+          background: "rgba(92,229,213,0.12)",
+          border: "1.5px solid rgba(92,229,213,0.35)",
+          color: "#5CE5D5",
+          fontSize: 13,
+          fontWeight: 600,
+          fontFamily: '"Inter Tight", sans-serif',
+          letterSpacing: "-0.01em",
+          cursor: "pointer",
+          transition: "border-color 150ms, background 150ms",
+          opacity: signingOut ? 0.5 : 1,
+        }}
       >
         {signingOut ? (
-          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden style={{ animation: "spin 0.8s linear infinite" }}>
+            <circle opacity="0.25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path opacity="0.75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
         ) : initial}
       </button>
@@ -67,27 +88,78 @@ export function AccountDropdown({ email, isAdmin = false }: Props) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+8px)] z-50 w-56 overflow-hidden rounded-xl border border-white/10 bg-neutral-950 shadow-[0_18px_48px_rgba(0,0,0,0.45)]"
+          style={{
+            position: "absolute",
+            right: 0,
+            top: "calc(100% + 10px)",
+            zIndex: 50,
+            width: 240,
+            overflow: "hidden",
+            borderRadius: 8,
+            border: "1px solid rgba(199,205,215,0.12)",
+            background: "#0E1421",
+            boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(92,229,213,0.06)",
+          }}
         >
-          <div className="px-3 py-2.5 border-b border-white/[0.06]">
-            <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-neutral-500">Signed in</div>
-            <div className="mt-0.5 truncate text-xs text-neutral-300" title={email}>{email}</div>
+          {/* Profile header */}
+          <div style={{ padding: "14px 16px 12px", borderBottom: "1px solid rgba(199,205,215,0.08)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                background: "rgba(92,229,213,0.12)",
+                border: "1.5px solid rgba(92,229,213,0.3)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#5CE5D5", fontSize: 14, fontWeight: 600,
+                fontFamily: '"Inter Tight", sans-serif',
+              }}>
+                {initial}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{
+                  fontSize: 13, fontWeight: 500, color: "#ECEFF4",
+                  fontFamily: '"Inter Tight", sans-serif',
+                  letterSpacing: "-0.01em", textTransform: "capitalize",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {name}
+                </div>
+                <div style={{
+                  fontSize: 11, color: "#5A6478", marginTop: 1,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }} title={email}>
+                  {email}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="py-1">
-            {[
-              { href: "/account",          label: "Account" },
-              { href: "/account/settings", label: "Settings" },
-              { href: "/account/usage",    label: "Usage" },
-            ].map((link) => (
+          {/* Menu items */}
+          <div style={{ padding: "4px 0" }}>
+            {menuItems.map((item) => (
               <Link
-                key={link.href}
-                href={link.href}
+                key={item.href}
+                href={item.href}
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="block px-3 py-2 text-sm text-neutral-300 transition hover:bg-white/[0.05] hover:text-white"
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "8px 16px",
+                  fontSize: 13, color: "#C7CDD7",
+                  textDecoration: "none",
+                  fontFamily: '"Inter Tight", sans-serif',
+                  transition: "background 120ms, color 120ms",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(199,205,215,0.06)";
+                  (e.currentTarget as HTMLElement).style.color = "#ECEFF4";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                  (e.currentTarget as HTMLElement).style.color = "#C7CDD7";
+                }}
               >
-                {link.label}
+                <span style={{ fontSize: 11, color: "#5A6478", width: 14, textAlign: "center" }}>{item.icon}</span>
+                {item.label}
               </Link>
             ))}
 
@@ -96,25 +168,55 @@ export function AccountDropdown({ email, isAdmin = false }: Props) {
                 href="/account/content"
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="block px-3 py-2 text-sm text-violet-300 transition hover:bg-white/[0.05] hover:text-white"
+                style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "8px 16px",
+                  fontSize: 13, color: "#5CE5D5",
+                  textDecoration: "none",
+                  fontFamily: '"Inter Tight", sans-serif',
+                  transition: "background 120ms",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(92,229,213,0.06)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
               >
+                <span style={{ fontSize: 11, color: "#5CE5D5", width: 14, textAlign: "center" }}>⬡</span>
                 Admin
               </Link>
             )}
           </div>
 
-          <div className="border-t border-white/[0.06] py-1">
+          {/* Sign out */}
+          <div style={{ borderTop: "1px solid rgba(199,205,215,0.08)", padding: "4px 0 6px" }}>
             <button
               type="button"
               role="menuitem"
               onClick={() => void handleSignOut()}
-              className="block w-full px-3 py-2 text-left text-sm text-neutral-500 transition hover:bg-white/[0.05] hover:text-white"
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", padding: "8px 16px",
+                fontSize: 13, color: "#5A6478",
+                background: "transparent", border: "none",
+                cursor: "pointer", textAlign: "left",
+                fontFamily: '"Inter Tight", sans-serif',
+                transition: "background 120ms, color 120ms",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(199,205,215,0.06)";
+                (e.currentTarget as HTMLElement).style.color = "#ECEFF4";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+                (e.currentTarget as HTMLElement).style.color = "#5A6478";
+              }}
             >
+              <span style={{ fontSize: 11, color: "#5A6478", width: 14, textAlign: "center" }}>↳</span>
               Sign out
             </button>
           </div>
         </div>
       )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </div>
   );
 }

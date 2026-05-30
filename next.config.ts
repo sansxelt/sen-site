@@ -22,11 +22,13 @@ const nextConfig: NextConfig = {
       { source: "/function", destination: "/product", permanent: true },
       { source: "/account/billing", destination: "/account/plan", permanent: true },
       { source: "/audio", destination: "/whisper", permanent: true },
-      // Single-domain migration: /app → /chat, /platform-soon → /platform
+      // Legacy route redirects
       { source: "/app", destination: "/chat", permanent: false },
       { source: "/app/:path*", destination: "/chat/:path*", permanent: false },
-      { source: "/platform-soon", destination: "/platform", permanent: false },
-      { source: "/platform-soon/:path*", destination: "/platform/:path*", permanent: false },
+      { source: "/platform-soon", destination: "/chat", permanent: false },
+      { source: "/platform-soon/:path*", destination: "/chat", permanent: false },
+      { source: "/platform", destination: "/chat", permanent: false },
+      { source: "/platform/:path*", destination: "/chat", permanent: false },
     ];
   },
 };

@@ -12,7 +12,7 @@ export default async function ChatLayout({ children }: { children: ReactNode }) 
     <div className="relative min-h-screen bg-background text-neutral-100">
       <div className="flex min-h-screen flex-col lg:flex-row">
         <DashboardNav userEmail={userEmail} zone="chat" isAdmin={isAdmin} />
-        <main className="flex-1 min-w-0 pb-[88px] lg:pb-0">
+        <main data-route-transition className="flex-1 min-w-0 pb-[88px] lg:pb-0">
           {children}
         </main>
       </div>

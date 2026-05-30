@@ -1,75 +1,68 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getZone, ZONE_THEME, type Zone } from "@/lib/zone";
 
-export async function ZoneShell({
+// Auth shell — used by /signin, /auth/*, /checkout.
+// Uses the same visual language as the landing page.
+export function ZoneShell({
   children,
-  zoneOverride,
   hideBackLink = false,
   backHrefOverride,
   backLabelOverride,
   wide = false,
 }: {
   children: ReactNode;
-  zoneOverride?: Zone;
+  zoneOverride?: string;
   hideBackLink?: boolean;
   backHrefOverride?: string;
   backLabelOverride?: string;
   wide?: boolean;
 }) {
-  const zone = zoneOverride ?? (await getZone());
-  const t = ZONE_THEME[zone];
-  const defaultHomeHref =
-    zone === "chat"
-      ? "/chat"
-      : zone === "platform"
-        ? "/platform"
-        : "/home";
-  const defaultHomeLabel =
-    zone === "chat" ? "← Go back" : zone === "platform" ? "← platform" : "← Go back";
-  const homeHref  = backHrefOverride  ?? defaultHomeHref;
-  const homeLabel = backLabelOverride ?? defaultHomeLabel;
+  const backHref  = backHrefOverride  ?? "/home";
+  const backLabel = backLabelOverride ?? "← Go back";
 
   return (
-    <div className={`min-h-screen ${t.bg} text-neutral-100 ${t.font}`}>
-      <header className="border-b border-white/[0.06]">
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-10 xl:px-14 2xl:px-20">
-          <Link
-            href={zone === "platform" ? "/platform" : zone === "chat" ? "/chat" : "/home"}
-            className="inline-flex shrink-0 items-center gap-2.5"
-          >
-            <Image
-              src={t.logoSrc}
-              alt="Vraelis"
-              width={36}
-              height={36}
-              className="h-9 w-9 rounded-xl"
-              priority
-            />
-            <div>
-              <div className={`text-sm font-semibold tracking-tight text-white sm:text-base ${zone === "platform" ? "font-mono" : ""}`}>
-                {t.label}
-              </div>
-              <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
-                {t.tagline}
-              </div>
-            </div>
+    <div style={{
+      minHeight: "100vh",
+      background: "var(--background)",
+      color: "var(--fg-1)",
+      fontFamily: '"Inter Tight", var(--font-geist-sans), sans-serif',
+    }}>
+      <header style={{
+        position: "sticky", top: 0, zIndex: 40,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 clamp(20px,4vw,64px)",
+        height: 64,
+        background: "rgba(10,15,24,0.90)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: "1px solid var(--border-soft)",
+      }}>
+        <Link href="/home" style={{
+          fontSize: 19, fontWeight: 600, letterSpacing: "-0.025em",
+          color: "var(--fg-1)", textDecoration: "none",
+          fontFamily: '"Inter Tight", sans-serif',
+        }}>
+          vraelis<span style={{ color: "var(--accent)" }}>.</span>
+        </Link>
+        {!hideBackLink && (
+          <Link href={backHref} style={{
+            fontSize: 13, color: "var(--fg-4)", textDecoration: "none",
+            letterSpacing: "-0.005em", transition: "color 150ms",
+            fontFamily: '"Inter Tight", sans-serif',
+          }}>
+            {backLabel}
           </Link>
-          <div className="flex items-center gap-3">
-            {!hideBackLink && (
-              <Link
-                href={homeHref}
-                className={`text-[11px] text-neutral-500 transition hover:text-neutral-200 ${zone === "platform" ? "font-mono" : ""}`}
-              >
-                {homeLabel}
-              </Link>
-            )}
-          </div>
-        </div>
+        )}
       </header>
 
-      <main className={`mx-auto ${wide ? "max-w-6xl" : "max-w-3xl"} px-6 py-12 sm:px-8 sm:py-16`}>
+      <main
+        data-route-transition
+        style={{
+          maxWidth: wide ? 1080 : 720,
+          margin: "0 auto",
+          padding: "clamp(40px,8vw,96px) clamp(20px,4vw,48px)",
+        }}
+      >
         {children}
       </main>
     </div>

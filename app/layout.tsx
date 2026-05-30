@@ -1,7 +1,15 @@
 ﻿import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+import { Inter_Tight } from "next/font/google";
 import "./globals.css";
+
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  variable: "--font-inter-tight",
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
 import { auth } from "../auth";
 import { CommandPalette } from "../components/command-palette";
 import { CopilotBar } from "../components/copilot-bar";
@@ -78,7 +86,7 @@ export default async function RootLayout({
       lang="en"
       data-theme="dark"
       style={{ colorScheme: "dark" }}
-      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${interTight.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background font-sans text-neutral-100">
         <script

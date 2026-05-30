@@ -5,6 +5,7 @@ import { isAdminEmail } from "../lib/admin";
 import { getSignInPath } from "../lib/auth-ui";
 import { AccountDropdown } from "./account-dropdown";
 import { MobileNav } from "./mobile-nav";
+import { ZoneDropdown } from "./zone-dropdown";
 
 const footerGroups = [
   {
@@ -97,16 +98,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
               <Link href={getSignInPath()} style={{ fontSize: 14, color: "#C7CDD7", textDecoration: "none", letterSpacing: "-0.005em" }}>
                 Sign in
               </Link>
-              <Link href={getSignInPath()} style={{
-                display: "inline-flex", alignItems: "center",
-                padding: "10px 20px",
-                background: "#ECEFF4", color: "#0A0F18",
-                fontSize: 14, fontWeight: 500, letterSpacing: "-0.005em",
-                textDecoration: "none", borderRadius: 4,
-                fontFamily: '"Inter Tight", sans-serif',
-              }}>
-                Join waitlist
-              </Link>
+              <ZoneDropdown signedIn={false} />
             </>
           )}
         </div>
@@ -118,7 +110,7 @@ export async function SiteShell({ children }: { children: ReactNode }) {
         @media (max-width: 768px) { .vra-nav-desktop { display: none !important; } }
       `}</style>
 
-      <main style={{ position: "relative", zIndex: 10, flex: 1, paddingTop: 64 }}>
+      <main data-route-transition style={{ position: "relative", zIndex: 10, flex: 1, paddingTop: 64 }}>
         {children}
       </main>
 
