@@ -20,7 +20,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const home = isHome(pathname);
 
   return (
-    <div data-route-transition-root>
+    <div data-route-transition-root style={{ background: "var(--background)", minHeight: "100%" }}>
       <div
         key={pathname}
         data-route-transition

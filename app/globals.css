@@ -265,8 +265,14 @@ body {
 }
 
 @keyframes route-enter {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes nav-shimmer {
@@ -275,7 +281,7 @@ body {
 }
 
 [data-route-transition] {
-  animation: route-enter 160ms ease-out both;
+  animation: route-enter 200ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
 }
 
 [data-nav-progress] {
