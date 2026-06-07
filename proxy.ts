@@ -1,124 +1,90 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Next.js 16 proxy. Single job now: host routing.
-//
-// Host routing splits sansxel.ai / chat.sansxel.ai /
-// platform.sansxel.ai into their own zones (workshop, marketing,
-// docs).
-//
-// Auth gating used to live here too but moved into route + layout
-// auth() checks; getToken() at the proxy layer disagreed with
-// auth() about cookie visibility, which produced false 401s
-// (most recently the Top-up Credits modal returning "Sign in to
-// continue" while the user was clearly signed in).
-//
-// Localhost + Vercel preview URLs (random *.vercel.app) skip host
-// routing so dev + previews keep working.
+// It's just vraelis.com. The marketing pages live under the internal
+// /v route group; map the clean public paths onto them so the URL bar
+// stays clean (vraelis.com/pricing → /v/pricing). Everything else —
+// /signin, /api/*, /account, and the /v/* routes themselves — passes
+// straight through untouched.
+const CLEAN_PATHS: Record<string, string> = {
+  "/": "/v",
+  "/how": "/v/how",
+  "/automates": "/v/automates",
+  "/pricing": "/v/pricing",
+  "/contact": "/v/contact",
+  "/privacy": "/v/privacy",
+  "/terms": "/v/terms",
+  "/refunds": "/v/refunds",
+};
 
-const APEX_HOSTS = new Set(["sansxel.ai", "www.sansxel.ai"]);
-const CHAT_HOST = "chat.sansxel.ai";
-const PLATFORM_HOST = "platform.sansxel.ai";
+// Marketing /v/* paths should never show in the URL bar — bounce them to
+// their clean alias (the rewrite above then serves the same content). App
+// paths (/v/account*, /v/checkout, /v/showcase) are intentionally left alone.
+const VANITY_REDIRECTS: Record<string, string> = {
+  "/v": "/",
+  "/v/how": "/how",
+  "/v/automates": "/automates",
+  "/v/pricing": "/pricing",
+  "/v/contact": "/contact",
+  "/v/privacy": "/privacy",
+  "/v/terms": "/terms",
+  "/v/refunds": "/refunds",
+};
 
-const CHAT_PATHS = [
-  "/app",
-  "/account",
-  "/checkout",
-  "/signin",
-  "/auth",
-  "/desktop-auth",
-];
-
-const MARKETING_PATHS = [
-  "/home",
-  "/product",
-  "/learn",
-  "/pricing",
-  "/contact",
-  "/contribute",
-  "/download",
-  "/privacy",
-  "/terms",
-];
-
-function startsWithAny(path: string, prefixes: string[]): boolean {
-  return prefixes.some((p) => path === p || path.startsWith(`${p}/`));
+// The old sansxel app surfaces (/account workshop, /app) still exist as
+// routes in this codebase, but on vraelis they must NEVER show — the
+// clean /account and /app URLs serve the vraelis account area instead.
+function isSansxelApp(path: string): boolean {
+  return (
+    path === "/account" ||
+    path.startsWith("/account/") ||
+    path === "/app" ||
+    path.startsWith("/app/")
+  );
 }
 
-function hostRoute(req: NextRequest): NextResponse | null {
-  const host = (req.headers.get("host") ?? "").toLowerCase();
-  const url = req.nextUrl;
-  const path = url.pathname;
+export default function proxy(req: NextRequest) {
+  const path = req.nextUrl.pathname;
 
-  // chat.sansxel.ai
-  if (host === CHAT_HOST) {
-    if (path === "/") {
-      // Root = workshop. Rewrite to /app so the URL bar stays at /
-      // and the workshop renders. /app's page.tsx now handles its
-      // own auth gate via auth() (avoids the proxy getToken mismatch).
-      return NextResponse.rewrite(new URL("/app", url));
-    }
-    if (startsWithAny(path, MARKETING_PATHS)) {
-      return NextResponse.redirect(
-        new URL(path + url.search, "https://sansxel.ai"),
-        302,
-      );
-    }
-    return null;
+  // Redirect internal marketing /v paths to their clean alias so the URL bar
+  // never shows /v. (Rewrites of clean → /v below don't re-trigger this.)
+  const vanity =
+    VANITY_REDIRECTS[path] ??
+    (path === "/v/articles" || path.startsWith("/v/articles/") ? path.slice(2) : undefined);
+  if (vanity) {
+    const url = req.nextUrl.clone();
+    url.pathname = vanity;
+    return NextResponse.redirect(url);
   }
 
-  // platform.sansxel.ai
-  if (host === PLATFORM_HOST) {
-    if (path === "/") {
-      return NextResponse.rewrite(new URL("/platform-soon", url));
-    }
-    if (startsWithAny(path, MARKETING_PATHS)) {
-      return NextResponse.redirect(
-        new URL(path + url.search, "https://sansxel.ai"),
-        302,
-      );
-    }
-    if (startsWithAny(path, CHAT_PATHS)) {
-      return NextResponse.redirect(
-        new URL(path + url.search, "https://chat.sansxel.ai"),
-        302,
-      );
-    }
-    return null;
+  const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0];
+  const isAppSubdomain = host === "app.vraelis.com";
+
+  let target =
+    CLEAN_PATHS[path] ??
+    (path === "/articles" || path.startsWith("/articles/")
+      ? `/v${path}`
+      : isSansxelApp(path)
+        ? "/v/account"
+        : undefined);
+
+  // On app.vraelis.com the root IS the signed-in app/account, not the
+  // marketing home. (vraelis.com stays the marketing site.)
+  if (isAppSubdomain && path === "/") {
+    target = "/v/account";
   }
 
-  // sansxel.ai (apex)
-  if (APEX_HOSTS.has(host)) {
-    if (host === "www.sansxel.ai") {
-      return NextResponse.redirect(
-        new URL(path + url.search, "https://sansxel.ai"),
-        308,
-      );
-    }
-    if (startsWithAny(path, CHAT_PATHS)) {
-      return NextResponse.redirect(
-        new URL(path + url.search, "https://chat.sansxel.ai"),
-        302,
-      );
-    }
-    return null;
+  if (target) {
+    const url = req.nextUrl.clone();
+    url.pathname = target;
+    return NextResponse.rewrite(url);
   }
 
-  // Unknown host (preview deploy, localhost, custom) — pass through.
-  return null;
-}
-
-export default async function proxy(req: NextRequest) {
-  const hostResp = hostRoute(req);
-  if (hostResp) return hostResp;
   return NextResponse.next();
 }
 
 export const config = {
-  // Catch all paths EXCEPT:
-  //   - Next internals (_next/*)
-  //   - Anything that looks like a file (favicon.ico, og-image.png, sitemap.xml, etc.)
-  // /api/* IS matched so /api/account gating works; auth() is cheap
-  // for non-account API routes (cookie+JWT, no DB).
+  // Match all paths EXCEPT Next internals (_next/*) and anything that
+  // looks like a file (favicon.ico, og-image.png, etc.).
   matcher: ["/((?!_next/|.*\\.[a-zA-Z0-9]+$).*)"],
 };

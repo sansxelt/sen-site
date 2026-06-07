@@ -1,15 +1,58 @@
 import type { ReactNode } from "react";
 import { ZoneShell } from "@/components/zone-shell";
+import { VraelisPromoBar } from "@/components/vraelis-promo-bar";
+import { isVraelisRequest } from "@/lib/site-host";
 
-// /signin gets the zone-aware shell so visiting from chat.sansxel.ai
-// shows workshop chrome, platform.sansxel.ai shows the dev console
-// chrome, etc. Same component, different identity per host.
-//
-// The back link is forced to the apex marketing site instead of
-// the per-zone home, because the per-zone home (workshop/platform)
-// is itself auth-gated and would just bounce an unauth visitor
-// right back to /signin. Marketing is always reachable.
-export default function SignInLayout({ children }: { children: ReactNode }) {
+// /signin gets the zone-aware shell on sansxel hosts (workshop /
+// platform chrome). On vraelis it skips that entirely — the root
+// layout already provides the light body + vraelis stylesheets, so we
+// just render the centered sign-in surface with a small "back to
+// vraelis" link.
+export default async function SignInLayout({ children }: { children: ReactNode }) {
+  if (await isVraelisRequest()) {
+    return (
+      <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+        <div style={{ position: "sticky", top: 0, zIndex: 50 }}>
+          <VraelisPromoBar />
+          <div style={{ padding: "20px var(--gutter)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "rgba(250, 248, 244, 0.86)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid var(--line-1)" }}>
+          <a
+            href="/v"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: 20,
+              fontWeight: 700,
+              letterSpacing: "-0.04em",
+              color: "var(--fg-1)",
+              textDecoration: "none",
+            }}
+          >
+            Vraelis
+          </a>
+          <a
+            href="/v"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--fg-2)",
+              textDecoration: "none",
+              border: "1px solid var(--line-3)",
+              borderRadius: 999,
+              padding: "8px 16px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span aria-hidden>←</span> Back
+          </a>
+          </div>
+        </div>
+        <div style={{ flex: 1, display: "grid", placeItems: "center" }}>{children}</div>
+      </div>
+    );
+  }
+
   return (
     <ZoneShell
       wide

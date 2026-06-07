@@ -22,6 +22,90 @@ import { getUserProfileByEmail } from "../../../../lib/user-profile";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
 import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
 import { invalidateAddonsCache } from "../../../../lib/active-addons";
+import { setWorkspacePlan, markPaymentPaid, markLeadsFeeBilled, setLeadStatus, setLeadOutcome } from "../../../../lib/vraelis-db";
+import { isCycle, isPlanKey } from "../../../../lib/vraelis-plans";
+import { createBooking, slotLabel } from "../../../../lib/vraelis-booking";
+import { refundPayment } from "../../../../lib/vraelis-connect";
+import { sendBookingConfirmation } from "../../../../lib/vraelis-email";
+import { captureError } from "../../../../lib/vraelis-monitor";
+
+// Vraelis runs in this same Stripe account. Vraelis checkout sessions +
+// subscriptions carry metadata { owner_email, plan, cycle }. When an
+// event is a vraelis one, record the plan on the vraelis workspace and
+// return true so the sansxel handlers skip it.
+async function recordVraelisPlan(
+  meta: Stripe.Metadata | null | undefined,
+  status: "active" | "canceled",
+): Promise<boolean> {
+  const owner = meta?.owner_email ?? "";
+  const plan = meta?.plan ?? "";
+  const cycle = meta?.cycle ?? "";
+  if (!owner || !isPlanKey(plan) || !isCycle(cycle)) return false;
+  try {
+    await setWorkspacePlan(owner, { plan, cycle, status, provider: "stripe" });
+  } catch (err) {
+    console.error("[stripe webhook] vraelis plan record failed:", err);
+  }
+  return true;
+}
+
+// Vraelis on-platform payment (Stripe Connect destination charge). The cut
+// was already taken as the application fee — here we just record it as paid
+// and advance the lead: a deposit confirms the booking, a full payment marks
+// the deal won. Idempotent via markPaymentPaid keyed on the session id.
+async function handleVraelisPayment(session: Stripe.Checkout.Session): Promise<void> {
+  const paymentIntent =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id ?? null;
+  // markPaymentPaid only returns a row on the FIRST (pending→paid) delivery,
+  // so this whole block runs at most once per payment — duplicate webhook
+  // deliveries (Stripe at-least-once, two endpoints) short-circuit here.
+  const payment = await markPaymentPaid(session.id, paymentIntent);
+  if (!payment) return;
+
+  try {
+    if (payment.kind === "deposit" && payment.booking_slot) {
+      const result = await createBooking({
+        ownerEmail: payment.owner_email,
+        leadId: payment.lead_id,
+        slotIso: payment.booking_slot,
+        name: payment.booking_name ?? undefined,
+        contactEmail: session.customer_details?.email ?? undefined,
+        contactPhone: payment.booking_phone ?? undefined,
+        note: "Deposit paid",
+      });
+      // Slot was taken between checkout and payment (concurrent booking) →
+      // we can't honor it. Refund the deposit instead of charging for nothing
+      // and don't send a misleading confirmation.
+      if (!result.ok) {
+        if (paymentIntent) await refundPayment(paymentIntent);
+        console.error(`[stripe webhook] deposit slot unavailable (${result.reason}), refunded payment ${payment.id}`);
+        return;
+      }
+      await sendBookingConfirmation({
+        businessName: payment.description ?? "",
+        slotLabel: slotLabel(payment.booking_slot),
+        leadEmail: session.customer_details?.email ?? null,
+        leadName: payment.booking_name ?? null,
+        ownerEmail: payment.owner_email,
+      });
+      if (payment.lead_id) {
+        await setLeadStatus(payment.owner_email, payment.lead_id, "booked");
+        await setLeadOutcome(payment.owner_email, payment.lead_id, "paid");
+        // Cut was already taken as the application fee → never let the monthly
+        // revenue-share sweep bill this lead again.
+        await markLeadsFeeBilled([payment.lead_id]);
+      }
+    } else if (payment.lead_id) {
+      await setLeadStatus(payment.owner_email, payment.lead_id, "won");
+      await setLeadOutcome(payment.owner_email, payment.lead_id, "paid");
+      await markLeadsFeeBilled([payment.lead_id]);
+    }
+  } catch (err) {
+    captureError("stripe", err, { where: "handleVraelisPayment", session: session.id });
+  }
+}
 
 /**
  * Look up the customer's display name so every billing email greets
@@ -105,6 +189,15 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
 }
 
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
+  // Vraelis subscription? Record plan status on the vraelis workspace and
+  // stop — the sansxel billing logic below doesn't apply to it.
+  const vraelisCanceled =
+    event.type === "customer.subscription.deleted" ||
+    ["canceled", "unpaid", "incomplete_expired"].includes(subscription.status);
+  if (await recordVraelisPlan(subscription.metadata, vraelisCanceled ? "canceled" : "active")) {
+    return;
+  }
+
   const ctx = await resolveContext(subscription);
   if (!ctx) {
     console.warn("[stripe webhook] missing email context, skipping");
@@ -408,8 +501,13 @@ async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
 //   • Anything else (handler errors, DB hiccups) → still 200 so we
 //     don't earn ourselves a Stripe retry storm against our own bugs.
 export async function POST(request: Request) {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!isStripeConfigured() || !webhookSecret) {
+  // Two webhook endpoints point here (the sansxel one + a dedicated
+  // Vraelis one), each with its own signing secret — accept either.
+  const secrets = [
+    process.env.STRIPE_WEBHOOK_SECRET,
+    process.env.STRIPE_VRAELIS_WEBHOOK_SECRET,
+  ].filter((s): s is string => Boolean(s));
+  if (!isStripeConfigured() || secrets.length === 0) {
     return NextResponse.json(
       {
         error:
@@ -426,16 +524,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing stripe-signature header." }, { status: 400 });
   }
 
-  let event: Stripe.Event;
-  try {
-    event = getStripe().webhooks.constructEvent(body, sig, webhookSecret);
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err);
+  let event: Stripe.Event | null = null;
+  for (const secret of secrets) {
+    try {
+      event = getStripe().webhooks.constructEvent(body, sig, secret);
+      break;
+    } catch {
+      /* try the next secret */
+    }
+  }
+  if (!event) {
+    console.error("Webhook signature verification failed against all secrets");
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
   try {
     switch (event.type) {
+      case "checkout.session.completed": {
+        // Vraelis one-time + subscription checkouts land their plan here
+        // too (belt-and-suspenders with the success-redirect recording).
+        const s = event.data.object as Stripe.Checkout.Session;
+        if (s.metadata?.kind === "vraelis_payment") {
+          await handleVraelisPayment(s);
+        } else {
+          await recordVraelisPlan(s.metadata, "active");
+        }
+        break;
+      }
+
       case "customer.subscription.created":
       case "customer.subscription.updated":
       case "customer.subscription.deleted":

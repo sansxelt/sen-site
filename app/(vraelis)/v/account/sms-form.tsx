@@ -1,0 +1,45 @@
+"use client";
+
+import { useActionState, type CSSProperties } from "react";
+import { setSmsAction, type ActionResult } from "./actions";
+
+const label: CSSProperties = {
+  fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em",
+  textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7, display: "block",
+};
+const input: CSSProperties = {
+  width: "100%", boxSizing: "border-box", borderRadius: "var(--r-xs)", border: "1px solid var(--line-2)",
+  background: "var(--bg-1)", padding: "11px 13px", fontSize: 13.5, color: "var(--fg-1)", outline: "none",
+  fontFamily: "var(--font-mono)",
+};
+
+export function SmsForm({
+  initialOwnerPhone = "",
+  initialTwilioNumber = "",
+}: {
+  initialOwnerPhone?: string;
+  initialTwilioNumber?: string;
+}) {
+  const [state, action, pending] = useActionState<ActionResult | null, FormData>(setSmsAction, null);
+  return (
+    <form action={action} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div>
+        <label style={label} htmlFor="ownerPhone">Your phone <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(new-lead alerts)</span></label>
+        <input id="ownerPhone" name="ownerPhone" defaultValue={initialOwnerPhone} placeholder="+1 555 123 4567" maxLength={32} style={input} />
+      </div>
+      <div>
+        <label style={label} htmlFor="twilioNumber">Your Twilio number <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(SMS &amp; calls)</span></label>
+        <input id="twilioNumber" name="twilioNumber" defaultValue={initialTwilioNumber} placeholder="+1 555 987 6543" maxLength={32} style={input} />
+      </div>
+      <p style={{ fontSize: 11.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
+        SMS &amp; missed-call text-back go live once your number&apos;s A2P registration clears the carriers. Until then, chat, email, and the web still capture every lead.
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <button type="submit" className="btn" disabled={pending} style={{ opacity: pending ? 0.7 : 1 }}>
+          {pending ? "Saving…" : "Save"}
+        </button>
+        {state && <span style={{ fontSize: 13, color: state.ok ? "var(--acc-deep)" : "#9F2D2D" }}>{state.message}</span>}
+      </div>
+    </form>
+  );
+}

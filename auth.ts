@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import type { NextRequest } from "next/server";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
@@ -32,49 +33,73 @@ delete process.env.NEXTAUTH_URL;
 // Migration cost: existing chat-only cookies stay valid for now,
 // but new sign-ins will get the spanning cookie. Users who want
 // the apex to recognize them need to sign out + back in once.
-const cookieDomain = (process.env.AUTH_COOKIE_DOMAIN ?? "").trim() || undefined;
-const cookieOptions = cookieDomain
-  ? {
-      sessionToken: {
-        // NextAuth picks the secure-prefixed name automatically
-        // for HTTPS; matching that here so existing logic still
-        // works.
-        name: "__Secure-authjs.session-token",
-        options: {
-          httpOnly: true,
-          sameSite: "lax" as const,
-          path: "/",
-          secure: true,
-          domain: cookieDomain,
-        },
-      },
-      callbackUrl: {
-        name: "__Secure-authjs.callback-url",
-        options: {
-          httpOnly: true,
-          sameSite: "lax" as const,
-          path: "/",
-          secure: true,
-          domain: cookieDomain,
-        },
-      },
-      csrfToken: {
-        name: "__Host-authjs.csrf-token",
-        options: {
-          httpOnly: true,
-          sameSite: "lax" as const,
-          path: "/",
-          secure: true,
-          // __Host- prefix forbids a domain attribute, so we
-          // intentionally OMIT domain on the csrf cookie. The
-          // CSRF check still fires per-host; only the session
-          // needs to span subdomains for SSO to work.
-        },
-      },
-    }
-  : undefined;
+const envCookieDomain = (process.env.AUTH_COOKIE_DOMAIN ?? "").trim() || undefined;
 
-const authResult = NextAuth({
+// v0.3.0 — vraelis.com now shares this project (separate brand, served
+// by host in proxy.ts). It's a different registrable domain, so it
+// CANNOT share the ".sansxel.ai" session cookie; with a hardcoded
+// domain the browser would silently reject the cookie and sign-in
+// would never stick. So the cookie domain is resolved per request:
+//   • *.sansxel.ai → ".sansxel.ai"  (unchanged: SSO across subdomains)
+//   • *.vraelis.com → ".vraelis.com" (its own cookie / session)
+//   • unknown host (preview, localhost) or RSC with no request → the
+//     env value (prod) or the per-host default, so previews keep
+//     working exactly as before.
+// Cookie NAMES stay constant whenever a domain applies, so the cookie
+// set during sign-in (request present) and read in RSC (request
+// absent) always match by name.
+function resolveCookieDomain(req: NextRequest | undefined): string | undefined {
+  const host = (req?.headers.get("host") ?? "").toLowerCase().split(":")[0];
+  if (host.endsWith("vraelis.com")) return ".vraelis.com";
+  if (host.endsWith("sansxel.ai")) return ".sansxel.ai";
+  return envCookieDomain;
+}
+
+function buildCookieOptions(cookieDomain: string | undefined) {
+  if (!cookieDomain) return undefined;
+  return {
+    sessionToken: {
+      // NextAuth picks the secure-prefixed name automatically
+      // for HTTPS; matching that here so existing logic still
+      // works.
+      name: "__Secure-authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        secure: true,
+        domain: cookieDomain,
+      },
+    },
+    callbackUrl: {
+      name: "__Secure-authjs.callback-url",
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        secure: true,
+        domain: cookieDomain,
+      },
+    },
+    csrfToken: {
+      name: "__Host-authjs.csrf-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        secure: true,
+        // __Host- prefix forbids a domain attribute, so we
+        // intentionally OMIT domain on the csrf cookie. The
+        // CSRF check still fires per-host; only the session
+        // needs to span subdomains for SSO to work.
+      },
+    },
+  };
+}
+
+const authResult = NextAuth((req: NextRequest | undefined) => {
+  const cookieOptions = buildCookieOptions(resolveCookieDomain(req));
+  return {
   trustHost: true,
   pages: {
     error: "/auth/error",
@@ -270,6 +295,7 @@ const authResult = NextAuth({
       return session;
     },
   },
+  };
 });
 
 export const { handlers, auth, signIn, signOut } = authResult;

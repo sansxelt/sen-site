@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AuthPanel, OAuthSection } from "@/components/auth-panel";
+import { VraelisSignIn } from "@/components/vraelis-auth";
 import { getSafeRedirectPath } from "@/lib/auth-ui";
 import { getZone, ZONE_THEME } from "@/lib/zone";
+import { isVraelisRequest } from "@/lib/site-host";
 
 export const metadata: Metadata = {
   title: "Sign In",
   description:
-    "Continue into sansxel with app-hosted email, Google, and GitHub sign-in flows.",
+    "Sign in with email, Google, or GitHub.",
 };
 
 export default async function SignInPage({
@@ -16,21 +18,31 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [session, params, zone] = await Promise.all([
+  const [session, params, zone, vraelis] = await Promise.all([
     auth(),
     searchParams,
     getZone(),
+    isVraelisRequest(),
   ]);
   const callbackUrl = Array.isArray(params.callbackUrl)
     ? params.callbackUrl[0]
     : params.callbackUrl;
 
   // If they're already signed in, don't make them sit on a signin
-  // page with a 'Open workspace' button, just take them where they
-  // were going. Default to /app since the chat host is signin's
-  // home zone.
+  // page — take them where they were going. Vraelis lands on its
+  // dashboard; sansxel defaults to /app (the chat host's home zone).
   if (session?.user?.email) {
-    redirect(getSafeRedirectPath(callbackUrl) || "/app");
+    redirect(getSafeRedirectPath(callbackUrl) || (vraelis ? "/account" : "/app"));
+  }
+
+  // Vraelis gets its own light, centered, green-accent sign-in surface
+  // (same NextAuth flows underneath, no sansxel chrome).
+  if (vraelis) {
+    return (
+      <div style={{ padding: "clamp(40px, 8vw, 96px) 20px" }}>
+        <VraelisSignIn callbackUrl={getSafeRedirectPath(callbackUrl) || "/account"} />
+      </div>
+    );
   }
 
   const t = ZONE_THEME[zone];

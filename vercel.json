@@ -1,0 +1,8 @@
+{
+  "crons": [
+    { "path": "/api/vraelis/cron/bill-fees", "schedule": "0 9 1 * *" },
+    { "path": "/api/vraelis/cron/followups", "schedule": "0 15 * * *" },
+    { "path": "/api/vraelis/cron/reminders", "schedule": "0 14 * * *" },
+    { "path": "/api/vraelis/cron/recovery", "schedule": "0 16 * * *" }
+  ]
+}

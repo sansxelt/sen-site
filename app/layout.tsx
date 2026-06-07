@@ -7,10 +7,11 @@ import { CommandPalette } from "../components/command-palette";
 import { CopilotBar } from "../components/copilot-bar";
 import { RevealOnScroll } from "../components/reveal-on-scroll";
 import { InflightBackToChat } from "../components/inflight-back-to-chat";
+import { isVraelisRequest } from "../lib/site-host";
 
 const BASE = "https://www.sansxel.ai";
 
-export const metadata: Metadata = {
+const sansxelMetadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
     default: "sansxel, AI with persistent project memory",
@@ -66,13 +67,71 @@ export const metadata: Metadata = {
   // it unset and let the file convention do its job.
 };
 
+// Vraelis is a separate brand served from this same project (split by
+// host in proxy.ts). Its metadata must NOT inherit the sansxel title
+// template / OG, so it's resolved per request.
+const vraelisMetadata: Metadata = {
+  metadataBase: new URL("https://vraelis.com"),
+  title: {
+    default: "Vraelis — Turn missed leads into booked calls",
+    template: "%s",
+  },
+  description:
+    "Vraelis is the AI lead follow-up agent that answers every inbound lead in seconds, qualifies them, follows up until they reply, and books the call on your calendar.",
+  alternates: { canonical: "https://vraelis.com" },
+  icons: { icon: "/vraelis/mark.jpg" },
+  openGraph: {
+    type: "website",
+    url: "https://vraelis.com",
+    siteName: "Vraelis",
+    title: "Turn missed leads into booked calls.",
+    description:
+      "The AI that answers, qualifies, and books your inbound leads — so a missed call stops being a missed job.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+export async function generateMetadata(): Promise<Metadata> {
+  return (await isVraelisRequest()) ? vraelisMetadata : sansxelMetadata;
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
+  const [session, vraelis] = await Promise.all([auth(), isVraelisRequest()]);
   const signedIn = Boolean(session?.user?.email);
+
+  // Vraelis owns its own light theme + chrome (nav/footer come from the
+  // (vraelis) layout). Render a minimal shell with no sansxel overlays,
+  // no dark body bg, and no sansxel JSON-LD so its stylesheet controls
+  // the page entirely.
+  if (vraelis) {
+    return (
+      <html
+        lang="en"
+        data-theme="light"
+        style={{ colorScheme: "light" }}
+        className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
+      >
+        <body className="min-h-full">
+          {/* Vraelis stylesheets load for every vraelis request (marketing
+              pages AND the shared /signin, /account flows) so the whole
+              brand renders light + green. tokens before styles. */}
+          {/* ?v bust: bump on every CSS change so browsers don't serve a
+              stale cached stylesheet (the static file URL is otherwise fixed). */}
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=7" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=7" />
+          {children}
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html
       lang="en"
