@@ -13,16 +13,15 @@ function getResend() {
   return resendClient;
 }
 
-// Sender address. vraelis.com is verified in Resend, so default to
-// hello@vraelis.com; VRAELIS_FROM_EMAIL can override (bare address or a
-// full "Name <addr>" header).
-function fromAddress(businessName: string) {
+// Sender header. vraelis.com is verified in Resend, so send as
+// "Vraelis <hello@vraelis.com>". VRAELIS_FROM_EMAIL can override (a bare
+// address gets the Vraelis display name, or pass a full "Name <addr>").
+function fromAddress(_businessName?: string) {
   const configured = (process.env.VRAELIS_FROM_EMAIL ?? "").trim();
-  const addr = configured || "hello@vraelis.com";
-  if (!addr.includes("<")) {
-    return `${businessName || "Vraelis"} <${addr}>`;
+  if (configured) {
+    return configured.includes("<") ? configured : `Vraelis <${configured}>`;
   }
-  return addr;
+  return "Vraelis <hello@vraelis.com>";
 }
 
 function escapeHtml(value: string) {
