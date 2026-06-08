@@ -13,15 +13,23 @@ function getResend() {
   return resendClient;
 }
 
-// Sender header. vraelis.com is verified in Resend, so send as
-// "Vraelis <hello@vraelis.com>". VRAELIS_FROM_EMAIL can override (a bare
-// address gets the Vraelis display name, or pass a full "Name <addr>").
-function fromAddress(_businessName?: string) {
+// ── Central sender config ────────────────────────────────────────────
+// THE single source of truth for the From header on every transactional
+// Vraelis email: booking confirmations, lead notifications/replies,
+// payment confirmations, calendar emails, recovery emails, and automated
+// follow-ups all resolve their sender here (via fromAddress()). To change
+// the sender everywhere, edit this one constant (or set VRAELIS_FROM_EMAIL
+// in the environment to override without a code change).
+export const VRAELIS_FROM = "Vraelis <noreply@vraelis.com>";
+
+// VRAELIS_FROM_EMAIL override accepts a bare address (gets the "Vraelis"
+// display name) or a full "Name <addr>" header.
+function fromAddress() {
   const configured = (process.env.VRAELIS_FROM_EMAIL ?? "").trim();
   if (configured) {
     return configured.includes("<") ? configured : `Vraelis <${configured}>`;
   }
-  return "Vraelis <hello@vraelis.com>";
+  return VRAELIS_FROM;
 }
 
 function escapeHtml(value: string) {
@@ -43,7 +51,7 @@ export async function sendBookingConfirmation(opts: {
 }): Promise<void> {
   const resend = getResend();
   if (!resend) return;
-  const from = fromAddress(opts.businessName);
+  const from = fromAddress();
   if (!from) return;
   const who = opts.leadName ? ` ${opts.leadName}` : "";
   try {
@@ -76,7 +84,7 @@ export async function sendLeadReply(opts: {
   const resend = getResend();
   if (!resend) return { sent: false, reason: "email_not_configured" };
 
-  const from = fromAddress(opts.businessName);
+  const from = fromAddress();
   if (!from) return { sent: false, reason: "sender_not_configured" };
   if (!opts.to) return { sent: false, reason: "no_recipient" };
 
