@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
@@ -75,15 +75,6 @@ const SURFACES: Surface[] = [
     href: "/workshop#memory",
   },
   {
-    key: "platform",
-    name: "Platform",
-    category: "Developer",
-    status: "alpha",
-    oneLine: "API keys, request inspector, usage dashboard, webhooks.",
-    depends: ["Chat API", "MCP registry", "Webhooks"],
-    href: "https://platform.sansxel.ai",
-  },
-  {
     key: "lens",
     name: "Lens",
     category: "Optics",
@@ -106,7 +97,7 @@ const SURFACES: Surface[] = [
     name: "Whisper hardware",
     category: "Hardware",
     status: "rnd",
-    oneLine: "Sansxel-built earbud, lives in the Day Kit case.",
+    oneLine: "VRAELIS-built earbud, lives in the Day Kit case.",
     depends: ["Whisper protocol", "Lens Day Kit"],
     href: "/whisper#hardware",
   },
@@ -146,12 +137,12 @@ const INTEGRATIONS: Integration[] = [
   { name: "Custom MCP", status: "live",  via: "MCP" },
 ];
 
-const SDK_SNIPPET = `import Sansxel from "@sansxel/sdk";
+const SDK_SNIPPET = `import Vraelis from "@vraelis/sdk";
 
-const sx = new Sansxel({ apiKey: process.env.SANSXEL_API_KEY });
+const sx = new Vraelis({ apiKey: process.env.VRAELIS_API_KEY });
 
 const stream = await sx.chat.completions.create({
-  model: "sansxel-1",
+  model: "vraelis-1",
   project: "proj_5g7",
   stream: true,
   messages: [{ role: "user", content: "summarize my open PRs" }],
@@ -252,14 +243,14 @@ export default function ProductPage() {
             transition={{ duration: 0.7, ease: EASE, delay: 0.3 }}
             style={{ fontSize: "clamp(1rem, 1.5vw, 1.2rem)", color: "rgba(255,255,255,0.62)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}
           >
-            The technical view of every Sansxel surface. Status, version,
+            The technical view of every Vraelis surface. Status, version,
             what it depends on, and how the API exposes it. For the
             consumer walkthrough, see the home page.
           </motion.p>
 
           <div style={{ marginTop: 28, display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
-              href="https://platform.sansxel.ai"
+              href="/account/keys"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "10px 18px", borderRadius: 100,
@@ -269,7 +260,7 @@ export default function ProductPage() {
                 fontSize: 13, fontWeight: 500, textDecoration: "none",
               }}
             >
-              Open Platform
+              Get API keys
               <span aria-hidden style={{ fontSize: 13 }}>→</span>
             </Link>
             <Link
@@ -625,13 +616,12 @@ export default function ProductPage() {
             Build on it before it ships everywhere.
           </h3>
           <p style={{ fontSize: 14, color: "#71717a", marginBottom: 24, lineHeight: 1.6 }}>
-            The Platform is alpha. API surface is stable enough to
-            integrate against; behavior may shift before v1. Get a key
-            and start.
+            The API is in alpha. Surface is stable enough to integrate
+            against; behavior may shift before v1. Get a key and start.
           </p>
           <div style={{ display: "inline-flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <Link
-              href="https://platform.sansxel.ai"
+              href="/account/keys"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "12px 22px", borderRadius: 100,
@@ -641,11 +631,11 @@ export default function ProductPage() {
                 fontSize: 14, fontWeight: 500, textDecoration: "none",
               }}
             >
-              Get an API key
+              Get API keys
               <span aria-hidden style={{ fontSize: 13 }}>→</span>
             </Link>
             <Link
-              href="/"
+              href="/home"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "12px 22px", borderRadius: 100,
@@ -655,7 +645,7 @@ export default function ProductPage() {
                 fontSize: 14, fontWeight: 500, textDecoration: "none",
               }}
             >
-              See the consumer story
+              See the product
             </Link>
           </div>
         </div>

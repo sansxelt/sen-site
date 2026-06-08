@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { ZoneShell } from "@/components/zone-shell";
 import { VraelisPromoBar } from "@/components/vraelis-promo-bar";
 import { isVraelisRequest } from "@/lib/site-host";
@@ -56,8 +56,8 @@ export default async function SignInLayout({ children }: { children: ReactNode }
   return (
     <ZoneShell
       wide
-      backHrefOverride="https://sansxel.ai/home"
-      backLabelOverride="← sansxel.ai"
+      backHrefOverride="https://vraelis.com/home"
+      backLabelOverride="← Go back"
     >
       {children}
     </ZoneShell>

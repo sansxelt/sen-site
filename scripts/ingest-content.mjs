@@ -167,7 +167,7 @@ async function fetchWikipediaSources(q) {
   // 1. Search Wikipedia for relevant article titles.
   const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&format=json&search=${encodeURIComponent(q)}&limit=3&namespace=0`;
   const searchRes = await fetch(searchUrl, {
-    headers: { "User-Agent": "sansxel-content-ingester/0.1 (+https://sansxel.ai)" },
+    headers: { "User-Agent": "VRAELIS-content-ingester/0.1 (+https://VRAELIS.ai)" },
   });
   if (!searchRes.ok) return [];
   const searchJson = await searchRes.json();
@@ -182,7 +182,7 @@ async function fetchWikipediaSources(q) {
     try {
       const sumUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
       const r = await fetch(sumUrl, {
-        headers: { "User-Agent": "sansxel-content-ingester/0.1 (+https://sansxel.ai)" },
+        headers: { "User-Agent": "VRAELIS-content-ingester/0.1 (+https://VRAELIS.ai)" },
       });
       if (!r.ok) continue;
       const j = await r.json();
@@ -208,7 +208,7 @@ async function fetchArxivSources(q, max = 2) {
   try {
     const url = `https://export.arxiv.org/api/query?search_query=all:${encodeURIComponent(q)}&max_results=${max}&sortBy=relevance&sortOrder=descending`;
     const res = await fetch(url, {
-      headers: { "User-Agent": "sansxel-content-ingester/0.1 (+https://sansxel.ai)" },
+      headers: { "User-Agent": "VRAELIS-content-ingester/0.1 (+https://VRAELIS.ai)" },
     });
     if (!res.ok) return [];
     const xml = await res.text();
@@ -257,7 +257,7 @@ async function draftPiece({ type, topic, subtopic, title, sources }) {
     research: "3-6 chapters, ~600-1200 words each. Deep-dive feel, split by concept rather than by length.",
   }[type];
 
-  const prompt = `Write a ${type} for the sansxel.ai Learn library on this topic.
+  const prompt = `Write a ${type} for the VRAELIS.ai Learn library on this topic.
 
 TITLE: ${title}
 TOPIC: ${topic}${subtopic ? ` / ${subtopic}` : ""}

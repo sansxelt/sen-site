@@ -1,99 +1,68 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { getZone, ZONE_THEME, type Zone } from "@/lib/zone";
 
-// Wraps an auth/checkout page in a thin zone-aware shell:
-//   - per-zone background color
-//   - top bar with the zone pinwheel + wordmark + tagline + a back
-//     link, edge-aligned across breakpoints to match the marketing
-//     site nav rhythm so every surface reads as the same site
-//   - per-zone font (mono on platform)
-// The page content lives unchanged inside <main>; the shell handles
-// the chrome so each subdomain's auth flow feels native.
-
-export async function ZoneShell({
+// Auth shell — used by /signin, /auth/*, /checkout.
+// Uses the same visual language as the landing page.
+export function ZoneShell({
   children,
-  // Optional override, useful when a page wants to force a specific
-  // zone (e.g. testing the platform variant from any host).
-  zoneOverride,
-  // Hide the top-right back link entirely. Rare; usually prefer
-  // backHrefOverride to redirect it somewhere useful.
   hideBackLink = false,
-  // Override where the back link points + how it's labeled. /signin
-  // uses this to send unauth visitors back to the marketing home
-  // instead of the per-zone workshop, since the workshop is auth
-  // gated and looping users back to /signin is bad.
   backHrefOverride,
   backLabelOverride,
-  // Widen the inner content column from the default max-w-3xl
-  // (768px) to max-w-6xl (1152px). Used by /signin where the
-  // two-column auth + OAuth layout needs real horizontal room.
   wide = false,
 }: {
   children: ReactNode;
-  zoneOverride?: Zone;
+  zoneOverride?: string;
   hideBackLink?: boolean;
   backHrefOverride?: string;
   backLabelOverride?: string;
   wide?: boolean;
 }) {
-  const zone = zoneOverride ?? (await getZone());
-  const t = ZONE_THEME[zone];
-  const defaultHomeHref =
-    zone === "chat"
-      ? "https://chat.sansxel.ai"
-      : zone === "platform"
-        ? "https://platform.sansxel.ai"
-        : "https://sansxel.ai";
-  const defaultHomeLabel =
-    zone === "chat" ? "← workshop" : zone === "platform" ? "← platform" : "← sansxel.ai";
-  const homeHref = backHrefOverride ?? defaultHomeHref;
-  const homeLabel = backLabelOverride ?? defaultHomeLabel;
+  const backHref  = backHrefOverride  ?? "/home";
+  const backLabel = backLabelOverride ?? "← Go back";
 
   return (
-    <div className={`min-h-screen ${t.bg} text-neutral-100 ${t.font}`}>
-      <header className="border-b border-white/[0.06]">
-        {/* Edge-aligned chrome. Wordmark hugs the left edge, back
-            link hugs the right edge. Same scaling pad as the
-            marketing nav (site-shell): tighter on phones, comfy on
-            wide monitors. Inner content below stays centered. */}
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-10 xl:px-14 2xl:px-20">
-          <Link
-            href={zone === "platform" ? "https://platform.sansxel.ai" : zone === "chat" ? "https://chat.sansxel.ai" : "/home"}
-            className="inline-flex shrink-0 items-center gap-2.5"
-          >
-            <Image
-              src={t.logoSrc}
-              alt="sansxel"
-              width={36}
-              height={36}
-              className="h-9 w-9 rounded-xl"
-              priority
-            />
-            <div>
-              <div className={`text-sm font-semibold tracking-tight text-white sm:text-base ${zone === "platform" ? "font-mono" : ""}`}>
-                {t.label}
-              </div>
-              <div className="hidden text-[11px] leading-none text-neutral-500 sm:block">
-                {t.tagline}
-              </div>
-            </div>
+    <div style={{
+      minHeight: "100vh",
+      background: "var(--background)",
+      color: "var(--fg-1)",
+      fontFamily: '"Inter Tight", var(--font-geist-sans), sans-serif',
+    }}>
+      <header style={{
+        position: "sticky", top: 0, zIndex: 40,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 clamp(20px,4vw,64px)",
+        height: 64,
+        background: "rgba(10,15,24,0.90)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: "1px solid var(--border-soft)",
+      }}>
+        <Link href="/home" style={{
+          fontSize: 19, fontWeight: 600, letterSpacing: "-0.025em",
+          color: "var(--fg-1)", textDecoration: "none",
+          fontFamily: '"Inter Tight", sans-serif',
+        }}>
+          vraelis<span style={{ color: "var(--accent)" }}>.</span>
+        </Link>
+        {!hideBackLink && (
+          <Link href={backHref} style={{
+            fontSize: 13, color: "var(--fg-4)", textDecoration: "none",
+            letterSpacing: "-0.005em", transition: "color 150ms",
+            fontFamily: '"Inter Tight", sans-serif',
+          }}>
+            {backLabel}
           </Link>
-          <div className="flex items-center gap-3">
-            {!hideBackLink && (
-              <Link
-                href={homeHref}
-                className={`text-[11px] text-neutral-500 transition hover:text-neutral-200 ${zone === "platform" ? "font-mono" : ""}`}
-              >
-                {homeLabel}
-              </Link>
-            )}
-          </div>
-        </div>
+        )}
       </header>
 
-      <main className={`mx-auto ${wide ? "max-w-6xl" : "max-w-3xl"} px-6 py-12 sm:px-8 sm:py-16`}>
+      <main
+        data-route-transition
+        style={{
+          maxWidth: wide ? 1080 : 720,
+          margin: "0 auto",
+          padding: "clamp(40px,8vw,96px) clamp(20px,4vw,48px)",
+        }}
+      >
         {children}
       </main>
     </div>

@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 // Removes the user's stored GitHub access token. Doesn't revoke the
 // token on GitHub's side (that needs the OAuth app to call DELETE
 // /applications/{client_id}/grant, separate flow). Removing the row
-// here is enough to break the connection from sansxel's side; the
+// here is enough to break the connection from Vraelis's side; the
 // user can re-authorize at any time.
 export async function POST() {
   const session = await auth();

@@ -179,9 +179,9 @@ export function MobileNav({ links, secondary, signedIn, isAdmin = false, accessH
               <div className="border-t border-white/[0.08] p-4">
                 <Link
                   href={accessHref}
-                  className="sansxel-white-button block rounded-xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+                  className="VRAELIS-white-button block rounded-xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
                 >
-                  {signedIn ? "Open Workshop" : "Access"}
+                  {signedIn ? "Open Vraelis" : "Get started"}
                 </Link>
               </div>
             </motion.nav>

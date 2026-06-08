@@ -98,7 +98,7 @@ export function SettingsPanel({
     <div className="space-y-0 divide-y divide-white/[0.07]">
 
       {/* ── Profile ──────────────────────────────────────────────── */}
-      <Section title="Profile" description="How sansxel identifies and addresses you.">
+      <Section title="Profile" description="How Vraelis identifies and addresses you.">
         <Field label="Display name">
           <input
             type="text"
@@ -119,7 +119,7 @@ export function SettingsPanel({
             className={input}
           />
         </Field>
-        <Field label="What to remember" hint="Context sansxel should prioritise when recalling your work.">
+        <Field label="What to remember" hint="Context Vraelis should prioritise when recalling your work.">
           <textarea
             value={focusArea}
             onChange={(e) => setFocusArea(e.target.value)}
@@ -143,7 +143,7 @@ export function SettingsPanel({
       </Section>
 
       {/* ── Preferences ──────────────────────────────────────────── */}
-      <Section title="Preferences" description="Tune how sansxel surfaces and delivers context.">
+      <Section title="Preferences" description="Tune how Vraelis surfaces and delivers context.">
         <Field label="Summary style">
           <div className="flex gap-2">
             {(["concise", "balanced", "detailed"] as SummaryStyle[]).map((v) => (
@@ -280,7 +280,7 @@ const input =
   "w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-neutral-100 outline-none placeholder:text-neutral-500 focus:border-white/20";
 
 const primaryBtn =
-  "sansxel-white-button rounded-lg border border-white/10 bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
+  "VRAELIS-white-button rounded-lg border border-white/10 bg-white px-4 py-2 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
 
 function Section({
   title,

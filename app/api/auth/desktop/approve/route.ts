@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       // Desktop deep-link the browser will redirect to next
-      callback: `sansxel://auth?request_id=${payload.request_id}`,
+      callback: `Vraelis://auth?request_id=${payload.request_id}`,
     });
   } catch (error) {
     console.error("desktop/approve failed:", error);

@@ -13,11 +13,11 @@ import {
 
 export const metadata: Metadata = {
   title: "Download",
-  description: "Download the current Sansxel desktop build and see the live release state.",
+  description: "Download the current Vraelis desktop build and see the live release state.",
 };
 
 const platformRequestHref =
-  "/contact?subject=Platform%20availability&message=Please%20notify%20me%20when%20macOS%20or%20Linux%20builds%20are%20available.%20I%20plan%20to%20use%20sansxel%20for%3A%20#contact-form";
+  "/contact?subject=Platform%20availability&message=Please%20notify%20me%20when%20macOS%20or%20Linux%20builds%20are%20available.%20I%20plan%20to%20use%20Vraelis%20for%3A%20#contact-form";
 
 export default function AccountDownloadPage() {
   return (
@@ -36,7 +36,7 @@ export default function AccountDownloadPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="text-lg font-semibold text-white">Sansxel desktop app</span>
+                <span className="text-lg font-semibold text-white">Vraelis desktop app</span>
                 <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-emerald-300">
                   Windows live
                 </span>
@@ -92,7 +92,7 @@ export default function AccountDownloadPage() {
             isn&apos;t the shipped installer yet.
           </p>
           <div className="mt-4 border-t border-white/10 pt-4">
-            <Link href="/account/updates" className="sansxel-subtle-link text-xs">
+            <Link href="/account/updates" className="VRAELIS-subtle-link text-xs">
               See shipped release notes -&gt;
             </Link>
           </div>
@@ -152,7 +152,7 @@ export default function AccountDownloadPage() {
         <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400/60" />
         <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs leading-5 text-neutral-500">
           <span>macOS and Linux builds are still on the roadmap after the Windows rollout.</span>
-          <Link href={platformRequestHref} className="sansxel-subtle-link">
+          <Link href={platformRequestHref} className="VRAELIS-subtle-link">
             Notify me when available -&gt;
           </Link>
         </div>

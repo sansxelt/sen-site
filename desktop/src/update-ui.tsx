@@ -126,7 +126,7 @@ function UpdateConsentBanner({
         )}
         <span className="upd-banner-hint">
           Closing with X just hides the window. To apply this update later,
-          press <kbd>Ctrl</kbd> + <kbd>Q</kbd> to fully quit, then relaunch sansxel.
+          press <kbd>Ctrl</kbd> + <kbd>Q</kbd> to fully quit, then relaunch Vraelis.
         </span>
       </div>
       <div className="upd-banner-actions">
@@ -177,11 +177,11 @@ function UpdateSplash({ progress }: { progress: UpdateProgress }) {
   }
 
   return (
-    <div className="upd-splash" role="dialog" aria-modal="true" aria-label="Updating sansxel">
+    <div className="upd-splash" role="dialog" aria-modal="true" aria-label="Updating Vraelis">
       <div className="upd-splash-frame" />
 
       <div className="upd-splash-brand">
-        <h1 className="upd-splash-wordmark">sansxel</h1>
+        <h1 className="upd-splash-wordmark">Vraelis</h1>
         <p className="upd-splash-tagline">Updating in place. Don't close the app.</p>
         <div className="upd-splash-spotlight" />
       </div>
@@ -192,7 +192,7 @@ function UpdateSplash({ progress }: { progress: UpdateProgress }) {
           <span>{label}</span>
         </div>
         <div className="upd-splash-build">
-          v{version || "—"} · sansxel-1 · auto-update
+          v{version || "—"} · vraelis-1 · auto-update
         </div>
       </div>
 
@@ -259,7 +259,7 @@ function WhatsNewCard({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="whats-new-tag">Updated</div>
-        <h2 className="whats-new-title">sansxel v{pending.version} is here</h2>
+        <h2 className="whats-new-title">Vraelis v{pending.version} is here</h2>
         <p className="whats-new-sub">
           The app updated in the background. Here's what changed:
         </p>

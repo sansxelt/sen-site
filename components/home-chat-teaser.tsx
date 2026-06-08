@@ -41,13 +41,13 @@ export function HomeChatTeaser({ signedIn }: { signedIn: boolean }) {
             submit();
           }
         }}
-        placeholder="Ask sansxel anything, &ldquo;summarize this PDF&rdquo;, &ldquo;build me an app&rdquo;, &ldquo;humanize this essay&rdquo;…"
+        placeholder="Ask Vraelis anything…"
         rows={2}
         className="home-teaser-input"
       />
       <div className="home-teaser-row">
         <span className="home-teaser-hint">
-          {signedIn ? "Press Enter to open in the workshop" : "Press Enter, sign in is one step"}
+          {signedIn ? "Press Enter to open Vraelis" : "Press Enter, sign in is one step"}
         </span>
         <button
           type="submit"

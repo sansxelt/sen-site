@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // Active project is persisted in localStorage so a refresh keeps
 // the same scope; WebChat reads the same key when sending.
 
-const ACTIVE_KEY = "sansxel.activeProjectId";
+const ACTIVE_KEY = "Vraelis.activeProjectId";
 
 export type Project = {
   id: string;
@@ -56,7 +56,7 @@ export function setActiveProjectId(id: string | null) {
   if (typeof window === "undefined") return;
   if (id) window.localStorage.setItem(ACTIVE_KEY, id);
   else window.localStorage.removeItem(ACTIVE_KEY);
-  window.dispatchEvent(new CustomEvent("sansxel:project:changed", { detail: id }));
+  window.dispatchEvent(new CustomEvent("Vraelis:project:changed", { detail: id }));
 }
 
 export function ProjectPicker() {
@@ -148,8 +148,8 @@ export function ProjectPicker() {
       setActiveIdLocal(id);
       void refreshActive(id);
     };
-    window.addEventListener("sansxel:project:changed", onChanged);
-    return () => window.removeEventListener("sansxel:project:changed", onChanged);
+    window.addEventListener("Vraelis:project:changed", onChanged);
+    return () => window.removeEventListener("Vraelis:project:changed", onChanged);
   }, [refreshActive]);
 
   useEffect(() => {

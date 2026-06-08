@@ -43,7 +43,7 @@ const INTEGRATIONS: Integration[] = [
   {
     key: "mcp",
     name: "MCP servers",
-    blurb: "Plug in any MCP-compatible tool to extend sansxel-1.",
+    blurb: "Plug in any MCP-compatible tool to extend vraelis-1.",
     icon: "MCP",
   },
 ];
@@ -75,7 +75,7 @@ export function DesktopIntegrationsView({ session }: { session: DesktopSession }
     <div className="view view--integrations">
       <div className="view-head">
         <h1>Integrations</h1>
-        <p>Connect your tools so sansxel-1 can read and act in real time.</p>
+        <p>Connect your tools so vraelis-1 can read and act in real time.</p>
       </div>
 
       <div className="view-body">

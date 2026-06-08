@@ -109,7 +109,7 @@ export async function POST(request: Request) {
             surface: "desktop",
             priceId,
           },
-          description: `sansxel ${addonKey} top-up`,
+          description: `Vraelis ${addonKey} top-up`,
         });
 
         if (!intent.client_secret) {

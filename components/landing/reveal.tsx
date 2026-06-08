@@ -43,9 +43,8 @@ export function Reveal({
   return (
     <Motion
       id={id}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount }}
+      initial={false}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration, ease: EASE, delay }}
       className={className}
       style={style}

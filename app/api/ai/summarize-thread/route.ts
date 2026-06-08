@@ -129,7 +129,7 @@ export async function POST(request: Request) {
     email,
     kind: "summary",
     model: descriptor.model,
-    surface: request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web",
+    surface: request.headers.get("x-VRAELIS-surface") === "desktop" ? "desktop" : "web",
     input_tokens: inputTokens,
     output_tokens: outputTokens,
     total_tokens: inputTokens + outputTokens,

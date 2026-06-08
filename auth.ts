@@ -10,13 +10,9 @@ import { signOAuthSignupToken } from "./lib/oauth-signup-token";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
-// v0.1.16 — AUTH_URL env var forces NextAuth to generate provider
-// signinUrl / callbackUrl strings against the configured hostname
-// (https://www.sansxel.ai), even when the request comes in on
-// chat.sansxel.ai or platform.sansxel.ai. The signin form ends up
-// posting cross-origin → browser blocks it → 'Configuration' error
-// page. Stripping AUTH_URL at module load forces NextAuth to fall
-// back to its trustHost-based per-request URL detection.
+// Single-domain architecture — vraelis.com only.
+// Strip AUTH_URL/NEXTAUTH_URL so NextAuth infers the base URL from the
+// incoming request via trustHost, preventing mismatched callback URLs.
 delete process.env.AUTH_URL;
 delete process.env.NEXTAUTH_URL;
 
@@ -170,50 +166,41 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
   session: {
     strategy: "jwt",
   },
-  ...(cookieOptions ? { cookies: cookieOptions } : {}),
   callbacks: {
     async signIn({ user, account }) {
-      // No email from the provider → reject. We can't create an account
-      // we can't address, and downstream code assumes email is present.
+      const tag = `[auth:signIn][${account?.provider ?? "?"}]`;
+
       if (!user.email) {
+        console.error(`${tag} rejected — no email from provider`, { userName: user.name });
         return false;
       }
 
-      // Credentials sign-in already requires verified email before the
-      // profile exists — nothing extra to do here.
       if (account?.provider === "credentials") {
         return true;
       }
 
       const provider = account?.provider ?? "";
+      console.log(`${tag} email=${user.email} — looking up profile`);
 
       try {
         const existingProfile = await getUserProfileByEmail(user.email);
+        console.log(`${tag} profile=${existingProfile ? "found" : "not found"}`);
 
-        // First-time OAuth (or post-deletion return) — behavior splits
-        // by provider:
-        //
-        //   • github  → let them through silently. GitHub is a
-        //     developer-audience signal; the extra consent step adds
-        //     friction without meaningfully changing risk.
-        //   • google (and anything else) → bounce to /auth/confirm-signup
-        //     so the user explicitly consents before we create a
-        //     profile. Fixes the post-deletion "silently re-created"
-        //     problem, and gives a clear moment for people who only
-        //     meant to sign in elsewhere.
         if (!existingProfile) {
           if (provider === "github") {
+            console.log(`${tag} new github user — creating profile`);
             await syncUserProfileIdentity({
               email: user.email,
               name:  typeof user.name === "string" ? user.name : null,
             });
-            void sendWelcomeEmail(
+            sendWelcomeEmail(
               user.email,
               typeof user.name === "string" ? user.name : "",
-            );
+            ).catch((err) => console.error(`${tag} welcome email failed:`, err));
             return true;
           }
 
+          console.log(`${tag} new google user — bouncing to confirm-signup`);
           const token = signOAuthSignupToken({ email: user.email, provider });
           const params = new URLSearchParams({
             email:    user.email,
@@ -224,14 +211,15 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
           return `/auth/confirm-signup?${params.toString()}`;
         }
 
-        // Existing profile — keep identity fields fresh from the OAuth
-        // provider (display name, etc.) and let them through.
+        console.log(`${tag} existing user — syncing identity`);
         await syncUserProfileIdentity({
           email: user.email,
           name:  typeof user.name === "string" ? user.name : null,
         });
+        console.log(`${tag} sync done — sign-in allowed`);
       } catch (error) {
-        console.error("User profile sync failed during sign-in:", error);
+        console.error(`${tag} error during profile sync:`, error);
+        // Allow sign-in even if sync fails — don't block the user on a DB hiccup.
       }
 
       return true;
@@ -271,12 +259,12 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
         const parsed = new URL(url);
 
         // Allow redirects to the same origin or anywhere within the
-        // sansxel.ai family (apex + subdomains) so sign-out from
+        // vraelis.com family (apex + subdomains) so sign-out from
         // chat/platform can land back on the apex marketing site.
         const isSameOrigin = parsed.origin === baseUrl;
-        const isSansxelHost = /^https:\/\/([\w-]+\.)?sansxel\.ai$/.test(parsed.origin);
+        const isVraelisHost = /^https:\/\/([\w-]+\.)?vraelis\.com$/.test(parsed.origin);
 
-        if (isSameOrigin || isSansxelHost) {
+        if (isSameOrigin || isVraelisHost) {
           return url;
         }
       } catch {

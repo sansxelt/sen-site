@@ -86,7 +86,7 @@ export function DesktopSourcesView({ session }: { session: DesktopSession }) {
         <h1>Sources</h1>
         <p>
           Upload PDFs, Markdown, or text files. Attach them to a chat to give
-          sansxel-1 reference material for the answer.
+          vraelis-1 reference material for the answer.
         </p>
       </div>
 

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AuroraBackground } from "@/components/aurora-background";
@@ -17,7 +17,7 @@ export async function generateStaticParams() {
   return ARTICLES.map((a) => ({ slug: a.slug }));
 }
 
-const CANONICAL_BASE = "https://www.sansxel.ai";
+const CANONICAL_BASE = "https://www.vraelis.com";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -28,15 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${article.title} · Learn`,
     description: article.excerpt,
     alternates: { canonical: url },
-    authors: [{ name: "Sansxel (OWNER)" }],
+    authors: [{ name: "Vraelis (OWNER)" }],
     openGraph: {
       title: article.title,
       description: article.excerpt,
       type: "article",
       url,
-      siteName: "sansxel",
+      siteName: "Vraelis",
       publishedTime: article.publishedAt,
-      authors: ["Sansxel (OWNER)"],
+      authors: ["Vraelis (OWNER)"],
       tags: [article.topic, article.subtopic ?? ""].filter(Boolean),
     },
     twitter: {
@@ -64,11 +64,11 @@ export default async function ArticlePage({ params }: Props) {
     headline: article.title,
     description: article.excerpt,
     datePublished: article.publishedAt,
-    author: { "@type": "Person", name: "Sansxel (OWNER)" },
+    author: { "@type": "Person", name: "Vraelis (OWNER)" },
     publisher: {
       "@type": "Organization",
-      name: "sansxel",
-      url: "https://www.sansxel.ai",
+      name: "Vraelis",
+      url: "https://www.vraelis.com",
     },
     mainEntityOfPage: {
       "@type": "WebPage",

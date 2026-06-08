@@ -46,12 +46,12 @@ export async function POST(request: Request) {
   const rawText = payload.text.slice(0, 4096);
 
   // Force the TTS model to pronounce the brand correctly. Without
-  // this, "sansxel" comes out closer to "san-zell" or "sans-ex-el".
+  // this, "Vraelis" comes out closer to "san-zell" or "sans-ex-el".
   // The brand should sound like "sans-zul".
   const text = rawText
-    .replace(/\bsansxel-1\b/gi, "sans-zul one")
-    .replace(/\bsansxel-?2\b/gi, "sans-zul two")
-    .replace(/\bsansxel\b/gi, "sans-zul");
+    .replace(/\bvraelis-1\b/gi, "sans-zul one")
+    .replace(/\bvraelis-?2\b/gi, "sans-zul two")
+    .replace(/\bVraelis\b/gi, "sans-zul");
 
   // Optional voice from client. Default is fable (British, expressive)
   // because that's the brand voice we want when nothing's set.
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
   const startedAt = Date.now();
   const surface =
-    request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+    request.headers.get("x-VRAELIS-surface") === "desktop" ? "desktop" : "web";
 
   // Voice cap: free can't speak at all on web (handled client-side
   // too), apprentice/studio have weekly minute caps. The estimated

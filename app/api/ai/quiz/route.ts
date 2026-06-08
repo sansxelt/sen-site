@@ -90,7 +90,7 @@ export async function POST(request: Request) {
   const descriptor = descriptorForTier(resolveTier(plan, "fast"));
 
   const surface =
-    request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+    request.headers.get("x-VRAELIS-surface") === "desktop" ? "desktop" : "web";
 
   const systemPrompt = `Generate ${count} multiple-choice questions about ${safeTopic}. Each question has 4 options. Return STRICT JSON only.
 

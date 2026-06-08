@@ -158,14 +158,14 @@ export function EarlyAccessForm({
         <textarea
           value={focusArea}
           onChange={(event) => setFocusArea(event.target.value)}
-          placeholder="What do you want sansxel to help you recover or remember?"
+          placeholder="What do you want Vraelis to help you recover or remember?"
           rows={4}
           className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-300 focus:border-white/25"
         />
         <button
           type="submit"
           disabled={loading}
-          className="sansxel-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
+          className="VRAELIS-white-button w-full rounded-2xl bg-white px-6 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed"
         >
           {loading ? "Saving request..." : "Join early access"}
         </button>
@@ -180,13 +180,13 @@ export function EarlyAccessForm({
           policies you need before installer access opens up.
         </p>
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-sm text-neutral-100">
-          <Link href="/privacy" className="sansxel-subtle-link">
+          <Link href="/privacy" className="VRAELIS-subtle-link">
             Privacy Policy
           </Link>
-          <Link href="/terms" className="sansxel-subtle-link">
+          <Link href="/terms" className="VRAELIS-subtle-link">
             Terms of Service
           </Link>
-          <Link href="/contact" className="sansxel-subtle-link">
+          <Link href="/contact" className="VRAELIS-subtle-link">
             Contact / Support
           </Link>
         </div>

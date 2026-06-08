@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vraelis</title>
+  <meta name="description" content="Wearable optics with a 360° camera, private audio, ambient HUD, and on-device voice." />
+  <link rel="icon" type="image/svg+xml" href="./assets/logo-mark.svg" />
+  <link rel="stylesheet" href="./colors_and_type.css" />
+  <style>
+    html, body { margin: 0; padding: 0; background: var(--bg-0); color: var(--fg-2); }
+    body { font-family: var(--font-sans); font-size: var(--fs-body); line-height: var(--lh-body); -webkit-font-smoothing: antialiased; }
+    @media (min-width: 900px) { .vra-modes-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+    @media (max-width: 720px) {
+      .vra-arch-grid   { grid-template-columns: 1fr !important; }
+      .vra-footer-grid { grid-template-columns: 1fr 1fr !important; }
+    }
+    @media (max-width: 760px) { .vra-nav { display: none !important; } }
+    html { scroll-behavior: smooth; }
+    .vra-nav a:hover { color: var(--fg-1) !important; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>window.VRAELIS_BASE = "./";</script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="./ui_kits/website/Header.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/ProductChips.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/CinematicAct.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/CapabilityModes.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/ArchitectureGrid.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/WaitlistPlate.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/Footer.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/App.jsx"></script>
+
+  <script type="text/babel">
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>

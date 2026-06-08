@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AuthPanel, OAuthSection } from "@/components/auth-panel";
@@ -53,13 +53,13 @@ export default async function SignInPage({
       ? "Sign in to the workshop."
       : zone === "platform"
         ? "Sign in to platform."
-        : "Sign in to sansxel.";
+        : "Sign in to Vraelis.";
   const subline =
     zone === "chat"
       ? "Pick up your threads, files, and credits across every device."
       : zone === "platform"
         ? "Manage API keys, usage, and billing from the developer console."
-        : "Email, Google, and GitHub all sign in to the same sansxel account.";
+        : "Email, Google, and GitHub all sign in to the same Vraelis account.";
 
   return (
     <div className="mx-auto max-w-6xl py-8 sm:py-14">

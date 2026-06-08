@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "../../auth";
 import { listApiKeys } from "../../lib/api-keys";
@@ -19,7 +19,7 @@ import { getCreditBalance } from "../../lib/credits";
 
 export const metadata: Metadata = {
   title: "Overview",
-  description: "Your sansxel account overview.",
+  description: "Your Vraelis account overview.",
 };
 
 export default async function AccountPage() {
@@ -97,13 +97,13 @@ export default async function AccountPage() {
                 : "Welcome back."}
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-neutral-300">
-              sansxel-1 is ready in your browser, and the desktop app adds toolbar
+              vraelis-1 is ready in your browser, and the desktop app adds toolbar
               modes, MCP, and the full voice loop. Pick a surface to keep going.
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <Link
-              href="/app"
+              href="/chat"
               className="hx-press inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold transition hover:opacity-95"
               style={{ color: "#0a0a0c" }}
             >
@@ -131,7 +131,7 @@ export default async function AccountPage() {
             Voice
           </div>
           <div className="mt-1 text-sm text-white">Fable · British</div>
-          <div className="mt-1 text-xs text-neutral-500">Pick how sansxel-1 sounds →</div>
+          <div className="mt-1 text-xs text-neutral-500">Pick how vraelis-1 sounds →</div>
         </Link>
         <Link
           href="/account/settings#persona"
@@ -151,7 +151,7 @@ export default async function AccountPage() {
             Memory
           </div>
           <div className="mt-1 text-sm text-white">Context retention</div>
-          <div className="mt-1 text-xs text-neutral-500">What sansxel-1 remembers →</div>
+          <div className="mt-1 text-xs text-neutral-500">What vraelis-1 remembers →</div>
         </Link>
       </div>
 
@@ -225,7 +225,7 @@ export default async function AccountPage() {
               <span className="text-sm font-medium text-white">Usage</span>
               <Link
                 href="/account/usage"
-                className="sansxel-subtle-link text-xs"
+                className="VRAELIS-subtle-link text-xs"
               >
                 Details →
               </Link>
@@ -257,7 +257,7 @@ export default async function AccountPage() {
               <span className="text-sm font-medium text-white">API Keys</span>
               <Link
                 href="/account/keys"
-                className="sansxel-subtle-link text-xs"
+                className="VRAELIS-subtle-link text-xs"
               >
                 Manage →
               </Link>
@@ -394,7 +394,7 @@ export default async function AccountPage() {
             <div className="mt-4">
               <Link
                 href="/account/settings"
-                className="sansxel-subtle-link text-xs"
+                className="VRAELIS-subtle-link text-xs"
               >
                 Edit settings →
               </Link>

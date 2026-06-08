@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    sansxel_lib::run()
+    VRAELIS_lib::run()
 }

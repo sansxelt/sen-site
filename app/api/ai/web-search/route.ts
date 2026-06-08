@@ -69,7 +69,7 @@ export async function POST(request: Request) {
   }
 
   const surface =
-    request.headers.get("x-sansxel-surface") === "desktop" ? "desktop" : "web";
+    request.headers.get("x-VRAELIS-surface") === "desktop" ? "desktop" : "web";
 
   const startedAt = Date.now();
   try {

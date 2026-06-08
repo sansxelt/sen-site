@@ -5,9 +5,9 @@
 #
 # Prereqs (one-time on a new PC):
 #   - Node 20+, Rust (rustup), VS Build Tools "Desktop dev with C++"
-#   - sansxel-updater.key at repo root (copy from old PC — gitignored)
+#   - VRAELIS-updater.key at repo root (copy from old PC — gitignored)
 #   - env vars set in your shell:
-#       export TAURI_SIGNING_PRIVATE_KEY="$(pwd)/sansxel-updater.key"
+#       export TAURI_SIGNING_PRIVATE_KEY="$(pwd)/VRAELIS-updater.key"
 #       export TAURI_SIGNING_PRIVATE_KEY_PASSWORD='<the key password>'
 #   - git remote set (check: git remote -v)
 #
@@ -19,7 +19,7 @@ set -euo pipefail
 VERSION="0.1.15"
 DATE_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 DATE_LABEL="$(date -u '+%b %d, %Y')"
-INSTALLER="sansxel_${VERSION}_x64-setup.exe"
+INSTALLER="VRAELIS_${VERSION}_x64-setup.exe"
 BUNDLE="desktop/src-tauri/target/release/bundle/nsis/${INSTALLER}"
 SIG_FILE="${BUNDLE}.sig"
 PUBLIC_DEST="public/desktop/${INSTALLER}"
@@ -28,7 +28,7 @@ MANIFEST_TS="app/api/desktop/updates/latest/route.ts"
 
 # --- sanity ---
 [ -f "${RELEASE_TS}" ]  || { echo "run me from the repo root"; exit 1; }
-[ -f "sansxel-updater.key" ] || { echo "sansxel-updater.key missing at repo root"; exit 1; }
+[ -f "VRAELIS-updater.key" ] || { echo "VRAELIS-updater.key missing at repo root"; exit 1; }
 : "${TAURI_SIGNING_PRIVATE_KEY:?set TAURI_SIGNING_PRIVATE_KEY first}"
 : "${TAURI_SIGNING_PRIVATE_KEY_PASSWORD:?set TAURI_SIGNING_PRIVATE_KEY_PASSWORD first}"
 git rev-parse --is-inside-work-tree > /dev/null || { echo "not a git repo"; exit 1; }

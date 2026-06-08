@@ -1,0 +1,326 @@
+/* ──────────────────────────────────────────────────────────────────────
+   VRAELIS — design tokens v3 ("instrument-grade")
+   Dark. Technical. Looks like instrumentation, not marketing.
+   Shared across vraelis.com, chat.vraelis.com, platform.vraelis.com.
+   ────────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  /* ═══════════════════════════════════════════════════════════════════
+     1. SURFACE — cool deep black with blue undertone
+     #0A0F18 is the floor. NOT pure black. NOT desaturated.
+     The blue undertone reads as "instrument panel at night",
+     not "default dark mode."
+     ═══════════════════════════════════════════════════════════════════ */
+  --bg-0:        #0A0F18;        /* floor */
+  --bg-1:        #0E1421;        /* card, panel */
+  --bg-2:        #060A12;        /* recessed wells, deep sections */
+  --bg-3:        #141B2B;        /* elevated, hovered */
+  --bg-elev:     rgba(255, 255, 255, 0.025);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     2. FOREGROUND — cool off-white
+     #ECEFF4 not pure white. Reduces glare against deep blue-black.
+     Five quiet steps down.
+     ═══════════════════════════════════════════════════════════════════ */
+  --fg-1:        #ECEFF4;        /* headlines, key numbers */
+  --fg-2:        #C7CDD7;        /* body */
+  --fg-3:        #8B95A6;        /* secondary */
+  --fg-4:        #5A6478;        /* meta, label */
+  --fg-5:        #3D4659;        /* whisper-quiet */
+  --fg-on-accent:#062520;        /* dark text on accent fill */
+
+  /* ═══════════════════════════════════════════════════════════════════
+     3. ACCENT — phosphor cyan
+     A bright, specific mineral cyan. NOT teal-startup-blue. NOT violet.
+     The color of radar screens, oscilloscope phosphor, mint
+     electrochemistry. Reserved for: primary action, one specific
+     status indicator, a hairline accent on the active grid cell.
+     ═══════════════════════════════════════════════════════════════════ */
+  --acc:           #5CE5D5;
+  --acc-deep:      #2BB5A3;
+  --acc-glow:      rgba(92, 229, 213, 0.40);
+  --acc-soft:      rgba(92, 229, 213, 0.06);
+  --acc-line:      rgba(92, 229, 213, 0.30);
+  --acc-line-2:    rgba(92, 229, 213, 0.55);
+
+  /* Semantic — restrained, used for status not decoration */
+  --ok:            #5CE5D5;      /* same as accent — system is healthy */
+  --warn:          #F0C75A;
+  --err:           #FF6470;
+  --rec:           #FF3D5E;
+  --rec-glow:      rgba(255, 61, 94, 0.5);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     4. LINES — hairlines, grid, rules
+     Cool blue-tinted instead of pure white. Reinforces the
+     instrument-panel atmosphere.
+     ═══════════════════════════════════════════════════════════════════ */
+  --line-1:        rgba(199, 205, 215, 0.06);   /* default hairline */
+  --line-2:        rgba(199, 205, 215, 0.10);   /* card border */
+  --line-3:        rgba(199, 205, 215, 0.18);   /* hover, button */
+  --line-strong:   rgba(199, 205, 215, 0.32);
+  --line-bright:   var(--fg-1);
+  --focus-ring:    var(--acc);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     5. TYPE — families
+     Inter Tight for everything readable. JetBrains Mono for everything
+     numeric, technical, instrument-like. Instrument Serif italic for
+     one or two words inside a display headline — the brand's only
+     typographic flourish.
+     ═══════════════════════════════════════════════════════════════════ */
+  --font-sans:   "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono:   "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-italic: "Instrument Serif", Georgia, "Times New Roman", serif;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     6. TYPE — scale
+     Headlines hit hard but never become Apple-Keynote huge.
+     The visual weight comes from layout chrome (rules, grid lines,
+     annotations), not from typography volume.
+     ═══════════════════════════════════════════════════════════════════ */
+  --fs-display:   clamp(2.75rem, 5.6vw, 5rem);
+  --fs-h1:        clamp(1.875rem, 3vw, 2.5rem);
+  --fs-h2:        clamp(1.5rem, 2.2vw, 1.75rem);
+  --fs-h3:        1.125rem;
+  --fs-body:      1rem;
+  --fs-body-sm:   0.875rem;
+  --fs-meta:      0.8125rem;
+  --fs-label:     0.75rem;
+  --fs-micro:     0.6875rem;
+  --fs-instrument:0.625rem;       /* HUD chrome text */
+
+  --lh-display:   1.02;
+  --lh-tight:     1.16;
+  --lh-body:      1.55;
+
+  --tr-display:  -0.035em;
+  --tr-tight:    -0.018em;
+  --tr-default:  -0.005em;
+  --tr-mono:      0;
+
+  --fw-light:     300;
+  --fw-regular:   400;
+  --fw-medium:    500;
+  --fw-semi:      600;
+  --fw-bold:      700;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     7. SPACING — 4px base
+     ═══════════════════════════════════════════════════════════════════ */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+  --s-32: 128px;
+  --max-content: 1320px;
+  --gutter:      clamp(20px, 4vw, 64px);
+  --section-y:   clamp(80px, 11vw, 144px);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     8. RADIUS — almost zero
+     Hard edges signal instrument-grade. Only circles for status dots.
+     ═══════════════════════════════════════════════════════════════════ */
+  --r-none:   0;
+  --r-xs:     2px;
+  --r-sm:     4px;
+  --r-circle: 999px;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     9. ELEVATION — never drop shadow
+     A surface is "elevated" through (a) brighter background and
+     (b) a brighter hairline border. Nothing else.
+     ═══════════════════════════════════════════════════════════════════ */
+  --elev-card:    inset 0 0 0 1px var(--line-2);
+  --elev-hover:   inset 0 0 0 1px var(--line-3);
+
+  /* ══════════════════════════════════════════════════════════════════
+     10. MOTION — brief, no drama
+     ══════════════════════════════════════════════════════════════════ */
+  --ease:        cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:    cubic-bezier(0, 0, 0.2, 1);
+  --dur-fast:    120ms;
+  --dur:         200ms;
+  --dur-slow:    400ms;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SEMANTIC ELEMENT STYLES
+   ═════════════════════════════════════════════════════════════════════ */
+
+html, body {
+  background: var(--bg-0);
+  color: var(--fg-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tr-default);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--acc); color: var(--fg-on-accent); }
+
+h1, h2, h3, h4 { margin: 0; color: var(--fg-1); font-weight: var(--fw-semi); }
+h1 { font-size: var(--fs-h1); letter-spacing: var(--tr-tight); line-height: var(--lh-tight); }
+h2 { font-size: var(--fs-h2); letter-spacing: var(--tr-tight); }
+h3 { font-size: var(--fs-h3); letter-spacing: var(--tr-default); }
+
+p  { margin: 0; color: var(--fg-3); line-height: var(--lh-body); text-wrap: pretty; }
+
+/* Display headline — used for hero + section openers.
+   Heavy weight, very tight tracking, very tight leading. */
+.display {
+  font-family: var(--font-sans);
+  font-size: var(--fs-display);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-display);
+  letter-spacing: var(--tr-display);
+  color: var(--fg-1);
+  text-wrap: balance;
+  margin: 0;
+}
+
+/* Italic serif — the brand's only flourish.
+   Used INSIDE a display headline, one or two words. */
+.em {
+  font-family: var(--font-italic);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  font-size: 1.04em;
+}
+
+small, .meta { font-size: var(--fs-meta); color: var(--fg-4); }
+
+code, kbd, .mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-sm);
+  letter-spacing: var(--tr-mono);
+  color: var(--fg-2);
+}
+
+/* Spec — small mono with a leading slash. The brand's annotation
+   marker. NOT uppercase. */
+.spec {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  color: var(--fg-4);
+}
+.spec::before { content: "/ "; color: var(--fg-5); }
+
+/* Instrument — tiny mono used in HUD chrome (top bar, status
+   readouts, persistent fixtures). Tracking opened up slightly so
+   numbers and capitals breathe. */
+.inst {
+  font-family: var(--font-mono);
+  font-size: var(--fs-instrument);
+  letter-spacing: 0.06em;
+  color: var(--fg-4);
+  text-transform: uppercase;
+}
+.inst--bright { color: var(--fg-2); }
+.inst--acc    { color: var(--acc); }
+
+/* Number — large mono numerals used as design elements
+   (model numbers, indices, callout values). */
+.num {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--fg-1);
+}
+
+/* ─── Buttons ──────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--fg-1);
+  background: var(--fg-1);
+  color: var(--bg-0);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  letter-spacing: var(--tr-default);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  white-space: nowrap;
+}
+.btn:hover  { background: var(--acc); color: var(--fg-on-accent); border-color: var(--acc); }
+.btn:active { background: var(--acc-deep); }
+
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--line-3);
+  color: var(--fg-1);
+}
+.btn--ghost:hover  { background: var(--bg-3); border-color: var(--fg-1); color: var(--fg-1); }
+
+/* Quiet link button — text + bottom border, no chrome */
+.btn--quiet {
+  background: transparent;
+  border: none;
+  padding: 6px 0;
+  color: var(--fg-1);
+  border-bottom: 1px solid var(--line-3);
+  border-radius: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.btn--quiet:hover { color: var(--acc); border-color: var(--acc); }
+
+/* ─── Status dot ──────────────────────────────────────────────────── */
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--fg-3);
+}
+.dot--acc { background: var(--acc); box-shadow: 0 0 8px var(--acc-glow); }
+.dot--rec { background: var(--rec); box-shadow: 0 0 8px var(--rec-glow); }
+.dot--ok  { background: var(--ok); }
+.dot--warn{ background: var(--warn); }
+
+/* ─── Form ────────────────────────────────────────────────────────── */
+input[type="text"], input[type="email"], textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--line-3);
+  background: var(--bg-2);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--dur) var(--ease);
+}
+input::placeholder, textarea::placeholder { color: var(--fg-4); }
+input:focus, textarea:focus { border-color: var(--acc); }
+
+:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+a { color: var(--fg-1); text-underline-offset: 3px; }
+a:hover { color: var(--acc); }

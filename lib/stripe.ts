@@ -1,4 +1,4 @@
-import Stripe from "stripe";
+﻿import Stripe from "stripe";
 import type { BillingAddonKey, PricingPlanKey } from "./pricing";
 
 let stripeClient: Stripe | null = null;
@@ -149,4 +149,4 @@ export async function findUsableSubscription(customerId: string): Promise<Stripe
 export const APP_URL =
   process.env.AUTH_URL ??
   process.env.NEXTAUTH_URL ??
-  "https://sansxel.ai";
+  "https://vraelis.com";

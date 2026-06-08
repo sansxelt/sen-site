@@ -14,7 +14,7 @@ import type { PricingPlanKey } from "../../../lib/pricing";
 
 export const metadata: Metadata = {
   title: "Plan",
-  description: "Subscription plan, payment method, and invoices for your sansxel account.",
+  description: "Subscription plan, payment method, and invoices for your Vraelis account.",
 };
 
 export default async function AccountPlanPage() {
@@ -67,7 +67,7 @@ export default async function AccountPlanPage() {
       ) : stripeReady ? (
         <p className="text-sm text-neutral-400">
           Sign in to manage your subscription. Visit{" "}
-          <Link href="/pricing" className="sansxel-subtle-link">
+          <Link href="/pricing" className="VRAELIS-subtle-link">
             pricing
           </Link>{" "}
           to compare plans.

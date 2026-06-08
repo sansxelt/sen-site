@@ -188,7 +188,7 @@ export function DesktopUsageView({
                 Currently serving on
                 <span className="usage-throttle-tier">
                   {" "}
-                  sansxel-1 {usage.pro_throttle.current_tier === "smart" ? "deep" : usage.pro_throttle.current_tier}
+                  vraelis-1 {usage.pro_throttle.current_tier === "smart" ? "deep" : usage.pro_throttle.current_tier}
                 </span>
                 .
                 {" "}

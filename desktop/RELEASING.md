@@ -1,4 +1,4 @@
-# Releasing the sansxel desktop
+﻿# Releasing the VRAELIS desktop
 
 End-to-end: from dev binary → signed Windows installer → users get it
 automatically.
@@ -16,13 +16,13 @@ npm run desktop:keygen
 ```
 
 It writes:
-- `sansxel-updater.key` — private key, keep safe (back it up to a
+- `VRAELIS-updater.key` — private key, keep safe (back it up to a
   password manager)
-- `sansxel-updater.key.pub` — public key, paste its contents into
+- `VRAELIS-updater.key.pub` — public key, paste its contents into
   `desktop/src-tauri/tauri.conf.json` under
   `plugins.updater.pubkey` (replace `REPLACE_WITH_YOUR_TAURI_PUBKEY`)
 
-`sansxel-updater.key` is gitignored. Don't lose it — you can't sign
+`VRAELIS-updater.key` is gitignored. Don't lose it — you can't sign
 new releases without it. Losing it means existing installs can never
 auto-update again (you'd have to ship a new app under a new pubkey
 and ask users to reinstall).
@@ -32,7 +32,7 @@ and ask users to reinstall).
 The build will sign artifacts automatically when these env vars are set:
 
 ```
-TAURI_SIGNING_PRIVATE_KEY=<paste contents of sansxel-updater.key>
+TAURI_SIGNING_PRIVATE_KEY=<paste contents of VRAELIS-updater.key>
 TAURI_SIGNING_PRIVATE_KEY_PASSWORD=<the password you chose during keygen>
 ```
 
@@ -56,9 +56,9 @@ Takes ~3-5 minutes. Output lands in:
 
 ```
 desktop/src-tauri/target/release/bundle/
-├── msi/sansxel_<version>_x64_en-US.msi
-├── nsis/sansxel_<version>_x64-setup.exe
-└── nsis/sansxel_<version>_x64-setup.nsis.zip + .nsis.zip.sig
+├── msi/VRAELIS_<version>_x64_en-US.msi
+├── nsis/VRAELIS_<version>_x64-setup.exe
+└── nsis/VRAELIS_<version>_x64-setup.nsis.zip + .nsis.zip.sig
 ```
 
 The `.nsis.zip` + `.nsis.zip.sig` pair is what the updater downloads.
@@ -68,10 +68,10 @@ The `.msi` / `.exe` is what new users download from your website.
 
 ```
 gh release create v<version> \
-  desktop/src-tauri/target/release/bundle/msi/sansxel_*_x64_en-US.msi \
-  desktop/src-tauri/target/release/bundle/nsis/sansxel_*_x64-setup.exe \
-  desktop/src-tauri/target/release/bundle/nsis/sansxel_*_x64-setup.nsis.zip \
-  desktop/src-tauri/target/release/bundle/nsis/sansxel_*_x64-setup.nsis.zip.sig
+  desktop/src-tauri/target/release/bundle/msi/VRAELIS_*_x64_en-US.msi \
+  desktop/src-tauri/target/release/bundle/nsis/VRAELIS_*_x64-setup.exe \
+  desktop/src-tauri/target/release/bundle/nsis/VRAELIS_*_x64-setup.nsis.zip \
+  desktop/src-tauri/target/release/bundle/nsis/VRAELIS_*_x64-setup.nsis.zip.sig
 ```
 
 (Or upload manually via github.com → Releases → Draft a new release.)
@@ -87,7 +87,7 @@ const RELEASE_DATE  = "2026-04-19T20:00:00Z";
 
 const PLATFORMS = {
   "windows-x86_64": {
-    url: "https://github.com/sansxelt/sen-site/releases/download/v0.2.0/sansxel_0.2.0_x64-setup.nsis.zip",
+    url: "https://github.com/sansxelt/sen-site/releases/download/v0.2.0/VRAELIS_0.2.0_x64-setup.nsis.zip",
     signature: "<contents of the matching .nsis.zip.sig file>",
   },
 };
@@ -102,7 +102,7 @@ launch. They'll find the new version, download the signed bundle in
 the background, and relaunch into it. Silent — no permission prompt,
 no install wizard.
 
-New users go to `https://sansxel.ai/download` and grab the MSI.
+New users go to `https://vraelis.com/download` and grab the MSI.
 
 ## Code signing (Windows "unrecognized publisher" warning)
 

@@ -148,7 +148,7 @@ export function KeysPanel({ initialKeys }: { initialKeys: ApiKeyRecord[] }) {
         <button
           type="submit"
           disabled={creating}
-          className="sansxel-white-button rounded-xl border border-white/10 bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:opacity-90 disabled:opacity-50"
+          className="VRAELIS-white-button rounded-xl border border-white/10 bg-white px-4 py-2.5 text-sm font-medium text-black transition hover:opacity-90 disabled:opacity-50"
         >
           {creating ? "Creating…" : "Create key"}
         </button>

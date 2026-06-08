@@ -47,7 +47,7 @@ export function DesktopApprovalCard({
       const data = (await res.json()) as { callback?: string };
       setPhase("approved");
 
-      // Hand off to the desktop via the sansxel:// URL scheme. The
+      // Hand off to the desktop via the Vraelis:// URL scheme. The
       // browser prompts the user to open the desktop app, then the
       // desktop redeems the approved request for a session token.
       if (data.callback) {
@@ -88,13 +88,13 @@ export function DesktopApprovalCard({
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 p-7">
       <div className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-400">
-        sansxel desktop
+        Vraelis desktop
       </div>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white">
         Sign in on this device?
       </h1>
       <p className="mt-3 text-sm leading-6 text-neutral-300">
-        The sansxel desktop app is asking to sign in as
+        The Vraelis desktop app is asking to sign in as
         <span className="text-white"> {email}</span>
         {deviceLabel ? (
           <>
@@ -111,13 +111,13 @@ export function DesktopApprovalCard({
 
       <div className="mt-5 rounded-2xl border border-amber-500/15 bg-amber-500/[0.06] p-3 text-xs leading-5 text-amber-200/80">
         Only approve if you just clicked &quot;Sign in&quot; inside your
-        sansxel desktop app. If you did not, close this tab and ignore it.
+        Vraelis desktop app. If you did not, close this tab and ignore it.
       </div>
 
       {phase === "approved" ? (
         <div className="mt-6 space-y-3">
           <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.06] p-4 text-sm text-emerald-100">
-            All done - sansxel desktop is signed in. Switch back to the app to
+            All done - Vraelis desktop is signed in. Switch back to the app to
             keep going.
           </div>
           <p className="text-center text-xs text-neutral-500">
@@ -130,7 +130,7 @@ export function DesktopApprovalCard({
             type="button"
             onClick={() => void handleApprove()}
             disabled={phase === "approving" || phase === "switching-account"}
-            className="sansxel-white-button rounded-2xl bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:opacity-90 disabled:opacity-60"
+            className="VRAELIS-white-button rounded-2xl bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:opacity-90 disabled:opacity-60"
           >
             {phase === "approving" ? "Approving..." : "Approve"}
           </button>

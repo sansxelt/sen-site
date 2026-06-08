@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { sendPasswordResetEmail } from "../../../../lib/email";
 import { createPasswordResetToken } from "../../../../lib/password-reset";
 import { isDatabaseConfigured } from "../../../../lib/supabase-admin";
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       const baseUrl =
         process.env.AUTH_URL ??
         process.env.NEXTAUTH_URL ??
-        "https://sansxel.ai";
+        "https://vraelis.com";
       const resetUrl = `${baseUrl}/auth/reset-password/confirm?token=${token}`;
 
       await sendPasswordResetEmail(email, resetUrl);

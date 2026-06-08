@@ -59,7 +59,7 @@ const QUESTIONS = [
     key: "api" as const,
     label: "Need API access for custom builds?",
     options: [
-      { value: "no",    title: "Not really",      desc: "Just using it inside sansxel" },
+      { value: "no",    title: "Not really",      desc: "Just using it inside Vraelis" },
       { value: "maybe", title: "Maybe someday",   desc: "I could see wiring it into things later" },
       { value: "yes",   title: "Yes, essential", desc: "I'm plugging it into my own apps / workflows" },
     ],
@@ -373,7 +373,7 @@ function PickPlansStep({
           type="button"
           onClick={onNext}
           disabled={!canAdvance}
-          className="sansxel-white-button rounded-2xl bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="VRAELIS-white-button rounded-2xl bg-white px-5 py-2.5 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Continue
         </button>
@@ -556,7 +556,7 @@ function ResultStep({
         <Link
           href={goHref}
           onClick={onClose}
-          className="sansxel-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+          className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
         >
           {recommended.ctaLabel}
         </Link>

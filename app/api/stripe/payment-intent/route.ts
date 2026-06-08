@@ -181,7 +181,7 @@ export async function POST(request: Request) {
             addonKey,
             userEmail: email,
           },
-          description: `sansxel one-time boost: ${addonKey}`,
+          description: `Vraelis one-time boost: ${addonKey}`,
         });
         if (intent.status === "succeeded") {
           return NextResponse.json({ status: "boost_charged", intentId: intent.id });

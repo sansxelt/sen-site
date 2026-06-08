@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { ZoneShell } from "@/components/zone-shell";
 
-// Checkout always lands on chat.sansxel.ai (the proxy redirects
+// Checkout always lands on vraelis.com (the proxy redirects
 // apex /checkout there), so this shell renders the workshop
 // identity 99% of the time. Falls back gracefully on other hosts.
 //

@@ -9,9 +9,9 @@ import {
 import { DesktopApprovalCard } from "@/components/desktop-approval-card";
 
 export const metadata: Metadata = {
-  title: "Approve sansxel desktop",
+  title: "Approve Vraelis desktop",
   description:
-    "Authorize the sansxel desktop app to sign in as your account.",
+    "Authorize the Vraelis desktop app to sign in as your account.",
 };
 
 async function fetchRequest(
@@ -46,7 +46,7 @@ export default async function DesktopAuthPage({
       <DesktopAuthShell>
         <DesktopAuthMessage
           title="Missing request"
-          body="This page should be opened from inside the sansxel desktop app."
+          body="This page should be opened from inside the Vraelis desktop app."
         />
       </DesktopAuthShell>
     );
@@ -91,7 +91,7 @@ export default async function DesktopAuthPage({
         <DesktopAuthMessage
           title="Already approved"
           body="The desktop app should already be signing you in. You can close this tab."
-          deepLink={`sansxel://auth?request_id=${requestId}`}
+          deepLink={`Vraelis://auth?request_id=${requestId}`}
         />
       </DesktopAuthShell>
     );
@@ -128,7 +128,7 @@ function DesktopAuthMessage({
   return (
     <div className="rounded-3xl border border-white/10 bg-white/5 p-7">
       <div className="text-sm font-medium uppercase tracking-[0.18em] text-neutral-400">
-        sansxel desktop
+        Vraelis desktop
       </div>
       <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white">
         {title}

@@ -1,4 +1,4 @@
-// v0.2.0 phase G — side-by-side model duel route.
+﻿// v0.2.0 phase G — side-by-side model duel route.
 //
 // One user prompt → two parallel assistant streams (Claude + GPT)
 // multiplexed into a single newline-delimited JSON event stream.
@@ -29,7 +29,7 @@ import {
   DUEL_CLAUDE_MODEL,
   getDuelGptModel,
 } from "../../../../lib/ai-models";
-import { SANSXEL_PRODUCT_BRIEF } from "../../../../lib/sansxel-context";
+import { VRAELIS_PRODUCT_BRIEF } from "../../../../lib/vraelis-context";
 import {
   appendMessage as saveMessage,
   createThread as createChatThread,
@@ -83,11 +83,11 @@ type DuelBody = {
 };
 
 // Compare-mode system prompt. Deliberately model-neutral, neither
-// side claims to be sansxel-1 in duel mode because the user is
+// side claims to be vraelis-1 in duel mode because the user is
 // explicitly comparing raw model intelligence. Project context +
 // time + language lock are appended just like /api/ai/chat so both
 // sides have identical grounding.
-const DUEL_SYSTEM_PROMPT = `You are answering inside sansxel.ai's side-by-side model duel. The user is comparing your raw intelligence against another model on the exact same prompt. Be yourself, answer directly in your natural voice.
+const DUEL_SYSTEM_PROMPT = `You are answering inside vraelis.com's side-by-side model duel. The user is comparing your raw intelligence against another model on the exact same prompt. Be yourself, answer directly in your natural voice.
 
 Hard rules:
 - MIRROR the user's energy and length. One word in, one word out. Casual in, casual out. "wsg" / "yo" / "hi" / "w" are greetings, NOT requests for clarification, treat them as openers and reply naturally ("hey, what's up?", "yo", "wsg"), never ask for "more details" or "could you clarify".
@@ -97,9 +97,9 @@ Hard rules:
 - Don't moralize, hedge, or pad with disclaimers on normal creative / cultural / casual topics.
 - For time-sensitive or live-data questions, say what you don't know rather than fabricating; the duel surface intentionally has no live web access.
 - Never mention the comparison itself or that you're being compared.
-- The sansxel workspace renders fenced code blocks in svg, html, jsx, tsx, or python as live inline previews. When the user asks for a chart, graph, diagram, map, visualization, or interactive demo, BUILD it: emit an svg or html code block with the actual rendered output. Don't punt to TradingView / Google / Yahoo. Don't say "I can't render that inline" — you can.
+- The Vraelis workspace renders fenced code blocks in svg, html, jsx, tsx, or python as live inline previews. When the user asks for a chart, graph, diagram, map, visualization, or interactive demo, BUILD it: emit an svg or html code block with the actual rendered output. Don't punt to TradingView / Google / Yahoo. Don't say "I can't render that inline" — you can.
 
-${SANSXEL_PRODUCT_BRIEF}`;
+${VRAELIS_PRODUCT_BRIEF}`;
 
 function buildSystem(args: {
   projectContextBlock: string;
@@ -268,7 +268,7 @@ export async function POST(request: Request) {
     email,
     kind: "duel",
     surface:
-      request.headers.get("x-sansxel-surface") === "desktop"
+      request.headers.get("x-VRAELIS-surface") === "desktop"
         ? "desktop"
         : "web",
   });
@@ -377,7 +377,7 @@ export async function POST(request: Request) {
     : [null, null];
 
   const surface =
-    request.headers.get("x-sansxel-surface") === "desktop"
+    request.headers.get("x-VRAELIS-surface") === "desktop"
       ? "desktop"
       : "web";
 
@@ -677,10 +677,10 @@ export async function POST(request: Request) {
   return new Response(body, {
     headers: {
       "Content-Type": "application/x-ndjson; charset=utf-8",
-      "x-sansxel-stream-format": "duel-jsonl",
+      "x-VRAELIS-stream-format": "duel-jsonl",
       "Cache-Control": "no-store",
-      "x-sansxel-thread-id": resolvedThreadId ?? "",
-      "x-sansxel-duel-group-id": groupId,
+      "x-VRAELIS-thread-id": resolvedThreadId ?? "",
+      "x-VRAELIS-duel-group-id": groupId,
     },
   });
 }

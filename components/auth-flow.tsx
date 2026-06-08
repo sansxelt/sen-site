@@ -38,8 +38,8 @@ export function AuthFlow({
           </h3>
           <div className="mt-6 grid gap-3 text-sm text-neutral-200 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              "Email, Google, and GitHub all start from sansxel's own sign-in flow before handing off when needed.",
-              "The callback returns to sansxel routes instead of a third-party auth hostname.",
+              "Email, Google, and GitHub all start from Vraelis's own sign-in flow before handing off when needed.",
+              "The callback returns to Vraelis routes instead of a third-party auth hostname.",
               "New email accounts are created inside the same auth surface and land in the same workspace flow.",
               "Privacy, terms, pricing, and support all have real routes.",
               "Invite requests stay attached to the same account path.",

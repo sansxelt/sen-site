@@ -5,10 +5,7 @@
 </clipPath>
 </defs>
 <g clip-path="url(#circleClip)">
-<rect x="0" y="0" width="680" height="680" fill="#0a0a0a"/>
-<polygon points="340,340 180,180 340,140" fill="#ffffff"/>
-<polygon points="340,340 500,180 540,340" fill="#A78BFA"/>
-<polygon points="340,340 380,540 200,500" fill="#ffffff"/>
-<circle cx="340" cy="340" r="14" fill="#0a0a0a"/>
+<rect x="0" y="0" width="680" height="680" fill="#000000"/>
+<path fill="#ffffff" d="M 95,156 L 116,129 L 224,129 L 170,218 L 340,374 L 510,218 L 456,129 L 564,129 L 585,156 L 340,558 Z"/>
 </g>
 </svg>

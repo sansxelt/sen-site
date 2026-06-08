@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vraelis</title>
+  <meta name="description" content="A pair of glasses that remember everything. 360° camera, near-field audio, ambient HUD, voice + whisper recognition." />
+  <meta name="theme-color" content="#0A0F18" />
+  <link rel="stylesheet" href="./colors_and_type.css" />
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <style>
+    html, body { margin: 0; padding: 0; background: var(--bg-0); }
+    html { scroll-behavior: smooth; }
+    .ph { line-height: 0; }
+
+    @keyframes vraPulse { 0%,100% { opacity:0.55; } 50% { opacity:1; } }
+    @keyframes vraDotPulse { 0%,100% { box-shadow: 0 0 0 rgba(92,229,213,0.40);} 50% { box-shadow: 0 0 12px rgba(92,229,213,0.65);} }
+    @keyframes vraRise { from { opacity:0; transform: translateY(18px);} to { opacity:1; transform: translateY(0);} }
+    @keyframes vraFade { from { opacity:0;} to { opacity:1;} }
+
+    .vra-rise-1 { animation: vraRise 700ms var(--ease) both; animation-delay: 0.05s; }
+    .vra-rise-2 { animation: vraRise 800ms var(--ease) both; animation-delay: 0.20s; }
+    .vra-rise-3 { animation: vraRise 800ms var(--ease) both; animation-delay: 0.35s; }
+    .vra-rise-4 { animation: vraRise 800ms var(--ease) both; animation-delay: 0.50s; }
+    .vra-card-anim { animation: vraRise 900ms var(--ease) both; animation-delay: 0.40s; }
+    .vra-step-anim { animation: vraFade 320ms var(--ease) both; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .vra-rise-1, .vra-rise-2, .vra-rise-3, .vra-rise-4,
+      .vra-card-anim, .vra-step-anim { animation: none !important; }
+    }
+
+    @media (max-width: 980px) {
+      .vra-hero-grid    { grid-template-columns: 1fr !important; gap: 48px !important; }
+      .vra-feature-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+      .vra-feature-grid > * { order: unset !important; }
+      .vra-spec-grid    { grid-template-columns: 1fr !important; }
+      .vra-footer-grid  { grid-template-columns: 1fr 1fr !important; }
+    }
+    @media (max-width: 720px) {
+      .vra-nav-links     { display: none !important; }
+      .vra-waitlist-form { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="./ui_kits/website/InstrumentBar.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/Nav.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/Glasses3D.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/SignUpCard.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/Hero.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/ManifestoBlock.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/FeatureRow.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/FeatureDiagrams.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/Spec.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/SiteFooter.jsx"></script>
+  <script type="text/babel" src="./ui_kits/website/App.jsx"></script>
+
+  <script type="text/babel">
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>

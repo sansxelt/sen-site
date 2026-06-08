@@ -1,7 +1,15 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
+import { Inter_Tight } from "next/font/google";
 import "./globals.css";
+
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  variable: "--font-inter-tight",
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
 import { auth } from "../auth";
 import { CommandPalette } from "../components/command-palette";
 import { CopilotBar } from "../components/copilot-bar";
@@ -9,19 +17,19 @@ import { RevealOnScroll } from "../components/reveal-on-scroll";
 import { InflightBackToChat } from "../components/inflight-back-to-chat";
 import { isVraelisRequest } from "../lib/site-host";
 
-const BASE = "https://www.sansxel.ai";
+const BASE = "https://www.vraelis.com";
 
 const sansxelMetadata: Metadata = {
   metadataBase: new URL(BASE),
   title: {
-    default: "sansxel, AI with persistent project memory",
-    template: "%s | sansxel",
+    default: "Vraelis, AI with persistent project memory",
+    template: "%s | Vraelis",
   },
   description:
-    "Stop re-explaining yourself to AI. Every chatbot forgets you between sessions. Sansxel remembers your projects, your context, your goals. Every session picks up where the last one left off.",
+    "Stop re-explaining yourself to AI. Every chatbot forgets you between sessions. Vraelis remembers your projects, your context, your goals. Every session picks up where the last one left off.",
   keywords: [
-    "sansxel",
-    "sansxel ai",
+    "Vraelis",
+    "Vraelis ai",
     "ai with memory",
     "persistent memory ai",
     "ai project memory",
@@ -33,27 +41,27 @@ const sansxelMetadata: Metadata = {
     "ai with web search",
     "multimodal ai",
   ],
-  authors: [{ name: "sansxel", url: BASE }],
-  creator: "sansxel",
-  publisher: "sansxel",
+  authors: [{ name: "Vraelis", url: BASE }],
+  creator: "Vraelis",
+  publisher: "Vraelis",
   alternates: { canonical: BASE },
   openGraph: {
     type: "website",
     locale: "en_US",
     url: BASE,
-    siteName: "sansxel",
+    siteName: "Vraelis",
     title: "Stop re-explaining yourself to AI.",
     description:
-      "Every chatbot forgets you between sessions. Sansxel remembers your projects, your context, your goals. Every session picks up where the last one left off.",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "sansxel" }],
+      "Every chatbot forgets you between sessions. Vraelis remembers your projects, your context, your goals. Every session picks up where the last one left off.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Vraelis" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Stop re-explaining yourself to AI.",
     description:
-      "Sansxel remembers your projects, context, and goals. Every session picks up where the last one left off.",
+      "Vraelis remembers your projects, context, and goals. Every session picks up where the last one left off.",
     images: ["/og-image.png"],
-    creator: "@sansxel",
+    creator: "@vraelis",
   },
   robots: {
     index: true,
@@ -137,21 +145,21 @@ export default async function RootLayout({
       lang="en"
       data-theme="dark"
       style={{ colorScheme: "dark" }}
-      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+      className={`${GeistSans.variable} ${GeistMono.variable} ${interTight.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-neutral-950 font-sans text-neutral-100">
+      <body className="flex min-h-full flex-col bg-background font-sans text-neutral-100">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              name: "sansxel",
-              url: "https://www.sansxel.ai",
+              name: "Vraelis",
+              url: "https://www.vraelis.com",
               applicationCategory: "ProductivityApplication",
               operatingSystem: "Windows, macOS",
               description:
-                "AI with persistent project memory. Sansxel remembers your projects, context, and goals; every session picks up where the last one left off. Chat, voice, drag-drop, image generation, live web search, all in one workspace.",
+                "AI with persistent project memory. Vraelis remembers your projects, context, and goals; every session picks up where the last one left off. Chat, voice, drag-drop, image generation, live web search, all in one workspace.",
               offers: {
                 "@type": "AggregateOffer",
                 lowPrice: "0",
@@ -161,8 +169,8 @@ export default async function RootLayout({
               },
               creator: {
                 "@type": "Organization",
-                name: "sansxel",
-                url: "https://www.sansxel.ai",
+                name: "Vraelis",
+                url: "https://www.vraelis.com",
               },
             }),
           }}

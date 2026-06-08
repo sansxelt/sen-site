@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -7,8 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Zone } from "../lib/zone";
 
-// Pinwheel mark per host. Same geometry, different accent triangle.
-// next/image auto-applies `unoptimized` for .svg sources in v16.
+// V chevron logo per host zone.
 const ZONE_LOGO: Record<Zone, string> = {
   apex: "/logo-violet.svg",
   chat: "/logo-cyan.svg",
@@ -157,18 +156,18 @@ function _RecentChats({ compact = false }: { compact?: boolean }) {
     };
     void load();
 
-    // Refresh signals: chat sends fire 'sansxel:threads:changed';
+    // Refresh signals: chat sends fire 'Vraelis:threads:changed';
     // tab focus picks up threads created on another device.
     const onChanged = () => { void load(); };
     const onFocus = () => { void load(); };
     if (typeof window !== "undefined") {
-      window.addEventListener("sansxel:threads:changed", onChanged);
+      window.addEventListener("Vraelis:threads:changed", onChanged);
       window.addEventListener("focus", onFocus);
     }
     return () => {
       cancelled = true;
       if (typeof window !== "undefined") {
-        window.removeEventListener("sansxel:threads:changed", onChanged);
+        window.removeEventListener("Vraelis:threads:changed", onChanged);
         window.removeEventListener("focus", onFocus);
       }
     };
@@ -300,23 +299,6 @@ function BillingIcon() {
   );
 }
 
-function LensIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
-      <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function AudioIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="shrink-0">
-      <path d="M3 5h2l3-2.5v11L5 11H3V5Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M11 6c.8.6 1.3 1.4 1.3 2s-.5 1.4-1.3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 // Workshop stations. Chat moved out, it lives in the dedicated
 // right-side history rail next to the canvas. Make group dropped
@@ -346,13 +328,6 @@ const navGroups: NavGroup[] = [
       { href: "/account/settings",     label: "Settings",     icon: <SettingsIcon /> },
       { href: "/account/updates",      label: "Updates",      icon: <UpdatesIcon /> },
       { href: "/account/download",     label: "Desktop",      icon: <DownloadIcon /> },
-    ],
-  },
-  {
-    label: "Hardware",
-    items: [
-      { href: "/lens",    label: "Lens",  icon: <LensIcon />,  soon: true },
-      { href: "/whisper", label: "Audio", icon: <AudioIcon />, soon: true },
     ],
   },
 ];
@@ -396,7 +371,7 @@ export function DashboardNav({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const inWorkshop = pathname === "/app" || pathname.startsWith("/app/");
+  const inWorkshop = pathname === "/chat" || pathname.startsWith("/chat/");
   const logoSrc = ZONE_LOGO[zone];
   // ChatGPT-style mobile drawer for chat history.
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -409,16 +384,16 @@ export function DashboardNav({
       // inherit the last project from localStorage. Must dispatch
       // project:changed (not just remove from storage) so the strip
       // in WebChat clears immediately without waiting for a remount.
-      window.localStorage.removeItem("sansxel.activeProjectId");
-      window.dispatchEvent(new CustomEvent("sansxel:project:changed", { detail: null }));
-      window.dispatchEvent(new CustomEvent("sansxel:new-chat"));
+      window.localStorage.removeItem("Vraelis.activeProjectId");
+      window.dispatchEvent(new CustomEvent("Vraelis:project:changed", { detail: null }));
+      window.dispatchEvent(new CustomEvent("Vraelis:new-chat"));
     }
     router.replace("/app?new=1");
   };
 
   function isActive(href: string) {
     if (href === "/account") return pathname === "/account";
-    if (href === "/app") return pathname === "/app";
+    if (href === "/chat") return pathname === "/chat";
     return pathname.startsWith(href);
   }
 
@@ -426,7 +401,7 @@ export function DashboardNav({
   // don't waste space on redundant pages (Overview + Billing both
   // being Shop items felt like duplicates on portrait phones).
   const mobileBarItems: NavItem[] = [
-    { href: "/app",                  label: "Chat",     icon: <ChatIcon /> },
+    { href: "/chat",                  label: "Chat",     icon: <ChatIcon /> },
     navGroups[0].items[0],          // Brain  → Memory
     navGroups[1].items[1],          // Shop   → Billing
     navGroups[2].items[0],          // Bench  → Settings
@@ -454,7 +429,7 @@ export function DashboardNav({
       return (
         <span
           key={item.href}
-          className="sx-nav-item sx-nav-item--soon"
+          className="vrl-nav-item vrl-nav-item--soon"
           aria-disabled="true"
           title="Coming soon"
         >
@@ -482,11 +457,11 @@ export function DashboardNav({
       <Link
         key={item.href}
         href={item.href}
-        className={`sx-nav-item${
+        className={`vrl-nav-item${
           isActive(item.href)
             ? zone === "platform"
-              ? " sx-nav-item--active sx-nav-item--active-platform"
-              : " sx-nav-item--active"
+              ? " vrl-nav-item--active vrl-nav-item--active-platform"
+              : " vrl-nav-item--active"
             : ""
         }`}
       >
@@ -505,11 +480,11 @@ export function DashboardNav({
           bottom, ChatGPT-style. */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 px-4 lg:flex">
         {/* Logo */}
-        <div className="flex shrink-0 items-center justify-between border-b py-3" style={{ borderColor: "var(--sx-border)" }}>
-          <Link href="/app" className="flex items-center gap-2.5">
-            <Image src={logoSrc} alt="sansxel" width={36} height={36} className="h-9 w-9 shrink-0 rounded-xl" priority />
+        <div className="flex shrink-0 items-center justify-between border-b py-3" style={{ borderColor: "var(--vrl-border)" }}>
+          <Link href="/chat" className="flex items-center gap-2.5">
+            <Image src={logoSrc} alt="Vraelis" width={36} height={36} className="h-9 w-9 shrink-0 rounded-xl" priority />
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold text-white">sansxel</span>
+              <span className="text-sm font-semibold text-white">Vraelis</span>
               <span
                 className="text-[10px] font-semibold uppercase tracking-[0.18em]"
                 style={{ color: zone === "platform" ? "#FFAC33" : "#A78BFA" }}
@@ -521,11 +496,11 @@ export function DashboardNav({
         </div>
 
         {/* Chat — pinned below logo */}
-        <div className="shrink-0 border-b py-2" style={{ borderColor: "var(--sx-border)" }}>
+        <div className="shrink-0 border-b py-2" style={{ borderColor: "var(--vrl-border)" }}>
           <Link
-            href="/app"
+            href="/chat"
             onClick={(e) => { if (inWorkshop) e.preventDefault(); }}
-            className={`sx-nav-item font-medium${isActive("/app") ? " sx-nav-item--active" : ""}`}
+            className={`vrl-nav-item font-medium${isActive("/chat") ? " vrl-nav-item--active" : ""}`}
           >
             <ChatIcon />
             Chat
@@ -537,20 +512,20 @@ export function DashboardNav({
         <nav className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto py-2">
           {effectiveGroups.map((group) => (
             <div key={group.label} className="flex flex-col gap-0.5">
-              <div className="sx-section-label">{group.label}</div>
+              <div className="vrl-section-label">{group.label}</div>
               {group.items.map(navLink)}
             </div>
           ))}
         </nav>
 
-        <div className="shrink-0 border-t pb-4 pt-3" style={{ borderColor: "var(--sx-border)" }}>
+        <div className="shrink-0 border-t pb-4 pt-3" style={{ borderColor: "var(--vrl-border)" }}>
           <div
             className="mb-2 truncate px-3 text-[11px]"
-            style={{ color: "var(--sx-text-dim)" }}
+            style={{ color: "var(--vrl-text-dim)" }}
           >
             {userEmail}
           </div>
-          <Link href="/home" className="sx-nav-item text-sm">
+          <Link href="/home" className="vrl-nav-item text-sm">
             <HomeIcon />
             Home
           </Link>
@@ -560,7 +535,7 @@ export function DashboardNav({
               await signOut({ redirect: false });
               window.location.href = "/home";
             }}
-            className="sx-nav-item w-full text-sm"
+            className="vrl-nav-item w-full text-sm"
           >
             <SignOutIcon />
             Sign out
@@ -583,10 +558,10 @@ export function DashboardNav({
               <HamburgerIcon />
             </button>
           )}
-          <Link href="/app" className="flex items-center gap-2">
-            <Image src={logoSrc} alt="sansxel" width={32} height={32} className="h-8 w-8 rounded-xl" priority />
+          <Link href="/chat" className="flex items-center gap-2">
+            <Image src={logoSrc} alt="Vraelis" width={32} height={32} className="h-8 w-8 rounded-xl" priority />
             <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold text-white">sansxel</span>
+              <span className="text-sm font-semibold text-white">Vraelis</span>
               <span
                 className="text-[8.5px] font-semibold uppercase tracking-[0.18em]"
                 style={{ color: zone === "platform" ? "#FFAC33" : "#A78BFA" }}
@@ -606,20 +581,20 @@ export function DashboardNav({
           {isAdmin && (
             <Link
               href="/account/content"
-              className="sx-btn sx-btn--workshop"
+              className="vrl-btn vrl-btn--workshop"
               title="Learn content (admin)"
             >
               <PenIcon />
               <span className="hidden xs:inline sm:inline">Admin</span>
             </Link>
           )}
-          <Link href="/home" className="sx-btn sx-btn--ghost" title="Return to home">
+          <Link href="/home" className="vrl-btn vrl-btn--ghost" title="Return to home">
             <HomeIcon />
             <span className="hidden xs:inline sm:inline">Home</span>
           </Link>
           <button
             onClick={async () => { await signOut({ redirect: false }); window.location.href = "/home"; }}
-            className="sx-btn sx-btn--ghost"
+            className="vrl-btn vrl-btn--ghost"
           >
             <SignOutIcon />
             <span className="hidden xs:inline sm:inline">Sign out</span>
@@ -637,7 +612,7 @@ export function DashboardNav({
             className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
           />
           <aside className="fixed inset-y-0 left-0 z-[55] flex w-[82vw] max-w-[320px] flex-col border-r border-white/[0.08] bg-neutral-950/98 lg:hidden chat-drawer-in">
-            <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: "var(--sx-border)" }}>
+            <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: "var(--vrl-border)" }}>
               <span className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "rgba(155,124,255,0.75)" }}>
                 Chat history
               </span>
@@ -653,7 +628,7 @@ export function DashboardNav({
             <button
               type="button"
               onClick={() => { handleNewChat(); setDrawerOpen(false); }}
-              className="sx-btn sx-btn--workshop m-3 w-[calc(100%-24px)] justify-center py-2.5 text-sm font-semibold"
+              className="vrl-btn vrl-btn--workshop m-3 w-[calc(100%-24px)] justify-center py-2.5 text-sm font-semibold"
             >
               <span aria-hidden className="text-base leading-none">＋</span>
               <span>New chat</span>
@@ -684,7 +659,7 @@ export function DashboardNav({
                 // Same guard as the desktop sidebar: tapping Chat
                 // while already in /app should NOT drop ?thread=
                 // and start a phantom new chat.
-                if (item.href === "/app" && inWorkshop) e.preventDefault();
+                if (item.href === "/chat" && inWorkshop) e.preventDefault();
               }}
               className={`flex min-w-[68px] flex-1 flex-col items-center justify-center gap-1 py-2.5 text-center transition-colors ${
                 isActive(item.href)

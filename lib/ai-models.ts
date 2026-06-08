@@ -1,4 +1,4 @@
-// sansxel-1 model registry. The user-facing tier names ("fast",
+// vraelis-1 model registry. The user-facing tier names ("fast",
 // "balanced", "smart") map to specific Anthropic model IDs and are
 // gated by subscription plan. Keeping this in one place so backend
 // routing and frontend pickers stay in sync.
@@ -29,21 +29,21 @@ export const MODEL_REGISTRY: ReadonlyArray<ModelDescriptor> = [
   {
     tier: "fast",
     model: "claude-haiku-4-5-20251001",
-    display_name: "sansxel-1 fast",
+    display_name: "vraelis-1 fast",
     blurb: "Quick replies, simple tasks. Free for all plans.",
     min_plan: "free",
   },
   {
     tier: "balanced",
     model: "claude-sonnet-4-6",
-    display_name: "sansxel-1",
+    display_name: "vraelis-1",
     blurb: "Default. Strong on writing, code, planning. Apprentice plan and up.",
     min_plan: "apprentice",
   },
   {
     tier: "smart",
     model: "claude-opus-4-7",
-    display_name: "sansxel-1 deep",
+    display_name: "vraelis-1 deep",
     blurb: "Heaviest reasoning. Long context. Pro plan and up.",
     min_plan: "pro",
   },

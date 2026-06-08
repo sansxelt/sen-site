@@ -43,8 +43,8 @@ next-env.d.ts
 scripts/__pycache__/
 
 # Tauri updater signing key (NEVER commit)
-sansxel-updater.key
-sansxel-updater.key.pub
+VRAELIS-updater.key
+VRAELIS-updater.key.pub
 
 # Claude Code per-user/local settings (shared project config in
 # .claude/settings.json IS committed; only the .local override is not)

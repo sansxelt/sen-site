@@ -179,7 +179,7 @@ function SetupForm({ onError, onSuccess }: { onError: (m: string) => void; onSuc
       <button
         type="submit"
         disabled={!stripe || busy}
-        className="sansxel-white-button w-full rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="VRAELIS-white-button w-full rounded-2xl bg-white px-5 py-3 text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy ? "Saving…" : "Save card"}
       </button>

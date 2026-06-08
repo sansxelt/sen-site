@@ -1,9 +1,9 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { getSignInPath } from "../../../lib/auth-ui";
 
 export const metadata = {
   title: "Account verified",
-  description: "Your sansxel account is live.",
+  description: "Your Vraelis account is live.",
 };
 
 type SearchParams = { email?: string };
@@ -28,13 +28,13 @@ export default async function VerifiedPage({
           You&apos;re in.
         </h1>
         <p className="mt-3 text-sm leading-6 text-neutral-300">
-          Your sansxel account{email && <> ({<span className="text-white">{email}</span>})</>} is active. Sign in with the password you chose during signup and you&apos;re ready to go.
+          Your Vraelis account{email && <> ({<span className="text-white">{email}</span>})</>} is active. Sign in with the password you chose during signup and you&apos;re ready to go.
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <Link
             href={signInHref}
-            className="sansxel-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+            className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
           >
             Sign in
           </Link>
@@ -47,7 +47,7 @@ export default async function VerifiedPage({
         </div>
 
         <p className="mt-6 border-t border-white/10 pt-6 text-xs text-neutral-500">
-          You&apos;ll also get a welcome email from hello@sansxel.ai with getting-started tips.
+          You&apos;ll also get a welcome email from hello@vraelis.com with getting-started tips.
         </p>
       </div>
     </div>

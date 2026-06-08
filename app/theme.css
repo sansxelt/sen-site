@@ -1,5 +1,5 @@
 /* Light-mode overrides intentionally removed.
-   The site is dark-only on every domain (sansxel.ai, chat, platform).
+   The site is dark-only on every domain (VRAELIS.ai, chat, platform).
    <html data-theme="dark"> is hard-coded in app/layout.tsx so any
    stray data-theme selectors elsewhere stay no-op. This file is kept
    so the @import in globals.css does not need updating. */

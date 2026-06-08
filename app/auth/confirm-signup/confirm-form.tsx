@@ -54,7 +54,7 @@ export function ConfirmSignupForm({ email, provider, name, token }: Props) {
           type="button"
           onClick={handleCreate}
           disabled={busy}
-          className="sansxel-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy ? "Creating…" : "Create account"}
         </button>

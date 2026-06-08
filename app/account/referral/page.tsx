@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { auth } from "../../../auth";
 import {
   getReferralStats,
@@ -10,10 +10,10 @@ import { CopyReferralLink } from "../../../components/copy-referral-link";
 
 export const metadata: Metadata = {
   title: "Referral & Rewards",
-  description: "Share sansxel with friends and earn credits when they upgrade.",
+  description: "Share Vraelis with friends and earn credits when they upgrade.",
 };
 
-const BASE_URL = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "https://sansxel.ai";
+const BASE_URL = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL ?? "https://vraelis.com";
 
 export default async function AccountReferralPage() {
   const session = await auth();

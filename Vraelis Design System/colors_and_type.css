@@ -1,0 +1,363 @@
+/* ──────────────────────────────────────────────────────────────────────
+   VRAELIS — colors_and_type.css
+   Single source of truth: color, type, spacing, radius, shadow, motion.
+   Dark-only. Cinematic. Quiet by default; accent on demand.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Geist Sans + Geist Mono are the production stack. Loaded from Google
+   Fonts here so any standalone HTML file that links this CSS gets the
+   right metrics. In the codebase they come from the `geist` npm package. */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ═══════════════════════════════════════════════════════════════════
+     1. SURFACE — page floor, panels, deep wells
+     ═══════════════════════════════════════════════════════════════════ */
+  --bg-0:        #050507;   /* page floor — cinematic near-black */
+  --bg-1:        #08080c;   /* card / panel */
+  --bg-2:        #040406;   /* deepest — outro / footer / scrim land */
+  --bg-elev-1:   rgba(255,255,255,0.02);   /* tinted surface on bg-0 */
+  --bg-elev-2:   rgba(255,255,255,0.04);
+  --bg-elev-3:   rgba(255,255,255,0.06);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     2. FOREGROUND — type + iconography
+     fg-1 reserved for headlines and key numbers.
+     fg-2 default body. fg-3 secondary. fg-4 label.
+     fg-5 whisper-quiet (captions, disabled).
+     ═══════════════════════════════════════════════════════════════════ */
+  --fg-1:        #f5f5f7;
+  --fg-2:        #e4e4e7;
+  --fg-3:        #a1a1aa;
+  --fg-4:        #71717a;
+  --fg-5:        #52525b;
+  --fg-on-accent:#0a0a0c;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     3. ACCENT — Vraelis Lens
+     The brand has ONE product (the Lens — smart contact + glasses
+     wearable) and ONE primary accent (violet). Cyan is a secondary
+     system pulse for status indicators, voice waveforms, connection.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /* Primary — violet (Lens / brand) */
+  --vio:           #c084fc;
+  --vio-strong:    #a855f7;
+  --vio-deep:      #7e22ce;
+  --vio-soft:      rgba(192,132,252,0.06);
+  --vio-line:      rgba(192,132,252,0.22);
+  --vio-line-2:    rgba(192,132,252,0.50);
+  --vio-glow:      rgba(192,132,252,0.35);
+
+  /* Secondary — cyan (signal / mic / status) */
+  --cya:           #22d3ee;
+  --cya-strong:    #06b6d4;
+  --cya-soft:      rgba(34,211,238,0.06);
+  --cya-line:      rgba(34,211,238,0.22);
+  --cya-glow:      rgba(34,211,238,0.35);
+
+  /* Tertiary — pale sky (cool neutral accent for UI chrome) */
+  --sky:           #a8c4ff;
+  --sky-soft:      rgba(168,196,255,0.04);
+  --sky-line:      rgba(168,196,255,0.22);
+  --sky-glow:      rgba(168,196,255,0.35);
+
+  /* Semantic */
+  --ok:            #34d399;
+  --ok-soft:       rgba(52,211,153,0.10);
+  --ok-line:       rgba(52,211,153,0.28);
+
+  --warn:          #fbbf24;
+  --warn-soft:     rgba(251,191,36,0.08);
+  --warn-line:     rgba(251,191,36,0.28);
+
+  --err:           #fca5a5;
+  --err-soft:      rgba(220,38,38,0.08);
+  --err-line:      rgba(220,38,38,0.28);
+
+  /* Voice/recording — a red used only for the "record" dot */
+  --rec:           #ef4444;
+  --rec-glow:      rgba(239,68,68,0.55);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     4. LINE — separators, borders, focus rings
+     ═══════════════════════════════════════════════════════════════════ */
+  --line-1:        rgba(255,255,255,0.05);
+  --line-2:        rgba(255,255,255,0.07);
+  --line-3:        rgba(255,255,255,0.10);
+  --line-4:        rgba(255,255,255,0.16);
+  --focus-ring:    rgba(168,196,255,0.55);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     5. TYPE — families
+     ═══════════════════════════════════════════════════════════════════ */
+  --font-sans:  "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono:  "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     6. TYPE — scale
+     Headlines use clamp() so cinematic feel survives every viewport.
+     Display sizes are huge: full-bleed acts need text that holds the
+     frame against a photograph.
+     ═══════════════════════════════════════════════════════════════════ */
+  --fs-display-xl: clamp(2.6rem, 6vw, 5.5rem);     /* full-bleed hero */
+  --fs-display-l:  clamp(2.2rem, 5vw, 4.5rem);     /* secondary act */
+  --fs-display-m:  clamp(1.8rem, 3.6vw, 3rem);     /* section headline */
+  --fs-h1:         clamp(1.5rem, 2.4vw, 2rem);     /* page title */
+  --fs-h2:         clamp(1.25rem, 1.6vw, 1.5rem);  /* sub-section */
+  --fs-h3:         1.125rem;                       /* card title */
+  --fs-body:       1rem;
+  --fs-body-sm:    0.875rem;
+  --fs-meta:       0.8125rem;
+  --fs-label:      0.6875rem;                      /* mono uppercase label */
+  --fs-micro:      0.625rem;
+
+  --lh-display:    1.05;
+  --lh-tight:      1.15;
+  --lh-body:       1.55;
+  --lh-loose:      1.65;
+
+  --tr-display:   -0.025em;
+  --tr-tight:     -0.015em;
+  --tr-default:   -0.005em;
+  --tr-label:      0.16em;        /* uppercase mono labels */
+  --tr-label-tight:0.06em;
+
+  --fw-light:      300;
+  --fw-regular:    400;
+  --fw-medium:     500;
+  --fw-semi:       600;
+  --fw-bold:       700;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     7. SPACING — 4px base
+     ═══════════════════════════════════════════════════════════════════ */
+  --s-0:  0;
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+  --s-16: 64px;
+  --s-20: 80px;
+  --s-24: 96px;
+  --s-32: 128px;
+  --pad-section: clamp(64px, 12vh, 140px) clamp(20px, 5vw, 80px);
+  --pad-card:    clamp(18px, 3vw, 28px);
+
+  /* ═══════════════════════════════════════════════════════════════════
+     8. RADIUS — cards, pills, chips
+     The system uses generous corners on cards and full-pill CTAs.
+     ═══════════════════════════════════════════════════════════════════ */
+  --r-xs:   6px;    /* chips / pills / inline tags */
+  --r-sm:   10px;   /* buttons, inputs */
+  --r-md:   14px;   /* small cards, mode tiles */
+  --r-lg:   18px;   /* product cards, glass slabs */
+  --r-xl:   24px;   /* hero panels, waitlist plates */
+  --r-2xl:  32px;   /* device frames */
+  --r-pill: 999px;
+
+  /* ═══════════════════════════════════════════════════════════════════
+     9. ELEVATION — shadow + halo
+     We almost never use drop shadow. Elevation is communicated with
+     hairline borders + an accent-tinted halo behind dots.
+     ═══════════════════════════════════════════════════════════════════ */
+  --shadow-none: none;
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset, 0 24px 64px -32px rgba(0,0,0,0.8);
+  --shadow-pop:  0 30px 80px -40px rgba(0,0,0,0.9);
+  --halo-vio:    0 0 24px rgba(192,132,252,0.35);
+  --halo-cya:    0 0 24px rgba(34,211,238,0.35);
+  --halo-sky:    0 0 24px rgba(168,196,255,0.35);
+  --halo-rec:    0 0 14px rgba(239,68,68,0.55);
+
+  /* ══════════════════════════════════════════════════════════════════
+     10. SCRIMS & GLOWS — radial backdrops for sections
+     ══════════════════════════════════════════════════════════════════ */
+  --scrim-top:    linear-gradient(180deg, var(--bg-0) 0%, transparent 100%);
+  --scrim-bottom: linear-gradient(180deg, transparent 0%, transparent 35%, rgba(5,5,7,0.55) 55%, rgba(5,5,7,0.88) 75%, var(--bg-0) 92%);
+  --scrim-left:   linear-gradient(to right, rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 35%, rgba(5,5,7,0) 75%);
+  --scrim-right:  linear-gradient(to left,  rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 35%, rgba(5,5,7,0) 75%);
+  --halo-section-vio: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(192,132,252,0.06) 0%, transparent 60%);
+  --halo-section-sky: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(168,196,255,0.04) 0%, transparent 60%);
+
+  /* ══════════════════════════════════════════════════════════════════
+     11. MOTION — durations + easings
+     Cinematic, slow, almost still. Heavy use of one custom ease.
+     ══════════════════════════════════════════════════════════════════ */
+  --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);   /* signature ease */
+  --ease-standard:  cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in:        cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:       cubic-bezier(0, 0, 0.2, 1);
+  --dur-fast:    150ms;
+  --dur-base:    250ms;
+  --dur-slow:    600ms;
+  --dur-act:     900ms;     /* hero text rise */
+
+  /* ══════════════════════════════════════════════════════════════════
+     12. BLUR — backdrop levels
+     ══════════════════════════════════════════════════════════════════ */
+  --blur-1: 8px;     /* pills over photos */
+  --blur-2: 10px;    /* CTAs over photos */
+  --blur-3: 20px;    /* glass slabs */
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+   SEMANTIC ELEMENT STYLES
+   Apply directly to bare HTML elements when a file links this CSS.
+   ═════════════════════════════════════════════════════════════════════ */
+
+html,
+body {
+  background: var(--bg-0);
+  color: var(--fg-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tr-default);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--vio-strong); color: var(--fg-1); }
+
+/* Display headline — used for cinematic full-bleed acts.
+   Stack: light weight + tight leading + tight tracking, with an
+   optional gradient variant for the loudest moments. */
+.cinematic-display,
+h1.display,
+h2.display {
+  font-family: var(--font-sans);
+  font-size: var(--fs-display-l);
+  font-weight: var(--fw-light);
+  line-height: var(--lh-display);
+  letter-spacing: var(--tr-display);
+  color: var(--fg-1);
+  text-wrap: balance;
+}
+
+.cinematic-display--gradient {
+  background: linear-gradient(180deg, #fafafa 0%, #c4c4c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.cinematic-body,
+p.lead {
+  font-size: clamp(1rem, 1.4vw, 1.25rem);
+  line-height: var(--lh-body);
+  color: rgba(245,245,247,0.72);
+  letter-spacing: var(--tr-default);
+  max-width: 540px;
+  text-wrap: pretty;
+}
+
+h1 { font-size: var(--fs-h1); font-weight: var(--fw-semi); letter-spacing: var(--tr-tight); color: var(--fg-1); }
+h2 { font-size: var(--fs-h2); font-weight: var(--fw-semi); letter-spacing: var(--tr-tight); color: var(--fg-1); }
+h3 { font-size: var(--fs-h3); font-weight: var(--fw-semi); letter-spacing: var(--tr-default); color: var(--fg-1); }
+
+p  { color: var(--fg-3); line-height: var(--lh-body); text-wrap: pretty; }
+
+small,
+.meta { font-size: var(--fs-meta); color: var(--fg-4); }
+
+code,
+kbd,
+.mono { font-family: var(--font-mono); font-size: var(--fs-body-sm); }
+
+/* The mono-uppercase label is a brand signature. Used for product
+   chips ("LENS"), mode names ("MODE"), and tiny section eyebrows. */
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--tr-label);
+  text-transform: uppercase;
+  color: var(--fg-4);
+}
+
+/* Card — the default container for content blocks. Hairline border,
+   no shadow, soft tinted surface. */
+.card {
+  background: var(--bg-elev-1);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  padding: var(--pad-card);
+}
+
+.card--featured {
+  background: var(--sky-soft);
+  border-color: var(--sky-line);
+}
+
+/* Pill — the brand's go-to chip/badge shape. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 6px 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line-3);
+  background: rgba(0,0,0,0.45);
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--tr-label-tight);
+  color: var(--fg-2);
+  backdrop-filter: blur(var(--blur-1));
+  -webkit-backdrop-filter: blur(var(--blur-1));
+  white-space: nowrap;
+}
+
+/* Brand dot — the single most-used decoration. A coloured dot with a
+   glow halo, sat next to a label. Drives status, mode, product. */
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sky);
+  box-shadow: 0 0 8px currentColor;
+  display: inline-block;
+}
+.dot--vio { color: var(--vio); background: var(--vio); }
+.dot--cya { color: var(--cya); background: var(--cya); }
+.dot--sky { color: var(--sky); background: var(--sky); }
+.dot--ok  { color: var(--ok);  background: var(--ok);  }
+.dot--rec { color: var(--rec); background: var(--rec); box-shadow: var(--halo-rec); }
+
+/* CTA — primary ghost link over photo. */
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  white-space: nowrap;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--sky-line);
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(var(--blur-2));
+  -webkit-backdrop-filter: blur(var(--blur-2));
+  color: rgba(168,196,255,0.94);
+  font-size: var(--fs-body-sm);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  letter-spacing: var(--tr-default);
+  transition: border-color var(--dur-base) var(--ease-cinematic),
+              color        var(--dur-base) var(--ease-cinematic),
+              transform    var(--dur-fast) var(--ease-out);
+}
+.cta:hover  { border-color: var(--sky); color: var(--sky); }
+.cta:active { transform: translateY(1px); }
+
+.cta--vio { border-color: var(--vio-line); color: var(--vio); }
+.cta--vio:hover { border-color: var(--vio); color: var(--vio); }
+
+/* Focus ring — visible only on keyboard focus. */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}

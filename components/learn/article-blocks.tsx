@@ -1,4 +1,4 @@
-// Reusable blocks for /learn articles. Kept tiny + dependency-free
+﻿// Reusable blocks for /learn articles. Kept tiny + dependency-free
 // so authoring an article is just composing these inside the
 // article's render() function in lib/learn-content.tsx.
 
@@ -150,7 +150,7 @@ export function Callout({
 
 export function TryItCTA({
   text = "Try it in the workshop",
-  href = "/app",
+  href = "/chat",
 }: {
   text?: string;
   href?: string;

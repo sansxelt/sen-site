@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+﻿import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { auth } from "../../../../auth";
 import { getDesktopUserEmailFromRequest } from "../../../../lib/desktop-auth";
@@ -9,7 +9,7 @@ import {
   resolveTier,
 } from "../../../../lib/ai-models";
 import { humanizeText, type HumanizationTone } from "../../../../lib/humanize-engine";
-import { SANSXEL_PRODUCT_BRIEF } from "../../../../lib/sansxel-context";
+import { VRAELIS_PRODUCT_BRIEF } from "../../../../lib/vraelis-context";
 import {
   buildReferenceBlock,
   fetchSourcesByIds,
@@ -52,14 +52,14 @@ export const runtime = "nodejs";
 
 const client = new Anthropic();
 
-const SYSTEM_PROMPT = `You are sansxel-1, the AI inside the sansxel workspace, an adaptive product for thinking, writing, and building. You are an assistant for serious creative and professional work.
+const SYSTEM_PROMPT = `You are vraelis-1, the AI inside the Vraelis workspace, an adaptive product for thinking, writing, and building. You are an assistant for serious creative and professional work.
 
 How to respond:
 - Just do the thing. No "Sure!", no "I'd be happy to", no "Here's...". Skip the preamble entirely and start with the actual answer.
 - For ANY question about current/live data, news, stock prices, sports scores, weather, recent events, "today/this week", anything time-sensitive, USE the web_search tool. Don't apologize for "no real-time data," don't dump links and ask the user to look it up themselves. Search, then answer with the actual data plus a short citation. Skip web_search only when the question is genuinely timeless (math, code, definitions, historical facts).
 - When the user pastes or drops a URL (article, blog post, doc page, YouTube link, GitHub link, anything web-reachable), USE the web_fetch tool to read the actual page contents BEFORE replying. NEVER say "I can't access URLs" or "I don't have a browser", you can. Fetch first, then answer with the real contents. If the fetch fails or the page is gated, say so explicitly and offer to work from what the user can paste in.
-- The sansxel workspace HAS image generation. When the user asks to make / generate / draw an image, the workspace runs gpt-image-1 inline, you don't have an image tool yourself, but the surface around you does. NEVER reply "I can't generate images" or "I'm a text assistant." Instead say something like "Tap the image button or just say 'gen an image of X' and I'll fire it off." Video generation is not yet wired (private beta), for video you can offer to script / storyboard it instead.
-- The sansxel workspace renders REAL charts and design canvases when you emit them as structured JSON inside special fenced blocks. NEVER hand-roll SVG / HTML to draw a chart. The renderer plots whatever data you put in the spec, so the visual is guaranteed to match the numbers. When the user asks for a CHART, GRAPH, DATA PLOT, TIME SERIES, or any visualization of numbers, emit a \`\`\`chart fenced block whose body is JSON of this shape:
+- The Vraelis workspace HAS image generation. When the user asks to make / generate / draw an image, the workspace runs gpt-image-1 inline, you don't have an image tool yourself, but the surface around you does. NEVER reply "I can't generate images" or "I'm a text assistant." Instead say something like "Tap the image button or just say 'gen an image of X' and I'll fire it off." Video generation is not yet wired (private beta), for video you can offer to script / storyboard it instead.
+- The Vraelis workspace renders REAL charts and design canvases when you emit them as structured JSON inside special fenced blocks. NEVER hand-roll SVG / HTML to draw a chart. The renderer plots whatever data you put in the spec, so the visual is guaranteed to match the numbers. When the user asks for a CHART, GRAPH, DATA PLOT, TIME SERIES, or any visualization of numbers, emit a \`\`\`chart fenced block whose body is JSON of this shape:
 \`\`\`chart
 { "type": "line" | "bar" | "area" | "pie" | "scatter", "title": "optional title", "data": [ { "x-key": "Jan", "y-key-1": 123, "y-key-2": 456 }, ... ], "x": "x-key", "y": "y-key-1" or ["y-key-1", "y-key-2"], "stacked": false, "colors": ["#a8c4ff", "#c084fc"] (optional), "yScale": "log" (use when the largest series is more than 10x bigger than the smallest, e.g. one stock returned 24,000% and another 1,000% — without log scale the smaller series flatten to the baseline and become invisible) }
 \`\`\`
@@ -79,7 +79,7 @@ NEVER reply "I can't render a chart inline" or punt to TradingView / Google Fina
 - For complex requests, you MAY briefly "think out loud" inside <think>...</think> tags before the actual answer. The UI renders this in a dim italic block separate from the answer, so users can see your reasoning without it cluttering the response. Keep it short (1-2 sentences) and skip it entirely on trivial questions. Never use <think> for the final answer itself.
 
 Custom UI cards:
-- For genuinely structured info (dashboards, comparisons, plans, key facts, quotes, timelines), emit a fenced "sansxel-card" block whose body is JSON in one of the shapes below. The UI renders these as real components, not as markdown tables. Don't use cards for conversational replies; only when the data is actually structured.
+- For genuinely structured info (dashboards, comparisons, plans, key facts, quotes, timelines), emit a fenced "VRAELIS-card" block whose body is JSON in one of the shapes below. The UI renders these as real components, not as markdown tables. Don't use cards for conversational replies; only when the data is actually structured.
 - Output the card BEFORE any prose commentary, then optionally add a short paragraph beneath. Never wrap a card inside another markdown block.
 - One card per response unless the user explicitly asks for multiple sections. Mix freely with normal markdown around the card.
 - Available shapes:
@@ -91,9 +91,9 @@ Custom UI cards:
   - timeline: ordered events. { "type": "timeline", "title": "...", "events": [{ "when": "...", "title": "...", "body": "..." }] }. Use for histories, schedules, release notes.
 
 Identity:
-- You are sansxel-1. The product is sansxel. Never mention Claude, Anthropic, the underlying model, or implementation details.
+- You are vraelis-1. The product is Vraelis. Never mention Claude, Anthropic, the underlying model, or implementation details.
 
-${SANSXEL_PRODUCT_BRIEF}`;
+${VRAELIS_PRODUCT_BRIEF}`;
 
 // Appended to the system prompt when the user is in voice mode.
 // Voice replies that ramble through long markdown sound terrible via
@@ -225,7 +225,7 @@ type ChatBody = {
   // can dispatch tool_use blocks and feed tool_result back in.
   tools_enabled?: boolean;
   // v0.1.16, thread persistence. If omitted, server creates a new
-  // thread and returns its id in the x-sansxel-thread-id response
+  // thread and returns its id in the x-VRAELIS-thread-id response
   // header so the client can stash it for follow-up turns. Same
   // account → same threads from any device.
   thread_id?: string;
@@ -702,7 +702,7 @@ export async function POST(request: Request) {
   let tFirstToken: number | null = null;
 
   // Two ways to authenticate this endpoint: a Bearer token (desktop)
-  // or a NextAuth session cookie (browser at sansxel.ai/app). Either
+  // or a NextAuth session cookie (browser at vraelis.com/chat). Either
   // one identifies a user; the rest of the route is identical.
   let email = await getDesktopUserEmailFromRequest(request);
   if (!email) {
@@ -1075,7 +1075,7 @@ export async function POST(request: Request) {
     // Capture from the surface header so the dashboard can split
     // web vs desktop usage.
     const surface =
-      request.headers.get("x-sansxel-surface") === "desktop"
+      request.headers.get("x-VRAELIS-surface") === "desktop"
         ? "desktop"
         : "web";
     const encoder = new TextEncoder();
@@ -1363,28 +1363,28 @@ export async function POST(request: Request) {
     return new Response(body, {
       headers: {
         // v0.1.8, JSON-Lines when tools are enabled, plain text
-        // otherwise. The client checks x-sansxel-stream-format to
+        // otherwise. The client checks x-VRAELIS-stream-format to
         // decide how to parse incoming chunks.
         "Content-Type": toolsEnabled
           ? "application/x-ndjson; charset=utf-8"
           : "text/plain; charset=utf-8",
-        "x-sansxel-stream-format": toolsEnabled ? "jsonl" : "text",
+        "x-VRAELIS-stream-format": toolsEnabled ? "jsonl" : "text",
         "Cache-Control": "no-store",
-        "x-sansxel-tier": resolvedTier,
-        "x-sansxel-tier-requested": requestedTier,
-        "x-sansxel-plan": plan,
-        "x-sansxel-persona": personaDescriptor?.key ?? "",
-        "x-sansxel-persona-delay-multiplier": String(
+        "x-VRAELIS-tier": resolvedTier,
+        "x-VRAELIS-tier-requested": requestedTier,
+        "x-VRAELIS-plan": plan,
+        "x-VRAELIS-persona": personaDescriptor?.key ?? "",
+        "x-VRAELIS-persona-delay-multiplier": String(
           personaDescriptor?.delay_multiplier ?? 1,
         ),
-        "x-sansxel-throttled": throttleApplied ?? "",
-        "x-sansxel-weekly-used": String(weekly.chat_requests),
-        "x-sansxel-weekly-limit": String(
+        "x-VRAELIS-throttled": throttleApplied ?? "",
+        "x-VRAELIS-weekly-used": String(weekly.chat_requests),
+        "x-VRAELIS-weekly-limit": String(
           planLimit.weekly_chat_requests ?? "",
         ),
         // v0.1.16, Echo the resolved thread id so the client can
         // stash it for follow-up turns + show it in the URL/sidebar.
-        "x-sansxel-thread-id": resolvedThreadId ?? "",
+        "x-VRAELIS-thread-id": resolvedThreadId ?? "",
       },
     });
   } catch (err) {
@@ -1394,7 +1394,7 @@ export async function POST(request: Request) {
     // detailed reason, so this catch only fires on real upstream
     // failures (Anthropic outage, malformed payload, etc.).
     return NextResponse.json(
-      { error: "sansxel-1 is having trouble responding right now. Try again in a moment." },
+      { error: "vraelis-1 is having trouble responding right now. Try again in a moment." },
       { status: 500 },
     );
   }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { loadStripe, type Stripe as StripeJs } from "@stripe/stripe-js";
@@ -618,7 +618,7 @@ export function DesktopBillingPanel({
                     <button
                       type="button"
                       className="upgrade-cta-btn"
-                      onClick={() => void openUrl("https://sansxel.ai/pricing#teams").catch(() => {})}
+                      onClick={() => void openUrl("https://vraelis.com/pricing#teams").catch(() => {})}
                     >
                       Set up in browser →
                     </button>
@@ -647,7 +647,7 @@ export function DesktopBillingPanel({
                     <button
                       type="button"
                       className="upgrade-cta-btn"
-                      onClick={() => void openUrl("https://sansxel.ai/contact?subject=Enterprise").catch(() => {})}
+                      onClick={() => void openUrl("https://vraelis.com/contact?subject=Enterprise").catch(() => {})}
                     >
                       Talk to us →
                     </button>
@@ -1106,7 +1106,7 @@ function CheckoutModal({
     <BillingModalFrame
       kicker="Secure checkout"
       title={`Start ${plan.name}`}
-      subtitle={`You stay inside sansxel desktop while Stripe handles the payment form.`}
+      subtitle={`You stay inside Vraelis desktop while Stripe handles the payment form.`}
       error={error}
       onClose={onClose}
     >
@@ -1167,7 +1167,7 @@ function PaymentMethodModal({
     <BillingModalFrame
       kicker="Payment method"
       title="Update card"
-      subtitle="Card details go directly to Stripe and never pass through sansxel servers."
+      subtitle="Card details go directly to Stripe and never pass through Vraelis servers."
       error={error}
       onClose={onClose}
     >

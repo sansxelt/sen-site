@@ -7,7 +7,7 @@ import { CheckoutSuccessPoller } from "../../../components/checkout-success-poll
 
 export const metadata = {
   title: "Confirming payment",
-  description: "We're verifying your sansxel subscription.",
+  description: "We're verifying your Vraelis subscription.",
 };
 
 type SearchParams = {
@@ -79,7 +79,7 @@ export default async function CheckoutSuccessPage({
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link
               href={retryHref}
-              className="sansxel-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+              className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
             >
               Try again
             </Link>
@@ -110,7 +110,7 @@ export default async function CheckoutSuccessPage({
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <Link
             href="/account"
-            className="sansxel-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
+            className="VRAELIS-white-button flex-1 rounded-2xl bg-white px-5 py-3 text-center text-sm font-medium text-black transition hover:opacity-90"
           >
             Go to account
           </Link>

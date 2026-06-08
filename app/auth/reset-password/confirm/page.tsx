@@ -3,7 +3,7 @@ import { ResetPasswordConfirmForm } from "./reset-password-confirm-form";
 
 export const metadata: Metadata = {
   title: "Set New Password",
-  description: "Choose a new password for your sansxel account.",
+  description: "Choose a new password for your Vraelis account.",
 };
 
 export default async function ResetPasswordConfirmPage({
@@ -25,7 +25,7 @@ export default async function ResetPasswordConfirmPage({
             Choose a new password.
           </h1>
           <p className="mt-4 text-sm leading-7 text-neutral-200">
-            Enter a new password for your sansxel account. After saving, sign
+            Enter a new password for your Vraelis account. After saving, sign
             in with your new credentials.
           </p>
           <div className="mt-8">

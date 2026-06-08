@@ -8,7 +8,7 @@ import { ContactChannels } from "./contact-channels";
 export const metadata: Metadata = {
   title: "Contact / Support",
   description:
-    "Contact sansxel for support, privacy questions, or early-access and team rollout conversations.",
+    "Contact Vraelis for support, privacy questions, or early-access and team rollout conversations.",
 };
 
 function readParam(
@@ -80,7 +80,7 @@ export default async function ContactPage({
               Tips for faster support
             </div>
             <div className="mt-4 space-y-3 text-sm leading-6 text-neutral-200">
-              <p>1. Include the email address tied to your sansxel account.</p>
+              <p>1. Include the email address tied to your Vraelis account.</p>
               <p>
                 2. Mention whether the issue is auth, early access, billing, or
                 privacy-related.
@@ -111,6 +111,25 @@ export default async function ContactPage({
             </div>
           </div>
         </div>
+      </Reveal>
+
+      <Reveal as="div" className="mt-6">
+        <a
+          href="https://discord.gg/5sxuuewf3u"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center justify-between rounded-3xl border border-[rgba(88,101,242,0.22)] bg-[rgba(88,101,242,0.06)] p-5 transition hover:border-[rgba(88,101,242,0.40)] hover:bg-[rgba(88,101,242,0.10)] sm:p-6"
+        >
+          <div>
+            <div className="text-base font-medium text-white">Discord community</div>
+            <p className="mt-1 text-sm text-neutral-400">
+              Fastest path to a real answer. The team monitors it daily — also where early users, feedback loops, and product updates live.
+            </p>
+          </div>
+          <div className="ml-6 shrink-0 text-sm font-medium transition" style={{ color: "rgba(148,163,255,0.80)" }}>
+            discord.gg/5sxuuewf3u →
+          </div>
+        </a>
       </Reveal>
       </section>
     </>

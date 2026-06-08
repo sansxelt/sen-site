@@ -11,7 +11,7 @@ import { LensHudProjection } from "./lens-hud-projection";
 import { CinematicEffects } from "./cinematic-effects";
 import { CameraDrift } from "./camera-drift";
 
-// Sansxel Lens. Medical-grade transparent contact with embedded
+// Vraelis Lens. Medical-grade transparent contact with embedded
 // electronics. Layered procedurally to fake real product realism:
 //
 //   shell        Lathe-curved acrylic disc (transmission, low rough)
@@ -24,7 +24,7 @@ import { CameraDrift } from "./camera-drift";
 //   12 chips     Tiny rectangular ICs scattered around the ring
 //   8 capacitors Smaller cylindrical SMD parts
 //   6 contacts   Gold pads (charge + data interface)
-//   etched mark  Sansxel triangles laser-etched into the carrier ring
+//   etched mark  Vraelis triangles laser-etched into the carrier ring
 //   serial       32 microscopic notches around the outer edge
 //   iris reticle Hairline ring over the pupil (no glow centre)
 //   traces       Concentric copper-blue lines at low opacity
@@ -216,7 +216,7 @@ function ProceduralLens() {
           );
         })}
 
-        {/* ETCHED SANSXEL MARK — laser etched on the carrier ring
+        {/* ETCHED Vraelis MARK — laser etched on the carrier ring
             inner face, visible only when light grazes it */}
         <BrandMark
           size={0.05}

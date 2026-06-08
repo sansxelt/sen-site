@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useTransition } from "react";
 import { sendBroadcastAction } from "./actions";
@@ -154,7 +154,7 @@ export function BroadcastComposer() {
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-[11px] text-neutral-500">
-          Sends from <code className="text-neutral-300">hello@sansxel.ai</code>
+          Sends from <code className="text-neutral-300">hello@vraelis.com</code>
           . Recipients see the rendered HTML.
         </p>
         <button

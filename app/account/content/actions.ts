@@ -80,7 +80,7 @@ export async function createDraftFromFormAction(formData: FormData) {
   }
 
   // Snapshot the byline at write time. Admins skip this — the
-  // renderer flips them to "Sansxel (OWNER)" via authorLabel —
+  // renderer flips them to "Vraelis (OWNER)" via authorLabel —
   // contributors get their hardlocked display_name baked in so a
   // later rename of the contributor doesn't rewrite the byline.
   const displayName = isAdminEmail(email)

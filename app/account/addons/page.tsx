@@ -66,7 +66,7 @@ export default async function AccountAddonsPage() {
       ) : stripeReady ? (
         <p className="text-sm text-neutral-400">
           Sign in to view addons. Visit{" "}
-          <Link href="/pricing" className="sansxel-subtle-link">
+          <Link href="/pricing" className="VRAELIS-subtle-link">
             pricing
           </Link>{" "}
           to compare plans.
