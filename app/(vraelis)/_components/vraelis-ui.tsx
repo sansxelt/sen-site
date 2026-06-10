@@ -296,105 +296,107 @@ type Lead = {
 
 const LEADS: Lead[] = [
   {
-    id: "l1", name: "Marcus Bell", company: "Bell & Co. Roofing",
-    source: "Website form", status: "booked", value: 4200, ago: "2m",
-    snippet: "Need a quote for a full re-roof, ~1800 sq ft.",
-    booking: "Thu, 12 Jun · 9:30 AM — On-site estimate",
+    id: "l1", name: "Marcus Bell", company: "Coaching · Instagram DM",
+    source: "Instagram", status: "won", value: 4000, ago: "2m",
+    snippet: "Paid in full — $4,000 transformation program.",
+    booking: "Kickoff call — Thu, 12 Jun · 9:30 AM",
     messages: [
-      { who: "lead", t: "Hi, need a quote for a full re-roof, around 1800 sq ft. How soon can someone come out?", time: "9:14" },
-      { who: "v", t: "Thanks Marcus — I can help with that. Is this for a residential property, and is the current roof asphalt shingle?", time: "9:14" },
-      { who: "lead", t: "Yep, residential, asphalt. Roof is about 20 years old.", time: "9:21" },
-      { who: "v", t: "Got it. We have an estimator near you. I can hold Thursday 9:30 AM or Friday 2:00 PM for an on-site visit — which works?", time: "9:21" },
-      { who: "lead", t: "Thursday morning is good.", time: "9:38" },
-      { who: "v", t: "Booked — Thu 12 Jun, 9:30 AM. You'll get a text reminder the day before. Anything else I should pass to the estimator?", time: "9:38" },
+      { who: "lead", t: "Saw your post about the 12-week program. I'm serious about leveling up but I've wasted money on coaches before — what makes this different?", time: "9:14" },
+      { who: "v", t: "Fair question, Marcus. The program is built around weekly 1:1 accountability, not just content — that's usually what makes it stick. Quick one so I point you right: are you looking to start this month, or planning ahead?", time: "9:14" },
+      { who: "lead", t: "This month. What's the investment?", time: "9:21" },
+      { who: "v", t: "The 12-week transformation program is $4,000 — pay in full, or split it. To lock your start date this week, want me to send a secure link to get going?", time: "9:21" },
+      { who: "lead", t: "Pay in full works. Send it.", time: "9:38" },
+      { who: "v", t: "Done — payment received, you're in 🎉. Your kickoff call is held for Thu 12 Jun, 9:30 AM. Onboarding sent to your email.", time: "9:38" },
     ],
     followups: [
       { label: "Instant reply sent", time: "9:14", state: "done" },
-      { label: "Qualified: residential · asphalt · 1800 sq ft", time: "9:21", state: "done" },
-      { label: "Estimate booked — Thu 9:30 AM", time: "9:38", state: "done" },
-      { label: "Reminder text — day before", time: "Wed 6:00 PM", state: "now" },
+      { label: "Qualified: serious · starting this month", time: "9:21", state: "done" },
+      { label: "Paid in full — $4,000", time: "9:38", state: "done" },
+      { label: "Kickoff call held — Thu 9:30 AM", time: "9:38", state: "done" },
     ],
   },
   {
-    id: "l2", name: "Priya Anand", company: "Inbound · Instagram DM",
-    source: "Instagram", status: "qualified", value: 2800, ago: "14m",
-    snippet: "Saw your studio — do you do brand photo days?",
+    id: "l2", name: "Priya Anand", company: "Course creator · Instagram",
+    source: "Instagram", status: "won", value: 997, ago: "14m",
+    snippet: "Bought the $997 course — mentorship upsell queued.",
     booking: null,
     messages: [
-      { who: "lead", t: "Saw your studio on IG — do you do brand photo days for small teams?", time: "13:02" },
-      { who: "v", t: "We do. Roughly how many people, and is there a date you're aiming for?", time: "13:02" },
-      { who: "lead", t: "About 6 people, sometime in July.", time: "13:20" },
-      { who: "v", t: "Perfect — a half-day session covers a team that size. Want me to send a few July dates and a sample gallery?", time: "13:20" },
+      { who: "lead", t: "Is the course still open? And is it beginner-friendly?", time: "13:02" },
+      { who: "v", t: "It is — open now, and built to take you from zero. It's $997 for lifetime access plus the live Q&A calls. Want the secure checkout link?", time: "13:02" },
+      { who: "lead", t: "Yes please.", time: "13:12" },
+      { who: "v", t: "You're enrolled — payment received, access email on its way. Since you're starting fresh, a lot of students add the $2,500 1:1 mentorship to go faster. Want details on that?", time: "13:20" },
     ],
     followups: [
       { label: "Instant reply sent", time: "13:02", state: "done" },
-      { label: "Qualified: 6 people · July", time: "13:20", state: "done" },
-      { label: "Follow-up: send dates + gallery", time: "in 1h", state: "now" },
-      { label: "Booking link", time: "queued", state: "next" },
+      { label: "Paid — $997 course", time: "13:12", state: "done" },
+      { label: "Upsell: $2,500 mentorship", time: "in 1h", state: "now" },
+      { label: "Follow-up if no reply", time: "queued", state: "next" },
     ],
   },
   {
-    id: "l3", name: "Dev Okonkwo", company: "Northgate Dental",
-    source: "Missed call", status: "contacted", value: 900, ago: "31m",
-    snippet: "Missed call recovered — texted back in 40s.",
-    booking: null,
+    id: "l3", name: "Dev Okonkwo", company: "Agency client · Referral",
+    source: "Referral", status: "booked", value: 3000, ago: "31m",
+    snippet: "Deposit paid — $3,000/mo retainer, onboarding booked.",
+    booking: "Onboarding — Mon, 16 Jun · 2:00 PM",
     messages: [
-      { who: "v", t: "Hi, this is Northgate Dental — sorry we missed your call. How can we help? (You can just text back here.)", time: "11:06" },
-      { who: "lead", t: "Trying to book a cleaning + checkup, new patient.", time: "11:09" },
-      { who: "v", t: "Welcome! For a new-patient cleaning we'll book a 60-min slot. Mornings or afternoons better for you?", time: "11:09" },
+      { who: "lead", t: "Tomás referred me. We need help with paid ads + creative, spending about $20k/mo right now.", time: "11:06" },
+      { who: "v", t: "Glad Tomás sent you. At that spend our growth retainer is the right fit — $3,000/mo, month to month. To get you onboarded this week, we take the first month to reserve the slot. Want me to send the link?", time: "11:09" },
+      { who: "lead", t: "Yeah let's do it.", time: "11:14" },
+      { who: "v", t: "First month received — you're on the calendar. Onboarding call held for Mon 16 Jun, 2:00 PM. Welcome aboard.", time: "11:14" },
     ],
     followups: [
-      { label: "Missed call → text in 40s", time: "11:06", state: "done" },
-      { label: "Replied: new patient cleaning", time: "11:09", state: "done" },
-      { label: "Follow-up if no reply", time: "in 3h", state: "next" },
+      { label: "Instant reply sent", time: "11:06", state: "done" },
+      { label: "Qualified: $20k/mo ad spend", time: "11:09", state: "done" },
+      { label: "First month paid — $3,000", time: "11:14", state: "done" },
+      { label: "Onboarding booked — Mon 2:00 PM", time: "11:14", state: "done" },
     ],
   },
   {
-    id: "l4", name: "Sara Lindqvist", company: "Lindqvist Consulting",
-    source: "Website form", status: "new", value: 6500, ago: "just now",
-    snippet: "Looking for help with a go-to-market plan.",
+    id: "l4", name: "Sara Lindqvist", company: "Mastermind lead · Webinar",
+    source: "Webinar", status: "new", value: 5000, ago: "just now",
+    snippet: "Asking about the $5k mastermind — qualifying now.",
     booking: null,
     messages: [
-      { who: "lead", t: "Looking for help with a go-to-market plan for a B2B launch in Q3. Do you take projects like this?", time: "now" },
-      { who: "v", t: "We do — GTM for B2B launches is core work for us. To point you to the right person: is this a new product, or repositioning an existing one?", time: "now" },
+      { who: "lead", t: "I joined the webinar — interested in the mastermind but want to know if it's worth it at $5k for someone at my stage.", time: "now" },
+      { who: "v", t: "Totally reasonable to ask. Quick read so I can tell you straight: roughly what does your business do per month right now, and what's the goal in the next 90 days?", time: "now" },
     ],
     followups: [
       { label: "Instant reply sent", time: "now", state: "done" },
-      { label: "Qualifying questions in progress", time: "live", state: "now" },
-      { label: "Route to owner if budget > $5k", time: "pending", state: "next" },
+      { label: "Qualifying: stage + 90-day goal", time: "live", state: "now" },
+      { label: "Send payment plan if a fit", time: "pending", state: "next" },
     ],
   },
   {
-    id: "l5", name: "Theo Marchetti", company: "Marchetti Fitness Studio",
-    source: "Website chat", status: "won", value: 1560, ago: "1h",
-    snippet: "Signed up — 12-week transformation plan.",
-    booking: "Intro session — Mon, 9 Jun · 6:00 PM",
+    id: "l5", name: "Theo Marchetti", company: "Community · Link in bio",
+    source: "Link in bio", status: "won", value: 1200, ago: "1h",
+    snippet: "Joined — $1,200 annual membership paid.",
+    booking: null,
     messages: [
-      { who: "lead", t: "Interested in personal training, want to lose weight before the summer.", time: "10:02" },
-      { who: "v", t: "Great goal. Our 12-week plan is built for exactly that. Want to start with a free intro session this week?", time: "10:02" },
-      { who: "lead", t: "Yes! Monday evening?", time: "10:11" },
-      { who: "v", t: "Done — Mon 9 Jun, 6:00 PM with Coach Theo. Confirmation + intake form sent to your email.", time: "10:11" },
+      { who: "lead", t: "What do I get with the membership, and how much?", time: "10:02" },
+      { who: "v", t: "Annual membership is $1,200 — daily community access, weekly live calls, and the full resource vault. Most people take the year since it's the best value. Want the link to join?", time: "10:02" },
+      { who: "lead", t: "Let's do the annual.", time: "10:11" },
+      { who: "v", t: "You're in — payment received, Discord invite + welcome sent to your email. See you on the next live call 👋", time: "10:11" },
     ],
     followups: [
       { label: "Instant reply sent", time: "10:02", state: "done" },
-      { label: "Intro session booked", time: "10:11", state: "done" },
-      { label: "Intake form sent", time: "10:12", state: "done" },
-      { label: "Marked won — plan purchased", time: "10:55", state: "done" },
+      { label: "Paid — $1,200 annual membership", time: "10:11", state: "done" },
+      { label: "Access + welcome sent", time: "10:12", state: "done" },
+      { label: "Marked won — member onboarded", time: "10:12", state: "done" },
     ],
   },
   {
-    id: "l6", name: "Wholesale enquiry", company: "Email · orders@",
-    source: "Email", status: "contacted", value: 3100, ago: "2h",
-    snippet: "Bulk order question — replied + asked volume.",
+    id: "l6", name: "Jordan Reyes", company: "Consulting · Email",
+    source: "Email", status: "contacted", value: 2500, ago: "2h",
+    snippet: "Deposit link sent for $2,500 strategy intensive.",
     booking: null,
     messages: [
-      { who: "lead", t: "Do you offer wholesale pricing? We'd be ordering monthly.", time: "8:40" },
-      { who: "v", t: "We do offer wholesale tiers. Roughly what monthly volume are you expecting, and which products?", time: "8:40" },
+      { who: "lead", t: "Do you offer a one-off strategy session? Not ready for a full retainer yet.", time: "8:40" },
+      { who: "v", t: "We do — the strategy intensive is a focused half-day, $2,500, with a written action plan after. A deposit reserves your date; want me to send it?", time: "8:40" },
     ],
     followups: [
       { label: "Instant reply sent", time: "8:40", state: "done" },
-      { label: "Asked: volume + products", time: "8:40", state: "done" },
-      { label: "Follow-up if no reply", time: "tomorrow 9 AM", state: "next" },
+      { label: "Offered: $2,500 strategy intensive", time: "8:40", state: "done" },
+      { label: "Follow-up if deposit not paid", time: "tomorrow 9 AM", state: "next" },
     ],
   },
 ];
@@ -569,29 +571,35 @@ function Hero() {
       <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 55% 45% at 50% 8%, rgba(14,158,108,0.07) 0%, transparent 68%)" }} />
       <div className="wrap" style={{ position: "relative", paddingTop: "clamp(56px, 9vw, 104px)", paddingBottom: "clamp(40px, 6vw, 72px)" }}>
         <div style={{ maxWidth: 880 }}>
-          <Reveal as="p" className="eyebrow rise" d="1">Books your leads for you</Reveal>
+          <Reveal as="p" className="eyebrow rise" d="1">The revenue platform for high-ticket sellers</Reveal>
           <h1 className="display rise" data-d="2" style={{ marginBottom: 24, maxWidth: 940 }}>
-            Turn missed leads into <span className="em">booked</span> calls.
+            Turn interested leads into <span className="em">paying</span> customers.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.05rem, 1.5vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 640, marginBottom: 34, lineHeight: 1.5 }}>
-            A form comes in at 11pm. Vraelis replies in under a minute, works out what they want,
-            keeps following up until they answer, and drops the booking on your calendar.
-            You wake up to a booked job — not a missed one.
+            Vraelis engages every lead in seconds, qualifies serious buyers, follows up automatically,
+            books the call, and collects the payment — so your $2k–$10k offers actually close.
+            No software fee. We only earn when you get paid.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 26 }}>
             <Cta large>Start free <span aria-hidden>→</span></Cta>
-            <a href="#how" className="btn btn--ghost btn--lg">See how it works</a>
+            <a href="#how" className="btn btn--ghost btn--lg">See how it converts a lead</a>
           </div>
           <div className="rise" data-d="5" style={{ display: "flex", gap: 22, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", letterSpacing: "0.02em" }}>
-            <Trust>No new CRM required</Trust>
-            <Trust>Connect forms, inboxes & calendars</Trust>
-            <Trust>Human handoff when needed</Trust>
+            <Trust>Free to start — pay when you get paid</Trust>
+            <Trust>Collects payment, not just the booking</Trust>
+            <Trust>You close in your sleep</Trust>
+          </div>
+          <div className="rise" data-d="6" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginTop: 18, fontSize: 13, color: "var(--fg-3)" }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.04em", textTransform: "uppercase" }}>Built for</span>
+            {["Coaches", "Course creators", "Agencies", "Communities", "Consultants"].map((w) => (
+              <span key={w} className="pill">{w}</span>
+            ))}
           </div>
         </div>
         <Reveal d="2" style={{ marginTop: "clamp(40px, 6vw, 64px)" }}>
           <Dashboard />
           <div style={{ display: "flex", alignItems: "center", gap: 9, justifyContent: "center", marginTop: 16, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.04em" }}>
-            <span className="dot dot--acc" /> Click any lead — that's the real conversation and follow-up behind it
+            <span className="dot dot--acc" /> Click any deal — that's the real conversation, follow-up, and payment behind it
           </div>
         </Reveal>
       </div>
@@ -604,8 +612,8 @@ function Problem() {
   const nodes = [
     { t: "0 min", l: "Enquiry lands", sub: "Warm. Ready to talk." },
     { t: "5 min", l: "Still no reply", sub: "They're filling out the next form." },
-    { t: "1 hour", l: "Cooling fast", sub: "Whoever called back already won." },
-    { t: "1 day", l: "Gone", sub: "Booked with someone else." },
+    { t: "1 hour", l: "Cooling fast", sub: "A faster seller already has their attention." },
+    { t: "1 day", l: "Gone", sub: "Bought from someone else." },
   ];
   return (
     <section id="problem" className="section">
@@ -614,12 +622,12 @@ function Problem() {
           <div>
             <Reveal as="p" className="eyebrow">The problem</Reveal>
             <Reveal as="h2" d="1" className="display" style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)" }}>
-              Whoever answers first wins.<br />It's rarely <span className="mark"><span>you.</span></span>
+              Interested isn't the same as <span className="mark"><span>paid.</span></span>
             </Reveal>
           </div>
           <Reveal as="p" d="2" className="lead-copy" style={{ paddingBottom: 6 }}>
-            You're on a ladder, mid-appointment, or asleep. So the lead waits — and a waiting lead
-            doesn't sit still. It cools by the minute and starts working down the list.
+            You're delivering, on a call, or asleep when the DM comes in. So the lead waits — and a
+            waiting buyer doesn't sit still. They cool by the minute, second-guess the price, and move on.
           </Reveal>
         </div>
         <Reveal d="1">
@@ -648,10 +656,10 @@ function Problem() {
 // ── How it works ────────────────────────────────────────────────────
 function HowItWorks() {
   const steps = [
-    { k: "01", t: "A lead arrives", d: "Form, email, missed call, DM, or website chat. Vraelis grabs it wherever it lands — you don't lift a finger.", chips: ["Forms", "Email", "Calls", "DMs", "Chat"] },
+    { k: "01", t: "A lead arrives", d: "An Instagram DM, a form, a link in bio, a webinar signup, an email. Vraelis grabs it wherever it lands — you don't lift a finger.", chips: ["DMs", "Link in bio", "Forms", "Webinars", "Email"] },
     { k: "02", t: "It replies in seconds", d: "Under a minute, in your voice, while their phone is still in their hand. No “sorry for the delay” three hours later.", chips: ["< 1 min", "Your voice"] },
     { k: "03", t: "It asks, then chases", d: "The same questions you'd ask — budget, timing, what they need — then it nudges the quiet ones until they answer.", chips: ["Qualifies", "Follows up"] },
-    { k: "04", t: "It books the call", d: "When they're ready, it offers your real openings, takes the slot, and reminds them so they actually turn up.", chips: ["Calendar", "Reminders"] },
+    { k: "04", t: "It books and collects", d: "When they're ready, it offers your real openings, locks the slot with a deposit or payment, and reminds them so they actually show.", chips: ["Calendar", "Payment", "Reminders"] },
   ];
   return (
     <section id="how" className="section" style={{ background: "var(--bg-2)" }}>
@@ -699,7 +707,7 @@ function Automations() {
           <Reveal as="h2" d="1" className="display" style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)", marginBottom: 16 }}>
             The chasing you keep meaning to do.
           </Reveal>
-          <Reveal as="p" d="2" className="lead-copy">Six jobs that quietly cost you work when they don't happen. Vraelis just does them.</Reveal>
+          <Reveal as="p" d="2" className="lead-copy">Six things that quietly cost you sales when they don't happen. Vraelis just does them.</Reveal>
         </div>
         <Reveal d="1" as="div" className="bento">
           <div className="tile tile--accent span3">
@@ -763,11 +771,11 @@ function DeepDashboard() {
         <div style={{ maxWidth: 760, marginBottom: "clamp(36px, 5vw, 56px)" }}>
           <Reveal as="p" className="eyebrow">Inside the dashboard</Reveal>
           <Reveal as="h2" d="1" className="display" style={{ fontSize: "clamp(2rem, 3.6vw, 3.2rem)", marginBottom: 18 }}>
-            What happened to one <span className="em">$4,200</span> lead.
+            How one <span className="em">$4,000</span> lead got paid.
           </Reveal>
           <Reveal as="p" d="2" className="lead-copy">
-            Marcus filled out the website form at 9:14am asking for a re-roof quote. Here's the whole thing —
-            answered, qualified, booked — and nobody on the team had to touch it.
+            Marcus DM'd at 9:14am asking about the coaching program. Here's the whole thing —
+            engaged, qualified, closed, and paid in full — without you lifting a finger.
           </Reveal>
         </div>
         <Reveal d="1" className="win">
@@ -802,7 +810,7 @@ function DeepDashboard() {
         </Reveal>
         <Reveal d="2" style={{ marginTop: 28, display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center" }}>
           <Cta large>Start free <span aria-hidden>→</span></Cta>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>Connect a form and watch your next lead get answered the same way</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>Connect your offer and watch your next lead move toward payment</span>
         </Reveal>
       </div>
     </section>
@@ -816,11 +824,11 @@ function DeepDashboard() {
 // screens (and reduced-motion users) fall back to a plain swipeable
 // strip — and that's also the no-JS / pre-hydration default.
 const USE_CASES = [
-  { t: "Agencies", n: "01", d: "A referral DMs you at midnight. By the time you're up, it's qualified and the intro call is already on your calendar.", m: "Intro calls booked overnight", c: "#2563EB" },
-  { t: "Contractors", n: "02", d: "You can't answer a quote request from the top of a ladder. Vraelis can — it gets the details and books the estimate.", m: "Quotes answered on the job", c: "#0E9E6C" },
-  { t: "Clinics", n: "03", d: "Missed call? It texts back in under a minute and books the new patient before they try the clinic down the road.", m: "Missed calls texted back in 40s", c: "#0D9488" },
-  { t: "Studios", n: "04", d: "Class and session questions land at 10pm. They get answered and booked then — not when the front desk opens.", m: "Booked after hours", c: "#7C3AED" },
-  { t: "Consultants", n: "05", d: "It screens the tire-kickers and drops the serious, in-budget leads straight onto your calendar.", m: "Only real calls get through", c: "#C2540C" },
+  { t: "Coaches", n: "01", d: "A DM about your program lands at midnight. By the time you're up, it's qualified, the kickoff is booked, and the $4k is already paid.", m: "Programs sold overnight", c: "#2563EB" },
+  { t: "Course creators", n: "02", d: "Someone asks if the course is still open. Vraelis answers, sends the checkout, closes the sale, and queues the mentorship upsell.", m: "Courses sold on autopilot", c: "#0E9E6C" },
+  { t: "Agencies", n: "03", d: "A referral wants help and has the budget. Vraelis qualifies the spend, collects the first month, and books onboarding before you reply.", m: "Retainers closed + deposited", c: "#0D9488" },
+  { t: "Communities", n: "04", d: "Questions about joining land at 10pm. They get answered, the annual membership gets paid, and the access link goes out — then, not tomorrow.", m: "Memberships paid after hours", c: "#7C3AED" },
+  { t: "Consultants", n: "05", d: "It screens the tire-kickers, sends serious buyers a deposit link for the engagement, and only puts paid calls on your calendar.", m: "Only paid calls get through", c: "#C2540C" },
 ];
 
 // Static 3-on-top / 2-centered-below grid — fits on screen, no scroll.
@@ -900,7 +908,7 @@ const PLANS: Plan[] = [
   },
   {
     name: "Growth", featured: true, key: "growth",
-    who: "For small businesses with steady inbound leads.",
+    who: "For sellers with steady inbound demand.",
     feats: ["All channels connected", "Qualification & scoring", "Multi-step follow-up", "Owner handoff alerts", "Revenue-recovered reporting"],
     cta: "Get Growth",
     prices: {
@@ -1099,7 +1107,7 @@ function Pricing() {
         <div style={{ maxWidth: 720, marginBottom: "clamp(28px, 4vw, 44px)" }}>
           <Reveal as="p" className="eyebrow">Pricing</Reveal>
           <Reveal as="h2" d="1" className="display" style={{ fontSize: "clamp(2rem, 3.6vw, 3.2rem)", marginBottom: 18 }}>
-            We win when you book.
+            We win when you get paid.
           </Reveal>
           <Reveal as="p" d="2" className="lead-copy">Low base, then we take a small cut of the revenue Vraelis books for you — we only earn when you do. The bigger your plan, the smaller our cut.</Reveal>
         </div>
@@ -1224,14 +1232,14 @@ function FinalCTA() {
           Stop letting warm leads <span className="em">go cold.</span>
         </Reveal>
         <Reveal as="p" d="1" className="lead-copy" style={{ margin: "0 auto 34px", textAlign: "center" }}>
-          Connect a form in a few minutes. The next lead that comes in gets answered — even if it's 2am and you're asleep.
+          Connect your offer in a few minutes. The next lead that comes in gets engaged, qualified, and moved toward payment — even if it's 2am and you're asleep.
         </Reveal>
         <Reveal d="2" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", marginBottom: 22 }}>
           <Cta large>Start free <span aria-hidden>→</span></Cta>
           <Cta variant="ghost" large>Request access</Cta>
         </Reveal>
         <Reveal d="3" style={{ display: "flex", gap: 22, justifyContent: "center", flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>
-          <span>No new CRM</span><span style={{ color: "var(--fg-5)" }}>·</span>
+          <span>No new sales stack</span><span style={{ color: "var(--fg-5)" }}>·</span>
           <span>Live in minutes</span><span style={{ color: "var(--fg-5)" }}>·</span>
           <span>Human handoff anytime</span>
         </Reveal>
@@ -1259,7 +1267,7 @@ function SiteFooter() {
           <div style={{ display: "inline-flex", alignItems: "center", marginBottom: 14 }}>
             <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.03em", color: "var(--fg-1)" }}>Vraelis</span>
           </div>
-          <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.55 }}>Replies to new leads in seconds, follows up, and books them. You stop losing jobs to whoever answered first.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.55 }}>The revenue platform for high-ticket sellers. Vraelis engages, qualifies, follows up, books, and collects payment — turning interested leads into paying customers.</p>
           <a
             href="https://instagram.com/usevraelis"
             target="_blank"
@@ -1288,7 +1296,7 @@ function SiteFooter() {
       </div>
       <div style={{ maxWidth: "var(--max-content)", margin: "var(--s-12) auto 0", paddingTop: "var(--s-6)", borderTop: "1px solid var(--line-1)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)" }}>
         <span>© 2026 Vraelis</span>
-        <span>Turn missed leads into booked calls.</span>
+        <span>Turn interested leads into paying customers.</span>
       </div>
       <p style={{ maxWidth: "var(--max-content)", margin: "10px auto 0", fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", lineHeight: 1.5 }}>
         Vraelis replies are AI-generated and may contain mistakes. Vraelis is a tool — you&apos;re responsible for your own business and customers.
