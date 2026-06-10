@@ -46,10 +46,39 @@
 
 /* ── CSS View Transitions — smooth cross-page fade (Chrome 126+) ─────── */
 @view-transition { navigation: auto; }
-::view-transition-old(root) { animation: 160ms ease-out vt-fade-out; }
-::view-transition-new(root) { animation: 280ms ease-in  vt-fade-in; }
-@keyframes vt-fade-out { from { opacity: 1 } to { opacity: 0 } }
-@keyframes vt-fade-in  { from { opacity: 0 } to { opacity: 1 } }
+
+/* Cross-fade: old and new overlap and both run the same easing/length so
+   it reads as one continuous dissolve, not an abrupt out then a slow in.
+   A tiny vertical lift on the incoming page adds a sense of forward motion
+   without feeling like a slide. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { animation-name: vt-fade-out; }
+::view-transition-new(root) { animation-name: vt-fade-in; }
+
+@keyframes vt-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+@keyframes vt-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Respect users who ask for less motion — fade only, no movement, faster. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 120ms;
+  }
+  @keyframes vt-fade-out { from { opacity: 1 } to { opacity: 0 } }
+  @keyframes vt-fade-in  { from { opacity: 0 } to { opacity: 1 } }
+}
 
 * {
   box-sizing: border-box;
