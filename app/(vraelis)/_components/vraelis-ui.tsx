@@ -9,14 +9,10 @@
 // sign-in flow instead of the old fake "early access" modal.
 
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { createContext, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { CUT_RATES } from "@/lib/vraelis-plans";
 import { VraelisPromoBar } from "@/components/vraelis-promo-bar";
-// Server-action sign-out — runs server-side so it clears the per-host
-// (.vraelis.com) session cookie with the matching domain attribute. The
-// client next-auth/react signOut() does NOT reliably clear a custom-domain
-// cookie, which is why the nav button appeared to do nothing.
-import { vraelisSignOut } from "@/app/(vraelis)/v/account/actions";
 
 // Lets marketing CTAs know whether the visitor is signed in, so
 // "Start free" becomes "Open app" instead of bouncing through /signin.
@@ -176,24 +172,23 @@ function Nav({ signedIn }: { signedIn: boolean }) {
       <div style={{ gridColumn: 3, justifySelf: "end", display: "flex", alignItems: "center", gap: 18 }}>
         {signedIn ? (
           <>
-            <form action={vraelisSignOut} style={{ display: "inline" }}>
-              <button
-                type="submit"
-                className="vra-nav-secondary"
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: 14,
-                  color: "var(--fg-2)",
-                  letterSpacing: "-0.005em",
-                  whiteSpace: "nowrap",
-                  padding: 0,
-                }}
-              >
-                Sign out
-              </button>
-            </form>
+            <button
+              type="button"
+              className="vra-nav-secondary"
+              onClick={() => void signOut({ redirectTo: "/v" })}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 14,
+                color: "var(--fg-2)",
+                letterSpacing: "-0.005em",
+                whiteSpace: "nowrap",
+                padding: 0,
+              }}
+            >
+              Sign out
+            </button>
             <Cta href={ACCOUNT_HREF}>Open app <span aria-hidden>→</span></Cta>
           </>
         ) : (
@@ -259,14 +254,13 @@ function Nav({ signedIn }: { signedIn: boolean }) {
             </a>
           ))}
           {signedIn ? (
-            <form action={vraelisSignOut} onSubmit={() => setMenuOpen(false)}>
-              <button
-                type="submit"
-                style={{ width: "100%", textAlign: "left", padding: "13px var(--gutter)", fontSize: 15, color: "var(--fg-3)", background: "none", border: "none", borderTop: "1px solid var(--line-1)", cursor: "pointer" }}
-              >
-                Sign out
-              </button>
-            </form>
+            <button
+              type="button"
+              onClick={() => { setMenuOpen(false); void signOut({ redirectTo: "/v" }); }}
+              style={{ textAlign: "left", padding: "13px var(--gutter)", fontSize: 15, color: "var(--fg-3)", background: "none", border: "none", borderTop: "1px solid var(--line-1)", cursor: "pointer" }}
+            >
+              Sign out
+            </button>
           ) : (
             <a
               href={SIGNIN_HREF}
