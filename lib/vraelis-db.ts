@@ -549,6 +549,53 @@ export async function setWorkspaceServices(email: string, services: string | nul
   }
 }
 
+// Offer setup extras — qualifying questions + where leads come from.
+// Same fail-soft contract as services above: kept OUT of the core SELECT
+// so a not-yet-migrated column never breaks workspace reads, and writes
+// no-op (log only) until `qualifying_questions` / `lead_sources` exist.
+export async function getWorkspaceOffer(
+  email: string,
+): Promise<{ qualifyingQuestions: string | null; leadSources: string | null }> {
+  const empty = { qualifyingQuestions: null, leadSources: null };
+  if (!email || !isDatabaseConfigured()) return empty;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("vraelis_workspaces" as never)
+      .select("qualifying_questions, lead_sources")
+      .eq("owner_email", normalizeEmail(email))
+      .maybeSingle();
+    if (error) return empty;
+    const row = data as unknown as { qualifying_questions?: string | null; lead_sources?: string | null } | null;
+    return {
+      qualifyingQuestions: row?.qualifying_questions ?? null,
+      leadSources: row?.lead_sources ?? null,
+    };
+  } catch {
+    return empty;
+  }
+}
+
+export async function setWorkspaceOffer(
+  email: string,
+  fields: { qualifyingQuestions?: string | null; leadSources?: string | null },
+): Promise<void> {
+  if (!email || !isDatabaseConfigured()) return;
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (fields.qualifyingQuestions !== undefined) patch.qualifying_questions = fields.qualifyingQuestions;
+  if (fields.leadSources !== undefined) patch.lead_sources = fields.leadSources;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from("vraelis_workspaces" as never)
+      .update(patch as never)
+      .eq("owner_email", normalizeEmail(email));
+    if (error) console.error("setWorkspaceOffer: columns may not exist yet —", error.message);
+  } catch (e) {
+    console.error("setWorkspaceOffer failed:", e);
+  }
+}
+
 // ── Google Calendar (fail-soft until columns are migrated) ────────────
 
 export async function getWorkspaceCalendar(

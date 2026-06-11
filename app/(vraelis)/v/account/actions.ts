@@ -16,6 +16,7 @@ import {
   setLeadStatus,
   setWorkspaceContact,
   setWorkspaceDeposit,
+  setWorkspaceOffer,
   setWorkspaceServices,
   updateLead,
   updateWorkspaceBusiness,
@@ -92,6 +93,61 @@ export async function setSmsAction(
     return { ok: true, message: "Saved." };
   } catch (error) {
     console.error("setSmsAction failed:", error);
+    return { ok: false, message: "Couldn't save — try again." };
+  }
+}
+
+// Offer-first onboarding save. One submit persists the whole "what you
+// sell / how much / how they pay / how to qualify / where leads come from"
+// sequence. Reuses the existing per-field helpers — no new Stripe, AI, or
+// pricing logic; the payment step just toggles the existing deposit flag.
+export async function saveOfferAction(
+  _prev: ActionResult | null,
+  formData: FormData,
+): Promise<ActionResult> {
+  const session = await auth();
+  const email = session?.user?.email;
+  if (!email) return { ok: false, message: "Signed out — sign in again to save." };
+  if (!isDatabaseConfigured()) {
+    return { ok: false, message: "Storage isn't configured in this environment." };
+  }
+
+  // 1) What you sell
+  const businessName = String(formData.get("businessName") ?? "").trim().slice(0, 120);
+  const businessDescription = String(formData.get("businessDescription") ?? "").trim().slice(0, 400);
+  // 2) How much (services + prices, freeform)
+  const businessServices = String(formData.get("businessServices") ?? "").trim().slice(0, 2000);
+  // 3) How customers pay — "full" | "deposit" (plan is a disabled placeholder).
+  //    Maps onto the EXISTING deposit flag; no Stripe logic change.
+  const payType = String(formData.get("payType") ?? "full");
+  const depositEnabled = payType === "deposit";
+  const depositDollars = Number(String(formData.get("depositAmount") ?? "").trim());
+  const depositCents =
+    depositEnabled && Number.isFinite(depositDollars) && depositDollars >= 0.5
+      ? Math.round(depositDollars * 100)
+      : null;
+  // 4) Qualifying questions  5) Where leads come from
+  const qualifyingQuestions = String(formData.get("qualifyingQuestions") ?? "").trim().slice(0, 1500);
+  const leadSources = String(formData.get("leadSources") ?? "").trim().slice(0, 500);
+
+  try {
+    await getOrCreateWorkspace(email); // ensure the row exists
+    await updateWorkspaceBusiness(email, {
+      businessName: businessName || null,
+      businessDescription: businessDescription || null,
+    });
+    // The remaining writes are all fail-soft (no-op until their column is
+    // migrated), so a missing column never blocks the core profile save.
+    await setWorkspaceServices(email, businessServices || null);
+    await setWorkspaceDeposit(email, { enabled: depositEnabled, amountCents: depositCents });
+    await setWorkspaceOffer(email, {
+      qualifyingQuestions: qualifyingQuestions || null,
+      leadSources: leadSources || null,
+    });
+    revalidatePath("/v/account");
+    return { ok: true, message: "Saved." };
+  } catch (error) {
+    console.error("saveOfferAction failed:", error);
     return { ok: false, message: "Couldn't save — try again." };
   }
 }

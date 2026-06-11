@@ -25,6 +25,12 @@ create table if not exists vraelis_workspaces (
 -- a price) and can collect the matching amount on-platform.
 alter table vraelis_workspaces add column if not exists business_services text;
 
+-- Offer-first onboarding: what Vraelis should ask to qualify buyers, and
+-- where the owner's leads come from. Both freeform text, fail-soft in code
+-- (no-op until migrated). Used to brief the AI; no Stripe/pricing impact.
+alter table vraelis_workspaces add column if not exists qualifying_questions text;
+alter table vraelis_workspaces add column if not exists lead_sources text;
+
 -- If the table already existed before plan columns were added, run these
 -- (safe / idempotent):
 alter table vraelis_workspaces add column if not exists plan text;

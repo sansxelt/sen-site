@@ -66,7 +66,7 @@ function Step({
         {n}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <h3 style={{ fontSize: 14.5, color: "var(--fg-1)", margin: "2px 0 12px", letterSpacing: "-0.01em" }}>{title}</h3>
+        <h3 style={{ fontSize: 14, color: "var(--fg-1)", margin: "3px 0 9px", letterSpacing: "-0.01em" }}>{title}</h3>
         {children}
       </div>
     </div>
@@ -102,40 +102,37 @@ export function OfferForm({
   );
 
   return (
-    <form action={action} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+    <form action={action} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       {/* 1 — What you sell */}
       <Step n={1} title="What do you sell?">
         <input
           name="businessName"
           defaultValue={initialName}
-          placeholder="Your business or offer name — e.g. Apex Coaching"
+          placeholder="Offer name — e.g. Apex Coaching"
           maxLength={120}
-          style={{ ...inputStyle, marginBottom: 10 }}
+          style={{ ...inputStyle, marginBottom: 8 }}
         />
         <textarea
           name="businessDescription"
           defaultValue={initialDescription}
-          placeholder="What you sell, in a sentence or two — e.g. A 12-week 1:1 coaching program for founders who want to scale past their first $10k month."
+          placeholder="One line on what it is — e.g. 12-week 1:1 coaching for founders scaling past $10k/mo."
           maxLength={400}
-          rows={3}
+          rows={2}
           style={{ ...inputStyle, resize: "vertical" }}
         />
-        <p style={hintStyle}>This is what Vraelis uses to talk about your offer in your voice.</p>
       </Step>
 
       {/* 2 — How much */}
-      <Step n={2} title="How much does it cost?">
+      <Step n={2} title="Price">
         <textarea
           name="businessServices"
           defaultValue={initialServices}
-          placeholder={"One offer per line, with the price — e.g.\n12-week program — $4,000\nIntensive call — $750\nStrategy audit — free"}
+          placeholder={"One per line with a price — e.g.\n12-week program — $4,000\nStrategy call — $750"}
           maxLength={2000}
-          rows={4}
+          rows={3}
           style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--font-mono)", fontSize: 13 }}
         />
-        <p style={hintStyle}>
-          Vraelis quotes <b>only</b> these exact prices (never invents one) and can collect the matching amount on-platform.
-        </p>
+        <p style={hintStyle}>Vraelis quotes <b>only</b> these prices and can collect them on-platform.</p>
       </Step>
 
       {/* 3 — How customers pay */}
@@ -246,34 +243,43 @@ export function OfferForm({
         )}
       </Step>
 
-      {/* 4 — Qualifying questions */}
-      <Step n={4} title="What should Vraelis ask to qualify buyers?">
-        <textarea
-          name="qualifyingQuestions"
-          defaultValue={initialQualifying}
-          placeholder={"One per line — the things you'd want to know before a call. e.g.\nWhat's your current monthly revenue?\nWhat's your goal in the next 90 days?\nHave you worked with a coach before?\nWhat's your timeline to start?"}
-          maxLength={1500}
-          rows={4}
-          style={{ ...inputStyle, resize: "vertical" }}
-        />
-        <p style={hintStyle}>Vraelis asks these naturally in conversation to separate serious buyers from browsers.</p>
-      </Step>
+      {/* Advanced — collapsed by default so core setup stays to 3 steps */}
+      <details style={{ borderTop: "1px solid var(--line-1)", paddingTop: 14 }}>
+        <summary style={{ cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 11.5, letterSpacing: "0.04em", color: "var(--fg-3)", listStyle: "none" }}>
+          <span style={{ color: "var(--acc-deep)" }}>+</span> Advanced — qualification &amp; lead sources <span style={{ color: "var(--fg-5)" }}>(optional)</span>
+        </summary>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
+          <div>
+            <label style={labelStyle} htmlFor="qualifyingQuestions">What should Vraelis ask to qualify buyers?</label>
+            <textarea
+              id="qualifyingQuestions"
+              name="qualifyingQuestions"
+              defaultValue={initialQualifying}
+              placeholder={"One per line — e.g.\nWhat's your monthly revenue?\nWhat's your goal in 90 days?\nTimeline to start?"}
+              maxLength={1500}
+              rows={3}
+              style={{ ...inputStyle, resize: "vertical" }}
+            />
+            <p style={hintStyle}>Vraelis asks these naturally to separate serious buyers from browsers.</p>
+          </div>
+          <div>
+            <label style={labelStyle} htmlFor="leadSources">Where do your leads come from?</label>
+            <input
+              id="leadSources"
+              name="leadSources"
+              defaultValue={initialLeadSources}
+              placeholder="e.g. Instagram DMs, link in bio, webinars, referrals"
+              maxLength={500}
+              style={inputStyle}
+            />
+            <p style={hintStyle}>Just so you know where to drop your Vraelis link.</p>
+          </div>
+        </div>
+      </details>
 
-      {/* 5 — Where leads come from */}
-      <Step n={5} title="Where do your leads come from?">
-        <input
-          name="leadSources"
-          defaultValue={initialLeadSources}
-          placeholder="e.g. Instagram DMs, link in bio, webinars, referrals, email list"
-          maxLength={500}
-          style={inputStyle}
-        />
-        <p style={hintStyle}>Just so you know where to drop your Vraelis link. Connect the channels themselves below.</p>
-      </Step>
-
-      <div style={{ display: "flex", alignItems: "center", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 16 }}>
         <button type="submit" className="btn" disabled={pending} style={{ opacity: pending ? 0.7 : 1 }}>
-          {pending ? "Saving…" : "Save your offer"}
+          {pending ? "Saving…" : "Save setup"}
         </button>
         {state && (
           <span style={{ fontSize: 13, color: state.ok ? "var(--acc-deep)" : "#9F2D2D" }}>{state.message}</span>

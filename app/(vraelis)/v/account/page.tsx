@@ -3,12 +3,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import Stripe from "stripe";
-import { getOrCreateWorkspace, getPaymentsSummary, getWorkspaceCalendar, getWorkspaceContact, getWorkspaceServices, listLeads, setWorkspaceConnect, setWorkspacePlan, type LeadStatus, type VraelisLead } from "@/lib/vraelis-db";
+import { getOrCreateWorkspace, getPaymentsSummary, getWorkspaceCalendar, getWorkspaceContact, getWorkspaceOffer, getWorkspaceServices, listLeads, listPayments, setWorkspaceConnect, setWorkspacePlan, type LeadStatus, type VraelisLead } from "@/lib/vraelis-db";
 import { listUpcomingBookings, slotLabel } from "@/lib/vraelis-booking";
 import { getAccountStatus } from "@/lib/vraelis-connect";
 import { cutRateFor, isCycle, isPlanKey } from "@/lib/vraelis-plans";
 import { AddLeadForm } from "./add-lead-form";
-import { BusinessForm } from "./business-form";
+import { OfferForm } from "./offer-form";
 import { SmsForm } from "./sms-form";
 import { DepositForm } from "./deposit-form";
 import { CopyField } from "./copy-field";
@@ -137,7 +137,7 @@ export default async function VraelisAccountPage({
   const sessionId = String(Array.isArray(params.session_id) ? params.session_id[0] : params.session_id ?? "");
   if (sessionId) await confirmStripeCheckout(email, sessionId);
 
-  const [workspace, leads, payments, bookings, services, contact, calendar] = await Promise.all([
+  const [workspace, leads, payments, bookings, services, contact, calendar, offer, recentPayments] = await Promise.all([
     getOrCreateWorkspace(email),
     listLeads(email),
     getPaymentsSummary(email),
@@ -145,6 +145,8 @@ export default async function VraelisAccountPage({
     getWorkspaceServices(email),
     getWorkspaceContact(email),
     getWorkspaceCalendar(email),
+    getWorkspaceOffer(email),
+    listPayments(email, { limit: 12 }),
   ]);
   const calendarConnected = Boolean(calendar?.gcal_connected);
 
@@ -344,81 +346,133 @@ export default async function VraelisAccountPage({
             </>
           }
           money={
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "clamp(16px, 2vw, 24px)", alignItems: "start" }}>
-              {/* Payouts — Stripe Connect */}
-              <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-                  <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Payouts</h2>
-                  {connected ? (
-                    <span className="pill st-won"><span className="dot" />Active</span>
-                  ) : workspace?.connect_account_id ? (
-                    <span className="pill st-booked"><span className="dot" />Finishing setup</span>
-                  ) : (
-                    <span className="pill st-new"><span className="dot" />Not set up</span>
-                  )}
+            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(16px, 2vw, 22px)" }}>
+              {/* ── Revenue KPIs — what Vraelis collected for you ───────── */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "clamp(12px, 1.6vw, 18px)" }}>
+                <StatCard label="Collected" value={`$${collected.toLocaleString()}`} sub={`${payments.paidCount} payment${payments.paidCount === 1 ? "" : "s"}`} />
+                <div className="win" style={{ padding: "16px 18px", borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>You kept</div>
+                  <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(23px, 2.4vw, 31px)", lineHeight: 1, color: "var(--money)", letterSpacing: "-0.02em" }}>${kept.toLocaleString()}</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, marginTop: 9, color: "var(--fg-4)" }}>after Vraelis fee</div>
                 </div>
-                {connected ? (
-                  <>
-                    <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 16 }}>
-                      Leads pay you through Vraelis. Vraelis keeps {(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}% at payment; you receive the rest, deposited automatically — nothing to invoice, nothing to chase. <span style={{ color: "var(--fg-4)" }}>Standard payment processing fees are deducted from your payout.</span>
-                    </p>
-                    <div style={{ paddingTop: 14, borderTop: "1px solid var(--line-1)" }}>
-                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Booking deposit</div>
-                      <DepositForm initialEnabled={Boolean(workspace?.deposit_enabled)} initialAmount={workspace?.deposit_amount_cents ?? null} />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 16 }}>
-                      Get paid on-platform. Connect your bank once and leads can pay you right through Vraelis — your {(100 - cutRate * 100).toFixed((100 - cutRate * 100) % 1 === 0 ? 0 : 1)}% lands in your account automatically, no off-platform chasing.
-                    </p>
-                    <a href="/api/vraelis/connect/start" className="btn" style={{ width: "100%", justifyContent: "center" }}>
-                      {workspace?.connect_account_id ? "Finish payout setup →" : "Set up payouts →"}
-                    </a>
-                  </>
-                )}
+                <StatCard label={`Vraelis fee · ${(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}%`} value={`$${feeTaken.toLocaleString()}`} sub="taken automatically" />
+                <StatCard label="Payout status" value={connected ? "Active" : workspace?.connect_account_id ? "Pending" : "Off"} sub={connected ? "paid out automatically" : "set up below"} subAccent={connected} />
               </div>
 
-              {/* Real revenue — money that actually moved through the platform */}
+              {/* ── Recent payments ─────────────────────────────────────── */}
               <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)" }}>
-                <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 14 }}>Revenue</h2>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, color: "var(--fg-3)" }}>Collected ({payments.paidCount} payment{payments.paidCount === 1 ? "" : "s"})</span>
-                  <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 15, color: "var(--fg-1)", fontWeight: 600 }}>${collected.toLocaleString()}</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                  <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Recent payments</h2>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>through Vraelis · cut taken at payment</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid var(--line-1)" }}>
-                  <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600 }}>You kept</span>
-                  <span className="tnum" style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--money)" }}>${kept.toLocaleString()}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontSize: 13, color: "var(--fg-3)" }}>Vraelis fee ({(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}%)</span>
-                  <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg-2)" }}>${feeTaken.toLocaleString()}</span>
-                </div>
-                <p style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 12, lineHeight: 1.5 }}>
-                  {collected > 0
-                    ? "Real money paid through Vraelis. The fee is taken automatically at payment — no monthly invoice, no self-reporting."
-                    : connected
-                      ? "Nothing yet. Revenue shows up here after your first deposit or payment — open a lead in the Inbox and use Request payment."
-                      : "Turn on payouts above, then revenue appears here after your first on-platform deposit or payment."}
+                {recentPayments.length === 0 ? (
+                  <div style={{ padding: "30px 20px", textAlign: "center" }}>
+                    <div style={{ fontSize: 14.5, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>No payments yet.</div>
+                    <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55, maxWidth: 380, margin: "0 auto 14px" }}>
+                      {connected
+                        ? "Open a lead in the Inbox and use Collect payment to send a secure request — it shows up here the moment they pay, with your cut already taken."
+                        : "Set up payouts below, then collect your first payment from any lead. It lands here automatically — no invoicing, no chasing."}
+                    </p>
+                    {!connected && (
+                      <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13 }}>Set up payouts →</a>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    {recentPayments.map((p) => {
+                      const amt = (p.amount_cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0 });
+                      const net = ((p.amount_cents - p.fee_cents) / 100).toLocaleString(undefined, { minimumFractionDigits: 0 });
+                      const statusClass = p.status === "paid" ? "st-won" : p.status === "pending" ? "st-booked" : "st-contacted";
+                      return (
+                        <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: "1px solid var(--line-1)" }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}
+                            </div>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>
+                              {p.kind === "deposit" ? "Deposit" : "Full payment"}{p.status === "paid" ? ` · you kept $${net}` : ""}
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                            <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: p.status === "paid" ? "var(--fg-1)" : "var(--fg-3)", fontWeight: 600 }}>${amt}</span>
+                            <span className={`pill ${statusClass}`} style={{ textTransform: "capitalize" }}><span className="dot" />{p.status}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <p style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.5, paddingTop: 12, borderTop: recentPayments.length ? "1px solid var(--line-1)" : "none" }}>
+                  Vraelis takes its {(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}% cut automatically the moment a payment is made — deducted before payout, no monthly invoice, no self-reporting. Standard card-processing fees come off your side.
                 </p>
+              </div>
+
+              {/* ── Payout + deposit config (secondary) ─────────────────── */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "clamp(14px, 2vw, 20px)", alignItems: "start" }}>
+                <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                    <h2 style={{ fontSize: 15, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Payouts</h2>
+                    {connected ? (
+                      <span className="pill st-won"><span className="dot" />Active</span>
+                    ) : workspace?.connect_account_id ? (
+                      <span className="pill st-booked"><span className="dot" />Finishing setup</span>
+                    ) : (
+                      <span className="pill st-new"><span className="dot" />Not set up</span>
+                    )}
+                  </div>
+                  {connected ? (
+                    <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, margin: 0 }}>
+                      Connected. Your share lands in your account automatically after each payment — nothing to invoice or chase.
+                    </p>
+                  ) : (
+                    <>
+                      <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 14 }}>
+                        Connect your bank once so leads can pay through Vraelis. Your {(100 - cutRate * 100).toFixed((100 - cutRate * 100) % 1 === 0 ? 0 : 1)}% is deposited automatically.
+                      </p>
+                      <a href="/api/vraelis/connect/start" className="btn" style={{ width: "100%", justifyContent: "center" }}>
+                        {workspace?.connect_account_id ? "Finish payout setup →" : "Set up payouts →"}
+                      </a>
+                    </>
+                  )}
+                </div>
+
+                <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
+                  <h2 style={{ fontSize: 15, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 4 }}>Booking deposit</h2>
+                  <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 12 }}>
+                    Optionally require a deposit through Vraelis to confirm a booking.
+                  </p>
+                  <DepositForm initialEnabled={Boolean(workspace?.deposit_enabled)} initialAmount={workspace?.deposit_amount_cents ?? null} />
+                </div>
               </div>
             </div>
           }
           setup={
-            <div style={{ columns: "320px", columnGap: "clamp(16px, 2vw, 22px)" }}>
-              {/* Business profile */}
-              <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)", breakInside: "avoid", marginBottom: "clamp(16px,2vw,22px)" }}>
-                <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 4 }}>Business profile</h2>
-                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 16 }}>
-                  What Vraelis uses to answer your leads in your voice.
+            <div>
+              {/* ── Step 1: define the offer (the revenue engine) ───────── */}
+              <div className="win" style={{ padding: "clamp(18px,2.2vw,26px)", marginBottom: "clamp(20px,2.6vw,28px)", maxWidth: 600 }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 5 }}>Step 1 · Your offer</div>
+                <h2 style={{ fontSize: 18, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 4 }}>Set up your revenue engine</h2>
+                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 18 }}>
+                  What you sell and how you get paid. Takes about a minute — connect channels after.
                 </p>
-                <BusinessForm
+                <OfferForm
                   initialName={workspace?.business_name ?? ""}
                   initialDescription={workspace?.business_description ?? ""}
                   initialServices={services ?? ""}
+                  initialDepositEnabled={Boolean(workspace?.deposit_enabled)}
+                  initialDepositAmount={workspace?.deposit_amount_cents ?? null}
+                  initialQualifying={offer?.qualifyingQuestions ?? ""}
+                  initialLeadSources={offer?.leadSources ?? ""}
                 />
               </div>
 
+              {/* ── Step 2: connect channels (after the offer is defined) ── */}
+              <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Step 2 · Connect channels</div>
+                <span style={{ fontSize: 12.5, color: "var(--fg-3)" }}>Where leads reach you and how payments land.</span>
+              </div>
+
+              <div style={{ columns: "320px", columnGap: "clamp(16px, 2vw, 22px)" }}>
               {/* Lead capture links */}
               <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)", breakInside: "avoid", marginBottom: "clamp(16px,2vw,22px)" }}>
                 <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 4 }}>Lead capture links</h2>
@@ -522,6 +576,7 @@ export default async function VraelisAccountPage({
                     <button type="submit" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13 }}>Sign out</button>
                   </form>
                 </div>
+              </div>
               </div>
             </div>
           }
