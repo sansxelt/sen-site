@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -52,6 +53,84 @@ function StatCard({ label, value, sub, subAccent }: { label: string; value: stri
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>{label}</div>
       <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(23px, 2.4vw, 31px)", lineHeight: 1, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>{value}</div>
       {sub && <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, marginTop: 9, color: subAccent ? "var(--acc)" : "var(--fg-4)" }}>{sub}</div>}
+    </div>
+  );
+}
+
+// A compact connection row for the Setup checklist: a ✓/⚠ status dot, a
+// one-line title + status text, and either a connect/disconnect LINK or an
+// inline-expanding form (native <details>, no client JS). `done` toggles the
+// green check vs the amber "to do" state.
+function ChecklistRow({
+  done,
+  title,
+  doneText,
+  todoText,
+  href,
+  cta,
+  expandLabel,
+  last,
+  children,
+}: {
+  done: boolean;
+  title: string;
+  doneText: string;
+  todoText: string;
+  href?: string;
+  cta?: string;
+  expandLabel?: string;
+  last?: boolean;
+  children?: ReactNode;
+}) {
+  const mark = (
+    <span
+      aria-hidden
+      style={{
+        flex: "0 0 auto", width: 18, height: 18, borderRadius: "50%",
+        display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700,
+        background: done ? "var(--acc-soft)" : "rgba(194,84,12,0.10)",
+        color: done ? "var(--acc-deep)" : "#C2540C",
+        border: `1px solid ${done ? "var(--acc-line)" : "rgba(194,84,12,0.3)"}`,
+      }}
+    >
+      {done ? "✓" : "!"}
+    </span>
+  );
+  const head = (
+    <>
+      {mark}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600 }}>{title}</div>
+        <div style={{ fontSize: 11.5, color: done ? "var(--fg-3)" : "#C2540C", marginTop: 1 }}>{done ? doneText : todoText}</div>
+      </div>
+    </>
+  );
+  const rowStyle: CSSProperties = {
+    display: "flex", alignItems: "center", gap: 11, padding: "12px 0",
+    borderTop: "1px solid var(--line-1)",
+    ...(last ? {} : {}),
+  };
+
+  // Expandable variant (SMS, deposit) — native details, opens the form inline.
+  if (children) {
+    return (
+      <details>
+        <summary style={{ ...rowStyle, cursor: "pointer", listStyle: "none" }}>
+          {head}
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--acc-deep)", fontWeight: 600, whiteSpace: "nowrap" }}>{expandLabel ?? (done ? "Edit" : "Set up")} →</span>
+        </summary>
+        <div style={{ padding: "4px 0 14px 29px" }}>{children}</div>
+      </details>
+    );
+  }
+
+  // Link variant (payments, calendar).
+  return (
+    <div style={rowStyle}>
+      {head}
+      {href && cta && (
+        <a href={href} style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: done ? "var(--fg-4)" : "var(--acc-deep)", fontWeight: 600, whiteSpace: "nowrap", textDecoration: "none" }}>{cta} →</a>
+      )}
     </div>
   );
 }
@@ -146,7 +225,7 @@ export default async function VraelisAccountPage({
     getWorkspaceContact(email),
     getWorkspaceCalendar(email),
     getWorkspaceOffer(email),
-    listPayments(email, { limit: 12 }),
+    listPayments(email, { limit: 100 }),
   ]);
   const calendarConnected = Boolean(calendar?.gcal_connected);
 
@@ -170,6 +249,26 @@ export default async function VraelisAccountPage({
   const collected = payments.grossCents / 100;
   const kept = payments.netCents / 100;
   const feeTaken = payments.feeCents / 100;
+
+  // ── Payment derivations (from listPayments, no extra Stripe calls) ──
+  const pendingPayments = recentPayments.filter((p) => p.status === "pending");
+  const paidPayments = recentPayments.filter((p) => p.status === "paid");
+  // "Awaiting payment" = requests sent but not yet paid (gross of those rows).
+  const awaitingCents = pendingPayments.reduce((s, p) => s + (p.amount_cents || 0), 0);
+  // "In transit" = your share of payments marked paid in the last 3 days
+  // (Stripe is still moving them to your bank).
+  const TRANSIT_WINDOW = 3 * 24 * 60 * 60 * 1000;
+  const inTransitCents = paidPayments
+    .filter((p) => p.paid_at && now - new Date(p.paid_at).getTime() <= TRANSIT_WINDOW)
+    .reduce((s, p) => s + ((p.amount_cents || 0) - (p.fee_cents || 0)), 0);
+  // Per-lead payment status, newest first, for the "Needs Attention" tiers.
+  const leadPayState = new Map<string, "paid" | "pending">();
+  for (const p of recentPayments) {
+    if (!p.lead_id) continue;
+    const cur = leadPayState.get(p.lead_id);
+    if (p.status === "paid") leadPayState.set(p.lead_id, "paid");
+    else if (p.status === "pending" && cur !== "paid") leadPayState.set(p.lead_id, "pending");
+  }
 
   const firstName = (workspace?.business_name || session.user.name || email.split("@")[0]).trim().slice(0, 48);
   const intakeKey = workspace?.intake_key ?? "";
@@ -212,6 +311,32 @@ export default async function VraelisAccountPage({
   const bookedTotal = oc.booked + oc.paid; // a paid lead was also booked
   const conversionRate = leads.length ? Math.round((bookedTotal / leads.length) * 100) : 0;
   const paymentRate = bookedTotal ? Math.round((oc.paid / bookedTotal) * 100) : 0;
+
+  // ── Needs Attention — revenue-proximity tiers (closest to money first) ──
+  // Tier 1: a payment link was sent and is still unpaid (about to pay).
+  // Tier 2: qualified / booking-ready but gone quiet (2+ days, no payment yet).
+  // Tier 3: the AI explicitly flagged it for the owner (needs_owner).
+  // Tier 4: replied recently and engaged (warm, keep momentum).
+  // A lead appears once, in its highest tier. Won/lost/paid are excluded.
+  const TWO_DAYS = 2 * 24 * 60 * 60 * 1000;
+  const reason = (l: VraelisLead): { tier: number; label: string } | null => {
+    if (l.status === "won" || l.status === "lost") return null;
+    if (leadPayState.get(l.id) === "paid") return null;
+    if (leadPayState.get(l.id) === "pending") return { tier: 1, label: "Payment sent — awaiting pay" };
+    const quiet = ageMs(l.updated_at) >= TWO_DAYS;
+    if ((l.status === "qualified" || l.status === "booking_ready") && quiet)
+      return { tier: 2, label: "Qualified, gone quiet" };
+    if (l.status === "needs_owner") return { tier: 3, label: "Flagged for you" };
+    if ((l.status === "qualified" || l.status === "booking_ready") && !quiet)
+      return { tier: 4, label: "Qualified — keep momentum" };
+    if (l.status === "contacted" && quiet) return { tier: 4, label: "No reply in 2+ days" };
+    return null;
+  };
+  const needsAttention = leads
+    .map((l) => ({ lead: l, r: reason(l) }))
+    .filter((x): x is { lead: VraelisLead; r: { tier: number; label: string } } => x.r !== null)
+    .sort((a, b) => a.r.tier - b.r.tier || (b.lead.value || 0) - (a.lead.value || 0))
+    .slice(0, 6);
 
   const steps: Step[] = [
     { key: "biz", label: "Add your business details", done: Boolean(workspace?.business_name && workspace?.business_description), action: { type: "tab", tab: "setup", cta: "Add" } },
@@ -287,6 +412,42 @@ export default async function VraelisAccountPage({
                 </div>
               </div>
 
+              {/* ── Needs Attention — closest-to-revenue leads, above pipeline ── */}
+              {needsAttention.length > 0 && (
+                <div className="win" style={{ padding: "clamp(16px,2vw,22px)", marginBottom: "clamp(16px,2vw,24px)", borderColor: "var(--acc-line)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+                    <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className="dot dot--acc pulse" />Needs attention
+                    </h2>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>closest to a payment first</span>
+                  </div>
+                  <div>
+                    {needsAttention.map(({ lead: l, r }) => {
+                      const title = l.name || l.contact_email || l.contact_phone || "New lead";
+                      const tierColor = r.tier === 1 ? "var(--money)" : r.tier === 2 ? "#C2540C" : r.tier === 3 ? "#2563EB" : "var(--acc-deep)";
+                      return (
+                        <Link key={l.id} href={`/v/account/leads/${l.id}`} style={{ textDecoration: "none", display: "block" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 0", borderTop: "1px solid var(--line-1)" }}>
+                            <span style={{ flex: "0 0 auto", width: 8, height: 8, borderRadius: "50%", background: tierColor }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
+                              <div style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 1 }}>
+                                <span style={{ color: tierColor, fontWeight: 600 }}>{r.label}</span>
+                                {l.snippet ? <span style={{ color: "var(--fg-4)" }}> · {l.snippet}</span> : null}
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                              {l.value ? <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--money)", fontWeight: 600 }}>${l.value.toLocaleString()}</span> : null}
+                              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>{timeAgo(l.updated_at)} →</span>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="win" style={{ overflow: "hidden" }}>
                 <div className="win__bar">
                   <div className="win__dots"><i /><i /><i /></div>
@@ -347,103 +508,110 @@ export default async function VraelisAccountPage({
           }
           money={
             <div style={{ display: "flex", flexDirection: "column", gap: "clamp(16px, 2vw, 22px)" }}>
-              {/* ── Revenue KPIs — what Vraelis collected for you ───────── */}
+              {/* ── Revenue KPIs — the money answers, first ─────────────── */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "clamp(12px, 1.6vw, 18px)" }}>
-                <StatCard label="Collected" value={`$${collected.toLocaleString()}`} sub={`${payments.paidCount} payment${payments.paidCount === 1 ? "" : "s"}`} />
+                <StatCard label="Revenue collected" value={`$${collected.toLocaleString()}`} sub={`${payments.paidCount} payment${payments.paidCount === 1 ? "" : "s"}`} subAccent={collected > 0} />
                 <div className="win" style={{ padding: "16px 18px", borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>You kept</div>
                   <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(23px, 2.4vw, 31px)", lineHeight: 1, color: "var(--money)", letterSpacing: "-0.02em" }}>${kept.toLocaleString()}</div>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, marginTop: 9, color: "var(--fg-4)" }}>after Vraelis fee</div>
                 </div>
                 <StatCard label={`Vraelis fee · ${(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}%`} value={`$${feeTaken.toLocaleString()}`} sub="taken automatically" />
-                <StatCard label="Payout status" value={connected ? "Active" : workspace?.connect_account_id ? "Pending" : "Off"} sub={connected ? "paid out automatically" : "set up below"} subAccent={connected} />
+                <StatCard label="Awaiting payment" value={`$${(awaitingCents / 100).toLocaleString()}`} sub={inTransitCents > 0 ? `+ $${(inTransitCents / 100).toLocaleString()} in transit` : `${pendingPayments.length} request${pendingPayments.length === 1 ? "" : "s"} sent`} />
               </div>
 
-              {/* ── Payout + deposit config (secondary) ─────────────────── */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "clamp(14px, 2vw, 20px)", alignItems: "start" }}>
-                <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-                    <h2 style={{ fontSize: 15, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Payouts</h2>
-                    {connected ? (
-                      <span className="pill st-won"><span className="dot" />Active</span>
-                    ) : workspace?.connect_account_id ? (
-                      <span className="pill st-booked"><span className="dot" />Finishing setup</span>
-                    ) : (
-                      <span className="pill st-new"><span className="dot" />Not set up</span>
-                    )}
-                  </div>
+              {/* ── Payout status strip (no deposit config — that's in Setup) ── */}
+              <div className="win" style={{ padding: "clamp(14px,1.8vw,18px) clamp(16px,2vw,22px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)", margin: 0 }}>Payouts</h2>
                   {connected ? (
-                    <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, margin: 0 }}>
-                      Connected. Your share lands in your account automatically after each payment — nothing to invoice or chase.
-                    </p>
+                    <span className="pill st-won"><span className="dot" />Active</span>
+                  ) : workspace?.connect_account_id ? (
+                    <span className="pill st-booked"><span className="dot" />Finishing setup</span>
                   ) : (
-                    <>
-                      <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 14 }}>
-                        Connect your bank once so leads can pay through Vraelis. Your {(100 - cutRate * 100).toFixed((100 - cutRate * 100) % 1 === 0 ? 0 : 1)}% is deposited automatically.
-                      </p>
-                      <a href="/api/vraelis/connect/start" className="btn" style={{ width: "100%", justifyContent: "center" }}>
-                        {workspace?.connect_account_id ? "Finish payout setup →" : "Set up payouts →"}
-                      </a>
-                    </>
+                    <span className="pill st-new"><span className="dot" />Not set up</span>
                   )}
+                  <span style={{ fontSize: 12, color: "var(--fg-3)" }}>
+                    {connected
+                      ? "Your share is deposited automatically after each payment."
+                      : `Connect your bank once so leads can pay you. You keep ${(100 - cutRate * 100).toFixed((100 - cutRate * 100) % 1 === 0 ? 0 : 1)}%.`}
+                  </span>
                 </div>
-
-                <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
-                  <h2 style={{ fontSize: 15, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 4 }}>Booking deposit</h2>
-                  <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 12 }}>
-                    Optionally require a deposit through Vraelis to confirm a booking.
-                  </p>
-                  <DepositForm initialEnabled={Boolean(workspace?.deposit_enabled)} initialAmount={workspace?.deposit_amount_cents ?? null} />
-                </div>
+                {!connected && (
+                  <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13, whiteSpace: "nowrap" }}>
+                    {workspace?.connect_account_id ? "Finish setup →" : "Set up payouts →"}
+                  </a>
+                )}
               </div>
 
-              {/* ── Recent payments (full history, kept at the bottom) ──── */}
+              {/* ── Recent payments (paid) ──────────────────────────────── */}
               <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                   <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Recent payments</h2>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>through Vraelis · cut taken at payment</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>paid through Vraelis</span>
                 </div>
-                {recentPayments.length === 0 ? (
-                  <div style={{ padding: "30px 20px", textAlign: "center" }}>
+                {paidPayments.length === 0 ? (
+                  <div style={{ padding: "26px 20px", textAlign: "center" }}>
                     <div style={{ fontSize: 14.5, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>No payments yet.</div>
-                    <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55, maxWidth: 380, margin: "0 auto 14px" }}>
+                    <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55, maxWidth: 400, margin: "0 auto 14px" }}>
                       {connected
-                        ? "Open a lead in the Inbox and use Collect payment to send a secure request — it shows up here the moment they pay, with your cut already taken."
-                        : "Set up payouts above, then collect your first payment from any lead. It lands here automatically — no invoicing, no chasing."}
+                        ? "Open a lead in the Inbox and use Collect payment. It shows up here the moment they pay — your cut already taken."
+                        : "Set up payouts above, then collect your first payment from any lead. It lands here automatically."}
                     </p>
-                    {!connected && (
-                      <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13 }}>Set up payouts →</a>
-                    )}
+                    {!connected && <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13 }}>Set up payouts →</a>}
                   </div>
                 ) : (
                   <div>
-                    {recentPayments.map((p) => {
-                      const amt = (p.amount_cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0 });
-                      const net = ((p.amount_cents - p.fee_cents) / 100).toLocaleString(undefined, { minimumFractionDigits: 0 });
-                      const statusClass = p.status === "paid" ? "st-won" : p.status === "pending" ? "st-booked" : "st-contacted";
+                    {paidPayments.slice(0, 12).map((p) => {
+                      const amt = (p.amount_cents / 100).toLocaleString();
+                      const net = ((p.amount_cents - p.fee_cents) / 100).toLocaleString();
                       return (
                         <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: "1px solid var(--line-1)" }}>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}
-                            </div>
-                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>
-                              {p.kind === "deposit" ? "Deposit" : "Full payment"}{p.status === "paid" ? ` · you kept $${net}` : ""}
-                            </div>
+                            <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}</div>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{p.kind === "deposit" ? "Deposit" : "Full payment"} · you kept ${net}</div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                            <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: p.status === "paid" ? "var(--fg-1)" : "var(--fg-3)", fontWeight: 600 }}>${amt}</span>
-                            <span className={`pill ${statusClass}`} style={{ textTransform: "capitalize" }}><span className="dot" />{p.status}</span>
+                            <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg-1)", fontWeight: 600 }}>${amt}</span>
+                            <span className="pill st-won"><span className="dot" />Paid</span>
                           </div>
                         </div>
                       );
                     })}
                   </div>
                 )}
-                <p style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.5, paddingTop: 12, borderTop: recentPayments.length ? "1px solid var(--line-1)" : "none" }}>
-                  Vraelis takes its {(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}% cut automatically the moment a payment is made — deducted before payout, no monthly invoice, no self-reporting. Standard card-processing fees come off your side.
-                </p>
               </div>
+
+              {/* ── Payment requests (sent, awaiting pay) ────────────────── */}
+              {pendingPayments.length > 0 && (
+                <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Payment requests</h2>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>sent · awaiting payment</span>
+                  </div>
+                  <div>
+                    {pendingPayments.map((p) => {
+                      const amt = (p.amount_cents / 100).toLocaleString();
+                      return (
+                        <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: "1px solid var(--line-1)" }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}</div>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{p.kind === "deposit" ? "Deposit" : "Full payment"} · sent {timeAgo(p.created_at)}</div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                            <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg-3)", fontWeight: 600 }}>${amt}</span>
+                            <span className="pill st-booked"><span className="dot" />Pending</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", lineHeight: 1.5, padding: "0 4px" }}>
+                Payout history: your kept share lands in your bank automatically after each payment — view full payout records in your Stripe dashboard. Vraelis takes its {(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}% cut automatically at payment; standard card-processing fees come off your side.
+              </p>
             </div>
           }
           setup={
@@ -502,55 +670,48 @@ export default async function VraelisAccountPage({
                 </details>
               </div>
 
-              {/* Phone & SMS */}
-              <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
-                <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 4 }}>Phone &amp; SMS</h2>
-                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 16 }}>
-                  Get a text on every new lead, and let Vraelis text leads back from your number.
-                </p>
-                <SmsForm initialOwnerPhone={contact?.owner_phone ?? ""} initialTwilioNumber={contact?.twilio_number ?? ""} />
-              </div>
-
-              {/* Calendar */}
-              <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-                  <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Calendar</h2>
-                  {calendarConnected ? (
-                    <span className="pill st-won"><span className="dot" />Connected</span>
-                  ) : (
-                    <span className="pill st-new"><span className="dot" />Not connected</span>
-                  )}
-                </div>
-                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 14 }}>
-                  {calendarConnected
-                    ? "Bookings appear on your Google Calendar, and times you're busy there are blocked automatically."
-                    : "Connect Google Calendar so bookings auto-create events and your busy times never get double-booked."}
-                </p>
-                {calendarConnected ? (
-                  <a href="/api/vraelis/calendar/disconnect" className="btn btn--ghost" style={{ width: "100%", justifyContent: "center" }}>Disconnect</a>
-                ) : (
-                  <a href="/api/vraelis/calendar/connect" className="btn" style={{ width: "100%", justifyContent: "center" }}>Connect Google Calendar →</a>
-                )}
-              </div>
-
-              {/* Payments / payouts */}
-              <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
-                  <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Payments</h2>
-                  {connected ? (
-                    <span className="pill st-won"><span className="dot" />Active</span>
-                  ) : (
-                    <span className="pill st-new"><span className="dot" />Not set up</span>
-                  )}
-                </div>
-                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 14 }}>
-                  {connected
-                    ? "Payouts are on. Manage deposits, request payments, and see revenue in the Money tab."
-                    : "Connect Stripe to collect deposits and payments on-platform — your cut is taken automatically."}
-                </p>
-                {!connected && (
-                  <a href="/api/vraelis/connect/start" className="btn" style={{ width: "100%", justifyContent: "center" }}>Set up payouts →</a>
-                )}
+              {/* Connections checklist — compact rows, not big cards */}
+              <div className="win" style={{ padding: "clamp(14px,1.8vw,18px) clamp(16px,2vw,20px)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 }}>Connections</div>
+                {/* Payments */}
+                <ChecklistRow
+                  done={connected}
+                  title="Payments & payouts"
+                  doneText="Active — leads can pay you on-platform"
+                  todoText="Connect Stripe to collect payments & deposits"
+                  href={connected ? undefined : "/api/vraelis/connect/start"}
+                  cta={connected ? undefined : workspace?.connect_account_id ? "Finish" : "Connect"}
+                />
+                {/* Calendar */}
+                <ChecklistRow
+                  done={calendarConnected}
+                  title="Calendar"
+                  doneText="Connected — bookings sync, busy times blocked"
+                  todoText="Connect Google Calendar so bookings auto-sync"
+                  href={calendarConnected ? "/api/vraelis/calendar/disconnect" : "/api/vraelis/calendar/connect"}
+                  cta={calendarConnected ? "Disconnect" : "Connect"}
+                />
+                {/* SMS */}
+                <ChecklistRow
+                  done={Boolean(contact?.twilio_number)}
+                  title="Phone & SMS"
+                  doneText="Connected — texts leads back, alerts you"
+                  todoText="Add a number to text leads & get new-lead alerts"
+                  expandLabel="Set up SMS"
+                >
+                  <SmsForm initialOwnerPhone={contact?.owner_phone ?? ""} initialTwilioNumber={contact?.twilio_number ?? ""} />
+                </ChecklistRow>
+                {/* Booking deposit — moved here from Money (it's setup, not revenue) */}
+                <ChecklistRow
+                  done={Boolean(workspace?.deposit_enabled)}
+                  title="Booking deposit"
+                  doneText={`On — $${((workspace?.deposit_amount_cents ?? 0) / 100).toLocaleString()} to confirm a booking`}
+                  todoText="Optional — require a deposit to confirm a booking"
+                  expandLabel="Configure deposit"
+                  last
+                >
+                  <DepositForm initialEnabled={Boolean(workspace?.deposit_enabled)} initialAmount={workspace?.deposit_amount_cents ?? null} />
+                </ChecklistRow>
               </div>
 
               {/* Plan & account */}
