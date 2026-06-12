@@ -56,23 +56,23 @@ export function AccountTabs({
   return (
     <div>
       {!allDone && (
-        <div className="win" style={{ padding: "clamp(16px,2vw,22px)", marginBottom: "clamp(16px,2vw,24px)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 14 }}>
+        <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)", marginBottom: "clamp(12px,1.5vw,16px)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
             <div>
-              <div style={{ fontSize: 15, color: "var(--fg-1)", fontWeight: 600, marginBottom: 2 }}>Finish setting up</div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{done} of {steps.length} done — get to your first paid lead</div>
+              <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, marginBottom: 1 }}>Finish setting up</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)" }}>{done} of {steps.length} done — get to your first paid lead</div>
             </div>
-            <div style={{ flex: "1 1 200px", maxWidth: 340, minWidth: 150 }}>
-              <div style={{ height: 6, background: "var(--bg-3)", borderRadius: 99, overflow: "hidden" }}>
+            <div style={{ flex: "1 1 180px", maxWidth: 340, minWidth: 140 }}>
+              <div style={{ height: 5, background: "var(--bg-3)", borderRadius: 99, overflow: "hidden" }}>
                 <div style={{ width: `${pct}%`, height: "100%", background: "var(--acc)", borderRadius: 99, transition: "width 400ms var(--ease)" }} />
               </div>
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 8 }}>
             {steps.map((s) => (
-              <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "1px solid var(--line-1)", borderRadius: 4 }}>
-                <span style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", fontSize: 11, border: s.done ? "none" : "1px solid var(--line-3)", background: s.done ? "var(--acc)" : "transparent", color: s.done ? "var(--fg-on-accent)" : "transparent" }}>✓</span>
-                <span style={{ flex: 1, fontSize: 13, color: s.done ? "var(--fg-4)" : "var(--fg-1)", textDecoration: s.done ? "line-through" : "none" }}>{s.label}</span>
+              <div key={s.key} style={{ display: "flex", alignItems: "center", gap: 9, padding: "7px 10px", border: "1px solid var(--line-1)", borderRadius: 4 }}>
+                <span style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center", fontSize: 10, border: s.done ? "none" : "1px solid var(--line-3)", background: s.done ? "var(--acc)" : "transparent", color: s.done ? "var(--fg-on-accent)" : "transparent" }}>✓</span>
+                <span style={{ flex: 1, fontSize: 12.5, color: s.done ? "var(--fg-4)" : "var(--fg-1)", textDecoration: s.done ? "line-through" : "none" }}>{s.label}</span>
                 {!s.done && <Action a={s.action} />}
               </div>
             ))}
@@ -80,7 +80,7 @@ export function AccountTabs({
         </div>
       )}
 
-      <div style={{ display: "flex", gap: "clamp(18px,3vw,30px)", borderBottom: "1px solid var(--line-2)", marginBottom: "clamp(20px,2.5vw,28px)" }}>
+      <div style={{ display: "flex", gap: "clamp(16px,2.5vw,26px)", borderBottom: "1px solid var(--line-2)", marginBottom: "clamp(14px,1.8vw,18px)" }}>
         {TABS.map((t) => {
           const on = tab === t.key;
           return (
@@ -90,8 +90,8 @@ export function AccountTabs({
               onClick={() => setTab(t.key)}
               style={{
                 border: "none", background: "none", cursor: "pointer",
-                padding: "0 1px 12px", marginBottom: -1,
-                fontFamily: "var(--font-mono)", fontSize: 13.5, letterSpacing: "0.01em",
+                padding: "0 1px 9px", marginBottom: -1,
+                fontFamily: "var(--font-mono)", fontSize: 13, letterSpacing: "0.01em",
                 color: on ? "var(--fg-1)" : "var(--fg-4)", fontWeight: on ? 600 : 500,
                 borderBottom: `2px solid ${on ? "var(--acc)" : "transparent"}`,
               }}

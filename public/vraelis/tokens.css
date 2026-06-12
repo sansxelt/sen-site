@@ -72,7 +72,13 @@
      typographic flourish.
      ═══════════════════════════════════════════════════════════════════ */
   --font-sans:   "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --font-mono:   "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* --font-mono is used everywhere for labels/captions/KPIs/status. JetBrains Mono
+     reads poorly at the small sizes those use, so it now points at the clean
+     sans (labels keep their uppercase + letter-spacing for the "label" feel).
+     Use --font-code for the few places that need true monospace (keys, URLs,
+     code snippets) where character alignment actually matters. */
+  --font-mono:   "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-code:   "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-italic: "Instrument Serif", Georgia, "Times New Roman", serif;
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -205,7 +211,7 @@ p  { margin: 0; color: var(--fg-3); line-height: var(--lh-body); text-wrap: pret
 small, .meta { font-size: var(--fs-meta); color: var(--fg-4); }
 
 code, kbd, .mono {
-  font-family: var(--font-mono);
+  font-family: var(--font-code);
   font-size: var(--fs-body-sm);
   letter-spacing: var(--tr-mono);
   color: var(--fg-2);

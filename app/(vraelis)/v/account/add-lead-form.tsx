@@ -29,7 +29,7 @@ export function AddLeadForm() {
 
   return (
     <details style={{ borderBottom: "1px solid var(--line-1)" }}>
-      <summary style={{ cursor: "pointer", padding: "13px 16px", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--acc-deep)" }}>
+      <summary style={{ cursor: "pointer", padding: "13px 16px", fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--acc-deep)", listStyle: "none" }}>
         + Add a lead &amp; reach out
       </summary>
       <form ref={formRef} action={action} style={{ padding: "4px 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>

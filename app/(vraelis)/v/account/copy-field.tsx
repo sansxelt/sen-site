@@ -18,7 +18,7 @@ export function CopyField({ label, value }: { label: string; value: string }) {
   const boxStyle: CSSProperties = {
     flex: 1,
     minWidth: 0,
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-code)",
     fontSize: 12,
     color: "var(--fg-2)",
     background: "var(--bg-2)",

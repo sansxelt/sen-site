@@ -90,7 +90,7 @@ export function FindLeads() {
         <div className="win" style={{ padding: "22px 24px" }}>
           <h3 style={{ fontSize: 15, color: "var(--fg-1)", marginBottom: 8 }}>Lead search needs a Google Places key.</h3>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
-            Add <code style={{ fontFamily: "var(--font-mono)" }}>GOOGLE_PLACES_API_KEY</code> in your Vercel project settings (Google Cloud → Places API), then this will work.
+            Add <code style={{ fontFamily: "var(--font-code)" }}>GOOGLE_PLACES_API_KEY</code> in your Vercel project settings (Google Cloud → Places API), then this will work.
           </p>
         </div>
       ) : error ? (
@@ -111,7 +111,7 @@ export function FindLeads() {
                   {[p.phone, p.address].filter(Boolean).join(" · ")}
                 </div>
                 {p.website && (
-                  <a href={p.website} target="_blank" rel="noreferrer" style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--acc-deep)", textDecoration: "none" }}>
+                  <a href={p.website} target="_blank" rel="noreferrer" style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--acc-deep)", textDecoration: "none" }}>
                     {p.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
                   </a>
                 )}

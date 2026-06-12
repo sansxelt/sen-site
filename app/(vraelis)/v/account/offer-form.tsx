@@ -8,8 +8,8 @@ const inputStyle: CSSProperties = {
   borderRadius: "var(--r-xs)",
   border: "1px solid var(--line-2)",
   background: "var(--bg-1)",
-  padding: "11px 13px",
-  fontSize: 14,
+  padding: "9px 12px",
+  fontSize: 13.5,
   color: "var(--fg-1)",
   outline: "none",
   fontFamily: "var(--font-sans)",
@@ -78,6 +78,69 @@ const PAY_OPTIONS = [
   { key: "deposit", label: "Deposit to book", sub: "Take a deposit to lock it in; collect the rest later." },
 ] as const;
 
+// Business-type personas. The selection personalizes every example and
+// hint in the form (and is saved so the AI can use it later).
+const PERSONAS = [
+  { key: "coach", label: "Coach" },
+  { key: "course", label: "Course creator" },
+  { key: "agency", label: "Agency" },
+  { key: "consultant", label: "Consultant" },
+  { key: "community", label: "Community" },
+  { key: "other", label: "Other" },
+] as const;
+
+type PersonaCopy = { namePh: string; descPh: string; servicesPh: string; qualPh: string; srcPh: string; srcHint: string };
+const PERSONA_COPY: Record<string, PersonaCopy> = {
+  coach: {
+    namePh: "Offer name — e.g. Apex Coaching",
+    descPh: "One line — e.g. 12-week 1:1 coaching for founders scaling past $10k/mo.",
+    servicesPh: "One per line with a price — e.g.\n12-week program — $4,000\nStrategy call — $750",
+    qualPh: "One per line — e.g.\nWhat's your monthly revenue?\nWhat's your goal in 90 days?\nTimeline to start?",
+    srcPh: "e.g. Instagram DMs, link in bio, referrals",
+    srcHint: "Most coaches drop their Vraelis link in their bio and DMs.",
+  },
+  course: {
+    namePh: "Offer name — e.g. The Creator OS course",
+    descPh: "One line — e.g. Self-paced course teaching creators to land brand deals.",
+    servicesPh: "One per line with a price — e.g.\nCourse (lifetime access) — $497\nCourse + group coaching — $997",
+    qualPh: "One per line — e.g.\nWhat are you hoping to learn?\nWhere are you starting from?\nWhen do you want to start?",
+    srcPh: "e.g. YouTube, Instagram bio, email list",
+    srcHint: "Most course creators drop their Vraelis link under videos and in their bio.",
+  },
+  agency: {
+    namePh: "Agency name — e.g. Northpeak Media",
+    descPh: "One line — e.g. Done-for-you short-form content for local businesses.",
+    servicesPh: "One per line with a price — e.g.\nContent engine — $2,500/mo\nOne-off campaign — $1,200",
+    qualPh: "One per line — e.g.\nWhat does your business do?\nWhat's your monthly budget?\nWho signs off on this?",
+    srcPh: "e.g. cold outreach, referrals, LinkedIn",
+    srcHint: "Agencies usually put their Vraelis link in outreach emails and proposals.",
+  },
+  consultant: {
+    namePh: "Practice name — e.g. Hale Consulting",
+    descPh: "One line — e.g. Ops consulting for e-commerce brands doing $50k+/mo.",
+    servicesPh: "One per line with a price — e.g.\nAudit + roadmap — $1,500\nMonthly advisory — $3,000/mo",
+    qualPh: "One per line — e.g.\nWhat problem are you hiring for?\nWhat's your revenue range?\nWhat's your timeline?",
+    srcPh: "e.g. LinkedIn, referrals, speaking",
+    srcHint: "Consultants usually share their Vraelis link on LinkedIn and in follow-ups.",
+  },
+  community: {
+    namePh: "Community name — e.g. The Operators Club",
+    descPh: "One line — e.g. Private community for agency owners sharing playbooks.",
+    servicesPh: "One per line with a price — e.g.\nMembership — $49/mo\nAnnual — $490/yr",
+    qualPh: "One per line — e.g.\nWhat do you do?\nWhat do you want from the community?\nHave you been in one before?",
+    srcPh: "e.g. X/Twitter, podcast, word of mouth",
+    srcHint: "Most communities share their Vraelis link in pinned posts and welcome emails.",
+  },
+  other: {
+    namePh: "Offer name — e.g. Apex Coaching",
+    descPh: "One line on what it is — e.g. 12-week 1:1 coaching for founders scaling past $10k/mo.",
+    servicesPh: "One per line with a price — e.g.\n12-week program — $4,000\nStrategy call — $750",
+    qualPh: "One per line — e.g.\nWhat's your monthly revenue?\nWhat's your goal in 90 days?\nTimeline to start?",
+    srcPh: "e.g. Instagram DMs, link in bio, webinars, referrals",
+    srcHint: "Just so you know where to drop your Vraelis link.",
+  },
+};
+
 export function OfferForm({
   initialName,
   initialDescription,
@@ -86,6 +149,7 @@ export function OfferForm({
   initialDepositAmount,
   initialQualifying,
   initialLeadSources,
+  initialPersona,
 }: {
   initialName: string;
   initialDescription: string;
@@ -94,28 +158,64 @@ export function OfferForm({
   initialDepositAmount: number | null; // cents
   initialQualifying: string;
   initialLeadSources: string;
+  initialPersona: string;
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(saveOfferAction, null);
   const [payType, setPayType] = useState<string>(initialDepositEnabled ? "deposit" : "full");
   const [depositAmount, setDepositAmount] = useState<string>(
     initialDepositAmount != null ? String(initialDepositAmount / 100) : "25",
   );
+  const [persona, setPersona] = useState<string>(
+    PERSONAS.some((p) => p.key === initialPersona) ? initialPersona : "",
+  );
+  const pc = PERSONA_COPY[persona] ?? PERSONA_COPY.other;
 
   return (
-    <form action={action} style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+    <form action={action} style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+      {/* 0 — Who you are: personalizes every example below */}
+      <div>
+        <span style={labelStyle}>What best describes you?</span>
+        <input type="hidden" name="persona" value={persona} />
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {PERSONAS.map((p) => {
+            const active = persona === p.key;
+            return (
+              <button
+                key={p.key}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setPersona(p.key)}
+                style={{
+                  cursor: "pointer",
+                  padding: "5px 12px",
+                  borderRadius: 999,
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  border: `1px solid ${active ? "var(--acc-deep)" : "var(--line-2)"}`,
+                  background: active ? "rgba(14,158,108,0.06)" : "var(--bg-1)",
+                  color: active ? "var(--acc-deep)" : "var(--fg-3)",
+                }}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* 1 — What you sell */}
       <Step n={1} title="What do you sell?">
         <input
           name="businessName"
           defaultValue={initialName}
-          placeholder="Offer name — e.g. Apex Coaching"
+          placeholder={pc.namePh}
           maxLength={120}
           style={{ ...inputStyle, marginBottom: 8 }}
         />
         <textarea
           name="businessDescription"
           defaultValue={initialDescription}
-          placeholder="One line on what it is — e.g. 12-week 1:1 coaching for founders scaling past $10k/mo."
+          placeholder={pc.descPh}
           maxLength={400}
           rows={2}
           style={{ ...inputStyle, resize: "vertical" }}
@@ -127,7 +227,7 @@ export function OfferForm({
         <textarea
           name="businessServices"
           defaultValue={initialServices}
-          placeholder={"One per line with a price — e.g.\n12-week program — $4,000\nStrategy call — $750"}
+          placeholder={pc.servicesPh}
           maxLength={2000}
           rows={3}
           style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--font-mono)", fontSize: 13 }}
@@ -145,6 +245,7 @@ export function OfferForm({
               <button
                 type="button"
                 key={o.key}
+                aria-pressed={active}
                 onClick={() => setPayType(o.key)}
                 style={{
                   textAlign: "left",
@@ -255,7 +356,7 @@ export function OfferForm({
               id="qualifyingQuestions"
               name="qualifyingQuestions"
               defaultValue={initialQualifying}
-              placeholder={"One per line — e.g.\nWhat's your monthly revenue?\nWhat's your goal in 90 days?\nTimeline to start?"}
+              placeholder={pc.qualPh}
               maxLength={1500}
               rows={3}
               style={{ ...inputStyle, resize: "vertical" }}
@@ -268,11 +369,11 @@ export function OfferForm({
               id="leadSources"
               name="leadSources"
               defaultValue={initialLeadSources}
-              placeholder="e.g. Instagram DMs, link in bio, webinars, referrals"
+              placeholder={pc.srcPh}
               maxLength={500}
               style={inputStyle}
             />
-            <p style={hintStyle}>Just so you know where to drop your Vraelis link.</p>
+            <p style={hintStyle}>{pc.srcHint}</p>
           </div>
         </div>
       </details>

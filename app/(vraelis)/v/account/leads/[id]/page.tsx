@@ -60,7 +60,7 @@ export default async function LeadDetailPage({
     outcome === "paid" ? "st-won" : outcome === "booked" ? "st-booked" : outcome === "lost" || outcome === "spam" ? "st-contacted" : "st-new";
 
   return (
-    <section className="section" style={{ position: "relative", overflow: "hidden" }}>
+    <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>
       <div className="gridbg" style={{ opacity: 0.3 }} />
       <div className="wrap" style={{ position: "relative", maxWidth: 820 }}>
         <Link href="/v/account" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none" }}>
@@ -68,10 +68,10 @@ export default async function LeadDetailPage({
         </Link>
 
         {/* ── Deal summary: who, status, value, source, last activity ── */}
-        <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)", margin: "16px 0 16px" }}>
+        <div className="win" style={{ padding: "clamp(14px,1.8vw,18px)", margin: "12px 0 12px" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
             <div style={{ minWidth: 0 }}>
-              <h1 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2.1rem)", marginBottom: 6 }}>{leadName}</h1>
+              <h1 className="display" style={{ fontSize: "clamp(1.3rem, 2vw, 1.7rem)", marginBottom: 5, overflowWrap: "anywhere" }}>{leadName}</h1>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <span className={`pill st-${lead.status}`}><span className="dot" />{STATUS_LABEL[lead.status]}</span>
                 {outcome !== "open" && <span className={`pill ${outcomeClass}`} style={{ textTransform: "capitalize" }}><span className="dot" />{outcome}</span>}
@@ -85,15 +85,15 @@ export default async function LeadDetailPage({
             </div>
           </div>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line-1)" }}>
-            {lead.contact_email && <span>✉ {lead.contact_email}</span>}
-            {lead.contact_phone && <span>☎ {lead.contact_phone}</span>}
+            {lead.contact_email && <span style={{ overflowWrap: "anywhere" }}>✉ {lead.contact_email}</span>}
+            {lead.contact_phone && <span style={{ overflowWrap: "anywhere" }}>☎ {lead.contact_phone}</span>}
             {lead.source && <span>via {lead.source}</span>}
             <span>active {lastActivity}</span>
           </div>
         </div>
 
         {/* ── Next best action: status / value / outcome controls ────── */}
-        <div className="win" style={{ padding: "clamp(16px,2vw,22px)", marginBottom: 16 }}>
+        <div className="win" style={{ padding: "clamp(14px,1.8vw,18px)", marginBottom: 12 }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 14 }}>
             Update this deal
           </div>
@@ -126,14 +126,14 @@ export default async function LeadDetailPage({
         </div>
 
         {/* ── Collect payment — the money action ──────────────────────── */}
-        <div className="win" style={{ padding: "clamp(16px,2vw,22px)", marginBottom: 16, borderColor: connected ? "var(--acc-line)" : "var(--line-2)", background: connected ? "var(--acc-soft)" : "var(--bg-1)" }}>
+        <div className="win" style={{ padding: "clamp(14px,1.8vw,18px)", marginBottom: 12, borderColor: connected ? "var(--acc-line)" : "var(--line-2)", background: connected ? "var(--acc-soft)" : "var(--bg-1)" }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: connected ? "var(--acc-deep)" : "var(--fg-4)", marginBottom: 14 }}>
             Collect payment
           </div>
           <RequestPayment leadId={lead.id} connected={connected} cutRate={cutRate} />
         </div>
 
-        <div className="win" style={{ padding: "20px 22px" }}>
+        <div className="win" style={{ padding: "clamp(14px,1.8vw,18px)" }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 16 }}>
             Conversation
           </div>

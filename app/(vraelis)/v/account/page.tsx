@@ -49,10 +49,10 @@ function timeAgo(iso: string): string {
 
 function StatCard({ label, value, sub, subAccent }: { label: string; value: string; sub?: string; subAccent?: boolean }) {
   return (
-    <div className="win" style={{ padding: "16px 18px" }}>
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>{label}</div>
-      <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(23px, 2.4vw, 31px)", lineHeight: 1, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>{value}</div>
-      {sub && <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, marginTop: 9, color: subAccent ? "var(--acc)" : "var(--fg-4)" }}>{sub}</div>}
+    <div className="win" style={{ padding: "11px 14px" }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5 }}>{label}</div>
+      <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(19px, 1.8vw, 24px)", lineHeight: 1, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>{value}</div>
+      {sub && <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, marginTop: 5, color: subAccent ? "var(--acc)" : "var(--fg-4)" }}>{sub}</div>}
     </div>
   );
 }
@@ -106,7 +106,7 @@ function ChecklistRow({
     </>
   );
   const rowStyle: CSSProperties = {
-    display: "flex", alignItems: "center", gap: 11, padding: "12px 0",
+    display: "flex", alignItems: "center", gap: 11, padding: "10px 0",
     borderTop: "1px solid var(--line-1)",
     ...(last ? {} : {}),
   };
@@ -138,7 +138,7 @@ function ChecklistRow({
 function FunnelBar({ segments, lost }: { segments: { label: string; count: number; color: string }[]; lost: number }) {
   const total = segments.reduce((s, x) => s + x.count, 0);
   return (
-    <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--line-1)" }}>
+    <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line-1)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Pipeline funnel</span>
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)" }}>{total} active{lost > 0 ? ` · ${lost} lost` : ""}</span>
@@ -163,21 +163,28 @@ function FunnelBar({ segments, lost }: { segments: { label: string; count: numbe
   );
 }
 
-function LeadRow({ lead, index }: { lead: VraelisLead; index: number }) {
+function LeadRow({ lead, index, pay }: { lead: VraelisLead; index: number; pay?: "paid" | "pending" }) {
   const title = lead.name || lead.contact_email || lead.contact_phone || "New lead";
   const color = AV_COLORS[index % AV_COLORS.length];
   return (
-    <Link href={`/v/account/leads/${lead.id}`} className="leadrow" style={{ display: "block", textDecoration: "none" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-        <span className="av" style={{ width: 36, height: 36, background: color, fontSize: 13.5 }}>{initials(title)}</span>
+    <Link href={`/v/account/leads/${lead.id}`} className="leadrow" style={{ display: "block", textDecoration: "none", padding: "9px 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span className="av" style={{ width: 32, height: 32, background: color, fontSize: 12.5 }}>{initials(title)}</span>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 4 }}>
-            <span style={{ color: "var(--fg-1)", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
-            <span className={`pill ${STATUS_CLASS[lead.status]}`}><span className="dot" />{STATUS_LABEL[lead.status]}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 3 }}>
+            <span style={{ color: "var(--fg-1)", fontSize: 13.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
+              {pay === "paid" && <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "#15803D", fontWeight: 700 }}>✓ paid</span>}
+              {pay === "pending" && <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--money)", fontWeight: 700 }}>$ link sent</span>}
+              <span className={`pill ${STATUS_CLASS[lead.status]}`}><span className="dot" />{STATUS_LABEL[lead.status]}</span>
+            </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
             <span style={{ color: "var(--fg-4)", fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lead.snippet || "—"}</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", whiteSpace: "nowrap" }}>{lead.source} · {timeAgo(lead.created_at)}</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", whiteSpace: "nowrap", flexShrink: 0 }}>
+              {lead.value ? <b className="tnum" style={{ color: "var(--money)", fontWeight: 600 }}>${lead.value.toLocaleString()} · </b> : null}
+              {lead.source} · {timeAgo(lead.created_at)}
+            </span>
           </div>
         </div>
       </div>
@@ -250,6 +257,8 @@ export default async function VraelisAccountPage({
   const kept = payments.netCents / 100;
   const feeTaken = payments.feeCents / 100;
 
+  const now = Date.now();
+
   // ── Payment derivations (from listPayments, no extra Stripe calls) ──
   const pendingPayments = recentPayments.filter((p) => p.status === "pending");
   const paidPayments = recentPayments.filter((p) => p.status === "paid");
@@ -275,7 +284,6 @@ export default async function VraelisAccountPage({
   const formLink = intakeKey ? `${ORIGIN}/f/${intakeKey}` : "";
   const bookingLink = intakeKey ? `${ORIGIN}/book/${intakeKey}` : "";
   const webhookUrl = `${ORIGIN}/api/vraelis/intake`;
-  const now = Date.now();
   const WEEK = 7 * 24 * 60 * 60 * 1000;
   const ageMs = (iso: string) => now - new Date(iso).getTime();
   const thisWeek = leads.filter((l) => ageMs(l.created_at) <= WEEK).length;
@@ -346,25 +354,24 @@ export default async function VraelisAccountPage({
   ];
 
   return (
-    <section className="section" style={{ position: "relative", overflow: "hidden" }}>
+    <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>
       <div className="gridbg" style={{ opacity: 0.35 }} />
       <div className="wrap" style={{ position: "relative" }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: "clamp(22px,3vw,32px)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: "clamp(14px,1.8vw,20px)" }}>
           <div>
-            <p className="eyebrow">Your workspace</p>
-            <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.6rem)", marginBottom: 6 }}>
+            <h1 className="display" style={{ fontSize: "clamp(1.25rem, 1.9vw, 1.6rem)", marginBottom: 3 }}>
               Welcome back, <span className="em">{firstName}</span>.
             </h1>
-            <p style={{ fontSize: 14.5, color: "var(--fg-3)", display: "flex", alignItems: "center", gap: 8 }}>
+            <p style={{ fontSize: 12.5, color: "var(--fg-3)", display: "flex", alignItems: "center", gap: 7 }}>
               <span className="dot dot--acc pulse" />Vraelis is online — answering your leads 24/7.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link href="/v/account/find" className="btn" style={{ whiteSpace: "nowrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Link href="/v/account/find" className="btn" style={{ whiteSpace: "nowrap", padding: "9px 16px", fontSize: 13 }}>
               Find leads →
             </Link>
             {formLink && (
-              <a href={formLink} target="_blank" rel="noreferrer" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>
+              <a href={formLink} target="_blank" rel="noreferrer" className="btn btn--ghost" style={{ whiteSpace: "nowrap", padding: "9px 16px", fontSize: 13 }}>
                 View your form ↗
               </a>
             )}
@@ -375,7 +382,7 @@ export default async function VraelisAccountPage({
           steps={steps}
           inbox={
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "clamp(12px,1.5vw,16px)", marginBottom: "clamp(16px,2vw,24px)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "clamp(10px,1.2vw,14px)", marginBottom: "clamp(12px,1.5vw,16px)" }}>
                 <StatCard
                   label="Leads this week"
                   value={String(thisWeek)}
@@ -387,36 +394,11 @@ export default async function VraelisAccountPage({
                 <StatCard label="Auto-answered" value={`${answerRate}%`} sub={`${answered} of ${leads.length} engaged`} />
               </div>
 
-              {/* Outcomes summary (VIE) */}
-              <div className="win" style={{ padding: "clamp(16px,2vw,20px)", marginBottom: "clamp(16px,2vw,24px)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-3)" }}>Outcomes</span>
-                  <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Conversion <b style={{ color: "var(--acc-deep)", fontWeight: 700 }}>{conversionRate}%</b></span>
-                    <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Payment rate <b style={{ color: "var(--acc-deep)", fontWeight: 700 }}>{paymentRate}%</b></span>
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(86px, 1fr))", gap: 10 }}>
-                  {([
-                    ["Open", oc.open, "#2563EB"],
-                    ["Booked", oc.booked, "var(--money)"],
-                    ["Paid", oc.paid, "#15803D"],
-                    ["Lost", oc.lost, "var(--fg-4)"],
-                    ["Spam", oc.spam, "#9F2D2D"],
-                  ] as const).map(([label, n, color]) => (
-                    <div key={label} style={{ border: "1px solid var(--line-1)", borderRadius: 6, padding: "10px 12px" }}>
-                      <div className="tnum" style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, lineHeight: 1, color }}>{n}</div>
-                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 5 }}>{label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* ── Needs Attention — closest-to-revenue leads, above pipeline ── */}
+              {/* ── Needs Attention — closest-to-revenue leads, first ── */}
               {needsAttention.length > 0 && (
-                <div className="win" style={{ padding: "clamp(16px,2vw,22px)", marginBottom: "clamp(16px,2vw,24px)", borderColor: "var(--acc-line)" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
-                    <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
+                <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)", marginBottom: "clamp(12px,1.5vw,16px)", borderColor: "var(--acc-line)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                    <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
                       <span className="dot dot--acc pulse" />Needs attention
                     </h2>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>closest to a payment first</span>
@@ -427,7 +409,7 @@ export default async function VraelisAccountPage({
                       const tierColor = r.tier === 1 ? "var(--money)" : r.tier === 2 ? "#C2540C" : r.tier === 3 ? "#2563EB" : "var(--acc-deep)";
                       return (
                         <Link key={l.id} href={`/v/account/leads/${l.id}`} style={{ textDecoration: "none", display: "block" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 0", borderTop: "1px solid var(--line-1)" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "8px 0", borderTop: "1px solid var(--line-1)" }}>
                             <span style={{ flex: "0 0 auto", width: 8, height: 8, borderRadius: "50%", background: tierColor }} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
@@ -473,31 +455,53 @@ export default async function VraelisAccountPage({
                 </div>
 
                 {leads.length === 0 ? (
-                  <div style={{ padding: "44px 28px", textAlign: "center" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", display: "grid", placeItems: "center", margin: "0 auto 16px", color: "var(--acc)", fontSize: 20 }}>✦</div>
-                    <div style={{ fontSize: 16, color: "var(--fg-1)", fontWeight: 600, marginBottom: 8 }}>See Vraelis answer a lead.</div>
-                    <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, maxWidth: 400, margin: "0 auto 18px" }}>
+                  <div style={{ padding: "26px 22px", textAlign: "center" }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--acc)", fontSize: 17 }}>✦</div>
+                    <div style={{ fontSize: 15, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>See Vraelis answer a lead.</div>
+                    <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, maxWidth: 400, margin: "0 auto 14px" }}>
                       Send yourself a sample lead and watch Vraelis reply instantly — or share your link to get a real one. New leads land here, answered automatically.
                     </p>
                     <form action={sendTestLead} style={{ display: "inline-block" }}>
-                      <button type="submit" className="btn">Send a test lead →</button>
+                      <button type="submit" className="btn" style={{ padding: "9px 16px", fontSize: 13 }}>Send a test lead →</button>
                     </form>
-                    <p style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 14 }}>
+                    <p style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 10 }}>
                       Or grab your shareable link in the <b style={{ color: "var(--fg-3)", fontWeight: 600 }}>Setup</b> tab.
                     </p>
                   </div>
                 ) : (
-                  <div style={{ maxHeight: 560, overflowY: "auto" }}>
-                    {leads.map((l, i) => <LeadRow key={l.id} lead={l} index={i} />)}
+                  <div style={{ maxHeight: 480, overflowY: "auto" }}>
+                    {leads.map((l, i) => <LeadRow key={l.id} lead={l} index={i} pay={leadPayState.get(l.id)} />)}
                   </div>
                 )}
               </div>
 
+              {/* Outcomes — one slim analytics strip, below the live pipeline */}
+              <div className="win" style={{ marginTop: "clamp(12px,1.5vw,16px)", padding: "10px clamp(14px,1.8vw,18px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px 18px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px 14px", flexWrap: "wrap" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Outcomes</span>
+                  {([
+                    ["Open", oc.open, "#2563EB"],
+                    ["Booked", oc.booked, "var(--money)"],
+                    ["Paid", oc.paid, "#15803D"],
+                    ["Lost", oc.lost, "var(--fg-4)"],
+                    ["Spam", oc.spam, "#9F2D2D"],
+                  ] as const).map(([label, n, color]) => (
+                    <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--fg-3)" }}>
+                      <b className="tnum" style={{ color, fontWeight: 700 }}>{n}</b> {label}
+                    </span>
+                  ))}
+                </div>
+                <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12, color: "var(--fg-4)" }}>Conversion <b style={{ color: "var(--acc-deep)", fontWeight: 700 }}>{conversionRate}%</b></span>
+                  <span style={{ fontSize: 12, color: "var(--fg-4)" }}>Payment rate <b style={{ color: "var(--acc-deep)", fontWeight: 700 }}>{paymentRate}%</b></span>
+                </div>
+              </div>
+
               {bookings.length > 0 && (
-                <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)", marginTop: 16 }}>
-                  <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 12 }}>Upcoming bookings</h2>
+                <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)", marginTop: "clamp(12px,1.5vw,16px)" }}>
+                  <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 8 }}>Upcoming bookings</h2>
                   {bookings.slice(0, 8).map((b) => (
-                    <div key={b.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, padding: "9px 0", borderTop: "1px solid var(--line-1)" }}>
+                    <div key={b.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, padding: "7px 0", borderTop: "1px solid var(--line-1)" }}>
                       <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600 }}>{slotLabel(b.slot)}</span>
                       <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 220 }}>{b.name || b.contact_email || "—"}</span>
                     </div>
@@ -507,21 +511,21 @@ export default async function VraelisAccountPage({
             </>
           }
           money={
-            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(16px, 2vw, 22px)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(12px, 1.5vw, 16px)" }}>
               {/* ── Revenue KPIs — the money answers, first ─────────────── */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "clamp(12px, 1.6vw, 18px)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "clamp(10px, 1.2vw, 14px)" }}>
                 <StatCard label="Revenue collected" value={`$${collected.toLocaleString()}`} sub={`${payments.paidCount} payment${payments.paidCount === 1 ? "" : "s"}`} subAccent={collected > 0} />
-                <div className="win" style={{ padding: "16px 18px", borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>You kept</div>
-                  <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(23px, 2.4vw, 31px)", lineHeight: 1, color: "var(--money)", letterSpacing: "-0.02em" }}>${kept.toLocaleString()}</div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, marginTop: 9, color: "var(--fg-4)" }}>after Vraelis fee</div>
+                <div className="win" style={{ padding: "11px 14px", borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5 }}>You kept</div>
+                  <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(19px, 1.8vw, 24px)", lineHeight: 1, color: "var(--money)", letterSpacing: "-0.02em" }}>${kept.toLocaleString()}</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, marginTop: 5, color: "var(--fg-4)" }}>after Vraelis fee</div>
                 </div>
                 <StatCard label={`Vraelis fee · ${(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}%`} value={`$${feeTaken.toLocaleString()}`} sub="taken automatically" />
                 <StatCard label="Awaiting payment" value={`$${(awaitingCents / 100).toLocaleString()}`} sub={inTransitCents > 0 ? `+ $${(inTransitCents / 100).toLocaleString()} in transit` : `${pendingPayments.length} request${pendingPayments.length === 1 ? "" : "s"} sent`} />
               </div>
 
               {/* ── Payout status strip (no deposit config — that's in Setup) ── */}
-              <div className="win" style={{ padding: "clamp(14px,1.8vw,18px) clamp(16px,2vw,22px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+              <div className="win" style={{ padding: "11px clamp(14px,1.8vw,18px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)", margin: 0 }}>Payouts</h2>
                   {connected ? (
@@ -545,20 +549,20 @@ export default async function VraelisAccountPage({
               </div>
 
               {/* ── Recent payments (paid) ──────────────────────────────── */}
-              <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                  <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Recent payments</h2>
+              <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Recent payments</h2>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>paid through Vraelis</span>
                 </div>
                 {paidPayments.length === 0 ? (
-                  <div style={{ padding: "26px 20px", textAlign: "center" }}>
-                    <div style={{ fontSize: 14.5, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>No payments yet.</div>
-                    <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55, maxWidth: 400, margin: "0 auto 14px" }}>
+                  <div style={{ padding: "16px 16px 8px", textAlign: "center" }}>
+                    <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, marginBottom: 5 }}>No payments yet.</div>
+                    <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, maxWidth: 400, margin: "0 auto 12px" }}>
                       {connected
                         ? "Open a lead in the Inbox and use Collect payment. It shows up here the moment they pay — your cut already taken."
                         : "Set up payouts above, then collect your first payment from any lead. It lands here automatically."}
                     </p>
-                    {!connected && <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13 }}>Set up payouts →</a>}
+                    {!connected && <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Set up payouts →</a>}
                   </div>
                 ) : (
                   <div>
@@ -566,7 +570,7 @@ export default async function VraelisAccountPage({
                       const amt = (p.amount_cents / 100).toLocaleString();
                       const net = ((p.amount_cents - p.fee_cents) / 100).toLocaleString();
                       return (
-                        <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: "1px solid var(--line-1)" }}>
+                        <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid var(--line-1)" }}>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}</div>
                             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{p.kind === "deposit" ? "Deposit" : "Full payment"} · you kept ${net}</div>
@@ -584,16 +588,16 @@ export default async function VraelisAccountPage({
 
               {/* ── Payment requests (sent, awaiting pay) ────────────────── */}
               {pendingPayments.length > 0 && (
-                <div className="win" style={{ padding: "clamp(18px,2.2vw,24px)" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-                    <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Payment requests</h2>
+                <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Payment requests</h2>
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>sent · awaiting payment</span>
                   </div>
                   <div>
                     {pendingPayments.map((p) => {
                       const amt = (p.amount_cents / 100).toLocaleString();
                       return (
-                        <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 0", borderTop: "1px solid var(--line-1)" }}>
+                        <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid var(--line-1)" }}>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}</div>
                             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{p.kind === "deposit" ? "Deposit" : "Full payment"} · sent {timeAgo(p.created_at)}</div>
@@ -617,13 +621,13 @@ export default async function VraelisAccountPage({
           setup={
             <div
               className="cols-stack"
-              style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.05fr) minmax(0, 0.95fr)", gap: "clamp(16px, 2vw, 24px)", alignItems: "start" }}
+              style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.05fr) minmax(0, 0.95fr)", gap: "clamp(12px, 1.6vw, 18px)", alignItems: "start" }}
             >
               {/* ── Step 1: define the offer (the revenue engine) — left ── */}
-              <div className="win" style={{ padding: "clamp(18px,2.2vw,26px)" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 5 }}>Step 1 · Your offer</div>
-                <h2 style={{ fontSize: 18, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 4 }}>Set up your revenue engine</h2>
-                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 18 }}>
+              <div className="win" style={{ padding: "clamp(14px,1.8vw,20px)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 4 }}>Step 1 · Your offer</div>
+                <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 3 }}>Set up your revenue engine</h2>
+                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 14 }}>
                   What you sell and how you get paid. Takes about a minute — connect channels after.
                 </p>
                 <OfferForm
@@ -634,21 +638,22 @@ export default async function VraelisAccountPage({
                   initialDepositAmount={workspace?.deposit_amount_cents ?? null}
                   initialQualifying={offer?.qualifyingQuestions ?? ""}
                   initialLeadSources={offer?.leadSources ?? ""}
+                  initialPersona={offer?.persona ?? ""}
                 />
               </div>
 
               {/* ── Step 2: connect channels — right column beside the offer ── */}
               <div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Step 2 · Connect channels</div>
                   <span style={{ fontSize: 12, color: "var(--fg-3)" }}>Where leads reach you &amp; how payments land.</span>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "clamp(14px,1.8vw,18px)" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "clamp(10px,1.4vw,14px)" }}>
               {/* Lead capture links */}
-              <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
-                <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 4 }}>Lead capture links</h2>
-                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 16 }}>
+              <div className="win" style={{ padding: "clamp(14px,1.8vw,18px)" }}>
+                <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 3 }}>Lead capture links</h2>
+                <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 12 }}>
                   No website needed — share your link in your Instagram bio, Google profile, email signature, or texts.
                 </p>
                 {formLink && <CopyField label="Your chat link · no code" value={formLink} />}
@@ -671,7 +676,7 @@ export default async function VraelisAccountPage({
               </div>
 
               {/* Connections checklist — compact rows, not big cards */}
-              <div className="win" style={{ padding: "clamp(14px,1.8vw,18px) clamp(16px,2vw,20px)" }}>
+              <div className="win" style={{ padding: "clamp(12px,1.6vw,14px) clamp(14px,1.8vw,18px)" }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 }}>Connections</div>
                 {/* Payments */}
                 <ChecklistRow
@@ -715,7 +720,7 @@ export default async function VraelisAccountPage({
               </div>
 
               {/* Plan & account */}
-              <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
+              <div className="win" style={{ padding: "clamp(14px,1.8vw,18px)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 3 }}>Plan</div>

@@ -549,27 +549,40 @@ export async function setWorkspaceServices(email: string, services: string | nul
   }
 }
 
-// Offer setup extras — qualifying questions + where leads come from.
-// Same fail-soft contract as services above: kept OUT of the core SELECT
-// so a not-yet-migrated column never breaks workspace reads, and writes
-// no-op (log only) until `qualifying_questions` / `lead_sources` exist.
+// Offer setup extras — qualifying questions + where leads come from +
+// business-type persona. Same fail-soft contract as services above: kept
+// OUT of the core SELECT so a not-yet-migrated column never breaks
+// workspace reads, and writes no-op (log only) until the columns exist.
+// `persona` is read/written in its OWN query so a missing persona column
+// can't break the (already-migrated) qualifying/lead-sources fields.
 export async function getWorkspaceOffer(
   email: string,
-): Promise<{ qualifyingQuestions: string | null; leadSources: string | null }> {
-  const empty = { qualifyingQuestions: null, leadSources: null };
+): Promise<{ qualifyingQuestions: string | null; leadSources: string | null; persona: string | null }> {
+  const empty = { qualifyingQuestions: null, leadSources: null, persona: null };
   if (!email || !isDatabaseConfigured()) return empty;
   try {
     const supabase = getSupabaseAdminClient();
+    const owner = normalizeEmail(email);
     const { data, error } = await supabase
       .from("vraelis_workspaces" as never)
       .select("qualifying_questions, lead_sources")
-      .eq("owner_email", normalizeEmail(email))
+      .eq("owner_email", owner)
       .maybeSingle();
-    if (error) return empty;
+    let persona: string | null = null;
+    try {
+      const { data: pData, error: pError } = await supabase
+        .from("vraelis_workspaces" as never)
+        .select("persona")
+        .eq("owner_email", owner)
+        .maybeSingle();
+      if (!pError) persona = (pData as unknown as { persona?: string | null } | null)?.persona ?? null;
+    } catch { /* persona column not migrated yet */ }
+    if (error) return { ...empty, persona };
     const row = data as unknown as { qualifying_questions?: string | null; lead_sources?: string | null } | null;
     return {
       qualifyingQuestions: row?.qualifying_questions ?? null,
       leadSources: row?.lead_sources ?? null,
+      persona,
     };
   } catch {
     return empty;
@@ -578,7 +591,7 @@ export async function getWorkspaceOffer(
 
 export async function setWorkspaceOffer(
   email: string,
-  fields: { qualifyingQuestions?: string | null; leadSources?: string | null },
+  fields: { qualifyingQuestions?: string | null; leadSources?: string | null; persona?: string | null },
 ): Promise<void> {
   if (!email || !isDatabaseConfigured()) return;
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -586,11 +599,19 @@ export async function setWorkspaceOffer(
   if (fields.leadSources !== undefined) patch.lead_sources = fields.leadSources;
   try {
     const supabase = getSupabaseAdminClient();
+    const owner = normalizeEmail(email);
     const { error } = await supabase
       .from("vraelis_workspaces" as never)
       .update(patch as never)
-      .eq("owner_email", normalizeEmail(email));
+      .eq("owner_email", owner);
     if (error) console.error("setWorkspaceOffer: columns may not exist yet —", error.message);
+    if (fields.persona !== undefined) {
+      const { error: pError } = await supabase
+        .from("vraelis_workspaces" as never)
+        .update({ persona: fields.persona } as never)
+        .eq("owner_email", owner);
+      if (pError) console.error("setWorkspaceOffer: persona column may not exist yet —", pError.message);
+    }
   } catch (e) {
     console.error("setWorkspaceOffer failed:", e);
   }

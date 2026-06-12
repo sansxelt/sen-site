@@ -14,18 +14,17 @@ export default async function FindLeadsPage() {
   if (!session?.user?.email) redirect("/signin?callbackUrl=%2Fv%2Faccount%2Ffind");
 
   return (
-    <section className="section" style={{ position: "relative", overflow: "hidden" }}>
+    <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>
       <div className="gridbg" style={{ opacity: 0.35 }} />
       <div className="wrap" style={{ position: "relative", maxWidth: 760 }}>
         <Link href="/v/account" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none" }}>
           ← Back to inbox
         </Link>
-        <div style={{ margin: "18px 0 24px" }}>
-          <p className="eyebrow">Find leads</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.8rem)", marginBottom: 8 }}>
+        <div style={{ margin: "12px 0 18px" }}>
+          <h1 className="display" style={{ fontSize: "clamp(1.4rem, 2.2vw, 1.9rem)", marginBottom: 6 }}>
             Find local <span className="em">businesses</span> to reach.
           </h1>
-          <p className="lead-copy">
+          <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, maxWidth: 560 }}>
             Search by what you&apos;re after and where. Add the ones you want to your inbox — then reach out (call, or add an email and let Vraelis do it).
           </p>
         </div>

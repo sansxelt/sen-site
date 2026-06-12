@@ -86,6 +86,12 @@ body { font-weight: 400; }
 /* ─── layout helpers ─────────────────────────────────────────────── */
 .wrap { max-width: var(--max-content); margin: 0 auto; padding-inline: var(--gutter); }
 .section { padding-block: var(--section-y); border-bottom: 1px solid var(--line-1); position: relative; }
+/* App pages (account, lead detail) — dashboard density, not landing-page
+   scale: content starts near the nav and cards stay compact. */
+.section--app { padding-block: clamp(18px, 2.6vw, 30px) clamp(48px, 6vw, 80px); }
+/* The account app styles its <summary> rows itself (inline listStyle:none);
+   older Safari needs the vendor marker hidden too. */
+summary::-webkit-details-marker { display: none; }
 
 .eyebrow {
   font-family: var(--font-display);
@@ -191,7 +197,7 @@ body { font-weight: 400; }
 .win__dots { display: flex; gap: 7px; }
 .win__dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-3); display: block; }
 .win__addr {
-  font-family: var(--font-mono); font-size: 11px; color: var(--fg-4);
+  font-family: var(--font-code); font-size: 11px; color: var(--fg-4);
   letter-spacing: 0.03em; display: inline-flex; align-items: center; gap: 7px;
 }
 
@@ -382,7 +388,7 @@ body { font-weight: 400; }
   font-style: italic;
 }
 .vra-prose code {
-  font-family: var(--font-mono);
+  font-family: var(--font-code);
   font-size: 0.88em;
   background: var(--bg-2);
   border: 1px solid var(--line-1);

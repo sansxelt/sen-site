@@ -132,8 +132,8 @@ export default async function RootLayout({
               brand renders light + green. tokens before styles. */}
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=8" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=8" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=9" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=9" />
           {children}
         </body>
       </html>

@@ -129,6 +129,10 @@ export async function saveOfferAction(
   // 4) Qualifying questions  5) Where leads come from
   const qualifyingQuestions = String(formData.get("qualifyingQuestions") ?? "").trim().slice(0, 1500);
   const leadSources = String(formData.get("leadSources") ?? "").trim().slice(0, 500);
+  // 0) Business type — personalizes the form examples; whitelist only.
+  const PERSONA_KEYS = ["coach", "course", "agency", "consultant", "community", "other"];
+  const personaRaw = String(formData.get("persona") ?? "").trim();
+  const persona = PERSONA_KEYS.includes(personaRaw) ? personaRaw : null;
 
   try {
     await getOrCreateWorkspace(email); // ensure the row exists
@@ -143,6 +147,7 @@ export async function saveOfferAction(
     await setWorkspaceOffer(email, {
       qualifyingQuestions: qualifyingQuestions || null,
       leadSources: leadSources || null,
+      persona,
     });
     revalidatePath("/v/account");
     return { ok: true, message: "Saved." };
