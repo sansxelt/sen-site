@@ -4,7 +4,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import Stripe from "stripe";
-import { getOrCreateWorkspace, getPaymentsSummary, getWorkspaceCalendar, getWorkspaceContact, getWorkspaceOffer, getWorkspaceServices, listLeads, listPayments, setWorkspaceConnect, setWorkspacePlan, type LeadStatus, type VraelisLead } from "@/lib/vraelis-db";
+import { deriveOnboarded, getOrCreateWorkspace, getPaymentsSummary, getWorkspaceCalendar, getWorkspaceContact, getWorkspaceOffer, getWorkspaceServices, listLeads, listPayments, setWorkspaceConnect, setWorkspacePlan, type LeadStatus, type VraelisLead } from "@/lib/vraelis-db";
+import { isDatabaseConfigured } from "@/lib/supabase-admin";
 import { listUpcomingBookings, slotLabel } from "@/lib/vraelis-booking";
 import { getAccountStatus } from "@/lib/vraelis-connect";
 import { cutRateFor, isCycle, isPlanKey } from "@/lib/vraelis-plans";
@@ -352,6 +353,98 @@ export default async function VraelisAccountPage({
     { key: "lead", label: "See it work — get your first lead", done: leads.length > 0, action: { type: "test", cta: "Send test lead" } },
     { key: "pay", label: "Take your first payment", done: payments.paidCount > 0, action: { type: "tab", tab: "inbox", cta: "Open a lead" } },
   ];
+
+  // A configured DB that still returned no workspace row means the read
+  // failed (getOrCreateWorkspace otherwise always creates one). Don't drop
+  // what may be a fully-onboarded account onto a BLANK onboarding form —
+  // a hasty re-submit there would overwrite their real offer data.
+  if (isDatabaseConfigured() && !workspace) {
+    return (
+      <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>
+        <div className="gridbg" style={{ opacity: 0.35 }} />
+        <div className="wrap" style={{ position: "relative", maxWidth: 560 }}>
+          <div className="win" style={{ padding: "clamp(18px,2.4vw,26px)", textAlign: "center" }}>
+            <h1 style={{ fontSize: 16, color: "var(--fg-1)", marginBottom: 6 }}>Couldn&apos;t load your workspace.</h1>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, marginBottom: 14 }}>
+              Something hiccuped on our side — your data is safe. Refresh to try again.
+            </p>
+            <a href="/v/account" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Refresh →</a>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Core-onboarding gate ─────────────────────────────────────────────
+  // Vraelis can't work until it knows what you sell, what it costs, and
+  // how customers pay. Until then (new signups AND existing accounts with
+  // missing fields — null reads as incomplete) the workspace shows ONLY
+  // the onboarding screen; Inbox/Money/leads unlock on completion, and
+  // completing it lands you straight on the Inbox tab below.
+  if (!deriveOnboarded(workspace, services, offer)) {
+    const offerDone = Boolean(offer?.persona && workspace?.business_name && workspace?.business_description);
+    const priceDone = Boolean(services);
+    const obSteps = [
+      { n: 1, label: "Define your offer", done: offerDone, later: false },
+      { n: 2, label: "Price & payment method", done: priceDone, later: false },
+      { n: 3, label: "Connect payments & calendar", done: false, later: true },
+    ];
+    return (
+      <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>
+        <div className="gridbg" style={{ opacity: 0.35 }} />
+        <div className="wrap" style={{ position: "relative", maxWidth: 700 }}>
+          <h1 className="display" style={{ fontSize: "clamp(1.4rem, 2.2vw, 1.8rem)", marginBottom: 6 }}>
+            Set up <span className="em">Vraelis</span>.
+          </h1>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, marginBottom: 14, maxWidth: 560 }}>
+            Vraelis answers your leads and collects payment for you — but it needs to know what you sell, what it costs, and how customers pay. Takes about two minutes.
+          </p>
+
+          <div className="win" style={{ padding: "10px clamp(14px,1.8vw,18px)", marginBottom: 12, display: "flex", alignItems: "center", gap: "8px 22px", flexWrap: "wrap" }}>
+            {obSteps.map((s) => (
+              <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span
+                  style={{
+                    width: 17, height: 17, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700, flexShrink: 0,
+                    background: s.done ? "var(--acc)" : "transparent",
+                    border: s.done ? "none" : "1px solid var(--line-3)",
+                    color: s.done ? "var(--fg-on-accent)" : "var(--fg-4)",
+                  }}
+                >
+                  {s.done ? "✓" : s.n}
+                </span>
+                <span style={{ fontSize: 12.5, color: s.later ? "var(--fg-4)" : s.done ? "var(--fg-4)" : "var(--fg-1)", fontWeight: s.later ? 400 : 600 }}>
+                  {s.label}
+                </span>
+                {s.later && <span style={{ fontSize: 10.5, color: "var(--fg-5)" }}>after setup</span>}
+              </div>
+            ))}
+          </div>
+
+          <div className="win" style={{ padding: "clamp(16px,2vw,22px)" }}>
+            <OfferForm
+              initialName={workspace?.business_name ?? ""}
+              initialDescription={workspace?.business_description ?? ""}
+              initialServices={services ?? ""}
+              initialDepositEnabled={Boolean(workspace?.deposit_enabled)}
+              initialDepositAmount={workspace?.deposit_amount_cents ?? null}
+              initialQualifying={offer?.qualifyingQuestions ?? ""}
+              initialLeadSources={offer?.leadSources ?? ""}
+              initialPersona={offer?.persona ?? ""}
+              mode="onboarding"
+            />
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 12, fontSize: 11.5, color: "var(--fg-4)" }}>
+            <span style={{ overflowWrap: "anywhere" }}>Signed in as {email}</span>
+            <form action={vraelisSignOut}>
+              <button type="submit" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg-4)", fontSize: 11.5, textDecoration: "underline", padding: 0 }}>Sign out</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>

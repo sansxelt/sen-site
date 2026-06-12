@@ -12,6 +12,7 @@ import {
   createPayment,
   getLeadWithMessages,
   getOrCreateWorkspace,
+  isWorkspaceOnboarded,
   setLeadOutcome,
   setLeadStatus,
   setWorkspaceContact,
@@ -133,9 +134,17 @@ export async function saveOfferAction(
   const PERSONA_KEYS = ["coach", "course", "agency", "consultant", "community", "other"];
   const personaRaw = String(formData.get("persona") ?? "").trim();
   const persona = PERSONA_KEYS.includes(personaRaw) ? personaRaw : null;
+  // "onboarding" mode = the gated first-run screen; it requires the
+  // core-onboarding minimums before the workspace unlocks.
+  const isOnboarding = String(formData.get("mode") ?? "") === "onboarding";
 
   try {
-    await getOrCreateWorkspace(email); // ensure the row exists
+    // Read onboarded state BEFORE writing: an account that is already
+    // complete (flag or derived from existing fields) must stay complete
+    // even if this save clears a minimum field — otherwise a flagless
+    // grandfathered account could silently re-lock itself into onboarding
+    // by editing the Setup tab.
+    const wasOnboarded = await isWorkspaceOnboarded(email);
     await updateWorkspaceBusiness(email, {
       businessName: businessName || null,
       businessDescription: businessDescription || null,
@@ -144,13 +153,28 @@ export async function saveOfferAction(
     // migrated), so a missing column never blocks the core profile save.
     await setWorkspaceServices(email, businessServices || null);
     await setWorkspaceDeposit(email, { enabled: depositEnabled, amountCents: depositCents });
+    // Core onboarding is complete when the minimums exist: persona, offer
+    // name + description, price/services. payType always has a value, and
+    // Stripe/Calendar/SMS stay post-onboarding. The flag is sticky — once
+    // complete, editing setup later never re-locks the workspace.
+    const missing: string[] = [];
+    if (!persona) missing.push("pick what describes you");
+    if (!businessName) missing.push("your offer name");
+    if (!businessDescription) missing.push("one line on what you sell");
+    if (!businessServices) missing.push("at least one price");
+    const minimumsMet = missing.length === 0;
+
     await setWorkspaceOffer(email, {
       qualifyingQuestions: qualifyingQuestions || null,
       leadSources: leadSources || null,
       persona,
+      ...(minimumsMet || wasOnboarded ? { onboardingComplete: true } : {}),
     });
     revalidatePath("/v/account");
-    return { ok: true, message: "Saved." };
+    if (isOnboarding && !minimumsMet) {
+      return { ok: false, message: `Saved your progress — still needed: ${missing.join(", ")}.` };
+    }
+    return { ok: true, message: isOnboarding ? "Setup complete — Vraelis is live on your leads." : "Saved." };
   } catch (error) {
     console.error("saveOfferAction failed:", error);
     return { ok: false, message: "Couldn't save — try again." };

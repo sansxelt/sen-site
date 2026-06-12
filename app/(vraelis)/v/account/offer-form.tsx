@@ -150,6 +150,7 @@ export function OfferForm({
   initialQualifying,
   initialLeadSources,
   initialPersona,
+  mode,
 }: {
   initialName: string;
   initialDescription: string;
@@ -159,6 +160,7 @@ export function OfferForm({
   initialQualifying: string;
   initialLeadSources: string;
   initialPersona: string;
+  mode?: "onboarding";
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(saveOfferAction, null);
   const [payType, setPayType] = useState<string>(initialDepositEnabled ? "deposit" : "full");
@@ -168,13 +170,27 @@ export function OfferForm({
   const [persona, setPersona] = useState<string>(
     PERSONAS.some((p) => p.key === initialPersona) ? initialPersona : "",
   );
+  const [personaError, setPersonaError] = useState(false);
   const pc = PERSONA_COPY[persona] ?? PERSONA_COPY.other;
+  const onboarding = mode === "onboarding";
 
   return (
-    <form action={action} style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+    <form
+      action={action}
+      onSubmit={(e) => {
+        // Persona is a pill row (no native required); block the gated
+        // onboarding submit until one is picked.
+        if (onboarding && !persona) {
+          e.preventDefault();
+          setPersonaError(true);
+        }
+      }}
+      style={{ display: "flex", flexDirection: "column", gap: 15 }}
+    >
+      {mode && <input type="hidden" name="mode" value={mode} />}
       {/* 0 — Who you are: personalizes every example below */}
       <div>
-        <span style={labelStyle}>What best describes you?</span>
+        <span style={labelStyle}>What best describes you?{onboarding && <span style={{ color: "var(--acc-deep)" }}> *</span>}</span>
         <input type="hidden" name="persona" value={persona} />
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {PERSONAS.map((p) => {
@@ -184,7 +200,7 @@ export function OfferForm({
                 key={p.key}
                 type="button"
                 aria-pressed={active}
-                onClick={() => setPersona(p.key)}
+                onClick={() => { setPersona(p.key); setPersonaError(false); }}
                 style={{
                   cursor: "pointer",
                   padding: "5px 12px",
@@ -201,6 +217,9 @@ export function OfferForm({
             );
           })}
         </div>
+        {personaError && (
+          <p style={{ ...hintStyle, color: "#9F2D2D" }}>Pick the closest one — it tailors everything below (you can change it anytime).</p>
+        )}
       </div>
 
       {/* 1 — What you sell */}
@@ -210,6 +229,7 @@ export function OfferForm({
           defaultValue={initialName}
           placeholder={pc.namePh}
           maxLength={120}
+          required={onboarding}
           style={{ ...inputStyle, marginBottom: 8 }}
         />
         <textarea
@@ -218,6 +238,7 @@ export function OfferForm({
           placeholder={pc.descPh}
           maxLength={400}
           rows={2}
+          required={onboarding}
           style={{ ...inputStyle, resize: "vertical" }}
         />
       </Step>
@@ -230,6 +251,7 @@ export function OfferForm({
           placeholder={pc.servicesPh}
           maxLength={2000}
           rows={3}
+          required={onboarding}
           style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--font-mono)", fontSize: 13 }}
         />
         <p style={hintStyle}>Vraelis quotes <b>only</b> these prices and can collect them on-platform.</p>
@@ -380,7 +402,7 @@ export function OfferForm({
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 16 }}>
         <button type="submit" className="btn" disabled={pending} style={{ opacity: pending ? 0.7 : 1 }}>
-          {pending ? "Saving…" : "Save setup"}
+          {pending ? "Saving…" : onboarding ? "Finish setup →" : "Save setup"}
         </button>
         {state && (
           <span style={{ fontSize: 13, color: state.ok ? "var(--acc-deep)" : "#9F2D2D" }}>{state.message}</span>

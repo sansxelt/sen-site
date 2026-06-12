@@ -31,8 +31,11 @@ export default async function SignInPage({
   // If they're already signed in, don't make them sit on a signin
   // page — take them where they were going. Vraelis lands on its
   // dashboard; sansxel defaults to /app (the chat host's home zone).
+  // getSafeRedirectPath never returns falsy (it defaults to "/account"),
+  // so the default has to be supplied as the INPUT when no callbackUrl
+  // came in — not as a `||` fallback on the output.
   if (session?.user?.email) {
-    redirect(getSafeRedirectPath(callbackUrl) || (vraelis ? "/account" : "/app"));
+    redirect(getSafeRedirectPath(callbackUrl ?? (vraelis ? "/v/account" : "/app")));
   }
 
   // Vraelis gets its own light, centered, green-accent sign-in surface
@@ -40,7 +43,7 @@ export default async function SignInPage({
   if (vraelis) {
     return (
       <div style={{ padding: "clamp(40px, 8vw, 96px) 20px" }}>
-        <VraelisSignIn callbackUrl={getSafeRedirectPath(callbackUrl) || "/account"} />
+        <VraelisSignIn callbackUrl={getSafeRedirectPath(callbackUrl ?? "/v/account")} />
       </div>
     );
   }

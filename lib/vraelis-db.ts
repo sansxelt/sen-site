@@ -557,8 +557,8 @@ export async function setWorkspaceServices(email: string, services: string | nul
 // can't break the (already-migrated) qualifying/lead-sources fields.
 export async function getWorkspaceOffer(
   email: string,
-): Promise<{ qualifyingQuestions: string | null; leadSources: string | null; persona: string | null }> {
-  const empty = { qualifyingQuestions: null, leadSources: null, persona: null };
+): Promise<{ qualifyingQuestions: string | null; leadSources: string | null; persona: string | null; onboardingComplete: boolean | null }> {
+  const empty = { qualifyingQuestions: null, leadSources: null, persona: null, onboardingComplete: null };
   if (!email || !isDatabaseConfigured()) return empty;
   try {
     const supabase = getSupabaseAdminClient();
@@ -568,7 +568,10 @@ export async function getWorkspaceOffer(
       .select("qualifying_questions, lead_sources")
       .eq("owner_email", owner)
       .maybeSingle();
+    // persona + onboarding_complete each in their own fail-soft query so
+    // one missing column can't blank out the others.
     let persona: string | null = null;
+    let onboardingComplete: boolean | null = null;
     try {
       const { data: pData, error: pError } = await supabase
         .from("vraelis_workspaces" as never)
@@ -577,12 +580,21 @@ export async function getWorkspaceOffer(
         .maybeSingle();
       if (!pError) persona = (pData as unknown as { persona?: string | null } | null)?.persona ?? null;
     } catch { /* persona column not migrated yet */ }
-    if (error) return { ...empty, persona };
+    try {
+      const { data: oData, error: oError } = await supabase
+        .from("vraelis_workspaces" as never)
+        .select("onboarding_complete")
+        .eq("owner_email", owner)
+        .maybeSingle();
+      if (!oError) onboardingComplete = (oData as unknown as { onboarding_complete?: boolean | null } | null)?.onboarding_complete ?? null;
+    } catch { /* onboarding_complete column not migrated yet */ }
+    if (error) return { ...empty, persona, onboardingComplete };
     const row = data as unknown as { qualifying_questions?: string | null; lead_sources?: string | null } | null;
     return {
       qualifyingQuestions: row?.qualifying_questions ?? null,
       leadSources: row?.lead_sources ?? null,
       persona,
+      onboardingComplete,
     };
   } catch {
     return empty;
@@ -591,7 +603,7 @@ export async function getWorkspaceOffer(
 
 export async function setWorkspaceOffer(
   email: string,
-  fields: { qualifyingQuestions?: string | null; leadSources?: string | null; persona?: string | null },
+  fields: { qualifyingQuestions?: string | null; leadSources?: string | null; persona?: string | null; onboardingComplete?: boolean },
 ): Promise<void> {
   if (!email || !isDatabaseConfigured()) return;
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -612,8 +624,50 @@ export async function setWorkspaceOffer(
         .eq("owner_email", owner);
       if (pError) console.error("setWorkspaceOffer: persona column may not exist yet —", pError.message);
     }
+    if (fields.onboardingComplete !== undefined) {
+      const { error: oError } = await supabase
+        .from("vraelis_workspaces" as never)
+        .update({ onboarding_complete: fields.onboardingComplete } as never)
+        .eq("owner_email", owner);
+      if (oError) console.error("setWorkspaceOffer: onboarding_complete column may not exist yet —", oError.message);
+    }
   } catch (e) {
     console.error("setWorkspaceOffer failed:", e);
+  }
+}
+
+// The core-onboarding gate. Complete when the explicit flag is set, OR —
+// for accounts that predate the flag (grandfathering + fail-safe) — when
+// every minimum field already exists: persona, offer name + description,
+// price/services. Payment type always has a value (full is the default),
+// and Stripe/Calendar/SMS/lead-capture are deliberately NOT required.
+// Missing columns read as null → false → the account routes into
+// onboarding, which is the required fail-safe direction.
+export function deriveOnboarded(
+  workspace: { business_name?: string | null; business_description?: string | null } | null,
+  services: string | null,
+  offer: { persona: string | null; onboardingComplete: boolean | null },
+): boolean {
+  if (offer.onboardingComplete === true) return true;
+  return Boolean(
+    workspace?.business_name &&
+    workspace?.business_description &&
+    services &&
+    offer.persona,
+  );
+}
+
+export async function isWorkspaceOnboarded(email: string): Promise<boolean> {
+  if (!email) return false;
+  try {
+    const [workspace, services, offer] = await Promise.all([
+      getOrCreateWorkspace(email),
+      getWorkspaceServices(email),
+      getWorkspaceOffer(email),
+    ]);
+    return deriveOnboarded(workspace, services, offer);
+  } catch {
+    return false;
   }
 }
 

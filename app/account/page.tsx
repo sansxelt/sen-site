@@ -1,6 +1,8 @@
 ﻿import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { auth } from "../../auth";
+import { isVraelisRequest } from "../../lib/site-host";
 import { listApiKeys } from "../../lib/api-keys";
 import { readSessionState } from "../../lib/account-session";
 import {
@@ -23,6 +25,12 @@ export const metadata: Metadata = {
 };
 
 export default async function AccountPage() {
+  // Backstop only: proxy.ts already rewrites /account → /v/account on the
+  // vraelis host, so this page is normally never served there. Kept as
+  // defense-in-depth in case the proxy matcher ever changes — the vraelis
+  // app (and its onboarding gate) lives at /v/account.
+  if (await isVraelisRequest()) redirect("/v/account");
+
   const session = await auth();
   const email = session?.user?.email ?? "";
   const [profile, keys, rawSubscription, credits] = await Promise.all([

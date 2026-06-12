@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getLeadWithMessages, getOrCreateWorkspace, type LeadStatus } from "@/lib/vraelis-db";
+import { getLeadWithMessages, getOrCreateWorkspace, isWorkspaceOnboarded, type LeadStatus } from "@/lib/vraelis-db";
 import { cutRateFor } from "@/lib/vraelis-plans";
 import { updateLeadDealAction, updateLeadOutcomeAction } from "../../actions";
 import { ReplyBox } from "./reply-box";
@@ -41,6 +41,8 @@ export default async function LeadDetailPage({
 }) {
   const session = await auth();
   if (!session?.user?.email) redirect("/signin?callbackUrl=%2Faccount");
+  // Core onboarding first — /v/account shows the setup screen until done.
+  if (!(await isWorkspaceOnboarded(session.user.email))) redirect("/v/account");
 
   const { id } = await params;
   const [data, workspace] = await Promise.all([

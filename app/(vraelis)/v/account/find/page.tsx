@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { isWorkspaceOnboarded } from "@/lib/vraelis-db";
 import { FindLeads } from "./find-client";
 
 export const metadata: Metadata = {
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 export default async function FindLeadsPage() {
   const session = await auth();
   if (!session?.user?.email) redirect("/signin?callbackUrl=%2Fv%2Faccount%2Ffind");
+  // Core onboarding first — /v/account shows the setup screen until done.
+  if (!(await isWorkspaceOnboarded(session.user.email))) redirect("/v/account");
 
   return (
     <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>
