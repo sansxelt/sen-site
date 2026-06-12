@@ -34,6 +34,9 @@ const STATUS_CLASS: Record<LeadStatus, string> = {
 };
 
 const AV_COLORS = ["#0E9E6C", "#2563EB", "#7C3AED", "#C2540C", "#0D9488", "#BE185D"];
+function leadTitle(lead: Pick<VraelisLead, "name" | "contact_email" | "contact_phone">) {
+  return lead.name || lead.contact_email || lead.contact_phone || "New lead";
+}
 function initials(s: string) {
   const w = s.replace(/[^a-zA-Z ]/g, "").trim().split(/\s+/);
   return ((w[0]?.[0] || "") + (w[1]?.[0] || "")).toUpperCase() || "·";
@@ -46,6 +49,12 @@ function timeAgo(iso: string): string {
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h`;
   return `${Math.floor(h / 24)}d`;
+}
+
+function formatMoneyFromCents(cents: number) {
+  const dollars = cents / 100;
+  const hasCents = cents % 100 !== 0;
+  return dollars.toLocaleString(undefined, { minimumFractionDigits: hasCents ? 2 : 0, maximumFractionDigits: 2 });
 }
 
 function StatCard({ label, value, sub, subAccent }: { label: string; value: string; sub?: string; subAccent?: boolean }) {
@@ -165,7 +174,7 @@ function FunnelBar({ segments, lost }: { segments: { label: string; count: numbe
 }
 
 function LeadRow({ lead, index, pay }: { lead: VraelisLead; index: number; pay?: "paid" | "pending" }) {
-  const title = lead.name || lead.contact_email || lead.contact_phone || "New lead";
+  const title = leadTitle(lead);
   const color = AV_COLORS[index % AV_COLORS.length];
   return (
     <Link href={`/v/account/leads/${lead.id}`} className="leadrow" style={{ display: "block", textDecoration: "none", padding: "9px 16px" }}>
@@ -222,6 +231,9 @@ export default async function VraelisAccountPage({
   const email = session.user.email;
   const params = await searchParams;
   const sessionId = String(Array.isArray(params.session_id) ? params.session_id[0] : params.session_id ?? "");
+  const requestedTab = String(Array.isArray(params.tab) ? params.tab[0] : params.tab ?? "");
+  const initialTab: "inbox" | "money" | "setup" =
+    requestedTab === "money" || requestedTab === "setup" || requestedTab === "inbox" ? requestedTab : "inbox";
   if (sessionId) await confirmStripeCheckout(email, sessionId);
 
   const [workspace, leads, payments, bookings, services, contact, calendar, offer, recentPayments] = await Promise.all([
@@ -279,6 +291,14 @@ export default async function VraelisAccountPage({
     if (p.status === "paid") leadPayState.set(p.lead_id, "paid");
     else if (p.status === "pending" && cur !== "paid") leadPayState.set(p.lead_id, "pending");
   }
+  const leadById = new Map(leads.map((lead) => [lead.id, lead] as const));
+  const readyToCollectLeads = leads
+    .filter((lead) => (
+      (lead.status === "qualified" || lead.status === "booking_ready" || lead.status === "booked")
+      && !leadPayState.get(lead.id)
+    ))
+    .sort((a, b) => (b.value || 0) - (a.value || 0) || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  const readyToCollectCount = readyToCollectLeads.length;
 
   const firstName = (workspace?.business_name || session.user.name || email.split("@")[0]).trim().slice(0, 48);
   const intakeKey = workspace?.intake_key ?? "";
@@ -472,6 +492,7 @@ export default async function VraelisAccountPage({
         </div>
 
         <AccountTabs
+          initialTab={initialTab}
           steps={steps}
           inbox={
             <>
@@ -550,9 +571,9 @@ export default async function VraelisAccountPage({
                 {leads.length === 0 ? (
                   <div style={{ padding: "26px 22px", textAlign: "center" }}>
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--acc)", fontSize: 17 }}>✦</div>
-                    <div style={{ fontSize: 15, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>See Vraelis answer a lead.</div>
+                    <div style={{ fontSize: 15, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>See your first lead move through Vraelis.</div>
                     <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, maxWidth: 400, margin: "0 auto 14px" }}>
-                      Send yourself a sample lead and watch Vraelis reply instantly — or share your link to get a real one. New leads land here, answered automatically.
+                      Send yourself a sample lead and watch Vraelis reply instantly, or share your link to get a real one. Once a lead is qualified, open it and collect payment.
                     </p>
                     <form action={sendTestLead} style={{ display: "inline-block" }}>
                       <button type="submit" className="btn" style={{ padding: "9px 16px", fontSize: 13 }}>Send a test lead →</button>
@@ -642,6 +663,39 @@ export default async function VraelisAccountPage({
               </div>
 
               {/* ── Recent payments (paid) ──────────────────────────────── */}
+              {readyToCollectCount > 0 && (
+                <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)", borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
+                    <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)", margin: 0 }}>Ready to collect</h2>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--acc-deep)" }}>
+                      {readyToCollectCount} lead{readyToCollectCount === 1 ? "" : "s"} ready now
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "0 0 10px" }}>
+                    These leads are already far enough along to send a payment request. Open one and use Collect payment.
+                  </p>
+                  <div>
+                    {readyToCollectLeads.slice(0, 3).map((lead) => (
+                      <Link key={lead.id} href={`/v/account/leads/${lead.id}`} style={{ textDecoration: "none", display: "block" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid var(--acc-line)" }}>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {leadTitle(lead)}
+                            </div>
+                            <div style={{ fontSize: 12, color: "var(--fg-3)", marginTop: 1 }}>
+                              {STATUS_LABEL[lead.status]}{lead.value ? ` - $${lead.value.toLocaleString()}` : ""} - active {timeAgo(lead.updated_at)}
+                            </div>
+                          </div>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--acc-deep)", flexShrink: 0 }}>
+                            Open lead -&gt;
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Recent payments</h2>
@@ -655,7 +709,9 @@ export default async function VraelisAccountPage({
                         ? "Set up payouts above, then collect your first payment from any lead. It lands here automatically."
                         : leads.length === 0
                           ? "Send yourself a test lead, or share your lead link from Setup. Once a lead comes in, open it and use Collect payment."
-                          : "Open a qualified lead in the Inbox and use Collect payment. It shows up here the moment they pay — Vraelis already deducted its fee."}
+                          : readyToCollectCount > 0
+                            ? `You already have ${readyToCollectCount} lead${readyToCollectCount === 1 ? "" : "s"} ready for Collect payment. Open one above to send a secure checkout link.`
+                            : "Move a live lead to Qualified or Booking in Inbox, then open it and use Collect payment. It shows up here the moment they pay, with the Vraelis fee already deducted."}
                     </p>
                     {!connected && <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Set up payouts →</a>}
                     {connected && leads.length === 0 && (
@@ -667,13 +723,17 @@ export default async function VraelisAccountPage({
                 ) : (
                   <div>
                     {paidPayments.slice(0, 12).map((p) => {
-                      const amt = (p.amount_cents / 100).toLocaleString();
-                      const net = ((p.amount_cents - p.fee_cents) / 100).toLocaleString();
+                      const ownerLead = p.lead_id ? leadById.get(p.lead_id) : null;
+                      const who = ownerLead ? leadTitle(ownerLead) : null;
+                      const amt = formatMoneyFromCents(p.amount_cents);
+                      const net = formatMoneyFromCents(p.amount_cents - p.fee_cents);
                       return (
                         <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid var(--line-1)" }}>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}</div>
-                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{p.kind === "deposit" ? "Deposit" : "Full payment"} · after Vraelis fee ${net}</div>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>
+                              {who ? `${who} · ` : ""}{p.kind === "deposit" ? "Deposit" : "Full payment"} · after Vraelis fee ${net}
+                            </div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                             <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg-1)", fontWeight: 600 }}>${amt}</span>
@@ -690,17 +750,21 @@ export default async function VraelisAccountPage({
               {pendingPayments.length > 0 && (
                 <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                    <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Payment requests</h2>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>sent · awaiting payment</span>
+                    <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>Waiting on payment</h2>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)" }}>already sent</span>
                   </div>
                   <div>
                     {pendingPayments.map((p) => {
-                      const amt = (p.amount_cents / 100).toLocaleString();
+                      const ownerLead = p.lead_id ? leadById.get(p.lead_id) : null;
+                      const who = ownerLead ? leadTitle(ownerLead) : null;
+                      const amt = formatMoneyFromCents(p.amount_cents);
                       return (
                         <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid var(--line-1)" }}>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}</div>
-                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{p.kind === "deposit" ? "Deposit" : "Full payment"} · sent {timeAgo(p.created_at)}</div>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>
+                              {who ? `${who} · ` : ""}{p.kind === "deposit" ? "Deposit" : "Full payment"} · sent {timeAgo(p.created_at)}
+                            </div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                             <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg-3)", fontWeight: 600 }}>${amt}</span>

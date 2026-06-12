@@ -13,6 +13,7 @@ import {
   getLeadWithMessages,
   getOrCreateWorkspace,
   isWorkspaceOnboarded,
+  listPayments,
   setLeadOutcome,
   setLeadStatus,
   setWorkspaceContact,
@@ -399,6 +400,13 @@ export async function requestPaymentAction(
     }
     const data = await getLeadWithMessages(email, leadId);
     if (!data) return { ok: false, message: "Lead not found." };
+    const existingPayments = await listPayments(email, { leadId, limit: 10 });
+    if (existingPayments.some((payment) => payment.status === "paid")) {
+      return { ok: false, message: "This lead already paid through Vraelis." };
+    }
+    if (existingPayments.some((payment) => payment.status === "pending")) {
+      return { ok: false, message: "A payment request is already waiting on this lead. The checkout link is saved in the conversation." };
+    }
 
     const feeCents = Math.round(amountCents * cutRateFor(ws.plan, ws.plan_cycle));
     const customerEmail = data.lead.contact_email;

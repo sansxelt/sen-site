@@ -26,13 +26,15 @@ export function AccountTabs({
   money,
   setup,
   steps,
+  initialTab = "inbox",
 }: {
   inbox: ReactNode;
   money: ReactNode;
   setup: ReactNode;
   steps: Step[];
+  initialTab?: Key;
 }) {
-  const [tab, setTab] = useState<Key>("inbox");
+  const [tab, setTab] = useState<Key>(initialTab);
   const done = steps.filter((s) => s.done).length;
   const allDone = done === steps.length;
   const pct = Math.round((done / steps.length) * 100);
