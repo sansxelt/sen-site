@@ -18,11 +18,12 @@ export type LeadStatus =
   | "won"
   | "lost";
 
-// Statuses the AI is allowed to set during a conversation. Booking/won
-// are owner-driven (booking isn't wired yet); new is the initial state.
+// Statuses the AI is allowed to set during a conversation. Booked / won
+// are payment- or owner-driven; new is the initial state.
 export const AI_SETTABLE_STATUSES: LeadStatus[] = [
   "contacted",
   "qualifying",
+  "qualified",
   "booking_ready",
   "needs_owner",
   "lost",

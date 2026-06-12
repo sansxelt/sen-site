@@ -31,7 +31,7 @@ export function RequestPayment({
       <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5 }}>
         Set up payouts in the{" "}
         <a href="/v/account" style={{ color: "var(--acc-deep)" }}>Money tab</a>{" "}
-        to collect payment from this lead — Vraelis collects it, takes its cut automatically, and pays you out.
+        to collect payment from this lead — Vraelis collects it, takes its cut automatically, and Stripe deducts card-processing fees from the payout it sends you.
       </p>
     );
   }
@@ -69,13 +69,13 @@ export function RequestPayment({
       {/* Live fee / you-keep preview from the plan cut rate */}
       {valid && (
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", paddingTop: 2 }}>
-          <span>You keep <b style={{ color: "var(--money)", fontWeight: 700 }}>${keep.toLocaleString(undefined, { maximumFractionDigits: 2 })}</b></span>
+          <span>After Vraelis fee <b style={{ color: "var(--money)", fontWeight: 700 }}>${keep.toLocaleString(undefined, { maximumFractionDigits: 2 })}</b></span>
           <span>Vraelis fee ({pct}%) <span style={{ color: "var(--fg-3)" }}>${fee.toLocaleString(undefined, { maximumFractionDigits: 2 })}</span></span>
         </div>
       )}
 
       <p style={{ fontSize: 11.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-        Sends the lead a secure payment request. Collected through Vraelis — your {pct}% cut is taken automatically when they pay, and your share is paid out to you. No invoicing, no chasing.
+        Sends the lead a secure payment request. Collected through Vraelis — it automatically takes its {pct}% fee, and Stripe deducts card-processing fees from the payout it sends you. No invoicing, no chasing.
       </p>
 
       {state && <span style={{ fontSize: 12.5, color: state.ok ? "var(--acc-deep)" : "#9F2D2D" }}>{state.message}</span>}

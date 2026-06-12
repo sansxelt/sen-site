@@ -449,6 +449,7 @@ export async function requestPaymentAction(
         delivered,
       });
     }
+    revalidatePath("/v/account");
     revalidatePath(`/v/account/leads/${leadId}`);
     return {
       ok: true,

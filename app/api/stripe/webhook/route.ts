@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
@@ -102,6 +103,8 @@ async function handleVraelisPayment(session: Stripe.Checkout.Session): Promise<v
       await setLeadOutcome(payment.owner_email, payment.lead_id, "paid");
       await markLeadsFeeBilled([payment.lead_id]);
     }
+    revalidatePath("/v/account");
+    if (payment.lead_id) revalidatePath(`/v/account/leads/${payment.lead_id}`);
   } catch (err) {
     captureError("stripe", err, { where: "handleVraelisPayment", session: session.id });
   }

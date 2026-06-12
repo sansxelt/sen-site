@@ -609,12 +609,12 @@ export default async function VraelisAccountPage({
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "clamp(10px, 1.2vw, 14px)" }}>
                 <StatCard label="Revenue collected" value={`$${collected.toLocaleString()}`} sub={`${payments.paidCount} payment${payments.paidCount === 1 ? "" : "s"}`} subAccent={collected > 0} />
                 <div className="win" style={{ padding: "11px 14px", borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5 }}>You kept</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5 }}>After Vraelis fee</div>
                   <div className="tnum" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(19px, 1.8vw, 24px)", lineHeight: 1, color: "var(--money)", letterSpacing: "-0.02em" }}>${kept.toLocaleString()}</div>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, marginTop: 5, color: "var(--fg-4)" }}>after Vraelis fee</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, marginTop: 5, color: "var(--fg-4)" }}>before Stripe processing</div>
                 </div>
-                <StatCard label={`Vraelis fee · ${(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}%`} value={`$${feeTaken.toLocaleString()}`} sub="taken automatically" />
-                <StatCard label="Awaiting payment" value={`$${(awaitingCents / 100).toLocaleString()}`} sub={inTransitCents > 0 ? `+ $${(inTransitCents / 100).toLocaleString()} in transit` : `${pendingPayments.length} request${pendingPayments.length === 1 ? "" : "s"} sent`} />
+                <StatCard label={`Vraelis fee · ${(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}%`} value={`$${feeTaken.toLocaleString()}`} sub="taken automatically at checkout" />
+                <StatCard label="Awaiting payment" value={`$${(awaitingCents / 100).toLocaleString()}`} sub={inTransitCents > 0 ? `+ $${(inTransitCents / 100).toLocaleString()} after Vraelis fee in transit` : `${pendingPayments.length} request${pendingPayments.length === 1 ? "" : "s"} sent`} />
               </div>
 
               {/* ── Payout status strip (no deposit config — that's in Setup) ── */}
@@ -630,8 +630,8 @@ export default async function VraelisAccountPage({
                   )}
                   <span style={{ fontSize: 12, color: "var(--fg-3)" }}>
                     {connected
-                      ? "Your share is deposited automatically after each payment."
-                      : `Connect your bank once so leads can pay you. You keep ${(100 - cutRate * 100).toFixed((100 - cutRate * 100) % 1 === 0 ? 0 : 1)}%.`}
+                      ? "Payments land automatically after each charge; Stripe deducts card-processing fees from that payout."
+                      : `Connect your bank once so leads can pay you. Vraelis takes ${(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}%; Stripe card-processing fees are separate.`}
                   </span>
                 </div>
                 {!connected && (
@@ -651,11 +651,18 @@ export default async function VraelisAccountPage({
                   <div style={{ padding: "16px 16px 8px", textAlign: "center" }}>
                     <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, marginBottom: 5 }}>No payments yet.</div>
                     <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, maxWidth: 400, margin: "0 auto 12px" }}>
-                      {connected
-                        ? "Open a lead in the Inbox and use Collect payment. It shows up here the moment they pay — your cut already taken."
-                        : "Set up payouts above, then collect your first payment from any lead. It lands here automatically."}
+                      {!connected
+                        ? "Set up payouts above, then collect your first payment from any lead. It lands here automatically."
+                        : leads.length === 0
+                          ? "Send yourself a test lead, or share your lead link from Setup. Once a lead comes in, open it and use Collect payment."
+                          : "Open a qualified lead in the Inbox and use Collect payment. It shows up here the moment they pay — Vraelis already deducted its fee."}
                     </p>
                     {!connected && <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Set up payouts →</a>}
+                    {connected && leads.length === 0 && (
+                      <form action={sendTestLead} style={{ display: "inline-block" }}>
+                        <button type="submit" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Send a test lead →</button>
+                      </form>
+                    )}
                   </div>
                 ) : (
                   <div>
@@ -666,7 +673,7 @@ export default async function VraelisAccountPage({
                         <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid var(--line-1)" }}>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.description || (p.kind === "deposit" ? "Deposit" : "Payment")}</div>
-                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{p.kind === "deposit" ? "Deposit" : "Full payment"} · you kept ${net}</div>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{p.kind === "deposit" ? "Deposit" : "Full payment"} · after Vraelis fee ${net}</div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                             <span className="tnum" style={{ fontFamily: "var(--font-mono)", fontSize: 14, color: "var(--fg-1)", fontWeight: 600 }}>${amt}</span>
@@ -707,7 +714,7 @@ export default async function VraelisAccountPage({
               )}
 
               <p style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", lineHeight: 1.5, padding: "0 4px" }}>
-                Payout history: your kept share lands in your bank automatically after each payment — view full payout records in your Stripe dashboard. Vraelis takes its {(cutRate * 100).toFixed(cutRate * 100 % 1 === 0 ? 0 : 1)}% cut automatically at payment; standard card-processing fees come off your side.
+                Money tab totals show revenue after the Vraelis fee. Stripe card-processing fees are deducted separately from your payout in Stripe, where you can see the exact payout records.
               </p>
             </div>
           }

@@ -14,12 +14,14 @@ import {
   findLeadByContactEmail,
   getLeadWithMessages,
   getOrCreateWorkspace,
+  getWorkspaceServices,
   touchLeadStatus,
   AI_SETTABLE_STATUSES,
   type LeadStatus,
 } from "@/lib/vraelis-db";
 import { continueLeadConversation, type ConvoTurn } from "@/lib/vraelis-ai";
 import { sendLeadReply } from "@/lib/vraelis-email";
+import { startWorkspacePayment } from "@/lib/vraelis-connect";
 
 const pick = (o: Record<string, unknown>, keys: string[]) => {
   for (const k of keys) if (typeof o[k] === "string" && (o[k] as string).trim()) return (o[k] as string).trim();
@@ -76,11 +78,20 @@ export async function POST(req: NextRequest) {
 
     const data = await getLeadWithMessages(lead.owner_email, lead.id);
     const history: ConvoTurn[] = (data?.messages ?? []).map((m) => ({ role: m.role, body: m.body }));
+    const connected = ws?.connect_status === "active" && Boolean(ws?.connect_account_id);
+    const depositLabel =
+      connected && ws?.deposit_enabled && ws.deposit_amount_cents
+        ? `$${(ws.deposit_amount_cents / 100).toLocaleString()}`
+        : null;
+    const services = await getWorkspaceServices(lead.owner_email);
 
     const ai = await continueLeadConversation({
       businessName: ws?.business_name ?? "",
       businessDescription: ws?.business_description ?? "",
       history,
+      businessServices: services ?? undefined,
+      canTakePayment: connected,
+      depositLabel,
     });
 
     const nextStatus: LeadStatus =
@@ -89,7 +100,24 @@ export async function POST(req: NextRequest) {
         : lead.status;
 
     let replyText = ai.reply;
-    if (nextStatus === "booking_ready" && ws?.intake_key) {
+    let injected = false;
+    if (ws && ai.payment && connected) {
+      const amountCents = ai.payment.kind === "deposit" ? (ws.deposit_amount_cents ?? 0) : ai.payment.amountCents;
+      if (amountCents >= 50) {
+        const pay = await startWorkspacePayment(ws, {
+          leadId: lead.id,
+          kind: ai.payment.kind,
+          amountCents,
+          description: ai.payment.label || (ai.payment.kind === "deposit" ? "Deposit to confirm your booking" : "Payment"),
+          customerEmail: lead.contact_email,
+        });
+        if (pay.ok && pay.url) {
+          replyText += `\n\nYou can ${ai.payment.kind === "deposit" ? "lock in your booking" : "pay securely"} here: ${pay.url}`;
+          injected = true;
+        }
+      }
+    }
+    if (!injected && nextStatus === "booking_ready" && ws?.intake_key) {
       replyText += `\n\nYou can grab a time here: https://vraelis.com/book/${ws.intake_key}?lead=${lead.id}`;
     }
 

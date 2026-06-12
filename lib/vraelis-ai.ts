@@ -28,7 +28,7 @@ export type ConvoResult = { reply: string; status: string | null; payment: Convo
 const OFFPLATFORM_RULE =
   "All payments happen ONLY through the secure Vraelis link provided in this chat. If the lead offers or asks to pay another way (Venmo, PayPal, Cash App, Zelle, cash, wire, ACH, gift card, crypto, etc.), politely decline and explain payment is handled securely through Vraelis so their booking is protected and guaranteed. Never share or accept off-platform payment handles, account numbers, or external links.";
 
-const ALLOWED_STATUSES = ["contacted", "qualifying", "booking_ready", "needs_owner", "lost"];
+const ALLOWED_STATUSES = ["contacted", "qualifying", "qualified", "booking_ready", "needs_owner", "lost"];
 
 // Multi-turn: continue an ongoing lead conversation. Returns the next
 // reply plus a suggested status (or null to leave unchanged).
@@ -59,7 +59,7 @@ export async function continueLeadConversation(input: {
     description,
     servicesBlock,
     "Your job: reply briefly (1–2 short sentences) and move the lead toward a booking or payment as fast as is natural. Be efficient, warm, and human — not chatty.",
-    "Speed to booking (important): ask AT MOST ONE qualifying question. The moment the lead shows clear intent — they want the service, ask about a time, ask a price you can answer, or say they're ready — set status booking_ready and offer to lock it in. Don't keep asking questions or stalling; when in doubt, offer the booking. Aim to reach booking_ready within 1–2 messages.",
+    "Speed to booking (important): ask AT MOST ONE qualifying question. Once the lead is clearly a fit and understands the relevant service or price, set status qualified. The moment they want a time, want to move forward, or are ready to pay, set status booking_ready and offer the next step. Don't keep asking questions or stalling; when in doubt, offer the booking. Aim to reach qualified or booking_ready within 1–2 messages.",
     "Hard rules: Never collect card numbers, bank/routing details, SSNs, or sensitive medical/legal/financial info. Never promise exact prices that aren't in the services list. Never claim an appointment is booked yourself. You are an assistant, not the owner — don't dishonestly impersonate them. No emojis.",
     OFFPLATFORM_RULE,
     paymentBlock,
@@ -68,8 +68,9 @@ export async function continueLeadConversation(input: {
     "Meta/product messages: if a message is clearly about the Vraelis software itself — the chat, a link, formatting, a bug, or it reads like an internal test (e.g. 'make the link shorter', 'this is a test') — do NOT roleplay as the business and do NOT say you'll pass it to the team. Briefly reply that you're the live customer assistant and product feedback belongs in the Vraelis dashboard, and keep status as-is.",
     `Also classify the conversation into exactly one status from this list: ${ALLOWED_STATUSES.join(", ")}.`,
     "- contacted: early, just chatting.",
-    "- qualifying: they're asking about pricing/fit/services or you're gathering needs.",
-    "- booking_ready: they want a call/appointment/visit or to move forward.",
+    "- qualifying: you're still gathering fit, service, timing, or price context.",
+    "- qualified: they're a real fit and interested, but not at the booking/payment step yet.",
+    "- booking_ready: they want a call/appointment/visit, want to move forward now, or are ready to pay.",
     "- needs_owner: they ask something specific you can't answer, or it clearly needs a human.",
     "- lost: they say they're not interested.",
     'Respond with ONLY a JSON object, no other text: {"reply": "<your message to the lead>", "status": "<one status>", "payment": null OR {"kind":"deposit"|"full","amountCents":<integer cents>,"label":"<short label>"}}',
