@@ -93,8 +93,10 @@ export async function POST(req: NextRequest) {
         to: email,
         businessName: workspace.business_name ?? "Vraelis",
         replyText,
-        // When the lead replies, route it to the business owner's inbox
-        // so they can take the conversation over from their own email.
+        // When the lead replies, route it to the business owner's inbox so they
+        // can take the conversation over from their own email. (Switches to the
+        // per-workspace reply+{key}@vraelis.com agent address once Cloudflare
+        // inbound routing is wired — see inboundReplyTo in lib/vraelis-email.)
         replyTo: workspace.owner_email,
       });
       delivered = result.sent;

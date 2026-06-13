@@ -13,7 +13,7 @@ import {
   addMessage,
   findLeadByContactEmail,
   getLeadWithMessages,
-  getOrCreateWorkspace,
+  getWorkspaceByIntakeKey,
   getWorkspaceOffer,
   getWorkspaceServices,
   touchLeadStatus,
@@ -42,20 +42,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  // Accept JSON or form-encoded (providers differ).
+  // Accept JSON or form-encoded (providers differ). We read the RECIPIENT too
+  // (the address the lead replied to), because that is what identifies the
+  // workspace — lead-facing emails set Reply-To: reply+{intakeKey}@vraelis.com,
+  // so the inbound recipient carries the workspace's intake key.
   let from = "";
   let text = "";
+  let to = "";
   try {
     const ct = req.headers.get("content-type") || "";
     if (ct.includes("application/json")) {
       const b = (await req.json()) as Record<string, unknown>;
       from = pick(b, ["from", "sender", "From", "fromEmail", "from_email"]);
       text = pick(b, ["text", "body-plain", "TextBody", "plain", "stripped-text", "strippedText", "body"]);
+      to = pick(b, ["to", "To", "recipient", "recipients", "toEmail", "to_email", "delivered-to", "Delivered-To"]);
     } else {
       const fd = await req.formData();
       const g = (k: string) => (typeof fd.get(k) === "string" ? (fd.get(k) as string) : "");
       from = g("from") || g("sender") || g("From");
       text = g("text") || g("body-plain") || g("stripped-text") || g("TextBody");
+      to = g("to") || g("To") || g("recipient") || g("recipients") || g("delivered-to");
     }
   } catch {
     return NextResponse.json({ ok: false, error: "Unparseable" }, { status: 400 });
@@ -67,14 +73,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Missing sender or body" }, { status: 400 });
   }
 
-  const lead = await findLeadByContactEmail(fromEmail);
+  // Resolve the WORKSPACE from the recipient address. The To header may list
+  // several addresses; find the vraelis reply address and pull the intake key
+  // from its local part: reply+{intakeKey}@vraelis.com. Keys are url-safe
+  // (the local-part charset already excludes the '+' separator and '@').
+  const intakeKey = (to.toLowerCase().match(/reply\+([a-z0-9._-]+)@vraelis\.com/) || [])[1] || "";
+  if (!intakeKey) {
+    // No vraelis reply address on the recipient → we can't tell which workspace
+    // this belongs to. FAIL SAFE: never global-match by email, never guess a
+    // workspace (that would let one tenant's agent answer another's lead).
+    return NextResponse.json({ ok: true, matched: false, reason: "no_workspace_key" });
+  }
+  const ws = await getWorkspaceByIntakeKey(intakeKey);
+  if (!ws) {
+    return NextResponse.json({ ok: true, matched: false, reason: "workspace_not_found" });
+  }
+
+  // Owner-scoped lead lookup: only a lead belonging to THIS workspace can match.
+  const lead = await findLeadByContactEmail(ws.owner_email, fromEmail);
   if (!lead) {
-    // Not a known lead — ignore (don't auto-engage strangers).
-    return NextResponse.json({ ok: true, matched: false });
+    // Known recipient workspace, but no lead with that email in it — ignore
+    // (don't auto-engage a stranger emailing the reply address).
+    return NextResponse.json({ ok: true, matched: false, reason: "lead_not_found" });
   }
 
   try {
-    const ws = await getOrCreateWorkspace(lead.owner_email);
     await addMessage({ leadId: lead.id, role: "lead", body: message, channel: "email" });
 
     const data = await getLeadWithMessages(lead.owner_email, lead.id);
@@ -127,8 +150,11 @@ export async function POST(req: NextRequest) {
 
     const r = await sendLeadReply({
       to: fromEmail,
-      businessName: ws?.business_name ?? "Vraelis",
+      businessName: ws.business_name ?? "Vraelis",
       replyText,
+      // Route the lead's next reply to the owner's inbox. (Switches to the
+      // per-workspace reply+{key}@vraelis.com agent address once Cloudflare
+      // inbound routing is wired — see inboundReplyTo in lib/vraelis-email.)
       replyTo: lead.owner_email,
     });
     await addMessage({ leadId: lead.id, role: "agent", body: replyText, channel: r.sent ? "email" : "note", delivered: r.sent });

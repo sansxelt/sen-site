@@ -32,6 +32,22 @@ function fromAddress() {
   return VRAELIS_FROM;
 }
 
+// The per-workspace inbound reply address: reply+{intakeKey}@vraelis.com. When
+// a lead replies to this, the recipient carries the workspace key, which is how
+// the inbound route identifies the tenant (owner-scoped, never a global email
+// match).
+//
+// STAGED — not yet wired into lead-facing sends. Lead emails currently set
+// Reply-To to the OWNER's inbox; this becomes the Reply-To only once Cloudflare
+// Email Routing is configured to catch reply+*@vraelis.com and POST to
+// /api/vraelis/inbound/email (a ~15-min Worker setup). Kept here ready to flip
+// in one change. Returns null on an empty key so a send never breaks.
+export function inboundReplyTo(intakeKey: string | null | undefined): string | null {
+  const key = (intakeKey ?? "").trim();
+  if (!key) return null;
+  return `reply+${key}@vraelis.com`;
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")

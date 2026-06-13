@@ -297,14 +297,21 @@ export async function bumpFollowup(leadId: string, current: number): Promise<voi
     .eq("id", leadId);
 }
 
-// Most recent lead matching a contact email — used to route inbound email
-// replies back to the right thread.
-export async function findLeadByContactEmail(email: string): Promise<VraelisLead | null> {
-  if (!email || !isDatabaseConfigured()) return null;
+// Most recent lead matching a contact email WITHIN ONE WORKSPACE — used to
+// route an inbound email reply back to the right thread. Owner-scoped (like
+// findLeadByContactPhone) so a lead's email that exists in two workspaces can
+// never be matched to the wrong tenant: the caller MUST resolve the workspace
+// from the inbound recipient address first, then scope the lookup here.
+export async function findLeadByContactEmail(
+  ownerEmail: string,
+  email: string,
+): Promise<VraelisLead | null> {
+  if (!ownerEmail || !email || !isDatabaseConfigured()) return null;
   const supabase = getSupabaseAdminClient();
   const { data } = await supabase
     .from("vraelis_leads" as never)
     .select("*")
+    .eq("owner_email", normalizeEmail(ownerEmail))
     .eq("contact_email", email.trim().toLowerCase())
     .order("updated_at", { ascending: false })
     .limit(1)
