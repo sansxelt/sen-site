@@ -13,6 +13,7 @@ import {
   getLeadWithMessages,
   getOrCreateWorkspace,
   getWorkspaceOffer,
+  getWorkspaceServices,
   isWorkspaceOnboarded,
   listPayments,
   setLeadOutcome,
@@ -502,7 +503,7 @@ export async function sendTestLead(): Promise<void> {
   const email = session?.user?.email;
   if (!email) return;
 
-  const question = "Hi! Do you have availability this week — and roughly what would it cost?";
+  const question = "Hi! Do you have availability this week, and roughly what would it cost?";
   try {
     const ws = await getOrCreateWorkspace(email);
     const lead = await createLead({
@@ -513,11 +514,22 @@ export async function sendTestLead(): Promise<void> {
     });
     await addMessage({ leadId: lead.id, role: "lead", body: question, channel: "chat", delivered: true });
 
+    // The sample question asks "what would it cost?", so feed the agent the
+    // real offer/pricing context — otherwise the demo reply deflects on the
+    // exact thing it's posing and undersells what the agent can do.
+    const [services, offer] = await Promise.all([
+      getWorkspaceServices(email),
+      getWorkspaceOffer(email),
+    ]);
     const reply = await generateLeadReply({
       businessName: ws?.business_name ?? "",
       businessDescription: ws?.business_description ?? "",
       leadName: "Sample Lead",
       leadMessage: question,
+      businessServices: services ?? undefined,
+      qualifyingQuestions: offer.qualifyingQuestions,
+      agentName: offer.agentName,
+      agentTone: offer.agentTone,
     });
     await addMessage({ leadId: lead.id, role: "agent", body: reply, channel: "chat", delivered: true });
     await setLeadStatus(email, lead.id, "contacted");

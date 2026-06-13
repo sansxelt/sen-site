@@ -571,21 +571,23 @@ function Hero() {
       <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 55% 45% at 50% 8%, rgba(14,158,108,0.07) 0%, transparent 68%)" }} />
       <div className="wrap" style={{ position: "relative", paddingTop: "clamp(56px, 9vw, 104px)", paddingBottom: "clamp(40px, 6vw, 72px)" }}>
         <div style={{ maxWidth: 880 }}>
-          <Reveal as="p" className="eyebrow rise" d="1">The revenue platform for high-ticket sellers</Reveal>
-          <h1 className="display rise" data-d="2" style={{ marginBottom: 24, maxWidth: 940 }}>
-            Turn interested leads into <span className="em">paying</span> customers.
+          <Reveal as="p" className="eyebrow rise" d="1">The AI agent that gets you paid</Reveal>
+          <h1 className="display rise" data-d="2" style={{ marginBottom: 22, maxWidth: 940 }}>
+            The AI agent that follows up, books leads, and <span className="em">collects payment</span>.
           </h1>
-          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.05rem, 1.5vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 640, marginBottom: 34, lineHeight: 1.5 }}>
-            Vraelis engages every lead in seconds, qualifies serious buyers, follows up automatically,
-            books the call, and collects the payment — so your $2k–$10k offers actually close.
-            No software fee. We only earn when you get paid.
+          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.05rem, 1.5vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 640, marginBottom: 18, lineHeight: 1.5 }}>
+            Vraelis answers every lead in seconds, qualifies serious buyers, follows up on its own,
+            books the call, and takes the payment, so your offers actually close.
+          </p>
+          <p className="rise" data-d="3" style={{ fontSize: "clamp(1rem, 1.3vw, 1.15rem)", fontWeight: 600, color: "var(--fg-1)", maxWidth: 640, marginBottom: 34, lineHeight: 1.45 }}>
+            Free to start. Vraelis only earns when your agent gets you paid.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 26 }}>
             <Cta large>Start free <span aria-hidden>→</span></Cta>
             <a href="#how" className="btn btn--ghost btn--lg">See how it converts a lead</a>
           </div>
           <div className="rise" data-d="5" style={{ display: "flex", gap: 22, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", letterSpacing: "0.02em" }}>
-            <Trust>Free to start — pay when you get paid</Trust>
+            <Trust>Free to start. You pay only when you get paid</Trust>
             <Trust>Collects payment, not just the booking</Trust>
             <Trust>You close in your sleep</Trust>
           </div>
@@ -599,7 +601,7 @@ function Hero() {
         <Reveal d="2" style={{ marginTop: "clamp(40px, 6vw, 64px)" }}>
           <Dashboard />
           <div style={{ display: "flex", alignItems: "center", gap: 9, justifyContent: "center", marginTop: 16, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.04em" }}>
-            <span className="dot dot--acc" /> Click any deal — that's the real conversation, follow-up, and payment behind it
+            <span className="dot dot--acc" /> Click any deal to see the real conversation, follow-up, and payment behind it
           </div>
         </Reveal>
       </div>

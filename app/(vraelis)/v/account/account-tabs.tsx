@@ -14,8 +14,33 @@ export type StepAction =
   | { type: "tab"; tab: Key; cta: string }
   | { type: "link"; href: string; cta: string }
   | { type: "test"; cta: string }
+  | { type: "copy"; value: string; cta: string }
   | null;
 export type Step = { key: string; label: string; done: boolean; action: StepAction };
+
+// Checklist action that copies a value (the shareable agent link) to the
+// clipboard and confirms inline — the real activation step for an inbound
+// product, so the user shares their link rather than only firing a test lead.
+function CopyAction({ value, cta, style }: { value: string; cta: string; style: React.CSSProperties }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      style={style}
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(value);
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 1500);
+        } catch {
+          /* clipboard blocked — ignore */
+        }
+      }}
+    >
+      {copied ? "Copied" : cta} →
+    </button>
+  );
+}
 
 // Account shell: an actionable setup checklist + the three tab panels.
 // Server-rendered panels are passed as props; we just toggle visibility
@@ -61,6 +86,7 @@ export function AccountTabs({
     if (!a) return null;
     if (a.type === "tab") return <button type="button" style={actionBtn} onClick={() => setTab(a.tab)}>{a.cta} →</button>;
     if (a.type === "link") return <a style={actionBtn} href={a.href}>{a.cta} →</a>;
+    if (a.type === "copy") return <CopyAction value={a.value} cta={a.cta} style={actionBtn} />;
     return (
       <form action={sendTestLead}>
         <button type="submit" style={actionBtn}>{a.cta} →</button>
@@ -74,8 +100,8 @@ export function AccountTabs({
         <div className="win" style={{ padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)", marginBottom: "clamp(12px,1.5vw,16px)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
             <div>
-              <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, marginBottom: 1 }}>Finish setting up</div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)" }}>{done} of {steps.length} done — get to your first paid lead</div>
+              <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, marginBottom: 1 }}>Your agent is live. Next: get paid</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)" }}>{done} of {steps.length} done. These get you to your first paid lead.</div>
             </div>
             <div style={{ flex: "1 1 180px", maxWidth: 340, minWidth: 140 }}>
               <div style={{ height: 5, background: "var(--bg-3)", borderRadius: 99, overflow: "hidden" }}>

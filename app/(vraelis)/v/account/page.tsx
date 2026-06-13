@@ -8,12 +8,14 @@ import { deriveOnboarded, getOrCreateWorkspace, getPaymentsSummary, getWorkspace
 import { isDatabaseConfigured } from "@/lib/supabase-admin";
 import { listUpcomingBookings, slotLabel } from "@/lib/vraelis-booking";
 import { getAccountStatus } from "@/lib/vraelis-connect";
+import { isTwilioConfigured } from "@/lib/vraelis-sms";
 import { cutRateFor, isCycle, isPlanKey } from "@/lib/vraelis-plans";
 import { AddLeadForm } from "./add-lead-form";
 import { OfferForm } from "./offer-form";
 import { SmsForm } from "./sms-form";
 import { DepositForm } from "./deposit-form";
 import { CopyField } from "./copy-field";
+import { CopyLinkButton } from "./copy-link-button";
 import { AccountTabs, type Step } from "./account-tabs";
 import { vraelisSignOut, sendTestLead } from "./actions";
 
@@ -232,7 +234,12 @@ export default async function VraelisAccountPage({
   const params = await searchParams;
   const sessionId = String(Array.isArray(params.session_id) ? params.session_id[0] : params.session_id ?? "");
   const requestedTab = String(Array.isArray(params.tab) ? params.tab[0] : params.tab ?? "");
+  // Google Calendar OAuth returns here with ?calendar=done|error|unavailable.
+  // Show a result banner and land the user on Setup so they see it next to the
+  // calendar control (instead of silently bouncing to an empty Inbox).
+  const calendarResult = String(Array.isArray(params.calendar) ? params.calendar[0] : params.calendar ?? "");
   const initialTab: "inbox" | "money" | "setup" =
+    calendarResult ? "setup" :
     requestedTab === "money" || requestedTab === "setup" || requestedTab === "inbox" ? requestedTab : "inbox";
   if (sessionId) await confirmStripeCheckout(email, sessionId);
 
@@ -305,6 +312,12 @@ export default async function VraelisAccountPage({
   // degrades to generic canned replies (no qualifying, no payment) — surface
   // that to the owner so they don't lose conversions unaware.
   const aiConfigured = Boolean(process.env.ANTHROPIC_API_KEY);
+  // Real capability state — so the dashboard never claims more than is true.
+  // The agent can always answer leads over chat/email; collecting payment needs
+  // payouts (Stripe Connect active); text/voice needs a saved number AND the
+  // platform Twilio creds (a saved number alone sends nothing).
+  const canCollect = connected;
+  const textVoiceLive = Boolean(contact?.twilio_number) && isTwilioConfigured();
   // The agent's own name (owner-set) or a sensible default tied to the business.
   const agentName = (offer?.agentName || "").trim();
   const agentLabel = agentName || `${(workspace?.business_name || "your").trim()} agent`;
@@ -358,13 +371,13 @@ export default async function VraelisAccountPage({
   const reason = (l: VraelisLead): { tier: number; label: string } | null => {
     if (l.status === "won" || l.status === "lost") return null;
     if (leadPayState.get(l.id) === "paid") return null;
-    if (leadPayState.get(l.id) === "pending") return { tier: 1, label: "Payment sent — awaiting pay" };
+    if (leadPayState.get(l.id) === "pending") return { tier: 1, label: "Payment sent, awaiting pay" };
     const quiet = ageMs(l.updated_at) >= TWO_DAYS;
     if ((l.status === "qualified" || l.status === "booking_ready") && quiet)
       return { tier: 2, label: "Qualified, gone quiet" };
     if (l.status === "needs_owner") return { tier: 3, label: "Flagged for you" };
     if ((l.status === "qualified" || l.status === "booking_ready") && !quiet)
-      return { tier: 4, label: "Qualified — keep momentum" };
+      return { tier: 4, label: "Qualified, keep momentum" };
     if (l.status === "contacted" && quiet) return { tier: 4, label: "No reply in 2+ days" };
     return null;
   };
@@ -374,10 +387,14 @@ export default async function VraelisAccountPage({
     .sort((a, b) => a.r.tier - b.r.tier || (b.lead.value || 0) - (a.lead.value || 0))
     .slice(0, 6);
 
+  // A test lead (source "test") is a preview, not activation — the real
+  // step is a genuine lead arriving from the shared link, so the checklist
+  // only greens this once a non-test lead exists.
+  const hasRealLead = leads.some((l) => l.source !== "test");
   const steps: Step[] = [
     { key: "biz", label: "Add your business details", done: Boolean(workspace?.business_name && workspace?.business_description), action: { type: "tab", tab: "setup", cta: "Add" } },
     { key: "payouts", label: "Turn on payouts (get paid)", done: connected, action: { type: "link", href: "/api/vraelis/connect/start", cta: workspace?.connect_account_id ? "Finish" : "Turn on" } },
-    { key: "lead", label: "See it work — get your first lead", done: leads.length > 0, action: { type: "test", cta: "Send test lead" } },
+    { key: "lead", label: "Share your link to get your first real lead", done: hasRealLead, action: formLink ? { type: "copy", value: formLink, cta: "Copy link" } : { type: "test", cta: "Send test lead" } },
     { key: "pay", label: "Take your first payment", done: payments.paidCount > 0, action: { type: "tab", tab: "inbox", cta: "Open a lead" } },
   ];
 
@@ -393,7 +410,7 @@ export default async function VraelisAccountPage({
           <div className="win" style={{ padding: "clamp(18px,2.4vw,26px)", textAlign: "center" }}>
             <h1 style={{ fontSize: 16, color: "var(--fg-1)", marginBottom: 6 }}>Couldn&apos;t load your workspace.</h1>
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, marginBottom: 14 }}>
-              Something hiccuped on our side — your data is safe. Refresh to try again.
+              Something hiccuped on our side. Your data is safe. Refresh to try again.
             </p>
             <a href="/v/account" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Refresh →</a>
           </div>
@@ -409,12 +426,17 @@ export default async function VraelisAccountPage({
   // the onboarding screen; Inbox/Money/leads unlock on completion, and
   // completing it lands you straight on the Inbox tab below.
   if (!deriveOnboarded(workspace, services, offer)) {
-    const offerDone = Boolean(offer?.persona && workspace?.business_name && workspace?.business_description);
+    // These are PHASES, not a 1:1 with the form's numbered steps. Phase 1 covers
+    // the persona + agent identity + your business section; phase 2 covers the
+    // "what you sell / price / how customers pay" steps; phase 3 is after setup.
+    // The labels deliberately describe the sections (not a step count) so the
+    // form's own Step 1–4 numbering doesn't read as a contradiction.
+    const agentDone = Boolean(offer?.persona && workspace?.business_name && workspace?.business_description && offer?.offerName);
     const priceDone = Boolean(services);
     const obSteps = [
-      { n: 1, label: "Create your agent", done: offerDone, later: false },
-      { n: 2, label: "Price & how customers pay", done: priceDone, later: false },
-      { n: 3, label: "Connect channels & payouts", done: false, later: true },
+      { n: 1, label: "You, your agent & business", done: agentDone, later: false },
+      { n: 2, label: "What you sell, price & payment", done: priceDone, later: false },
+      { n: 3, label: "Share your link & launch", done: false, later: true },
     ];
     return (
       <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>
@@ -424,7 +446,7 @@ export default async function VraelisAccountPage({
             Create your <span className="em">revenue agent</span>.
           </h1>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, marginBottom: 14, maxWidth: 560 }}>
-            Vraelis is an AI sales agent that answers every lead, qualifies them, books calls, and collects payment for you — across chat, email, and text. First, tell it what you sell and how customers pay. Takes about two minutes.
+            Vraelis is an AI sales agent that answers every lead, qualifies serious buyers, books calls, and collects payment for you across chat, email, and text. First, tell it what you sell and how customers pay. Takes about two minutes.
           </p>
 
           <div className="win" style={{ padding: "10px clamp(14px,1.8vw,18px)", marginBottom: 12, display: "flex", alignItems: "center", gap: "8px 22px", flexWrap: "wrap" }}>
@@ -487,26 +509,31 @@ export default async function VraelisAccountPage({
               Welcome back, <span className="em">{firstName}</span>.
             </h1>
             <p style={{ fontSize: 12.5, color: "var(--fg-3)", display: "flex", alignItems: "center", gap: 7 }}>
-              {aiConfigured ? (
+              {!aiConfigured ? (
                 <>
-                  <span className="dot dot--acc pulse" />{agentName ? `${agentName}, your AI agent, is` : "Your AI agent is"} online — working every lead 24/7.
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#C2540C", display: "inline-block", flexShrink: 0 }} />Your agent is in safe mode. See below.
+                </>
+              ) : canCollect ? (
+                <>
+                  <span className="dot dot--acc pulse" />{agentName ? `${agentName}, your AI agent, is` : "Your AI agent is"} answering leads and collecting payment.
                 </>
               ) : (
                 <>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#C2540C", display: "inline-block", flexShrink: 0 }} />Your agent is in safe mode — see below.
+                  <span className="dot dot--acc pulse" />{agentName ? `${agentName}, your AI agent, is` : "Your AI agent is"} answering your leads. Turn on payouts to start collecting payment.
                 </>
               )}
             </p>
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Link href="/v/account/find" className="btn" style={{ whiteSpace: "nowrap", padding: "9px 16px", fontSize: 13 }}>
-              Find leads →
-            </Link>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {formLink && <CopyLinkButton value={formLink} />}
             {formLink && (
               <a href={formLink} target="_blank" rel="noreferrer" className="btn btn--ghost" style={{ whiteSpace: "nowrap", padding: "9px 16px", fontSize: 13 }}>
-                Try your agent ↗
+                Test your agent ↗
               </a>
             )}
+            <Link href="/v/account/find" style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", padding: "9px 4px" }}>
+              Find businesses →
+            </Link>
           </div>
         </div>
 
@@ -524,7 +551,7 @@ export default async function VraelisAccountPage({
               Your AI agent isn&apos;t fully switched on.
             </div>
             <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, margin: 0 }}>
-              Replies are running in safe mode — your agent answers leads, but it can&apos;t qualify them or
+              Replies are running in safe mode. Your agent answers leads, but it can&apos;t qualify them or
               take payment until the AI is connected. Your leads are still captured and saved. If you just
               set this up, this clears once the AI key is configured on the server.
             </p>
@@ -556,7 +583,7 @@ export default async function VraelisAccountPage({
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{agentLabel}</div>
                       <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>
-                        Qualifies leads · follows up · books calls{connected ? " · collects payment" : ""}
+                        {aiConfigured ? "Qualifies leads · follows up · books calls" : "Answers leads · books calls"}{connected ? " · collects payment" : ""}
                       </div>
                     </div>
                   </div>
@@ -564,14 +591,14 @@ export default async function VraelisAccountPage({
                     Edit agent →
                   </button>
                 </div>
-                {/* Channel chips — capabilities, on or off */}
+                {/* Channel chips — capabilities, on only when genuinely live. */}
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                   {([
                     ["Website & chat", true],
                     ["Email", true],
-                    ["Text & voice", Boolean(contact?.twilio_number)],
-                    ["Book calls", calendarConnected],
-                    ["Take payments", connected],
+                    ["Book calls", true],
+                    ["Text & voice", textVoiceLive],
+                    ["Take payments", canCollect],
                   ] as const).map(([label, on]) => (
                     <span
                       key={label}
@@ -651,18 +678,27 @@ export default async function VraelisAccountPage({
                 </div>
 
                 {leads.length === 0 ? (
-                  <div style={{ padding: "26px 22px", textAlign: "center" }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--acc)", fontSize: 17 }}>✦</div>
-                    <div style={{ fontSize: 15, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>Watch your agent work a lead.</div>
-                    <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, maxWidth: 400, margin: "0 auto 14px" }}>
-                      Send yourself a sample lead and watch your agent reply, qualify, and move it toward payment, or share your link to get a real one.
-                    </p>
-                    <form action={sendTestLead} style={{ display: "inline-block" }}>
-                      <button type="submit" className="btn" style={{ padding: "9px 16px", fontSize: 13 }}>Send a test lead →</button>
-                    </form>
-                    <p style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 10 }}>
-                      Or grab your shareable link in the <b style={{ color: "var(--fg-3)", fontWeight: 600 }}>Setup</b> tab.
-                    </p>
+                  <div style={{ padding: "24px 22px" }}>
+                    <div style={{ textAlign: "center", marginBottom: 16 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--acc)", fontSize: 17 }}>✦</div>
+                      <div style={{ fontSize: 15.5, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>
+                        {agentName ? `${agentName} is ready.` : "Your agent is ready."} Share your link to get your first lead.
+                      </div>
+                      <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, maxWidth: 420, margin: "0 auto" }}>
+                        Put this link in your Instagram bio, send it to a lead, or drop it anywhere you talk to people. Anyone who opens it chats with your agent, which {aiConfigured ? "qualifies them" : "answers them"}{canCollect ? ", books the call, and can take payment" : " and books the call. Turn on payouts so it can collect payment too"}.
+                      </p>
+                    </div>
+                    {formLink && (
+                      <div style={{ maxWidth: 460, margin: "0 auto 16px" }}>
+                        <CopyField label="Your agent's link · paste it in your bio" value={formLink} />
+                      </div>
+                    )}
+                    <div style={{ textAlign: "center", paddingTop: 4, borderTop: "1px solid var(--line-1)", marginTop: 4 }}>
+                      <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "12px 0 8px" }}>Want to see it work first?</p>
+                      <form action={sendTestLead} style={{ display: "inline-block" }}>
+                        <button type="submit" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 12.5 }}>Send yourself a test lead →</button>
+                      </form>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ maxHeight: 480, overflowY: "auto" }}>
@@ -788,9 +824,9 @@ export default async function VraelisAccountPage({
                     <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, marginBottom: 5 }}>No payments yet.</div>
                     <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, maxWidth: 400, margin: "0 auto 12px" }}>
                       {!connected
-                        ? "Set up payouts above, then collect your first payment from any lead. It lands here automatically."
+                        ? "Turn on payouts above, then your agent can collect your first payment from any lead. It lands here automatically."
                         : leads.length === 0
-                          ? "Send yourself a test lead, or share your lead link from Setup. Once a lead comes in, open it and use Collect payment."
+                          ? "Share your link so a real lead comes in, then open it and use Collect payment. Want a preview first? Send yourself a test lead."
                           : readyToCollectCount > 0
                             ? `You already have ${readyToCollectCount} lead${readyToCollectCount === 1 ? "" : "s"} ready for Collect payment. Open one above to send a secure checkout link.`
                             : "Move a live lead to Qualified or Booking in Inbox, then open it and use Collect payment. It shows up here the moment they pay, with the Vraelis fee already deducted."}
@@ -871,10 +907,10 @@ export default async function VraelisAccountPage({
             >
               {/* ── Step 1: the agent (identity + what it sells) — left ── */}
               <div className="win" style={{ padding: "clamp(14px,1.8vw,20px)" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 4 }}>Step 1 · Your agent</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 4 }}>Your agent &amp; offer</div>
                 <h2 style={{ fontSize: 16, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 3 }}>Your AI sales agent</h2>
                 <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 14 }}>
-                  Its name, voice, what it sells, and how it gets paid. This is what your agent uses on every lead — connect channels after.
+                  Its name, voice, what it sells, and how it gets paid. This is what your agent uses on every lead. Connect channels after.
                 </p>
                 <OfferForm
                   initialName={workspace?.business_name ?? ""}
@@ -895,7 +931,7 @@ export default async function VraelisAccountPage({
               {/* ── Step 2: the agent's channels — right column beside the offer ── */}
               <div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
-                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Step 2 · Channels</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Connect channels</div>
                   <span style={{ fontSize: 12, color: "var(--fg-3)" }}>Where your agent works leads &amp; how payments land.</span>
                 </div>
 
@@ -904,7 +940,7 @@ export default async function VraelisAccountPage({
               <div className="win" style={{ padding: "clamp(14px,1.8vw,18px)" }}>
                 <h2 style={{ fontSize: 14.5, letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 3 }}>Website &amp; link</h2>
                 <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 12 }}>
-                  Your agent&apos;s own chat and booking links — no website needed. Share them in your Instagram bio, Google profile, email signature, or texts.
+                  Your agent&apos;s own chat and booking links, no website needed. Share them in your Instagram bio, Google profile, email signature, or texts.
                 </p>
                 {formLink && <CopyField label="Your chat link · no code" value={formLink} />}
                 {bookingLink && <CopyField label="Your booking link" value={bookingLink} />}
@@ -925,41 +961,79 @@ export default async function VraelisAccountPage({
                 </details>
               </div>
 
+              {/* Calendar OAuth result — explicit success/failure feedback so a
+                  user who just connected (or hit an error) isn't left guessing. */}
+              {calendarResult && (
+                <div
+                  className="win"
+                  style={{
+                    padding: "clamp(10px,1.4vw,13px) clamp(14px,1.8vw,18px)",
+                    marginBottom: "clamp(12px,1.5vw,16px)",
+                    borderColor: calendarResult === "done" ? "var(--acc-line)" : "rgba(194,84,12,0.35)",
+                    background: calendarResult === "done" ? "var(--acc-soft)" : "rgba(194,84,12,0.06)",
+                  }}
+                >
+                  {calendarResult === "done" ? (
+                    <div style={{ fontSize: 13, color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className="dot dot--acc" />Google Calendar connected. Your agent now blocks your busy times when it books calls.
+                    </div>
+                  ) : calendarResult === "unavailable" ? (
+                    <div style={{ fontSize: 13, color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#C2540C", flexShrink: 0 }} />Calendar sync isn&apos;t set up on the server yet. Leads can still book your open times, your busy times just won&apos;t be blocked.
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 13, color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#C2540C", flexShrink: 0 }} />Couldn&apos;t connect Google Calendar. Leads can still book your open times, your busy times just won&apos;t be blocked. Try Sync calendar below again.
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Channels & payments checklist — capabilities the agent uses */}
               <div className="win" style={{ padding: "clamp(12px,1.6vw,14px) clamp(14px,1.8vw,18px)" }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 }}>What your agent can do</div>
-                {/* Email — always on */}
+                {/* Email — the agent sends replies; a lead's reply currently
+                    comes to the owner's inbox (the agent doesn't auto-handle
+                    inbound email replies yet — Reply-To is the owner). */}
                 <ChecklistRow
                   done
                   title="Email"
-                  doneText="On — your agent replies to leads by email automatically"
+                  doneText="On. Your agent emails leads automatically, and replies come to your inbox so you can jump in."
                   todoText=""
                 />
                 {/* Payments */}
                 <ChecklistRow
                   done={connected}
                   title="Take payments"
-                  doneText="On — your agent can collect payment and deposits in the conversation"
+                  doneText="On. Your agent can collect payment and deposits in the conversation."
                   todoText="Turn on payouts so your agent can collect payment from leads"
                   href={connected ? undefined : "/api/vraelis/connect/start"}
                   cta={connected ? undefined : workspace?.connect_account_id ? "Finish" : "Turn on"}
                 />
-                {/* Calendar — book calls */}
+                {/* Book calls — works without Google (self-serve slots);
+                    connecting Google calendar only ADDS busy-time blocking, so
+                    this is always "on" and the calendar is an enhancement. */}
                 <ChecklistRow
-                  done={calendarConnected}
+                  done
                   title="Book calls"
-                  doneText="On — bookings sync to your calendar, busy times blocked"
-                  todoText="Connect your calendar so the agent can book calls and block busy times"
+                  doneText={calendarConnected
+                    ? "On. Leads can book times, your Google calendar is synced, and busy times are blocked."
+                    : "On. Leads can book times. Connect Google Calendar to also block your busy times."}
+                  todoText=""
                   href={calendarConnected ? "/api/vraelis/calendar/disconnect" : "/api/vraelis/calendar/connect"}
-                  cta={calendarConnected ? "Disconnect" : "Connect"}
+                  cta={calendarConnected ? "Disconnect" : "Sync calendar"}
                 />
-                {/* Text & voice (Twilio underneath, but framed as a capability) */}
+                {/* Text & voice — only truly "on" when a number is saved AND the
+                    platform SMS is configured; a saved-but-not-live number shows
+                    a pending state, never a green "on" that silently sends nothing. */}
                 <ChecklistRow
-                  done={Boolean(contact?.twilio_number)}
+                  done={textVoiceLive}
                   title="Text & voice"
-                  doneText="On — your agent texts leads back and alerts you to new ones"
-                  todoText="Add a number so your agent can text leads and answer missed calls"
-                  expandLabel="Turn on"
+                  doneText="On. Your agent texts leads back and alerts you to new ones."
+                  todoText={contact?.twilio_number
+                    ? "Pending. Number saved, going live once it clears carrier registration."
+                    : "Add a number so your agent can text leads and answer missed calls"}
+                  expandLabel={contact?.twilio_number ? "Edit" : "Add number"}
                 >
                   <SmsForm initialOwnerPhone={contact?.owner_phone ?? ""} initialTwilioNumber={contact?.twilio_number ?? ""} />
                 </ChecklistRow>
@@ -967,9 +1041,9 @@ export default async function VraelisAccountPage({
                 <ChecklistRow
                   done={Boolean(workspace?.deposit_enabled)}
                   title="Booking deposit"
-                  doneText={`On — $${((workspace?.deposit_amount_cents ?? 0) / 100).toLocaleString()} to confirm a booking`}
-                  todoText="Optional — require a deposit to confirm a booking"
-                  expandLabel="Configure deposit"
+                  doneText={`On. $${((workspace?.deposit_amount_cents ?? 0) / 100).toLocaleString()} to confirm a booking.`}
+                  todoText="Optional. Require a deposit to confirm a booking."
+                  expandLabel="Set up deposit"
                   last
                 >
                   <DepositForm initialEnabled={Boolean(workspace?.deposit_enabled)} initialAmount={workspace?.deposit_amount_cents ?? null} />

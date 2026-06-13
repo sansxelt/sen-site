@@ -13,6 +13,8 @@ import {
   addMessage,
   createLead,
   getWorkspaceByIntakeKey,
+  getWorkspaceOffer,
+  getWorkspaceServices,
   touchLeadStatus,
 } from "@/lib/vraelis-db";
 import { generateLeadReply } from "@/lib/vraelis-ai";
@@ -79,12 +81,22 @@ export async function POST(req: NextRequest) {
       await addMessage({ leadId: lead.id, role: "lead", body: message, channel: source });
     }
 
-    // Draft + persist the instant AI reply.
+    // Draft + persist the instant AI reply. Pass the offer/pricing context so
+    // the very first reply can answer "how much does it cost?" with the real
+    // price instead of deflecting — same data the ongoing chat/SMS agent uses.
+    const [services, offer] = await Promise.all([
+      getWorkspaceServices(workspace.owner_email),
+      getWorkspaceOffer(workspace.owner_email),
+    ]);
     const replyText = await generateLeadReply({
       businessName: workspace.business_name ?? "",
       businessDescription: workspace.business_description ?? "",
       leadName: name,
       leadMessage: message || "(no message — just contact details)",
+      businessServices: services ?? undefined,
+      qualifyingQuestions: offer.qualifyingQuestions,
+      agentName: offer.agentName,
+      agentTone: offer.agentTone,
     });
 
     let delivered = false;

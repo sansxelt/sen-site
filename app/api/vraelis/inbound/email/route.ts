@@ -116,6 +116,7 @@ export async function POST(req: NextRequest) {
       businessDescription: ws?.business_description ?? "",
       history,
       businessServices: services ?? undefined,
+      qualifyingQuestions: agent.qualifyingQuestions,
       canTakePayment: connected,
       depositLabel,
       agentName: agent.agentName,

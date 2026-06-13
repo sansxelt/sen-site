@@ -213,7 +213,7 @@ export function OfferForm({
       {mode && <input type="hidden" name="mode" value={mode} />}
       {/* Save affordance — the Save button lives at the bottom of this form
           (after all steps), which isn't obvious, so flag it up top in the
-          Setup-edit case. Onboarding already ends in a clear "Finish setup". */}
+          Setup-edit case. Onboarding already ends in a clear "Launch your agent". */}
       {!onboarding && (
         <p style={{ ...hintStyle, marginTop: 0, marginBottom: 2, color: "var(--fg-3)" }}>
           Edit anything below, then <b style={{ color: "var(--acc-deep)" }}>Save setup</b> at the bottom to apply your changes.
@@ -249,15 +249,15 @@ export function OfferForm({
           })}
         </div>
         {personaError && (
-          <p style={{ ...hintStyle, color: "#9F2D2D" }}>Pick the closest one — it tailors everything below (you can change it anytime).</p>
+          <p style={{ ...hintStyle, color: "#9F2D2D" }}>Pick the closest one. It tailors everything below, and you can change it anytime.</p>
         )}
       </div>
 
       {/* Agent identity — name + voice. Feeds the AI prompt across every
-          channel (chat, email, SMS). */}
+          channel (chat, email, SMS). Optional: sensible defaults apply. */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 200px", minWidth: 160 }}>
-          <label style={labelStyle} htmlFor="agentName">Name your agent</label>
+          <label style={labelStyle} htmlFor="agentName">Name your agent <span style={{ color: "var(--fg-5)", fontWeight: 400 }}>(optional)</span></label>
           <input
             id="agentName"
             name="agentName"
@@ -266,7 +266,7 @@ export function OfferForm({
             maxLength={40}
             style={inputStyle}
           />
-          <p style={hintStyle}>How it introduces itself to leads. Leave blank to speak as your business.</p>
+          <p style={hintStyle}>How it introduces itself to leads. Leave blank and it speaks as your business name.</p>
         </div>
         <div style={{ flex: "1 1 200px", minWidth: 160 }}>
           <span style={labelStyle}>Voice</span>
@@ -466,11 +466,16 @@ export function OfferForm({
         )}
       </Step>
 
-      {/* Advanced — collapsed by default so core setup stays to 3 steps */}
+      {/* Teach your agent — collapsed by default so core setup stays short, but
+          labeled as a meaningful step (it shapes how the agent qualifies), not a
+          throwaway "advanced" section a first-time user skips without knowing why. */}
       <details style={{ borderTop: "1px solid var(--line-1)", paddingTop: 14 }}>
-        <summary style={{ cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 11.5, letterSpacing: "0.04em", color: "var(--fg-3)", listStyle: "none" }}>
-          <span style={{ color: "var(--acc-deep)" }}>+</span> How your agent qualifies &amp; where it works <span style={{ color: "var(--fg-5)" }}>(optional)</span>
+        <summary style={{ cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", listStyle: "none" }}>
+          <span style={{ color: "var(--acc-deep)" }}>+</span> Teach your agent how to qualify buyers <span style={{ fontWeight: 400, color: "var(--fg-5)", fontSize: 11.5 }}>(optional, makes it sharper)</span>
         </summary>
+        <p style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.5, margin: "6px 0 0" }}>
+          Tell it what to ask so it separates serious buyers from browsers. Skip this and it still asks sensible default questions.
+        </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
           <div>
             <label style={labelStyle} htmlFor="qualifyingQuestions">What should your agent ask to qualify buyers?</label>
@@ -515,7 +520,7 @@ export function OfferForm({
         }}
       >
         <button type="submit" className="btn" disabled={pending} style={{ opacity: pending ? 0.7 : 1 }}>
-          {pending ? "Saving…" : onboarding ? "Finish setup →" : "Save setup"}
+          {pending ? "Saving…" : onboarding ? "Launch your agent →" : "Save setup"}
         </button>
         {state && (
           <span style={{ fontSize: 13, color: state.ok ? "var(--acc-deep)" : "#9F2D2D" }}>{state.message}</span>
