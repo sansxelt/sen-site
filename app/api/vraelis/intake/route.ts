@@ -17,7 +17,7 @@ import {
 } from "@/lib/vraelis-db";
 import { generateLeadReply } from "@/lib/vraelis-ai";
 import { sendLeadReply } from "@/lib/vraelis-email";
-import { notifyOwnerNewLead } from "@/lib/vraelis-sms";
+import { notifyOwnerNewLeadEvent } from "@/lib/vraelis-notify";
 import { limitOr429 } from "@/lib/vraelis-ratelimit";
 
 const CORS = {
@@ -111,8 +111,15 @@ export async function POST(req: NextRequest) {
     });
     await touchLeadStatus(lead.id, "contacted");
 
-    // Text the owner that a new lead landed (fail-soft, no-op if SMS unset).
-    await notifyOwnerNewLead(workspace.owner_email, { name, phone, email, message });
+    // Alert the owner that a new lead landed — email always (works without
+    // Twilio) + SMS when configured.
+    await notifyOwnerNewLeadEvent(workspace.owner_email, {
+      id: lead.id,
+      name,
+      contact_email: email,
+      contact_phone: phone,
+      message,
+    });
 
     return NextResponse.json(
       { ok: true, leadId: lead.id, reply: replyText, delivered },

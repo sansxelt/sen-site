@@ -22,6 +22,7 @@ import {
 } from "@/lib/vraelis-db";
 import { continueLeadConversation, type ConvoTurn } from "@/lib/vraelis-ai";
 import { sendLeadReply } from "@/lib/vraelis-email";
+import { notifyOwnerStatusEvent } from "@/lib/vraelis-notify";
 import { startWorkspacePayment } from "@/lib/vraelis-connect";
 
 const pick = (o: Record<string, unknown>, keys: string[]) => {
@@ -158,7 +159,10 @@ export async function POST(req: NextRequest) {
       replyTo: lead.owner_email,
     });
     await addMessage({ leadId: lead.id, role: "agent", body: replyText, channel: r.sent ? "email" : "note", delivered: r.sent });
+    const prevStatus = lead.status;
     await touchLeadStatus(lead.id, nextStatus);
+    // Alert the owner on a genuine escalation / hot-lead transition.
+    await notifyOwnerStatusEvent(ws.owner_email, lead, prevStatus, nextStatus);
 
     return NextResponse.json({ ok: true, matched: true, replied: r.sent });
   } catch (error) {

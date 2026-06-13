@@ -24,7 +24,8 @@ import {
 } from "@/lib/vraelis-db";
 import { continueLeadConversation, type ConvoTurn } from "@/lib/vraelis-ai";
 import { startWorkspacePayment } from "@/lib/vraelis-connect";
-import { sendSms, normalizePhone, notifyOwnerNewLead } from "@/lib/vraelis-sms";
+import { sendSms, normalizePhone } from "@/lib/vraelis-sms";
+import { notifyOwnerNewLeadEvent, notifyOwnerStatusEvent } from "@/lib/vraelis-notify";
 import { allow } from "@/lib/vraelis-ratelimit";
 import { captureError } from "@/lib/vraelis-monitor";
 
@@ -59,7 +60,6 @@ export async function POST(req: NextRequest) {
 
     // Match the existing lead by phone, or create a new SMS lead.
     let lead = await findLeadByContactPhone(workspace.owner_email, from);
-    const isNew = !lead;
     if (!lead) {
       lead = await createLead({
         ownerEmail: workspace.owner_email,
@@ -67,7 +67,7 @@ export async function POST(req: NextRequest) {
         source: "sms",
         snippet: bodyText,
       });
-      await notifyOwnerNewLead(workspace.owner_email, { phone: from, message: bodyText });
+      await notifyOwnerNewLeadEvent(workspace.owner_email, { id: lead.id, contact_phone: from, message: bodyText });
     }
 
     await addMessage({ leadId: lead.id, role: "lead", body: bodyText, channel: "sms" });
@@ -126,8 +126,15 @@ export async function POST(req: NextRequest) {
 
     await sendSms(from, replyText, workspace.twilio_number ?? undefined);
     await addMessage({ leadId: lead.id, role: "agent", body: replyText, channel: "sms", delivered: true });
+    const prevStatus = lead.status;
     await touchLeadStatus(lead.id, nextStatus);
-    void isNew;
+    // Alert the owner on a genuine escalation / hot-lead transition. Fired
+    // unconditionally: notifyOwnerStatusEvent only emails for needs_owner /
+    // booking_ready AND only when the status actually changed, so a normal
+    // new lead (new->contacted/qualifying) sends no second email — but a
+    // first-message hot lead or escalation (new->booking_ready/needs_owner)
+    // correctly reaches the owner, which the prior isNew skip swallowed.
+    await notifyOwnerStatusEvent(workspace.owner_email, lead, prevStatus, nextStatus);
   } catch (e) {
     captureError("sms-inbound", e);
   }

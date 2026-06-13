@@ -25,6 +25,7 @@ import {
 } from "@/lib/vraelis-db";
 import { startWorkspacePayment } from "@/lib/vraelis-connect";
 import { continueLeadConversation, type ConvoTurn } from "@/lib/vraelis-ai";
+import { notifyOwnerStatusEvent } from "@/lib/vraelis-notify";
 import { limitOr429 } from "@/lib/vraelis-ratelimit";
 
 const CORS = {
@@ -148,6 +149,9 @@ export async function POST(req: NextRequest) {
 
     await addMessage({ leadId, role: "agent", body: replyText, channel: "chat" });
     await touchLeadStatus(leadId, nextStatus);
+
+    // Alert the owner on a genuine escalation or hot-lead transition.
+    await notifyOwnerStatusEvent(workspace.owner_email, { ...data.lead, id: leadId }, data.lead.status, nextStatus);
 
     return NextResponse.json(
       { ok: true, reply: replyText, status: nextStatus },

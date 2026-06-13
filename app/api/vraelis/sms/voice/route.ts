@@ -15,7 +15,8 @@ import {
   getWorkspaceByTwilioNumber,
   getWorkspaceContact,
 } from "@/lib/vraelis-db";
-import { sendSms, normalizePhone, notifyOwnerNewLead } from "@/lib/vraelis-sms";
+import { sendSms, normalizePhone } from "@/lib/vraelis-sms";
+import { notifyOwnerNewLeadEvent } from "@/lib/vraelis-notify";
 import { captureError } from "@/lib/vraelis-monitor";
 
 const ORIGIN = "https://vraelis.com";
@@ -30,16 +31,18 @@ async function textBack(toNumber: string, callerNumber: string) {
   const workspace = await getWorkspaceByTwilioNumber(toNumber);
   if (!workspace) return;
   const existing = await findLeadByContactPhone(workspace.owner_email, callerNumber);
+  let newLeadId: string | undefined;
   if (!existing) {
-    await createLead({
+    const created = await createLead({
       ownerEmail: workspace.owner_email,
       contactPhone: callerNumber,
       source: "missed_call",
       snippet: "Missed call",
     });
-    await notifyOwnerNewLead(workspace.owner_email, { phone: callerNumber, message: "Missed call" });
+    newLeadId = created.id;
+    await notifyOwnerNewLeadEvent(workspace.owner_email, { id: created.id, contact_phone: callerNumber, message: "Missed call" });
   }
-  const leadId = existing?.id;
+  const leadId = existing?.id ?? newLeadId;
   const body = "Sorry we missed your call! Reply here and we'll help you right away.";
   await sendSms(callerNumber, body, workspace.twilio_number ?? undefined);
   if (leadId) await addMessage({ leadId, role: "agent", body, channel: "sms", delivered: true });

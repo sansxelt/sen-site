@@ -91,6 +91,33 @@ export async function sendBookingConfirmation(opts: {
   }
 }
 
+// Always-works owner notification (email, via the same verified Resend sender).
+// Unlike the SMS owner alert, this fires without Twilio, so escalations and
+// hot leads can never sit silently. Fire-and-forget: never throws into the
+// caller (a lead handler must not 500 because an alert email failed), and
+// dedupes nothing itself — callers fire it only on a genuine transition so the
+// owner isn't spammed per message.
+export async function sendOwnerAlert(opts: {
+  ownerEmail: string;
+  subject: string;
+  body: string;
+}): Promise<void> {
+  const resend = getResend();
+  if (!resend || !opts.ownerEmail) return;
+  const from = fromAddress();
+  if (!from) return;
+  try {
+    await resend.emails.send({
+      from,
+      to: opts.ownerEmail,
+      subject: opts.subject,
+      text: opts.body,
+    });
+  } catch (error) {
+    console.error("sendOwnerAlert failed:", error);
+  }
+}
+
 export async function sendLeadReply(opts: {
   to: string;
   businessName: string;
