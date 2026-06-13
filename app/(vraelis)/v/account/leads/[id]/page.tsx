@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getLeadWithMessages, getOrCreateWorkspace, isWorkspaceOnboarded, listPayments, type LeadStatus } from "@/lib/vraelis-db";
+import { getLeadWithMessages, getOrCreateWorkspace, getWorkspaceOffer, isWorkspaceOnboarded, listPayments, type LeadStatus } from "@/lib/vraelis-db";
 import { cutRateFor } from "@/lib/vraelis-plans";
 import { updateLeadDealAction, updateLeadOutcomeAction } from "../../actions";
 import { ReplyBox } from "./reply-box";
@@ -51,14 +51,18 @@ export default async function LeadDetailPage({
   if (!(await isWorkspaceOnboarded(session.user.email))) redirect("/v/account");
 
   const { id } = await params;
-  const [data, workspace, leadPayments] = await Promise.all([
+  const [data, workspace, leadPayments, offer] = await Promise.all([
     getLeadWithMessages(session.user.email, id),
     getOrCreateWorkspace(session.user.email),
     listPayments(session.user.email, { leadId: id, limit: 10 }),
+    getWorkspaceOffer(session.user.email),
   ]);
   if (!data) notFound();
   const { lead, messages } = data;
   const leadName = lead.name || lead.contact_email || lead.contact_phone || "New lead";
+  // The agent's name (owner-set) labels its messages in the thread, matching
+  // the rest of the app; falls back to a business-tied label when unnamed.
+  const agentLabel = (offer?.agentName || "").trim() || `${(workspace?.business_name || "Your").trim()} agent`;
   const connected = workspace?.connect_status === "active";
   const cutRate = cutRateFor(workspace?.plan ?? null, workspace?.plan_cycle ?? null);
   const pendingPayment = leadPayments.find((payment) => payment.status === "pending") ?? null;
@@ -277,7 +281,7 @@ export default async function LeadDetailPage({
               {messages.map((m) => (
                 <div key={m.id} className={`bub ${m.role === "agent" ? "bub--out" : "bub--in"}`} style={{ maxWidth: "80%", alignSelf: m.role === "agent" ? "flex-end" : "flex-start" }}>
                   <div className="bub__who">
-                    {m.role === "agent" ? "Vraelis" : leadName.split(" ")[0]}
+                    {m.role === "agent" ? agentLabel : leadName.split(" ")[0]}
                     {m.role === "agent" && m.channel === "chat" ? " · chat" : ""}
                     {m.role === "agent" && !m.delivered && m.channel !== "chat" ? " · draft (not emailed)" : ""}
                   </div>

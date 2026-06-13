@@ -141,6 +141,15 @@ const PERSONA_COPY: Record<string, PersonaCopy> = {
   },
 };
 
+// Tone presets the agent speaks in. Stored key feeds the AI prompt
+// (see toneLine in lib/vraelis-ai.ts).
+const TONES = [
+  { key: "friendly", label: "Friendly" },
+  { key: "professional", label: "Professional" },
+  { key: "direct", label: "Direct" },
+  { key: "casual", label: "Casual" },
+] as const;
+
 export function OfferForm({
   initialName,
   initialDescription,
@@ -150,6 +159,8 @@ export function OfferForm({
   initialQualifying,
   initialLeadSources,
   initialPersona,
+  initialAgentName,
+  initialAgentTone,
   mode,
 }: {
   initialName: string;
@@ -160,6 +171,8 @@ export function OfferForm({
   initialQualifying: string;
   initialLeadSources: string;
   initialPersona: string;
+  initialAgentName: string;
+  initialAgentTone: string;
   mode?: "onboarding";
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(saveOfferAction, null);
@@ -171,6 +184,9 @@ export function OfferForm({
     PERSONAS.some((p) => p.key === initialPersona) ? initialPersona : "",
   );
   const [personaError, setPersonaError] = useState(false);
+  const [tone, setTone] = useState<string>(
+    TONES.some((t) => t.key === initialAgentTone) ? initialAgentTone : "friendly",
+  );
   const pc = PERSONA_COPY[persona] ?? PERSONA_COPY.other;
   const onboarding = mode === "onboarding";
 
@@ -222,8 +238,55 @@ export function OfferForm({
         )}
       </div>
 
+      {/* Agent identity — name + voice. Feeds the AI prompt across every
+          channel (chat, email, SMS). */}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 200px", minWidth: 160 }}>
+          <label style={labelStyle} htmlFor="agentName">Name your agent</label>
+          <input
+            id="agentName"
+            name="agentName"
+            defaultValue={initialAgentName}
+            placeholder="e.g. Ava"
+            maxLength={40}
+            style={inputStyle}
+          />
+          <p style={hintStyle}>How it introduces itself to leads. Leave blank to speak as your business.</p>
+        </div>
+        <div style={{ flex: "1 1 200px", minWidth: 160 }}>
+          <span style={labelStyle}>Voice</span>
+          <input type="hidden" name="agentTone" value={tone} />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {TONES.map((t) => {
+              const active = tone === t.key;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setTone(t.key)}
+                  style={{
+                    cursor: "pointer",
+                    padding: "5px 12px",
+                    borderRadius: 999,
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    border: `1px solid ${active ? "var(--acc-deep)" : "var(--line-2)"}`,
+                    background: active ? "rgba(14,158,108,0.06)" : "var(--bg-1)",
+                    color: active ? "var(--acc-deep)" : "var(--fg-3)",
+                  }}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <p style={hintStyle}>How your agent sounds with every lead.</p>
+        </div>
+      </div>
+
       {/* 1 — What you sell */}
-      <Step n={1} title="What do you sell?">
+      <Step n={1} title="What does your agent sell?">
         <input
           name="businessName"
           defaultValue={initialName}
@@ -254,7 +317,7 @@ export function OfferForm({
           required={onboarding}
           style={{ ...inputStyle, resize: "vertical", fontFamily: "var(--font-mono)", fontSize: 13 }}
         />
-        <p style={hintStyle}>Vraelis quotes <b>only</b> these prices and can collect them on-platform.</p>
+        <p style={hintStyle}>Your agent quotes <b>only</b> these prices and can collect them in the conversation.</p>
       </Step>
 
       {/* 3 — How customers pay */}
@@ -369,11 +432,11 @@ export function OfferForm({
       {/* Advanced — collapsed by default so core setup stays to 3 steps */}
       <details style={{ borderTop: "1px solid var(--line-1)", paddingTop: 14 }}>
         <summary style={{ cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 11.5, letterSpacing: "0.04em", color: "var(--fg-3)", listStyle: "none" }}>
-          <span style={{ color: "var(--acc-deep)" }}>+</span> Advanced — qualification &amp; lead sources <span style={{ color: "var(--fg-5)" }}>(optional)</span>
+          <span style={{ color: "var(--acc-deep)" }}>+</span> How your agent qualifies &amp; where it works <span style={{ color: "var(--fg-5)" }}>(optional)</span>
         </summary>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
           <div>
-            <label style={labelStyle} htmlFor="qualifyingQuestions">What should Vraelis ask to qualify buyers?</label>
+            <label style={labelStyle} htmlFor="qualifyingQuestions">What should your agent ask to qualify buyers?</label>
             <textarea
               id="qualifyingQuestions"
               name="qualifyingQuestions"
@@ -383,7 +446,7 @@ export function OfferForm({
               rows={3}
               style={{ ...inputStyle, resize: "vertical" }}
             />
-            <p style={hintStyle}>Vraelis asks these naturally to separate serious buyers from browsers.</p>
+            <p style={hintStyle}>Your agent asks these naturally to separate serious buyers from browsers.</p>
           </div>
           <div>
             <label style={labelStyle} htmlFor="leadSources">Where do your leads come from?</label>

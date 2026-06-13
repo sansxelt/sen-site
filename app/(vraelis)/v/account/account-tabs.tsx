@@ -35,6 +35,19 @@ export function AccountTabs({
   initialTab?: Key;
 }) {
   const [tab, setTab] = useState<Key>(initialTab);
+
+  // Server-rendered panels (passed as props) can't call setTab directly, so
+  // they request a tab jump via a `data-tab-jump="<key>"` attribute on any
+  // clickable element; we delegate the click here.
+  function onPanelClick(e: React.MouseEvent<HTMLDivElement>) {
+    const el = (e.target as HTMLElement).closest<HTMLElement>("[data-tab-jump]");
+    const key = el?.dataset.tabJump;
+    if (key === "inbox" || key === "money" || key === "setup") {
+      e.preventDefault();
+      setTab(key);
+    }
+  }
+
   const done = steps.filter((s) => s.done).length;
   const allDone = done === steps.length;
   const pct = Math.round((done / steps.length) * 100);
@@ -103,8 +116,8 @@ export function AccountTabs({
           );
         })}
       </div>
-      <div style={{ display: tab === "inbox" ? "block" : "none" }}>{inbox}</div>
-      <div style={{ display: tab === "money" ? "block" : "none" }}>{money}</div>
+      <div onClick={onPanelClick} style={{ display: tab === "inbox" ? "block" : "none" }}>{inbox}</div>
+      <div onClick={onPanelClick} style={{ display: tab === "money" ? "block" : "none" }}>{money}</div>
       <div style={{ display: tab === "setup" ? "block" : "none" }}>{setup}</div>
     </div>
   );

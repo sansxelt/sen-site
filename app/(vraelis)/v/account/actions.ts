@@ -135,6 +135,12 @@ export async function saveOfferAction(
   const PERSONA_KEYS = ["coach", "course", "agency", "consultant", "community", "other"];
   const personaRaw = String(formData.get("persona") ?? "").trim();
   const persona = PERSONA_KEYS.includes(personaRaw) ? personaRaw : null;
+  // Agent identity — name (free text) + tone (whitelisted preset). Both
+  // feed the AI prompt across chat/email/SMS.
+  const TONE_KEYS = ["friendly", "professional", "direct", "casual"];
+  const agentName = String(formData.get("agentName") ?? "").trim().slice(0, 40) || null;
+  const agentToneRaw = String(formData.get("agentTone") ?? "").trim();
+  const agentTone = TONE_KEYS.includes(agentToneRaw) ? agentToneRaw : null;
   // "onboarding" mode = the gated first-run screen; it requires the
   // core-onboarding minimums before the workspace unlocks.
   const isOnboarding = String(formData.get("mode") ?? "") === "onboarding";
@@ -169,13 +175,15 @@ export async function saveOfferAction(
       qualifyingQuestions: qualifyingQuestions || null,
       leadSources: leadSources || null,
       persona,
+      agentName,
+      agentTone,
       ...(minimumsMet || wasOnboarded ? { onboardingComplete: true } : {}),
     });
     revalidatePath("/v/account");
     if (isOnboarding && !minimumsMet) {
       return { ok: false, message: `Saved your progress — still needed: ${missing.join(", ")}.` };
     }
-    return { ok: true, message: isOnboarding ? "Setup complete — Vraelis is live on your leads." : "Saved." };
+    return { ok: true, message: isOnboarding ? "Your agent is live — it's now working every lead." : "Saved." };
   } catch (error) {
     console.error("saveOfferAction failed:", error);
     return { ok: false, message: "Couldn't save — try again." };

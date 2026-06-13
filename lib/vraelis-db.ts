@@ -556,10 +556,17 @@ export async function setWorkspaceServices(email: string, services: string | nul
 // workspace reads, and writes no-op (log only) until the columns exist.
 // `persona` is read/written in its OWN query so a missing persona column
 // can't break the (already-migrated) qualifying/lead-sources fields.
-export async function getWorkspaceOffer(
-  email: string,
-): Promise<{ qualifyingQuestions: string | null; leadSources: string | null; persona: string | null; onboardingComplete: boolean | null }> {
-  const empty = { qualifyingQuestions: null, leadSources: null, persona: null, onboardingComplete: null };
+export type WorkspaceOffer = {
+  qualifyingQuestions: string | null;
+  leadSources: string | null;
+  persona: string | null;
+  onboardingComplete: boolean | null;
+  agentName: string | null;
+  agentTone: string | null;
+};
+
+export async function getWorkspaceOffer(email: string): Promise<WorkspaceOffer> {
+  const empty: WorkspaceOffer = { qualifyingQuestions: null, leadSources: null, persona: null, onboardingComplete: null, agentName: null, agentTone: null };
   if (!email || !isDatabaseConfigured()) return empty;
   try {
     const supabase = getSupabaseAdminClient();
@@ -569,10 +576,14 @@ export async function getWorkspaceOffer(
       .select("qualifying_questions, lead_sources")
       .eq("owner_email", owner)
       .maybeSingle();
-    // persona + onboarding_complete each in their own fail-soft query so
-    // one missing column can't blank out the others.
+    // persona, onboarding_complete, and agent_name/agent_tone each read in
+    // their OWN fail-soft query so one not-yet-migrated column can't blank
+    // out the others. agent_name + agent_tone migrate together, so they
+    // share one query.
     let persona: string | null = null;
     let onboardingComplete: boolean | null = null;
+    let agentName: string | null = null;
+    let agentTone: string | null = null;
     try {
       const { data: pData, error: pError } = await supabase
         .from("vraelis_workspaces" as never)
@@ -589,13 +600,27 @@ export async function getWorkspaceOffer(
         .maybeSingle();
       if (!oError) onboardingComplete = (oData as unknown as { onboarding_complete?: boolean | null } | null)?.onboarding_complete ?? null;
     } catch { /* onboarding_complete column not migrated yet */ }
-    if (error) return { ...empty, persona, onboardingComplete };
+    try {
+      const { data: aData, error: aError } = await supabase
+        .from("vraelis_workspaces" as never)
+        .select("agent_name, agent_tone")
+        .eq("owner_email", owner)
+        .maybeSingle();
+      if (!aError) {
+        const a = aData as unknown as { agent_name?: string | null; agent_tone?: string | null } | null;
+        agentName = a?.agent_name ?? null;
+        agentTone = a?.agent_tone ?? null;
+      }
+    } catch { /* agent_name/agent_tone columns not migrated yet */ }
+    if (error) return { ...empty, persona, onboardingComplete, agentName, agentTone };
     const row = data as unknown as { qualifying_questions?: string | null; lead_sources?: string | null } | null;
     return {
       qualifyingQuestions: row?.qualifying_questions ?? null,
       leadSources: row?.lead_sources ?? null,
       persona,
       onboardingComplete,
+      agentName,
+      agentTone,
     };
   } catch {
     return empty;
@@ -604,7 +629,7 @@ export async function getWorkspaceOffer(
 
 export async function setWorkspaceOffer(
   email: string,
-  fields: { qualifyingQuestions?: string | null; leadSources?: string | null; persona?: string | null; onboardingComplete?: boolean },
+  fields: { qualifyingQuestions?: string | null; leadSources?: string | null; persona?: string | null; onboardingComplete?: boolean; agentName?: string | null; agentTone?: string | null },
 ): Promise<void> {
   if (!email || !isDatabaseConfigured()) return;
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -631,6 +656,17 @@ export async function setWorkspaceOffer(
         .update({ onboarding_complete: fields.onboardingComplete } as never)
         .eq("owner_email", owner);
       if (oError) console.error("setWorkspaceOffer: onboarding_complete column may not exist yet —", oError.message);
+    }
+    // agent_name + agent_tone migrate together → one fail-soft update.
+    if (fields.agentName !== undefined || fields.agentTone !== undefined) {
+      const agentPatch: Record<string, unknown> = {};
+      if (fields.agentName !== undefined) agentPatch.agent_name = fields.agentName;
+      if (fields.agentTone !== undefined) agentPatch.agent_tone = fields.agentTone;
+      const { error: aError } = await supabase
+        .from("vraelis_workspaces" as never)
+        .update(agentPatch as never)
+        .eq("owner_email", owner);
+      if (aError) console.error("setWorkspaceOffer: agent_name/agent_tone columns may not exist yet —", aError.message);
     }
   } catch (e) {
     console.error("setWorkspaceOffer failed:", e);

@@ -38,7 +38,7 @@ export function AddLeadForm() {
           <input name="email" type="email" placeholder="Email" style={inputStyle} />
         </div>
         <input name="phone" placeholder="Phone (optional)" style={inputStyle} />
-        <textarea name="note" rows={2} placeholder="Note for Vraelis — who they are / why you're reaching out" style={{ ...inputStyle, resize: "vertical" }} />
+        <textarea name="note" rows={2} placeholder="Note for your agent — who they are / why you're reaching out" style={{ ...inputStyle, resize: "vertical" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button type="submit" className="btn" disabled={pending} style={{ padding: "9px 16px", fontSize: 13, opacity: pending ? 0.7 : 1 }}>
             {pending ? "Reaching out…" : "Reach out"}
@@ -48,7 +48,7 @@ export function AddLeadForm() {
           )}
         </div>
         <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-4)", lineHeight: 1.5 }}>
-          Vraelis emails them a first-touch message and starts the thread — replies come back to you.
+          Your agent emails them a first-touch message and starts the thread — replies come back to you.
         </p>
       </form>
     </details>

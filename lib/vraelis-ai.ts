@@ -30,6 +30,25 @@ const OFFPLATFORM_RULE =
 
 const ALLOWED_STATUSES = ["contacted", "qualifying", "qualified", "booking_ready", "needs_owner", "lost"];
 
+// Tone presets the owner picks for their agent. Maps the stored key to a
+// short instruction the model follows. Unknown/empty → balanced default.
+const TONE_INSTRUCTION: Record<string, string> = {
+  friendly: "Voice: warm and friendly — approachable and personable, like a helpful person who genuinely likes their customers.",
+  professional: "Voice: polished and professional — clear, competent, and respectful, the way a trusted business represents itself.",
+  direct: "Voice: direct and efficient — concise and to the point, no filler, respects the lead's time while staying courteous.",
+  casual: "Voice: casual and relaxed — conversational and easygoing, like texting a friend, while still helpful.",
+};
+function toneLine(tone?: string | null): string {
+  return TONE_INSTRUCTION[(tone ?? "").toLowerCase()] ?? "Voice: warm, efficient, and human — friendly but not chatty.";
+}
+// How the agent refers to itself. Owner can name it; otherwise it speaks
+// as the business's assistant without inventing a persona name.
+function agentIdentity(agentName: string | null | undefined, business: string): string {
+  return agentName?.trim()
+    ? `You are ${agentName.trim()}, the AI sales agent for ${business}.`
+    : `You are the AI sales agent for ${business}.`;
+}
+
 // Multi-turn: continue an ongoing lead conversation. Returns the next
 // reply plus a suggested status (or null to leave unchanged).
 export async function continueLeadConversation(input: {
@@ -39,6 +58,8 @@ export async function continueLeadConversation(input: {
   businessServices?: string; // freeform "service — $price" lines the AI may quote
   canTakePayment?: boolean; // payouts connected → AI may request payment in-chat
   depositLabel?: string | null; // e.g. "$30" when a booking deposit is configured
+  agentName?: string | null; // owner-named agent (e.g. "Ava"); blank → unnamed
+  agentTone?: string | null; // tone preset key: friendly | professional | direct | casual
 }): Promise<ConvoResult> {
   const business = input.businessName || "the business";
   const description = input.businessDescription
@@ -55,10 +76,11 @@ export async function continueLeadConversation(input: {
     : "Payments are not enabled for this business yet. Do not offer to take payment; payment must be null.";
 
   const system = [
-    `You are the AI lead follow-up assistant for ${business}. You are talking with an inbound lead in a live chat.`,
+    `${agentIdentity(input.agentName, business)} You are talking with an inbound lead in a live chat.`,
+    toneLine(input.agentTone),
     description,
     servicesBlock,
-    "Your job: reply briefly (1–2 short sentences) and move the lead toward a booking or payment as fast as is natural. Be efficient, warm, and human — not chatty.",
+    "Your job: reply briefly (1–2 short sentences) and move the lead toward a booking or payment as fast as is natural. Be efficient and human — not chatty.",
     "Speed to booking (important): ask AT MOST ONE qualifying question. Once the lead is clearly a fit and understands the relevant service or price, set status qualified. The moment they want a time, want to move forward, or are ready to pay, set status booking_ready and offer the next step. Don't keep asking questions or stalling; when in doubt, offer the booking. Aim to reach qualified or booking_ready within 1–2 messages.",
     "Hard rules: Never collect card numbers, bank/routing details, SSNs, or sensitive medical/legal/financial info. Never promise exact prices that aren't in the services list. Never claim an appointment is booked yourself. You are an assistant, not the owner — don't dishonestly impersonate them. No emojis.",
     OFFPLATFORM_RULE,

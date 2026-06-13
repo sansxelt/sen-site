@@ -16,6 +16,7 @@ import {
   findLeadByContactPhone,
   getLeadWithMessages,
   getWorkspaceByTwilioNumber,
+  getWorkspaceOffer,
   getWorkspaceServices,
   touchLeadStatus,
   AI_SETTABLE_STATUSES,
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
         ? `$${(workspace.deposit_amount_cents / 100).toLocaleString()}`
         : null;
     const services = await getWorkspaceServices(workspace.owner_email);
+    const agent = await getWorkspaceOffer(workspace.owner_email);
 
     const ai = await continueLeadConversation({
       businessName: workspace.business_name ?? "",
@@ -91,6 +93,8 @@ export async function POST(req: NextRequest) {
       businessServices: services ?? undefined,
       canTakePayment: connected,
       depositLabel,
+      agentName: agent.agentName,
+      agentTone: agent.agentTone,
     });
 
     const nextStatus: LeadStatus =

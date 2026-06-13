@@ -28,11 +28,11 @@ export function SmsForm({
         <input id="ownerPhone" name="ownerPhone" defaultValue={initialOwnerPhone} placeholder="+1 555 123 4567" maxLength={32} style={input} />
       </div>
       <div>
-        <label style={label} htmlFor="twilioNumber">Your Twilio number <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(SMS &amp; calls)</span></label>
+        <label style={label} htmlFor="twilioNumber">Agent&apos;s text &amp; voice number <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(the number leads see)</span></label>
         <input id="twilioNumber" name="twilioNumber" defaultValue={initialTwilioNumber} placeholder="+1 555 987 6543" maxLength={32} style={input} />
       </div>
       <p style={{ fontSize: 11.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-        SMS &amp; missed-call text-back go live once your number&apos;s A2P registration clears the carriers. Until then, chat, email, and the web still capture every lead.
+        This is the number your agent texts leads from and answers missed calls on. It goes live once the number clears carrier registration. Until then, your agent still works every lead over chat, email, and the web.
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <button type="submit" className="btn" disabled={pending} style={{ opacity: pending ? 0.7 : 1 }}>

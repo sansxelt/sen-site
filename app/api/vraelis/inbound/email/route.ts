@@ -14,6 +14,7 @@ import {
   findLeadByContactEmail,
   getLeadWithMessages,
   getOrCreateWorkspace,
+  getWorkspaceOffer,
   getWorkspaceServices,
   touchLeadStatus,
   AI_SETTABLE_STATUSES,
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
         ? `$${(ws.deposit_amount_cents / 100).toLocaleString()}`
         : null;
     const services = await getWorkspaceServices(lead.owner_email);
+    const agent = await getWorkspaceOffer(lead.owner_email);
 
     const ai = await continueLeadConversation({
       businessName: ws?.business_name ?? "",
@@ -92,6 +94,8 @@ export async function POST(req: NextRequest) {
       businessServices: services ?? undefined,
       canTakePayment: connected,
       depositLabel,
+      agentName: agent.agentName,
+      agentTone: agent.agentTone,
     });
 
     const nextStatus: LeadStatus =
