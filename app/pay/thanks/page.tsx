@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { reconcileSessionById } from "@/lib/vraelis-payment-settle";
 
 export const metadata: Metadata = {
   title: "Payment — Vraelis",
@@ -12,6 +13,13 @@ export default async function PayThanksPage({
 }) {
   const params = await searchParams;
   const canceled = Boolean(params.canceled);
+  // Self-heal: if the buyer lands here with a session id, settle it now in
+  // case the webhook is delayed or was dropped. Idempotent — a no-op once the
+  // webhook (or a prior visit) already recorded the payment.
+  const sessionId = String(Array.isArray(params.session_id) ? params.session_id[0] : params.session_id ?? "");
+  if (sessionId && !canceled) {
+    await reconcileSessionById(sessionId);
+  }
 
   return (
     <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#F7F6F1", padding: 24, fontFamily: "'Inter Tight', system-ui, sans-serif" }}>

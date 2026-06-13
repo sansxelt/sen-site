@@ -427,7 +427,7 @@ export async function requestPaymentAction(
       productName,
       description: description || "Payment",
       customerEmail,
-      successUrl: `${ORIGIN}/pay/thanks`,
+      successUrl: `${ORIGIN}/pay/thanks?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${ORIGIN}/pay/thanks?canceled=1`,
       metadata: { kind: "vraelis_payment", owner_email: email, lead_id: leadId, pay_kind: "full" },
     });

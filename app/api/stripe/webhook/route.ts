@@ -23,12 +23,9 @@ import { getUserProfileByEmail } from "../../../../lib/user-profile";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
 import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
 import { invalidateAddonsCache } from "../../../../lib/active-addons";
-import { setWorkspacePlan, markPaymentPaid, markLeadsFeeBilled, setLeadStatus, setLeadOutcome } from "../../../../lib/vraelis-db";
+import { setWorkspacePlan } from "../../../../lib/vraelis-db";
 import { isCycle, isPlanKey } from "../../../../lib/vraelis-plans";
-import { createBooking, slotLabel } from "../../../../lib/vraelis-booking";
-import { refundPayment } from "../../../../lib/vraelis-connect";
-import { sendBookingConfirmation } from "../../../../lib/vraelis-email";
-import { captureError } from "../../../../lib/vraelis-monitor";
+import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
 
 // Vraelis runs in this same Stripe account. Vraelis checkout sessions +
 // subscriptions carry metadata { owner_email, plan, cycle }. When an
@@ -52,61 +49,18 @@ async function recordVraelisPlan(
 
 // Vraelis on-platform payment (Stripe Connect destination charge). The cut
 // was already taken as the application fee — here we just record it as paid
-// and advance the lead: a deposit confirms the booking, a full payment marks
-// the deal won. Idempotent via markPaymentPaid keyed on the session id.
+// and advance the lead. The settle logic lives in lib/vraelis-payment-settle
+// so the reconcile paths (buyer return + cron) share it; markPaymentPaid is
+// the idempotency gate, so duplicate deliveries are no-ops.
 async function handleVraelisPayment(session: Stripe.Checkout.Session): Promise<void> {
   const paymentIntent =
     typeof session.payment_intent === "string"
       ? session.payment_intent
       : session.payment_intent?.id ?? null;
-  // markPaymentPaid only returns a row on the FIRST (pending→paid) delivery,
-  // so this whole block runs at most once per payment — duplicate webhook
-  // deliveries (Stripe at-least-once, two endpoints) short-circuit here.
-  const payment = await markPaymentPaid(session.id, paymentIntent);
-  if (!payment) return;
-
-  try {
-    if (payment.kind === "deposit" && payment.booking_slot) {
-      const result = await createBooking({
-        ownerEmail: payment.owner_email,
-        leadId: payment.lead_id,
-        slotIso: payment.booking_slot,
-        name: payment.booking_name ?? undefined,
-        contactEmail: session.customer_details?.email ?? undefined,
-        contactPhone: payment.booking_phone ?? undefined,
-        note: "Deposit paid",
-      });
-      // Slot was taken between checkout and payment (concurrent booking) →
-      // we can't honor it. Refund the deposit instead of charging for nothing
-      // and don't send a misleading confirmation.
-      if (!result.ok) {
-        if (paymentIntent) await refundPayment(paymentIntent);
-        console.error(`[stripe webhook] deposit slot unavailable (${result.reason}), refunded payment ${payment.id}`);
-        return;
-      }
-      await sendBookingConfirmation({
-        businessName: payment.description ?? "",
-        slotLabel: slotLabel(payment.booking_slot),
-        leadEmail: session.customer_details?.email ?? null,
-        leadName: payment.booking_name ?? null,
-        ownerEmail: payment.owner_email,
-      });
-      if (payment.lead_id) {
-        await setLeadStatus(payment.owner_email, payment.lead_id, "booked");
-        await setLeadOutcome(payment.owner_email, payment.lead_id, "paid");
-        // Cut was already taken as the application fee → never let the monthly
-        // revenue-share sweep bill this lead again.
-        await markLeadsFeeBilled([payment.lead_id]);
-      }
-    } else if (payment.lead_id) {
-      await setLeadStatus(payment.owner_email, payment.lead_id, "won");
-      await setLeadOutcome(payment.owner_email, payment.lead_id, "paid");
-      await markLeadsFeeBilled([payment.lead_id]);
-    }
+  const result = await settlePaidSession(session.id, paymentIntent, session.customer_details?.email ?? null);
+  if (result.settled) {
     revalidatePath("/v/account");
-    if (payment.lead_id) revalidatePath(`/v/account/leads/${payment.lead_id}`);
-  } catch (err) {
-    captureError("stripe", err, { where: "handleVraelisPayment", session: session.id });
+    if (result.payment.lead_id) revalidatePath(`/v/account/leads/${result.payment.lead_id}`);
   }
 }
 

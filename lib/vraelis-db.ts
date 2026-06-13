@@ -791,6 +791,38 @@ export async function getPaymentsToRecover(): Promise<RecoverablePayment[]> {
   }
 }
 
+// Pending payments with a Stripe session id, for the reconcile sweep: ones
+// that may have been paid but whose webhook never landed. Bounded to a window:
+// `olderThanIso` floors the age so we don't race a webhook that's merely a few
+// seconds slow, and `newerThanIso` caps it — a Checkout Session expires after
+// ~24h, so a pending row older than that can never be paid and there's nothing
+// to reconcile. Without the cap, genuinely-abandoned payments (buyer never
+// pays, row stays 'pending' forever) would be re-retrieved from Stripe every
+// sweep, unbounded.
+export async function getPendingPaymentSessions(
+  olderThanIso: string,
+  newerThanIso: string,
+  limit = 100,
+): Promise<{ id: string; stripe_session_id: string | null }[]> {
+  if (!isDatabaseConfigured()) return [];
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("vraelis_payments" as never)
+      .select("id, stripe_session_id")
+      .eq("status", "pending")
+      .not("stripe_session_id", "is", null)
+      .lt("created_at", olderThanIso)
+      .gt("created_at", newerThanIso)
+      .order("created_at", { ascending: true })
+      .limit(limit);
+    if (error) return [];
+    return (data as unknown as { id: string; stripe_session_id: string | null }[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export async function updatePaymentSession(id: string, sessionId: string, url: string | null): Promise<void> {
   if (!isDatabaseConfigured()) return;
   try {

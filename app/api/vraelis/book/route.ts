@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         productName: workspace.business_name || "Vraelis",
         description: `Deposit to confirm ${label}`,
         customerEmail: email || null,
-        successUrl: `${ORIGIN}/pay/thanks`,
+        successUrl: `${ORIGIN}/pay/thanks?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${ORIGIN}/book/${key}${leadId ? `?lead=${leadId}` : ""}`,
         metadata: { kind: "vraelis_payment", owner_email: workspace.owner_email, lead_id: leadId || "", pay_kind: "deposit" },
       });

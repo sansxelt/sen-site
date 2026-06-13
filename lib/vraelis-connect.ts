@@ -174,7 +174,7 @@ export async function startWorkspacePayment(
       productName: ws.business_name || "Vraelis",
       description: input.description ?? (input.kind === "deposit" ? "Deposit" : "Payment"),
       customerEmail: input.customerEmail ?? null,
-      successUrl: input.successUrl ?? `${ORIGIN}/pay/thanks`,
+      successUrl: input.successUrl ?? `${ORIGIN}/pay/thanks?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: input.cancelUrl ?? `${ORIGIN}/pay/thanks?canceled=1`,
       metadata: { kind: "vraelis_payment", owner_email: ws.owner_email, lead_id: input.leadId ?? "", pay_kind: input.kind },
     });

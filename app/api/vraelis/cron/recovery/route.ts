@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
         productName: ws.business_name || "Vraelis",
         description: p.description || (p.kind === "deposit" ? "Deposit" : "Payment"),
         customerEmail: lead.contact_email,
-        successUrl: `${ORIGIN}/pay/thanks`,
+        successUrl: `${ORIGIN}/pay/thanks?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${ORIGIN}/pay/thanks?canceled=1`,
         metadata: { kind: "vraelis_payment", owner_email: p.owner_email, lead_id: p.lead_id, pay_kind: p.kind },
       });
