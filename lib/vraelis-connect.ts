@@ -10,7 +10,7 @@
 // skipped, because the platform takes it before the owner ever sees the money.
 
 import { getStripe } from "./stripe";
-import { createPayment, getWorkspaceOffer, type VraelisWorkspace } from "./vraelis-db";
+import { createPayment, getWorkspaceOffer, leadOpenPaymentStatus, type VraelisWorkspace } from "./vraelis-db";
 import { cutRateFor } from "./vraelis-plans";
 
 const ORIGIN = "https://vraelis.com";
@@ -153,8 +153,16 @@ export async function createPaymentCheckout(input: {
   metadata: Record<string, string>;
 }): Promise<{ url: string | null; sessionId: string }> {
   const stripe = getStripe();
+  // Pin the session lifetime so the live-link age is DETERMINISTIC (not
+  // dependent on Stripe's account default). The duplicate-charge guard's
+  // PENDING_BLOCK_WINDOW_MS is sized off this bound + the recovery-nudge
+  // horizon, so a stale pending row never stops blocking while a link is still
+  // payable. Stripe requires 30min ≤ expires_at ≤ 24h; use 23h55m so clock
+  // skew never pushes us past the 24h ceiling and rejects the session.
+  const expiresAt = Math.floor(Date.now() / 1000) + (23 * 60 + 55) * 60;
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
+    expires_at: expiresAt,
     line_items: [
       {
         quantity: 1,
@@ -204,6 +212,16 @@ export async function startWorkspacePayment(
 ): Promise<{ ok: boolean; url?: string; reason?: string }> {
   if (!ws.connect_account_id || ws.connect_status !== "active") return { ok: false, reason: "connect_required" };
   if (!Number.isFinite(input.amountCents) || input.amountCents < 50) return { ok: false, reason: "amount_too_small" };
+
+  // Duplicate-charge guard (P0 #4). This is the shared chokepoint for the AI
+  // web-chat / email / SMS paths: never mint a second live link for a lead
+  // that already has a pending link or has already paid. Re-engaging a quiet
+  // pending link is the recovery cron's job (which safely supersedes it), not
+  // a fresh charge. A null leadId can't be deduped → falls through (those
+  // calls always pass a leadId in practice).
+  const open = await leadOpenPaymentStatus(ws.owner_email, input.leadId);
+  if (open === "paid") return { ok: false, reason: "already_paid" };
+  if (open === "pending") return { ok: false, reason: "payment_pending" };
 
   const feeCents = Math.round(input.amountCents * cutRateFor(ws.plan, ws.plan_cycle));
   // Buyer sees the OFFER as the Stripe product (what they're buying), not the

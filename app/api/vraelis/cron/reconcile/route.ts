@@ -21,14 +21,14 @@ export const maxDuration = 60;
 // payments forever. The cap can't be ~24h (one session lifetime) because the
 // recovery cron regenerates FRESH, payable sessions at the 24h and 72h
 // reminder tiers — keyed on the row's original created_at, which never moves.
-// A buyer paying the 72h nudge is on a valid session whose row is already
-// ~72h old; the last nudge fires at 72h and that session lives ~24h, so a
-// payable session can exist up to ~96h after created_at. Recovery stops at
-// reminders_sent < 3 (no fresh session after 72h), so beyond ~96h every
-// still-pending row is genuinely dead — the ~4-day tail costs only a few
-// extra Stripe retrievals.
+// Because recovery runs DAILY, its 72h tier can slip up to ~24h, minting a
+// fresh session as late as ~96h after created_at; sessions live 24h
+// (expires_at pinned in createPaymentCheckout), so a payable session can exist
+// up to ~120h. Recovery stops at reminders_sent < 3 (no fresh session after
+// the last tier), so beyond that every still-pending row is genuinely dead.
+// Kept aligned with the dup-charge guard's PENDING_BLOCK_WINDOW_MS (126h).
 const MIN_AGE_MS = 10 * 60 * 1000;
-const MAX_AGE_MS = 100 * 60 * 60 * 1000;
+const MAX_AGE_MS = 126 * 60 * 60 * 1000;
 
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;

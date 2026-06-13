@@ -1036,6 +1036,67 @@ export type VraelisPayment = {
 const PAYMENT_COLS =
   "id, owner_email, lead_id, kind, description, currency, amount_cents, fee_cents, status, stripe_session_id, stripe_payment_intent, booking_slot, booking_name, booking_phone, created_at, paid_at";
 
+// Duplicate-charge guard (P0 #4). Returns the kind of OPEN payment a lead
+// already has, so callers refuse to mint a second live checkout link:
+//   "paid"    — the lead already paid on-platform (never charge again).
+//   "pending" — a live checkout link is already outstanding for this lead.
+//   null      — no open payment; safe to create one.
+// Scoping:
+//   - leadId is REQUIRED to dedup; a null/empty leadId returns null (no lead
+//     to dedup against — those paths can't be deduped by lead and the caller
+//     must decide its own policy).
+//   - bookingSlot (optional, ISO string): when set, only payments for THAT
+//     slot count, so a lead booking a different slot is never blocked.
+// Fail-OPEN on DB error (returns null): a transient read failure must not
+// permanently block a legitimate payment; the worst case degrades to today's
+// unguarded behavior, never to lost money.
+// A pending row only blocks while its checkout link could still be live; past
+// that it's a genuinely-dead abandoned link and MUST NOT block, or the lead
+// would be locked out of every future link forever (nothing else transitions
+// an abandoned row out of 'pending'). A PAID row always blocks regardless of
+// age (never re-charge someone who paid).
+//
+// Sizing the window (this is load-bearing — too short reopens the
+// duplicate-charge hole). The recovery cron runs DAILY, so its 72h reminder
+// tier can slip up to ~24h, minting a fresh session as late as ~96h after
+// created_at. Sessions are pinned to a 24h life (expires_at in
+// createPaymentCheckout), so the last possible payable link dies at ~96h+24h =
+// ~120h. We block to 126h for cron-drift margin. KEEP THIS ≥ (latest nudge age
+// ~96h) + (session life 24h); it is intentionally aligned with the reconcile
+// cron's MAX_AGE_MS.
+const PENDING_BLOCK_WINDOW_MS = 126 * 60 * 60 * 1000;
+
+export async function leadOpenPaymentStatus(
+  email: string,
+  leadId: string | null | undefined,
+  opts?: { bookingSlot?: string | null; now?: number },
+): Promise<"paid" | "pending" | null> {
+  if (!email || !leadId || !isDatabaseConfigured()) return null;
+  try {
+    const supabase = getSupabaseAdminClient();
+    let q = supabase
+      .from("vraelis_payments" as never)
+      .select("status, booking_slot, created_at")
+      .eq("owner_email", normalizeEmail(email))
+      .eq("lead_id", leadId)
+      .in("status", ["pending", "paid"]);
+    if (opts?.bookingSlot) q = q.eq("booking_slot", opts.bookingSlot);
+    const { data, error } = await q;
+    if (error) return null; // fail-open
+    const rows = (data as unknown as { status: string; created_at: string }[]) ?? [];
+    if (rows.some((r) => r.status === "paid")) return "paid";
+    const now = opts?.now ?? Date.now();
+    // Only a pending row still within its live-link window blocks; an
+    // abandoned/expired pending row does not (would otherwise lock the lead out).
+    const hasLivePending = rows.some(
+      (r) => r.status === "pending" && now - new Date(r.created_at).getTime() < PENDING_BLOCK_WINDOW_MS,
+    );
+    return hasLivePending ? "pending" : null;
+  } catch {
+    return null; // fail-open
+  }
+}
+
 export async function createPayment(input: {
   ownerEmail: string;
   leadId?: string | null;
@@ -1105,6 +1166,27 @@ export async function markPaymentPaid(
     return null;
   }
   return (data as unknown as VraelisPayment) ?? null;
+}
+
+// Mark an abandoned checkout as canceled (Stripe checkout.session.expired).
+// Keyed on session id AND status='pending', so it never touches a row that was
+// already paid, and only the session id Stripe is reporting as expired — a row
+// the recovery cron already superseded (new session id swapped in) won't match
+// and is correctly left pending. Idempotent: a duplicate event finds no
+// pending row and no-ops.
+export async function markPaymentCanceledBySession(sessionId: string): Promise<void> {
+  if (!sessionId || !isDatabaseConfigured()) return;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from("vraelis_payments" as never)
+      .update({ status: "canceled" } as never)
+      .eq("stripe_session_id", sessionId)
+      .eq("status", "pending");
+    if (error) console.error("markPaymentCanceledBySession failed:", error.message);
+  } catch (e) {
+    console.error("markPaymentCanceledBySession failed:", e);
+  }
 }
 
 // Real revenue from money that actually moved through the platform.

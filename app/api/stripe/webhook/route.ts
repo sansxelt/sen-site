@@ -23,7 +23,7 @@ import { getUserProfileByEmail } from "../../../../lib/user-profile";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../../lib/supabase-admin";
 import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
 import { invalidateAddonsCache } from "../../../../lib/active-addons";
-import { setWorkspacePlan } from "../../../../lib/vraelis-db";
+import { markPaymentCanceledBySession, setWorkspacePlan } from "../../../../lib/vraelis-db";
 import { isCycle, isPlanKey } from "../../../../lib/vraelis-plans";
 import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
 
@@ -505,6 +505,20 @@ export async function POST(request: Request) {
           await handleVraelisPayment(s);
         } else {
           await recordVraelisPlan(s.metadata, "active");
+        }
+        break;
+      }
+
+      case "checkout.session.expired": {
+        // A buyer opened a Vraelis payment/deposit link and let it expire
+        // (~24h unpaid). Flip the pending ledger row to 'canceled' so it stops
+        // counting as an open payment — otherwise the duplicate-charge guard
+        // would block the lead from ever getting a fresh link. Only the
+        // CURRENT session id is canceled, so a row that was already superseded
+        // by the recovery cron (new session id swapped in) is left untouched.
+        const s = event.data.object as Stripe.Checkout.Session;
+        if (s.metadata?.kind === "vraelis_payment") {
+          await markPaymentCanceledBySession(s.id);
         }
         break;
       }

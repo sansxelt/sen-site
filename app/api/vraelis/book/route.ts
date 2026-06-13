@@ -6,6 +6,7 @@ import {
   createPayment,
   getWorkspaceByIntakeKey,
   getWorkspaceOffer,
+  leadOpenPaymentStatus,
   setLeadStatus,
   updateLeadContact,
 } from "@/lib/vraelis-db";
@@ -67,11 +68,23 @@ export async function POST(req: NextRequest) {
 
   if (depositCents) {
     const label = slotLabel(slot);
+    const slotIso = new Date(slot).toISOString();
     // Don't take a deposit for a slot that's already booked (narrows the race
     // with concurrent bookings; the webhook also refunds if it's lost later).
     const taken = await getTakenSlots(workspace.owner_email);
-    if (taken.has(new Date(slot).toISOString())) {
+    if (taken.has(slotIso)) {
       return NextResponse.json({ ok: false, error: "slot_taken" }, { status: 409, headers: CORS });
+    }
+    // Duplicate-charge guard (P0 #4), scoped to lead + THIS slot: if the lead
+    // already has a live deposit link (or paid) for this exact slot, don't
+    // mint a second one. Different slots are never blocked (the guard is
+    // slot-scoped), and an anonymous booking (no leadId) falls through to the
+    // slot_taken check above — it can't be deduped by lead.
+    if (leadId) {
+      const open = await leadOpenPaymentStatus(workspace.owner_email, leadId, { bookingSlot: slotIso });
+      if (open) {
+        return NextResponse.json({ ok: false, error: "deposit_pending" }, { status: 409, headers: CORS });
+      }
     }
     try {
       const feeCents = Math.round(depositCents * cutRateFor(workspace.plan, workspace.plan_cycle));
@@ -97,7 +110,7 @@ export async function POST(req: NextRequest) {
         amountCents: depositCents,
         feeCents,
         sessionId,
-        bookingSlot: new Date(slot).toISOString(),
+        bookingSlot: slotIso,
         bookingName: name || null,
         bookingPhone: phone || null,
       });

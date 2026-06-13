@@ -10,6 +10,7 @@ import {
   getOrCreateWorkspace,
   getWorkspaceOffer,
   getLeadWithMessages,
+  leadOpenPaymentStatus,
   addMessage,
   createPayment,
 } from "@/lib/vraelis-db";
@@ -53,6 +54,20 @@ export async function POST(req: NextRequest) {
     if (d) {
       validLeadId = d.lead.id;
       customerEmail = d.lead.contact_email;
+    }
+  }
+
+  // Duplicate-charge guard (P0 #4): when this request targets a lead, never
+  // mint a second live link for one that already has a pending link or has
+  // paid. A leadId-less call (ad-hoc link) can't be deduped by lead and is
+  // allowed through, same as before.
+  if (validLeadId) {
+    const open = await leadOpenPaymentStatus(email, validLeadId);
+    if (open === "paid") {
+      return NextResponse.json({ ok: false, error: "already_paid" }, { status: 409 });
+    }
+    if (open === "pending") {
+      return NextResponse.json({ ok: false, error: "payment_pending" }, { status: 409 });
     }
   }
 
