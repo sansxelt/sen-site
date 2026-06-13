@@ -8,6 +8,7 @@ import type { NextRequest } from "next/server";
 import { auth } from "@/auth";
 import {
   getOrCreateWorkspace,
+  getWorkspaceOffer,
   getLeadWithMessages,
   addMessage,
   createPayment,
@@ -55,7 +56,10 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const productName = ws.business_name || "Vraelis";
+  // Buyer sees the OFFER as the product on Stripe (what they're buying),
+  // not the business brand. Falls back to the brand, then "Vraelis".
+  const offer = await getWorkspaceOffer(email);
+  const productName = offer.offerName || ws.business_name || "Vraelis";
   try {
     const { url, sessionId } = await createPaymentCheckout({
       accountId: ws.connect_account_id,
@@ -93,8 +97,10 @@ export async function POST(req: NextRequest) {
     if (url && customerEmail) {
       try {
         await sendLeadReply({
+          // Email subject is a BRAND surface ("Re: your enquiry to X"), so it
+          // uses the business name — NOT productName (the offer, for Stripe).
           to: customerEmail,
-          businessName: productName,
+          businessName: ws.business_name || "Vraelis",
           replyText: `${description ? description + "\n\n" : ""}You can pay securely here:\n${url}`,
           replyTo: email,
         });

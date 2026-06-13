@@ -10,7 +10,7 @@
 // skipped, because the platform takes it before the owner ever sees the money.
 
 import { getStripe } from "./stripe";
-import { createPayment, type VraelisWorkspace } from "./vraelis-db";
+import { createPayment, getWorkspaceOffer, type VraelisWorkspace } from "./vraelis-db";
 import { cutRateFor } from "./vraelis-plans";
 
 const ORIGIN = "https://vraelis.com";
@@ -166,12 +166,16 @@ export async function startWorkspacePayment(
   if (!Number.isFinite(input.amountCents) || input.amountCents < 50) return { ok: false, reason: "amount_too_small" };
 
   const feeCents = Math.round(input.amountCents * cutRateFor(ws.plan, ws.plan_cycle));
+  // Buyer sees the OFFER as the Stripe product (what they're buying), not the
+  // business brand. Fail-soft: offer_name may be unmigrated → fall back to brand.
+  const offer = await getWorkspaceOffer(ws.owner_email);
+  const productName = offer.offerName || ws.business_name || "Vraelis";
   try {
     const { url, sessionId } = await createPaymentCheckout({
       accountId: ws.connect_account_id,
       amountCents: input.amountCents,
       feeCents,
-      productName: ws.business_name || "Vraelis",
+      productName,
       description: input.description ?? (input.kind === "deposit" ? "Deposit" : "Payment"),
       customerEmail: input.customerEmail ?? null,
       successUrl: input.successUrl ?? `${ORIGIN}/pay/thanks?session_id={CHECKOUT_SESSION_ID}`,

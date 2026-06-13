@@ -11,6 +11,7 @@ import {
   updatePaymentSession,
   bumpPaymentReminder,
   getOrCreateWorkspace,
+  getWorkspaceOffer,
   getLeadWithMessages,
   getWorkspaceContact,
   addMessage,
@@ -54,12 +55,14 @@ export async function GET(req: NextRequest) {
       // Don't chase a lead who already paid/booked/closed.
       if (["won", "booked", "lost"].includes(lead.status)) continue;
 
+      // Buyer sees the OFFER as the Stripe product; brand is the fallback.
+      const offer = await getWorkspaceOffer(p.owner_email);
       // Fresh, always-valid checkout link for the same amount.
       const { url, sessionId } = await createPaymentCheckout({
         accountId: ws.connect_account_id,
         amountCents: p.amount_cents,
         feeCents: p.fee_cents,
-        productName: ws.business_name || "Vraelis",
+        productName: offer.offerName || ws.business_name || "Vraelis",
         description: p.description || (p.kind === "deposit" ? "Deposit" : "Payment"),
         customerEmail: lead.contact_email,
         successUrl: `${ORIGIN}/pay/thanks?session_id={CHECKOUT_SESSION_ID}`,

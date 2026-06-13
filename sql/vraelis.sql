@@ -31,6 +31,30 @@ alter table vraelis_workspaces add column if not exists business_services text;
 alter table vraelis_workspaces add column if not exists qualifying_questions text;
 alter table vraelis_workspaces add column if not exists lead_sources text;
 
+-- Agent identity (fail-soft in code, no-op until migrated): the persona that
+-- personalizes onboarding examples, the named agent + its tone (fed to the
+-- AI prompt), and the onboarding-complete gate flag.
+alter table vraelis_workspaces add column if not exists persona text;
+alter table vraelis_workspaces add column if not exists agent_name text;
+alter table vraelis_workspaces add column if not exists agent_tone text;
+alter table vraelis_workspaces add column if not exists onboarding_complete boolean;
+
+-- Identity split: business_name is the BUSINESS BRAND (e.g. "Apex Trading"),
+-- used for the greeting and customer-facing brand surfaces. offer_name is the
+-- OFFER the agent sells (e.g. "12-Week Coaching"), shown as the Stripe product.
+-- Fail-soft in code (no-op until migrated). The backfill below preserves
+-- existing data: early onboarding put the OFFER into business_name, so copy it
+-- into offer_name once, only where offer_name isn't already set. Owners can
+-- then correct business_name to their real brand.
+alter table vraelis_workspaces add column if not exists offer_name text;
+alter table vraelis_workspaces add column if not exists offer_description text;
+update vraelis_workspaces
+  set offer_name = business_name
+  where offer_name is null and business_name is not null;
+update vraelis_workspaces
+  set offer_description = business_description
+  where offer_description is null and business_description is not null;
+
 -- If the table already existed before plan columns were added, run these
 -- (safe / idempotent):
 alter table vraelis_workspaces add column if not exists plan text;

@@ -12,6 +12,7 @@ import {
   createPayment,
   getLeadWithMessages,
   getOrCreateWorkspace,
+  getWorkspaceOffer,
   isWorkspaceOnboarded,
   listPayments,
   setLeadOutcome,
@@ -114,9 +115,14 @@ export async function saveOfferAction(
     return { ok: false, message: "Storage isn't configured in this environment." };
   }
 
-  // 1) What you sell
+  // 1) Your business — the brand (business_name). Customer-facing surfaces
+  //    and the greeting use this, never the offer.
   const businessName = String(formData.get("businessName") ?? "").trim().slice(0, 120);
   const businessDescription = String(formData.get("businessDescription") ?? "").trim().slice(0, 400);
+  // 1b) What the agent sells — the offer (offer_name). Distinct from the
+  //     brand; used for the Stripe product label / checkout description.
+  const offerName = String(formData.get("offerName") ?? "").trim().slice(0, 120) || null;
+  const offerDescription = String(formData.get("offerDescription") ?? "").trim().slice(0, 400) || null;
   // 2) How much (services + prices, freeform)
   const businessServices = String(formData.get("businessServices") ?? "").trim().slice(0, 2000);
   // 3) How customers pay — "full" | "deposit" (plan is a disabled placeholder).
@@ -166,8 +172,9 @@ export async function saveOfferAction(
     // complete, editing setup later never re-locks the workspace.
     const missing: string[] = [];
     if (!persona) missing.push("pick what describes you");
-    if (!businessName) missing.push("your offer name");
-    if (!businessDescription) missing.push("one line on what you sell");
+    if (!businessName) missing.push("your business name");
+    if (!businessDescription) missing.push("one line on your business");
+    if (!offerName) missing.push("what your agent sells");
     if (!businessServices) missing.push("at least one price");
     const minimumsMet = missing.length === 0;
 
@@ -177,6 +184,8 @@ export async function saveOfferAction(
       persona,
       agentName,
       agentTone,
+      offerName,
+      offerDescription,
       ...(minimumsMet || wasOnboarded ? { onboardingComplete: true } : {}),
     });
     revalidatePath("/v/account");
@@ -418,7 +427,9 @@ export async function requestPaymentAction(
 
     const feeCents = Math.round(amountCents * cutRateFor(ws.plan, ws.plan_cycle));
     const customerEmail = data.lead.contact_email;
-    const productName = ws.business_name || "Vraelis";
+    // Buyer sees the OFFER as the Stripe product; brand is the fallback.
+    const offer = await getWorkspaceOffer(email);
+    const productName = offer.offerName || ws.business_name || "Vraelis";
 
     const { url, sessionId } = await createPaymentCheckout({
       accountId: ws.connect_account_id,
@@ -449,8 +460,10 @@ export async function requestPaymentAction(
     let delivered = false;
     if (url && customerEmail) {
       const r = await sendLeadReply({
+        // Email subject is a BRAND surface ("Re: your enquiry to X"), so it
+        // uses the business name — NOT productName (the offer, for Stripe).
         to: customerEmail,
-        businessName: productName,
+        businessName: ws.business_name || "Vraelis",
         replyText: `${description ? description + "\n\n" : ""}You can pay securely here:\n${url}`,
         replyTo: email,
       });

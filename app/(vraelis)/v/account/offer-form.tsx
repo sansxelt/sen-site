@@ -161,8 +161,11 @@ export function OfferForm({
   initialPersona,
   initialAgentName,
   initialAgentTone,
+  initialOfferName,
+  initialOfferDescription,
   mode,
 }: {
+  // initialName/initialDescription are the BUSINESS brand (business_name).
   initialName: string;
   initialDescription: string;
   initialServices: string;
@@ -173,6 +176,10 @@ export function OfferForm({
   initialPersona: string;
   initialAgentName: string;
   initialAgentTone: string;
+  // The OFFER the agent sells (offer_name/offer_description) — separate
+  // from the business brand above.
+  initialOfferName: string;
+  initialOfferDescription: string;
   mode?: "onboarding";
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(saveOfferAction, null);
@@ -285,12 +292,12 @@ export function OfferForm({
         </div>
       </div>
 
-      {/* 1 — What you sell */}
-      <Step n={1} title="What does your agent sell?">
+      {/* 1 — Your business (the brand) */}
+      <Step n={1} title="Your business">
         <input
           name="businessName"
           defaultValue={initialName}
-          placeholder={pc.namePh}
+          placeholder="Business name — e.g. Apex Trading"
           maxLength={120}
           required={onboarding}
           style={{ ...inputStyle, marginBottom: 8 }}
@@ -298,16 +305,38 @@ export function OfferForm({
         <textarea
           name="businessDescription"
           defaultValue={initialDescription}
-          placeholder={pc.descPh}
+          placeholder="One line on your business — e.g. Trading education for busy professionals."
           maxLength={400}
           rows={2}
           required={onboarding}
           style={{ ...inputStyle, resize: "vertical" }}
         />
+        <p style={hintStyle}>Your brand. This is the name leads see in chat, on your booking page, and on payment receipts.</p>
       </Step>
 
-      {/* 2 — How much */}
-      <Step n={2} title="Price">
+      {/* 2 — What you sell (the offer) */}
+      <Step n={2} title="What does your agent sell?">
+        <input
+          name="offerName"
+          defaultValue={initialOfferName}
+          placeholder={pc.namePh}
+          maxLength={120}
+          required={onboarding}
+          style={{ ...inputStyle, marginBottom: 8 }}
+        />
+        <textarea
+          name="offerDescription"
+          defaultValue={initialOfferDescription}
+          placeholder={pc.descPh}
+          maxLength={400}
+          rows={2}
+          style={{ ...inputStyle, resize: "vertical" }}
+        />
+        <p style={hintStyle}>The offer your agent sells and that customers pay for.</p>
+      </Step>
+
+      {/* 3 — How much */}
+      <Step n={3} title="Price">
         <textarea
           name="businessServices"
           defaultValue={initialServices}
@@ -320,8 +349,8 @@ export function OfferForm({
         <p style={hintStyle}>Your agent quotes <b>only</b> these prices and can collect them in the conversation.</p>
       </Step>
 
-      {/* 3 — How customers pay */}
-      <Step n={3} title="How do customers pay?">
+      {/* 4 — How customers pay */}
+      <Step n={4} title="How do customers pay?">
         <input type="hidden" name="payType" value={payType} />
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {PAY_OPTIONS.map((o) => {

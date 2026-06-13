@@ -5,6 +5,7 @@ import {
   addMessage,
   createPayment,
   getWorkspaceByIntakeKey,
+  getWorkspaceOffer,
   setLeadStatus,
   updateLeadContact,
 } from "@/lib/vraelis-db";
@@ -74,11 +75,14 @@ export async function POST(req: NextRequest) {
     }
     try {
       const feeCents = Math.round(depositCents * cutRateFor(workspace.plan, workspace.plan_cycle));
+      // Buyer sees the OFFER as the Stripe product; brand is the fallback.
+      const offer = await getWorkspaceOffer(workspace.owner_email);
+      const productLabel = offer.offerName || workspace.business_name || "Vraelis";
       const { url, sessionId } = await createPaymentCheckout({
         accountId: workspace.connect_account_id!,
         amountCents: depositCents,
         feeCents,
-        productName: workspace.business_name || "Vraelis",
+        productName: productLabel,
         description: `Deposit to confirm ${label}`,
         customerEmail: email || null,
         successUrl: `${ORIGIN}/pay/thanks?session_id={CHECKOUT_SESSION_ID}`,

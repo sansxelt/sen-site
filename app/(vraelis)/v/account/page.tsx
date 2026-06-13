@@ -456,6 +456,8 @@ export default async function VraelisAccountPage({
               initialPersona={offer?.persona ?? ""}
               initialAgentName={offer?.agentName ?? ""}
               initialAgentTone={offer?.agentTone ?? ""}
+              initialOfferName={offer?.offerName ?? ""}
+              initialOfferDescription={offer?.offerDescription ?? ""}
               mode="onboarding"
             />
           </div>
@@ -852,6 +854,8 @@ export default async function VraelisAccountPage({
                   initialPersona={offer?.persona ?? ""}
                   initialAgentName={offer?.agentName ?? ""}
                   initialAgentTone={offer?.agentTone ?? ""}
+                  initialOfferName={offer?.offerName ?? ""}
+                  initialOfferDescription={offer?.offerDescription ?? ""}
                 />
               </div>
 

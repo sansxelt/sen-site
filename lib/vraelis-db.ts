@@ -563,10 +563,15 @@ export type WorkspaceOffer = {
   onboardingComplete: boolean | null;
   agentName: string | null;
   agentTone: string | null;
+  // The offer/product the agent sells (e.g. "12-Week Coaching") — distinct
+  // from business_name (the brand, e.g. "Apex Coaching"). Used for the Stripe
+  // product label and checkout description, NOT the greeting/brand surfaces.
+  offerName: string | null;
+  offerDescription: string | null;
 };
 
 export async function getWorkspaceOffer(email: string): Promise<WorkspaceOffer> {
-  const empty: WorkspaceOffer = { qualifyingQuestions: null, leadSources: null, persona: null, onboardingComplete: null, agentName: null, agentTone: null };
+  const empty: WorkspaceOffer = { qualifyingQuestions: null, leadSources: null, persona: null, onboardingComplete: null, agentName: null, agentTone: null, offerName: null, offerDescription: null };
   if (!email || !isDatabaseConfigured()) return empty;
   try {
     const supabase = getSupabaseAdminClient();
@@ -584,6 +589,8 @@ export async function getWorkspaceOffer(email: string): Promise<WorkspaceOffer> 
     let onboardingComplete: boolean | null = null;
     let agentName: string | null = null;
     let agentTone: string | null = null;
+    let offerName: string | null = null;
+    let offerDescription: string | null = null;
     try {
       const { data: pData, error: pError } = await supabase
         .from("vraelis_workspaces" as never)
@@ -612,7 +619,19 @@ export async function getWorkspaceOffer(email: string): Promise<WorkspaceOffer> 
         agentTone = a?.agent_tone ?? null;
       }
     } catch { /* agent_name/agent_tone columns not migrated yet */ }
-    if (error) return { ...empty, persona, onboardingComplete, agentName, agentTone };
+    try {
+      const { data: ofData, error: ofError } = await supabase
+        .from("vraelis_workspaces" as never)
+        .select("offer_name, offer_description")
+        .eq("owner_email", owner)
+        .maybeSingle();
+      if (!ofError) {
+        const o = ofData as unknown as { offer_name?: string | null; offer_description?: string | null } | null;
+        offerName = o?.offer_name ?? null;
+        offerDescription = o?.offer_description ?? null;
+      }
+    } catch { /* offer_name/offer_description columns not migrated yet */ }
+    if (error) return { ...empty, persona, onboardingComplete, agentName, agentTone, offerName, offerDescription };
     const row = data as unknown as { qualifying_questions?: string | null; lead_sources?: string | null } | null;
     return {
       qualifyingQuestions: row?.qualifying_questions ?? null,
@@ -621,6 +640,8 @@ export async function getWorkspaceOffer(email: string): Promise<WorkspaceOffer> 
       onboardingComplete,
       agentName,
       agentTone,
+      offerName,
+      offerDescription,
     };
   } catch {
     return empty;
@@ -629,7 +650,7 @@ export async function getWorkspaceOffer(email: string): Promise<WorkspaceOffer> 
 
 export async function setWorkspaceOffer(
   email: string,
-  fields: { qualifyingQuestions?: string | null; leadSources?: string | null; persona?: string | null; onboardingComplete?: boolean; agentName?: string | null; agentTone?: string | null },
+  fields: { qualifyingQuestions?: string | null; leadSources?: string | null; persona?: string | null; onboardingComplete?: boolean; agentName?: string | null; agentTone?: string | null; offerName?: string | null; offerDescription?: string | null },
 ): Promise<void> {
   if (!email || !isDatabaseConfigured()) return;
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -667,6 +688,17 @@ export async function setWorkspaceOffer(
         .update(agentPatch as never)
         .eq("owner_email", owner);
       if (aError) console.error("setWorkspaceOffer: agent_name/agent_tone columns may not exist yet —", aError.message);
+    }
+    // offer_name + offer_description migrate together → one fail-soft update.
+    if (fields.offerName !== undefined || fields.offerDescription !== undefined) {
+      const offerPatch: Record<string, unknown> = {};
+      if (fields.offerName !== undefined) offerPatch.offer_name = fields.offerName;
+      if (fields.offerDescription !== undefined) offerPatch.offer_description = fields.offerDescription;
+      const { error: ofError } = await supabase
+        .from("vraelis_workspaces" as never)
+        .update(offerPatch as never)
+        .eq("owner_email", owner);
+      if (ofError) console.error("setWorkspaceOffer: offer_name/offer_description columns may not exist yet —", ofError.message);
     }
   } catch (e) {
     console.error("setWorkspaceOffer failed:", e);
