@@ -2,13 +2,15 @@
 // pay/deposit link but didn't finish (the warmest possible lead). We nudge
 // them at 1h, 24h, and 72h via SMS + email, regenerating a FRESH checkout
 // link each time (Stripe sessions expire after 24h, so we never re-send a
-// dead link). Vercel Cron hourly; CRON_SECRET-gated.
+// dead link). The OLD session is superseded (expired) and atomically swapped
+// before each new link, so a payment never has two live links. Vercel Cron
+// (daily per vercel.json); CRON_SECRET-gated.
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
   getPaymentsToRecover,
-  updatePaymentSession,
+  swapPaymentSession,
   bumpPaymentReminder,
   getOrCreateWorkspace,
   getWorkspaceOffer,
@@ -16,7 +18,7 @@ import {
   getWorkspaceContact,
   addMessage,
 } from "@/lib/vraelis-db";
-import { createPaymentCheckout } from "@/lib/vraelis-connect";
+import { createPaymentCheckout, expireCheckout, supersedeCheckoutSession } from "@/lib/vraelis-connect";
 import { sendSms } from "@/lib/vraelis-sms";
 import { sendLeadReply } from "@/lib/vraelis-email";
 import { captureError, captureEvent } from "@/lib/vraelis-monitor";
@@ -55,9 +57,26 @@ export async function GET(req: NextRequest) {
       // Don't chase a lead who already paid/booked/closed.
       if (["won", "booked", "lost"].includes(lead.status)) continue;
 
+      // Supersede the OLD session BEFORE minting a new one, so we never leave
+      // two payable links for the same payment. If the old session was already
+      // paid (webhook in flight or missed), skip entirely — minting a new link
+      // would risk a double charge, and the webhook/reconcile will settle the
+      // original against the session id still on the row.
+      const supersede = await supersedeCheckoutSession(p.stripe_session_id ?? "");
+      if (supersede === "paid") {
+        captureEvent("payment_recovery_skipped", { reason: "already_paid", paymentId: p.id, leadId: p.lead_id });
+        continue;
+      }
+      if (supersede === "unknown") {
+        // Couldn't confirm the old link is dead — don't risk a second live
+        // link for the same payment. Try again next sweep.
+        captureEvent("payment_recovery_skipped", { reason: "supersede_unknown", paymentId: p.id, leadId: p.lead_id });
+        continue;
+      }
+
       // Buyer sees the OFFER as the Stripe product; brand is the fallback.
       const offer = await getWorkspaceOffer(p.owner_email);
-      // Fresh, always-valid checkout link for the same amount.
+      // Fresh checkout link for the same amount (old one is now expired).
       const { url, sessionId } = await createPaymentCheckout({
         accountId: ws.connect_account_id,
         amountCents: p.amount_cents,
@@ -70,7 +89,20 @@ export async function GET(req: NextRequest) {
         metadata: { kind: "vraelis_payment", owner_email: p.owner_email, lead_id: p.lead_id, pay_kind: p.kind },
       });
       if (!url) continue;
-      await updatePaymentSession(p.id, sessionId, url);
+      // Atomically claim the row: only swap if it still holds the session id
+      // we just superseded. This both (a) detects a concurrent recovery run
+      // that already swapped (loser sees false), and (b) guarantees we never
+      // leave the row pointing at a dead session while a live link is out — if
+      // the swap fails for ANY reason (lost race, DB error), we expire the
+      // just-minted session and bail BEFORE sending it, so no unrecorded live
+      // link ever reaches the buyer. The row keeps its prior session id and
+      // stays pending; the next sweep retries cleanly.
+      const swapped = await swapPaymentSession(p.id, p.stripe_session_id ?? null, sessionId, url);
+      if (!swapped) {
+        await expireCheckout(sessionId);
+        captureEvent("payment_recovery_skipped", { reason: "swap_failed", paymentId: p.id, leadId: p.lead_id });
+        continue;
+      }
 
       const verb = p.kind === "deposit" ? "lock in your booking" : "finish your payment";
       const tierCopy = tier === 0 ? "Just following up —" : tier === 1 ? "Still want to grab your spot?" : "Last nudge —";

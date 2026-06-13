@@ -84,6 +84,46 @@ export async function expireCheckout(sessionId: string): Promise<void> {
   }
 }
 
+// Decide whether it's safe to REPLACE an old checkout session with a fresh
+// one (the recovery cron's core question). Returns:
+//   "superseded" — the old session was open and is now expired/dead, so the
+//                  old link can no longer be paid → safe to mint a new link
+//                  and overwrite stripe_session_id.
+//   "paid"       — the old session is already complete/paid (a webhook is in
+//                  flight or was missed); the caller must NOT mint a competing
+//                  link or overwrite the session id, and should let the
+//                  webhook/reconcile settle the original payment.
+//   "unknown"    — couldn't determine (Stripe error). Caller should be
+//                  conservative and skip this round rather than orphan a link.
+export async function supersedeCheckoutSession(
+  sessionId: string,
+): Promise<"superseded" | "paid" | "unknown"> {
+  if (!sessionId) return "superseded"; // nothing to orphan
+  let stripe;
+  try {
+    stripe = getStripe();
+  } catch {
+    return "unknown"; // no Stripe config → be conservative, skip this round
+  }
+  try {
+    // expire() succeeds only for an OPEN session — that's exactly the case
+    // where replacing is safe (the buyer hadn't paid it).
+    await stripe.checkout.sessions.expire(sessionId);
+    return "superseded";
+  } catch {
+    // expire() throws for an already-paid or already-expired session. Retrieve
+    // to tell them apart: paid → don't replace; already-expired → safe.
+    try {
+      const cs = await stripe.checkout.sessions.retrieve(sessionId);
+      if (cs.payment_status === "paid" || cs.status === "complete") return "paid";
+      if (cs.status === "expired") return "superseded"; // already dead, safe to replace
+      return "unknown";
+    } catch {
+      return "unknown";
+    }
+  }
+}
+
 // Fully refund a destination charge (returns the application fee + reverses
 // the transfer to the connected account). Used when a paid deposit can't be
 // honored (e.g. the slot was taken by a concurrent booking).

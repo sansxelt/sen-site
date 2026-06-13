@@ -800,6 +800,7 @@ export type RecoverablePayment = {
   amount_cents: number;
   fee_cents: number;
   checkout_url: string | null;
+  stripe_session_id: string | null;
   reminders_sent: number;
   created_at: string;
 };
@@ -810,7 +811,7 @@ export async function getPaymentsToRecover(): Promise<RecoverablePayment[]> {
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from("vraelis_payments" as never)
-      .select("id, owner_email, lead_id, kind, description, amount_cents, fee_cents, checkout_url, reminders_sent, created_at")
+      .select("id, owner_email, lead_id, kind, description, amount_cents, fee_cents, checkout_url, stripe_session_id, reminders_sent, created_at")
       .eq("status", "pending")
       .not("lead_id", "is", null)
       .lt("reminders_sent", 3)
@@ -855,15 +856,35 @@ export async function getPendingPaymentSessions(
   }
 }
 
-export async function updatePaymentSession(id: string, sessionId: string, url: string | null): Promise<void> {
-  if (!isDatabaseConfigured()) return;
+// Atomically swap a payment's checkout session to a fresh one. Guarded on the
+// EXPECTED current session id (`fromSessionId`) so two concurrent recovery
+// runs can't both claim the same row — only the writer whose expected id still
+// matches wins; the loser sees rowsAffected 0 and must expire its just-minted
+// session. Returns true only if exactly this row was updated. Still keyed on
+// status='pending' so we never resurrect an already-settled payment.
+export async function swapPaymentSession(
+  id: string,
+  fromSessionId: string | null,
+  toSessionId: string,
+  url: string | null,
+): Promise<boolean> {
+  if (!isDatabaseConfigured()) return false;
   try {
     const supabase = getSupabaseAdminClient();
-    await supabase
+    let q = supabase
       .from("vraelis_payments" as never)
-      .update({ stripe_session_id: sessionId, checkout_url: url } as never)
-      .eq("id", id);
-  } catch { /* fail-soft */ }
+      .update({ stripe_session_id: toSessionId, checkout_url: url } as never)
+      .eq("id", id)
+      .eq("status", "pending");
+    // Conditional claim: only swap if the row still holds the session id we
+    // expect (the one we just superseded). null is matched with .is().
+    q = fromSessionId === null ? q.is("stripe_session_id", null) : q.eq("stripe_session_id", fromSessionId);
+    const { data, error } = await q.select("id");
+    if (error) return false;
+    return ((data as unknown as { id: string }[] | null)?.length ?? 0) > 0;
+  } catch {
+    return false;
+  }
 }
 
 export async function bumpPaymentReminder(id: string, newCount: number): Promise<void> {

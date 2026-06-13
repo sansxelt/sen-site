@@ -211,6 +211,14 @@ export function OfferForm({
       style={{ display: "flex", flexDirection: "column", gap: 15 }}
     >
       {mode && <input type="hidden" name="mode" value={mode} />}
+      {/* Save affordance — the Save button lives at the bottom of this form
+          (after all steps), which isn't obvious, so flag it up top in the
+          Setup-edit case. Onboarding already ends in a clear "Finish setup". */}
+      {!onboarding && (
+        <p style={{ ...hintStyle, marginTop: 0, marginBottom: 2, color: "var(--fg-3)" }}>
+          Edit anything below, then <b style={{ color: "var(--acc-deep)" }}>Save setup</b> at the bottom to apply your changes.
+        </p>
+      )}
       {/* 0 — Who you are: personalizes every example below */}
       <div>
         <span style={labelStyle}>What best describes you?{onboarding && <span style={{ color: "var(--acc-deep)" }}> *</span>}</span>
@@ -492,7 +500,20 @@ export function OfferForm({
         </div>
       </details>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 16 }}>
+      <div
+        style={{
+          display: "flex", alignItems: "center", gap: 12,
+          borderTop: "1px solid var(--line-1)", paddingTop: 16,
+          // In the Setup-edit case, stick the save bar to the bottom of the
+          // viewport so it's always reachable — the form is long and the
+          // button was otherwise buried far below the fold.
+          ...(onboarding ? {} : {
+            position: "sticky", bottom: 0, zIndex: 1,
+            background: "var(--bg-1)", marginInline: "calc(-1 * clamp(14px,1.8vw,20px))",
+            paddingInline: "clamp(14px,1.8vw,20px)", paddingBottom: 14,
+          }),
+        }}
+      >
         <button type="submit" className="btn" disabled={pending} style={{ opacity: pending ? 0.7 : 1 }}>
           {pending ? "Saving…" : onboarding ? "Finish setup →" : "Save setup"}
         </button>
