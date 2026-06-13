@@ -4,6 +4,9 @@ import { getSupabaseAdminClient, isDatabaseConfigured } from "../../../lib/supab
 export async function GET() {
   const dbConfigured = isDatabaseConfigured();
   const authConfigured = Boolean(process.env.AUTH_SECRET);
+  // Without ANTHROPIC_API_KEY the AI agent silently degrades to canned
+  // replies (never qualifies, never raises payment), so surface it.
+  const aiConfigured = Boolean(process.env.ANTHROPIC_API_KEY);
   let dbConnected = false;
 
   if (dbConfigured) {
@@ -29,6 +32,9 @@ export async function GET() {
     },
     auth: {
       configured: authConfigured,
+    },
+    ai: {
+      configured: aiConfigured,
     },
   });
 }

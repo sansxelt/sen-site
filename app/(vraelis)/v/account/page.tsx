@@ -301,6 +301,10 @@ export default async function VraelisAccountPage({
   const readyToCollectCount = readyToCollectLeads.length;
 
   const firstName = (workspace?.business_name || session.user.name || email.split("@")[0]).trim().slice(0, 48);
+  // The AI agent runs on the Anthropic key. If it's missing, the agent silently
+  // degrades to generic canned replies (no qualifying, no payment) — surface
+  // that to the owner so they don't lose conversions unaware.
+  const aiConfigured = Boolean(process.env.ANTHROPIC_API_KEY);
   // The agent's own name (owner-set) or a sensible default tied to the business.
   const agentName = (offer?.agentName || "").trim();
   const agentLabel = agentName || `${(workspace?.business_name || "your").trim()} agent`;
@@ -483,7 +487,15 @@ export default async function VraelisAccountPage({
               Welcome back, <span className="em">{firstName}</span>.
             </h1>
             <p style={{ fontSize: 12.5, color: "var(--fg-3)", display: "flex", alignItems: "center", gap: 7 }}>
-              <span className="dot dot--acc pulse" />{agentName ? `${agentName}, your AI agent, is` : "Your AI agent is"} online — working every lead 24/7.
+              {aiConfigured ? (
+                <>
+                  <span className="dot dot--acc pulse" />{agentName ? `${agentName}, your AI agent, is` : "Your AI agent is"} online — working every lead 24/7.
+                </>
+              ) : (
+                <>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#C2540C", display: "inline-block", flexShrink: 0 }} />Your agent is in safe mode — see below.
+                </>
+              )}
             </p>
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -497,6 +509,27 @@ export default async function VraelisAccountPage({
             )}
           </div>
         </div>
+
+        {!aiConfigured && (
+          <div
+            className="win"
+            style={{
+              padding: "clamp(12px,1.6vw,16px) clamp(14px,1.8vw,18px)",
+              marginBottom: "clamp(14px,1.8vw,20px)",
+              borderColor: "rgba(194,84,12,0.35)",
+              background: "rgba(194,84,12,0.06)",
+            }}
+          >
+            <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, marginBottom: 3 }}>
+              Your AI agent isn&apos;t fully switched on.
+            </div>
+            <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, margin: 0 }}>
+              Replies are running in safe mode — your agent answers leads, but it can&apos;t qualify them or
+              take payment until the AI is connected. Your leads are still captured and saved. If you just
+              set this up, this clears once the AI key is configured on the server.
+            </p>
+          </div>
+        )}
 
         <AccountTabs
           initialTab={initialTab}
