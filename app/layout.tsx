@@ -81,20 +81,20 @@ const sansxelMetadata: Metadata = {
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
-    default: "Vraelis — Turn interested leads into paying customers",
+    default: "Vraelis — The AI agent that follows up, books leads, and collects payment",
     template: "%s",
   },
   description:
-    "Vraelis is the revenue platform for high-ticket sellers. It engages every lead, qualifies serious buyers, follows up automatically, books the call, and collects payment — so your $2k–$10k offers actually close.",
+    "Vraelis is the AI agent that answers every lead, qualifies serious buyers, follows up on its own, books the call, and collects payment for you. Free to start; Vraelis only earns when your agent gets you paid.",
   alternates: { canonical: "https://vraelis.com" },
   icons: { icon: "/vraelis/mark.jpg" },
   openGraph: {
     type: "website",
     url: "https://vraelis.com",
     siteName: "Vraelis",
-    title: "Turn interested leads into paying customers.",
+    title: "The AI agent that follows up, books leads, and collects payment.",
     description:
-      "The revenue platform that engages, qualifies, follows up, books, and collects payment — turning interested leads into paying customers. Free to start; we only earn when you get paid.",
+      "Vraelis answers every lead, qualifies serious buyers, follows up, books the call, and collects payment. Free to start; Vraelis only earns when your agent gets you paid.",
   },
   robots: {
     index: true,

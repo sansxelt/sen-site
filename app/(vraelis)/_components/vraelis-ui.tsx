@@ -1298,7 +1298,7 @@ function SiteFooter() {
       </div>
       <div style={{ maxWidth: "var(--max-content)", margin: "var(--s-12) auto 0", paddingTop: "var(--s-6)", borderTop: "1px solid var(--line-1)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)" }}>
         <span>© 2026 Vraelis</span>
-        <span>Turn interested leads into paying customers.</span>
+        <span>The AI agent that follows up, books leads, and collects payment.</span>
       </div>
       <p style={{ maxWidth: "var(--max-content)", margin: "10px auto 0", fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", lineHeight: 1.5 }}>
         Vraelis replies are AI-generated and may contain mistakes. Vraelis is a tool — you&apos;re responsible for your own business and customers.
