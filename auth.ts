@@ -6,7 +6,6 @@ import Google from "next-auth/providers/google";
 import { getSafeRedirectPath } from "./lib/auth-ui";
 import { verifyAutoSigninToken } from "./lib/auto-signin-token";
 import { sendWelcomeEmail } from "./lib/email";
-import { signOAuthSignupToken } from "./lib/oauth-signup-token";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
@@ -187,28 +186,21 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
         console.log(`${tag} profile=${existingProfile ? "found" : "not found"}`);
 
         if (!existingProfile) {
-          if (provider === "github") {
-            console.log(`${tag} new github user — creating profile`);
-            await syncUserProfileIdentity({
-              email: user.email,
-              name:  typeof user.name === "string" ? user.name : null,
-            });
-            sendWelcomeEmail(
-              user.email,
-              typeof user.name === "string" ? user.name : "",
-            ).catch((err) => console.error(`${tag} welcome email failed:`, err));
-            return true;
-          }
-
-          console.log(`${tag} new google user — bouncing to confirm-signup`);
-          const token = signOAuthSignupToken({ email: user.email, provider });
-          const params = new URLSearchParams({
-            email:    user.email,
-            provider,
-            name:     typeof user.name === "string" ? user.name : "",
-            token,
+          // New OAuth user (Google or GitHub): the provider already verified
+          // their identity and they explicitly chose "Continue with X", so we
+          // create the account inline and sign them straight in — no second
+          // "Create a Vraelis account?" confirmation and no extra OAuth
+          // round-trip. They land in onboarding from here.
+          console.log(`${tag} new ${provider} user — creating profile`);
+          await syncUserProfileIdentity({
+            email: user.email,
+            name:  typeof user.name === "string" ? user.name : null,
           });
-          return `/auth/confirm-signup?${params.toString()}`;
+          sendWelcomeEmail(
+            user.email,
+            typeof user.name === "string" ? user.name : "",
+          ).catch((err) => console.error(`${tag} welcome email failed:`, err));
+          return true;
         }
 
         console.log(`${tag} existing user — syncing identity`);
