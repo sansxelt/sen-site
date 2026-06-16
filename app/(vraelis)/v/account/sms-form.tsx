@@ -2,6 +2,7 @@
 
 import { useActionState, type CSSProperties } from "react";
 import { setSmsAction, type ActionResult } from "./actions";
+import { useRefreshOnSuccess } from "./use-refresh-on-success";
 
 const label: CSSProperties = {
   fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em",
@@ -21,6 +22,7 @@ export function SmsForm({
   initialTwilioNumber?: string;
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(setSmsAction, null);
+  useRefreshOnSuccess(state); // refresh the Text & voice chip + checklist row on save
   return (
     <form action={action} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <div>

@@ -6,6 +6,7 @@ import { getLeadWithMessages, getOrCreateWorkspace, getWorkspaceOffer, isWorkspa
 import { cutRateFor } from "@/lib/vraelis-plans";
 import { updateLeadDealAction, updateLeadOutcomeAction } from "../../actions";
 import { ReplyBox } from "./reply-box";
+import { RefreshForm } from "./refresh-form";
 import { RequestPayment } from "./request-payment";
 
 const OUTCOMES = ["open", "booked", "paid", "lost", "spam"] as const;
@@ -181,7 +182,7 @@ export default async function LeadDetailPage({
           </div>
           <div style={{ display: "flex", gap: "clamp(12px,3vw,28px)", flexWrap: "wrap" }}>
             {/* Stage + deal value */}
-            <form action={updateLeadDealAction} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <RefreshForm action={updateLeadDealAction} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <input type="hidden" name="leadId" value={lead.id} />
               <select name="status" defaultValue={lead.status} style={{ borderRadius: "var(--r-xs)", border: "1px solid var(--line-2)", background: "var(--bg-1)", padding: "9px 12px", fontSize: 13, color: "var(--fg-1)", fontFamily: "var(--font-sans)" }}>
                 {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
@@ -191,9 +192,9 @@ export default async function LeadDetailPage({
                 <input name="value" type="number" min={0} defaultValue={lead.value ?? ""} placeholder="deal value" style={{ width: 92, border: "none", background: "transparent", padding: "9px 2px", fontSize: 13, color: "var(--fg-1)", outline: "none", fontFamily: "var(--font-mono)" }} />
               </div>
               <button type="submit" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13 }}>Save</button>
-            </form>
+            </RefreshForm>
             {/* Outcome (won/lost) */}
-            <form action={updateLeadOutcomeAction} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <RefreshForm action={updateLeadOutcomeAction} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
               <input type="hidden" name="leadId" value={lead.id} />
               <select name="outcome" defaultValue={outcome} style={{ borderRadius: "var(--r-xs)", border: "1px solid var(--line-2)", background: "var(--bg-1)", padding: "9px 11px", fontSize: 13, color: "var(--fg-1)", fontFamily: "var(--font-sans)" }}>
                 {OUTCOMES.map((o) => <option key={o} value={o}>{o === "open" ? "Mark outcome…" : o[0].toUpperCase() + o.slice(1)}</option>)}
@@ -203,7 +204,7 @@ export default async function LeadDetailPage({
                 {LOST_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
               <button type="submit" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13 }}>Save</button>
-            </form>
+            </RefreshForm>
           </div>
         </div>
 

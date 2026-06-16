@@ -17,7 +17,9 @@ import { DepositForm } from "./deposit-form";
 import { CopyField } from "./copy-field";
 import { CopyLinkButton } from "./copy-link-button";
 import { AccountTabs, type Step } from "./account-tabs";
-import { vraelisSignOut, sendTestLead } from "./actions";
+import { vraelisSignOut } from "./actions";
+import { TestLeadButton } from "./test-lead-button";
+import { ExpandableRow } from "./expandable-row";
 
 export const metadata: Metadata = {
   title: "Your account — Vraelis",
@@ -123,16 +125,22 @@ function ChecklistRow({
     ...(last ? {} : {}),
   };
 
-  // Expandable variant (SMS, deposit) — native details, opens the form inline.
+  // Expandable variant (SMS, deposit). The open state lives in a client
+  // component so it survives router.refresh() after a save (a plain
+  // server-rendered <details> would snap shut on every refresh).
   if (children) {
     return (
-      <details>
-        <summary style={{ ...rowStyle, cursor: "pointer", listStyle: "none" }}>
-          {head}
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--acc-deep)", fontWeight: 600, whiteSpace: "nowrap" }}>{expandLabel ?? (done ? "Edit" : "Set up")} →</span>
-        </summary>
-        <div style={{ padding: "4px 0 14px 29px" }}>{children}</div>
-      </details>
+      <ExpandableRow
+        rowStyle={rowStyle}
+        summary={
+          <>
+            {head}
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--acc-deep)", fontWeight: 600, whiteSpace: "nowrap" }}>{expandLabel ?? (done ? "Edit" : "Set up")} →</span>
+          </>
+        }
+      >
+        {children}
+      </ExpandableRow>
     );
   }
 
@@ -695,9 +703,7 @@ export default async function VraelisAccountPage({
                     )}
                     <div style={{ textAlign: "center", paddingTop: 4, borderTop: "1px solid var(--line-1)", marginTop: 4 }}>
                       <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "12px 0 8px" }}>Want to see it work first?</p>
-                      <form action={sendTestLead} style={{ display: "inline-block" }}>
-                        <button type="submit" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 12.5 }}>Send yourself a test lead →</button>
-                      </form>
+                      <TestLeadButton label="Send yourself a test lead →" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 12.5 }} />
                     </div>
                   </div>
                 ) : (
@@ -833,9 +839,7 @@ export default async function VraelisAccountPage({
                     </p>
                     {!connected && <a href="/api/vraelis/connect/start" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Set up payouts →</a>}
                     {connected && leads.length === 0 && (
-                      <form action={sendTestLead} style={{ display: "inline-block" }}>
-                        <button type="submit" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Send a test lead →</button>
-                      </form>
+                      <TestLeadButton label="Send a test lead →" className="btn" style={{ fontSize: 13, padding: "9px 16px" }} />
                     )}
                   </div>
                 ) : (

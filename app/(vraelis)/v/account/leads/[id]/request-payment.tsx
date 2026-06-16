@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState, type CSSProperties } from "react";
+import { useActionState, useEffect, useRef, useState, type CSSProperties } from "react";
 import { requestPaymentAction, type ActionResult } from "../../actions";
+import { useRefreshOnSuccess } from "../../use-refresh-on-success";
 
 const inputStyle: CSSProperties = {
   borderRadius: "var(--r-xs)",
@@ -25,6 +26,16 @@ export function RequestPayment({
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(requestPaymentAction, null);
   const [amount, setAmount] = useState("");
+  useRefreshOnSuccess(state); // show the payment request + checkout link in the thread immediately
+  // Clear the amount once after a successful request so the just-sent value
+  // doesn't linger and invite an accidental duplicate charge.
+  const clearedFor = useRef<unknown>(null);
+  useEffect(() => {
+    if (state?.ok && clearedFor.current !== state) {
+      clearedFor.current = state;
+      setAmount("");
+    }
+  }, [state]);
 
   if (!connected) {
     return (

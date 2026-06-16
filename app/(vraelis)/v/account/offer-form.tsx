@@ -2,6 +2,7 @@
 
 import { useActionState, useState, type CSSProperties } from "react";
 import { saveOfferAction, type ActionResult } from "./actions";
+import { useRefreshOnSuccess } from "./use-refresh-on-success";
 
 const inputStyle: CSSProperties = {
   width: "100%",
@@ -183,6 +184,10 @@ export function OfferForm({
   mode?: "onboarding";
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(saveOfferAction, null);
+  // On a successful save, re-run the server component so the result shows
+  // instantly: onboarding lands on the dashboard (deriveOnboarded now true),
+  // and setup edits refresh the agent card, capability chips, and checklist.
+  useRefreshOnSuccess(state);
   const [payType, setPayType] = useState<string>(initialDepositEnabled ? "deposit" : "full");
   const [depositAmount, setDepositAmount] = useState<string>(
     initialDepositAmount != null ? String(initialDepositAmount / 100) : "25",

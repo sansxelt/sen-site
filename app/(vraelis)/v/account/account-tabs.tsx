@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { sendTestLead } from "./actions";
+import { TestLeadButton } from "./test-lead-button";
 
 const TABS = [
   { key: "inbox", label: "Inbox" },
@@ -87,11 +87,7 @@ export function AccountTabs({
     if (a.type === "tab") return <button type="button" style={actionBtn} onClick={() => setTab(a.tab)}>{a.cta} →</button>;
     if (a.type === "link") return <a style={actionBtn} href={a.href}>{a.cta} →</a>;
     if (a.type === "copy") return <CopyAction value={a.value} cta={a.cta} style={actionBtn} />;
-    return (
-      <form action={sendTestLead}>
-        <button type="submit" style={actionBtn}>{a.cta} →</button>
-      </form>
-    );
+    return <TestLeadButton label={`${a.cta} →`} className="" style={actionBtn} />;
   }
 
   return (

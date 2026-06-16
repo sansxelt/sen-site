@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, type CSSProperties } from "react";
 import { addLeadAndReachOut, type ActionResult } from "./actions";
+import { useRefreshOnSuccess } from "./use-refresh-on-success";
 
 const inputStyle: CSSProperties = {
   width: "100%",
@@ -26,6 +27,7 @@ export function AddLeadForm() {
     },
     null,
   );
+  useRefreshOnSuccess(state); // show the new lead in the pipeline/funnel immediately
 
   return (
     <details style={{ borderBottom: "1px solid var(--line-1)" }}>

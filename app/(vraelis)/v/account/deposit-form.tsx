@@ -2,6 +2,7 @@
 
 import { useActionState, useState, type CSSProperties } from "react";
 import { setDepositAction, type ActionResult } from "./actions";
+import { useRefreshOnSuccess } from "./use-refresh-on-success";
 
 const inputStyle: CSSProperties = {
   width: "100%",
@@ -23,6 +24,7 @@ export function DepositForm({
   initialAmount: number | null;
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(setDepositAction, null);
+  useRefreshOnSuccess(state); // refresh the Booking deposit checklist row on save
   const [enabled, setEnabled] = useState(initialEnabled);
   const [amount, setAmount] = useState(initialAmount != null ? String(initialAmount / 100) : "25");
 

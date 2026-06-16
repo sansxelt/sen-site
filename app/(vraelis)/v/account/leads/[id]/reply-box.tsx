@@ -3,6 +3,7 @@
 import { useActionState, useRef, type CSSProperties } from "react";
 import { sendManualReply } from "../../actions";
 import type { ActionResult } from "../../actions";
+import { useRefreshOnSuccess } from "../../use-refresh-on-success";
 
 const inputStyle: CSSProperties = {
   width: "100%",
@@ -27,6 +28,7 @@ export function ReplyBox({ leadId }: { leadId: string }) {
     },
     null,
   );
+  useRefreshOnSuccess(state); // show the sent reply in the conversation thread immediately
 
   return (
     <form ref={formRef} action={action} style={{ marginTop: 16 }}>
