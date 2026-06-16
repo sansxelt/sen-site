@@ -5,6 +5,7 @@
 // to the signed-in user.
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import {
   addMessage,
@@ -33,6 +34,27 @@ import { cutRateFor } from "@/lib/vraelis-plans";
 import { isDatabaseConfigured } from "@/lib/supabase-admin";
 
 const ORIGIN = "https://vraelis.com";
+
+// The dashboard is browsed at the CLEAN url (/account, /account/leads/:id) but
+// proxy.ts rewrites it to the internal /v/account route group. router.refresh()
+// refetches the CURRENT browser url (/account), so revalidating only /v/account
+// left the browser-path cache entry stale — the intermittent "saved but UI
+// didn't update" bug. Revalidate BOTH the clean and internal paths so whichever
+// cache key the refresh hits is fresh. "layout" scope covers nested segments.
+function revalidateAccount() {
+  // /v/account is the REAL rendered route — "layout" scope so nested segments
+  // (lead pages) go stale too. /account is the browser URL the rewrite maps
+  // from; revalidate it (page scope) so router.refresh() of the current URL
+  // aligns. (/account is the unrelated sansxel route on other hosts, so keep
+  // it page-scoped — no need to bust that whole subtree.)
+  revalidatePath("/v/account", "layout");
+  revalidatePath("/account");
+}
+function revalidateLead(leadId: string) {
+  revalidatePath(`/v/account/leads/${leadId}`, "layout");
+  revalidatePath(`/account/leads/${leadId}`);
+  revalidateAccount();
+}
 
 export type ActionResult = { ok: boolean; message: string };
 
@@ -73,7 +95,7 @@ export async function updateVraelisBusiness(
     });
     // Fail-soft: no-ops until the column is migrated.
     await setWorkspaceServices(email, businessServices || null);
-    revalidatePath("/v/account");
+    revalidateAccount();
     return { ok: true, message: "Saved." };
   } catch (error) {
     console.error("updateVraelisBusiness failed:", error);
@@ -93,7 +115,7 @@ export async function setSmsAction(
   const twilioNumber = String(formData.get("twilioNumber") ?? "").trim().slice(0, 32);
   try {
     await setWorkspaceContact(email, { ownerPhone: ownerPhone || null, twilioNumber: twilioNumber || null });
-    revalidatePath("/v/account");
+    revalidateAccount();
     return { ok: true, message: "Saved." };
   } catch (error) {
     console.error("setSmsAction failed:", error);
@@ -189,15 +211,25 @@ export async function saveOfferAction(
       offerDescription,
       ...(minimumsMet || wasOnboarded ? { onboardingComplete: true } : {}),
     });
-    revalidatePath("/v/account");
+    revalidateAccount();
     if (isOnboarding && !minimumsMet) {
       return { ok: false, message: `Saved your progress — still needed: ${missing.join(", ")}.` };
     }
-    return { ok: true, message: isOnboarding ? "Your agent is live — it's now working every lead." : "Saved." };
+    // Non-onboarding setup edit: refresh-in-place handles the UI update.
+    if (!isOnboarding) return { ok: true, message: "Saved." };
+    // Onboarding just completed (isOnboarding && minimumsMet): fall through to
+    // the redirect below.
   } catch (error) {
     console.error("saveOfferAction failed:", error);
     return { ok: false, message: "Couldn't save — try again." };
   }
+  // Onboarding completed: leave onboarding deterministically. A server redirect
+  // forces a fresh navigation to the dashboard, so it never depends on a client
+  // cache-invalidation race (the cause of the intermittent "saved but stayed on
+  // onboarding" bug). redirect() throws NEXT_REDIRECT, so it MUST run outside
+  // the try/catch above or the catch would swallow the signal. Landing on the
+  // dashboard IS the success signal, so no query param to clean up.
+  redirect("/account");
 }
 
 // OUTBOUND: owner adds a lead (missed call, referral, list) and Vraelis
@@ -244,14 +276,14 @@ export async function addLeadAndReachOut(
       });
       await addMessage({ leadId: lead.id, role: "agent", body: outreach, channel: r.sent ? "email" : "note", delivered: r.sent });
       await setLeadStatus(email, lead.id, "contacted");
-      revalidatePath("/v/account");
+      revalidateLead(lead.id);
       return {
         ok: true,
         message: r.sent ? `Reached out to ${name || contactEmail}.` : "Lead added — but the outreach email didn't send.",
       };
     }
 
-    revalidatePath("/v/account");
+    revalidateLead(lead.id);
     return { ok: true, message: "Lead added. Add an email and Vraelis will reach out by email." };
   } catch (error) {
     console.error("addLeadAndReachOut failed:", error);
@@ -290,7 +322,7 @@ export async function sendManualReply(
     }
     await addMessage({ leadId, role: "agent", body, channel: delivered ? "email" : "note", delivered });
     if (data.lead.status === "new") await setLeadStatus(email, leadId, "contacted");
-    revalidatePath(`/v/account/leads/${leadId}`);
+    revalidateLead(leadId);
     return {
       ok: true,
       message: delivered
@@ -321,8 +353,7 @@ export async function updateLeadDealAction(formData: FormData): Promise<void> {
 
   try {
     await updateLead(email, leadId, { status, value });
-    revalidatePath(`/v/account/leads/${leadId}`);
-    revalidatePath("/v/account");
+    revalidateLead(leadId);
   } catch (error) {
     console.error("updateLeadDealAction failed:", error);
   }
@@ -340,8 +371,7 @@ export async function updateLeadOutcomeAction(formData: FormData): Promise<void>
   if (!leadId || !OUTCOMES.includes(outcome)) return;
   try {
     await setLeadOutcome(email, leadId, outcome, outcome === "lost" ? lostReason : null);
-    revalidatePath(`/v/account/leads/${leadId}`);
-    revalidatePath("/v/account");
+    revalidateLead(leadId);
   } catch (error) {
     console.error("updateLeadOutcomeAction failed:", error);
   }
@@ -358,8 +388,7 @@ export async function updateLeadStatusAction(formData: FormData): Promise<void> 
 
   try {
     await setLeadStatus(email, leadId, status);
-    revalidatePath(`/v/account/leads/${leadId}`);
-    revalidatePath("/v/account");
+    revalidateLead(leadId);
   } catch (error) {
     console.error("updateLeadStatusAction failed:", error);
   }
@@ -384,7 +413,7 @@ export async function setDepositAction(
 
   try {
     await setWorkspaceDeposit(email, { enabled, amountCents });
-    revalidatePath("/v/account");
+    revalidateAccount();
     return { ok: true, message: enabled ? `Deposit of $${(amountCents! / 100).toLocaleString()} required to book.` : "Deposit turned off." };
   } catch (error) {
     console.error("setDepositAction failed:", error);
@@ -479,8 +508,7 @@ export async function requestPaymentAction(
         delivered,
       });
     }
-    revalidatePath("/v/account");
-    revalidatePath(`/v/account/leads/${leadId}`);
+    revalidateLead(leadId);
     return {
       ok: true,
       message: delivered
@@ -533,7 +561,7 @@ export async function sendTestLead(): Promise<void> {
     });
     await addMessage({ leadId: lead.id, role: "agent", body: reply, channel: "chat", delivered: true });
     await setLeadStatus(email, lead.id, "contacted");
-    revalidatePath("/v/account");
+    revalidateLead(lead.id);
   } catch (error) {
     console.error("sendTestLead failed:", error);
   }

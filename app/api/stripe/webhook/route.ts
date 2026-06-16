@@ -59,8 +59,15 @@ async function handleVraelisPayment(session: Stripe.Checkout.Session): Promise<v
       : session.payment_intent?.id ?? null;
   const result = await settlePaidSession(session.id, paymentIntent, session.customer_details?.email ?? null);
   if (result.settled) {
-    revalidatePath("/v/account");
-    if (result.payment.lead_id) revalidatePath(`/v/account/leads/${result.payment.lead_id}`);
+    // Revalidate both the clean (browser) and internal (rewritten) paths so the
+    // owner's dashboard / lead view is fresh on next load regardless of which
+    // cache key is hit (see proxy.ts rewrite of /account -> /v/account).
+    revalidatePath("/v/account", "layout");
+    revalidatePath("/account");
+    if (result.payment.lead_id) {
+      revalidatePath(`/v/account/leads/${result.payment.lead_id}`, "layout");
+      revalidatePath(`/account/leads/${result.payment.lead_id}`);
+    }
   }
 }
 
