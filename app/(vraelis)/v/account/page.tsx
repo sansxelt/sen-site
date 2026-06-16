@@ -1035,9 +1035,9 @@ export default async function VraelisAccountPage({
                   title="Text & voice"
                   doneText="On. Your agent texts leads back and alerts you to new ones."
                   todoText={contact?.twilio_number
-                    ? "Pending. Number saved, going live once it clears carrier registration."
-                    : "Add a number so your agent can text leads and answer missed calls"}
-                  expandLabel={contact?.twilio_number ? "Edit" : "Add number"}
+                    ? "Pending. Your agent's number goes live once SMS registration is approved."
+                    : "We'll assign your agent a texting number once SMS registration is approved."}
+                  expandLabel={contact?.twilio_number ? "View" : "Details"}
                 >
                   <SmsForm initialOwnerPhone={contact?.owner_phone ?? ""} initialTwilioNumber={contact?.twilio_number ?? ""} />
                 </ChecklistRow>
