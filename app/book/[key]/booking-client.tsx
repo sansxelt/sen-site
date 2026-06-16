@@ -119,6 +119,11 @@ export function BookingClient({
             <input name="name" placeholder="Your name" style={inputStyle} />
             <input name="email" type="email" placeholder="Email (for confirmation)" style={inputStyle} />
             <input name="phone" placeholder="Phone (optional)" style={inputStyle} />
+            <p style={{ fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: "2px 0 0" }}>
+              By providing your phone number, you agree to receive conversational text messages from {businessName} about your booking, appointments, and service updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. Consent is not a condition of purchase. See our{" "}
+              <a href="https://vraelis.com/privacy" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Privacy Policy</a>{" "}and{" "}
+              <a href="https://vraelis.com/terms" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Terms</a>.
+            </p>
             <button type="submit" className="btn" disabled={!selected || state === "booking"} style={{ justifyContent: "center", opacity: !selected || state === "booking" ? 0.6 : 1 }}>
               {state === "booking" ? (depositLabel ? "Redirecting…" : "Booking…") : depositLabel ? `Continue to ${depositLabel} deposit →` : "Confirm booking"}
             </button>

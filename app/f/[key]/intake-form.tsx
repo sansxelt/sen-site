@@ -183,6 +183,11 @@ export function IntakeForm({
         <input name="email" type="email" placeholder="Email" style={inputStyle} />
         <input name="phone" placeholder="Phone (optional)" style={inputStyle} />
         <textarea name="message" placeholder="What can we help with?" required rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+        <p style={{ fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: "2px 0 0" }}>
+          By providing your phone number, you agree to receive conversational text messages from {businessName} about your inquiry, appointments, and service updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. Consent is not a condition of purchase. See our{" "}
+          <a href="https://vraelis.com/privacy" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Privacy Policy</a>{" "}and{" "}
+          <a href="https://vraelis.com/terms" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Terms</a>.
+        </p>
         <button type="submit" className="btn" disabled={busy} style={{ justifyContent: "center", opacity: busy ? 0.7 : 1 }}>
           {busy ? "Starting…" : "Start chat"}
         </button>
