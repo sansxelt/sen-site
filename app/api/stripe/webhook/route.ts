@@ -25,6 +25,7 @@ import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
 import { invalidateAddonsCache } from "../../../../lib/active-addons";
 import { markPaymentCanceledBySession, setWorkspacePlan } from "../../../../lib/vraelis-db";
 import { isCycle, isPlanKey } from "../../../../lib/vraelis-plans";
+import { maybeProvisionAgentNumber } from "../../../../lib/vraelis-sms";
 import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
 
 // Vraelis runs in this same Stripe account. Vraelis checkout sessions +
@@ -41,6 +42,11 @@ async function recordVraelisPlan(
   if (!owner || !isPlanKey(plan) || !isCycle(cycle)) return false;
   try {
     await setWorkspacePlan(owner, { plan, cycle, status, provider: "stripe" });
+    // Paid plan went active → assign the agent's phone number (idempotent +
+    // gated: no-ops if free, not onboarded, or already assigned). Fire-and-
+    // forget so a slow Twilio call can't delay the webhook response; its
+    // internals are timeout-bounded + self-catching.
+    if (status === "active") void maybeProvisionAgentNumber(owner).catch(() => {});
   } catch (err) {
     console.error("[stripe webhook] vraelis plan record failed:", err);
   }

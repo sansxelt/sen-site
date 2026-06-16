@@ -54,6 +54,14 @@ export function cutRateFor(plan: string | null, cycle: string | null): number {
 export function isPlanKey(v: string): v is PlanKey {
   return v === "solo" || v === "growth";
 }
+
+// Paid = an actual subscription plan that is currently active. "starter"/null
+// is the free tier. Used to decide whether a workspace gets an assigned agent
+// phone number (paid perk only).
+const PAID_PLANS = new Set(["solo", "growth", "agency"]);
+export function isPaidPlan(plan: string | null, status: string | null): boolean {
+  return Boolean(plan && PAID_PLANS.has(plan) && status === "active");
+}
 export function isCycle(v: string): v is Cycle {
   return v === "monthly" || v === "yearly" || v === "lifetime";
 }

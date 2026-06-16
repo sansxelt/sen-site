@@ -31,6 +31,7 @@ import { generateOutreach, generateLeadReply } from "@/lib/vraelis-ai";
 import { sendLeadReply } from "@/lib/vraelis-email";
 import { createPaymentCheckout, expireCheckout } from "@/lib/vraelis-connect";
 import { cutRateFor } from "@/lib/vraelis-plans";
+import { maybeProvisionAgentNumber } from "@/lib/vraelis-sms";
 import { isDatabaseConfigured } from "@/lib/supabase-admin";
 
 const ORIGIN = "https://vraelis.com";
@@ -103,7 +104,9 @@ export async function updateVraelisBusiness(
   }
 }
 
-// Save SMS settings (owner alert phone + the business's Twilio number).
+// Save the owner's alert phone. The agent's twilio_number is NOT accepted here
+// — it's assigned only by provisionAgentNumber (a Vraelis-owned Twilio
+// purchase), so the form can never overwrite it with a user-supplied value.
 export async function setSmsAction(
   _prev: ActionResult | null,
   formData: FormData,
@@ -112,9 +115,8 @@ export async function setSmsAction(
   const email = session?.user?.email;
   if (!email) return { ok: false, message: "Signed out — sign in again." };
   const ownerPhone = String(formData.get("ownerPhone") ?? "").trim().slice(0, 32);
-  const twilioNumber = String(formData.get("twilioNumber") ?? "").trim().slice(0, 32);
   try {
-    await setWorkspaceContact(email, { ownerPhone: ownerPhone || null, twilioNumber: twilioNumber || null });
+    await setWorkspaceContact(email, { ownerPhone: ownerPhone || null });
     revalidateAccount();
     return { ok: true, message: "Saved." };
   } catch (error) {
@@ -217,8 +219,13 @@ export async function saveOfferAction(
     }
     // Non-onboarding setup edit: refresh-in-place handles the UI update.
     if (!isOnboarding) return { ok: true, message: "Saved." };
-    // Onboarding just completed (isOnboarding && minimumsMet): fall through to
-    // the redirect below.
+    // Onboarding just completed: kick off agent-number assignment for paid
+    // plans, but DON'T block the redirect on a Twilio round-trip. It's gated +
+    // idempotent + self-catching, and the plan-activation webhook also triggers
+    // it, so the dashboard never waits on provisioning. Fire-and-forget with a
+    // catch so a rejection can't crash the action.
+    void maybeProvisionAgentNumber(email).catch(() => {});
+    // Fall through to the redirect below.
   } catch (error) {
     console.error("saveOfferAction failed:", error);
     return { ok: false, message: "Couldn't save — try again." };

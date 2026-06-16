@@ -945,6 +945,38 @@ export async function setWorkspaceContact(
   }
 }
 
+// Atomically claim a Twilio number for a workspace: only writes if no number is
+// set yet (twilio_number IS NULL). Returns "won" if THIS call set it, "lost" if
+// another row already had one (concurrent buy — the caller should release its
+// number), or "error" if the write couldn't be confirmed (caller should NOT
+// release, to avoid deleting a number that may actually be live). This makes
+// provisioning safe against two concurrent provision calls double-buying.
+export async function claimTwilioNumber(
+  email: string,
+  number: string,
+): Promise<"won" | "lost" | "error"> {
+  if (!email || !number || !isDatabaseConfigured()) return "error";
+  try {
+    const supabase = getSupabaseAdminClient();
+    // Conditional update: WHERE owner_email = ? AND twilio_number IS NULL.
+    // .select() returns the rows actually updated — 1 row => we won the claim.
+    const { data, error } = await supabase
+      .from("vraelis_workspaces" as never)
+      .update({ twilio_number: number, updated_at: new Date().toISOString() } as never)
+      .eq("owner_email", normalizeEmail(email))
+      .is("twilio_number", null)
+      .select("owner_email");
+    if (error) {
+      console.error("claimTwilioNumber failed:", error.message);
+      return "error";
+    }
+    return (data as unknown[] | null)?.length ? "won" : "lost";
+  } catch (e) {
+    console.error("claimTwilioNumber failed:", e);
+    return "error";
+  }
+}
+
 // Route an inbound SMS/call (sent to a business's Twilio number) to its
 // workspace. Fail-soft if the column isn't migrated.
 export async function getWorkspaceByTwilioNumber(

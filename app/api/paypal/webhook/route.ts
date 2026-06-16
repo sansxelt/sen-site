@@ -7,6 +7,7 @@ import {
 } from "../../../../lib/paypal";
 import { upsertActiveSubscription } from "../../../../lib/subscriptions";
 import { invalidateAddonsCache } from "../../../../lib/active-addons";
+import { maybeProvisionAgentNumber } from "../../../../lib/vraelis-sms";
 
 /**
  * Map PayPal's subscription state to the same normalized-status format our
@@ -77,6 +78,13 @@ async function handleSubscriptionEvent(event: WebhookEvent) {
   // addon set so the cap-lift logic re-resolves immediately. Mirrors
   // the same call in the Stripe webhook.
   invalidateAddonsCache(custom.email);
+  // Assign the agent's phone number if this activated a paid Vraelis plan.
+  // Gated + idempotent: re-checks the workspace plan/onboarding/existing number
+  // and no-ops otherwise. Fire-and-forget so a slow Twilio call can't delay the
+  // webhook response (its internals are timeout-bounded + self-catching).
+  if (normalizePaypalStatus(subscription.status) === "active") {
+    void maybeProvisionAgentNumber(custom.email).catch(() => {});
+  }
 }
 
 type WebhookEvent = {

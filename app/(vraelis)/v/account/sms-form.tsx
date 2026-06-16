@@ -17,9 +17,13 @@ const input: CSSProperties = {
 export function SmsForm({
   initialOwnerPhone = "",
   initialTwilioNumber = "",
+  smsLive = false,
+  isPaid = false,
 }: {
   initialOwnerPhone?: string;
   initialTwilioNumber?: string;
+  smsLive?: boolean; // texting actually works (number assigned AND A2P/Twilio live)
+  isPaid?: boolean; // paid plan → eligible for an assigned number
 }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(setSmsAction, null);
   useRefreshOnSuccess(state); // refresh the Text & voice chip + checklist row on save
@@ -30,13 +34,15 @@ export function SmsForm({
         Your agent gets its own business texting line. Leads text that number and your agent replies automatically, and follows up after missed calls. Vraelis provides the number, you don&apos;t need one of your own.
       </p>
 
-      {/* AI agent number — Vraelis-assigned, read-only. Until SMS registration
-          clears there's no number to show, so this is a status, not an input. */}
+      {/* AI agent number — Vraelis-assigned, read-only. Three states: live
+          (assigned + SMS approved), reserved (assigned but texting pending A2P),
+          and not-yet (free plan, or paid-but-not-onboarded). */}
       <div>
         <span style={label}>Your agent&apos;s number <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(leads text this)</span></span>
         {assigned ? (
-          <div style={{ ...input, display: "flex", alignItems: "center", gap: 8, background: "var(--acc-soft)", borderColor: "var(--acc-line)", color: "var(--acc-deep)", fontWeight: 600 }}>
-            <span className="dot dot--acc" />{initialTwilioNumber}
+          <div style={{ ...input, display: "flex", alignItems: "center", gap: 8, background: smsLive ? "var(--acc-soft)" : "var(--bg-2)", borderColor: smsLive ? "var(--acc-line)" : "var(--line-2)", color: smsLive ? "var(--acc-deep)" : "var(--fg-2)", fontWeight: 600 }}>
+            <span style={smsLive ? undefined : { width: 7, height: 7, borderRadius: "50%", background: "#C2540C", flexShrink: 0 }} className={smsLive ? "dot dot--acc" : undefined} />{initialTwilioNumber}
+            {!smsLive && <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, fontWeight: 600, color: "#C2540C", marginLeft: "auto" }}>TEXTING PENDING</span>}
           </div>
         ) : (
           <div style={{ ...input, display: "flex", alignItems: "center", gap: 8, color: "var(--fg-4)", background: "var(--bg-2)" }}>
@@ -45,8 +51,12 @@ export function SmsForm({
         )}
         <p style={{ fontSize: 11.5, color: "var(--fg-4)", lineHeight: 1.5, margin: "7px 0 0" }}>
           {assigned
-            ? "This is your agent's live texting and call-back number."
-            : "We'll assign your agent a business texting number automatically once SMS registration is approved. Until then, your agent still works every lead over chat, email, and the web."}
+            ? smsLive
+              ? "This is your agent's live texting and call-back number."
+              : "Your number is reserved and answers calls now. Texting switches on automatically once carrier (A2P) registration is approved."
+            : isPaid
+              ? "We'll assign your agent its own business number automatically. In the meantime, your agent works every lead over chat, email, and the web."
+              : "An agent texting number is included on paid plans. Your agent already works every lead over chat, email, and the web."}
         </p>
       </div>
 
@@ -54,8 +64,8 @@ export function SmsForm({
       <div>
         <label style={label} htmlFor="ownerPhone">Your phone <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(where you get new-lead alerts)</span></label>
         <input id="ownerPhone" name="ownerPhone" defaultValue={initialOwnerPhone} placeholder="+1 555 123 4567" maxLength={32} style={input} />
-        {/* Preserve any assigned agent number when the owner saves their phone. */}
-        <input type="hidden" name="twilioNumber" value={initialTwilioNumber} />
+        {/* The agent's number is Vraelis-assigned (server-side only) — never a
+            form field, so it can't be tampered with or overwritten here. */}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

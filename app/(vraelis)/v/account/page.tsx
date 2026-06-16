@@ -9,7 +9,7 @@ import { isDatabaseConfigured } from "@/lib/supabase-admin";
 import { listUpcomingBookings, slotLabel } from "@/lib/vraelis-booking";
 import { getAccountStatus } from "@/lib/vraelis-connect";
 import { isTwilioConfigured } from "@/lib/vraelis-sms";
-import { cutRateFor, isCycle, isPlanKey } from "@/lib/vraelis-plans";
+import { cutRateFor, isCycle, isPlanKey, isPaidPlan } from "@/lib/vraelis-plans";
 import { AddLeadForm } from "./add-lead-form";
 import { OfferForm } from "./offer-form";
 import { SmsForm } from "./sms-form";
@@ -1039,7 +1039,7 @@ export default async function VraelisAccountPage({
                     : "We'll assign your agent a texting number once SMS registration is approved."}
                   expandLabel={contact?.twilio_number ? "View" : "Details"}
                 >
-                  <SmsForm initialOwnerPhone={contact?.owner_phone ?? ""} initialTwilioNumber={contact?.twilio_number ?? ""} />
+                  <SmsForm initialOwnerPhone={contact?.owner_phone ?? ""} initialTwilioNumber={contact?.twilio_number ?? ""} smsLive={textVoiceLive} isPaid={isPaidPlan(workspace?.plan ?? null, workspace?.plan_status ?? null)} />
                 </ChecklistRow>
                 {/* Booking deposit — moved here from Money (it's setup, not revenue) */}
                 <ChecklistRow
