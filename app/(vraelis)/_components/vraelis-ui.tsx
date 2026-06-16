@@ -23,6 +23,10 @@ const SignedInContext = createContext(false);
 // vraelis account area (app/(vraelis)/v/account) by proxy.ts.
 const ACCOUNT_HREF = "/account";
 const SIGNIN_HREF = "/signin?callbackUrl=%2Faccount";
+// Signup-intent CTAs ("Start free") open the auth surface in create-account
+// mode so a brand-new visitor doesn't land on a "Welcome back" sign-in screen.
+// Plain "Sign in" links keep using SIGNIN_HREF (defaults to sign-in mode).
+const SIGNUP_HREF = "/signin?mode=signup&callbackUrl=%2Faccount";
 
 // The marketing dashboard demo lives as a section on the home page
 // (#dashboard) — not a separate route.
@@ -34,7 +38,7 @@ function Cta({
   variant = "solid",
   large = false,
   style,
-  href = SIGNIN_HREF,
+  href = SIGNUP_HREF,
 }: {
   children: ReactNode;
   variant?: "solid" | "ghost";
@@ -52,7 +56,7 @@ function Cta({
     .join(" ");
   // A signed-in visitor clicking a "Start free"/signup CTA shouldn't be
   // bounced through /signin — send them straight to the app instead.
-  const isSignupCta = href === SIGNIN_HREF;
+  const isSignupCta = href === SIGNUP_HREF;
   const finalHref = signedIn && isSignupCta ? ACCOUNT_HREF : href;
   const content =
     signedIn && isSignupCta ? (
@@ -1292,7 +1296,7 @@ function SiteFooter() {
             <FooterCol title="Company" links={[{ label: "Articles", href: "/articles" }, { label: "Contact", href: "/contact" }, { label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" }, { label: "Refunds", href: "/refunds" }]} />
           </div>
           <div style={{ flex: "1 1 110px", minWidth: 110 }}>
-            <FooterCol title="Get started" links={[{ label: "Start free", href: SIGNIN_HREF }, { label: "Request access", href: SIGNIN_HREF }, { label: "Sign in", href: SIGNIN_HREF }]} />
+            <FooterCol title="Get started" links={[{ label: "Start free", href: SIGNUP_HREF }, { label: "Request access", href: SIGNUP_HREF }, { label: "Sign in", href: SIGNIN_HREF }]} />
           </div>
         </div>
       </div>

@@ -39,11 +39,17 @@ export default async function SignInPage({
   }
 
   // Vraelis gets its own light, centered, green-accent sign-in surface
-  // (same NextAuth flows underneath, no sansxel chrome).
+  // (same NextAuth flows underneath, no sansxel chrome). A signup-intent CTA
+  // (homepage "Start free") arrives with ?mode=signup so a brand-new user
+  // opens in create-account mode instead of a "Welcome back" sign-in screen.
   if (vraelis) {
+    const modeParam = Array.isArray(params.mode) ? params.mode[0] : params.mode;
     return (
       <div style={{ padding: "clamp(40px, 8vw, 96px) 20px" }}>
-        <VraelisSignIn callbackUrl={getSafeRedirectPath(callbackUrl ?? "/v/account")} />
+        <VraelisSignIn
+          callbackUrl={getSafeRedirectPath(callbackUrl ?? "/v/account")}
+          initialMode={modeParam === "signup" ? "signup" : "signin"}
+        />
       </div>
     );
   }

@@ -72,10 +72,19 @@ function statusStyle(tone: Tone): CSSProperties {
   };
 }
 
-export function VraelisSignIn({ callbackUrl = "/account" }: { callbackUrl?: string }) {
+export function VraelisSignIn({
+  callbackUrl = "/account",
+  initialMode = "signin",
+}: {
+  callbackUrl?: string;
+  initialMode?: AuthMode;
+}) {
   const router = useRouter();
   const safeRedirect = getSafeRedirectPath(callbackUrl) || "/account";
-  const [mode, setMode] = useState<AuthMode>("signin");
+  // Defaults to sign-in, but a signup-intent CTA (homepage "Start free")
+  // opens straight in create-account mode so a brand-new user doesn't land
+  // on a "Welcome back" sign-in screen.
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
