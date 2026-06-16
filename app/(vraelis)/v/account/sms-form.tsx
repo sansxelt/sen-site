@@ -25,16 +25,19 @@ export function SmsForm({
   useRefreshOnSuccess(state); // refresh the Text & voice chip + checklist row on save
   return (
     <form action={action} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.55, margin: 0, fontWeight: 600 }}>
+        Give your agent its own business texting line. Your leads text this number and your agent replies automatically, and follows up after missed calls.
+      </p>
       <div>
-        <label style={label} htmlFor="ownerPhone">Your phone <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(new-lead alerts)</span></label>
-        <input id="ownerPhone" name="ownerPhone" defaultValue={initialOwnerPhone} placeholder="+1 555 123 4567" maxLength={32} style={input} />
-      </div>
-      <div>
-        <label style={label} htmlFor="twilioNumber">Agent&apos;s text &amp; voice number <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(the number leads see)</span></label>
+        <label style={label} htmlFor="twilioNumber">AI agent number <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(your leads text this number)</span></label>
         <input id="twilioNumber" name="twilioNumber" defaultValue={initialTwilioNumber} placeholder="+1 555 987 6543" maxLength={32} style={input} />
       </div>
+      <div>
+        <label style={label} htmlFor="ownerPhone">Your phone <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(where you get new-lead alerts)</span></label>
+        <input id="ownerPhone" name="ownerPhone" defaultValue={initialOwnerPhone} placeholder="+1 555 123 4567" maxLength={32} style={input} />
+      </div>
       <p style={{ fontSize: 11.5, color: "var(--fg-4)", lineHeight: 1.5, margin: 0 }}>
-        This is the number your agent texts leads from and answers missed calls on. It goes live once the number clears carrier registration. Until then, your agent still works every lead over chat, email, and the web.
+        The agent number goes live once it clears carrier registration. Until then, your agent still works every lead over chat, email, and the web.
       </p>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <button type="submit" className="btn" disabled={pending} style={{ opacity: pending ? 0.7 : 1 }}>
