@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ARTICLES, formatArticleDate } from "./_articles";
 
 export const metadata: Metadata = {
-  title: "Articles — Vraelis",
+  title: "Resources — Vraelis",
   description:
     "The follow-up playbook: speed-to-lead, follow-up sequences, and turning missed calls into booked work.",
 };
@@ -14,7 +14,7 @@ export default function VraelisArticlesPage() {
       <div className="gridbg" style={{ opacity: 0.4 }} />
       <div className="wrap" style={{ position: "relative" }}>
         <div style={{ maxWidth: 760, marginBottom: "clamp(36px,5vw,56px)" }}>
-          <p className="eyebrow">Articles</p>
+          <p className="eyebrow">Resources</p>
           <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)", marginBottom: 16 }}>
             The follow-up <span className="mark"><span>playbook.</span></span>
           </h1>

@@ -114,9 +114,9 @@ function Reveal({
 const NAV_LINKS = [
   { href: "/how", label: "How it works", key: "how" },
   { href: "/automates", label: "What it automates", key: "automates" },
-  { href: DASHBOARD_HREF, label: "Dashboard", key: "dashboard" },
+  { href: DASHBOARD_HREF, label: "See it work", key: "dashboard" },
   { href: "/pricing", label: "Pricing", key: "pricing" },
-  { href: "/articles", label: "Articles", key: "articles" },
+  { href: "/articles", label: "Resources", key: "articles" },
 ];
 
 function Nav({ signedIn }: { signedIn: boolean }) {
@@ -1290,10 +1290,10 @@ function SiteFooter() {
         </div>
         <div style={{ flex: "2 1 340px", display: "flex", flexWrap: "wrap", gap: "clamp(24px, 4vw, 56px)" }}>
           <div style={{ flex: "1 1 110px", minWidth: 110 }}>
-            <FooterCol title="Product" links={[{ label: "How it works", href: "/how" }, { label: "What it automates", href: "/automates" }, { label: "Dashboard", href: DASHBOARD_HREF }, { label: "Pricing", href: "/pricing" }]} />
+            <FooterCol title="Product" links={[{ label: "How it works", href: "/how" }, { label: "What it automates", href: "/automates" }, { label: "See it work", href: DASHBOARD_HREF }, { label: "Pricing", href: "/pricing" }]} />
           </div>
           <div style={{ flex: "1 1 110px", minWidth: 110 }}>
-            <FooterCol title="Company" links={[{ label: "Articles", href: "/articles" }, { label: "Contact", href: "/contact" }, { label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" }, { label: "Refunds", href: "/refunds" }]} />
+            <FooterCol title="Company" links={[{ label: "Resources", href: "/articles" }, { label: "Contact", href: "/contact" }, { label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" }, { label: "Refunds", href: "/refunds" }]} />
           </div>
           <div style={{ flex: "1 1 110px", minWidth: 110 }}>
             <FooterCol title="Get started" links={[{ label: "Start free", href: SIGNUP_HREF }, { label: "Request access", href: SIGNUP_HREF }, { label: "Sign in", href: SIGNIN_HREF }]} />
