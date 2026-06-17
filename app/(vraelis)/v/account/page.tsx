@@ -8,7 +8,7 @@ import { deriveOnboarded, getOrCreateWorkspace, getPaymentsSummary, getWorkspace
 import { isDatabaseConfigured } from "@/lib/supabase-admin";
 import { listUpcomingBookings, slotLabel } from "@/lib/vraelis-booking";
 import { getAccountStatus } from "@/lib/vraelis-connect";
-import { isSmsLive } from "@/lib/vraelis-sms";
+import { isSmsLive, maybeProvisionAgentNumber } from "@/lib/vraelis-sms";
 import { cutRateFor, isCycle, isPlanKey, isPaidPlan } from "@/lib/vraelis-plans";
 import { AddLeadForm } from "./add-lead-form";
 import { OfferForm } from "./offer-form";
@@ -328,6 +328,15 @@ export default async function VraelisAccountPage({
   // "On" only when a number is assigned AND A2P/SMS is actually live. A
   // reserved-but-not-yet-A2P-approved number stays "pending", never green.
   const textVoiceLive = Boolean(contact?.twilio_number) && isSmsLive();
+
+  // Backfill safety net: provisioning normally fires on onboarding completion /
+  // plan-activation webhook, but those are past events for accounts that became
+  // eligible before Twilio creds were live. So if a PAID workspace is missing
+  // its number, kick off assignment in the background on dashboard load. Gated +
+  // idempotent (buys at most once); fire-and-forget so it never slows the page.
+  if (!contact?.twilio_number && isPaidPlan(workspace?.plan ?? null, workspace?.plan_status ?? null)) {
+    void maybeProvisionAgentNumber(email).catch(() => {});
+  }
   // The agent's own name (owner-set) or a sensible default tied to the business.
   const agentName = (offer?.agentName || "").trim();
   const agentLabel = agentName || `${(workspace?.business_name || "your").trim()} agent`;
