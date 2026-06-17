@@ -27,6 +27,15 @@ export function isTwilioConfigured(): boolean {
   );
 }
 
+// Texting only counts as LIVE once A2P 10DLC registration is approved at the
+// carrier. The Twilio creds being present is NOT enough — a number can be owned
+// (voice works, inbound routes) while SMS is still carrier-blocked. Flip
+// TWILIO_A2P_APPROVED=true in prod env the moment 10DLC clears; until then the
+// UI shows assigned numbers as "reserved, texting pending" rather than ON.
+export function isSmsLive(): boolean {
+  return isTwilioConfigured() && process.env.TWILIO_A2P_APPROVED === "true";
+}
+
 // Provisioning needs the account creds (not the platform sender), so it's its
 // own check — we can buy + own a number for a workspace even before the
 // platform default sender is set.
