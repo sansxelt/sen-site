@@ -124,6 +124,15 @@ function Nav({ signedIn }: { signedIn: boolean }) {
   const activeKey =
     NAV_LINKS.find((l) => pathname === l.href || pathname.startsWith(`${l.href}/`))?.key ?? "";
   const [menuOpen, setMenuOpen] = useState(false);
+  // Keep the header divider hidden at the very top so the page doesn't look
+  // "blocked off"; fade the border in once the user scrolls past the top.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   return (
     <nav
       style={{
@@ -135,7 +144,9 @@ function Nav({ signedIn }: { signedIn: boolean }) {
         background: "rgba(250, 248, 244, 0.86)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
-        borderBottom: "1px solid var(--line-1)",
+        // Borderless at the top (clean, not "blocked off"); divider fades in on scroll.
+        borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`,
+        transition: "border-color 0.25s ease",
       }}
     >
       <a
