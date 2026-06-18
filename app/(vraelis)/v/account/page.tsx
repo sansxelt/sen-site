@@ -711,21 +711,22 @@ export default async function VraelisAccountPage({
                     <div style={{ textAlign: "center", marginBottom: 16 }}>
                       <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--acc)", fontSize: 17 }}>✦</div>
                       <div style={{ fontSize: 15.5, color: "var(--fg-1)", fontWeight: 600, marginBottom: 6 }}>
-                        {agentName ? `${agentName} is ready.` : "Your agent is ready."} Share your link to get your first lead.
+                        {agentName ? `${agentName} is ready.` : "Your agent is ready."} Talk to it like a customer.
                       </div>
                       <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5, maxWidth: 420, margin: "0 auto" }}>
-                        Put this link in your Instagram bio, send it to a lead, or drop it anywhere you talk to people. Anyone who opens it chats with your agent, which {aiConfigured ? "qualifies them" : "answers them"}{canCollect ? ", books the call, and can take payment" : " and books the call. Turn on payouts so it can collect payment too"}.
+                        Open it and message it the way a lead would — watch it reply, {aiConfigured ? "qualify" : "answer"}, and offer to book, live. Then share the same link to start getting real leads.
                       </p>
                     </div>
                     {formLink && (
-                      <div style={{ maxWidth: 460, margin: "0 auto 16px" }}>
-                        <CopyField label="Your agent's link · paste it in your bio" value={formLink} />
+                      <div style={{ textAlign: "center", marginBottom: 16 }}>
+                        <a href={formLink} target="_blank" rel="noreferrer" className="btn" style={{ padding: "10px 18px", fontSize: 13.5 }}>Talk to your agent →</a>
                       </div>
                     )}
-                    <div style={{ textAlign: "center", paddingTop: 4, borderTop: "1px solid var(--line-1)", marginTop: 4 }}>
-                      <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "12px 0 8px" }}>Want to see it work first?</p>
-                      <TestLeadButton label="Send yourself a test lead →" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 12.5 }} />
-                    </div>
+                    {formLink && (
+                      <div style={{ maxWidth: 460, margin: "0 auto", paddingTop: 14, borderTop: "1px solid var(--line-1)" }}>
+                        <CopyField label="Share this link to get real leads · paste it in your bio" value={formLink} />
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div style={{ maxHeight: 480, overflowY: "auto" }}>
