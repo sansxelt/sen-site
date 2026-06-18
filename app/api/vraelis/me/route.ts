@@ -14,5 +14,9 @@ export async function GET() {
     signedIn: true,
     plan: ws?.plan ?? null,
     cycle: ws?.plan_cycle ?? null,
+    // planStatus lets the pricing page treat a lapsed plan as not-currently-owned
+    // (so the user can re-buy their old tier instead of hitting a blocked tile).
+    planStatus: ws?.plan_status ?? null,
+    planProvider: ws?.plan_provider ?? null,
   });
 }

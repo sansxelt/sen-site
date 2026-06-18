@@ -53,13 +53,28 @@ export async function POST(req: NextRequest) {
     const subRes = await fetch(`${PP_BASE}/v1/billing/subscriptions/${subscriptionId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const sub = (await subRes.json()) as { status?: string };
+    const sub = (await subRes.json()) as {
+      status?: string;
+      billing_info?: { next_billing_time?: string };
+    };
     const ok = sub.status === "ACTIVE" || sub.status === "APPROVED";
     if (!ok) {
       return NextResponse.json({ ok: false, error: `Subscription ${sub.status ?? "unknown"}` }, { status: 400 });
     }
 
-    await setWorkspacePlan(email, { plan, cycle, status: "active", provider: "paypal" });
+    // Persist the subscription id + next billing date so the reconcile cron can
+    // re-poll PayPal and self-heal a cancel/expire even if the webhook never
+    // routes this sub (Vraelis PayPal subs are created without a custom_id).
+    const nextBilling = sub.billing_info?.next_billing_time;
+    const periodEndISO = nextBilling ? new Date(nextBilling).toISOString() : null;
+    await setWorkspacePlan(email, {
+      plan,
+      cycle,
+      status: "active",
+      provider: "paypal",
+      subscriptionId,
+      periodEndISO,
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("paypal record failed:", error);

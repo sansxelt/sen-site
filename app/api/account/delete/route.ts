@@ -3,6 +3,7 @@ import { auth, signOut } from "../../../../auth";
 import { sendAccountDeletedEmail } from "../../../../lib/email";
 import { getStripe, isStripeConfigured } from "../../../../lib/stripe";
 import { getSupabaseAdminClient } from "../../../../lib/supabase-admin";
+import { releaseAgentNumber } from "../../../../lib/vraelis-sms";
 
 function normalizeEmail(raw: string): string {
   return raw.trim().toLowerCase();
@@ -55,6 +56,12 @@ export async function DELETE() {
     // Failures are logged but don't block the deletion.
     await cancelStripeSubscriptionsForEmail(email);
 
+    // Step 1b, release the workspace's Twilio agent number BEFORE wiping the
+    // row (the lookup reads twilio_number off the workspace). Otherwise the
+    // number is orphaned — owned + billed forever with no row to find it by.
+    // Self-catching + timeout-bounded; never blocks the deletion.
+    await releaseAgentNumber(email);
+
     // Step 2, wipe every table keyed by email.  Done as a sequence of
     // separate DELETEs (no Postgres transaction primitive available via
     // supabase-js); if one fails the rest still attempt, and we surface
@@ -79,6 +86,20 @@ export async function DELETE() {
         console.error(`[account.delete] Failed to delete from ${table}:`, error);
         if (!firstError) firstError = { table, err: error };
       }
+    }
+
+    // Wipe the Vraelis workspace too (keyed by owner_email, not "email"). Its
+    // leads / messages / payments / bookings cascade-delete via FK, so this one
+    // delete cleans the whole Vraelis footprint. Best-effort: a failure here
+    // doesn't block account deletion (the row no longer maps to a live user).
+    try {
+      const { error: wsErr } = await supabase
+        .from("vraelis_workspaces" as never)
+        .delete()
+        .eq("owner_email", email);
+      if (wsErr) console.error("[account.delete] Failed to delete vraelis_workspaces:", wsErr);
+    } catch (err) {
+      console.error("[account.delete] vraelis_workspaces cleanup threw:", err);
     }
 
     // Only reject if the profile delete failed, the other tables

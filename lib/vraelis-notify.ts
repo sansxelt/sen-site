@@ -22,6 +22,35 @@ function leadUrl(leadId: string): string {
   return `${ORIGIN}/v/account/leads/${leadId}`;
 }
 
+const ACCOUNT_URL = `${ORIGIN}/v/account`;
+
+// The owner's own subscription lapsed. Fired ONCE on a real status transition
+// (callers gate on setWorkspacePlan's statusChanged). past_due → nudge to fix
+// the card before features pause; canceled → plan ended, reactivate to restore
+// text/voice + payments. Fail-soft like the other notify helpers.
+export async function notifyOwnerPlanLapse(
+  ownerEmail: string,
+  status: "past_due" | "canceled",
+): Promise<void> {
+  try {
+    if (status === "past_due") {
+      await sendOwnerAlert({
+        ownerEmail,
+        subject: "Action needed: your Vraelis payment didn't go through",
+        body: `A renewal payment for your Vraelis plan failed.\n\nYour agent keeps working for a few days, but text & voice will pause if it isn't fixed. Update your card here:\n${ACCOUNT_URL}`,
+      });
+    } else {
+      await sendOwnerAlert({
+        ownerEmail,
+        subject: "Your Vraelis plan has ended",
+        body: `Your Vraelis plan has ended. Your agent still captures leads over chat, email, and the web — but text/voice and your agent number are paused.\n\nReactivate anytime to turn them back on:\n${ACCOUNT_URL}`,
+      });
+    }
+  } catch {
+    /* notifications must never throw into a webhook / cron */
+  }
+}
+
 // A new lead arrived on any channel. Email always; SMS when configured (the
 // existing notifyOwnerNewLead is SMS-only and no-ops without Twilio, so we
 // keep it for the text and add the reliable email here).

@@ -15,7 +15,7 @@
 //     chat/email (channel = "sms").
 
 import { captureError } from "./vraelis-monitor";
-import { getWorkspaceContact, getOrCreateWorkspace, isWorkspaceOnboarded, claimTwilioNumber } from "./vraelis-db";
+import { getWorkspaceContact, getOrCreateWorkspace, isWorkspaceOnboarded, claimTwilioNumber, setWorkspaceContact } from "./vraelis-db";
 import { isPaidPlan } from "./vraelis-plans";
 import { APP_URL } from "./stripe";
 
@@ -71,34 +71,69 @@ async function twFetch(url: string, init?: RequestInit): Promise<Response> {
   }
 }
 
-// Release a number back to Twilio (used to roll back a purchase we couldn't
-// persist, so a failed save never leaks a paid number).
-async function releaseNumber(sid: string, e164: string, email: string): Promise<void> {
+// Release a number back to Twilio. Used both to roll back a purchase we couldn't
+// persist (so a failed save never leaks a paid number) and to reap the agent
+// number when a plan lapses. Returns true ONLY when the number is confirmed gone
+// from the account (DELETE 204, already-404, or not owned by us) — false on any
+// unconfirmed/failed release, so callers never clear the DB ahead of a real
+// Twilio release (which would desync and keep the line billing silently).
+async function releaseNumber(sid: string, e164: string, email: string): Promise<boolean> {
   try {
     // Look up the number's SID, then DELETE it.
     const listRes = await twFetch(
       `https://api.twilio.com/2010-04-01/Accounts/${sid}/IncomingPhoneNumbers.json?PhoneNumber=${encodeURIComponent(e164)}`,
       { headers: { Authorization: twilioAuthHeader() } },
     );
-    const numSid = listRes.ok
-      ? ((await listRes.json()) as { incoming_phone_numbers?: { sid?: string }[] }).incoming_phone_numbers?.[0]?.sid
-      : null;
-    if (numSid) {
-      const delRes = await twFetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/IncomingPhoneNumbers/${numSid}.json`, {
-        method: "DELETE",
-        headers: { Authorization: twilioAuthHeader() },
-      });
-      // A failed DELETE means the number is still owned + charged. Twilio
-      // returns 204 on success; anything else is a real (visible) leak.
-      if (!delRes.ok && delRes.status !== 404) {
-        captureError("twilio-provision", new Error(`release DELETE ${delRes.status}`), { email, number: e164, numSid });
-      }
-    } else {
-      captureError("twilio-provision", new Error("release: could not find number sid"), { email, number: e164 });
+    if (!listRes.ok) {
+      // Couldn't even confirm ownership — don't claim success (caller retries).
+      captureError("twilio-provision", new Error(`release list ${listRes.status}`), { email, number: e164 });
+      return false;
     }
+    const numSid = ((await listRes.json()) as { incoming_phone_numbers?: { sid?: string }[] })
+      .incoming_phone_numbers?.[0]?.sid;
+    if (!numSid) {
+      // Number isn't owned by this account (already released / never ours) →
+      // nothing to bill, safe to treat as released.
+      return true;
+    }
+    const delRes = await twFetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/IncomingPhoneNumbers/${numSid}.json`, {
+      method: "DELETE",
+      headers: { Authorization: twilioAuthHeader() },
+    });
+    // Twilio returns 204 on success; 404 means it's already gone. Anything else
+    // means the number is still owned + charged — a real (visible) leak.
+    if (delRes.ok || delRes.status === 404) return true;
+    captureError("twilio-provision", new Error(`release DELETE ${delRes.status}`), { email, number: e164, numSid });
+    return false;
   } catch (err) {
     // Couldn't release — log loudly so it can be freed by hand (cost leak).
     captureError("twilio-provision", err, { email, number: e164, stage: "release_failed" });
+    return false;
+  }
+}
+
+// Reap a workspace's assigned agent number when its plan lapses (canceled, or
+// past_due beyond grace) or its account is deleted. Looks up the saved number,
+// releases it at Twilio, and clears the DB column ONLY after a confirmed
+// release. Idempotent + self-catching; safe to fire-and-forget. Eligibility
+// (is this plan actually lapsed?) is the CALLER's decision — this just executes.
+export async function releaseAgentNumber(email: string): Promise<boolean> {
+  try {
+    if (!email || !hasTwilioAccount()) return false;
+    const contact = await getWorkspaceContact(email);
+    const number = contact?.twilio_number;
+    if (!number) return false; // nothing assigned → nothing to release
+    const sid = (process.env.TWILIO_ACCOUNT_SID || "").trim();
+    const released = await releaseNumber(sid, number, email);
+    if (released) {
+      // Clear the column only AFTER a confirmed release, so a failed release
+      // never leaves the DB saying "no number" while Twilio keeps billing it.
+      await setWorkspaceContact(email, { twilioNumber: null });
+    }
+    return released;
+  } catch (e) {
+    captureError("twilio-provision", e, { email, stage: "release_agent" });
+    return false;
   }
 }
 

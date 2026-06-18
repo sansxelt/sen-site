@@ -63,6 +63,17 @@ alter table vraelis_workspaces add column if not exists plan_status text;
 alter table vraelis_workspaces add column if not exists plan_provider text;
 alter table vraelis_workspaces add column if not exists plan_updated_at timestamptz;
 
+-- Lapse handling (grace + self-heal). plan_status now carries THREE values:
+--   'active'   — paid + current
+--   'past_due' — a renewal charge failed; SHORT grace (see PAST_DUE_GRACE_DAYS
+--                in lib/vraelis-plans), then treated as lapsed. plan_updated_at
+--                marks when it went past_due (the grace clock).
+--   'canceled' — subscription ended / fully lapsed.
+-- We persist the provider's subscription id + current period end so the daily
+-- reconcile cron can re-poll live status and self-heal a missed webhook.
+alter table vraelis_workspaces add column if not exists plan_subscription_id text;
+alter table vraelis_workspaces add column if not exists plan_current_period_end timestamptz;
+
 -- Inbound leads belonging to a workspace.
 create table if not exists vraelis_leads (
   id            uuid primary key default gen_random_uuid(),

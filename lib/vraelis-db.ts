@@ -38,6 +38,7 @@ export type VraelisWorkspace = {
   plan_cycle: string | null;
   plan_status: string | null;
   plan_provider: string | null;
+  plan_updated_at: string | null;
   connect_account_id: string | null;
   connect_status: string | null;
   deposit_enabled: boolean | null;
@@ -45,7 +46,7 @@ export type VraelisWorkspace = {
 };
 
 const WORKSPACE_COLS =
-  "owner_email, intake_key, business_name, business_description, plan, plan_cycle, plan_status, plan_provider, connect_account_id, connect_status, deposit_enabled, deposit_amount_cents";
+  "owner_email, intake_key, business_name, business_description, plan, plan_cycle, plan_status, plan_provider, plan_updated_at, connect_account_id, connect_status, deposit_enabled, deposit_amount_cents";
 
 export type VraelisLead = {
   id: string;
@@ -164,23 +165,103 @@ export async function updateWorkspaceBusiness(
 
 export async function setWorkspacePlan(
   email: string,
-  fields: { plan: string; cycle: string; status: string; provider: string },
-): Promise<void> {
-  if (!isDatabaseConfigured()) return;
-  await getOrCreateWorkspace(email); // ensure row exists
+  fields: {
+    plan: string;
+    cycle: string;
+    status: string;
+    provider: string;
+    // Self-heal metadata (written fail-soft; columns migrated separately).
+    subscriptionId?: string | null;
+    periodEndISO?: string | null;
+  },
+): Promise<{ statusChanged: boolean }> {
+  if (!isDatabaseConfigured()) return { statusChanged: false };
+  const existing = await getOrCreateWorkspace(email); // ensure row exists
   const supabase = getSupabaseAdminClient();
+
+  // plan_updated_at is the grace clock — it must mark when the STATUS changed,
+  // not every write. Otherwise a daily reconcile re-writing 'past_due' would
+  // keep resetting the clock and the plan would never actually lapse.
+  const statusChanged = (existing?.plan_status ?? null) !== fields.status;
+  const patch: Record<string, unknown> = {
+    plan: fields.plan,
+    plan_cycle: fields.cycle,
+    plan_status: fields.status,
+    plan_provider: fields.provider,
+    updated_at: new Date().toISOString(),
+  };
+  if (statusChanged) patch.plan_updated_at = new Date().toISOString();
+
   const { error } = await supabase
     .from("vraelis_workspaces" as never)
-    .update({
-      plan: fields.plan,
-      plan_cycle: fields.cycle,
-      plan_status: fields.status,
-      plan_provider: fields.provider,
-      plan_updated_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    } as never)
+    .update(patch as never)
     .eq("owner_email", normalizeEmail(email));
   if (error) throw error;
+
+  if (fields.subscriptionId !== undefined || fields.periodEndISO !== undefined) {
+    await setWorkspaceSubscriptionMeta(email, {
+      subscriptionId: fields.subscriptionId,
+      periodEndISO: fields.periodEndISO,
+    });
+  }
+  return { statusChanged };
+}
+
+// Persist the provider's subscription id + current period end so the reconcile
+// cron can re-poll live status. Fail-soft: these columns are migrated after the
+// base plan columns, so a not-yet-migrated DB still records the plan above.
+export async function setWorkspaceSubscriptionMeta(
+  email: string,
+  fields: { subscriptionId?: string | null; periodEndISO?: string | null },
+): Promise<void> {
+  if (!email || !isDatabaseConfigured()) return;
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (fields.subscriptionId !== undefined) patch.plan_subscription_id = fields.subscriptionId;
+  if (fields.periodEndISO !== undefined) patch.plan_current_period_end = fields.periodEndISO;
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase
+      .from("vraelis_workspaces" as never)
+      .update(patch as never)
+      .eq("owner_email", normalizeEmail(email));
+    if (error) console.error("setWorkspaceSubscriptionMeta: columns may not exist yet —", error.message);
+  } catch (e) {
+    console.error("setWorkspaceSubscriptionMeta failed:", e);
+  }
+}
+
+// Lapse/reap/reconcile view: every workspace with the self-heal fields the
+// subscription-reconcile + number-reap crons need. Fail-soft (returns [] if the
+// new columns aren't migrated yet) so the crons degrade rather than throw.
+export type WorkspaceLapseRow = {
+  owner_email: string;
+  plan: string | null;
+  plan_cycle: string | null;
+  plan_status: string | null;
+  plan_provider: string | null;
+  plan_updated_at: string | null;
+  plan_subscription_id: string | null;
+  plan_current_period_end: string | null;
+  twilio_number: string | null;
+};
+export async function getWorkspaceLapseRows(): Promise<WorkspaceLapseRow[]> {
+  if (!isDatabaseConfigured()) return [];
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("vraelis_workspaces" as never)
+      .select(
+        "owner_email, plan, plan_cycle, plan_status, plan_provider, plan_updated_at, plan_subscription_id, plan_current_period_end, twilio_number",
+      );
+    if (error) {
+      console.error("getWorkspaceLapseRows (columns may not be migrated):", error.message);
+      return [];
+    }
+    return (data as unknown as WorkspaceLapseRow[]) ?? [];
+  } catch (e) {
+    console.error("getWorkspaceLapseRows failed:", e);
+    return [];
+  }
 }
 
 // Sum of revenue from won deals (value on leads marked won) — the base

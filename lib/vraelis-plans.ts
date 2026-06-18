@@ -65,3 +65,46 @@ export function isPaidPlan(plan: string | null, status: string | null): boolean 
 export function isCycle(v: string): v is Cycle {
   return v === "monthly" || v === "yearly" || v === "lifetime";
 }
+
+// The three plan_status values a workspace can hold (see sql/vraelis.sql).
+export type PlanStatus = "active" | "past_due" | "canceled";
+
+// past_due is a SHORT grace window (a failed renewal, still recoverable) — NOT a
+// free pass until the period ends. After this many days unfixed, the plan is
+// treated as lapsed: paid features gate off and the agent number is reaped.
+// Applies to subscriptions only (one-time/lifetime never goes past_due).
+export const PAST_DUE_GRACE_DAYS = 3;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Grace-aware FEATURE entitlement. Paid features stay ON while the plan is
+// active, and during the short past_due grace window measured from
+// plan_updated_at (the moment it went past_due). Canceled — or past_due beyond
+// the grace window — is NOT entitled. Use this (not isPaidPlan) anywhere a
+// lapsed-but-recoverable customer should keep working briefly.
+export function isEntitled(
+  plan: string | null,
+  status: string | null,
+  planUpdatedAt?: string | null,
+): boolean {
+  if (!plan || !PAID_PLANS.has(plan)) return false;
+  if (status === "active") return true;
+  if (status === "past_due") {
+    if (!planUpdatedAt) return true; // no grace clock yet → give the benefit of grace
+    const since = new Date(planUpdatedAt).getTime();
+    if (!Number.isFinite(since)) return true;
+    return Date.now() - since <= PAST_DUE_GRACE_DAYS * DAY_MS;
+  }
+  return false; // canceled (or any unknown status)
+}
+
+// True once a past_due plan has burned through its grace window — i.e. it's time
+// to gate features off and reap the agent number. Canceled is handled directly;
+// this isolates the past_due clock so the reap/reconcile crons can act on it.
+export function isPastDueExpired(status: string | null, planUpdatedAt?: string | null): boolean {
+  if (status !== "past_due") return false;
+  if (!planUpdatedAt) return false;
+  const since = new Date(planUpdatedAt).getTime();
+  if (!Number.isFinite(since)) return false;
+  return Date.now() - since > PAST_DUE_GRACE_DAYS * DAY_MS;
+}

@@ -9,7 +9,7 @@ import { isDatabaseConfigured } from "@/lib/supabase-admin";
 import { listUpcomingBookings, slotLabel } from "@/lib/vraelis-booking";
 import { getAccountStatus } from "@/lib/vraelis-connect";
 import { isSmsLive, maybeProvisionAgentNumber } from "@/lib/vraelis-sms";
-import { cutRateFor, isCycle, isPlanKey, isPaidPlan } from "@/lib/vraelis-plans";
+import { cutRateFor, isCycle, isPlanKey, isPaidPlan, isEntitled } from "@/lib/vraelis-plans";
 import { AddLeadForm } from "./add-lead-form";
 import { OfferForm } from "./offer-form";
 import { SmsForm } from "./sms-form";
@@ -325,9 +325,19 @@ export default async function VraelisAccountPage({
   // payouts (Stripe Connect active); text/voice needs a saved number AND the
   // platform Twilio creds (a saved number alone sends nothing).
   const canCollect = connected;
-  // "On" only when a number is assigned AND A2P/SMS is actually live. A
-  // reserved-but-not-yet-A2P-approved number stays "pending", never green.
-  const textVoiceLive = Boolean(contact?.twilio_number) && isSmsLive();
+  // Plan lifecycle state for the dashboard. plan_status is one of
+  // active | past_due | canceled. Grace-aware entitlement keeps paid features on
+  // while active and during the short past_due grace window; a canceled (or
+  // long-past_due) plan is not entitled, but core lead capture never gates on it.
+  const planStatus = workspace?.plan_status ?? null;
+  const planProvider = workspace?.plan_provider ?? null;
+  const planEntitled = isEntitled(workspace?.plan ?? null, planStatus, workspace?.plan_updated_at ?? null);
+  const planNotActive = Boolean(workspace?.plan) && planStatus !== "active";
+  const ctaLink = { fontSize: 13, color: "var(--acc-deep)", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" } as const;
+  // "On" only when a number is assigned, A2P/SMS is live, AND the plan is
+  // entitled. A reserved-but-not-yet-A2P-approved number stays "pending"; a
+  // lapsed plan turns the chip off immediately (before the daily reap runs).
+  const textVoiceLive = Boolean(contact?.twilio_number) && isSmsLive() && planEntitled;
 
   // Backfill safety net: provisioning normally fires on onboarding completion /
   // plan-activation webhook, but those are past events for accounts that became
@@ -1071,17 +1081,40 @@ export default async function VraelisAccountPage({
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 3 }}>Plan</div>
                     {workspace?.plan ? (
-                      <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, textTransform: "capitalize" }}>
-                        {workspace.plan} <span style={{ color: "var(--fg-4)", fontWeight: 400 }}>· {workspace.plan_cycle}</span>
-                        <span className="pill st-won" style={{ marginLeft: 8 }}><span className="dot" />Active</span>
-                      </div>
+                      <>
+                        <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, textTransform: "capitalize" }}>
+                          {workspace.plan} <span style={{ color: "var(--fg-4)", fontWeight: 400 }}>· {workspace.plan_cycle}</span>
+                          {planStatus === "active" ? (
+                            <span className="pill st-won" style={{ marginLeft: 8 }}><span className="dot" />Active</span>
+                          ) : planStatus === "past_due" ? (
+                            <span className="pill" style={{ marginLeft: 8, color: "#C2540C" }}><span className="dot" style={{ background: "#C2540C" }} />Payment failed</span>
+                          ) : (
+                            <span className="pill" style={{ marginLeft: 8, color: "var(--fg-4)" }}><span className="dot" style={{ background: "var(--fg-4)" }} />Canceled</span>
+                          )}
+                        </div>
+                        {planNotActive && (
+                          <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.45, maxWidth: 360 }}>
+                            {planStatus === "past_due"
+                              ? "A renewal payment failed. Your agent keeps working for a few days — update your card to keep text & voice on."
+                              : "Your paid plan ended. Your agent still captures leads over chat, email, and the web; text/voice and your agent number are paused. Reactivate to turn them back on."}
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div style={{ fontSize: 14, color: "var(--fg-2)" }}>Starter (free)</div>
                     )}
                   </div>
-                  <Link href="/v/pricing" style={{ fontSize: 13, color: "var(--acc-deep)", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>
-                    {workspace?.plan ? "Change →" : "Upgrade →"}
-                  </Link>
+                  {planStatus === "past_due" ? (
+                    planProvider === "paypal" ? (
+                      <a href="https://www.paypal.com/myaccount/autopay/" target="_blank" rel="noreferrer" style={ctaLink}>Fix payment →</a>
+                    ) : (
+                      <a href="/api/vraelis/billing/portal" style={ctaLink}>Fix payment →</a>
+                    )
+                  ) : planStatus === "canceled" ? (
+                    <Link href={`/v/checkout?plan=${workspace?.plan ?? ""}&cycle=${workspace?.plan_cycle ?? "monthly"}`} style={ctaLink}>Reactivate →</Link>
+                  ) : (
+                    <Link href="/v/pricing" style={ctaLink}>{workspace?.plan ? "Change →" : "Upgrade →"}</Link>
+                  )}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 12, borderTop: "1px solid var(--line-1)" }}>
                   <div style={{ minWidth: 0 }}>

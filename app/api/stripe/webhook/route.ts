@@ -25,7 +25,8 @@ import { addCredits, CREDITS_PER_DOLLAR } from "../../../../lib/credits";
 import { invalidateAddonsCache } from "../../../../lib/active-addons";
 import { markPaymentCanceledBySession, setWorkspacePlan } from "../../../../lib/vraelis-db";
 import { isCycle, isPlanKey } from "../../../../lib/vraelis-plans";
-import { maybeProvisionAgentNumber } from "../../../../lib/vraelis-sms";
+import { maybeProvisionAgentNumber, releaseAgentNumber } from "../../../../lib/vraelis-sms";
+import { notifyOwnerPlanLapse } from "../../../../lib/vraelis-notify";
 import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
 
 // Vraelis runs in this same Stripe account. Vraelis checkout sessions +
@@ -34,19 +35,38 @@ import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
 // return true so the sansxel handlers skip it.
 async function recordVraelisPlan(
   meta: Stripe.Metadata | null | undefined,
-  status: "active" | "canceled",
+  status: "active" | "past_due" | "canceled",
+  extra?: { subscriptionId?: string | null; periodEndISO?: string | null },
 ): Promise<boolean> {
   const owner = meta?.owner_email ?? "";
   const plan = meta?.plan ?? "";
   const cycle = meta?.cycle ?? "";
   if (!owner || !isPlanKey(plan) || !isCycle(cycle)) return false;
   try {
-    await setWorkspacePlan(owner, { plan, cycle, status, provider: "stripe" });
-    // Paid plan went active → assign the agent's phone number (idempotent +
-    // gated: no-ops if free, not onboarded, or already assigned). Fire-and-
-    // forget so a slow Twilio call can't delay the webhook response; its
-    // internals are timeout-bounded + self-catching.
-    if (status === "active") void maybeProvisionAgentNumber(owner).catch(() => {});
+    const { statusChanged } = await setWorkspacePlan(owner, {
+      plan,
+      cycle,
+      status,
+      provider: "stripe",
+      subscriptionId: extra?.subscriptionId,
+      periodEndISO: extra?.periodEndISO,
+    });
+    if (status === "active") {
+      // Paid plan active → assign the agent's phone number (idempotent + gated:
+      // no-ops if free, not onboarded, or already assigned). Fire-and-forget so
+      // a slow Twilio call can't delay the webhook; internals are self-catching.
+      void maybeProvisionAgentNumber(owner).catch(() => {});
+    } else if (status === "canceled") {
+      // Plan ended → reap the agent's Twilio number so it stops billing and is
+      // freed. Fire-and-forget; the daily reap cron is the backstop if this
+      // fails. (past_due keeps the number through the short grace window.)
+      void releaseAgentNumber(owner).catch(() => {});
+    }
+    // Email the owner ONCE on a real transition into a lapse state (statusChanged
+    // guards against redelivered webhooks re-sending the same notice).
+    if (statusChanged && (status === "canceled" || status === "past_due")) {
+      void notifyOwnerPlanLapse(owner, status).catch(() => {});
+    }
   } catch (err) {
     console.error("[stripe webhook] vraelis plan record failed:", err);
   }
@@ -160,11 +180,22 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
 
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
   // Vraelis subscription? Record plan status on the vraelis workspace and
-  // stop — the sansxel billing logic below doesn't apply to it.
-  const vraelisCanceled =
+  // stop — the sansxel billing logic below doesn't apply to it. Map Stripe's
+  // status to our 3-way plan_status: terminal endings → canceled, a failed
+  // renewal still retrying → past_due (short grace), everything else → active.
+  const canceled =
     event.type === "customer.subscription.deleted" ||
     ["canceled", "unpaid", "incomplete_expired"].includes(subscription.status);
-  if (await recordVraelisPlan(subscription.metadata, vraelisCanceled ? "canceled" : "active")) {
+  const pastDue = !canceled && subscription.status === "past_due";
+  const vraelisStatus = canceled ? "canceled" : pastDue ? "past_due" : "active";
+  const periodEndRaw = (subscription as unknown as Record<string, unknown>)["current_period_end"];
+  const periodEndISO = typeof periodEndRaw === "number" ? new Date(periodEndRaw * 1000).toISOString() : null;
+  if (
+    await recordVraelisPlan(subscription.metadata, vraelisStatus, {
+      subscriptionId: subscription.id,
+      periodEndISO,
+    })
+  ) {
     return;
   }
 
