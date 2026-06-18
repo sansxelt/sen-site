@@ -72,7 +72,7 @@ export default function PrivacyPage() {
         <P>We keep data while your account is active. To request a copy of your data or have it deleted, email <a href="mailto:privacy@vraelis.com" style={{ color: "var(--acc-deep)" }}>privacy@vraelis.com</a> and we'll action it within a reasonable time, subject to records we must keep for legal or accounting reasons.</P>
 
         <H>Children</H>
-        <P>Vraelis is for businesses and is not directed to children under 16. We don't knowingly collect data from children.</P>
+        <P>Vraelis is a business tool intended for adults (18+, or a minor under the supervision of a responsible parent or legal guardian, as set out in our Terms). It is not directed to children, and we don&apos;t knowingly collect data from them.</P>
 
         <H>Security</H>
         <P>Data is encrypted in transit (HTTPS). Secret keys and credentials live only on the server and are never exposed to the browser. No system is perfectly secure, but we take reasonable measures to protect your data.</P>

@@ -35,7 +35,7 @@ export default function TermsPage() {
         <P>Vraelis is a tool that replies to your inbound leads with an AI assistant, follows up, books appointments, and can collect payments from your leads on your behalf via Stripe. Vraelis is the tool; you run your business.</P>
 
         <H>Eligibility</H>
-        <P>You must be at least 18 and use Vraelis for a legitimate business. You're responsible for everything that happens under your account, including the messages the AI sends to your leads on your behalf.</P>
+        <P>You must be at least 18 — or have the consent and supervision of a parent or legal guardian who is responsible for the account and for any payments, contracts, or business activity conducted through it — and you must use Vraelis for a legitimate business. You're responsible for everything that happens under your account, including the messages the AI sends to your leads on your behalf.</P>
 
         <H>Acceptable use</H>
         <P>You agree not to use Vraelis to:</P>
