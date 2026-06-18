@@ -35,7 +35,7 @@ export default function RefundsPage() {
         <P>Deposits and payments your customers make through Vraelis are for your services, not ours. If a customer wants a refund for a service or booking, that's between you and your customer — Vraelis isn't a party to it. As the business, you decide and issue those refunds (you can do this from your Stripe dashboard). Customers should contact the business they paid, not Vraelis.</P>
 
         <H>How to request a refund</H>
-        <P>Email <a href="mailto:hello@vraelis.com" style={{ color: "var(--acc-deep)" }}>hello@vraelis.com</a> with your account email and what you'd like refunded. We'll get back to you quickly.</P>
+        <P>Email <a href="mailto:help@vraelis.com" style={{ color: "var(--acc-deep)" }}>help@vraelis.com</a> with your account email and what you'd like refunded. We'll get back to you quickly.</P>
       </div>
     </section>
   );

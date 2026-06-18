@@ -73,7 +73,7 @@ export default function TermsPage() {
         <P>We may update these terms. We'll update the date above and, for significant changes, notify you. Continued use means you accept the update.</P>
 
         <H>Contact</H>
-        <P><a href="mailto:hello@vraelis.com" style={{ color: "var(--acc-deep)" }}>hello@vraelis.com</a></P>
+        <P><a href="mailto:help@vraelis.com" style={{ color: "var(--acc-deep)" }}>help@vraelis.com</a></P>
       </div>
     </section>
   );
