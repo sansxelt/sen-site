@@ -41,7 +41,7 @@ export function RequestPayment({
     return (
       <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5 }}>
         Set up payouts in the{" "}
-        <a href="/v/account?tab=money" style={{ color: "var(--acc-deep)" }}>Money tab</a>{" "}
+        <a href="/account?tab=money" style={{ color: "var(--acc-deep)" }}>Money tab</a>{" "}
         to collect payment from this lead — Vraelis collects it, takes its cut automatically, and Stripe deducts card-processing fees from the payout it sends you.
       </p>
     );

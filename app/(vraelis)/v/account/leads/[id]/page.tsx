@@ -49,7 +49,7 @@ export default async function LeadDetailPage({
   const session = await auth();
   if (!session?.user?.email) redirect("/signin?callbackUrl=%2Faccount");
   // Core onboarding first — /v/account shows the setup screen until done.
-  if (!(await isWorkspaceOnboarded(session.user.email))) redirect("/v/account");
+  if (!(await isWorkspaceOnboarded(session.user.email))) redirect("/account");
 
   const { id } = await params;
   const [data, workspace, leadPayments, offer] = await Promise.all([
@@ -97,7 +97,7 @@ export default async function LeadDetailPage({
             title: "Set up your payment rail before you ask for money.",
             body: "Open the Money tab to finish payouts. Once that is live, you can send this lead a secure checkout link right from here.",
             tone: { borderColor: "var(--line-2)", background: "var(--bg-1)", eyebrow: "var(--fg-4)" },
-            pill: <Link href="/v/account?tab=money" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13, textDecoration: "none" }}>Open Money</Link>,
+            pill: <Link href="/account?tab=money" className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13, textDecoration: "none" }}>Open Money</Link>,
           }
         : readyForPayment
           ? {
@@ -119,7 +119,7 @@ export default async function LeadDetailPage({
     <section className="section section--app" style={{ position: "relative", overflow: "hidden" }}>
       <div className="gridbg" style={{ opacity: 0.3 }} />
       <div className="wrap" style={{ position: "relative", maxWidth: 820 }}>
-        <Link href="/v/account" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none" }}>
+        <Link href="/account" style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none" }}>
           ← Back to inbox
         </Link>
 

@@ -30,7 +30,7 @@ export function CheckoutClient({
       body: JSON.stringify({ plan, cycle }),
     });
     if (res.status === 401) {
-      window.location.href = `/signin?callbackUrl=${encodeURIComponent(`/v/checkout?plan=${plan}&cycle=${cycle}`)}`;
+      window.location.href = `/signin?callbackUrl=${encodeURIComponent(`/checkout?plan=${plan}&cycle=${cycle}`)}`;
       return "";
     }
     const json = (await res.json()) as { clientSecret?: string };

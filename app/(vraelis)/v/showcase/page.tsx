@@ -27,7 +27,7 @@ const COLORS = ["#0E9E6C", "#2563EB", "#7C3AED", "#C2540C", "#0D9488", "#BE185D"
 export default async function ShowcasePage() {
   const session = await auth();
   const email = session?.user?.email?.toLowerCase() ?? "";
-  if (!ADMIN_EMAILS.includes(email)) redirect("/v/account");
+  if (!ADMIN_EMAILS.includes(email)) redirect("/account");
 
   return (
     <section className="section">

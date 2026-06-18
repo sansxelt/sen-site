@@ -28,7 +28,7 @@ export default async function CheckoutPage({
 
   const session = await auth();
   if (!session?.user?.email) {
-    redirect(`/signin?callbackUrl=${encodeURIComponent(`/v/checkout?plan=${plan}&cycle=${cycle}`)}`);
+    redirect(`/signin?callbackUrl=${encodeURIComponent(`/checkout?plan=${plan}&cycle=${cycle}`)}`);
   }
 
   return (

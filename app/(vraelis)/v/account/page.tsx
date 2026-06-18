@@ -187,7 +187,7 @@ function LeadRow({ lead, index, pay }: { lead: VraelisLead; index: number; pay?:
   const title = leadTitle(lead);
   const color = AV_COLORS[index % AV_COLORS.length];
   return (
-    <Link href={`/v/account/leads/${lead.id}`} className="leadrow" style={{ display: "block", textDecoration: "none", padding: "9px 16px" }}>
+    <Link href={`/account/leads/${lead.id}`} className="leadrow" style={{ display: "block", textDecoration: "none", padding: "9px 16px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span className="av" style={{ width: 32, height: 32, background: color, fontSize: 12.5 }}>{initials(title)}</span>
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -441,7 +441,7 @@ export default async function VraelisAccountPage({
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, marginBottom: 14 }}>
               Something hiccuped on our side. Your data is safe. Refresh to try again.
             </p>
-            <a href="/v/account" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Refresh →</a>
+            <a href="/account" className="btn" style={{ fontSize: 13, padding: "9px 16px" }}>Refresh →</a>
           </div>
         </div>
       </section>
@@ -560,7 +560,7 @@ export default async function VraelisAccountPage({
                 Test your agent ↗
               </a>
             )}
-            <Link href="/v/account/find" style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", padding: "9px 4px" }}>
+            <Link href="/account/find" style={{ whiteSpace: "nowrap", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", padding: "9px 4px" }}>
               Find businesses →
             </Link>
           </div>
@@ -660,7 +660,7 @@ export default async function VraelisAccountPage({
                       const title = l.name || l.contact_email || l.contact_phone || "New lead";
                       const tierColor = r.tier === 1 ? "var(--money)" : r.tier === 2 ? "#C2540C" : r.tier === 3 ? "#2563EB" : "var(--acc-deep)";
                       return (
-                        <Link key={l.id} href={`/v/account/leads/${l.id}`} style={{ textDecoration: "none", display: "block" }}>
+                        <Link key={l.id} href={`/account/leads/${l.id}`} style={{ textDecoration: "none", display: "block" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "8px 0", borderTop: "1px solid var(--line-1)" }}>
                             <span style={{ flex: "0 0 auto", width: 8, height: 8, borderRadius: "50%", background: tierColor }} />
                             <div style={{ flex: 1, minWidth: 0 }}>
@@ -821,7 +821,7 @@ export default async function VraelisAccountPage({
                   </p>
                   <div>
                     {readyToCollectLeads.slice(0, 3).map((lead) => (
-                      <Link key={lead.id} href={`/v/account/leads/${lead.id}`} style={{ textDecoration: "none", display: "block" }}>
+                      <Link key={lead.id} href={`/account/leads/${lead.id}`} style={{ textDecoration: "none", display: "block" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid var(--acc-line)" }}>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -1111,9 +1111,15 @@ export default async function VraelisAccountPage({
                       <a href="/api/vraelis/billing/portal" style={ctaLink}>Fix payment →</a>
                     )
                   ) : planStatus === "canceled" ? (
-                    <Link href={`/v/checkout?plan=${workspace?.plan ?? ""}&cycle=${workspace?.plan_cycle ?? "monthly"}`} style={ctaLink}>Reactivate →</Link>
+                    <Link href={`/checkout?plan=${workspace?.plan ?? ""}&cycle=${workspace?.plan_cycle ?? "monthly"}`} style={ctaLink}>Reactivate →</Link>
+                  ) : workspace?.plan ? (
+                    planProvider === "paypal" ? (
+                      <Link href="/pricing" style={ctaLink}>Change →</Link>
+                    ) : (
+                      <a href="/api/vraelis/billing/portal" style={ctaLink}>Manage billing →</a>
+                    )
                   ) : (
-                    <Link href="/v/pricing" style={ctaLink}>{workspace?.plan ? "Change →" : "Upgrade →"}</Link>
+                    <Link href="/pricing" style={ctaLink}>Upgrade →</Link>
                   )}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 12, borderTop: "1px solid var(--line-1)" }}>

@@ -27,7 +27,7 @@ export default function VraelisArticlesPage() {
           {ARTICLES.map((a) => (
             <Link
               key={a.slug}
-              href={`/v/articles/${a.slug}`}
+              href={`/articles/${a.slug}`}
               style={{
                 display: "flex",
                 flexDirection: "column",

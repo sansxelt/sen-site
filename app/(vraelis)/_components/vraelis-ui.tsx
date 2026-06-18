@@ -599,7 +599,7 @@ function Hero() {
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 26 }}>
             <Cta large>Start free <span aria-hidden>→</span></Cta>
-            <a href="#how" className="btn btn--ghost btn--lg">See how it converts a lead</a>
+            <a href="/how" className="btn btn--ghost btn--lg">See how it converts a lead</a>
           </div>
           <div className="rise" data-d="5" style={{ display: "flex", gap: 22, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", letterSpacing: "0.02em" }}>
             <Trust>Free to start. You pay only when you get paid</Trust>
@@ -1115,7 +1115,7 @@ function Pricing() {
 
   // Take the buyer to the checkout page (card + PayPal) for this plan/cycle.
   function startCheckout(plan: "solo" | "growth") {
-    window.location.href = `/v/checkout?plan=${plan}&cycle=${cycle}`;
+    window.location.href = `/checkout?plan=${plan}&cycle=${cycle}`;
   }
 
   return (
@@ -1336,6 +1336,7 @@ export function VraelisShell({
   const isAppArea =
     pathname.startsWith("/account") ||
     pathname.startsWith("/app") ||
+    pathname.startsWith("/checkout") ||
     pathname.startsWith("/v/account") ||
     pathname.startsWith("/v/checkout");
   return (

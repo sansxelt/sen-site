@@ -36,7 +36,7 @@ export default async function VraelisArticlePage({
       <div className="gridbg" style={{ opacity: 0.35 }} />
       <div className="wrap" style={{ position: "relative", maxWidth: 760 }}>
         <Link
-          href="/v/articles"
+          href="/articles"
           style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none" }}
         >
           ← All articles
