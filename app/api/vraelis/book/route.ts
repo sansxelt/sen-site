@@ -12,6 +12,7 @@ import {
 } from "@/lib/vraelis-db";
 import { createBooking, getTakenSlots, slotLabel } from "@/lib/vraelis-booking";
 import { createPaymentCheckout, expireCheckout } from "@/lib/vraelis-connect";
+import { trackServer } from "@/lib/analytics";
 import { cutRateFor } from "@/lib/vraelis-plans";
 import { sendBookingConfirmation } from "@/lib/vraelis-email";
 import { limitOr429 } from "@/lib/vraelis-ratelimit";
@@ -137,6 +138,9 @@ export async function POST(req: NextRequest) {
     const status = result.reason === "slot_taken" ? 409 : 400;
     return NextResponse.json({ ok: false, error: result.reason }, { status, headers: CORS });
   }
+
+  // Conversion: a call got booked. Server-side, fire-and-forget.
+  void trackServer("booking", { email, phone, clientId: workspace.owner_email });
 
   const label = slotLabel(slot);
   try {

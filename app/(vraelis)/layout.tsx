@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { auth } from "@/auth";
 import { VraelisShell } from "./_components/vraelis-ui";
+import { AnalyticsScripts } from "./_components/analytics-scripts";
 
 // Vraelis zone layout. Loads the standalone vraelis stylesheets (kept
 // as plain CSS under /public/vraelis so they bypass the sansxel
@@ -14,5 +15,10 @@ export default async function VraelisLayout({ children }: { children: ReactNode 
   // The vraelis stylesheets are loaded once in the root layout's vraelis
   // branch (so /signin + /account get them too); here we just add the
   // nav/footer shell around the page content.
-  return <VraelisShell signedIn={signedIn}>{children}</VraelisShell>;
+  return (
+    <>
+      <AnalyticsScripts />
+      <VraelisShell signedIn={signedIn}>{children}</VraelisShell>
+    </>
+  );
 }

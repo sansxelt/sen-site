@@ -10,6 +10,7 @@ import { APP_URL } from "../../../../lib/stripe";
 import { getSupabaseAdminClient } from "../../../../lib/supabase-admin";
 import { syncUserProfileIdentity } from "../../../../lib/user-profile";
 import { getUserCredentialByEmail } from "../../../../lib/user-credentials";
+import { trackServer } from "../../../../lib/analytics";
 
 /**
  * Build the redirect target that kicks off auto-signin on whatever
@@ -84,6 +85,10 @@ export async function GET(request: Request) {
     });
 
     await deletePendingSignup(pending.email);
+
+    // Conversion: account is now real (email verified). Server-side so it can't
+    // be dropped by an ad-blocker. Fire-and-forget; never blocks the redirect.
+    void trackServer("signup", { email: pending.email, clientId: pending.email });
 
     // Welcome email replaces the "confirm" one from this point on.
     sendWelcomeEmail(pending.email, pending.display_name ?? undefined).catch((err) =>

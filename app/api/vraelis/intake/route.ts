@@ -21,6 +21,7 @@ import { generateLeadReply } from "@/lib/vraelis-ai";
 import { sendLeadReply } from "@/lib/vraelis-email";
 import { notifyOwnerNewLeadEvent } from "@/lib/vraelis-notify";
 import { limitOr429 } from "@/lib/vraelis-ratelimit";
+import { trackServer } from "@/lib/analytics";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -76,6 +77,10 @@ export async function POST(req: NextRequest) {
       source,
       snippet: message,
     });
+
+    // Conversion: a lead came in. clientId = workspace owner so GA4 can group by
+    // account. Fire-and-forget; never blocks the lead response.
+    void trackServer("lead", { email, phone, clientId: workspace.owner_email });
 
     if (message) {
       await addMessage({ leadId: lead.id, role: "lead", body: message, channel: source });

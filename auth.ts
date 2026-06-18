@@ -7,6 +7,7 @@ import { getSafeRedirectPath } from "./lib/auth-ui";
 import { verifyAutoSigninToken } from "./lib/auto-signin-token";
 import { sendWelcomeEmail } from "./lib/email";
 import { getUserProfileByEmail, syncUserProfileIdentity } from "./lib/user-profile";
+import { trackServer } from "./lib/analytics";
 import { getUserCredentialByEmail, verifyPassword } from "./lib/user-credentials";
 
 // Single-domain architecture — vraelis.com only.
@@ -200,6 +201,8 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
             user.email,
             typeof user.name === "string" ? user.name : "",
           ).catch((err) => console.error(`${tag} welcome email failed:`, err));
+          // Conversion: new account created via OAuth. Server-side, fire-and-forget.
+          void trackServer("signup", { email: user.email, clientId: user.email });
           return true;
         }
 

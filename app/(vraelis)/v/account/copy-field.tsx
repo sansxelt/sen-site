@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
+import { trackClient } from "../../_components/analytics-scripts";
 
 export function CopyField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
@@ -9,6 +10,7 @@ export function CopyField({ label, value }: { label: string; value: string }) {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
+      trackClient("copy_link", { source: "field" });
       window.setTimeout(() => setCopied(false), 1500);
     } catch {
       /* clipboard blocked — ignore */

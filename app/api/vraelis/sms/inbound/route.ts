@@ -28,6 +28,7 @@ import { sendSms, normalizePhone } from "@/lib/vraelis-sms";
 import { notifyOwnerNewLeadEvent, notifyOwnerStatusEvent } from "@/lib/vraelis-notify";
 import { allow } from "@/lib/vraelis-ratelimit";
 import { captureError } from "@/lib/vraelis-monitor";
+import { trackServer } from "@/lib/analytics";
 
 const TWIML_EMPTY = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
 const xml = () => new NextResponse(TWIML_EMPTY, { status: 200, headers: { "Content-Type": "text/xml" } });
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
         snippet: bodyText,
       });
       await notifyOwnerNewLeadEvent(workspace.owner_email, { id: lead.id, contact_phone: from, message: bodyText });
+      void trackServer("lead", { phone: from, clientId: workspace.owner_email });
     }
 
     await addMessage({ leadId: lead.id, role: "lead", body: bodyText, channel: "sms" });

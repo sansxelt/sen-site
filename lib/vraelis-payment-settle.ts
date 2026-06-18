@@ -20,6 +20,7 @@ import { createBooking, slotLabel } from "./vraelis-booking";
 import { refundPayment } from "./vraelis-connect";
 import { sendBookingConfirmation } from "./vraelis-email";
 import { captureError } from "./vraelis-monitor";
+import { trackServer } from "./analytics";
 
 export type SettleResult =
   | { settled: false; reason: "already_settled" | "not_paid" | "no_session" | "error" }
@@ -83,6 +84,15 @@ export async function settlePaidSession(
   if (!sessionId) return { settled: false, reason: "no_session" };
   const payment = await markPaymentPaid(sessionId, paymentIntent);
   if (!payment) return { settled: false, reason: "already_settled" };
+  // Conversion: a payment settled. markPaymentPaid only returns a row on the
+  // FIRST pending->paid flip, so this fires exactly once per payment (no double
+  // counting on webhook retries / reconcile). Server-side, fire-and-forget.
+  void trackServer("payment", {
+    email: customerEmail,
+    value: payment.amount_cents / 100,
+    currency: payment.currency || "USD",
+    clientId: payment.owner_email,
+  });
   try {
     await advanceSettledPayment(payment, customerEmail, paymentIntent);
   } catch (err) {

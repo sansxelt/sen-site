@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
+import { trackClient } from "../../_components/analytics-scripts";
 
 // Primary header CTA for an inbound product: copies the shareable agent link
 // so the user's loudest next action is "put this in your bio," not a test or
@@ -28,6 +29,7 @@ export function CopyLinkButton({
         try {
           await navigator.clipboard.writeText(value);
           setCopied(true);
+          trackClient("copy_link", { source: "header" });
           window.setTimeout(() => setCopied(false), 1800);
         } catch {
           /* clipboard blocked — ignore */

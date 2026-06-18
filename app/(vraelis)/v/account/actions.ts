@@ -32,6 +32,7 @@ import { sendLeadReply } from "@/lib/vraelis-email";
 import { createPaymentCheckout, expireCheckout } from "@/lib/vraelis-connect";
 import { cutRateFor } from "@/lib/vraelis-plans";
 import { maybeProvisionAgentNumber } from "@/lib/vraelis-sms";
+import { trackServer } from "@/lib/analytics";
 import { isDatabaseConfigured } from "@/lib/supabase-admin";
 
 const ORIGIN = "https://vraelis.com";
@@ -225,6 +226,8 @@ export async function saveOfferAction(
     // it, so the dashboard never waits on provisioning. Fire-and-forget with a
     // catch so a rejection can't crash the action.
     void maybeProvisionAgentNumber(email).catch(() => {});
+    // Conversion: onboarding finished. Server-side, fire-and-forget.
+    void trackServer("onboarding_complete", { email, clientId: email });
     // Fall through to the redirect below.
   } catch (error) {
     console.error("saveOfferAction failed:", error);
