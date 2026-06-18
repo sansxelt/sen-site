@@ -30,7 +30,7 @@ const SIGNUP_HREF = "/signin?mode=signup&callbackUrl=%2Faccount";
 
 // The marketing dashboard demo lives as a section on the home page
 // (#dashboard) — not a separate route.
-const DASHBOARD_HREF = "/#dashboard";
+const DASHBOARD_HREF = "/demo";
 
 // ── CTA: an anchor styled as the site's button ─────────────────────
 function Cta({
@@ -167,22 +167,24 @@ function Nav({ signedIn }: { signedIn: boolean }) {
         Vraelis
       </a>
       <div className="vra-nav-links" style={{ justifySelf: "center", display: "flex", gap: 28, alignItems: "center" }}>
-        {NAV_LINKS.map((l) => (
-          <a
-            key={l.key}
-            href={l.href}
-            style={{
-              fontSize: 14,
-              color: activeKey === l.key ? "var(--fg-1)" : "var(--fg-2)",
-              fontWeight: activeKey === l.key ? 600 : 400,
-              textDecoration: "none",
-              letterSpacing: "-0.005em",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {l.label}
-          </a>
-        ))}
+        {NAV_LINKS.map((l) => {
+          const active = activeKey === l.key;
+          const linkStyle = {
+            fontSize: 14,
+            color: active ? "var(--fg-1)" : "var(--fg-2)",
+            fontWeight: active ? 600 : 400,
+            textDecoration: "none",
+            letterSpacing: "-0.005em",
+            whiteSpace: "nowrap",
+          } as const;
+          // The tab for the page you're already on renders as plain text, not a
+          // link — so re-clicking it can't reload/refresh the page.
+          return active ? (
+            <span key={l.key} aria-current="page" style={{ ...linkStyle, cursor: "default" }}>{l.label}</span>
+          ) : (
+            <a key={l.key} href={l.href} style={linkStyle}>{l.label}</a>
+          );
+        })}
       </div>
       <div style={{ gridColumn: 3, justifySelf: "end", display: "flex", alignItems: "center", gap: 18 }}>
         {signedIn ? (
@@ -258,16 +260,16 @@ function Nav({ signedIn }: { signedIn: boolean }) {
             display: "flex", flexDirection: "column", padding: "6px 0",
           }}
         >
-          {NAV_LINKS.map((l) => (
-            <a
-              key={l.key}
-              href={l.href}
-              onClick={() => setMenuOpen(false)}
-              style={{ padding: "13px var(--gutter)", fontSize: 15, textDecoration: "none", color: activeKey === l.key ? "var(--fg-1)" : "var(--fg-2)", fontWeight: activeKey === l.key ? 600 : 400 }}
-            >
-              {l.label}
-            </a>
-          ))}
+          {NAV_LINKS.map((l) => {
+            const active = activeKey === l.key;
+            const mStyle = { padding: "13px var(--gutter)", fontSize: 15, textDecoration: "none", color: active ? "var(--fg-1)" : "var(--fg-2)", fontWeight: active ? 600 : 400 } as const;
+            // Active tab is plain text (closes the menu, never reloads).
+            return active ? (
+              <span key={l.key} aria-current="page" onClick={() => setMenuOpen(false)} style={{ ...mStyle, cursor: "default" }}>{l.label}</span>
+            ) : (
+              <a key={l.key} href={l.href} onClick={() => setMenuOpen(false)} style={mStyle}>{l.label}</a>
+            );
+          })}
           {signedIn ? (
             <button
               type="button"
@@ -1391,6 +1393,17 @@ export function PricingContent() {
   return (
     <>
       <Pricing />
+      <UseCases />
+    </>
+  );
+}
+
+// "See it work" — its own page (was the /#dashboard hash anchor). The live
+// dashboard walkthrough + the automation scenarios.
+export function DemoContent() {
+  return (
+    <>
+      <DeepDashboard />
       <UseCases />
     </>
   );

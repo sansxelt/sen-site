@@ -20,6 +20,7 @@ const CLEAN_PATHS: Record<string, string> = {
   "/refunds": "/v/refunds",
   "/checkout": "/v/checkout",
   "/showcase": "/v/showcase",
+  "/demo": "/v/demo",
 };
 
 // Internal /v alias -> clean public path (exact matches) for the redirect.
@@ -35,6 +36,7 @@ const VANITY_REDIRECTS: Record<string, string> = {
   "/v/refunds": "/refunds",
   "/v/checkout": "/checkout",
   "/v/showcase": "/showcase",
+  "/v/demo": "/demo",
 };
 
 export default function proxy(req: NextRequest) {
