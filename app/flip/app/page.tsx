@@ -1,14 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, type CSSProperties } from "react";
-import Link from "next/link";
 import { signIn } from "next-auth/react";
-
-const PAPER = "#FBFAF8";
-const INK = "#16130F";
-const MUT = "#6B6258";
-const ACC = "#0E8A4F";
-const LINE = "#E9E4DB";
 
 type Listing = {
   item_type: string; brand: string; model: string; colorway: string; size: string;
@@ -45,20 +38,32 @@ function resize(file: File, max = 1024): Promise<Pic> {
   });
 }
 
-const card: CSSProperties = { background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: 16 };
+const cardStyle: CSSProperties = {
+  background: "var(--bg-1)", border: "1px solid var(--line-2)",
+  borderRadius: "var(--r-sm)", padding: 16, boxShadow: "var(--shadow-card)",
+};
+const monoLabel: CSSProperties = {
+  fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.07em",
+  textTransform: "uppercase", color: "var(--fg-4)",
+};
 
 function Copyable({ label, value }: { label: string; value: string }) {
   const [done, setDone] = useState(false);
   return (
-    <div style={{ ...card, padding: 14 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 6 }}>
-        <span style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: MUT }}>{label}</span>
+    <div style={{ ...cardStyle, padding: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 7 }}>
+        <span style={monoLabel}>{label}</span>
         <button
           onClick={() => { navigator.clipboard?.writeText(value); setDone(true); setTimeout(() => setDone(false), 1400); }}
-          style={{ border: `1px solid ${done ? ACC : LINE}`, color: done ? ACC : INK, background: "#fff", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+          style={{
+            border: `1px solid ${done ? "var(--acc)" : "var(--line-3)"}`,
+            color: done ? "var(--acc-deep)" : "var(--fg-1)", background: "var(--bg-1)",
+            borderRadius: "var(--r-xs)", padding: "4px 11px", fontSize: 12, fontWeight: 600,
+            cursor: "pointer", fontFamily: "var(--font-sans)",
+          }}
         >{done ? "Copied ✓" : "Copy"}</button>
       </div>
-      <div style={{ fontSize: 13.5, color: INK, lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{value}</div>
+      <div style={{ fontSize: 13.5, color: "var(--fg-1)", lineHeight: 1.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{value}</div>
     </div>
   );
 }
@@ -114,111 +119,119 @@ export default function FlipApp() {
     } catch { setError("Couldn't start checkout."); }
   }
 
+  const ready = pics.length > 0 && !busy;
+
   return (
-    <main style={{ background: PAPER, color: INK, minHeight: "100svh", fontFamily: "'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" }}>
-      <header style={{ maxWidth: 880, margin: "0 auto", padding: "18px clamp(16px,4vw,32px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <Link href="/flip" style={{ textDecoration: "none", color: INK, fontWeight: 800, fontSize: 18, letterSpacing: "-0.02em" }}>Flip<span style={{ color: ACC }}>Engine</span></Link>
-        <span style={{ fontSize: 13, color: MUT }}>{credits === null ? "" : `${credits} free listing${credits === 1 ? "" : "s"} left`}</span>
-      </header>
-
-      <div style={{ maxWidth: 880, margin: "0 auto", padding: "8px clamp(16px,4vw,32px) 64px" }}>
-        <h1 style={{ fontSize: "clamp(1.5rem,3.2vw,2rem)", letterSpacing: "-0.02em", fontWeight: 780, margin: "8px 0 4px" }}>Make a listing</h1>
-        <p style={{ color: MUT, fontSize: 14.5, margin: "0 0 20px" }}>Upload 1–5 photos of your item and generate a finished resale listing.</p>
-
-        {/* uploader */}
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-          onDragLeave={() => setDrag(false)}
-          onDrop={(e) => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}
-          onClick={() => inputRef.current?.click()}
-          style={{ border: `1.5px dashed ${drag ? ACC : LINE}`, background: drag ? "rgba(14,138,79,0.05)" : "#fff", borderRadius: 16, padding: "26px 18px", textAlign: "center", cursor: "pointer", transition: "all .15s ease" }}
-        >
-          <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => e.target.files && addFiles(e.target.files)} />
-          <div style={{ fontSize: 15, fontWeight: 600, color: INK }}>Drop photos here, or tap to choose</div>
-          <div style={{ fontSize: 12.5, color: MUT, marginTop: 4 }}>JPG / PNG · up to 5 · front, tag, and any flaws</div>
-        </div>
-
-        {pics.length > 0 && (
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-            {pics.map((p, i) => (
-              <div key={i} style={{ position: "relative", width: 76, height: 76, borderRadius: 10, border: `1px solid ${LINE}`, backgroundImage: `url(${p.url})`, backgroundSize: "cover", backgroundPosition: "center" }}>
-                <button
-                  onClick={() => setPics((arr) => arr.filter((_, j) => j !== i))}
-                  aria-label="remove"
-                  style={{ position: "absolute", top: -7, right: -7, width: 20, height: 20, borderRadius: "50%", border: "none", background: INK, color: "#fff", fontSize: 12, lineHeight: 1, cursor: "pointer" }}
-                >×</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <button
-          onClick={generate}
-          disabled={pics.length === 0 || busy}
-          style={{ marginTop: 18, width: "100%", padding: "13px", borderRadius: 12, border: "none", background: pics.length === 0 || busy ? "#A9C9B8" : ACC, color: "#fff", fontWeight: 700, fontSize: 15.5, cursor: pics.length === 0 || busy ? "default" : "pointer" }}
-        >{busy ? "Reading the photos…" : "Generate listing →"}</button>
-
-        {error && <p style={{ color: "#B42318", fontSize: 13.5, marginTop: 12 }}>{error}</p>}
-
-        {/* limit gates */}
-        {limit === "signin" && (
-          <div style={{ ...card, marginTop: 16, textAlign: "center" }}>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>That was your free try.</div>
-            <p style={{ color: MUT, fontSize: 14, margin: "0 0 14px" }}>Sign in with Google to keep going — 3 free listings on us.</p>
-            <button onClick={() => signIn("google", { callbackUrl: "/flip/app" })} style={{ padding: "11px 20px", borderRadius: 11, border: `1px solid ${LINE}`, background: "#fff", fontWeight: 650, cursor: "pointer" }}>Continue with Google</button>
-          </div>
-        )}
-        {limit === "upgrade" && (
-          <div style={{ ...card, marginTop: 16, textAlign: "center", borderColor: ACC }}>
-            <div style={{ fontWeight: 700, marginBottom: 6 }}>You&apos;ve used your 3 free listings.</div>
-            <p style={{ color: MUT, fontSize: 14, margin: "0 0 14px" }}>Go Pro for unlimited listings — $19/mo, cancel anytime.</p>
-            <button onClick={upgrade} style={{ padding: "11px 22px", borderRadius: 11, border: "none", background: ACC, color: "#fff", fontWeight: 700, cursor: "pointer" }}>Upgrade to Pro →</button>
-          </div>
-        )}
-
-        {/* result */}
-        {result && (
-          <div style={{ marginTop: 26, display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 750, margin: 0 }}>
-                {result.brand !== "unknown" ? `${result.brand} ` : ""}{result.item_type}
-              </h2>
-              <span style={{ fontSize: 12.5, color: MUT }}>{result.category} · {result.condition_grade}{result.size !== "unknown" ? ` · ${result.size}` : ""}</span>
-            </div>
-
-            {/* price */}
-            <div style={{ ...card, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: MUT, marginRight: 4 }}>Price</span>
-              {([["fast", result.price.fast], ["market", result.price.market], ["high", result.price.high]] as const).map(([k, v]) => (
-                <span key={k} style={{ fontSize: 14, fontWeight: 700, color: ACC, background: "rgba(14,138,79,0.08)", border: "1px solid rgba(14,138,79,0.2)", borderRadius: 999, padding: "5px 12px" }}>
-                  ${v} <span style={{ fontWeight: 500, color: MUT, fontSize: 11.5 }}>{k}</span>
-                </span>
-              ))}
-              <span style={{ fontSize: 12, color: MUT, marginLeft: "auto" }}>confidence: {result.price.confidence}</span>
-            </div>
-
-            {/* titles */}
-            <Copyable label="eBay title" value={result.titles.ebay} />
-            <Copyable label="Poshmark title" value={result.titles.poshmark} />
-            <Copyable label="Depop title" value={result.titles.depop} />
-            <Copyable label="Mercari title" value={result.titles.mercari} />
-            <Copyable label="Description" value={result.description} />
-            <Copyable label="Keywords" value={result.keywords.join(", ")} />
-            <Copyable label="Poshmark hashtags" value={result.hashtags.poshmark.map((h) => (h.startsWith("#") ? h : "#" + h)).join(" ")} />
-            <Copyable label="Depop hashtags" value={result.hashtags.depop.map((h) => (h.startsWith("#") ? h : "#" + h)).join(" ")} />
-
-            {(result.measurements_to_take.length > 0 || result.visible_flaws.length > 0 || result.condition_notes) && (
-              <div style={{ ...card, fontSize: 13.5, color: INK, lineHeight: 1.55 }}>
-                {result.condition_notes && <div style={{ marginBottom: 8 }}><b>Condition:</b> {result.condition_notes}</div>}
-                {result.visible_flaws.length > 0 && <div style={{ marginBottom: 8, color: "#9A3412" }}><b>Flaws to mention:</b> {result.visible_flaws.join("; ")}</div>}
-                {result.measurements_to_take.length > 0 && <div style={{ color: MUT }}><b>Add before posting:</b> {result.measurements_to_take.join("; ")}</div>}
-              </div>
-            )}
-
-            <button onClick={() => { setResult(null); setPics([]); }} style={{ alignSelf: "center", marginTop: 6, background: "none", border: "none", color: ACC, fontWeight: 650, cursor: "pointer", fontSize: 14 }}>+ List another item</button>
-          </div>
+    <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(22px, 3vw, 38px)", paddingBottom: 80 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.6rem, 3vw, 2.1rem)", letterSpacing: "-0.02em", color: "var(--fg-1)", margin: 0 }}>Make a listing</h1>
+        {credits !== null && (
+          <span style={{ ...monoLabel, color: "var(--fg-3)" }}>{credits} free listing{credits === 1 ? "" : "s"} left</span>
         )}
       </div>
-    </main>
+      <p style={{ color: "var(--fg-3)", fontSize: 14.5, margin: "8px 0 22px", lineHeight: 1.5 }}>
+        Upload 1–5 photos of your item and generate a finished resale listing.
+      </p>
+
+      {/* uploader */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); addFiles(e.dataTransfer.files); }}
+        onClick={() => inputRef.current?.click()}
+        style={{
+          border: `1.5px dashed ${drag ? "var(--acc)" : "var(--line-3)"}`,
+          background: drag ? "var(--acc-soft)" : "var(--bg-1)",
+          borderRadius: "var(--r-sm)", padding: "28px 18px", textAlign: "center",
+          cursor: "pointer", transition: "border-color .15s ease, background .15s ease",
+        }}
+      >
+        <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => e.target.files && addFiles(e.target.files)} />
+        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-1)" }}>Drop photos here, or tap to choose</div>
+        <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 5 }}>JPG / PNG · up to 5 · front, tag, and any flaws</div>
+      </div>
+
+      {pics.length > 0 && (
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+          {pics.map((p, i) => (
+            <div key={i} style={{ position: "relative", width: 76, height: 76, borderRadius: "var(--r-xs)", border: "1px solid var(--line-2)", backgroundImage: `url(${p.url})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+              <button
+                onClick={() => setPics((arr) => arr.filter((_, j) => j !== i))}
+                aria-label="remove"
+                style={{ position: "absolute", top: -7, right: -7, width: 20, height: 20, borderRadius: "50%", border: "none", background: "var(--fg-1)", color: "var(--bg-1)", fontSize: 12, lineHeight: 1, cursor: "pointer" }}
+              >×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        onClick={generate}
+        disabled={!ready}
+        className="btn btn--lg"
+        style={{ marginTop: 18, width: "100%", justifyContent: "center", opacity: ready ? 1 : 0.55, cursor: ready ? "pointer" : "default" }}
+      >{busy ? "Reading the photos…" : <>Generate listing <span aria-hidden>→</span></>}</button>
+
+      {error && <p style={{ color: "var(--err)", fontSize: 13.5, marginTop: 12 }}>{error}</p>}
+
+      {/* limit gates */}
+      {limit === "signin" && (
+        <div style={{ ...cardStyle, marginTop: 16, textAlign: "center" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)", marginBottom: 6 }}>That was your free try.</div>
+          <p style={{ color: "var(--fg-3)", fontSize: 14, margin: "0 0 16px" }}>Sign in with Google to keep going — 3 free listings on us.</p>
+          <button onClick={() => signIn("google", { callbackUrl: "/flip/app" })} className="btn btn--ghost">Continue with Google</button>
+        </div>
+      )}
+      {limit === "upgrade" && (
+        <div style={{ ...cardStyle, marginTop: 16, textAlign: "center", borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)", marginBottom: 6 }}>You&apos;ve used your 3 free listings.</div>
+          <p style={{ color: "var(--fg-3)", fontSize: 14, margin: "0 0 16px" }}>Go Pro for unlimited listings — $19/mo, cancel anytime.</p>
+          <button onClick={upgrade} className="btn">Upgrade to Pro <span aria-hidden>→</span></button>
+        </div>
+      )}
+
+      {/* result */}
+      {result && (
+        <div style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 600, color: "var(--fg-1)", margin: 0, letterSpacing: "-0.02em" }}>
+              {result.brand !== "unknown" ? `${result.brand} ` : ""}{result.item_type}
+            </h2>
+            <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>{result.category} · {result.condition_grade}{result.size !== "unknown" ? ` · ${result.size}` : ""}</span>
+          </div>
+
+          {/* price */}
+          <div style={{ ...cardStyle, display: "flex", gap: 9, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ ...monoLabel, marginRight: 4 }}>Price</span>
+            {([["fast", result.price.fast], ["market", result.price.market], ["high", result.price.high]] as const).map(([k, v]) => (
+              <span key={k} style={{ display: "inline-flex", alignItems: "baseline", gap: 5, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, letterSpacing: "-0.02em", color: "var(--acc-deep)", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", borderRadius: "var(--r-circle)", padding: "5px 12px" }}>
+                ${v} <span style={{ fontFamily: "var(--font-mono)", fontWeight: 500, color: "var(--fg-4)", fontSize: 11 }}>{k}</span>
+              </span>
+            ))}
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", marginLeft: "auto" }}>confidence: {result.price.confidence}</span>
+          </div>
+
+          {/* titles + content */}
+          <Copyable label="eBay title" value={result.titles.ebay} />
+          <Copyable label="Poshmark title" value={result.titles.poshmark} />
+          <Copyable label="Depop title" value={result.titles.depop} />
+          <Copyable label="Mercari title" value={result.titles.mercari} />
+          <Copyable label="Description" value={result.description} />
+          <Copyable label="Keywords" value={result.keywords.join(", ")} />
+          <Copyable label="Poshmark hashtags" value={result.hashtags.poshmark.map((h) => (h.startsWith("#") ? h : "#" + h)).join(" ")} />
+          <Copyable label="Depop hashtags" value={result.hashtags.depop.map((h) => (h.startsWith("#") ? h : "#" + h)).join(" ")} />
+
+          {(result.measurements_to_take.length > 0 || result.visible_flaws.length > 0 || result.condition_notes) && (
+            <div style={{ ...cardStyle, fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55 }}>
+              {result.condition_notes && <div style={{ marginBottom: 8 }}><b style={{ color: "var(--fg-1)" }}>Condition:</b> {result.condition_notes}</div>}
+              {result.visible_flaws.length > 0 && <div style={{ marginBottom: 8, color: "var(--money)" }}><b>Flaws to mention:</b> {result.visible_flaws.join("; ")}</div>}
+              {result.measurements_to_take.length > 0 && <div style={{ color: "var(--fg-3)" }}><b style={{ color: "var(--fg-1)" }}>Add before posting:</b> {result.measurements_to_take.join("; ")}</div>}
+            </div>
+          )}
+
+          <button onClick={() => { setResult(null); setPics([]); }} style={{ alignSelf: "center", marginTop: 8, background: "none", border: "none", color: "var(--acc-deep)", fontWeight: 600, cursor: "pointer", fontSize: 14, fontFamily: "var(--font-sans)" }}>+ List another item</button>
+        </div>
+      )}
+    </div>
   );
 }
