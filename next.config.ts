@@ -22,9 +22,7 @@ const nextConfig: NextConfig = {
       { source: "/function", destination: "/product", permanent: true },
       { source: "/account/billing", destination: "/account/plan", permanent: true },
       { source: "/audio", destination: "/whisper", permanent: true },
-      // Legacy route redirects
-      { source: "/app", destination: "/chat", permanent: false },
-      { source: "/app/:path*", destination: "/chat/:path*", permanent: false },
+      // Legacy route redirects ( /app is now the Flip tool — handled by proxy.ts )
       { source: "/platform-soon", destination: "/chat", permanent: false },
       { source: "/platform-soon/:path*", destination: "/chat", permanent: false },
       { source: "/platform", destination: "/chat", permanent: false },
