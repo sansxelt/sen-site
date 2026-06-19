@@ -44,14 +44,14 @@ function ListingPreview() {
         <div style={{ borderRight: "1px solid var(--line-1)", minWidth: 0, display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line-1)", ...MONO_LABEL }}>Your photo</div>
           <div
+            role="img"
+            aria-label="A gray fleece pullover photographed for resale"
             style={{
-              flex: 1, minHeight: 230, display: "grid", placeItems: "center",
-              color: "var(--fg-4)", fontSize: 13,
-              background: "repeating-linear-gradient(135deg, var(--bg-2), var(--bg-2) 14px, var(--bg-3) 14px, var(--bg-3) 28px)",
+              flex: 1, minHeight: 230,
+              backgroundImage: "url(/flip-assets/before-sweater.jpg)",
+              backgroundSize: "cover", backgroundPosition: "center",
             }}
-          >
-            a phone snap
-          </div>
+          />
         </div>
         <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line-1)", ...MONO_LABEL }}>Finished listing</div>
