@@ -28,6 +28,7 @@ import { isCycle, isPlanKey } from "../../../../lib/vraelis-plans";
 import { maybeProvisionAgentNumber, releaseAgentNumber } from "../../../../lib/vraelis-sms";
 import { notifyOwnerPlanLapse } from "../../../../lib/vraelis-notify";
 import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
+import { setFlipPlan } from "../../../../lib/flip-db";
 
 // Vraelis runs in this same Stripe account. Vraelis checkout sessions +
 // subscriptions carry metadata { owner_email, plan, cycle }. When an
@@ -179,6 +180,21 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
 }
 
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
+  // Flip Engine subscription? Flip the flip_accounts plan and stop — separate
+  // product from Vraelis, separate table.
+  if (subscription.metadata?.flip === "1") {
+    const flipCanceled =
+      event.type === "customer.subscription.deleted" ||
+      ["canceled", "unpaid", "incomplete_expired"].includes(subscription.status);
+    await setFlipPlan({
+      userId: subscription.metadata.user_id ?? null,
+      stripeCustomerId: typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id ?? null,
+      plan: flipCanceled ? "free" : "pro",
+      planStatus: flipCanceled ? "canceled" : "active",
+    });
+    return;
+  }
+
   // Vraelis subscription? Record plan status on the vraelis workspace and
   // stop — the sansxel billing logic below doesn't apply to it. Map Stripe's
   // status to our 3-way plan_status: terminal endings → canceled, a failed
@@ -545,7 +561,15 @@ export async function POST(request: Request) {
         // Vraelis one-time + subscription checkouts land their plan here
         // too (belt-and-suspenders with the success-redirect recording).
         const s = event.data.object as Stripe.Checkout.Session;
-        if (s.metadata?.kind === "vraelis_payment") {
+        if (s.metadata?.flip === "1") {
+          // Flip Engine subscription — separate product, separate table.
+          await setFlipPlan({
+            userId: s.metadata.user_id ?? s.client_reference_id ?? null,
+            stripeCustomerId: typeof s.customer === "string" ? s.customer : s.customer?.id ?? null,
+            plan: "pro",
+            planStatus: "active",
+          });
+        } else if (s.metadata?.kind === "vraelis_payment") {
           await handleVraelisPayment(s);
         } else {
           await recordVraelisPlan(s.metadata, "active");
