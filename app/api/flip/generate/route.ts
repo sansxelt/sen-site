@@ -21,6 +21,7 @@ import {
 } from "@/lib/flip-db";
 
 export const runtime = "nodejs"; // service-role Supabase + the Anthropic SDK
+export const maxDuration = 60; // a vision listing takes ~10-20s; default ~10s 502s. Matches the vraelis AI routes.
 
 const OK_MEDIA = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const ANON_COOKIE = "flip_anon";
