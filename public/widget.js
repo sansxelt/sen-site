@@ -87,19 +87,35 @@
     var form = el("form");
     var name = el("input", inputStyle()); name.placeholder = "Your name";
     var email = el("input", inputStyle()); email.placeholder = "Email"; email.type = "email";
-    var phone = el("input", inputStyle()); phone.placeholder = "Phone (optional)";
+    var phone = el("input", inputStyle()); phone.placeholder = "Phone (optional, for text updates)";
     var msg = el("textarea", inputStyle() + "resize:vertical;min-height:84px;"); msg.placeholder = "What can we help with?"; msg.required = true;
+    // Active, unchecked SMS opt-in. The phone is only sent as SMS-consented when
+    // this is checked; otherwise the chat still works without it.
+    var consentWrap = el("div", "display:flex;gap:8px;align-items:flex-start;margin:2px 0 10px;");
+    var consent = el("input"); consent.type = "checkbox";
+    consent.setAttribute("style", "margin-top:3px;flex:0 0 auto;width:15px;height:15px;accent-color:" + ACCENT + ";cursor:pointer;");
+    var consentTxt = el("span", "font-size:11px;color:" + MUT + ";line-height:1.45;");
+    consentTxt.innerHTML =
+      "I agree to receive conversational text messages from this business and its AI assistant about my inquiry, appointment scheduling, reminders, follow-up, support, payment requests, and service updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. Consent is not a condition of purchase. See our <a href='" +
+      BASE + "/privacy' target='_blank' rel='noreferrer' style='color:" + DEEP + ";text-decoration:underline;'>Privacy Policy</a> and <a href='" +
+      BASE + "/terms' target='_blank' rel='noreferrer' style='color:" + DEEP + ";text-decoration:underline;'>Terms</a>.";
+    consentWrap.appendChild(consent); consentWrap.appendChild(consentTxt);
+    var consentErr = el("div", "font-size:11px;color:#9F2D2D;line-height:1.45;margin-bottom:8px;display:none;", "To get text updates, check the box above — or clear the phone field to continue by chat/email.");
+    consent.addEventListener("change", function () { if (consent.checked) consentErr.style.display = "none"; });
     var send = el("button", btnStyle(), "Start chat"); send.type = "submit";
-    [name, email, phone, msg, send].forEach(function (n) { form.appendChild(n); });
+    [name, email, phone, msg, consentWrap, consentErr, send].forEach(function (n) { form.appendChild(n); });
     wrap.appendChild(form);
     bodyWrap.appendChild(wrap);
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       if (busy || !msg.value.trim()) return;
+      var phoneVal = (phone.value || "").trim();
+      if (phoneVal && !consent.checked) { consentErr.style.display = "block"; return; }
+      consentErr.style.display = "none";
       busy = true; send.textContent = "Starting…"; send.disabled = true;
       post(BASE + "/api/vraelis/intake", {
-        key: KEY, name: name.value, email: email.value, phone: phone.value, message: msg.value, source: "widget",
+        key: KEY, name: name.value, email: email.value, phone: consent.checked ? phoneVal : "", smsConsent: consent.checked, message: msg.value, source: "widget",
       }).then(function (j) {
         busy = false;
         if (!j || !j.ok || !j.leadId) { send.textContent = "Start chat"; send.disabled = false; return; }

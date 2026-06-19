@@ -34,12 +34,17 @@ export function BookingClient({
   const [selected, setSelected] = useState<string>("");
   const [state, setState] = useState<"idle" | "booking" | "done" | "error">("idle");
   const [confirmed, setConfirmed] = useState<string>("");
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [consentError, setConsentError] = useState(false);
 
   async function book(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!selected || state === "booking") return;
-    setState("booking");
     const data = new FormData(e.currentTarget);
+    const phoneVal = String(data.get("phone") ?? "").trim();
+    // SMS consent must be actively checked before a textable number is captured.
+    if (phoneVal && !smsConsent) { setConsentError(true); return; }
+    setState("booking");
     try {
       const res = await fetch("/api/vraelis/book", {
         method: "POST",
@@ -50,7 +55,8 @@ export function BookingClient({
           leadId,
           name: data.get("name"),
           email: data.get("email"),
-          phone: data.get("phone"),
+          phone: smsConsent ? phoneVal : "",
+          smsConsent,
         }),
       });
       const json = (await res.json()) as { ok?: boolean; label?: string; redirect?: string };
@@ -118,12 +124,29 @@ export function BookingClient({
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <input name="name" placeholder="Your name" style={inputStyle} />
             <input name="email" type="email" placeholder="Email (for confirmation)" style={inputStyle} />
-            <input name="phone" placeholder="Phone (optional)" style={inputStyle} />
-            <p style={{ fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: "2px 0 0" }}>
-              By providing your phone number, you agree to receive conversational text messages from {businessName} about your booking, appointments, and service updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. Consent is not a condition of purchase. See our{" "}
-              <a href="https://vraelis.com/privacy" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Privacy Policy</a>{" "}and{" "}
-              <a href="https://vraelis.com/terms" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Terms</a>.
-            </p>
+            <input name="phone" placeholder="Phone (optional, for text reminders)" style={inputStyle} />
+            {/* Active, unchecked SMS opt-in — the phone is only treated as
+                SMS-consented when this is checked. Not a <label>, so the links
+                don't toggle it. */}
+            <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+              <input
+                id="smsConsent"
+                type="checkbox"
+                checked={smsConsent}
+                onChange={(e) => { setSmsConsent(e.target.checked); if (e.target.checked) setConsentError(false); }}
+                style={{ marginTop: 3, flexShrink: 0, width: 15, height: 15, accentColor: "var(--acc)", cursor: "pointer" }}
+              />
+              <span style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5 }}>
+                I agree to receive conversational text messages from {businessName} and its AI assistant about my inquiry, appointment scheduling, reminders, follow-up, support, payment requests, and service updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. Consent is not a condition of purchase. See our{" "}
+                <a href="https://vraelis.com/privacy" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Privacy Policy</a>{" "}and{" "}
+                <a href="https://vraelis.com/terms" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Terms</a>.
+              </span>
+            </div>
+            {consentError && (
+              <p style={{ fontSize: 11, color: "#9F2D2D", lineHeight: 1.5, margin: "-2px 0 0" }}>
+                To get text reminders, check the box above — or clear the phone field to book without SMS.
+              </p>
+            )}
             <button type="submit" className="btn" disabled={!selected || state === "booking"} style={{ justifyContent: "center", opacity: !selected || state === "booking" ? 0.6 : 1 }}>
               {state === "booking" ? (depositLabel ? "Redirecting…" : "Booking…") : depositLabel ? `Continue to ${depositLabel} deposit →` : "Confirm booking"}
             </button>

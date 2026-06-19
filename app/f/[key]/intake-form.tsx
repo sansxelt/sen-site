@@ -58,6 +58,8 @@ export function IntakeForm({
   const [leadId, setLeadId] = useState<string>("");
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [consentError, setConsentError] = useState(false);
   const threadRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,9 +69,14 @@ export function IntakeForm({
 
   async function startConversation(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setBusy(true);
     const data = new FormData(e.currentTarget);
     const opening = String(data.get("message") ?? "");
+    const phoneVal = String(data.get("phone") ?? "").trim();
+    // SMS consent must be ACTIVELY given (checkbox) before a textable number is
+    // captured. No phone, or no consent → we simply don't send the number; the
+    // chat/email flow still works.
+    if (phoneVal && !smsConsent) { setConsentError(true); return; }
+    setBusy(true);
     try {
       const res = await fetch("/api/vraelis/intake", {
         method: "POST",
@@ -78,7 +85,8 @@ export function IntakeForm({
           key: intakeKey,
           name: data.get("name"),
           email: data.get("email"),
-          phone: data.get("phone"),
+          phone: smsConsent ? phoneVal : "",
+          smsConsent,
           message: opening,
           source: "form",
         }),
@@ -181,13 +189,30 @@ export function IntakeForm({
       <form onSubmit={startConversation} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <input name="name" placeholder="Your name" style={inputStyle} />
         <input name="email" type="email" placeholder="Email" style={inputStyle} />
-        <input name="phone" placeholder="Phone (optional)" style={inputStyle} />
+        <input name="phone" placeholder="Phone (optional, for text updates)" style={inputStyle} />
         <textarea name="message" placeholder="What can we help with?" required rows={4} style={{ ...inputStyle, resize: "vertical" }} />
-        <p style={{ fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: "2px 0 0" }}>
-          By providing your phone number, you agree to receive conversational text messages from {businessName} about your inquiry, appointments, and service updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. Consent is not a condition of purchase. See our{" "}
-          <a href="https://vraelis.com/privacy" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Privacy Policy</a>{" "}and{" "}
-          <a href="https://vraelis.com/terms" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Terms</a>.
-        </p>
+        {/* Active, unchecked SMS opt-in. The phone above is only treated as
+            SMS-consented when this is checked; the box is not in a <label> so
+            tapping the Privacy/Terms links can't toggle it. */}
+        <div style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+          <input
+            id="smsConsent"
+            type="checkbox"
+            checked={smsConsent}
+            onChange={(e) => { setSmsConsent(e.target.checked); if (e.target.checked) setConsentError(false); }}
+            style={{ marginTop: 3, flexShrink: 0, width: 15, height: 15, accentColor: "var(--acc)", cursor: "pointer" }}
+          />
+          <span style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5 }}>
+            I agree to receive conversational text messages from {businessName} and its AI assistant about my inquiry, appointment scheduling, reminders, follow-up, support, payment requests, and service updates. Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. Consent is not a condition of purchase. See our{" "}
+            <a href="https://vraelis.com/privacy" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Privacy Policy</a>{" "}and{" "}
+            <a href="https://vraelis.com/terms" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Terms</a>.
+          </span>
+        </div>
+        {consentError && (
+          <p style={{ fontSize: 11, color: "#9F2D2D", lineHeight: 1.5, margin: "-2px 0 0" }}>
+            To get text updates, check the box above — or clear the phone field to continue by chat and email.
+          </p>
+        )}
         <button type="submit" className="btn" disabled={busy} style={{ justifyContent: "center", opacity: busy ? 0.7 : 1 }}>
           {busy ? "Starting…" : "Start chat"}
         </button>

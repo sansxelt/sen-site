@@ -64,6 +64,11 @@ export function SmsForm({
       <div>
         <label style={label} htmlFor="ownerPhone">Your phone <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(where you get new-lead alerts)</span></label>
         <input id="ownerPhone" name="ownerPhone" defaultValue={initialOwnerPhone} placeholder="+1 555 123 4567" maxLength={32} style={input} />
+        <p style={{ fontSize: 11, color: "var(--fg-4)", lineHeight: 1.5, margin: "7px 0 0" }}>
+          By saving your number you agree to receive operational text alerts and reminders from Vraelis at it (new leads, bookings, follow-ups). Message frequency varies. Message and data rates may apply. Reply STOP to opt out and HELP for help. See our{" "}
+          <a href="https://vraelis.com/privacy" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Privacy Policy</a>{" "}and{" "}
+          <a href="https://vraelis.com/terms" target="_blank" rel="noreferrer" style={{ color: "var(--acc-deep)", textDecoration: "underline" }}>Terms</a>.
+        </p>
         {/* The agent's number is Vraelis-assigned (server-side only) — never a
             form field, so it can't be tampered with or overwritten here. */}
       </div>

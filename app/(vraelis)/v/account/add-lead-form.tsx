@@ -50,7 +50,7 @@ export function AddLeadForm() {
           )}
         </div>
         <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-4)", lineHeight: 1.5 }}>
-          Your agent emails them a first-touch message and starts the thread — replies come back to you.
+          Your agent emails them a first-touch message and starts the thread — replies come back to you. Only add people who gave you their details and agreed to hear from you.
         </p>
       </form>
     </details>

@@ -53,6 +53,11 @@ export default function PrivacyPage() {
         ]} />
         <P>We do not sell your data, and we do not sell your leads' data.</P>
 
+        <H>Text messaging (SMS)</H>
+        <P>Phone numbers may be collected when a lead or visitor submits a Vraelis-powered chat, booking, contact, or lead form and actively consents to text messages (by checking the SMS consent box), or when someone texts a Vraelis-managed business number first.</P>
+        <P>With that consent, the number may be used to send conversational text messages from the business and its Vraelis AI assistant about the person&apos;s inquiry — including appointment scheduling, reminders, follow-up, support, payment requests, and service updates. Message frequency varies. Message and data rates may apply. Reply <b>STOP</b> at any time to opt out, and <b>HELP</b> for help; we honor these automatically. Opting out of SMS does not affect the chat or email conversation, and SMS consent is never a condition of purchase.</P>
+        <P>We do not sell phone numbers or message content, and we do not share them with third parties for those parties&apos; own marketing.</P>
+
         <H>Service providers we share data with</H>
         <P>We use trusted third parties to run Vraelis. Each receives only the data needed for its function:</P>
         <List items={[
