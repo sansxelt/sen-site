@@ -126,6 +126,27 @@ export async function insertFlipItem(args: {
   return (data as unknown as { id: string }).id;
 }
 
+export type FlipItemRow = {
+  id: string;
+  created_at: string;
+  detected: { item_type?: string; brand?: string; condition_grade?: string; size?: string; category?: string } | null;
+  generated: { titles?: { ebay?: string } } | null;
+  suggested_price: { fast?: number; market?: number; high?: number; confidence?: string } | null;
+};
+
+// Recent listings for a signed-in user (account dashboard).
+export async function listUserItems(userId: string, limit = 24): Promise<FlipItemRow[]> {
+  if (!userId || !isDatabaseConfigured()) return [];
+  const supabase = getSupabaseAdminClient();
+  const { data } = await supabase
+    .from("flip_items" as never)
+    .select("id, created_at, detected, generated, suggested_price")
+    .eq("user_id", norm(userId))
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  return (data as unknown as FlipItemRow[]) ?? [];
+}
+
 // Used by the Stripe webhook to flip a user to/from Pro.
 export async function setFlipPlan(args: {
   userId?: string | null;

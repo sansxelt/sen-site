@@ -1,60 +1,58 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// vraelis.com only. The marketing AND app pages live under the internal /v
-// route group — that prefix exists so they can coexist with leftover sansxel
-// routes (/account, /terms, …) without colliding. This proxy maps clean public
-// paths onto /v and bounces any /v URL back to its clean alias, so /v NEVER
-// shows in the URL bar. Everything else (/signin, /api/*, /book, /f, …) passes
-// straight through.
+// vraelis.com — now Flip Engine. The product pages live under the internal
+// /flip route group; this proxy maps clean public paths onto /flip and bounces
+// any /flip URL back to its clean alias, so /flip NEVER shows in the URL bar.
+// The old lead-agent marketing (/v/*) is retired — its paths redirect home.
+// Auth (/signin, /api/auth/*), the API, and Stripe return pages pass through.
 
-// Clean public path -> internal /v route (exact matches).
+// Clean public path -> internal route (rewrite — URL stays clean).
 const CLEAN_PATHS: Record<string, string> = {
-  "/": "/v",
-  "/how": "/v/how",
-  "/automates": "/v/automates",
-  "/pricing": "/v/pricing",
-  "/contact": "/v/contact",
+  "/": "/flip",
+  "/app": "/flip/app",
+  "/pricing": "/flip/pricing",
+  "/connections": "/flip/connections",
+  "/account": "/flip/account",
+  // legal pages kept (generic) from the old route group
   "/privacy": "/v/privacy",
   "/terms": "/v/terms",
   "/refunds": "/v/refunds",
-  "/checkout": "/v/checkout",
-  "/showcase": "/v/showcase",
-  "/demo": "/v/demo",
+  "/contact": "/v/contact",
 };
 
-// Internal /v alias -> clean public path (exact matches) for the redirect.
-// Prefix families (/v/account*, /v/articles*) are handled in code below.
+// Internal route -> clean public path (redirect) so the internal prefix never
+// shows. /flip/billing/* is intentionally absent — Stripe returns there directly.
 const VANITY_REDIRECTS: Record<string, string> = {
-  "/v": "/",
-  "/v/how": "/how",
-  "/v/automates": "/automates",
-  "/v/pricing": "/pricing",
-  "/v/contact": "/contact",
+  "/flip": "/",
+  "/flip/app": "/app",
+  "/flip/pricing": "/pricing",
+  "/flip/connections": "/connections",
+  "/flip/account": "/account",
   "/v/privacy": "/privacy",
   "/v/terms": "/terms",
   "/v/refunds": "/refunds",
-  "/v/checkout": "/checkout",
-  "/v/showcase": "/showcase",
-  "/v/demo": "/demo",
+  "/v/contact": "/contact",
 };
+
+// Retired lead-agent marketing — bounce home so old links/SEO don't 404.
+const RETIRED = new Set([
+  "/how", "/automates", "/demo", "/showcase", "/checkout",
+  "/v", "/v/how", "/v/automates", "/v/demo", "/v/showcase", "/v/pricing", "/v/checkout",
+]);
 
 export default function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
-  // 1) Bounce any internal /v URL to its clean alias so /v never shows in the
-  //    bar. Exact aliases above, plus the /v/account* and /v/articles* families
-  //    (slice off the leading "/v", preserving the subpath + query).
-  let vanity = VANITY_REDIRECTS[path];
-  if (
-    !vanity &&
-    (path === "/v/account" ||
-      path.startsWith("/v/account/") ||
-      path === "/v/articles" ||
-      path.startsWith("/v/articles/"))
-  ) {
-    vanity = path.slice(2); // "/v/account/leads/1" -> "/account/leads/1"
+  // 1) Retired lead-agent paths -> home.
+  if (RETIRED.has(path) || path.startsWith("/v/articles") || path.startsWith("/v/account")) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
   }
+
+  // 2) Bounce internal route URLs to their clean alias.
+  const vanity = VANITY_REDIRECTS[path];
   if (vanity) {
     const url = req.nextUrl.clone();
     url.pathname = vanity;
@@ -64,24 +62,11 @@ export default function proxy(req: NextRequest) {
   const host = (req.headers.get("host") ?? "").toLowerCase().split(":")[0];
   const isAppSubdomain = host === "app.vraelis.com";
 
-  // 2) Map clean public paths onto the internal /v routes (rewrite — URL stays
-  //    clean). Account/articles preserve their real subpaths; any other old
-  //    sansxel /account|/app surface collapses to the vraelis dashboard.
+  // 3) Map clean public paths onto internal routes (rewrite — URL stays clean).
   let target = CLEAN_PATHS[path];
-  if (!target) {
-    if (path === "/articles" || path.startsWith("/articles/")) {
-      target = `/v${path}`;
-    } else if (path === "/account" || path === "/app") {
-      target = "/v/account";
-    } else if (path.startsWith("/account/leads/") || path === "/account/find") {
-      target = `/v${path}`; // real vraelis app subpaths
-    } else if (path.startsWith("/account/") || path.startsWith("/app/")) {
-      target = "/v/account"; // leftover sansxel subpaths -> dashboard
-    }
-  }
 
-  // On app.vraelis.com the root IS the signed-in app, not the marketing home.
-  if (isAppSubdomain && path === "/") target = "/v/account";
+  // On app.vraelis.com the root IS the tool, not the marketing home.
+  if (isAppSubdomain && path === "/") target = "/flip/app";
 
   if (target) {
     const url = req.nextUrl.clone();
@@ -94,6 +79,6 @@ export default function proxy(req: NextRequest) {
 
 export const config = {
   // Match all paths EXCEPT Next internals (_next/*) and anything that looks
-  // like a file (favicon.ico, og-image.png, etc.).
+  // like a file (favicon.ico, og-image.png, /flip-assets/*.jpg, etc.).
   matcher: ["/((?!_next/|.*\\.[a-zA-Z0-9]+$).*)"],
 };

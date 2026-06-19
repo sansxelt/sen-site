@@ -112,7 +112,7 @@ export default function FlipApp() {
   async function upgrade() {
     try {
       const res = await fetch("/api/flip/checkout", { method: "POST" });
-      if (res.status === 401) { signIn("google", { callbackUrl: "/flip/app" }); return; }
+      if (res.status === 401) { signIn("google", { callbackUrl: "/app" }); return; }
       const j = await res.json();
       if (j.url) window.location.href = j.url;
       else setError("Couldn't start checkout.");
@@ -179,7 +179,7 @@ export default function FlipApp() {
         <div style={{ ...cardStyle, marginTop: 16, textAlign: "center" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)", marginBottom: 6 }}>That was your free try.</div>
           <p style={{ color: "var(--fg-3)", fontSize: 14, margin: "0 0 16px" }}>Sign in with Google to keep going — 3 free listings on us.</p>
-          <button onClick={() => signIn("google", { callbackUrl: "/flip/app" })} className="btn btn--ghost">Continue with Google</button>
+          <button onClick={() => signIn("google", { callbackUrl: "/app" })} className="btn btn--ghost">Continue with Google</button>
         </div>
       )}
       {limit === "upgrade" && (
