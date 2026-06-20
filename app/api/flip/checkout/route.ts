@@ -38,11 +38,9 @@ export async function POST(req: Request) {
     const stripe = getStripe();
     const oneTime = cycle === "lifetime";
     const checkout = await stripe.checkout.sessions.create({
-      // This SDK's UiMode enum is mislabeled ("embedded_page"/"hosted_page"), but
-      // its OWN field docs (client_secret, return_url, success_url) say the real
-      // API value is "embedded" — and Stripe's servers only accept "embedded".
-      // Send the real value; cast past the bad enum type.
-      ui_mode: "embedded" as never,
+      // Stripe's current API uses "embedded_page" — the old "embedded" value is
+      // no longer supported (verified against the live API). The SDK enum was right.
+      ui_mode: "embedded_page",
       mode: oneTime ? "payment" : "subscription",
       line_items: [{ price, quantity: 1 }],
       customer_email: email,

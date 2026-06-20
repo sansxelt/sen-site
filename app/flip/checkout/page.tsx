@@ -23,7 +23,7 @@ export default async function CheckoutPage({
   }
 
   return (
-    <section className="section" style={{ borderBottom: "none" }}>
+    <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(24px, 3vw, 44px)" }}>
       <div className="wrap" style={{ maxWidth: 680 }}>
         <p className="eyebrow">Checkout</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.2vw, 2.4rem)", marginBottom: 6 }}>
