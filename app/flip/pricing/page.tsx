@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { UpgradeButton } from "../account/upgrade-button";
 
 export const metadata: Metadata = {
   title: "Pricing — Vraelis",
@@ -66,7 +67,7 @@ export default function FlipPricing() {
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "rgba(255,255,255,0.65)" }}>/ month</span>
               </div>
               <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.88)", marginTop: 18, marginBottom: 22, lineHeight: 1.5 }}>Or $190/yr — two months free. Card or crypto, cancel anytime.</p>
-              <a href="/app" style={{ width: "100%", textAlign: "center", borderRadius: "var(--r-sm)", padding: "14px 22px", fontSize: 15, fontWeight: 600, background: "#fff", color: "var(--acc-deep)", textDecoration: "none", fontFamily: "var(--font-sans)" }}>Get Pro →</a>
+              <UpgradeButton label="Get Pro" className="" style={{ width: "100%", textAlign: "center", borderRadius: "var(--r-sm)", padding: "14px 22px", fontSize: 15, fontWeight: 600, background: "#fff", color: "var(--acc-deep)", border: "none", fontFamily: "var(--font-sans)" }} />
               <div style={{ marginTop: 26 }}>{PRO.map((f) => <Check key={f} text={f} light />)}</div>
             </div>
           </div>
@@ -100,7 +101,7 @@ export default function FlipPricing() {
                   </div>
                 ))}
               </div>
-              <a href="/app" className="btn" style={{ width: "100%", justifyContent: "center", marginTop: 16 }}>Start free, upgrade anytime</a>
+              <UpgradeButton label="Get Pro" className="btn" style={{ width: "100%", justifyContent: "center", marginTop: 16 }} />
             </div>
           </div>
         </div>

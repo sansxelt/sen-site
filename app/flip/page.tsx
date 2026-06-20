@@ -263,7 +263,7 @@ export default function FlipLanding() {
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(255,255,255,0.65)" }}>/ month</span>
               </div>
               <p style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", marginTop: 18, marginBottom: 22, lineHeight: 1.5 }}>Unlimited listings. Card or crypto.</p>
-              <a href="/app" style={{ width: "100%", textAlign: "center", borderRadius: "var(--r-sm)", padding: "13px 22px", fontSize: 15, fontWeight: 600, background: "#fff", color: "var(--acc-deep)", textDecoration: "none", fontFamily: "var(--font-sans)" }}>Get Pro →</a>
+              <a href="/pricing" style={{ width: "100%", textAlign: "center", borderRadius: "var(--r-sm)", padding: "13px 22px", fontSize: 15, fontWeight: 600, background: "#fff", color: "var(--acc-deep)", textDecoration: "none", fontFamily: "var(--font-sans)" }}>See Pro &amp; checkout →</a>
               <div style={{ marginTop: 24 }}>{PRO_FEATS.map((f) => <FeatureRow key={f} text={f} light />)}</div>
             </div>
           </div>
