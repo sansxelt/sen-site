@@ -31,7 +31,12 @@ export function receivingAddress(): string | null {
   return a && /^0x[0-9a-fA-F]{40}$/.test(a) ? a : null;
 }
 export function isCryptoConfigured(): boolean {
-  return Boolean(receivingAddress());
+  // HARD-GATED OFF. A security review found the shared-address / exact-amount
+  // design is exploitable (replay, amount-collision, reorg/0-conf, RPC trust).
+  // Stays disabled even if USDC_RECEIVING_ADDRESS is set, until the flow is
+  // rebuilt (per-invoice deposit addresses + confirmations + tx dedup) AND
+  // CRYPTO_LIVE=true is explicitly set. Do NOT remove this without the rebuild.
+  return process.env.CRYPTO_LIVE === "true" && Boolean(receivingAddress());
 }
 
 async function rpc(url: string, method: string, params: unknown[]): Promise<unknown> {
