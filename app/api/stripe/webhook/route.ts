@@ -580,8 +580,11 @@ export async function POST(request: Request) {
           if (userId && credits > 0) {
             const { recordPackPurchase } = await import("../../../../lib/v-db");
             const { grant } = await import("../../../../lib/v-credits");
-            if (await recordPackPurchase(userId, "credit_topup", credits, s.id)) {
-              await grant(userId, credits, "topup", { bucket: "purchased" });
+            // Grant first, idempotent per session id (ledger ext_ref) so a replay
+            // can't double-grant and a transient failure can't permanently lose it;
+            // record the payment audit row only on a fresh grant.
+            if (await grant(userId, credits, "topup", { bucket: "purchased", extRef: s.id })) {
+              await recordPackPurchase(userId, "credit_topup", credits, s.id);
             }
           }
         } else if (s.metadata?.flip === "1") {

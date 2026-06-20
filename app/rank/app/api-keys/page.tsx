@@ -28,6 +28,7 @@ curl https://vraelis.com/api/v1/credits -H "X-Api-Key: YOUR_KEY"`;
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<Key[]>([]);
   const [fresh, setFresh] = useState<string>("");
+  const [err, setErr] = useState<string>("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -40,11 +41,13 @@ export default function ApiKeysPage() {
   useEffect(() => { load(); }, []);
 
   async function create() {
-    setBusy(true); setFresh("");
+    setBusy(true); setFresh(""); setErr("");
     try {
       const r = await fetch("/api/v/keys", { method: "POST" });
       const j = await r.json();
       if (j.key) { setFresh(j.key); load(); }
+      else if (j.error === "plan_required") setErr("The public API is a Scale plan feature. Upgrade to generate keys.");
+      else setErr("Couldn't create a key. Try again.");
     } finally { setBusy(false); }
   }
   async function revoke(id: string) {
@@ -62,6 +65,12 @@ export default function ApiKeysPage() {
         <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
       </div>
       <p className="lead-copy" style={{ marginBottom: 24 }}>Add human preference testing to your own app or AI tool. Send creative options, get back a ranked result.</p>
+
+      {err && (
+        <div className="card" style={{ marginBottom: 20, borderColor: "var(--line-2)" }}>
+          <p style={{ fontSize: 14, color: "var(--fg-2)", margin: 0 }}>{err} {err.includes("Scale") && <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>See plans →</a>}</p>
+        </div>
+      )}
 
       {fresh && (
         <div className="card" style={{ marginBottom: 20, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>

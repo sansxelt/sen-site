@@ -41,7 +41,9 @@ export async function getPlan(userId: string): Promise<string> {
   const s = getSupabaseAdminClient();
   const { data } = await s.from("v_subscriptions" as never).select("plan,status").eq("user_id", norm(userId)).maybeSingle();
   const r = data as unknown as { plan: string; status: string } | null;
-  return r && r.status === "active" ? r.plan : "free";
+  // past_due keeps the tier during Stripe's dunning/retry grace (credits simply
+  // don't refresh); only a true cancellation drops to free.
+  return r && (r.status === "active" || r.status === "past_due") ? r.plan : "free";
 }
 
 export async function createTest(args: {
@@ -194,9 +196,14 @@ export async function ensureReportAnalysis(testId: string): Promise<VReport | nu
 export async function recordPackPurchase(userId: string, sku: string, credits: number, stripeId: string): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
   const s = getSupabaseAdminClient();
-  const { count } = await s.from("v_payments" as never).select("*", { count: "exact", head: true }).eq("stripe_id", stripeId);
-  if ((count ?? 0) > 0) return false;
-  await s.from("v_payments" as never).insert({ user_id: norm(userId), stripe_id: stripeId, kind: "credit_pack", sku, credits, status: "paid" } as never);
+  // Insert-first dedup: the unique index on v_payments(stripe_id) makes this
+  // atomic, so concurrent/retried deliveries can't both pass (23505 = already done).
+  const { error } = await s.from("v_payments" as never).insert({ user_id: norm(userId), stripe_id: stripeId, kind: "credit_pack", sku, credits, status: "paid" } as never);
+  if (error) {
+    if ((error as { code?: string }).code === "23505") return false;
+    console.error("recordPackPurchase:", error.message);
+    return false;
+  }
   return true;
 }
 
@@ -232,13 +239,19 @@ export async function countActiveTestsThisMonth(userId: string): Promise<number>
   return count ?? 0;
 }
 
-// Dedup a subscription-invoice credit grant by Stripe invoice id.
+// Record a subscription-invoice payment, deduped by Stripe invoice id via the
+// unique index on v_payments(stripe_id) (insert-first; 23505 = already recorded).
+// This is the payment audit row — the credit grant itself is separately made
+// idempotent via the ledger ext_ref.
 export async function recordInvoiceGrant(userId: string, plan: string, credits: number, invoiceId: string): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
   const s = getSupabaseAdminClient();
-  const { count } = await s.from("v_payments" as never).select("*", { count: "exact", head: true }).eq("stripe_id", invoiceId);
-  if ((count ?? 0) > 0) return false;
-  await s.from("v_payments" as never).insert({ user_id: norm(userId), stripe_id: invoiceId, kind: "subscription", sku: plan, credits, status: "paid" } as never);
+  const { error } = await s.from("v_payments" as never).insert({ user_id: norm(userId), stripe_id: invoiceId, kind: "subscription", sku: plan, credits, status: "paid" } as never);
+  if (error) {
+    if ((error as { code?: string }).code === "23505") return false;
+    console.error("recordInvoiceGrant:", error.message);
+    return false;
+  }
   return true;
 }
 

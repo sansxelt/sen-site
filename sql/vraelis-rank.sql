@@ -119,3 +119,16 @@ create table if not exists v_api_keys (
   created_at timestamptz not null default now()
 );
 create index if not exists v_api_keys_user_idx on v_api_keys (user_id, created_at desc);
+
+-- ── Idempotency / hardening (added after the credit + webhook security review) ──
+-- 1) Dedup Stripe events at the DB level so concurrent/retried webhook deliveries
+--    can't double-record a payment (partial: stripe_id is nullable).
+create unique index if not exists v_payments_stripe_id_uidx
+  on v_payments (stripe_id) where stripe_id is not null;
+
+-- 2) Idempotent credit grants. ext_ref holds the Stripe invoice/session id; a
+--    given (user, reason, ext_ref) can mint only ONE ledger row, so a replayed or
+--    raced webhook can never double-grant credits regardless of app-level checks.
+alter table v_credit_ledger add column if not exists ext_ref text;
+create unique index if not exists v_ledger_extref_uidx
+  on v_credit_ledger (user_id, reason, ext_ref) where ext_ref is not null;

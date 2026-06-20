@@ -35,3 +35,11 @@ export const SIGNUP_FREE_CREDITS = 25;
 export const MIN_OPTIONS = 2;
 export const MIN_VOTES = 10;
 export const MAX_VOTES_FREE = 100;
+
+// API access is a Scale+ feature. VRAELIS_API_ALLOW (comma-separated emails)
+// allowlists specific accounts regardless of plan — e.g. for testing.
+export function apiAccessAllowed(plan: string | null | undefined, email: string): boolean {
+  if (entitlements(plan).api) return true;
+  const allow = (process.env.VRAELIS_API_ALLOW || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
+  return allow.includes((email || "").trim().toLowerCase());
+}
