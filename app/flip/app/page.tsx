@@ -76,7 +76,23 @@ export default function FlipApp() {
   const [limit, setLimit] = useState<"signin" | "upgrade" | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
   const [drag, setDrag] = useState(false);
+  const [copiedAll, setCopiedAll] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  function copyFull(l: Listing) {
+    const text = [
+      `eBay\n${l.titles.ebay}`,
+      `Poshmark\n${l.titles.poshmark}`,
+      `Depop\n${l.titles.depop}`,
+      `Mercari\n${l.titles.mercari}`,
+      `Description\n${l.description}`,
+      `Price: $${l.price.fast} fast · $${l.price.market} market · $${l.price.high} high`,
+      `Keywords: ${l.keywords.join(", ")}`,
+    ].join("\n\n");
+    navigator.clipboard?.writeText(text);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 1500);
+  }
 
   const addFiles = useCallback(async (files: FileList | File[]) => {
     setError("");
@@ -199,6 +215,9 @@ export default function FlipApp() {
             </h2>
             <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>{result.category} · {result.condition_grade}{result.size !== "unknown" ? ` · ${result.size}` : ""}</span>
           </div>
+          <button onClick={() => copyFull(result)} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>
+            {copiedAll ? "Copied full listing ✓" : "Copy full listing"}
+          </button>
 
           {/* price */}
           <div style={{ ...cardStyle, display: "flex", gap: 9, flexWrap: "wrap", alignItems: "center" }}>

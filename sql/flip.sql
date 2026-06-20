@@ -43,5 +43,16 @@ create table if not exists flip_listings (
 );
 create index if not exists flip_listings_item_idx on flip_listings (item_id);
 
+-- Per-user marketplace connections. status 'early_access' = enrolled for the
+-- integration; 'connected' = live (store/handle stored once OAuth/token is set).
+create table if not exists flip_connections (
+  user_id    text not null,
+  platform   text not null,   -- 'ebay' | 'shopify' | 'poshmark' | 'depop' | 'mercari'
+  status     text not null default 'early_access',
+  handle     text,            -- store domain / username when actually connected
+  created_at timestamptz not null default now(),
+  primary key (user_id, platform)
+);
+
 -- Access is server-only via the Supabase service-role key (lib/supabase-admin),
 -- which bypasses RLS; every query is scoped by user_id / anon_id in app code.

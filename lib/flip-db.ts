@@ -147,6 +147,31 @@ export async function listUserItems(userId: string, limit = 24): Promise<FlipIte
   return (data as unknown as FlipItemRow[]) ?? [];
 }
 
+export type FlipConnection = { platform: string; status: string; handle: string | null };
+
+export async function listConnections(userId: string): Promise<FlipConnection[]> {
+  if (!userId || !isDatabaseConfigured()) return [];
+  const supabase = getSupabaseAdminClient();
+  const { data } = await supabase
+    .from("flip_connections" as never)
+    .select("platform, status, handle")
+    .eq("user_id", norm(userId));
+  return (data as unknown as FlipConnection[]) ?? [];
+}
+
+export async function upsertConnection(
+  userId: string,
+  platform: string,
+  status = "early_access",
+  handle: string | null = null,
+): Promise<void> {
+  if (!userId || !isDatabaseConfigured()) return;
+  const supabase = getSupabaseAdminClient();
+  await supabase
+    .from("flip_connections" as never)
+    .upsert({ user_id: norm(userId), platform, status, handle } as never, { onConflict: "user_id,platform" } as never);
+}
+
 // Used by the Stripe webhook to flip a user to/from Pro.
 export async function setFlipPlan(args: {
   userId?: string | null;
