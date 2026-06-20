@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Flip Engine — list a thrift find in seconds",
+  title: "Vraelis — list a thrift find in seconds",
   description:
     "Photograph your item, get a finished resale listing — platform titles for eBay, Poshmark, Depop & Mercari, a clean description, hashtags, and a price range. Free for 3 listings.",
 };
@@ -24,7 +24,7 @@ function ListingPreview() {
     <div className="win">
       <div className="win__bar">
         <div className="win__dots"><i /><i /><i /></div>
-        <span className="win__addr"><span className="dot dot--acc" /> flip-engine · listing</span>
+        <span className="win__addr"><span className="dot dot--acc" /> vraelis · listing</span>
         <span style={{ marginLeft: "auto" }} className="pill"><span className="dot dot--acc" />ready to post</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.82fr) minmax(0,1.18fr)" }} className="deep-body">
@@ -59,7 +59,7 @@ function ListingPreview() {
 
 const STEPS = [
   { k: "01", t: "Photograph the item", d: "Front, the tag, any flaws — phone shots are fine. No lightbox, no editing, no light tent. Drop in up to five.", chips: ["Front", "Tag", "Flaws"] },
-  { k: "02", t: "Generate the listing", d: "One tap. Flip reads the photos and writes four platform titles, a description, keywords, hashtags, and a fast / market / high price.", chips: ["Titles", "Description", "Price"] },
+  { k: "02", t: "Generate the listing", d: "One tap. Vraelis reads the photos and writes four platform titles, a description, keywords, hashtags, and a fast / market / high price.", chips: ["Titles", "Description", "Price"] },
   { k: "03", t: "Copy & post", d: "Tap to copy each field straight into eBay, Poshmark, Depop, or Mercari. Set your price, hit list, move to the next piece.", chips: ["eBay", "Poshmark", "Depop", "Mercari"] },
 ];
 
@@ -92,7 +92,7 @@ export default function FlipLanding() {
                 List a thrift find in <span className="em">seconds</span>.
               </h1>
               <p className="rise" data-d="3" style={{ fontSize: "clamp(1.05rem, 1.4vw, 1.22rem)", color: "var(--fg-2)", maxWidth: 540, marginBottom: 16, lineHeight: 1.5 }}>
-                Photograph your item. Flip Engine writes the whole listing — keyword-tuned titles for eBay,
+                Photograph your item. Vraelis writes the whole listing — keyword-tuned titles for eBay,
                 Poshmark, Depop &amp; Mercari, a clean description, hashtags, and a fast / market / high price.
               </p>
               <p className="rise" data-d="3" style={{ fontSize: "clamp(1rem, 1.2vw, 1.1rem)", fontWeight: 600, color: "var(--fg-1)", maxWidth: 540, marginBottom: 28, lineHeight: 1.45 }}>

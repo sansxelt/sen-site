@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Checkout canceled — Flip Engine" };
+export const metadata: Metadata = { title: "Checkout canceled — Vraelis" };
 
 export default function FlipBillingCancel() {
   return (

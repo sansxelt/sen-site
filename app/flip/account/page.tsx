@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { getOrCreateFlipAccount, listUserItems, FLIP_FREE_SIGNED_IN } from "@/lib/flip-db";
 import { UpgradeButton } from "./upgrade-button";
 
-export const metadata: Metadata = { title: "Your account — Flip Engine" };
+export const metadata: Metadata = { title: "Your account — Vraelis" };
 
 const MONO = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" } as const;
 

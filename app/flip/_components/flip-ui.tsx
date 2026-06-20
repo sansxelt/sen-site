@@ -1,6 +1,6 @@
 "use client";
 
-// Flip Engine chrome — nav + footer on the shared vraelis design system
+// Vraelis chrome — nav + footer on the shared vraelis design system
 // (/vraelis/tokens.css + styles.css). Clean URLs (/, /app, /pricing,
 // /connections, /account) are mapped to the internal /flip routes by proxy.ts.
 
@@ -33,7 +33,7 @@ function FlipNav({ signedIn }: { signedIn: boolean }) {
       }}
     >
       <a href="/" style={{ gridColumn: 1, justifySelf: "start", display: "inline-flex", alignItems: "center", textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.04em" }}>
-        Flip Engine
+        Vraelis
       </a>
       <div className="vra-nav-links" style={{ justifySelf: "center", display: "flex", gap: 28, alignItems: "center" }}>
         {NAV_LINKS.map((l) => <a key={l.key} href={l.href} style={link}>{l.label}</a>)}
@@ -81,7 +81,7 @@ function FlipFooter() {
     <footer style={{ padding: "var(--s-16) var(--gutter) var(--s-12)", borderTop: "1px solid var(--line-1)" }}>
       <div style={{ maxWidth: "var(--max-content)", margin: "0 auto", display: "flex", flexWrap: "wrap", gap: "clamp(32px, 5vw, 72px)", alignItems: "flex-start" }}>
         <div style={{ flex: "1.5 1 280px", minWidth: 240, maxWidth: 420 }}>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--fg-1)" }}>Flip Engine</span>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--fg-1)" }}>Vraelis</span>
           <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.55, marginTop: 14 }}>
             Turn a thrift find into a finished resale listing — platform titles, a clean description, and a price range, from a phone photo.
           </p>
@@ -104,7 +104,7 @@ function FlipFooter() {
         </div>
       </div>
       <div style={{ maxWidth: "var(--max-content)", margin: "var(--s-12) auto 0", paddingTop: "var(--s-6)", borderTop: "1px solid var(--line-1)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)" }}>
-        <span>© 2026 Flip Engine</span>
+        <span>© 2026 Vraelis</span>
         <span>From a photo to a finished listing.</span>
       </div>
       <p style={{ maxWidth: "var(--max-content)", margin: "10px auto 0", fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", lineHeight: 1.5 }}>

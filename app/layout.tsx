@@ -81,20 +81,20 @@ const sansxelMetadata: Metadata = {
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
-    default: "Vraelis — The AI agent that follows up, books leads, and collects payment",
+    default: "Vraelis — list a thrift find in seconds",
     template: "%s",
   },
   description:
-    "Vraelis is the AI agent that answers every lead, qualifies serious buyers, follows up on its own, books the call, and collects payment for you. Free to start; Vraelis only earns when your agent gets you paid.",
+    "Vraelis turns a photo of your item into a finished resale listing — platform titles for eBay, Poshmark, Depop & Mercari, a clean description, and a fast/market/high price range. Free for 3 listings.",
   alternates: { canonical: "https://vraelis.com" },
   icons: { icon: "/vraelis/mark.jpg" },
   openGraph: {
     type: "website",
     url: "https://vraelis.com",
     siteName: "Vraelis",
-    title: "The AI agent that follows up, books leads, and collects payment.",
+    title: "List a thrift find in seconds.",
     description:
-      "Vraelis answers every lead, qualifies serious buyers, follows up, books the call, and collects payment. Free to start; Vraelis only earns when your agent gets you paid.",
+      "Photograph your item and get a finished resale listing — titles for eBay, Poshmark, Depop & Mercari, a description, and a price range. Free for 3 listings.",
   },
   robots: {
     index: true,

@@ -1,11 +1,3 @@
 {
-  "crons": [
-    { "path": "/api/vraelis/cron/bill-fees", "schedule": "0 9 1 * *" },
-    { "path": "/api/vraelis/cron/followups", "schedule": "0 15 * * *" },
-    { "path": "/api/vraelis/cron/reminders", "schedule": "0 14 * * *" },
-    { "path": "/api/vraelis/cron/recovery", "schedule": "0 16 * * *" },
-    { "path": "/api/vraelis/cron/reconcile", "schedule": "30 8 * * *" },
-    { "path": "/api/vraelis/cron/subscriptions", "schedule": "0 8 * * *" },
-    { "path": "/api/vraelis/cron/provision-numbers", "schedule": "0 10 * * *" }
-  ]
+  "crons": []
 }

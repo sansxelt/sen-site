@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing — Flip Engine",
+  title: "Pricing — Vraelis",
   description: "Three listings free. Then $19/mo for unlimited, or $190/yr. Pay by card or crypto (BTC, ETH, USDC). Cancel anytime.",
 };
 
@@ -89,7 +89,7 @@ export default function FlipPricing() {
             <div className="card" style={{ padding: "clamp(22px, 2.4vw, 30px)" }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>Crypto checkout</div>
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, paddingBottom: 14, borderBottom: "1px solid var(--line-1)" }}>
-                <span style={{ fontSize: 14.5, color: "var(--fg-1)", fontWeight: 600 }}>Flip Engine Pro</span>
+                <span style={{ fontSize: 14.5, color: "var(--fg-1)", fontWeight: 600 }}>Vraelis Pro</span>
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--fg-1)" }}>$19<span style={{ fontSize: 12, fontWeight: 500, color: "var(--fg-4)" }}>/mo</span></span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>

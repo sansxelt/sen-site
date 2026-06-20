@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Marketplaces — Flip Engine",
-  description: "Flip writes copy-paste-ready listings for eBay, Poshmark, Depop and Mercari today. One-click cross-posting and Shopify are rolling out.",
+  title: "Marketplaces — Vraelis",
+  description: "Vraelis writes copy-paste-ready listings for eBay, Poshmark, Depop and Mercari today. One-click cross-posting and Shopify are rolling out.",
 };
 
 const MARKETS = [
@@ -33,7 +33,7 @@ export default function FlipConnections() {
             <h1 className="display" style={{ fontSize: "clamp(2.3rem, 4.4vw, 3.6rem)", marginBottom: 18 }}>
               List everywhere you <span className="em">sell</span>.
             </h1>
-            <p className="lead-copy">Flip writes a listing tuned to each marketplace. Today you copy it in; one-click cross-posting and Shopify sync are on the way. We&apos;ll always tell you what&apos;s live and what&apos;s building.</p>
+            <p className="lead-copy">Vraelis writes a listing tuned to each marketplace. Today you copy it in; one-click cross-posting and Shopify sync are on the way. We&apos;ll always tell you what&apos;s live and what&apos;s building.</p>
           </div>
         </div>
       </section>
