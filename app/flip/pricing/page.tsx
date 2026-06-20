@@ -3,7 +3,7 @@ import { PricingTable } from "./pricing-table";
 
 export const metadata: Metadata = {
   title: "Pricing — Vraelis",
-  description: "Free to try. Then Seller, Growth, or Operator — monthly, yearly, or one-time lifetime. Pay by card or crypto. Built for sellers, suppliers, and teams.",
+  description: "Free to try. Then Seller, Growth, or Operator — monthly, yearly, or one-time lifetime. Card or Apple Pay. Built for sellers, suppliers, and teams.",
 };
 
 const FAQ = [
@@ -11,7 +11,7 @@ const FAQ = [
   ["Monthly, yearly, or lifetime?", "Monthly is flexible. Yearly bills once and saves you two months. Lifetime is a single one-time payment — no subscription, you own the plan. Switch the toggle at the top of the page to compare."],
   ["Can I cancel?", "Recurring plans cancel in two clicks and stay active until the period ends. Lifetime is one-time, so there's nothing to cancel."],
   ["Do you keep my photos?", "Photos are sent to the model to read the item, not published anywhere. We store the finished listing on your account so you can come back to it; you can delete it."],
-  ["How does crypto checkout work?", "Pick crypto at checkout and pay in BTC, ETH, or a stablecoin (USDC) — same price as card. It's handled through Stripe alongside cards and Apple Pay."],
+  ["How do I pay?", "Card or Apple Pay, securely through Stripe. Pick a plan, pick monthly / yearly / lifetime, and you're set."],
 ];
 
 export default function FlipPricing() {
@@ -25,41 +25,13 @@ export default function FlipPricing() {
             <h1 className="display" style={{ fontSize: "clamp(2.3rem, 4.4vw, 3.6rem)", marginBottom: 18 }}>
               Start free. Scale when it <span className="em">runs your selling</span>.
             </h1>
-            <p className="lead-copy">From a solo closet-clearer to a supplier moving pallets — pick the level of automation you need. Monthly, yearly, or a one-time lifetime. Card or crypto.</p>
+            <p className="lead-copy">From a solo closet-clearer to a supplier moving pallets — pick the level of automation you need. Monthly, yearly, or a one-time lifetime.</p>
           </div>
         </div>
       </section>
 
       <section className="section">
         <div className="wrap"><PricingTable /></div>
-      </section>
-
-      {/* Crypto */}
-      <section className="section" style={{ background: "var(--bg-2)" }}>
-        <div className="wrap">
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px, 4vw, 56px)", alignItems: "center" }} className="cols-stack">
-            <div>
-              <p className="eyebrow">Payments</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.8rem)", marginBottom: 16 }}>Cards via Stripe. Crypto <span className="em">on-chain</span>.</h2>
-              <p className="lead-copy" style={{ marginBottom: 20 }}>Subscriptions run on card or Apple Pay. Prefer crypto? Pay a <b>lifetime</b> plan in USDC straight to our wallet, right here on Vraelis — no redirect, no middleman.</p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {["Card", "Apple Pay", "USDC on Base"].map((m) => <span key={m} className="pill">{m}</span>)}
-              </div>
-            </div>
-            <div className="card" style={{ padding: "clamp(22px, 2.4vw, 30px)" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>Pay lifetime in USDC</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {[["Seller — lifetime", "$290", "seller"], ["Growth — lifetime", "$790", "growth"]].map(([n, price]) => (
-                  <div key={n} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "12px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)" }}>
-                    <span style={{ fontSize: 13.5, color: "var(--fg-1)" }}>{n}</span>
-                    <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color: "var(--acc-deep)" }}>{price}</span>
-                  </div>
-                ))}
-              </div>
-              <a href="/flip/pay?plan=growth&cycle=lifetime" className="btn" style={{ width: "100%", justifyContent: "center", marginTop: 16 }}>Pay in USDC →</a>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* FAQ */}

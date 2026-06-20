@@ -75,7 +75,7 @@ function FeatureRow({ text, light }: { text: string; light?: boolean }) {
 }
 
 const FREE_FEATS = ["3 listings, free", "All four platform titles", "Description + price range", "No card to start"];
-const PRO_FEATS = ["Unlimited listings", "Keywords + hashtags", "Pay card or crypto", "Cancel anytime"];
+const PRO_FEATS = ["Unlimited listings", "Keywords + hashtags", "Card & Apple Pay", "Cancel anytime"];
 
 export default function FlipLanding() {
   return (
@@ -240,7 +240,7 @@ export default function FlipLanding() {
             <h2 className="display" style={{ fontSize: "clamp(2rem, 3.6vw, 3.2rem)", marginBottom: 16 }}>
               Start free. Go Pro when it <span className="em">pays for itself</span>.
             </h2>
-            <p className="lead-copy">Three listings free. After that, unlimited for less than the profit on a single flip — pay by card or crypto.</p>
+            <p className="lead-copy">Three listings free. After that, unlimited for less than the profit on a single flip.</p>
           </div>
           <div className="grid cols-2" style={{ maxWidth: 720, alignItems: "stretch" }}>
             <div style={{ display: "flex", flexDirection: "column", borderRadius: "var(--r-sm)", padding: "clamp(24px, 2.3vw, 30px)", background: "var(--bg-1)", border: "1px solid var(--line-2)", boxShadow: "var(--shadow-card)" }}>
@@ -262,13 +262,13 @@ export default function FlipLanding() {
                 <span style={{ fontFamily: "var(--font-display)", fontSize: 44, fontWeight: 700, letterSpacing: "-0.045em", lineHeight: 1, color: "#fff" }}>$19</span>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "rgba(255,255,255,0.65)" }}>/ month</span>
               </div>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", marginTop: 18, marginBottom: 22, lineHeight: 1.5 }}>Unlimited listings. Card or crypto.</p>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.88)", marginTop: 18, marginBottom: 22, lineHeight: 1.5 }}>Unlimited listings. Cancel anytime.</p>
               <a href="/pricing" style={{ width: "100%", textAlign: "center", borderRadius: "var(--r-sm)", padding: "13px 22px", fontSize: 15, fontWeight: 600, background: "#fff", color: "var(--acc-deep)", textDecoration: "none", fontFamily: "var(--font-sans)" }}>See Pro &amp; checkout →</a>
               <div style={{ marginTop: 24 }}>{PRO_FEATS.map((f) => <FeatureRow key={f} text={f} light />)}</div>
             </div>
           </div>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", marginTop: 24 }}>
-            Full plans, annual pricing, and crypto checkout on the <a href="/pricing" style={{ color: "var(--acc-deep)" }}>pricing page →</a>
+            Full plans and annual pricing on the <a href="/pricing" style={{ color: "var(--acc-deep)" }}>pricing page →</a>
           </p>
         </div>
       </section>

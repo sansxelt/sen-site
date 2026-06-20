@@ -29,7 +29,7 @@ const PLANS: Plan[] = [
     price: { monthly: 19, yearly: 190, lifetime: 290 },
     unit: { monthly: "/ mo", yearly: "/ yr", lifetime: "once" },
     cta: "Get Seller",
-    feats: ["Unlimited listings", "Saved listing history", "Bulk export to eBay & Shopify", "2 marketplace connections", "Card or crypto"],
+    feats: ["Unlimited listings", "Saved listing history", "Bulk export to eBay & Shopify", "2 marketplace connections", "Card & Apple Pay"],
   },
   {
     key: "growth", name: "Growth", who: "For sellers running real volume across every channel.", featured: true,
@@ -121,10 +121,6 @@ export function PricingTable() {
                 />
               )}
 
-              {p.key !== "free" && p.price.lifetime !== null && cycle === "lifetime" && (
-                <a href={`/flip/pay?plan=${p.key}&cycle=lifetime`} style={{ display: "block", textAlign: "center", marginTop: 10, fontSize: 12.5, fontWeight: 600, color: ink ? "rgba(255,255,255,0.92)" : "var(--acc-deep)", textDecoration: "none" }}>or pay with USDC →</a>
-              )}
-
               <div style={{ marginTop: 22 }}>
                 {p.feats.map((f) => (
                   <div key={f} style={{ display: "flex", gap: 9, padding: "8px 0", borderTop: `1px solid ${c.rule}`, alignItems: "baseline" }}>
@@ -155,7 +151,7 @@ export function PricingTable() {
       </div>
 
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)", marginTop: 22 }}>
-        Prices in USD. Yearly is billed once a year (two months off). Lifetime is a one-time payment — pay by card or crypto. Cancel recurring plans anytime.
+        Prices in USD. Yearly is billed once a year (two months off). Lifetime is a one-time payment. Cancel recurring plans anytime.
       </p>
     </div>
   );
