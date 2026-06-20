@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
   // /features and /function were merged into /product. Permanent
   // redirects so old links + indexed pages land on the canonical
   // route without a 404.
+  // The embeddable vote widget must be framable on any external site.
+  async headers() {
+    return [
+      { source: "/embed/:path*", headers: [{ key: "Content-Security-Policy", value: "frame-ancestors *" }] },
+    ];
+  },
   async redirects() {
     return [
       { source: "/features", destination: "/product", permanent: true },

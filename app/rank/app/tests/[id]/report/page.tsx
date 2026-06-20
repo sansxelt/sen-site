@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { getTestWithOptions, getReport, ensureReportAnalysis, OPTION_LETTERS, type VOption } from "@/lib/v-db";
 import { CloseButton } from "../close-button";
+import { EmbedSnippet } from "../embed-snippet";
 
 export const metadata: Metadata = { title: "Results — Vraelis" };
 export const maxDuration = 60; // first view of a completed test generates the AI analysis
@@ -61,6 +62,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Unfilled credits are refunded.</span>
           </div>
         )}
+        {test.status === "active" && <EmbedSnippet testId={test.id} />}
       </div>
     );
   }
