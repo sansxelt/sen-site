@@ -133,7 +133,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       )}
 
       {/* breakdown */}
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Breakdown · {r.total} votes</div>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Breakdown · {r.total} valid vote{r.total === 1 ? "" : "s"}{r.filtered ? ` · ${r.filtered} filtered` : ""}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 28 }}>
         {r.ranked.map((row, i) => (
           <div key={row.id} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 12, alignItems: "center" }}>

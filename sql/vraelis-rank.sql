@@ -244,3 +244,75 @@ begin
 
   return jsonb_build_object('status','ok','earned',v_earned,'votes_valid',v_valid,'should_complete', v_valid >= v_target);
 end; $$;
+
+-- ── Voter quality / anti-abuse ──
+-- Per-vote provenance for duplicate/velocity checks, and a per-voter reputation
+-- tally. Rejected votes are kept (they still hold the one-vote-per-test slot) but
+-- don't count toward the target and earn no reward.
+alter table v_judgments add column if not exists ip_hash text;
+alter table v_judgments add column if not exists device_hash text;
+create index if not exists v_judg_ip_idx on v_judgments (ip_hash, created_at desc);
+create index if not exists v_judg_status_idx on v_judgments (status, created_at desc);
+
+create table if not exists v_voter_rep (
+  voter_id   text primary key,
+  valid      int not null default 0,
+  rejected   int not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+-- v2 of v_record_vote: accepts a quality verdict (status/reject_reason) plus
+-- ip/device provenance, counts only VALID votes toward the target, rewards only
+-- valid votes, and maintains v_voter_rep. Defaults keep older callers working.
+drop function if exists v_record_vote(uuid, text, uuid, text, int, int);
+create or replace function v_record_vote(
+  p_test uuid, p_voter text, p_option uuid, p_reason text, p_time_spent int, p_reward_cap int,
+  p_status text default 'valid', p_reject_reason text default null,
+  p_ip_hash text default null, p_device_hash text default null
+) returns jsonb language plpgsql as $$
+declare
+  v_voter text := lower(trim(p_voter));
+  v_owner text; v_tstatus text; v_valid_cur int; v_target int;
+  v_opt_ok int; v_valid int; v_reward_today int; v_earned boolean := false;
+  v_vote_status text := case when p_status = 'rejected' then 'rejected' else 'valid' end;
+begin
+  select user_id, status, votes_valid, votes_target into v_owner, v_tstatus, v_valid_cur, v_target from v_tests where id = p_test;
+  if not found or v_tstatus <> 'active' or v_owner = v_voter or v_valid_cur >= v_target then
+    return jsonb_build_object('status','invalid');
+  end if;
+  select count(*) into v_opt_ok from v_test_options where id = p_option and test_id = p_test;
+  if v_opt_ok = 0 then return jsonb_build_object('status','invalid'); end if;
+
+  begin
+    insert into v_judgments (test_id, voter_id, option_id, reason, time_spent_ms, status, reject_reason, ip_hash, device_hash)
+      values (p_test, v_voter, p_option, nullif(p_reason,''), p_time_spent, v_vote_status, p_reject_reason, p_ip_hash, p_device_hash);
+  exception when unique_violation then
+    return jsonb_build_object('status','dup');
+  end;
+
+  insert into v_voter_rep (voter_id, valid, rejected)
+    values (v_voter, case when v_vote_status='valid' then 1 else 0 end, case when v_vote_status='rejected' then 1 else 0 end)
+    on conflict (voter_id) do update set
+      valid = v_voter_rep.valid + (case when v_vote_status='valid' then 1 else 0 end),
+      rejected = v_voter_rep.rejected + (case when v_vote_status='rejected' then 1 else 0 end),
+      updated_at = now();
+
+  select count(*) into v_valid from v_judgments where test_id = p_test and status = 'valid';
+  update v_tests set votes_valid = v_valid where id = p_test;
+
+  if v_vote_status = 'valid' then
+    perform pg_advisory_xact_lock(hashtext('reward:' || v_voter)::bigint);
+    select coalesce(sum(delta),0) into v_reward_today from v_credit_ledger
+      where user_id = v_voter and reason = 'reward'
+        and created_at >= (date_trunc('day', now() at time zone 'utc') at time zone 'utc');
+    if v_reward_today < p_reward_cap then
+      begin
+        insert into v_credit_ledger (user_id, delta, reason, bucket, ref_type, ref_id, ext_ref)
+          values (v_voter, 1, 'reward', 'purchased', 'vote', p_test, 'reward:' || p_test::text);
+        v_earned := true;
+      exception when unique_violation then v_earned := false; end;
+    end if;
+  end if;
+
+  return jsonb_build_object('status','ok','vote_status',v_vote_status,'earned',v_earned,'votes_valid',v_valid,'should_complete', v_valid >= v_target);
+end; $$;

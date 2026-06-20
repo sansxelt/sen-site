@@ -44,3 +44,10 @@ export function apiAccessAllowed(plan: string | null | undefined, email: string)
   const allow = (process.env.VRAELIS_API_ALLOW || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
   return allow.includes((email || "").trim().toLowerCase());
 }
+
+// Admin access (vote review). VRAELIS_ADMIN = comma-separated emails.
+export function isAdmin(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const allow = (process.env.VRAELIS_ADMIN || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
+  return allow.includes(email.trim().toLowerCase());
+}

@@ -17,8 +17,9 @@ export type VReport = {
   test_id: string; winner_option_id: string | null;
   results: {
     total: number;
+    filtered?: number;
     ranked: { id: string; position: number; label: string | null; votes: number; pct: number }[];
-    winner_option_id: string;
+    winner_option_id: string | null;
     comments: { option_id: string; reason: string }[];
     recommendation: string;
     analysis?: ReportAnalysis | null;
@@ -167,6 +168,8 @@ export async function completeTest(testId: string): Promise<void> {
   const { data: judg } = await s.from("v_judgments" as never).select("option_id,reason").eq("test_id", testId).eq("status", "valid");
   const judgments = (judg as unknown as { option_id: string; reason: string | null }[]) ?? [];
   const total = judgments.length;
+  const { count: filteredCount } = await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).eq("test_id", testId).eq("status", "rejected");
+  const filtered = filteredCount ?? 0;
   const tally: Record<string, number> = {};
   for (const o of options) tally[o.id] = 0;
   for (const j of judgments) tally[j.option_id] = (tally[j.option_id] || 0) + 1;
@@ -189,7 +192,7 @@ export async function completeTest(testId: string): Promise<void> {
     winnerId = top.id;
     recommendation = `Option ${LETTERS[top.position] ?? "?"} won with ${top.pct}% of ${total} vote${total === 1 ? "" : "s"} — go with it.`;
   }
-  const results = { total, ranked, winner_option_id: winnerId, comments, recommendation };
+  const results = { total, filtered, ranked, winner_option_id: winnerId, comments, recommendation };
   await s.from("v_reports" as never).upsert({ test_id: testId, winner_option_id: winnerId, results } as never, { onConflict: "test_id" } as never);
   const unfilled = Math.max(0, test.votes_target - total);
   if (unfilled > 0) await refund(test.user_id, testId, unfilled);
@@ -233,21 +236,25 @@ export async function launchTest(args: {
 // Falls back to the JS path when the RPC isn't present yet.
 export async function recordVote(args: {
   testId: string; voterId: string; optionId: string; reason?: string; timeSpentMs?: number; rewardCap: number;
-}): Promise<{ status: "ok" | "dup" | "invalid" | "err"; earned?: boolean }> {
+  status?: "valid" | "rejected"; rejectReason?: string; ipHash?: string | null; deviceHash?: string | null;
+}): Promise<{ status: "ok" | "dup" | "invalid" | "err"; earned?: boolean; voteStatus?: "valid" | "rejected" }> {
   if (!isDatabaseConfigured()) return { status: "err" };
   const s = getSupabaseAdminClient();
   const { data, error } = await s.rpc("v_record_vote" as never, {
     p_test: args.testId, p_voter: norm(args.voterId), p_option: args.optionId,
     p_reason: args.reason ?? null, p_time_spent: args.timeSpentMs ?? null, p_reward_cap: args.rewardCap,
+    p_status: args.status ?? "valid", p_reject_reason: args.rejectReason ?? null,
+    p_ip_hash: args.ipHash ?? null, p_device_hash: args.deviceHash ?? null,
   } as never);
   if (!error && data) {
-    const r = data as unknown as { status: string; earned?: boolean; should_complete?: boolean };
+    const r = data as unknown as { status: string; earned?: boolean; should_complete?: boolean; vote_status?: "valid" | "rejected" };
     if (r.status === "ok" && r.should_complete) await completeTest(args.testId);
-    return { status: (r.status as "ok" | "dup" | "invalid") ?? "err", earned: r.earned };
+    return { status: (r.status as "ok" | "dup" | "invalid") ?? "err", earned: r.earned, voteStatus: r.vote_status };
   }
   if (error && (error as { code?: string }).code !== "42883") console.error("recordVote rpc:", error.message);
 
-  // Fallback (pre-migration): recordJudgment + capped reward in JS.
+  // Fallback (pre-migration): recordJudgment + capped reward in JS. Quality
+  // enforcement (rejection) begins once the v2 SQL is applied.
   const res = await recordJudgment({ testId: args.testId, voterId: args.voterId, optionId: args.optionId, reason: args.reason, timeSpentMs: args.timeSpentMs });
   if (res !== "ok") return { status: res };
   let earned = false;
@@ -255,7 +262,7 @@ export async function recordVote(args: {
     await grant(args.voterId, 1, "reward", { refType: "vote", refId: args.testId, extRef: `reward:${args.testId}` });
     earned = true;
   }
-  return { status: "ok", earned };
+  return { status: "ok", earned, voteStatus: "valid" };
 }
 
 export async function getReport(testId: string): Promise<VReport | null> {
@@ -356,6 +363,50 @@ export async function recordInvoiceGrant(userId: string, plan: string, credits: 
     console.error("recordInvoiceGrant:", error.message);
     return false;
   }
+  return true;
+}
+
+// ── Admin: vote review ──
+export type VAdminVote = { id: string; test_id: string; voter_id: string; status: string; reject_reason: string | null; reason: string | null; time_spent_ms: number | null; created_at: string; title: string | null };
+
+export async function listRecentVotes(opts: { status?: string; limit?: number } = {}): Promise<VAdminVote[]> {
+  if (!isDatabaseConfigured()) return [];
+  const s = getSupabaseAdminClient();
+  let q = s.from("v_judgments" as never).select("id,test_id,voter_id,status,reject_reason,reason,time_spent_ms,created_at").order("created_at", { ascending: false }).limit(opts.limit ?? 100);
+  if (opts.status) q = (q as { eq: (c: string, v: string) => typeof q }).eq("status", opts.status);
+  const { data } = await q;
+  const rows = (data as unknown as Omit<VAdminVote, "title">[]) ?? [];
+  const ids = [...new Set(rows.map((r) => r.test_id))];
+  const { data: tests } = ids.length ? await s.from("v_tests" as never).select("id,title").in("id", ids) : { data: [] };
+  const titleById: Record<string, string> = Object.fromEntries(((tests as unknown as { id: string; title: string }[]) ?? []).map((t) => [t.id, t.title]));
+  return rows.map((r) => ({ ...r, title: titleById[r.test_id] ?? null }));
+}
+
+export async function voteStats(): Promise<{ valid: number; rejected: number; byReason: Record<string, number> }> {
+  if (!isDatabaseConfigured()) return { valid: 0, rejected: 0, byReason: {} };
+  const s = getSupabaseAdminClient();
+  const since = new Date(); since.setUTCDate(since.getUTCDate() - 7);
+  const { data } = await s.from("v_judgments" as never).select("status,reject_reason").gte("created_at", since.toISOString());
+  const rows = (data as unknown as { status: string; reject_reason: string | null }[]) ?? [];
+  const byReason: Record<string, number> = {};
+  let valid = 0, rejected = 0;
+  for (const r of rows) {
+    if (r.status === "rejected") { rejected += 1; const k = r.reject_reason ?? "other"; byReason[k] = (byReason[k] ?? 0) + 1; }
+    else valid += 1;
+  }
+  return { valid, rejected, byReason };
+}
+
+// Flip a vote's status (admin) and recount the test's valid votes.
+export async function overrideVoteStatus(judgmentId: string, status: "valid" | "rejected"): Promise<boolean> {
+  if (!judgmentId || !isDatabaseConfigured()) return false;
+  const s = getSupabaseAdminClient();
+  const { data: j } = await s.from("v_judgments" as never).select("test_id,status").eq("id", judgmentId).maybeSingle();
+  const jj = j as unknown as { test_id: string; status: string } | null;
+  if (!jj || jj.status === status) return false;
+  await s.from("v_judgments" as never).update({ status, reject_reason: status === "rejected" ? "admin" : null } as never).eq("id", judgmentId);
+  const { count } = await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).eq("test_id", jj.test_id).eq("status", "valid");
+  await s.from("v_tests" as never).update({ votes_valid: count ?? 0 } as never).eq("id", jj.test_id);
   return true;
 }
 

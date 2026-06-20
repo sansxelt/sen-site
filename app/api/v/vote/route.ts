@@ -4,9 +4,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ensureProfile, recordVote } from "@/lib/v-db";
+import { assessVote, hashToken, ipFromHeaders } from "@/lib/v-quality";
 
-// Cap vote-to-earn per account per day to bound farming until the
-// reputation/quality system lands. Keep /vote invite-only meanwhile.
 const REWARD_CAP_PER_DAY = 30;
 
 export const runtime = "nodejs";
@@ -24,8 +23,12 @@ export async function POST(req: Request) {
   const timeSpentMs = parseInt(body?.timeSpentMs, 10) || undefined;
   if (!testId || !optionId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
-  // Atomic: validate + insert judgment + recount + capped reward in one transaction.
-  const res = await recordVote({ testId, voterId: email, optionId, reason, timeSpentMs, rewardCap: REWARD_CAP_PER_DAY });
+  // Quality gate: too-fast / IP velocity / reputation / spam → vote is recorded
+  // but rejected (doesn't count, earns nothing). Then the atomic record + reward.
+  const ip = ipFromHeaders(req.headers);
+  const ipHash = ip ? hashToken(ip) : null;
+  const verdict = await assessVote({ voterId: email, timeSpentMs, reason, ipHash, isAnon: false });
+  const res = await recordVote({ testId, voterId: email, optionId, reason, timeSpentMs, rewardCap: REWARD_CAP_PER_DAY, status: verdict.status, rejectReason: verdict.reason, ipHash });
   if (res.status === "dup") return NextResponse.json({ error: "already_voted" }, { status: 409 });
   if (res.status === "invalid") return NextResponse.json({ error: "invalid_vote" }, { status: 400 });
   if (res.status === "err") return NextResponse.json({ error: "vote_failed" }, { status: 500 });

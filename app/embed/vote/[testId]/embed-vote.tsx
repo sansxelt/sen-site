@@ -13,6 +13,7 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const startRef = useRef(Date.now());
 
   // Tell the host page how tall to make the iframe (the embed.js loader listens).
   useEffect(() => {
@@ -32,7 +33,7 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
     if (!selected || busy) return;
     setBusy(true); setErr("");
     try {
-      const r = await fetch("/api/embed/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId, optionId: selected, reason, voterId: anonId() }) });
+      const r = await fetch("/api/embed/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId, optionId: selected, reason, voterId: anonId(), timeSpentMs: Date.now() - startRef.current }) });
       if (r.status === 409) { setPhase("dup"); return; }
       if (r.ok) { setPhase("done"); return; }
       setErr("Couldn't save your vote — try again.");

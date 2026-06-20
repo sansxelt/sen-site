@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { ensureProfile, listUserTests } from "@/lib/v-db";
 import { ensureSignupGrant, balance } from "@/lib/v-credits";
+import { isAdmin } from "@/lib/v-entitlements";
 
 export const metadata: Metadata = { title: "Dashboard — Vraelis" };
 
@@ -34,6 +35,7 @@ export default async function Dashboard() {
           <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)" }}>Your tests</h1>
         </div>
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          {isAdmin(email) && <a href="/app/admin" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Admin</a>}
           <a href="/app/plans" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Plans</a>
           <a href="/app/api-keys" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>API</a>
           <a href="/app/new" className="btn">New test <span aria-hidden>→</span></a>
