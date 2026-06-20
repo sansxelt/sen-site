@@ -3,7 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { ensureProfile, createTest, setTestActive, getPlan } from "@/lib/v-db";
+import { ensureProfile, createTest, setTestActive, getPlan, countActiveTestsThisMonth } from "@/lib/v-db";
 import { ensureSignupGrant, hold } from "@/lib/v-credits";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
 
@@ -41,6 +41,11 @@ export async function POST(req: Request) {
 
   if (opts.length < MIN_OPTIONS) return NextResponse.json({ error: "need_2_options" }, { status: 400 });
   if (opts.length > ent.maxOptions) return NextResponse.json({ error: "too_many_options", max: ent.maxOptions }, { status: 400 });
+
+  const used = await countActiveTestsThisMonth(email);
+  if (used >= ent.activeTestsPerMonth) {
+    return NextResponse.json({ error: "plan_limit", limit: ent.activeTestsPerMonth, plan: ent.plan }, { status: 403 });
+  }
 
   const id = await createTest({ userId: email, title, context, category, audience, votesTarget, options: opts });
   if (!id) return NextResponse.json({ error: "create_failed" }, { status: 500 });

@@ -180,6 +180,13 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
 }
 
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
+  // Vraelis Rank subscription? Update plan/status on v_subscriptions and stop.
+  if (subscription.metadata?.type === "v_plan") {
+    const { handleRankSubChange } = await import("../../../../lib/v-subscriptions");
+    await handleRankSubChange(event, subscription);
+    return;
+  }
+
   // Flip Engine subscription? Flip the flip_accounts plan and stop — separate
   // product from Vraelis, separate table.
   if (subscription.metadata?.flip === "1") {
@@ -362,6 +369,11 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
  * from customer.subscription.created.
  */
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  // Vraelis Rank subscription invoice? Grant monthly credits (deduped) and stop.
+  {
+    const { handleRankInvoicePaid } = await import("../../../../lib/v-subscriptions");
+    if (await handleRankInvoicePaid(invoice)) return;
+  }
   const email = invoice.customer_email ?? null;
   if (!email) return;
   const reason = (invoice as unknown as { billing_reason?: string }).billing_reason;

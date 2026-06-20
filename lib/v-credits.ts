@@ -72,3 +72,11 @@ export async function refund(userId: string, testId: string, amount: number): Pr
   if (amount <= 0) return;
   await grant(userId, amount, "refund", { refType: "test", refId: testId });
 }
+
+// Monthly subscription credits — the "monthly" bucket, expiring at the period
+// end. The next cycle grants a fresh bucket; the old one expires (so monthly
+// credits reset). Purchased top-up credits use the "purchased" bucket and persist.
+export async function grantMonthly(userId: string, credits: number, expiresAt: string): Promise<void> {
+  if (credits <= 0) return;
+  await grant(userId, credits, "monthly_reset", { bucket: "monthly", expiresAt });
+}

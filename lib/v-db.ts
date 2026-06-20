@@ -200,4 +200,46 @@ export async function recordPackPurchase(userId: string, sku: string, credits: n
   return true;
 }
 
+export type VSubscription = { user_id: string; plan: string; status: string; cycle: string | null; stripe_subscription_id: string | null; monthly_credits: number; current_period_end: string | null };
+
+export async function setSubscription(args: {
+  userId: string; plan: string; status: string; cycle?: string | null;
+  stripeSubscriptionId?: string | null; monthlyCredits?: number; currentPeriodEnd?: string | null;
+}): Promise<void> {
+  if (!isDatabaseConfigured()) return;
+  const s = getSupabaseAdminClient();
+  await s.from("v_subscriptions" as never).upsert({
+    user_id: norm(args.userId), plan: args.plan, status: args.status,
+    cycle: args.cycle ?? null, stripe_subscription_id: args.stripeSubscriptionId ?? null,
+    monthly_credits: args.monthlyCredits ?? 0, current_period_end: args.currentPeriodEnd ?? null,
+    updated_at: new Date().toISOString(),
+  } as never, { onConflict: "user_id" } as never);
+}
+
+export async function getSubscription(userId: string): Promise<VSubscription | null> {
+  if (!userId || !isDatabaseConfigured()) return null;
+  const s = getSupabaseAdminClient();
+  const { data } = await s.from("v_subscriptions" as never).select("*").eq("user_id", norm(userId)).maybeSingle();
+  return (data as unknown as VSubscription) ?? null;
+}
+
+export async function countActiveTestsThisMonth(userId: string): Promise<number> {
+  if (!userId || !isDatabaseConfigured()) return 0;
+  const s = getSupabaseAdminClient();
+  const since = new Date(); since.setUTCDate(1); since.setUTCHours(0, 0, 0, 0);
+  // Only launched tests consume the monthly quota — abandoned drafts don't.
+  const { count } = await s.from("v_tests" as never).select("*", { count: "exact", head: true }).eq("user_id", norm(userId)).neq("status", "draft").gte("created_at", since.toISOString());
+  return count ?? 0;
+}
+
+// Dedup a subscription-invoice credit grant by Stripe invoice id.
+export async function recordInvoiceGrant(userId: string, plan: string, credits: number, invoiceId: string): Promise<boolean> {
+  if (!isDatabaseConfigured()) return false;
+  const s = getSupabaseAdminClient();
+  const { count } = await s.from("v_payments" as never).select("*", { count: "exact", head: true }).eq("stripe_id", invoiceId);
+  if ((count ?? 0) > 0) return false;
+  await s.from("v_payments" as never).insert({ user_id: norm(userId), stripe_id: invoiceId, kind: "subscription", sku: plan, credits, status: "paid" } as never);
+  return true;
+}
+
 export const OPTION_LETTERS = LETTERS;
