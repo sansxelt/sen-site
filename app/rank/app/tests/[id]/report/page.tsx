@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
-import { getTestWithOptions, getReport, OPTION_LETTERS, type VOption } from "@/lib/v-db";
+import { getTestWithOptions, getReport, ensureReportAnalysis, OPTION_LETTERS, type VOption } from "@/lib/v-db";
 import { CloseButton } from "../close-button";
 
 export const metadata: Metadata = { title: "Results — Vraelis" };
+export const maxDuration = 60; // first view of a completed test generates the AI analysis
 
 function Msg({ title, body }: { title: string; body?: string }) {
   return (
@@ -37,7 +38,8 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
 
   const { test, options } = data;
   const optById: Record<string, VOption> = Object.fromEntries(options.map((o) => [o.id, o]));
-  const report = await getReport(id);
+  let report = await getReport(id);
+  if (report && test.status === "complete") report = (await ensureReportAnalysis(id)) ?? report;
 
   // In progress (no report yet)
   if (!report || test.status !== "complete") {
@@ -86,6 +88,39 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
           <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 4 }}>{r.recommendation}</p>
         </div>
       </div>
+
+      {/* AI analysis */}
+      {r.analysis && (
+        <div className="card" style={{ marginBottom: 22 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Vraelis analysis</span>
+            <span className="pill" style={{ color: "var(--fg-4)" }}>confidence: {r.analysis.confidence}</span>
+          </div>
+          <p style={{ fontSize: 15, color: "var(--fg-1)", lineHeight: 1.55, marginBottom: 16, fontWeight: 500 }}>{r.analysis.summary}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }} className="cols-2">
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Why it won</div>
+              <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55 }}>{r.analysis.why_winner}</p>
+            </div>
+            {r.analysis.weaknesses.length > 0 && (
+              <div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--money)", marginBottom: 8 }}>What held the others back</div>
+                <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
+                  {r.analysis.weaknesses.map((w, i) => <li key={i} style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5 }}>{w}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+          {r.analysis.suggestions.length > 0 && (
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line-1)" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Make the winner stronger</div>
+              <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5 }}>
+                {r.analysis.suggestions.map((sug, i) => <li key={i} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5 }}>{sug}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* breakdown */}
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Breakdown · {r.total} votes</div>

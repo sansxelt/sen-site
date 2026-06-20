@@ -2,6 +2,7 @@
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { refund } from "./v-credits";
+import type { ReportAnalysis } from "./v-ai";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 
@@ -20,6 +21,7 @@ export type VReport = {
     winner_option_id: string;
     comments: { option_id: string; reason: string }[];
     recommendation: string;
+    analysis?: ReportAnalysis | null;
   };
 };
 
@@ -151,6 +153,43 @@ export async function getReport(testId: string): Promise<VReport | null> {
   const s = getSupabaseAdminClient();
   const { data } = await s.from("v_reports" as never).select("*").eq("test_id", testId).maybeSingle();
   return (data as unknown as VReport) ?? null;
+}
+
+// Lazily generate + cache the AI analysis the first time a completed report is
+// viewed (so the cost/latency lands on the buyer, not the last voter).
+export async function ensureReportAnalysis(testId: string): Promise<VReport | null> {
+  const rep = await getReport(testId);
+  if (!rep) return null;
+  if ("analysis" in rep.results) return rep; // already attempted (cached, even if null)
+  const data = await getTestWithOptions(testId);
+  if (!data) return rep;
+  const { test, options } = data;
+  const letterFor = (id: string) => { const o = options.find((x) => x.id === id); return o ? LETTERS[o.position] : "?"; };
+  let analysis: ReportAnalysis | null = null;
+  try {
+    const { analyzeReport } = await import("./v-ai");
+    analysis = await analyzeReport({
+      title: test.title,
+      category: test.category,
+      options: rep.results.ranked.map((r) => ({ letter: LETTERS[r.position], pct: r.pct, votes: r.votes, isWinner: r.id === rep.results.winner_option_id })),
+      comments: rep.results.comments.map((c) => ({ letter: letterFor(c.option_id), reason: c.reason })),
+    });
+  } catch { /* fail-soft */ }
+  const newResults = { ...rep.results, analysis };
+  const s = getSupabaseAdminClient();
+  await s.from("v_reports" as never).update({ results: newResults } as never).eq("test_id", testId);
+  return { ...rep, results: newResults };
+}
+
+// Credit pack purchase — deduped by Stripe session id so a webhook retry can't
+// double-grant. Returns true only on the first (fresh) processing.
+export async function recordPackPurchase(userId: string, sku: string, credits: number, stripeId: string): Promise<boolean> {
+  if (!isDatabaseConfigured()) return false;
+  const s = getSupabaseAdminClient();
+  const { count } = await s.from("v_payments" as never).select("*", { count: "exact", head: true }).eq("stripe_id", stripeId);
+  if ((count ?? 0) > 0) return false;
+  await s.from("v_payments" as never).insert({ user_id: norm(userId), stripe_id: stripeId, kind: "credit_pack", sku, credits, status: "paid" } as never);
+  return true;
 }
 
 export const OPTION_LETTERS = LETTERS;

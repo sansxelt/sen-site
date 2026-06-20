@@ -41,7 +41,10 @@ export default async function Dashboard() {
           <div style={{ fontFamily: "var(--font-display)", fontSize: 30, fontWeight: 700, color: "var(--fg-1)", lineHeight: 1 }}>{bal}<span style={{ fontSize: 14, color: "var(--fg-4)", fontWeight: 500, marginLeft: 8 }}>credits</span></div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 6 }}>1 credit = 1 real human vote. Out of credits? Vote on others&apos; tests to earn more.</p>
         </div>
-        <a href="/vote" className="btn btn--ghost">Vote &amp; earn <span aria-hidden>→</span></a>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <a href="/app/credits" className="btn btn--ghost">Buy credits</a>
+          <a href="/vote" className="btn btn--ghost">Vote &amp; earn</a>
+        </div>
       </div>
 
       {tests.length === 0 ? (
