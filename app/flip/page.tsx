@@ -87,13 +87,13 @@ export default function FlipLanding() {
         <div className="wrap" style={{ position: "relative", paddingTop: "clamp(44px, 7vw, 80px)", paddingBottom: "clamp(40px, 6vw, 72px)" }}>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.05fr)", gap: "clamp(32px, 5vw, 64px)", alignItems: "center" }} className="cols-stack">
             <div>
-              <p className="eyebrow rise" data-d="1">For resellers — by the photo</p>
+              <p className="eyebrow rise" data-d="1">AI commerce automation</p>
               <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.4rem, 4.6vw, 3.7rem)", marginBottom: 20 }}>
-                List a thrift find in <span className="em">seconds</span>.
+                List anything you sell, in <span className="em">seconds</span>.
               </h1>
               <p className="rise" data-d="3" style={{ fontSize: "clamp(1.05rem, 1.4vw, 1.22rem)", color: "var(--fg-2)", maxWidth: 540, marginBottom: 16, lineHeight: 1.5 }}>
-                Photograph your item. Vraelis writes the whole listing — keyword-tuned titles for eBay,
-                Poshmark, Depop &amp; Mercari, a clean description, hashtags, and a fast / market / high price.
+                Snap your inventory — Vraelis writes the whole listing for every marketplace, prices it, then
+                helps you post and keep it in sync. For resellers, store owners, and suppliers alike.
               </p>
               <p className="rise" data-d="3" style={{ fontSize: "clamp(1rem, 1.2vw, 1.1rem)", fontWeight: 600, color: "var(--fg-1)", maxWidth: 540, marginBottom: 28, lineHeight: 1.45 }}>
                 Free for your first 3 listings. No card to start.

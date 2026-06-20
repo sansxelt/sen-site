@@ -81,7 +81,7 @@ const sansxelMetadata: Metadata = {
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
-    default: "Vraelis — list a thrift find in seconds",
+    default: "Vraelis — list anything you sell, in seconds",
     template: "%s",
   },
   description:
