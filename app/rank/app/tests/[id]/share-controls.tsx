@@ -2,19 +2,21 @@
 
 import { useState } from "react";
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://vraelis.com";
+
 export function ShareControls({ testId, enabled: e0, token: t0 }: { testId: string; enabled: boolean; token: string | null }) {
   const [enabled, setEnabled] = useState(e0);
-  const [token, setToken] = useState<string | null>(t0);
+  const [shareUrl, setShareUrl] = useState(e0 && t0 ? `${SITE}/r/${t0}` : "");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
-  const url = enabled && token ? `https://vraelis.com/r/${token}` : "";
+  const url = enabled ? shareUrl : "";
 
   async function act(action: "enable" | "disable" | "regenerate") {
     setBusy(true);
     try {
       const r = await fetch("/api/v/share", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId, action }) });
       const j = await r.json().catch(() => ({}));
-      if (r.ok) { setEnabled(!!j.enabled); setToken(j.token ?? null); }
+      if (r.ok) { setEnabled(!!j.enabled); setShareUrl(j.url ?? (j.enabled && j.token ? `${SITE}/r/${j.token}` : "")); }
     } finally { setBusy(false); }
   }
   function copy() {

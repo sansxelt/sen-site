@@ -47,8 +47,21 @@ export default async function PublicReport({ params }: { params: Promise<{ token
 
   const { test, options, report } = data;
 
-  // In progress
-  if (!report || test.status !== "complete") {
+  // Only active (collecting) and complete (with a report) are viewable publicly.
+  if (test.status !== "active" && test.status !== "complete") return <Unavailable />;
+  if (test.status === "complete" && !report) {
+    return (
+      <Frame>
+        <div style={{ textAlign: "center", padding: "clamp(40px, 7vw, 80px) 0" }}>
+          <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", marginBottom: 10 }}>This test has closed</h1>
+          <p className="lead-copy" style={{ margin: "0 auto" }}>No report was generated for it.</p>
+        </div>
+      </Frame>
+    );
+  }
+
+  // In progress (actively collecting votes)
+  if (test.status === "active") {
     const pct = Math.min(100, Math.round((test.votes_valid / Math.max(1, test.votes_target)) * 100));
     return (
       <Frame>
@@ -71,7 +84,8 @@ export default async function PublicReport({ params }: { params: Promise<{ token
     );
   }
 
-  // Complete
+  // Complete with report
+  if (!report) return <Unavailable />; // unreachable (handled above) — satisfies the type checker
   return (
     <Frame>
       <p className="eyebrow">Report · complete</p>

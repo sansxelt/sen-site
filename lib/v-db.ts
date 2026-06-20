@@ -285,9 +285,11 @@ export async function getReport(testId: string): Promise<VReport | null> {
 export async function setShare(testId: string, userId: string, action: "enable" | "disable" | "regenerate"): Promise<{ enabled: boolean; token: string | null } | null> {
   if (!testId || !isDatabaseConfigured()) return null;
   const s = getSupabaseAdminClient();
-  const { data } = await s.from("v_tests" as never).select("user_id,share_token").eq("id", testId).maybeSingle();
-  const row = data as unknown as { user_id: string; share_token: string | null } | null;
+  const { data } = await s.from("v_tests" as never).select("user_id,status,share_token").eq("id", testId).maybeSingle();
+  const row = data as unknown as { user_id: string; status: string; share_token: string | null } | null;
   if (!row || row.user_id !== norm(userId)) return null;
+  // Only launched tests can be published; disable is always allowed.
+  if (action !== "disable" && row.status !== "active" && row.status !== "complete") return null;
   let token = row.share_token;
   let enabled: boolean;
   if (action === "disable") {
@@ -296,7 +298,8 @@ export async function setShare(testId: string, userId: string, action: "enable" 
     if (action === "regenerate" || !token) token = crypto.randomBytes(18).toString("base64url"); // 144-bit unguessable
     enabled = true;
   }
-  await s.from("v_tests" as never).update({ share_token: token, share_enabled: enabled } as never).eq("id", testId);
+  const { error } = await s.from("v_tests" as never).update({ share_token: token, share_enabled: enabled } as never).eq("id", testId);
+  if (error) { console.error("setShare:", error.message); return null; }
   return { enabled, token };
 }
 
