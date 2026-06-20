@@ -55,7 +55,8 @@ export default function NewTest() {
   const [category, setCategory] = useState("thumbnail");
   const [audience, setAudience] = useState("general");
   const [votes, setVotes] = useState(50);
-  const [images, setImages] = useState<string[]>([]);
+  const [assets, setAssets] = useState<{ url: string; path: string | null }[]>([]);
+  const [uploading, setUploading] = useState(0);
   const [texts, setTexts] = useState<string[]>(["", ""]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -78,7 +79,7 @@ export default function NewTest() {
   const activeUsed = ctx.activeTests ?? 0;
   const planName = ctx.plan ? ctx.plan.charAt(0).toUpperCase() + ctx.plan.slice(1) : "Free";
 
-  const optionCount = isText ? texts.map((t) => t.trim()).filter(Boolean).length : images.length;
+  const optionCount = isText ? texts.map((t) => t.trim()).filter(Boolean).length : assets.length;
   const overVotes = votes > maxVotes;
   const atTestCap = ctx.signedIn && activeUsed >= activeCap;
   const lowCredits = ctx.signedIn && votes > balance;
@@ -93,19 +94,36 @@ export default function NewTest() {
     : { t: "Ready to launch", tone: "ok" };
   const toneColor = status.tone === "ok" ? "var(--acc-deep)" : status.tone === "warn" ? "var(--money)" : "var(--err)";
 
-  function addImages(files: FileList) {
+  async function addImages(files: FileList) {
     setError("");
     const arr = Array.from(files);
     if (arr.some((f) => !f.type.startsWith("image/"))) { setError("Unsupported file — use JPG or PNG images."); return; }
     if (arr.some((f) => f.size > MAX_FILE_MB * 1024 * 1024)) { setError(`Image too large — keep each under ${MAX_FILE_MB}MB.`); return; }
-    const room = maxOptions - images.length;
-    const list = arr.slice(0, Math.max(0, room));
-    Promise.all(list.map((f) => resize(f))).then((out) => setImages((p) => [...p, ...out].slice(0, maxOptions))).catch(() => setError("Couldn't read an image — try JPG or PNG."));
+    const list = arr.slice(0, Math.max(0, maxOptions - assets.length));
+    if (!list.length) return;
+    setUploading((n) => n + list.length);
+    for (const f of list) {
+      try {
+        const dataUrl = await resize(f);
+        const r = await fetch("/api/v/upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dataUrl }) });
+        const j = await r.json().catch(() => ({}));
+        if (r.status === 413) setError("That image is too large — try a smaller one.");
+        else if (j.url) setAssets((p) => (p.length < maxOptions ? [...p, { url: j.url as string, path: (j.path as string) ?? null }] : p));
+        else setError("Couldn't upload an image — try again.");
+      } catch { setError("Couldn't read an image — try JPG or PNG."); }
+      finally { setUploading((n) => Math.max(0, n - 1)); }
+    }
+  }
+
+  function removeAsset(i: number) {
+    const a = assets[i];
+    setAssets((p) => p.filter((_, j) => j !== i));
+    if (a?.path) fetch(`/api/v/upload?path=${encodeURIComponent(a.path)}`, { method: "DELETE" }).catch(() => {});
   }
 
   async function submit() {
     setError("");
-    const options = isText ? texts.map((t) => t.trim()).filter(Boolean).map((t) => ({ label: t })) : images.map((a) => ({ asset: a }));
+    const options = isText ? texts.map((t) => t.trim()).filter(Boolean).map((t) => ({ label: t })) : assets.map((a) => ({ asset: a.url, path: a.path ?? undefined }));
     if (!title.trim()) return setError("Give your test a title.");
     if (options.length < 2) return setError(isText ? "Add at least 2 text options." : "Upload at least 2 images.");
     setBusy(true);
@@ -182,13 +200,16 @@ export default function NewTest() {
                   <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-1)" }}>Drop images here or tap to choose</div>
                   <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 4 }}>2–{maxOptions} options · JPG or PNG · up to {MAX_FILE_MB}MB each</div>
                 </div>
-                {images.length > 0 && (
+                {(assets.length > 0 || uploading > 0) && (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(92px, 1fr))", gap: 10, marginTop: 14 }}>
-                    {images.map((src, i) => (
-                      <div key={i} style={{ position: "relative", aspectRatio: "1/1", borderRadius: 10, border: "1px solid var(--line-2)", backgroundImage: `url(${src})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+                    {assets.map((a, i) => (
+                      <div key={a.url} style={{ position: "relative", aspectRatio: "1/1", borderRadius: 10, border: "1px solid var(--line-2)", backgroundImage: `url(${a.url})`, backgroundSize: "cover", backgroundPosition: "center" }}>
                         <span style={{ position: "absolute", top: 6, left: 6, width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.55)", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11 }}>{optLetter(i)}</span>
-                        <button onClick={() => setImages((a) => a.filter((_, j) => j !== i))} aria-label="remove" style={{ position: "absolute", top: -7, right: -7, width: 22, height: 22, borderRadius: "50%", border: "none", background: "var(--fg-1)", color: "var(--bg-1)", fontSize: 13, cursor: "pointer" }}>×</button>
+                        <button onClick={() => removeAsset(i)} aria-label="remove" style={{ position: "absolute", top: -7, right: -7, width: 22, height: 22, borderRadius: "50%", border: "none", background: "var(--fg-1)", color: "var(--bg-1)", fontSize: 13, cursor: "pointer" }}>×</button>
                       </div>
+                    ))}
+                    {Array.from({ length: uploading }).map((_, i) => (
+                      <div key={`up-${i}`} style={{ aspectRatio: "1/1", borderRadius: 10, border: "1px dashed var(--line-3)", display: "grid", placeItems: "center", color: "var(--fg-4)", fontFamily: "var(--font-mono)", fontSize: 10.5 }}>Uploading…</div>
                     ))}
                   </div>
                 )}
@@ -224,8 +245,8 @@ export default function NewTest() {
               {status.cta && <a href={status.cta.href} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>{status.cta.label}</a>}
             </div>
             {error && <p style={{ color: "var(--err)", fontSize: 13 }}>{error}</p>}
-            <button onClick={submit} disabled={busy || !ready} className="btn btn--lg" style={{ justifyContent: "center", opacity: busy || !ready ? 0.55 : 1 }}>
-              {busy ? "Launching…" : <>Launch test · {votes} credits</>}
+            <button onClick={submit} disabled={busy || uploading > 0 || !ready} className="btn btn--lg" style={{ justifyContent: "center", opacity: busy || uploading > 0 || !ready ? 0.55 : 1 }}>
+              {busy ? "Launching…" : uploading > 0 ? "Uploading…" : <>Launch test · {votes} credits</>}
             </button>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", lineHeight: 1.6 }}>
               Credits held in escrow → real people vote → invalid votes filtered → unused credits refunded → report generated.

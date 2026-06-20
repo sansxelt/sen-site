@@ -174,8 +174,9 @@ begin
 
   for v_opt in select * from jsonb_array_elements(coalesce(p_options, '[]'::jsonb)) loop
     exit when v_pos >= p_max_options;
-    insert into v_test_options (test_id, position, asset_url, label)
-      values (v_id, v_pos, nullif(v_opt->>'asset',''), nullif(v_opt->>'label',''));
+    insert into v_test_options (test_id, position, asset_url, label, asset_path, mime_type, size_bytes)
+      values (v_id, v_pos, nullif(v_opt->>'asset',''), nullif(v_opt->>'label',''),
+              nullif(v_opt->>'path',''), nullif(v_opt->>'mime',''), nullif(v_opt->>'size','')::int);
     v_pos := v_pos + 1;
   end loop;
 
@@ -316,3 +317,18 @@ begin
 
   return jsonb_build_object('status','ok','vote_status',v_vote_status,'earned',v_earned,'votes_valid',v_valid,'should_complete', v_valid >= v_target);
 end; $$;
+
+-- ── Storage migration: option images move from base64 to Supabase Storage URLs ──
+-- asset_url now holds EITHER a Storage public URL (new uploads) or a base64 data
+-- URL (old tests) — both render in url()/<img>. The extra columns track Storage
+-- objects for cleanup/backfill. Old base64 columns are kept (nothing dropped).
+alter table v_test_options add column if not exists asset_path text;   -- storage object path (null for base64 / external)
+alter table v_test_options add column if not exists mime_type  text;
+alter table v_test_options add column if not exists size_bytes int;
+
+-- Public bucket for creative option assets. Public read (assets are shown to
+-- voters/embed anyway); uploads happen only through the service-role server.
+-- (You can also create this in the Storage dashboard — bucket name below, Public.)
+insert into storage.buckets (id, name, public)
+  values ('vraelis-test-assets', 'vraelis-test-assets', true)
+  on conflict (id) do nothing;

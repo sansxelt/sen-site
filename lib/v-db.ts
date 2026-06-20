@@ -49,7 +49,7 @@ export async function getPlan(userId: string): Promise<string> {
 
 export async function createTest(args: {
   userId: string; title: string; context?: string; category: string; audience: string;
-  votesTarget: number; options: { asset?: string; label?: string }[];
+  votesTarget: number; options: { asset?: string; label?: string; path?: string; mime?: string; size?: number }[];
 }): Promise<string | null> {
   if (!isDatabaseConfigured()) return null;
   const s = getSupabaseAdminClient();
@@ -59,7 +59,13 @@ export async function createTest(args: {
   } as never).select("id").single();
   if (error) { console.error("createTest:", error.message); return null; }
   const id = (data as unknown as { id: string }).id;
-  const rows = args.options.map((o, i) => ({ test_id: id, position: i, asset_url: o.asset ?? null, label: o.label ?? null }));
+  const rows = args.options.map((o, i) => {
+    const row: Record<string, unknown> = { test_id: id, position: i, asset_url: o.asset ?? null, label: o.label ?? null };
+    if (o.path) row.asset_path = o.path;
+    if (o.mime) row.mime_type = o.mime;
+    if (typeof o.size === "number") row.size_bytes = o.size;
+    return row;
+  });
   const ins = await s.from("v_test_options" as never).insert(rows as never);
   if (ins.error) {
     // Don't leave a launchable zero-option test (would crash report generation).
@@ -203,7 +209,7 @@ export async function completeTest(testId: string): Promise<void> {
 // non-atomic JS path when the RPC isn't present yet, so launches never break.
 export async function launchTest(args: {
   userId: string; title: string; context?: string; category: string; audience: string;
-  votesTarget: number; options: { asset?: string; label?: string }[]; activeLimit: number; maxOptions: number;
+  votesTarget: number; options: { asset?: string; label?: string; path?: string; mime?: string; size?: number }[]; activeLimit: number; maxOptions: number;
 }): Promise<{ status: "ok" | "insufficient_credits" | "plan_limit" | "err"; id?: string; needed?: number; limit?: number }> {
   if (!isDatabaseConfigured()) return { status: "err" };
   const s = getSupabaseAdminClient();

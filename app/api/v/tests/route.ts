@@ -34,9 +34,12 @@ export async function POST(req: Request) {
 
   const opts = rawOptions
     .slice(0, ent.maxOptions)
-    .map((o: { asset?: string; label?: string }) => ({
+    .map((o: { asset?: string; label?: string; path?: string; mime?: string; size?: number }) => ({
       asset: typeof o?.asset === "string" ? o.asset : undefined,
       label: typeof o?.label === "string" ? o.label.slice(0, 120) : undefined,
+      path: typeof o?.path === "string" ? o.path : undefined,
+      mime: typeof o?.mime === "string" ? o.mime : undefined,
+      size: typeof o?.size === "number" ? o.size : undefined,
     }))
     .filter((o: { asset?: string; label?: string }) => o.asset || o.label);
 
