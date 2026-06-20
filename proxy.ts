@@ -8,6 +8,8 @@ import type { NextRequest } from "next/server";
 
 const CLEAN_EXACT: Record<string, string> = {
   "/": "/rank",
+  "/pricing": "/rank/pricing",
+  "/developers": "/rank/developers",
   "/privacy": "/v/privacy",
   "/terms": "/v/terms",
   "/refunds": "/v/refunds",

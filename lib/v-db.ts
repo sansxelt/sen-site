@@ -410,4 +410,11 @@ export async function overrideVoteStatus(judgmentId: string, status: "valid" | "
   return true;
 }
 
+export async function listRecentLedger(userId: string, limit = 12): Promise<{ delta: number; reason: string; created_at: string }[]> {
+  if (!userId || !isDatabaseConfigured()) return [];
+  const s = getSupabaseAdminClient();
+  const { data } = await s.from("v_credit_ledger" as never).select("delta,reason,created_at").eq("user_id", norm(userId)).order("created_at", { ascending: false }).limit(limit);
+  return (data as unknown as { delta: number; reason: string; created_at: string }[]) ?? [];
+}
+
 export const OPTION_LETTERS = LETTERS;
