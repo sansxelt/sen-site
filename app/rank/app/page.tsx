@@ -116,6 +116,7 @@ export default async function Dashboard() {
         </div>
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           {isAdmin(email) && <a href="/app/admin" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Admin</a>}
+          <a href="/app/data" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Data</a>
           <a href="/app/billing" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</a>
           <a href="/app/new" className="btn">New test <span aria-hidden>→</span></a>
         </div>

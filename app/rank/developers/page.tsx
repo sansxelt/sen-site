@@ -26,6 +26,22 @@ const POLL = `curl https://vraelis.com/api/v1/tests/{id} \\
 const EMBED = `<script async src="https://vraelis.com/embed.js"
         data-vraelis-test="YOUR_TEST_ID"></script>`;
 
+const EXPORT_CURL = `curl "https://vraelis.com/api/v1/tests/{id}/export?format=json" \\
+  -H "X-Api-Key: vr_live_..."
+# CSV breakdown: ?format=csv`;
+
+const EXPORT_SHAPE = `{
+  "test_id": "…", "title": "Which thumbnail?",
+  "status": "complete",
+  "votes_valid": 122, "votes_filtered": 14,
+  "winner": { "option": "B", "pct": 61 },
+  "options": [ { "option": "A", "votes": 47, "pct": 39 }, … ],
+  "comments": [ { "option": "B", "reason": "cleaner" } ],
+  "analysis": { "summary": "…", "confidence": "high" },
+  "quality": { "valid": 122, "filtered": 14,
+    "filtered_reasons": { "too_fast": 9, "spam_comment": 5 } }
+}`;
+
 function Code({ children }: { children: string }) {
   return <pre style={{ fontFamily: "var(--font-code, monospace)", fontSize: 12.5, color: "var(--fg-1)", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 10, padding: "14px 16px", overflowX: "auto", lineHeight: 1.55, margin: 0 }}><code>{children}</code></pre>;
 }
@@ -71,8 +87,24 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Export */}
+      <section id="export" className="section" style={{ background: "var(--bg-2)" }}>
+        <div className="wrap">
+          <div style={{ maxWidth: 660, marginBottom: "clamp(20px, 3vw, 32px)" }}>
+            <p className="eyebrow">Preference data exports</p>
+            <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Pull preference data into your product.</h2>
+            <p className="lead-copy">Use Vraelis exports to pull preference results into dashboards, training-data pipelines, analytics tools, or product workflows — as JSON or CSV. Owner- or API-key-authenticated.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 18, alignItems: "start" }} className="cols-stack">
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Export — JSON or CSV</div><Code>{EXPORT_CURL}</Code></div>
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Response shape</div><Code>{EXPORT_SHAPE}</Code></div>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 14, maxWidth: 720 }}>Includes the winner, vote breakdown, percentages, <strong style={{ color: "var(--fg-2)" }}>valid vs filtered</strong> vote quality, comments, and the AI analysis. Never includes account email, voter identities, or raw IP/device data.</p>
+        </div>
+      </section>
+
       {/* Embed */}
-      <section id="embed" className="section" style={{ background: "var(--bg-2)" }}>
+      <section id="embed" className="section">
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
             <div>

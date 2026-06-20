@@ -6,6 +6,7 @@ import { CloseButton } from "../close-button";
 import { EmbedSnippet } from "../embed-snippet";
 import { AnalysisPanel } from "../analysis-panel";
 import { ShareControls } from "../share-controls";
+import { ExportControls } from "../export-controls";
 import { ReportBody, OptionThumb } from "../report-body";
 
 export const metadata: Metadata = { title: "Report — Vraelis" };
@@ -90,6 +91,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
 
       <ReportBody results={r} options={options} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
+
+      <ExportControls testId={test.id} />
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 22 }}>
         <a href="/app/new" className="btn">Run another test <span aria-hidden>→</span></a>

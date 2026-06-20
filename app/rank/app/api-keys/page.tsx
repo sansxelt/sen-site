@@ -23,7 +23,11 @@ curl -X POST https://vraelis.com/api/v1/tests \\
 curl https://vraelis.com/api/v1/tests/TEST_ID -H "X-Api-Key: YOUR_KEY"
 
 # Check your credit balance
-curl https://vraelis.com/api/v1/credits -H "X-Api-Key: YOUR_KEY"`;
+curl https://vraelis.com/api/v1/credits -H "X-Api-Key: YOUR_KEY"
+
+# Export preference data (JSON or CSV) for dashboards / training pipelines
+curl "https://vraelis.com/api/v1/tests/TEST_ID/export?format=json" -H "X-Api-Key: YOUR_KEY"
+curl "https://vraelis.com/api/v1/tests/TEST_ID/export?format=csv"  -H "X-Api-Key: YOUR_KEY"`;
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<Key[]>([]);
@@ -65,6 +69,14 @@ export default function ApiKeysPage() {
         <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
       </div>
       <p className="lead-copy" style={{ marginBottom: 24 }}>Add human preference testing to your own app or AI tool. Send creative options, get back a ranked result.</p>
+
+      <div className="card" style={{ marginBottom: 24, background: "var(--bg-2)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Preference data exports</div>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed test results as JSON or CSV — winner, vote breakdown, valid-vs-filtered quality, comments, and AI analysis — for dashboards, analytics, or training pipelines.</p>
+        </div>
+        <a href="/developers#export" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Export docs →</a>
+      </div>
 
       {err && (
         <div className="card" style={{ marginBottom: 20, borderColor: "var(--line-2)" }}>

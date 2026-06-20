@@ -461,4 +461,38 @@ export async function listRecentLedger(userId: string, limit = 12): Promise<{ de
   return (data as unknown as { delta: number; reason: string; created_at: string }[]) ?? [];
 }
 
+// Lightweight aggregate for the owner's data surface (/app/data).
+export async function ownerStats(userId: string): Promise<{
+  completed: number; active: number; totalValid: number; totalFiltered: number;
+  byCategory: { category: string; count: number }[];
+  recent: { id: string; title: string; category: string; winner: string | null; votes: number }[];
+}> {
+  const empty = { completed: 0, active: 0, totalValid: 0, totalFiltered: 0, byCategory: [], recent: [] };
+  if (!userId || !isDatabaseConfigured()) return empty;
+  const s = getSupabaseAdminClient();
+  const { data } = await s.from("v_tests" as never).select("id,title,category,status,votes_valid").eq("user_id", norm(userId)).order("created_at", { ascending: false }).limit(500);
+  const all = (data as unknown as { id: string; title: string; category: string; status: string; votes_valid: number }[]) ?? [];
+  const completedTests = all.filter((t) => t.status === "complete");
+  const totalValid = all.reduce((a, t) => a + (t.votes_valid || 0), 0);
+  const ids = all.map((t) => t.id);
+  const { count } = ids.length ? await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).in("test_id", ids).eq("status", "rejected") : { count: 0 };
+
+  const catMap: Record<string, number> = {};
+  for (const t of completedTests) catMap[t.category] = (catMap[t.category] ?? 0) + 1;
+  const byCategory = Object.entries(catMap).map(([category, c]) => ({ category, count: c })).sort((a, b) => b.count - a.count).slice(0, 6);
+
+  const recentCompleted = completedTests.slice(0, 5);
+  const recIds = recentCompleted.map((t) => t.id);
+  const { data: reps } = recIds.length ? await s.from("v_reports" as never).select("test_id,results").in("test_id", recIds) : { data: [] };
+  const repMap = Object.fromEntries(((reps as unknown as { test_id: string; results: { winner_option_id?: string | null; ranked?: { id: string; position: number; pct: number }[] } }[]) ?? []).map((r) => [r.test_id, r.results]));
+  const recent = recentCompleted.map((t) => {
+    const res = repMap[t.id];
+    let winner: string | null = null;
+    if (res?.winner_option_id) { const w = (res.ranked ?? []).find((x) => x.id === res.winner_option_id); winner = w ? `${LETTERS[w.position]} · ${w.pct}%` : null; }
+    return { id: t.id, title: t.title, category: t.category, winner, votes: t.votes_valid };
+  });
+
+  return { completed: completedTests.length, active: all.filter((t) => t.status === "active").length, totalValid, totalFiltered: count ?? 0, byCategory, recent };
+}
+
 export const OPTION_LETTERS = LETTERS;
