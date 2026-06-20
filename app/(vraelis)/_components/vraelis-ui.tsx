@@ -1332,15 +1332,6 @@ export function VraelisShell({
   signedIn: boolean;
   children: ReactNode;
 }) {
-  const pathname = usePathname() || "";
-  // The signed-in app area shouldn't get the marketing "Start free" CTA.
-  // (URL bar shows /account or /app; internal route is /v/account.)
-  const isAppArea =
-    pathname.startsWith("/account") ||
-    pathname.startsWith("/app") ||
-    pathname.startsWith("/checkout") ||
-    pathname.startsWith("/v/account") ||
-    pathname.startsWith("/v/checkout");
   return (
     <SignedInContext.Provider value={signedIn}>
       <div className="vraelis-root">
@@ -1349,7 +1340,6 @@ export function VraelisShell({
           <Nav signedIn={signedIn} />
         </div>
         {children}
-        {!isAppArea && <FinalCTA />}
         <SiteFooter />
       </div>
     </SignedInContext.Provider>
