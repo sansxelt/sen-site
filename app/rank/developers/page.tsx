@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import { ogMeta } from "@/lib/og-meta";
 
-export const metadata: Metadata = {
+export const metadata = ogMeta({
   title: "Developers — Vraelis API & embed",
   description: "Add human preference testing to your app. Send generated options to the Vraelis API or drop in the embeddable “Test with Vraelis” widget and get back what real users prefer.",
-};
+  path: "/developers",
+});
 
 const CURL = `curl https://vraelis.com/api/v1/tests \\
   -H "X-Api-Key: vr_live_..." \\

@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
 import { PLAN_CATALOG } from "@/lib/v-plans";
+import { ogMeta } from "@/lib/og-meta";
 
-export const metadata: Metadata = {
+export const metadata = ogMeta({
   title: "Vraelis — test generated content with real users",
-  description:
-    "Vraelis is a feedback network for AI apps and creative teams. Test generated options with real users, get clear reports on what wins and why, and turn feedback into revenue.",
-};
+  description: "A feedback network for AI apps and creative teams. Test generated options with real users, get clear reports on what wins, and turn feedback into revenue.",
+  path: "/",
+});
 
 const STEPS = [
   { k: "01", t: "Upload or send creative options", d: "Drop in 2–8 versions from your tool or pipeline — generated images, ads, thumbnails, landing pages, brand assets, UI concepts, copy variations.", tag: "Web · API · embed" },
@@ -22,6 +22,17 @@ const AUDIENCE = [
 ];
 
 const TESTABLE = ["Generated creative", "Campaign concepts", "Product visuals", "Landing pages", "Brand assets", "UI concepts", "Content variations", "Thumbnails & covers"];
+
+const SUPPORTS: [string, string][] = [
+  ["Real-user voting", "Quality-filtered humans, not bots."],
+  ["Valid vs filtered quality", "Too-fast, duplicate & spam votes are rejected."],
+  ["Public shareable reports", "Send a read-only verdict to clients."],
+  ["Embeddable tests", "Collect votes on any site with one line."],
+  ["API for external apps", "Send options, get a ranked result."],
+  ["Credit-based pricing", "1 credit = 1 valid human judgment."],
+  ["On-site checkout", "Cards & wallets — never leave Vraelis."],
+  ["Storage-backed assets", "Fast, CDN-served creative."],
+];
 
 export default function RankLanding() {
   return (
@@ -186,6 +197,25 @@ export default function RankLanding() {
               </div>
             ))}
             <div className="card"><div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18 }}>Enterprise</div><div style={{ fontSize: 13, color: "var(--fg-4)" }}>Custom volume + SLA</div></div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── What Vraelis supports ── */}
+      <section className="section" style={{ background: "var(--bg-2)" }}>
+        <div className="wrap">
+          <div style={{ maxWidth: 660, marginBottom: "clamp(24px, 3vw, 36px)" }}>
+            <p className="eyebrow">What Vraelis supports today</p>
+            <h2 className="display" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.6rem)" }}>A complete loop, <span className="em">already live</span>.</h2>
+            <p className="lead-copy" style={{ marginTop: 8 }}>Built for AI apps, creators, and creative teams — from upload to verdict to a shareable report.</p>
+          </div>
+          <div className="cols-4" style={{ gap: 12 }}>
+            {SUPPORTS.map(([t, d]) => (
+              <div key={t} className="card" style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}><span style={{ color: "var(--acc)" }}>✓</span><span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14.5 }}>{t}</span></div>
+                <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{d}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

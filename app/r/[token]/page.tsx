@@ -1,11 +1,28 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getSharedReport, OPTION_LETTERS } from "@/lib/v-db";
+import { ogMeta } from "@/lib/og-meta";
 import { ReportBody, OptionThumb } from "@/app/rank/app/tests/[id]/report-body";
 import { AnalysisPanel } from "@/app/rank/app/tests/[id]/analysis-panel";
 
-// Tokened links shouldn't be search-indexed; the owner shares them directly.
-export const metadata: Metadata = { title: "Report — Vraelis", robots: { index: false, follow: false } };
+// Report-specific preview (title + verdict), static OG image, noindex (tokened).
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+  const data = await getSharedReport(token);
+  if (!data) return ogMeta({ title: "Report — Vraelis", description: "See which creative option real users preferred.", path: `/r/${token}`, index: false });
+  const { test, report } = data;
+  let description = "See which creative option real users preferred.";
+  if (report && test.status === "complete") {
+    const r = report.results;
+    const win = r.winner_option_id ? r.ranked.find((x) => x.id === r.winner_option_id) : null;
+    description = win
+      ? `Real users preferred Option ${OPTION_LETTERS[win.position]} — ${win.pct}%. See the full Vraelis report.`
+      : "A clear, real-user verdict on which creative wins. See the full Vraelis report.";
+  } else if (test.status === "active") {
+    description = "This creative test is collecting real-user votes on Vraelis.";
+  }
+  return ogMeta({ title: `Vraelis Report: ${test.title}`, description, path: `/r/${token}`, index: false });
+}
 
 function Frame({ children }: { children: ReactNode }) {
   return (

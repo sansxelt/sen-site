@@ -81,32 +81,28 @@ const sansxelMetadata: Metadata = {
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
-    default: "Vraelis — test which creative real people prefer",
+    default: "Vraelis — test generated content with real users",
     template: "%s",
   },
   description:
-    "Vraelis is a human preference engine for creative content. Upload your options — thumbnails, ads, logos, icons, designs — and real people vote on which one to launch.",
+    "Vraelis is a feedback network for AI apps and creative teams. Test generated options with real users, get clear reports on what wins, and turn feedback into revenue.",
   alternates: { canonical: "https://vraelis.com" },
   icons: { icon: "/vraelis/mark.jpg" },
   openGraph: {
     type: "website",
     url: "https://vraelis.com",
     siteName: "Vraelis",
-    title: "Test which creative real people prefer.",
-    description:
-      "Upload your options. Real people vote. Vraelis tells you what to launch.",
-    images: [{ url: "/vraelis/mark.jpg", alt: "Vraelis" }],
+    title: "Test generated content with real users",
+    description: "Real people vote on your creative options. Vraelis tells you what wins before you launch.",
+    images: [{ url: "/og", width: 1200, height: 630, alt: "Vraelis" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Test which creative real people prefer.",
-    description: "Upload your options. Real people vote. Vraelis tells you what to launch.",
-    images: ["/vraelis/mark.jpg"],
+    title: "Test generated content with real users",
+    description: "Real people vote on your creative options. Vraelis tells you what wins before you launch.",
+    images: ["/og"],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: { index: true, follow: true },
 };
 
 export async function generateMetadata(): Promise<Metadata> {

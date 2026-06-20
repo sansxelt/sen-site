@@ -1,0 +1,17 @@
+import type { Metadata } from "next";
+
+// Consistent Open Graph + Twitter metadata for Vraelis public pages. The OG
+// image is the dynamic 1200×630 card at /og (see app/og/route.tsx).
+const OG_IMAGE = { url: "/og", width: 1200, height: 630, alt: "Vraelis — test generated content with real users" };
+
+export function ogMeta({ title, description, path = "/", index = true }: { title: string; description: string; path?: string; index?: boolean }): Metadata {
+  const url = `https://vraelis.com${path}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { type: "website", url, siteName: "Vraelis", title, description, images: [OG_IMAGE] },
+    twitter: { card: "summary_large_image", title, description, images: ["/og"] },
+    robots: { index, follow: index },
+  };
+}
