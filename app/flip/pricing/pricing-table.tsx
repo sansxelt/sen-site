@@ -121,6 +121,10 @@ export function PricingTable() {
                 />
               )}
 
+              {p.key !== "free" && p.price.lifetime !== null && cycle === "lifetime" && (
+                <a href={`/flip/pay?plan=${p.key}&cycle=lifetime`} style={{ display: "block", textAlign: "center", marginTop: 10, fontSize: 12.5, fontWeight: 600, color: ink ? "rgba(255,255,255,0.92)" : "var(--acc-deep)", textDecoration: "none" }}>or pay with USDC →</a>
+              )}
+
               <div style={{ marginTop: 22 }}>
                 {p.feats.map((f) => (
                   <div key={f} style={{ display: "flex", gap: 9, padding: "8px 0", borderTop: `1px solid ${c.rule}`, alignItems: "baseline" }}>

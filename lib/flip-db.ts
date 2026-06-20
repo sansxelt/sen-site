@@ -172,6 +172,43 @@ export async function upsertConnection(
     .upsert({ user_id: norm(userId), platform, status, handle } as never, { onConflict: "user_id,platform" } as never);
 }
 
+export type CryptoInvoice = {
+  id: string; user_id: string; plan: string; cycle: string;
+  amount_units: number; chain: string; to_address: string; start_block: number;
+  status: string; tx_hash: string | null; created_at: string;
+};
+
+export async function createCryptoInvoice(args: {
+  userId: string; plan: string; cycle: string; amountUnits: number;
+  chain: string; toAddress: string; startBlock: number;
+}): Promise<CryptoInvoice | null> {
+  if (!isDatabaseConfigured()) return null;
+  const supabase = getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("flip_crypto_invoices" as never)
+    .insert({
+      user_id: norm(args.userId), plan: args.plan, cycle: args.cycle,
+      amount_units: args.amountUnits, chain: args.chain, to_address: args.toAddress, start_block: args.startBlock,
+    } as never)
+    .select("*")
+    .single();
+  if (error) { console.error("createCryptoInvoice failed:", error.message); return null; }
+  return data as unknown as CryptoInvoice;
+}
+
+export async function getCryptoInvoice(id: string): Promise<CryptoInvoice | null> {
+  if (!id || !isDatabaseConfigured()) return null;
+  const supabase = getSupabaseAdminClient();
+  const { data } = await supabase.from("flip_crypto_invoices" as never).select("*").eq("id", id).maybeSingle();
+  return (data as unknown as CryptoInvoice) ?? null;
+}
+
+export async function markCryptoInvoicePaid(id: string, txHash: string): Promise<void> {
+  if (!isDatabaseConfigured()) return;
+  const supabase = getSupabaseAdminClient();
+  await supabase.from("flip_crypto_invoices" as never).update({ status: "paid", tx_hash: txHash } as never).eq("id", id);
+}
+
 // Used by the Stripe webhook to flip a user to/from Pro.
 export async function setFlipPlan(args: {
   userId?: string | null;

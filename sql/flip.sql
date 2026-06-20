@@ -54,5 +54,22 @@ create table if not exists flip_connections (
   primary key (user_id, platform)
 );
 
+-- Direct-USDC crypto invoices. A unique on-chain amount (base price + sub-cent
+-- random offset) ties an anonymous USDC transfer back to one invoice/user.
+create table if not exists flip_crypto_invoices (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      text not null,
+  plan         text not null,
+  cycle        text not null,
+  amount_units bigint not null,        -- USDC smallest units (6 decimals)
+  chain        text not null default 'base',
+  to_address   text not null,          -- merchant receiving wallet
+  start_block  bigint not null default 0,
+  status       text not null default 'pending',  -- 'pending' | 'paid' | 'expired'
+  tx_hash      text,
+  created_at   timestamptz not null default now()
+);
+create index if not exists flip_crypto_invoices_user_idx on flip_crypto_invoices (user_id, created_at desc);
+
 -- Access is server-only via the Supabase service-role key (lib/supabase-admin),
 -- which bypasses RLS; every query is scoped by user_id / anon_id in app code.

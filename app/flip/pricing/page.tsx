@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { PricingTable } from "./pricing-table";
-import { UpgradeButton } from "../account/upgrade-button";
 
 export const metadata: Metadata = {
   title: "Pricing — Vraelis",
@@ -41,23 +40,23 @@ export default function FlipPricing() {
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(28px, 4vw, 56px)", alignItems: "center" }} className="cols-stack">
             <div>
               <p className="eyebrow">Payments</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.8rem)", marginBottom: 16 }}>Pay how you want — including <span className="em">crypto</span>.</h2>
-              <p className="lead-copy" style={{ marginBottom: 20 }}>Card and Apple Pay for the quick path, or settle on-chain. Pick your method at checkout — same price either way.</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.8rem)", marginBottom: 16 }}>Cards via Stripe. Crypto <span className="em">on-chain</span>.</h2>
+              <p className="lead-copy" style={{ marginBottom: 20 }}>Subscriptions run on card or Apple Pay. Prefer crypto? Pay a <b>lifetime</b> plan in USDC straight to our wallet, right here on Vraelis — no redirect, no middleman.</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {["Card", "Apple Pay", "BTC", "ETH", "USDC"].map((m) => <span key={m} className="pill">{m}</span>)}
+                {["Card", "Apple Pay", "USDC on Base"].map((m) => <span key={m} className="pill">{m}</span>)}
               </div>
             </div>
             <div className="card" style={{ padding: "clamp(22px, 2.4vw, 30px)" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>Crypto checkout</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>Pay lifetime in USDC</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {[["Bitcoin", "BTC"], ["Ethereum", "ETH"], ["USD Coin", "USDC"]].map(([n, t]) => (
-                  <div key={t} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)" }}>
+                {[["Seller — lifetime", "$290", "seller"], ["Growth — lifetime", "$790", "growth"]].map(([n, price]) => (
+                  <div key={n} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "12px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)" }}>
                     <span style={{ fontSize: 13.5, color: "var(--fg-1)" }}>{n}</span>
-                    <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)" }}>{t}</span>
+                    <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color: "var(--acc-deep)" }}>{price}</span>
                   </div>
                 ))}
               </div>
-              <UpgradeButton label="Get Growth" plan="growth" cycle="monthly" className="btn" style={{ width: "100%", justifyContent: "center", marginTop: 16 }} />
+              <a href="/flip/pay?plan=growth&cycle=lifetime" className="btn" style={{ width: "100%", justifyContent: "center", marginTop: 16 }}>Pay in USDC →</a>
             </div>
           </div>
         </div>
