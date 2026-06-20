@@ -35,7 +35,7 @@ export default async function SignInPage({
   // so the default has to be supplied as the INPUT when no callbackUrl
   // came in — not as a `||` fallback on the output.
   if (session?.user?.email) {
-    redirect(getSafeRedirectPath(callbackUrl ?? (vraelis ? "/v/account" : "/app")));
+    redirect(getSafeRedirectPath(callbackUrl ?? "/app"));
   }
 
   // Vraelis gets its own light, centered, green-accent sign-in surface
@@ -47,7 +47,7 @@ export default async function SignInPage({
     return (
       <div style={{ padding: "clamp(40px, 8vw, 96px) 20px" }}>
         <VraelisSignIn
-          callbackUrl={getSafeRedirectPath(callbackUrl ?? "/v/account")}
+          callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
           initialMode={modeParam === "signup" ? "signup" : "signin"}
         />
       </div>

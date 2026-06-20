@@ -11,6 +11,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const planKey = sp.plan && PLAN_CATALOG.some((p) => p.plan === sp.plan) ? sp.plan : "";
   const cycle: "monthly" | "yearly" = sp.cycle === "yearly" ? "yearly" : "monthly";
+  // Nothing chosen → send them to pick, don't silently start a $5 checkout.
+  if (!planKey && !sp.amount) redirect("/app/credits");
   const amount = Math.max(5, Math.min(9999, parseInt(sp.amount || "0", 10) || 0));
 
   const session = await auth();

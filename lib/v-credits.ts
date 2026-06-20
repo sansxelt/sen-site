@@ -98,7 +98,9 @@ export async function refund(userId: string, testId: string, amount: number): Pr
   // unfilled monthly credits stay this-cycle and can't be laundered into
   // permanent credits; otherwise refund as purchased.
   const exp = latestMonthlyExpiry(await liveRows(userId));
-  await grant(userId, amount, "refund", { bucket: exp ? "monthly" : "purchased", expiresAt: exp, refType: "test", refId: testId });
+  // extRef makes the refund idempotent per test (ledger unique index), so a
+  // completion race can't refund the unfilled escrow twice.
+  await grant(userId, amount, "refund", { bucket: exp ? "monthly" : "purchased", expiresAt: exp, refType: "test", refId: testId, extRef: `refund:${testId}` });
 }
 
 function latestMonthlyExpiry(rows: LedgerRow[]): string | null {

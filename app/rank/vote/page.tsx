@@ -15,10 +15,11 @@ export default function VotePage() {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [earned, setEarned] = useState(0);
+  const [err, setErr] = useState("");
   const startRef = useRef(0);
 
   const fetchNext = useCallback(async () => {
-    setPhase("loading"); setSelected(""); setReason("");
+    setPhase("loading"); setSelected(""); setReason(""); setErr("");
     try {
       const r = await fetch("/api/v/vote/next");
       if (r.status === 401) { setPhase("signin"); return; }
@@ -32,11 +33,21 @@ export default function VotePage() {
 
   async function submit() {
     if (!test || !selected || busy) return;
-    setBusy(true);
+    setBusy(true); setErr("");
     try {
       const r = await fetch("/api/v/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId: test.id, optionId: selected, reason, timeSpentMs: Date.now() - startRef.current }) });
       if (r.status === 401) { setPhase("signin"); return; }
-      if (r.ok) { setEarned((e) => e + 1); fetchNext(); }
+      const j = await r.json().catch(() => ({}));
+      if (r.ok) {
+        if (j.earned) setEarned((e) => e + 1); // counter follows what was actually granted
+        fetchNext();
+      } else if (r.status === 409 || r.status === 400) {
+        fetchNext(); // already voted / test just filled or closed — move to the next
+      } else {
+        setErr("Couldn't save your vote — try again.");
+      }
+    } catch {
+      setErr("Network error — try again.");
     } finally { setBusy(false); }
   }
 
@@ -85,8 +96,9 @@ export default function VotePage() {
             })}
           </div>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why? (optional — one line)" rows={2} style={{ width: "100%", padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box", marginBottom: 14, resize: "vertical" }} />
+          {err && <p style={{ color: "#d33", fontSize: 13, marginBottom: 10 }}>{err}</p>}
           <button onClick={submit} disabled={!selected || busy} className="btn btn--lg" style={{ justifyContent: "center", width: "100%", opacity: !selected || busy ? 0.55 : 1 }}>{busy ? "Saving…" : "Submit & next →"}</button>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", marginTop: 12 }}>You earn 1 credit per vote. Be honest — quality is checked.</p>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", marginTop: 12 }}>You earn 1 credit per vote (up to a daily cap). Be honest — quality is checked.</p>
         </div>
       )}
     </div>

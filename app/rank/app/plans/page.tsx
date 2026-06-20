@@ -21,20 +21,31 @@ export default function PlansPage() {
   const [signedIn, setSignedIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [prices, setPrices] = useState<Record<string, Record<string, { available: boolean; amount?: number }>>>({});
+  const [note, setNote] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
-    fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setSignedIn(true); setPlan(j.plan || "free"); } }).catch(() => {});
+    const loadMe = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setSignedIn(true); setPlan(j.plan || "free"); } }).catch(() => {});
+    loadMe();
     fetch("/api/v/plans").then((r) => r.json()).then((j) => setPrices(j.plans || {})).catch(() => {});
+    const sid = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("session_id") : null;
+    if (sid) {
+      setSubscribed(true);
+      window.history.replaceState({}, "", "/app/plans");
+      let tries = 0;
+      const iv = setInterval(() => { tries += 1; loadMe(); if (tries >= 6) clearInterval(iv); }, 2000);
+      return () => clearInterval(iv);
+    }
   }, []);
 
   async function manageBilling() {
-    setBusy(true);
+    setBusy(true); setNote("");
     try {
       const r = await fetch("/api/v/portal", { method: "POST" });
-      const j = await r.json();
+      const j = await r.json().catch(() => ({}));
       if (j.url) window.location.href = j.url;
-      else alert(j.error === "no_subscription" ? "No billing account yet — subscribe to a plan first." : "Couldn't open billing.");
-    } finally { setBusy(false); }
+      else setNote(j.error === "no_subscription" ? "No billing account yet — subscribe to a plan first." : "Couldn't open billing — please try again.");
+    } catch { setNote("Couldn't open billing — please try again."); } finally { setBusy(false); }
   }
 
   return (
@@ -45,10 +56,17 @@ export default function PlansPage() {
           <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)" }}>Pick a plan</h1>
           <p className="lead-copy" style={{ marginTop: 4 }}>Plans refresh credits every month. Need more mid-cycle? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Top up anytime →</a></p>
         </div>
-        {signedIn && plan !== "free" && (
+        {signedIn && (
           <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>
         )}
       </div>
+
+      {subscribed && (
+        <div className="card" style={{ marginTop: 18, borderColor: "var(--acc)", background: "var(--acc-soft)" }}>
+          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Subscription received — your plan and monthly credits will activate within a few seconds.</p>
+        </div>
+      )}
+      {note && <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 12 }}>{note}</p>}
 
       {/* cycle toggle */}
       <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: 999, border: "1px solid var(--line-2)", background: "var(--bg-1)", margin: "22px 0 30px" }}>

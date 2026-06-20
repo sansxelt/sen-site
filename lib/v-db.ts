@@ -60,8 +60,19 @@ export async function createTest(args: {
   const id = (data as unknown as { id: string }).id;
   const rows = args.options.map((o, i) => ({ test_id: id, position: i, asset_url: o.asset ?? null, label: o.label ?? null }));
   const ins = await s.from("v_test_options" as never).insert(rows as never);
-  if (ins.error) { console.error("createTest options:", ins.error.message); }
+  if (ins.error) {
+    // Don't leave a launchable zero-option test (would crash report generation).
+    console.error("createTest options:", ins.error.message);
+    await s.from("v_tests" as never).delete().eq("id", id);
+    return null;
+  }
   return id;
+}
+
+export async function deleteTest(testId: string): Promise<void> {
+  if (!testId || !isDatabaseConfigured()) return;
+  const s = getSupabaseAdminClient();
+  await s.from("v_tests" as never).delete().eq("id", testId); // options cascade
 }
 
 export async function setTestActive(testId: string, creditsHeld: number): Promise<void> {
@@ -91,10 +102,12 @@ export async function nextTestForVoter(voterId: string): Promise<{ test: VTest; 
   const s = getSupabaseAdminClient();
   const { data: tests } = await s.from("v_tests" as never).select("*").eq("status", "active").neq("user_id", norm(voterId)).order("created_at", { ascending: true }).limit(25);
   const list = (tests as unknown as VTest[]) ?? [];
+  // Fetch this voter's judged test ids once (avoids an N+1 count per candidate).
+  const { data: judged } = await s.from("v_judgments" as never).select("test_id").eq("voter_id", norm(voterId));
+  const judgedIds = new Set(((judged as unknown as { test_id: string }[]) ?? []).map((j) => j.test_id));
   for (const t of list) {
     if (t.votes_valid >= t.votes_target) continue;
-    const { count } = await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).eq("test_id", t.id).eq("voter_id", norm(voterId));
-    if ((count ?? 0) > 0) continue;
+    if (judgedIds.has(t.id)) continue;
     const { data: options } = await s.from("v_test_options" as never).select("*").eq("test_id", t.id).order("position");
     return { test: t, options: (options as unknown as VOption[]) ?? [] };
   }
@@ -127,7 +140,10 @@ export async function recordJudgment(args: {
     return "err";
   }
 
-  const nv = tt.votes_valid + 1;
+  // Derive the count from the source of truth (v_judgments) rather than a
+  // read-modify-write +1, so concurrent votes don't lose-update the counter.
+  const { count: valid } = await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).eq("test_id", args.testId).eq("status", "valid");
+  const nv = valid ?? tt.votes_valid + 1;
   await s.from("v_tests" as never).update({ votes_valid: nv } as never).eq("id", args.testId);
   if (nv >= tt.votes_target) await completeTest(args.testId);
   return "ok";
@@ -135,26 +151,47 @@ export async function recordJudgment(args: {
 
 // Tally valid judgments → report, mark complete, refund unfilled credits.
 export async function completeTest(testId: string): Promise<void> {
+  if (!testId || !isDatabaseConfigured()) return;
   const s = getSupabaseAdminClient();
+  // Single-winner gate: atomically flip active → complete. Only the caller that
+  // actually flips it runs the tally + refund, so a vote/close race (or two
+  // concurrent final votes) can't double-refund.
+  const { data: claimed } = await s.from("v_tests" as never)
+    .update({ status: "complete", completed_at: new Date().toISOString() } as never)
+    .eq("id", testId).eq("status", "active").select("id");
+  if (!claimed || (claimed as unknown[]).length === 0) return; // already completed elsewhere
+
   const data = await getTestWithOptions(testId);
-  if (!data || data.test.status === "complete") return;
+  if (!data) return;
   const { test, options } = data;
   const { data: judg } = await s.from("v_judgments" as never).select("option_id,reason").eq("test_id", testId).eq("status", "valid");
   const judgments = (judg as unknown as { option_id: string; reason: string | null }[]) ?? [];
-  const total = judgments.length || 1;
+  const total = judgments.length;
   const tally: Record<string, number> = {};
   for (const o of options) tally[o.id] = 0;
   for (const j of judgments) tally[j.option_id] = (tally[j.option_id] || 0) + 1;
   const ranked = options
-    .map((o) => ({ id: o.id, position: o.position, label: o.label, votes: tally[o.id] || 0, pct: Math.round(((tally[o.id] || 0) / total) * 100) }))
+    .map((o) => ({ id: o.id, position: o.position, label: o.label, votes: tally[o.id] || 0, pct: total ? Math.round(((tally[o.id] || 0) / total) * 100) : 0 }))
     .sort((a, b) => b.votes - a.votes);
-  const winner = ranked[0];
   const comments = judgments.filter((j) => j.reason && j.reason.trim()).map((j) => ({ option_id: j.option_id, reason: j.reason as string })).slice(0, 40);
-  const recommendation = `Option ${LETTERS[winner.position] ?? "?"} won with ${winner.pct}% of ${judgments.length} vote${judgments.length === 1 ? "" : "s"} — go with it.`;
-  const results = { total: judgments.length, ranked, winner_option_id: winner.id, comments, recommendation };
-  await s.from("v_reports" as never).upsert({ test_id: testId, winner_option_id: winner.id, results } as never, { onConflict: "test_id" } as never);
-  await s.from("v_tests" as never).update({ status: "complete", completed_at: new Date().toISOString() } as never).eq("id", testId);
-  const unfilled = Math.max(0, test.votes_target - judgments.length);
+
+  // Only call a winner with real signal AND a clear lead — never fabricate an
+  // "Option A — 0%" on an empty close, never silently break a tie.
+  const top = ranked[0], runnerUp = ranked[1];
+  const decisive = total >= 1 && top && (!runnerUp || top.votes > runnerUp.votes);
+  let winnerId: string | null = null;
+  let recommendation: string;
+  if (total === 0) {
+    recommendation = "Not enough votes yet to call a winner.";
+  } else if (!decisive) {
+    recommendation = `It's a tie at the top (${top.pct}%). Collect more votes to break it.`;
+  } else {
+    winnerId = top.id;
+    recommendation = `Option ${LETTERS[top.position] ?? "?"} won with ${top.pct}% of ${total} vote${total === 1 ? "" : "s"} — go with it.`;
+  }
+  const results = { total, ranked, winner_option_id: winnerId, comments, recommendation };
+  await s.from("v_reports" as never).upsert({ test_id: testId, winner_option_id: winnerId, results } as never, { onConflict: "test_id" } as never);
+  const unfilled = Math.max(0, test.votes_target - total);
   if (unfilled > 0) await refund(test.user_id, testId, unfilled);
 }
 
@@ -185,6 +222,10 @@ export async function ensureReportAnalysis(testId: string): Promise<VReport | nu
       comments: rep.results.comments.map((c) => ({ letter: letterFor(c.option_id), reason: c.reason })),
     });
   } catch { /* fail-soft */ }
+  // Only cache a SUCCESSFUL analysis. On a transient failure (timeout, overload,
+  // missing key) leave it unset so a later view retries, instead of caching null
+  // forever and permanently hiding the paid analysis.
+  if (!analysis) return rep;
   const newResults = { ...rep.results, analysis };
   const s = getSupabaseAdminClient();
   await s.from("v_reports" as never).update({ results: newResults } as never).eq("test_id", testId);

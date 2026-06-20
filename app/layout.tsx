@@ -95,6 +95,13 @@ const vraelisMetadata: Metadata = {
     title: "Test which creative real people prefer.",
     description:
       "Upload your options. Real people vote. Vraelis tells you what to launch.",
+    images: [{ url: "/vraelis/mark.jpg", alt: "Vraelis" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Test which creative real people prefer.",
+    description: "Upload your options. Real people vote. Vraelis tells you what to launch.",
+    images: ["/vraelis/mark.jpg"],
   },
   robots: {
     index: true,

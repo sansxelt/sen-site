@@ -8,18 +8,19 @@ export type Entitlements = {
   monthlyCredits: number;
   activeTestsPerMonth: number;
   maxOptions: number;
+  maxVotes: number;
   targeting: boolean;
   api: boolean;
   discord: boolean;
 };
 
 const TABLE: Record<Plan, Omit<Entitlements, "plan">> = {
-  free:       { monthlyCredits: 0,      activeTestsPerMonth: 1,     maxOptions: 4, targeting: false, api: false, discord: false },
-  starter:    { monthlyCredits: 150,    activeTestsPerMonth: 3,     maxOptions: 5, targeting: false, api: false, discord: false },
-  creator:    { monthlyCredits: 500,    activeTestsPerMonth: 10,    maxOptions: 6, targeting: true,  api: false, discord: false },
-  pro:        { monthlyCredits: 2000,   activeTestsPerMonth: 30,    maxOptions: 8, targeting: true,  api: false, discord: true  },
-  scale:      { monthlyCredits: 7500,   activeTestsPerMonth: 100,   maxOptions: 8, targeting: true,  api: true,  discord: true  },
-  enterprise: { monthlyCredits: 999999, activeTestsPerMonth: 99999, maxOptions: 8, targeting: true,  api: true,  discord: true  },
+  free:       { monthlyCredits: 0,      activeTestsPerMonth: 1,     maxOptions: 4, maxVotes: 100,  targeting: false, api: false, discord: false },
+  starter:    { monthlyCredits: 150,    activeTestsPerMonth: 3,     maxOptions: 5, maxVotes: 300,  targeting: false, api: false, discord: false },
+  creator:    { monthlyCredits: 500,    activeTestsPerMonth: 10,    maxOptions: 6, maxVotes: 500,  targeting: true,  api: false, discord: false },
+  pro:        { monthlyCredits: 2000,   activeTestsPerMonth: 30,    maxOptions: 8, maxVotes: 1000, targeting: true,  api: false, discord: true  },
+  scale:      { monthlyCredits: 7500,   activeTestsPerMonth: 100,   maxOptions: 8, maxVotes: 2000, targeting: true,  api: true,  discord: true  },
+  enterprise: { monthlyCredits: 999999, activeTestsPerMonth: 99999, maxOptions: 8, maxVotes: 5000, targeting: true,  api: true,  discord: true  },
 };
 
 export function entitlements(plan: string | null | undefined): Entitlements {

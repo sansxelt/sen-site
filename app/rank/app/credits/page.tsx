@@ -9,9 +9,21 @@ export default function CreditsPage() {
   const [amount, setAmount] = useState<number>(39);
   const [custom, setCustom] = useState("");
   const [bal, setBal] = useState<number | null>(null);
+  const [paid, setPaid] = useState(false);
 
   useEffect(() => {
-    fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) setBal(j.balance); }).catch(() => {});
+    const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) setBal(j.balance); }).catch(() => {});
+    load();
+    // Returned from Stripe? Credits land via the webhook a moment later — confirm
+    // it and poll the balance so a successful purchase never looks like it failed.
+    const sid = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("session_id") : null;
+    if (sid) {
+      setPaid(true);
+      window.history.replaceState({}, "", "/app/credits");
+      let tries = 0;
+      const iv = setInterval(() => { tries += 1; load(); if (tries >= 6) clearInterval(iv); }, 2000);
+      return () => clearInterval(iv);
+    }
   }, []);
 
   const usingCustom = custom !== "";
@@ -39,7 +51,13 @@ export default function CreditsPage() {
         </div>
         {bal !== null && <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--fg-1)" }}>{bal.toLocaleString()}<span style={{ fontSize: 13, color: "var(--fg-4)", fontWeight: 500, marginLeft: 6 }}>credits</span></span>}
       </div>
-      <p className="lead-copy" style={{ marginBottom: 28 }}>$1 = 10 credits. 1 credit = 1 real human vote. Credits don&apos;t expire.</p>
+      <p className="lead-copy" style={{ marginBottom: paid ? 16 : 28 }}>$1 = 10 credits. 1 credit = 1 real human vote. Credits don&apos;t expire.</p>
+
+      {paid && (
+        <div className="card" style={{ marginBottom: 24, borderColor: "var(--acc)", background: "var(--acc-soft)" }}>
+          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Payment received — your new credits will appear here within a few seconds.</p>
+        </div>
+      )}
 
       {/* recommended */}
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Recommended</div>

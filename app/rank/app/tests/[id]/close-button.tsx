@@ -4,18 +4,25 @@ import { useState } from "react";
 
 export function CloseButton({ testId }: { testId: string }) {
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
   async function close() {
     if (busy) return;
-    setBusy(true);
+    setBusy(true); setErr("");
     try {
       const r = await fetch(`/api/v/tests/${testId}/close`, { method: "POST" });
-      if (r.ok) window.location.reload();
-      else setBusy(false);
-    } catch { setBusy(false); }
+      if (r.ok) { window.location.reload(); return; }
+      const j = await r.json().catch(() => ({}));
+      // not_active = a vote just completed it — reload to show the finished report.
+      if (j.error === "not_active") { window.location.reload(); return; }
+      setErr("Couldn't close — try again."); setBusy(false);
+    } catch { setErr("Couldn't close — try again."); setBusy(false); }
   }
   return (
-    <button onClick={close} disabled={busy} className="btn">
-      {busy ? "Closing…" : "Close & see results now"}
-    </button>
+    <div>
+      <button onClick={close} disabled={busy} className="btn">
+        {busy ? "Closing…" : "Close & see results now"}
+      </button>
+      {err && <p style={{ color: "#d33", fontSize: 12, marginTop: 8 }}>{err}</p>}
+    </div>
   );
 }

@@ -69,8 +69,10 @@ export default function NewTest() {
         body: JSON.stringify({ title, context, category, audience, votesTarget: votes, options }),
       });
       if (res.status === 401) { signIn("google", { callbackUrl: "/app/new" }); return; }
-      const j = await res.json();
-      if (res.status === 402) { setError(`Not enough credits — this test needs ${j.needed}. Vote on others' tests to earn more, or top up later.`); return; }
+      const j = await res.json().catch(() => ({}));
+      if (res.status === 402) { setError(`Not enough credits — this test needs ${j.needed}. Vote on others' tests to earn more, or top up.`); return; }
+      if (res.status === 403 && j.error === "plan_limit") { setError(`You've hit your plan's ${j.limit} active test${j.limit === 1 ? "" : "s"} this month. Upgrade for more.`); return; }
+      if (res.status === 413) { setError("One of your images is too large. Try smaller or fewer images."); return; }
       if (!res.ok) { setError("Couldn't launch the test. Try again."); return; }
       window.location.href = `/app/tests/${j.id}/report`;
     } catch { setError("Network error — try again."); }

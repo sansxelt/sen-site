@@ -68,7 +68,7 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
   // Complete — full report
   const r = report.results;
   const max = Math.max(1, ...r.ranked.map((x) => x.votes));
-  const winner = optById[r.winner_option_id];
+  const winner = r.winner_option_id ? optById[r.winner_option_id] : undefined;
   const commentsByOption: Record<string, string[]> = {};
   for (const c of r.comments) (commentsByOption[c.option_id] ||= []).push(c.reason);
 
@@ -77,17 +77,25 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
       <p className="eyebrow">Results</p>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 18 }}>{test.title}</h1>
 
-      {/* winner */}
-      <div className="card" style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
-        <OptionThumb o={winner} size={72} />
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 4 }}>Winner</div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>
-            Option {OPTION_LETTERS[r.ranked[0].position]} — {r.ranked[0].pct}%
+      {/* winner — or an honest inconclusive state when there's no clear/decisive result */}
+      {winner ? (
+        <div className="card" style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
+          <OptionThumb o={winner} size={72} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 4 }}>Winner</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>
+              Option {OPTION_LETTERS[winner.position]} — {r.ranked.find((x) => x.id === winner.id)?.pct ?? 0}%
+            </div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 4 }}>{r.recommendation}</p>
           </div>
+        </div>
+      ) : (
+        <div className="card" style={{ marginBottom: 22 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 }}>Result</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, color: "var(--fg-1)" }}>No clear winner {r.total === 0 ? "yet" : "— it's close"}</div>
           <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 4 }}>{r.recommendation}</p>
         </div>
-      </div>
+      )}
 
       {/* AI analysis */}
       {r.analysis && (

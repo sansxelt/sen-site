@@ -7,7 +7,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 
-const client = new Anthropic(); // reads ANTHROPIC_API_KEY
+// Bound the call well under the report route's maxDuration (60s) so a slow/hung
+// Anthropic response surfaces as a caught error → analysis=null → the report
+// still renders, instead of the SDK's 10-minute default killing the request.
+const client = new Anthropic({ timeout: 45_000, maxRetries: 1 }); // reads ANTHROPIC_API_KEY
 
 const Analysis = z.object({
   summary: z.string(),                  // 1–2 sentence verdict
