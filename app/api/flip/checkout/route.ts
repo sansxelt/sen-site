@@ -1,8 +1,8 @@
-// POST /api/flip/checkout — start a Stripe Checkout for a paid Vraelis plan.
-// Body: { plan: "seller"|"growth"|"operator", cycle: "monthly"|"yearly"|"lifetime" }.
-// Maps plan+cycle to a Stripe price via env (STRIPE_PRICE_<PLAN>_<CYCLE>); the
-// shared webhook flips the account to 'pro' on completion. Lifetime = one-time
-// (mode "payment"); monthly/yearly = subscription.
+// POST /api/flip/checkout — start a Stripe EMBEDDED Checkout session for a paid
+// plan. Returns a client_secret that mounts on vraelis.com (no redirect to
+// checkout.stripe.com). Body: { plan, cycle }. Lifetime = one-time (mode
+// "payment"); monthly/yearly = subscription. The shared webhook flips the
+// account to 'pro' on completion (checkout.session.completed).
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
@@ -14,9 +14,6 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || APP_URL;
 const PLANS = new Set(["seller", "growth", "operator"]);
 const CYCLES = new Set(["monthly", "yearly", "lifetime"]);
 
-// Resolve the Stripe price id for a plan+cycle. Seller/monthly falls back to the
-// original single Pro price so existing checkout keeps working before the new
-// prices are created in Stripe.
 function resolvePrice(plan: string, cycle: string): string | null {
   const id = process.env[`STRIPE_PRICE_${plan.toUpperCase()}_${cycle.toUpperCase()}`];
   if (id) return id;
@@ -35,15 +32,17 @@ export async function POST(req: Request) {
   const cycle = CYCLES.has(body?.cycle) ? body.cycle : "monthly";
 
   const price = resolvePrice(plan, cycle);
-  if (!price) {
-    // Plan exists in the UI but its Stripe price hasn't been created yet.
-    return NextResponse.json({ error: "plan_unavailable", plan, cycle }, { status: 503 });
-  }
+  if (!price) return NextResponse.json({ error: "plan_unavailable", plan, cycle }, { status: 503 });
 
   try {
     const stripe = getStripe();
     const oneTime = cycle === "lifetime";
     const checkout = await stripe.checkout.sessions.create({
+      // This SDK's UiMode enum is mislabeled ("embedded_page"/"hosted_page"), but
+      // its OWN field docs (client_secret, return_url, success_url) say the real
+      // API value is "embedded" — and Stripe's servers only accept "embedded".
+      // Send the real value; cast past the bad enum type.
+      ui_mode: "embedded" as never,
       mode: oneTime ? "payment" : "subscription",
       line_items: [{ price, quantity: 1 }],
       customer_email: email,
@@ -51,10 +50,9 @@ export async function POST(req: Request) {
       metadata: { flip: "1", user_id: email, plan, cycle },
       ...(oneTime ? {} : { subscription_data: { metadata: { flip: "1", user_id: email, plan, cycle } } }),
       allow_promotion_codes: true,
-      success_url: `${SITE_URL}/flip/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE_URL}/flip/billing/cancel`,
+      return_url: `${SITE_URL}/flip/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     });
-    return NextResponse.json({ url: checkout.url });
+    return NextResponse.json({ clientSecret: checkout.client_secret });
   } catch (e) {
     console.error("[vraelis checkout] failed:", e);
     return NextResponse.json({ error: "checkout_failed" }, { status: 500 });

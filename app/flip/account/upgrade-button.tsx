@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
-import { signIn } from "next-auth/react";
+import { type CSSProperties } from "react";
 
+// Navigates to the on-site embedded checkout (no redirect off vraelis.com).
+// Auth is enforced by the /flip/checkout page (redirects to sign-in if needed).
 export function UpgradeButton({
   className,
   label = "Upgrade to Pro",
@@ -16,31 +17,13 @@ export function UpgradeButton({
   plan?: string;
   cycle?: string;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState(false);
-  async function go() {
-    if (busy) return;
-    setBusy(true); setErr(false);
-    try {
-      const res = await fetch("/api/flip/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, cycle }),
-      });
-      if (res.status === 401) { signIn("google", { callbackUrl: "/account" }); return; }
-      const j = await res.json();
-      if (j.url) { window.location.href = j.url; return; }
-      setErr(true); setBusy(false);
-    } catch { setErr(true); setBusy(false); }
-  }
   return (
-    <button
-      onClick={go}
-      disabled={busy}
+    <a
+      href={`/flip/checkout?plan=${plan}&cycle=${cycle}`}
       className={className ?? "btn"}
-      style={{ ...style, cursor: busy ? "default" : "pointer", opacity: busy ? 0.6 : 1 }}
+      style={style}
     >
-      {busy ? "Opening checkout…" : err ? "Try again" : <>{label} <span aria-hidden>→</span></>}
-    </button>
+      {label} <span aria-hidden>→</span>
+    </a>
   );
 }
