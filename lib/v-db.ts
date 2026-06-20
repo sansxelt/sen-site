@@ -1,7 +1,7 @@
 // Vraelis Rank — data access (Supabase service-role). Scoped by user_id in code.
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
-import { refund } from "./v-credits";
+import { refund, hold, grant, rewardsToday } from "./v-credits";
 import type { ReportAnalysis } from "./v-ai";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -193,6 +193,69 @@ export async function completeTest(testId: string): Promise<void> {
   await s.from("v_reports" as never).upsert({ test_id: testId, winner_option_id: winnerId, results } as never, { onConflict: "test_id" } as never);
   const unfilled = Math.max(0, test.votes_target - total);
   if (unfilled > 0) await refund(test.user_id, testId, unfilled);
+}
+
+// Atomic test launch — quota + balance check + create + options + escrow hold in
+// ONE transaction (v_launch_test RPC, advisory-locked per user). Falls back to the
+// non-atomic JS path when the RPC isn't present yet, so launches never break.
+export async function launchTest(args: {
+  userId: string; title: string; context?: string; category: string; audience: string;
+  votesTarget: number; options: { asset?: string; label?: string }[]; activeLimit: number; maxOptions: number;
+}): Promise<{ status: "ok" | "insufficient_credits" | "plan_limit" | "err"; id?: string; needed?: number; limit?: number }> {
+  if (!isDatabaseConfigured()) return { status: "err" };
+  const s = getSupabaseAdminClient();
+  const { data, error } = await s.rpc("v_launch_test" as never, {
+    p_user: norm(args.userId), p_title: args.title, p_context: args.context ?? null,
+    p_category: args.category, p_audience: args.audience, p_votes: args.votesTarget,
+    p_options: args.options, p_active_limit: args.activeLimit, p_max_options: args.maxOptions,
+  } as never);
+  if (!error && data) {
+    const r = data as unknown as { status: string; id?: string; needed?: number; limit?: number };
+    if (r.status === "ok") return { status: "ok", id: r.id };
+    if (r.status === "insufficient_credits") return { status: "insufficient_credits", needed: r.needed };
+    if (r.status === "plan_limit") return { status: "plan_limit", limit: r.limit };
+    return { status: "err" };
+  }
+  if (error && (error as { code?: string }).code !== "42883") console.error("launchTest rpc:", error.message);
+
+  // Fallback (pre-migration): non-atomic create → quota → hold → activate.
+  const used = await countActiveTestsThisMonth(args.userId);
+  if (used >= args.activeLimit) return { status: "plan_limit", limit: args.activeLimit };
+  const id = await createTest({ userId: args.userId, title: args.title, context: args.context, category: args.category, audience: args.audience, votesTarget: args.votesTarget, options: args.options });
+  if (!id) return { status: "err" };
+  const ok = await hold(args.userId, id, args.votesTarget);
+  if (!ok) { await deleteTest(id); return { status: "insufficient_credits", needed: args.votesTarget }; }
+  await setTestActive(id, args.votesTarget);
+  return { status: "ok", id };
+}
+
+// Atomic vote + daily-capped reward (v_record_vote RPC). Completion stays in JS.
+// Falls back to the JS path when the RPC isn't present yet.
+export async function recordVote(args: {
+  testId: string; voterId: string; optionId: string; reason?: string; timeSpentMs?: number; rewardCap: number;
+}): Promise<{ status: "ok" | "dup" | "invalid" | "err"; earned?: boolean }> {
+  if (!isDatabaseConfigured()) return { status: "err" };
+  const s = getSupabaseAdminClient();
+  const { data, error } = await s.rpc("v_record_vote" as never, {
+    p_test: args.testId, p_voter: norm(args.voterId), p_option: args.optionId,
+    p_reason: args.reason ?? null, p_time_spent: args.timeSpentMs ?? null, p_reward_cap: args.rewardCap,
+  } as never);
+  if (!error && data) {
+    const r = data as unknown as { status: string; earned?: boolean; should_complete?: boolean };
+    if (r.status === "ok" && r.should_complete) await completeTest(args.testId);
+    return { status: (r.status as "ok" | "dup" | "invalid") ?? "err", earned: r.earned };
+  }
+  if (error && (error as { code?: string }).code !== "42883") console.error("recordVote rpc:", error.message);
+
+  // Fallback (pre-migration): recordJudgment + capped reward in JS.
+  const res = await recordJudgment({ testId: args.testId, voterId: args.voterId, optionId: args.optionId, reason: args.reason, timeSpentMs: args.timeSpentMs });
+  if (res !== "ok") return { status: res };
+  let earned = false;
+  if ((await rewardsToday(args.voterId)) < args.rewardCap) {
+    await grant(args.voterId, 1, "reward", { refType: "vote", refId: args.testId, extRef: `reward:${args.testId}` });
+    earned = true;
+  }
+  return { status: "ok", earned };
 }
 
 export async function getReport(testId: string): Promise<VReport | null> {

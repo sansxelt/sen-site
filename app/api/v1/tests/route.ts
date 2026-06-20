@@ -3,8 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { apiAuth } from "../_auth";
-import { createTest, setTestActive, getPlan, countActiveTestsThisMonth, deleteTest } from "@/lib/v-db";
-import { hold } from "@/lib/v-credits";
+import { getPlan, launchTest } from "@/lib/v-db";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
 
 export const runtime = "nodejs";
@@ -42,20 +41,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "image_too_large" }, { status: 413 });
   }
 
-  const used = await countActiveTestsThisMonth(userId);
-  if (used >= ent.activeTestsPerMonth) {
-    return NextResponse.json({ error: "plan_limit", limit: ent.activeTestsPerMonth, plan: ent.plan }, { status: 403 });
-  }
-
-  const id = await createTest({ userId, title, category, audience, votesTarget: votes, options: opts });
-  if (!id) return NextResponse.json({ error: "create_failed" }, { status: 500 });
-
-  const ok = await hold(userId, id, votes);
-  if (!ok) {
-    await deleteTest(id);
-    return NextResponse.json({ error: "insufficient_credits", needed: votes }, { status: 402 });
-  }
-
-  await setTestActive(id, votes);
-  return NextResponse.json({ id, status: "active", votes, credits_charged: votes });
+  // Atomic: quota + balance + create + hold + activate in one transaction.
+  const r = await launchTest({ userId, title, category, audience, votesTarget: votes, options: opts, activeLimit: ent.activeTestsPerMonth, maxOptions: ent.maxOptions });
+  if (r.status === "plan_limit") return NextResponse.json({ error: "plan_limit", limit: r.limit, plan: ent.plan }, { status: 403 });
+  if (r.status === "insufficient_credits") return NextResponse.json({ error: "insufficient_credits", needed: r.needed }, { status: 402 });
+  if (r.status !== "ok") return NextResponse.json({ error: "create_failed" }, { status: 500 });
+  return NextResponse.json({ id: r.id, status: "active", votes, credits_charged: votes });
 }

@@ -132,3 +132,115 @@ create unique index if not exists v_payments_stripe_id_uidx
 alter table v_credit_ledger add column if not exists ext_ref text;
 create unique index if not exists v_ledger_extref_uidx
   on v_credit_ledger (user_id, reason, ext_ref) where ext_ref is not null;
+
+-- ── Atomic credit / quota RPCs (close concurrency races at the DB level) ──
+-- These wrap the check-then-write money paths in a single transaction under a
+-- per-user advisory lock, so concurrent/double-submitted requests can't overdraw
+-- the balance or slip past the active-test / reward caps. Idempotent to re-run.
+
+-- Launch a test atomically: verify the monthly active-test quota and the credit
+-- balance, then create + activate the test, insert its options, and escrow the
+-- hold (monthly bucket first, then purchased) — all or nothing.
+-- Returns jsonb: {status: ok|insufficient_credits|plan_limit|bad_request, id, needed, limit}.
+create or replace function v_launch_test(
+  p_user text, p_title text, p_context text, p_category text, p_audience text,
+  p_votes int, p_options jsonb, p_active_limit int, p_max_options int
+) returns jsonb language plpgsql as $$
+declare
+  v_user text := lower(trim(p_user));
+  v_used int; v_bal int; v_monthly int; v_monthly_exp timestamptz;
+  v_from_monthly int; v_from_purchased int;
+  v_id uuid; v_opt jsonb; v_pos int := 0;
+begin
+  if p_votes <= 0 then return jsonb_build_object('status','bad_request'); end if;
+  perform pg_advisory_xact_lock(hashtext(v_user)::bigint);
+
+  select count(*) into v_used from v_tests
+    where user_id = v_user and status <> 'draft'
+      and created_at >= (date_trunc('month', now() at time zone 'utc') at time zone 'utc');
+  if v_used >= p_active_limit then
+    return jsonb_build_object('status','plan_limit','limit',p_active_limit);
+  end if;
+
+  select coalesce(sum(delta),0) into v_bal from v_credit_ledger
+    where user_id = v_user and (expires_at is null or expires_at > now());
+  if v_bal < p_votes then
+    return jsonb_build_object('status','insufficient_credits','needed',p_votes);
+  end if;
+
+  insert into v_tests (user_id, title, context, category, audience, votes_target, status, credits_held)
+    values (v_user, p_title, nullif(p_context,''), p_category, p_audience, p_votes, 'active', p_votes)
+    returning id into v_id;
+
+  for v_opt in select * from jsonb_array_elements(coalesce(p_options, '[]'::jsonb)) loop
+    exit when v_pos >= p_max_options;
+    insert into v_test_options (test_id, position, asset_url, label)
+      values (v_id, v_pos, nullif(v_opt->>'asset',''), nullif(v_opt->>'label',''));
+    v_pos := v_pos + 1;
+  end loop;
+
+  select coalesce(sum(delta),0) into v_monthly from v_credit_ledger
+    where user_id = v_user and bucket = 'monthly' and (expires_at is null or expires_at > now());
+  select max(expires_at) into v_monthly_exp from v_credit_ledger
+    where user_id = v_user and bucket = 'monthly' and delta > 0 and (expires_at is null or expires_at > now());
+  v_from_monthly := greatest(0, least(p_votes, v_monthly));
+  v_from_purchased := p_votes - v_from_monthly;
+  if v_from_monthly > 0 then
+    insert into v_credit_ledger (user_id, delta, reason, bucket, expires_at, ref_type, ref_id)
+      values (v_user, -v_from_monthly, 'hold', 'monthly', v_monthly_exp, 'test', v_id);
+  end if;
+  if v_from_purchased > 0 then
+    insert into v_credit_ledger (user_id, delta, reason, bucket, ref_type, ref_id)
+      values (v_user, -v_from_purchased, 'hold', 'purchased', 'test', v_id);
+  end if;
+
+  return jsonb_build_object('status','ok','id',v_id);
+end; $$;
+
+-- Record a vote atomically: validate, insert the judgment (one per voter/test via
+-- the unique constraint), recount votes_valid, and grant the daily-capped reward
+-- (idempotent per voter/test via ext_ref) — all in one transaction.
+-- Returns jsonb: {status: ok|dup|invalid, earned, votes_valid, should_complete}.
+create or replace function v_record_vote(
+  p_test uuid, p_voter text, p_option uuid, p_reason text, p_time_spent int, p_reward_cap int
+) returns jsonb language plpgsql as $$
+declare
+  v_voter text := lower(trim(p_voter));
+  v_owner text; v_status text; v_valid_cur int; v_target int;
+  v_opt_ok int; v_valid int; v_reward_today int; v_earned boolean := false;
+begin
+  select user_id, status, votes_valid, votes_target
+    into v_owner, v_status, v_valid_cur, v_target
+    from v_tests where id = p_test;
+  if not found or v_status <> 'active' or v_owner = v_voter or v_valid_cur >= v_target then
+    return jsonb_build_object('status','invalid');
+  end if;
+  select count(*) into v_opt_ok from v_test_options where id = p_option and test_id = p_test;
+  if v_opt_ok = 0 then return jsonb_build_object('status','invalid'); end if;
+
+  begin
+    insert into v_judgments (test_id, voter_id, option_id, reason, time_spent_ms, status)
+      values (p_test, v_voter, p_option, nullif(p_reason,''), p_time_spent, 'valid');
+  exception when unique_violation then
+    return jsonb_build_object('status','dup');
+  end;
+
+  select count(*) into v_valid from v_judgments where test_id = p_test and status = 'valid';
+  update v_tests set votes_valid = v_valid where id = p_test;
+
+  perform pg_advisory_xact_lock(hashtext('reward:' || v_voter)::bigint);
+  select coalesce(sum(delta),0) into v_reward_today from v_credit_ledger
+    where user_id = v_voter and reason = 'reward'
+      and created_at >= (date_trunc('day', now() at time zone 'utc') at time zone 'utc');
+  if v_reward_today < p_reward_cap then
+    begin
+      insert into v_credit_ledger (user_id, delta, reason, bucket, ref_type, ref_id, ext_ref)
+        values (v_voter, 1, 'reward', 'purchased', 'vote', p_test, 'reward:' || p_test::text);
+      v_earned := true;
+    exception when unique_violation then
+      v_earned := false; -- already rewarded for this test
+    end;
+  end if;
+
+  return jsonb_build_object('status','ok','earned',v_earned,'votes_valid',v_valid,'should_complete', v_valid >= v_target);
+end; $$;

@@ -3,8 +3,8 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { ensureProfile, createTest, setTestActive, getPlan, countActiveTestsThisMonth, deleteTest } from "@/lib/v-db";
-import { ensureSignupGrant, hold } from "@/lib/v-credits";
+import { ensureProfile, getPlan, launchTest } from "@/lib/v-db";
+import { ensureSignupGrant } from "@/lib/v-credits";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
 
 export const runtime = "nodejs";
@@ -46,20 +46,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "image_too_large" }, { status: 413 });
   }
 
-  const used = await countActiveTestsThisMonth(email);
-  if (used >= ent.activeTestsPerMonth) {
-    return NextResponse.json({ error: "plan_limit", limit: ent.activeTestsPerMonth, plan: ent.plan }, { status: 403 });
-  }
-
-  const id = await createTest({ userId: email, title, context, category, audience, votesTarget, options: opts });
-  if (!id) return NextResponse.json({ error: "create_failed" }, { status: 500 });
-
-  const ok = await hold(email, id, votesTarget);
-  if (!ok) {
-    await deleteTest(id); // don't leave an orphan draft (+ its image rows) behind
-    return NextResponse.json({ error: "insufficient_credits", needed: votesTarget }, { status: 402 });
-  }
-
-  await setTestActive(id, votesTarget);
-  return NextResponse.json({ id, status: "active" });
+  // Atomic: quota + balance + create + hold + activate in one transaction.
+  const r = await launchTest({ userId: email, title, context, category, audience, votesTarget, options: opts, activeLimit: ent.activeTestsPerMonth, maxOptions: ent.maxOptions });
+  if (r.status === "plan_limit") return NextResponse.json({ error: "plan_limit", limit: r.limit, plan: ent.plan }, { status: 403 });
+  if (r.status === "insufficient_credits") return NextResponse.json({ error: "insufficient_credits", needed: r.needed }, { status: 402 });
+  if (r.status !== "ok") return NextResponse.json({ error: "create_failed" }, { status: 500 });
+  return NextResponse.json({ id: r.id, status: "active" });
 }
