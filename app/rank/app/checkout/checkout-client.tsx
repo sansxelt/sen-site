@@ -6,16 +6,16 @@ import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
 
-export function CheckoutClient({ sku }: { sku: string }) {
+export function CheckoutClient({ amount }: { amount: number }) {
   const fetchClientSecret = useCallback(async () => {
     const r = await fetch("/api/v/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sku }),
+      body: JSON.stringify({ amountDollars: amount }),
     });
     const j = await r.json();
     return (j.clientSecret as string) || "";
-  }, [sku]);
+  }, [amount]);
 
   return (
     <div style={{ borderRadius: "var(--r-sm)", overflow: "hidden" }}>

@@ -561,15 +561,15 @@ export async function POST(request: Request) {
         // Vraelis one-time + subscription checkouts land their plan here
         // too (belt-and-suspenders with the success-redirect recording).
         const s = event.data.object as Stripe.Checkout.Session;
-        if (s.metadata?.kind === "v_pack") {
-          // Vraelis Rank credit pack — grant credits once (deduped by session id).
+        if (s.metadata?.type === "credit_topup") {
+          // Vraelis credit top-up — grant credits once (deduped by session id).
           const userId = s.metadata.user_id ?? s.client_reference_id ?? null;
           const credits = parseInt(s.metadata.credits || "0", 10);
           if (userId && credits > 0) {
             const { recordPackPurchase } = await import("../../../../lib/v-db");
             const { grant } = await import("../../../../lib/v-credits");
-            if (await recordPackPurchase(userId, s.metadata.sku ?? "pack", credits, s.id)) {
-              await grant(userId, credits, "pack", { bucket: "purchased" });
+            if (await recordPackPurchase(userId, "credit_topup", credits, s.id)) {
+              await grant(userId, credits, "topup", { bucket: "purchased" });
             }
           }
         } else if (s.metadata?.flip === "1") {
