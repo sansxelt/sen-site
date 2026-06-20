@@ -1,5 +1,6 @@
 // Vraelis Rank — data access (Supabase service-role). Scoped by user_id in code.
 
+import crypto from "crypto";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { refund, hold, grant, rewardsToday } from "./v-credits";
 import type { ReportAnalysis } from "./v-ai";
@@ -11,6 +12,7 @@ export type VTest = {
   category: string; audience: string; status: string;
   votes_target: number; votes_valid: number; credits_held: number;
   created_at: string; completed_at: string | null;
+  share_token?: string | null; share_enabled?: boolean;
 };
 export type VOption = { id: string; test_id: string; position: number; asset_url: string | null; label: string | null };
 export type VReport = {
@@ -276,6 +278,39 @@ export async function getReport(testId: string): Promise<VReport | null> {
   const s = getSupabaseAdminClient();
   const { data } = await s.from("v_reports" as never).select("*").eq("test_id", testId).maybeSingle();
   return (data as unknown as VReport) ?? null;
+}
+
+// Owner-only: enable/disable/regenerate the public share link for a test.
+// Returns null if the test isn't found or the caller isn't the owner.
+export async function setShare(testId: string, userId: string, action: "enable" | "disable" | "regenerate"): Promise<{ enabled: boolean; token: string | null } | null> {
+  if (!testId || !isDatabaseConfigured()) return null;
+  const s = getSupabaseAdminClient();
+  const { data } = await s.from("v_tests" as never).select("user_id,share_token").eq("id", testId).maybeSingle();
+  const row = data as unknown as { user_id: string; share_token: string | null } | null;
+  if (!row || row.user_id !== norm(userId)) return null;
+  let token = row.share_token;
+  let enabled: boolean;
+  if (action === "disable") {
+    enabled = false;
+  } else {
+    if (action === "regenerate" || !token) token = crypto.randomBytes(18).toString("base64url"); // 144-bit unguessable
+    enabled = true;
+  }
+  await s.from("v_tests" as never).update({ share_token: token, share_enabled: enabled } as never).eq("id", testId);
+  return { enabled, token };
+}
+
+// Public, read-only: resolve a test + report by its share token (only when
+// sharing is enabled). No auth. Returns null for unknown/disabled tokens.
+export async function getSharedReport(token: string): Promise<{ test: VTest; options: VOption[]; report: VReport | null } | null> {
+  if (!token || !isDatabaseConfigured()) return null;
+  const s = getSupabaseAdminClient();
+  const { data } = await s.from("v_tests" as never).select("*").eq("share_token", token).eq("share_enabled", true).maybeSingle();
+  if (!data) return null;
+  const test = data as unknown as VTest;
+  const { data: options } = await s.from("v_test_options" as never).select("*").eq("test_id", test.id).order("position");
+  const report = await getReport(test.id);
+  return { test, options: (options as unknown as VOption[]) ?? [], report };
 }
 
 // Lazily generate + cache the AI analysis the first time a completed report is

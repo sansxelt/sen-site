@@ -6,9 +6,9 @@ type Analysis = { summary: string; why_winner: string; weaknesses: string[]; sug
 
 const headStyle = { fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 } as const;
 
-export function AnalysisPanel({ testId, initial }: { testId: string; initial: Analysis | null }) {
+export function AnalysisPanel({ testId, initial, readOnly }: { testId: string; initial: Analysis | null; readOnly?: boolean }) {
   const [analysis, setAnalysis] = useState<Analysis | null>(initial);
-  const [state, setState] = useState<"ready" | "loading" | "error">(initial ? "ready" : "loading");
+  const [state, setState] = useState<"ready" | "loading" | "error">(initial ? "ready" : readOnly ? "ready" : "loading");
 
   async function load() {
     setState("loading");
@@ -20,7 +20,10 @@ export function AnalysisPanel({ testId, initial }: { testId: string; initial: An
     } catch { setState("error"); }
   }
 
-  useEffect(() => { if (!initial) load(); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { if (!initial && !readOnly) load(); /* eslint-disable-next-line */ }, []);
+
+  // Public/read-only report with no cached analysis → render nothing.
+  if (readOnly && !analysis) return null;
 
   return (
     <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)" }}>

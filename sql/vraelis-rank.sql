@@ -332,3 +332,11 @@ alter table v_test_options add column if not exists size_bytes int;
 insert into storage.buckets (id, name, public)
   values ('vraelis-test-assets', 'vraelis-test-assets', true)
   on conflict (id) do nothing;
+
+-- ── Public report sharing (token-gated, read-only) ──
+-- An owner can publish a read-only public report at /r/<share_token>. Off by
+-- default; the token is a long random unguessable string. Disable flips the
+-- boolean (link dies, token kept); regenerate mints a new token (old link dies).
+alter table v_tests add column if not exists share_token   text;
+alter table v_tests add column if not exists share_enabled boolean not null default false;
+create unique index if not exists v_tests_share_token_uidx on v_tests (share_token) where share_token is not null;
