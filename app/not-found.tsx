@@ -36,7 +36,7 @@ export default function NotFound() {
         </h1>
 
         <h2 className="v404-head v404-in v404-d1">
-          This page went <span className="em">cold</span>.
+          This page doesn&rsquo;t <span className="em">exist</span>.
         </h2>
 
         <p className="v404-body v404-in v404-d2">
@@ -45,7 +45,7 @@ export default function NotFound() {
 
         <div className="v404-actions v404-in v404-d3">
           <Link href="/" className="btn btn--lg">Back home</Link>
-          <Link href="/how" className="v404-link">How Vraelis works</Link>
+          <Link href="/vote" className="v404-link">Vote &amp; earn credits</Link>
         </div>
       </div>
     </main>

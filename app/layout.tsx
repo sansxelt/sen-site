@@ -81,20 +81,20 @@ const sansxelMetadata: Metadata = {
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
-    default: "Vraelis — list anything you sell, in seconds",
+    default: "Vraelis — test which creative real people prefer",
     template: "%s",
   },
   description:
-    "Vraelis turns a photo of your item into a finished resale listing — platform titles for eBay, Poshmark, Depop & Mercari, a clean description, and a fast/market/high price range. Free for 3 listings.",
+    "Vraelis is a human preference engine for creative content. Upload your options — thumbnails, ads, logos, icons, designs — and real people vote on which one to launch.",
   alternates: { canonical: "https://vraelis.com" },
   icons: { icon: "/vraelis/mark.jpg" },
   openGraph: {
     type: "website",
     url: "https://vraelis.com",
     siteName: "Vraelis",
-    title: "List a thrift find in seconds.",
+    title: "Test which creative real people prefer.",
     description:
-      "Photograph your item and get a finished resale listing — titles for eBay, Poshmark, Depop & Mercari, a description, and a price range. Free for 3 listings.",
+      "Upload your options. Real people vote. Vraelis tells you what to launch.",
   },
   robots: {
     index: true,
