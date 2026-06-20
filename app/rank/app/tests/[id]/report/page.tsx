@@ -30,8 +30,9 @@ function OptionThumb({ o, size = 56 }: { o?: VOption; size?: number }) {
   );
 }
 
-export default async function ReportPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ReportPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ launched?: string }> }) {
   const { id } = await params;
+  const justLaunched = ((await searchParams) || {}).launched === "1";
   const session = await auth();
   const email = session?.user?.email;
 
@@ -48,6 +49,16 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
     const pct = Math.min(100, Math.round((test.votes_valid / Math.max(1, test.votes_target)) * 100));
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+        {justLaunched && test.status === "active" && (
+          <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc)", background: "var(--acc-soft)" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 700, color: "var(--acc-deep)", marginBottom: 4 }}>🎉 Your test is live!</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>Real people are voting now. Share or embed it below to collect votes faster — we&apos;ll generate your report once enough valid votes come in.</p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+              <a href="/app/new" className="btn btn--ghost" style={{ fontSize: 13 }}>Create another</a>
+              <a href="/app" className="btn btn--ghost" style={{ fontSize: 13 }}>Dashboard</a>
+            </div>
+          </div>
+        )}
         <p className="eyebrow">Collecting votes</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
         <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid votes</p>

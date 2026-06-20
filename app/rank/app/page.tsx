@@ -4,6 +4,59 @@ import { ensureProfile, listUserTests, getPlan } from "@/lib/v-db";
 import { ensureSignupGrant, balance } from "@/lib/v-credits";
 import { isAdmin } from "@/lib/v-entitlements";
 
+function FirstRun({ bal }: { bal: number }) {
+  const steps: [string, string, boolean][] = [
+    ["Claim your starter credits", `${bal} credits ready`, bal > 0],
+    ["Create your first test", "Upload 2–8 options", false],
+    ["Pick a vote target", "1 credit = 1 human vote", false],
+    ["Launch & collect votes", "Real people weigh in", false],
+    ["Read your report", "Winner, why, what to fix", false],
+    ["Embed or use the API", "Collect votes anywhere", false],
+  ];
+  const credits: [string, string][] = [
+    ["1 credit = 1 valid human vote", "You only pay for real judgments."],
+    ["Credits are held when you launch", "Escrowed, not spent up front."],
+    ["Invalid votes are filtered", "Too-fast, duplicate and spam votes are rejected."],
+    ["Unused credits are refunded", "If a test doesn't fill, you get them back."],
+    ["Buy more anytime", "Top up from $5, or earn credits by voting."],
+  ];
+  return (
+    <>
+      <div style={{ background: "linear-gradient(150deg, var(--acc) 0%, var(--acc-deep) 100%)", borderRadius: 14, color: "#fff", padding: "clamp(24px, 3.5vw, 36px)", marginBottom: 16, boxShadow: "var(--shadow-win)" }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.85, marginBottom: 8 }}>Welcome to Vraelis</div>
+        <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", color: "#fff", marginBottom: 8 }}>You have {bal} starter credits.</h2>
+        <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 540, opacity: 0.95, marginBottom: 18 }}>Create your first test in under 2 minutes — upload a few options and real people will tell you what wins. <strong>1 credit = 1 valid human judgment.</strong></p>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <a href="/app/new" className="btn" style={{ background: "#fff", color: "var(--acc-deep)", borderColor: "#fff" }}>Create first test →</a>
+          <a href="/vote" className="btn btn--ghost" style={{ background: "transparent", color: "#fff", borderColor: "rgba(255,255,255,0.55)" }}>Try voting first</a>
+        </div>
+      </div>
+      <div className="cols-2" style={{ gap: 14 }}>
+        <div className="card">
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>Get started</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {steps.map(([label, sub, done], i) => (
+              <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <span style={{ flex: "none", width: 22, height: 22, borderRadius: "50%", border: done ? "none" : "1.5px solid var(--line-3)", background: done ? "var(--acc)" : "transparent", color: "#fff", display: "grid", placeItems: "center", fontSize: 12, marginTop: 1 }}>{done ? "✓" : ""}</span>
+                <div><div style={{ fontSize: 14, fontWeight: 600, color: done ? "var(--fg-4)" : "var(--fg-1)", textDecoration: done ? "line-through" : "none" }}>{label}</div><div style={{ fontSize: 12, color: "var(--fg-4)" }}>{sub}</div></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="card">
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>How credits work</div>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 11 }}>
+            {credits.map(([t, d], i) => (
+              <li key={i} style={{ display: "flex", gap: 9 }}><span style={{ color: "var(--acc)", marginTop: 1 }}>✓</span><div><div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)" }}>{t}</div><div style={{ fontSize: 12.5, color: "var(--fg-3)" }}>{d}</div></div></li>
+            ))}
+          </ul>
+          <a href="/app/credits" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none", display: "inline-block", marginTop: 14 }}>Buy credits →</a>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function TestList({ title, items }: { title: string; items: Awaited<ReturnType<typeof listUserTests>> }) {
   return (
     <div style={{ marginBottom: 26 }}>
@@ -76,21 +129,16 @@ export default async function Dashboard() {
         <div className="metric"><div className="metric__label">Completed</div><div className="metric__val tnum">{completed.length}</div><div className="metric__delta">reports ready</div></div>
       </div>
 
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 28 }}>
-        <a href="/app/new" className="btn">Create a test</a>
-        <a href="/app/credits" className="btn btn--ghost">Buy credits</a>
-        <a href="/vote" className="btn btn--ghost">Vote &amp; earn</a>
-        <a href="/app/api-keys" className="btn btn--ghost">API &amp; embed</a>
-      </div>
-
       {tests.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "clamp(36px, 6vw, 64px)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, color: "var(--fg-1)", marginBottom: 8 }}>Run your first test</div>
-          <p style={{ fontSize: 14.5, color: "var(--fg-3)", maxWidth: 420, margin: "0 auto 22px" }}>Upload 2–8 options, set how many votes you want, and real people pick the winner. You have {bal} credits to start.</p>
-          <a href="/app/new" className="btn btn--lg">Create a test →</a>
-        </div>
+        <FirstRun bal={bal} />
       ) : (
         <>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 28 }}>
+            <a href="/app/new" className="btn">Create a test</a>
+            <a href="/app/credits" className="btn btn--ghost">Buy credits</a>
+            <a href="/vote" className="btn btn--ghost">Vote &amp; earn</a>
+            <a href="/app/api-keys" className="btn btn--ghost">API &amp; embed</a>
+          </div>
           {active.length > 0 && <TestList title="Active" items={active} />}
           {completed.length > 0 && <TestList title="Completed" items={completed} />}
           {active.length === 0 && completed.length === 0 && tests.length > 0 && <TestList title="Tests" items={tests} />}

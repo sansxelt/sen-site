@@ -17,6 +17,9 @@ export default function VotePage() {
   const [earned, setEarned] = useState(0);
   const [err, setErr] = useState("");
   const startRef = useRef(0);
+  const [showIntro, setShowIntro] = useState(false);
+  useEffect(() => { try { if (!localStorage.getItem("vraelis_vote_intro")) setShowIntro(true); } catch { /* ignore */ } }, []);
+  function dismissIntro() { setShowIntro(false); try { localStorage.setItem("vraelis_vote_intro", "1"); } catch { /* ignore */ } }
 
   const fetchNext = useCallback(async () => {
     setPhase("loading"); setSelected(""); setReason(""); setErr("");
@@ -80,6 +83,21 @@ export default function VotePage() {
 
       {phase === "vote" && test && (
         <div>
+          {showIntro && (
+            <div className="card" style={{ marginBottom: 18, background: "var(--bg-2)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                <div>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, marginBottom: 8 }}>How voting works</div>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+                    {["Vote on real creative tests from teams & creators", "Earn 1 credit per valid vote (up to a daily cap)", "Low-quality, too-fast, or spam votes don't count", "Your honest feedback helps teams learn what people prefer"].map((x) => (
+                      <li key={x} style={{ display: "flex", gap: 8, fontSize: 13, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</li>
+                    ))}
+                  </ul>
+                </div>
+                <button onClick={dismissIntro} aria-label="Dismiss" style={{ border: "none", background: "transparent", color: "var(--fg-4)", cursor: "pointer", fontSize: 18, lineHeight: 1, flex: "none" }}>×</button>
+              </div>
+            </div>
+          )}
           <div style={{ marginBottom: 6, fontSize: 15, color: "var(--fg-1)", fontWeight: 600 }}>{test.title}</div>
           {test.context && <div style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 16 }}>{test.context}</div>}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px,1fr))", gap: 12, marginBottom: 18, marginTop: 12 }}>

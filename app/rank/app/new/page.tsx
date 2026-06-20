@@ -13,6 +13,14 @@ const AUDIENCES: [string, string][] = [
   ["general", "General"], ["gamers", "Gamers"], ["creators", "Creators"], ["designers", "Designers"],
   ["gen_z", "Gen Z"], ["shoppers", "Shoppers"], ["entrepreneurs", "Entrepreneurs"],
 ];
+const TEMPLATES: { name: string; title: string; category: string; context: string }[] = [
+  { name: "Two ad creatives", title: "Which ad creative performs better?", category: "ad", context: "Which of these grabs attention and makes you want to click?" },
+  { name: "Logo options", title: "Which logo do you prefer?", category: "logo", context: "Which logo feels more trustworthy and memorable for a modern brand?" },
+  { name: "Thumbnails", title: "Which thumbnail would you click?", category: "thumbnail", context: "You're scrolling your feed — which thumbnail makes you stop and click?" },
+  { name: "Landing hero", title: "Which hero concept is clearer?", category: "landing", context: "Which landing-page hero best explains the product at a glance?" },
+  { name: "AI images", title: "Which AI image looks best?", category: "ai_image", context: "Which generated image looks the most polished and on-brand?" },
+];
+
 const MAX_FILE_MB = 15;
 
 function resize(file: File, max = 720): Promise<string> {
@@ -135,7 +143,7 @@ export default function NewTest() {
       if (res.status === 403 && j.error === "plan_limit") { setError(`You've hit your plan's ${j.limit} active test${j.limit === 1 ? "" : "s"} this month. Upgrade for more.`); return; }
       if (res.status === 413) { setError("One of your images is too large. Try smaller or fewer images."); return; }
       if (!res.ok) { setError("Couldn't launch the test. Try again."); return; }
-      window.location.href = `/app/tests/${j.id}/report`;
+      window.location.href = `/app/tests/${j.id}/report?launched=1`;
     } catch { setError("Network error — try again."); }
     finally { setBusy(false); }
   }
@@ -155,7 +163,16 @@ export default function NewTest() {
           <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Credits</div><div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>{balance.toLocaleString()}</div></div>
         </div>
       </div>
-      <p className="lead-copy" style={{ marginBottom: 28 }}>Upload creative options, choose your vote target, and get a clear report on what real users prefer.</p>
+      <p className="lead-copy" style={{ marginBottom: 22 }}>Upload creative options, choose your vote target, and get a clear report on what real users prefer.</p>
+
+      <div style={{ marginBottom: 26 }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Start from a template <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>· optional — edit anything</span></div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {TEMPLATES.map((t) => (
+            <button key={t.name} onClick={() => { setTitle(t.title); setCategory(t.category); setContext(t.context); }} className="pill" style={{ cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: 12.5, padding: "8px 14px" }}>{t.name}</button>
+          ))}
+        </div>
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 320px", gap: "clamp(20px, 3vw, 40px)", alignItems: "start" }} className="cols-stack">
         {/* ── form ── */}
