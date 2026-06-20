@@ -106,3 +106,16 @@ create table if not exists v_payments (
   status       text not null default 'paid',
   created_at   timestamptz not null default now()
 );
+
+-- API keys for the public Vraelis API (external apps / AI tools). Only the hash
+-- is stored; the raw key is shown to the user once at creation.
+create table if not exists v_api_keys (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    text not null,
+  key_hash   text not null unique,
+  prefix     text not null,                    -- shown in UI, e.g. vr_live_ab12cd34
+  scopes     text[] not null default '{tests:write,tests:read,credits:read}',
+  last_used  timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists v_api_keys_user_idx on v_api_keys (user_id, created_at desc);

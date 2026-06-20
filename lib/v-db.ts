@@ -101,11 +101,22 @@ export async function nextTestForVoter(voterId: string): Promise<{ test: VTest; 
 
 export async function recordJudgment(args: {
   testId: string; voterId: string; optionId: string; reason?: string; timeSpentMs?: number;
-}): Promise<"ok" | "dup" | "err"> {
+}): Promise<"ok" | "dup" | "invalid" | "err"> {
   if (!isDatabaseConfigured()) return "err";
   const s = getSupabaseAdminClient();
+  const voter = norm(args.voterId);
+
+  // Validate: test is active, not the voter's own, and not already full.
+  const { data: t } = await s.from("v_tests" as never).select("user_id,status,votes_valid,votes_target").eq("id", args.testId).maybeSingle();
+  const tt = t as unknown as { user_id: string; status: string; votes_valid: number; votes_target: number } | null;
+  if (!tt || tt.status !== "active" || tt.user_id === voter || tt.votes_valid >= tt.votes_target) return "invalid";
+
+  // Validate: the chosen option belongs to this test.
+  const { count: optOk } = await s.from("v_test_options" as never).select("*", { count: "exact", head: true }).eq("id", args.optionId).eq("test_id", args.testId);
+  if ((optOk ?? 0) === 0) return "invalid";
+
   const { error } = await s.from("v_judgments" as never).insert({
-    test_id: args.testId, voter_id: norm(args.voterId), option_id: args.optionId,
+    test_id: args.testId, voter_id: voter, option_id: args.optionId,
     reason: args.reason ?? null, time_spent_ms: args.timeSpentMs ?? null, status: "valid",
   } as never);
   if (error) {
@@ -113,13 +124,10 @@ export async function recordJudgment(args: {
     console.error("recordJudgment:", error.message);
     return "err";
   }
-  const { data: t } = await s.from("v_tests" as never).select("votes_valid,votes_target").eq("id", args.testId).maybeSingle();
-  const tt = t as unknown as { votes_valid: number; votes_target: number } | null;
-  if (tt) {
-    const nv = tt.votes_valid + 1;
-    await s.from("v_tests" as never).update({ votes_valid: nv } as never).eq("id", args.testId);
-    if (nv >= tt.votes_target) await completeTest(args.testId);
-  }
+
+  const nv = tt.votes_valid + 1;
+  await s.from("v_tests" as never).update({ votes_valid: nv } as never).eq("id", args.testId);
+  if (nv >= tt.votes_target) await completeTest(args.testId);
   return "ok";
 }
 

@@ -33,7 +33,10 @@ export default async function Dashboard() {
           <p className="eyebrow">Dashboard</p>
           <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)" }}>Your tests</h1>
         </div>
-        <a href="/app/new" className="btn">New test <span aria-hidden>→</span></a>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <a href="/app/api-keys" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>API</a>
+          <a href="/app/new" className="btn">New test <span aria-hidden>→</span></a>
+        </div>
       </div>
 
       <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap", marginBottom: 24 }}>

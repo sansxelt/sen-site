@@ -23,6 +23,7 @@ export async function POST(req: Request) {
 
   const res = await recordJudgment({ testId, voterId: email, optionId, reason, timeSpentMs });
   if (res === "dup") return NextResponse.json({ error: "already_voted" }, { status: 409 });
+  if (res === "invalid") return NextResponse.json({ error: "invalid_vote" }, { status: 400 });
   if (res === "err") return NextResponse.json({ error: "vote_failed" }, { status: 500 });
 
   // vote-to-earn (MVP: 1 credit / valid vote). Reputation-weighting + caps come with the quality system.
