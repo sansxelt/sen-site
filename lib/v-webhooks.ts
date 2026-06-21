@@ -3,6 +3,9 @@
 // email/user_id, API keys, billing, or raw ip/device data. Owner-scoped CRUD.
 
 import crypto from "crypto";
+import dns from "dns/promises";
+import net from "net";
+import { Agent } from "undici";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getTestWithOptions, getReport, OPTION_LETTERS, type VTest } from "./v-db";
 
@@ -13,20 +16,64 @@ const DELIVERY_TIMEOUT_MS = 6000;
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function newSecret(): string { return "whsec_" + crypto.randomBytes(24).toString("hex"); }
 
-// SSRF guard: https only, block localhost + private/reserved IP literals.
+// True if an IP literal is private/reserved/loopback/link-local (incl. cloud
+// metadata 169.254.169.254). Covers IPv4 ranges + IPv6 (loopback, ULA, link-local,
+// and IPv4-mapped forms). Unknown → treated as unsafe.
+export function isPrivateIp(ip: string): boolean {
+  let addr = ip.trim().toLowerCase();
+  if (addr.startsWith("::ffff:") && net.isIP(addr.slice(7)) === 4) addr = addr.slice(7); // IPv4-mapped
+  const fam = net.isIP(addr);
+  if (fam === 4) {
+    const p = addr.split(".").map(Number);
+    if (p.some((n) => Number.isNaN(n) || n > 255)) return true;
+    return (
+      p[0] === 0 || p[0] === 10 || p[0] === 127 ||
+      (p[0] === 100 && p[1] >= 64 && p[1] <= 127) ||   // CGN 100.64/10
+      (p[0] === 169 && p[1] === 254) ||                // link-local / metadata
+      (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+      (p[0] === 192 && p[1] === 0 && p[2] === 0) ||    // 192.0.0.0/24
+      (p[0] === 192 && p[1] === 168) ||
+      (p[0] === 198 && (p[1] === 18 || p[1] === 19)) || // 198.18.0.0/15 benchmarking
+      p[0] >= 224                                      // multicast/reserved/broadcast
+    );
+  }
+  if (fam === 6) {
+    return addr === "::1" || addr === "::" || addr.startsWith("fc") || addr.startsWith("fd") || addr.startsWith("fe8") || addr.startsWith("fe9") || addr.startsWith("fea") || addr.startsWith("feb");
+  }
+  return true;
+}
+
+// SSRF guard (create-time, string only — first line of defense). https only,
+// port 443 only, no localhost/internal, no private IP literals. The real defense
+// is safeFetch (DNS-resolve + validate + pin) at delivery time.
 export function webhookUrlError(url: string): string | null {
   let u: URL;
   try { u = new URL(url); } catch { return "Enter a valid URL."; }
   if (u.protocol !== "https:") return "Webhook URL must use https://.";
+  if (u.port && u.port !== "443") return "Only port 443 is allowed.";
   const host = u.hostname.toLowerCase();
-  if (host === "localhost" || host === "0.0.0.0" || host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".localhost")) return "Public host required (no localhost/internal).";
+  if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal") || host.endsWith(".localhost")) return "Public host required (no localhost/internal).";
   if (host.includes(":")) return "Use a public hostname, not an IPv6 literal.";
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) {
-    const p = host.split(".").map(Number);
-    if (p.some((n) => n > 255)) return "Invalid IP.";
-    if (p[0] === 10 || p[0] === 127 || p[0] === 0 || (p[0] === 169 && p[1] === 254) || (p[0] === 172 && p[1] >= 16 && p[1] <= 31) || (p[0] === 192 && p[1] === 168) || p[0] >= 224) return "Private/reserved IPs are not allowed.";
-  }
+  if (net.isIP(host) === 4 && isPrivateIp(host)) return "Private/reserved IPs are not allowed.";
   return null;
+}
+
+// Resolve the hostname, reject if ANY resolved address is private/reserved, then
+// pin the connection to the validated IP (no re-resolution → defeats DNS
+// rebinding). Throws "blocked" on any unsafe destination. https + port 443 only.
+async function safeFetch(url: string, init: RequestInit): Promise<Response> {
+  const u = new URL(url);
+  if (u.protocol !== "https:" || (u.port && u.port !== "443")) throw new Error("blocked");
+  let addrs: { address: string; family: number }[];
+  try { addrs = await dns.lookup(u.hostname, { all: true }); } catch { throw new Error("blocked"); }
+  if (!addrs.length || addrs.some((a) => isPrivateIp(a.address))) throw new Error("blocked");
+  const pin = addrs[0];
+  const agent = new Agent({ connect: { lookup: (_h: string, _o: unknown, cb: (e: Error | null, a: string, f: number) => void) => cb(null, pin.address, pin.family) } as never });
+  try {
+    return await fetch(url, { ...init, dispatcher: agent } as RequestInit & { dispatcher: Agent });
+  } finally {
+    agent.close().catch(() => {});
+  }
 }
 
 function sign(secret: string, timestamp: string, body: string): string {
@@ -129,7 +176,7 @@ async function post(url: string, secret: string, event: string, deliveryId: stri
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), DELIVERY_TIMEOUT_MS);
   try {
-    const r = await fetch(url, {
+    const r = await safeFetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "User-Agent": "Vraelis-Webhooks/1", "X-Vraelis-Event": event, "X-Vraelis-Signature": sign(secret, ts, body), "X-Vraelis-Timestamp": ts, "X-Vraelis-Delivery": deliveryId },
       body,
@@ -141,7 +188,10 @@ async function post(url: string, secret: string, event: string, deliveryId: stri
     return { ok, status: r.status, error: ok ? null : `HTTP ${r.status}` };
   } catch (e) {
     clearTimeout(to);
-    return { ok: false, status: null, error: String((e as Error)?.message ?? e).slice(0, 200) };
+    // Coarse errors only — never expose connection-level detail (no scan oracle).
+    const msg = String((e as Error)?.message ?? "");
+    const coarse = msg === "blocked" ? "blocked_url" : ctrl.signal.aborted ? "timeout" : "delivery_failed";
+    return { ok: false, status: null, error: coarse };
   }
 }
 

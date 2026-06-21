@@ -39,6 +39,7 @@
     "shiki": "^4.0.2",
     "stripe": "^22.0.1",
     "three": "^0.184.0",
+    "undici": "^8.5.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
