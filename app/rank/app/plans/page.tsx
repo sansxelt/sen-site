@@ -59,7 +59,7 @@ export default function PlansPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <div className="seg">
             {(["monthly", "yearly"] as Cycle[]).map((c) => (
-              <button key={c} onClick={() => setCycle(c)} className={cycle === c ? "on" : ""}>{c === "monthly" ? "Monthly" : "Yearly"}{c === "yearly" ? <span className="seg__save">2 mo free</span> : null}</button>
+              <button key={c} onClick={() => setCycle(c)} className={cycle === c ? "on" : ""}>{c === "monthly" ? "Monthly" : "Yearly"}</button>
             ))}
           </div>
           {signedIn && <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>}
@@ -107,8 +107,8 @@ export default function PlansPage() {
         })}
       </div>
 
-      <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 26, lineHeight: 1.7 }}>
-        Plan credits refresh each billing cycle and don&apos;t roll over. Top-up credits you buy never expire. Cancel anytime. Your plan stays active until the period ends.
+      <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 28, lineHeight: 1.6, textAlign: "center", maxWidth: 620, marginInline: "auto" }}>
+        Plan credits refresh each billing cycle and don&apos;t roll over. Top-up credits you buy never expire. Cancel anytime, and your plan stays active until the period ends.
       </p>
     </div>
   );

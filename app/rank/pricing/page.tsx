@@ -55,7 +55,7 @@ export default function PricingPage() {
           <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Every plan includes monthly credits. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong> Need more mid-cycle? Top up anytime.</p>
           <div className="seg">
             {(["monthly", "yearly"] as Cycle[]).map((c) => (
-              <button key={c} onClick={() => setCycle(c)} className={cycle === c ? "on" : ""}>{c === "monthly" ? "Monthly" : "Yearly"}{c === "yearly" ? <span className="seg__save">2 months free</span> : null}</button>
+              <button key={c} onClick={() => setCycle(c)} className={cycle === c ? "on" : ""}>{c === "monthly" ? "Monthly" : "Yearly"}</button>
             ))}
           </div>
         </div>
@@ -108,17 +108,14 @@ export default function PricingPage() {
           </div>
 
           {/* top-ups */}
-          <div className="card" style={{ marginTop: 22, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap", background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
-            <div>
+          <div className="card" style={{ marginTop: 22, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
+            <div style={{ maxWidth: 520 }}>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Need credits without a plan?</div>
-              <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0 }}>Buy custom top-ups. $1 = 10 credits, from $5 to $9,999. Top-up credits never expire.</p>
+              <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Buy custom top-ups from $5 to $9,999. Every $1 adds 10 credits, and they never expire.</p>
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-              {[9, 39, 99].map((a) => <span key={a} className="chip">${a} → {a * 10}</span>)}
-              <a className="btn" href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</a>
-            </div>
+            <a className="btn btn--lg" href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</a>
           </div>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 18, textAlign: "center" }}>Plans renew automatically. Cancel anytime, your plan stays active until the period ends. Secure checkout on Vraelis, powered by Stripe.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Plans renew automatically. Cancel anytime, and your plan stays active until the period ends. Secure checkout on Vraelis, powered by Stripe.</p>
         </div>
       </section>
     </div>

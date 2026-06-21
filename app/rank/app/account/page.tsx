@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { ensureProfile, getPlan, getSubscription } from "@/lib/v-db";
 import { balance } from "@/lib/v-credits";
 import { SignOutButton } from "../../_components/rank-ui";
+import { DeleteAccount } from "./delete-account";
 
 export const metadata: Metadata = { title: "Account" };
 
@@ -66,12 +67,15 @@ export default async function AccountPage() {
 
       {/* security */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Security</div>
-      <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-        <div>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)" }}>Sign out of Vraelis</div>
-          <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>End your session on this device. You can sign back in anytime.</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)" }}>Sign out</div>
+            <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>End your session on this device. You can sign back in anytime.</div>
+          </div>
+          <SignOutButton />
         </div>
-        <SignOutButton />
+        <DeleteAccount />
       </div>
     </div>
   );

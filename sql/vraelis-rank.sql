@@ -119,6 +119,8 @@ create table if not exists v_api_keys (
   created_at timestamptz not null default now()
 );
 create index if not exists v_api_keys_user_idx on v_api_keys (user_id, created_at desc);
+-- Optional label so owners can name their keys (e.g. "Production", "Zapier").
+alter table v_api_keys add column if not exists name text;
 
 -- ── Idempotency / hardening (added after the credit + webhook security review) ──
 -- 1) Dedup Stripe events at the DB level so concurrent/retried webhook deliveries

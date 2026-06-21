@@ -117,7 +117,7 @@ function Footer() {
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
         <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© 2026 Vraelis. All rights reserved.</span>
-        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>1 credit = 1 valid judgment</span>
+        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Questions? <a href="mailto:help@vraelis.com" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>help@vraelis.com</a></span>
       </div>
     </footer>
   );
@@ -167,8 +167,9 @@ function AppSidebar() {
           ))}
         </div>
       ))}
-      <div className="app-side__foot" style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--line-1)" }}>
+      <div className="app-side__foot" style={{ marginTop: "auto", position: "sticky", bottom: 0, background: "var(--bg-0)", paddingTop: 12, paddingBottom: 4, borderTop: "1px solid var(--line-1)" }}>
         <a href="/" className="slink" style={{ color: "var(--fg-3)" }}><span className="slink__i"><Ic d="M19 12H5M11 18l-6-6 6-6" /></span>Back to site</a>
+        <button onClick={() => signOut({ callbackUrl: "/" })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 14, fontWeight: 500 }}><span className="slink__i"><Ic d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></span>Sign out</button>
       </div>
     </aside>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { WebhooksSection } from "./webhooks-section";
 
-type Key = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string };
+type Key = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null };
 
 const CURL = `# Create a test
 curl -X POST https://vraelis.com/api/v1/tests \\
@@ -37,6 +37,7 @@ export default function ApiKeysPage() {
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [keyName, setKeyName] = useState("");
 
   async function load() {
     const r = await fetch("/api/v/keys");
@@ -48,9 +49,9 @@ export default function ApiKeysPage() {
   async function create() {
     setBusy(true); setFresh(""); setErr("");
     try {
-      const r = await fetch("/api/v/keys", { method: "POST" });
+      const r = await fetch("/api/v/keys", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: keyName.trim() }) });
       const j = await r.json();
-      if (j.key) { setFresh(j.key); load(); }
+      if (j.key) { setFresh(j.key); setKeyName(""); load(); }
       else if (j.error === "plan_required") setErr("The public API is a Scale plan feature. Upgrade to generate keys.");
       else setErr("Couldn't create a key. Try again.");
     } finally { setBusy(false); }
@@ -68,7 +69,18 @@ export default function ApiKeysPage() {
           <h1 className="display">API &amp; webhooks</h1>
           <p>Add human feedback to your app. Send options, get a ranked result.</p>
         </div>
-        <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
+      </div>
+
+      {/* create */}
+      <div className="card" style={{ marginBottom: 18 }}>
+        <div className="field">
+          <span className="lbl">Create an API key</span>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Name it, e.g. Production or Zapier" maxLength={40} onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ flex: 1, minWidth: 220, padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
+            <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
+          </div>
+          <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation.</span>
+        </div>
       </div>
 
       <div className="card cta-band" style={{ marginBottom: 24, background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
@@ -105,12 +117,15 @@ export default function ApiKeysPage() {
         </div>
       )}
       {keys.length > 0 && (
-        <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", overflow: "hidden", background: "var(--bg-1)", marginBottom: 28 }}>
+        <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", marginBottom: 28, boxShadow: "var(--shadow-sm)" }}>
           {keys.map((k, i) => (
-            <div key={k.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "13px 16px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
+            <div key={k.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
               <div style={{ minWidth: 0 }}>
-                <code style={{ fontFamily: "var(--font-code)", fontSize: 13, color: "var(--fg-1)" }}>{k.prefix}…</code>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", marginTop: 3 }}>{k.last_used ? `last used ${new Date(k.last_used).toLocaleDateString()}` : "never used"}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-1)" }}>{k.name || "Untitled key"}</span>
+                  <code style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)" }}>{k.prefix}…</code>
+                </div>
+                <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>Created {new Date(k.created_at).toLocaleDateString()}, {k.last_used ? `last used ${new Date(k.last_used).toLocaleDateString()}` : "never used"}</div>
               </div>
               <button onClick={() => revoke(k.id)} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Revoke</button>
             </div>
