@@ -407,6 +407,8 @@ summary::-webkit-details-marker { display: none; }
   --paper-grad: radial-gradient(120% 90% at 50% -8%, #FFFFFF 0%, var(--bg-0) 46%);
   /* tighter vertical rhythm — was clamp(80,11vw,144), which left big dead gaps */
   --section-y: clamp(60px, 7.5vw, 104px);
+  /* app topbar height — the sidebar sticks exactly below it so it never slides */
+  --app-topbar-h: 64px;
   /* slightly stronger hairlines so cards read as substantial, not flimsy */
   --line-2: rgba(28,27,24,0.13);
   --line-3: rgba(28,27,24,0.22);

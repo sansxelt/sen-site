@@ -128,7 +128,7 @@ function AppTopbar({ email }: { email: string | null }) {
   const pathname = usePathname() || "";
   useEffect(() => { setMenu(false); }, [pathname]);
   return (
-    <header style={{ display: "flex", alignItems: "center", gap: 16, padding: "13px var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
+    <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
       <Brand href="/app" />
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</a>
