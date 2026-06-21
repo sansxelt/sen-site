@@ -563,7 +563,10 @@ summary::-webkit-details-marker { display: none; }
 .app-side {
   border-right: 1px solid var(--line-2); background: var(--bg-0);
   padding: 18px 14px; display: flex; flex-direction: column; gap: 4px;
-  position: sticky; top: 0; align-self: start; height: 100svh; overflow-y: auto;
+  /* sit below the sticky topbar and fill exactly the remaining viewport, so the
+     pinned foot (Back to site + Sign out) is visible without scrolling */
+  position: sticky; top: var(--app-topbar-h, 66px); align-self: start;
+  height: calc(100svh - var(--app-topbar-h, 66px)); overflow-y: auto;
 }
 .app-side__group { font-family: var(--font-code); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-5); padding: 14px 12px 6px; }
 .slink {

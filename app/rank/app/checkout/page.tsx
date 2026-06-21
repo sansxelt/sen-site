@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { PLAN_CATALOG, priceIdFor } from "@/lib/v-plans";
-import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import { PLAN_CATALOG } from "@/lib/v-plans";
 import { CheckoutClient } from "./checkout-client";
 
 export const metadata: Metadata = { title: "Checkout" };
@@ -21,17 +20,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   }
 
   const plan = PLAN_CATALOG.find((p) => p.plan === planKey);
-  let planAmount = plan?.price[cycle] ?? 0;
-  if (plan && isStripeConfigured()) {
-    try {
-      const id = priceIdFor(planKey, cycle);
-      if (id) planAmount = ((await getStripe().prices.retrieve(id)).unit_amount ?? 0) / 100;
-    } catch { /* fall back to catalog price */ }
-  }
-
   const title = plan ? `${plan.name} plan` : `${(amount * 10).toLocaleString()} credits`;
-  const price = plan ? `$${planAmount.toLocaleString()}` : `$${amount.toLocaleString()}`;
-  const priceUnit = plan ? `/${cycle === "yearly" ? "year" : "month"}` : " one time";
   const backHref = plan ? "/app/plans" : "/app/credits";
   const included: string[] = plan
     ? [`${plan.monthlyCredits.toLocaleString()} credits every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
@@ -45,11 +34,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           {/* order summary */}
           <div>
             <p className="eyebrow">Checkout</p>
-            <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 12 }}>{title}</h1>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-              <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(2.1rem, 4vw, 2.8rem)", letterSpacing: "-0.03em", color: "var(--fg-1)", lineHeight: 1 }}>{price}</span>
-              <span style={{ fontSize: 14, color: "var(--fg-4)" }}>{priceUnit}</span>
-            </div>
+            <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.6rem)" }}>{title}</h1>
 
             <div className="card" style={{ marginTop: 22, padding: 20 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>{plan ? "What's included" : "How credits work"}</div>
