@@ -29,7 +29,7 @@ export default function NotFound() {
       <div className="v404-bloom" aria-hidden />
 
       <div className="wrap v404-stack">
-        <h1 className="display v404-num" aria-label="404 — page not found">
+        <h1 className="display v404-num" aria-label="404 page not found">
           <span aria-hidden>4</span>
           <span aria-hidden className="em v404-zero">0</span>
           <span aria-hidden>4</span>
@@ -40,7 +40,7 @@ export default function NotFound() {
         </h2>
 
         <p className="v404-body v404-in v404-d2">
-          The link you followed doesn&rsquo;t exist &mdash; or doesn&rsquo;t anymore.
+          The link you followed doesn&rsquo;t exist, or it doesn&rsquo;t anymore.
         </p>
 
         <div className="v404-actions v404-in v404-d3">
