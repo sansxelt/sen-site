@@ -2,14 +2,26 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ownerStats } from "@/lib/v-db";
+import { balance } from "@/lib/v-credits";
+import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
 
 export const metadata: Metadata = { title: "Data" };
+
+// Credits consumed on tests = holds net of refunds (both are test-scoped).
+async function creditsUsed(email: string): Promise<number> {
+  if (!isDatabaseConfigured()) return 0;
+  const { data } = await getSupabaseAdminClient().from("v_credit_ledger" as never)
+    .select("delta,reason").eq("user_id", email.toLowerCase()).in("reason", ["hold", "refund"]);
+  let used = 0;
+  for (const r of (data as unknown as { delta: number }[]) ?? []) used -= r.delta;
+  return Math.max(0, used);
+}
 
 export default async function DataPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fdata");
-  const stats = await ownerStats(email);
+  const [stats, bal, used] = await Promise.all([ownerStats(email), balance(email), creditsUsed(email)]);
   const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
 
   return (
@@ -20,6 +32,21 @@ export default async function DataPage() {
           <h1 className="display">Your preference data</h1>
           <p>Real preference data from your tests. Export any completed result as JSON or CSV.</p>
         </div>
+      </div>
+
+      {/* credit usage */}
+      <div className="card" style={{ marginBottom: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "clamp(28px, 5vw, 56px)", flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Credits remaining</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{bal.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Credits used</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{used.toLocaleString()}</div>
+          </div>
+        </div>
+        <a href="/app/credits" className="btn btn--ghost">Top up →</a>
       </div>
 
       <div className="tile-grid cols-4" style={{ marginBottom: 22 }}>

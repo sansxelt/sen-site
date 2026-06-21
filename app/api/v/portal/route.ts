@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getStripe, isStripeConfigured, APP_URL } from "@/lib/stripe";
+import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 
@@ -18,12 +19,20 @@ export async function POST() {
 
   try {
     const stripe = getStripe();
-    const customers = await stripe.customers.list({ email: email.toLowerCase(), limit: 1 });
-    const customer = customers.data[0];
-    if (!customer) return NextResponse.json({ error: "no_subscription" }, { status: 404 });
+    const norm = email.toLowerCase();
+    const customers = await stripe.customers.list({ email: norm, limit: 1 });
+    let customer = customers.data[0];
+    // Create the customer on first use so even free users (who've never paid)
+    // can add a card on file — the portal needs an existing customer.
+    if (!customer) {
+      customer = await stripe.customers.create({ email: norm, name: session.user?.name ?? undefined });
+      if (isDatabaseConfigured()) {
+        try { await getSupabaseAdminClient().from("v_profiles" as never).update({ stripe_customer_id: customer.id } as never).eq("user_id", norm); } catch { /* best-effort */ }
+      }
+    }
     const portal = await stripe.billingPortal.sessions.create({
       customer: customer.id,
-      return_url: `${SITE_URL}/app/plans`,
+      return_url: `${SITE_URL}/app/billing`,
     });
     return NextResponse.json({ url: portal.url });
   } catch (e) {

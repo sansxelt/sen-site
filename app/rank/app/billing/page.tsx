@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { getSubscription, listRecentLedger } from "@/lib/v-db";
 import { balance } from "@/lib/v-credits";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
-import { BillingActions } from "./billing-actions";
+import { BillingActions, PaymentMethodButton } from "./billing-actions";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -67,10 +67,16 @@ export default async function BillingPage() {
         </div>
       </div>
 
+      <div className="card" style={{ marginBottom: 18 }}>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Payment method</div>
+        <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", maxWidth: 540 }}>Keep a card on file for top-ups and plan renewals, and view your invoices. Cards are stored securely by Stripe — we never see your card number.</p>
+        <PaymentMethodButton />
+      </div>
+
       <div className="card" style={{ marginBottom: 28 }}>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 14 }}>Subscription</div>
         <BillingActions canceling={cancelAtEnd} hasSub={hasSub} />
-        <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 16, marginBottom: 0, lineHeight: 1.6 }}>Plan changes, cancel and resume happen here on Vraelis. Card details &amp; invoices are managed via Stripe&apos;s secure portal.</p>
+        <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 16, marginBottom: 0, lineHeight: 1.6 }}>Plan changes, cancel and resume happen here on Vraelis.</p>
       </div>
 
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Recent credit activity</div>

@@ -11,7 +11,7 @@ import { getStripe, isStripeConfigured, APP_URL } from "@/lib/stripe";
 export const runtime = "nodejs";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || APP_URL;
-const MIN = 5, MAX = 9999, CREDITS_PER_DOLLAR = 10;
+const MIN = 5, MAX = 99999, CREDITS_PER_DOLLAR = 10;
 
 export async function POST(req: Request) {
   const session = await auth();
