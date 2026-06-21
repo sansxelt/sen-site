@@ -116,7 +116,7 @@ function Footer() {
         </div>
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 30px", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 22 }}>
-        <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)" }}>© Vraelis · 1 credit = 1 human judgment</span>
+        <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)" }}>© Vraelis. 1 credit = 1 human judgment</span>
         <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)" }}>Made for AI apps &amp; creative teams</span>
       </div>
     </footer>
@@ -140,7 +140,7 @@ function AppTopbar({ email }: { email: string | null }) {
           <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 220, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
-              <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{email || "—"}</div>
+              <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{email || "your account"}</div>
             </div>
             <a href="/app/account" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Account</a>
             <a href="/app/billing" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</a>

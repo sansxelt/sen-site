@@ -66,7 +66,7 @@ export default function ApiKeysPage() {
         <div>
           <p className="eyebrow">Developers</p>
           <h1 className="display">API &amp; webhooks</h1>
-          <p>Add human preference testing to your own app or AI tool — send creative options, get back a ranked result.</p>
+          <p>Add human feedback to your app. Send options, get a ranked result.</p>
         </div>
         <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
       </div>
@@ -74,7 +74,7 @@ export default function ApiKeysPage() {
       <div className="card cta-band" style={{ marginBottom: 24, background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Preference data exports</div>
-          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed results as JSON or CSV — winner, vote breakdown, valid-vs-filtered quality, comments, and AI analysis — for dashboards, analytics, or training pipelines.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed results as JSON or CSV. Winner, breakdown, quality, comments, and AI analysis.</p>
         </div>
         <a href="/developers#export" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Export docs →</a>
       </div>
@@ -87,7 +87,7 @@ export default function ApiKeysPage() {
 
       {fresh && (
         <div className="card" style={{ marginBottom: 20, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Your new key — copy it now, it won&apos;t be shown again</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Your new key. Copy it now, it won&apos;t be shown again</div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <code style={{ flex: 1, fontFamily: "var(--font-code)", fontSize: 13, color: "var(--fg-1)", wordBreak: "break-all", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: "var(--r-xs)", padding: "10px 12px" }}>{fresh}</code>
             <button onClick={() => { navigator.clipboard?.writeText(fresh); setCopied(true); setTimeout(() => setCopied(false), 1400); }} className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>{copied ? "Copied ✓" : "Copy"}</button>

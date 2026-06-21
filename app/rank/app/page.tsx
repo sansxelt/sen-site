@@ -27,7 +27,7 @@ function FirstRun({ bal }: { bal: number }) {
         <div style={{ position: "relative" }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Welcome to Vraelis</div>
           <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", marginBottom: 8 }}>You have {bal} starter credits.</h2>
-          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 540, color: "var(--fg-2)", marginBottom: 18 }}>Create your first test in under 2 minutes — upload a few options and real people will tell you what wins. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
+          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 540, color: "var(--fg-2)", marginBottom: 18 }}>Create your first test in under 2 minutes. Upload a few options and real people will tell you what wins. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <a href="/app/new" className="btn">Create first test →</a>
             <a href="/vote" className="btn btn--ghost">Try voting first</a>
@@ -63,7 +63,7 @@ function FirstRun({ bal }: { bal: number }) {
 function TestList({ title, items }: { title: string; items: Awaited<ReturnType<typeof listUserTests>> }) {
   return (
     <div style={{ marginBottom: 26 }}>
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>{title} · {items.length}</div>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>{title} ({items.length})</div>
       <div style={{ border: "1px solid var(--line-2)", borderRadius: 12, overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-card)" }}>
         {items.map((t, i) => {
           const pct = Math.min(100, Math.round((t.votes_valid / Math.max(1, t.votes_target)) * 100));
@@ -71,7 +71,7 @@ function TestList({ title, items }: { title: string; items: Awaited<ReturnType<t
             <a key={t.id} href={`/app/tests/${t.id}/report`} style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "14px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", textDecoration: "none" }}>
               <div style={{ minWidth: 0, flex: "1 1 200px" }}>
                 <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</div>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>{t.category} · {t.votes_valid}/{t.votes_target} votes</div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>{t.category}, {t.votes_valid}/{t.votes_target} votes</div>
               </div>
               <div style={{ flex: "0 0 90px", height: 6, borderRadius: 99, background: "var(--bg-2)", overflow: "hidden" }}><div style={{ height: "100%", width: `${pct}%`, background: t.status === "complete" ? "var(--acc)" : "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} /></div>
               <span className="pill" style={t.status === "complete" ? { background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" } : { color: "var(--fg-4)" }}>{t.status}</span>

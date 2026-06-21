@@ -11,7 +11,7 @@ export function BillingActions({ canceling, hasSub }: { canceling: boolean; hasS
     const r = await fetch("/api/v/cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: resume ? "resume" : "cancel" }) });
     const j = await r.json().catch(() => ({}));
     if (j.ok) { window.location.reload(); return; }
-    setBusy(false); setMsg(j.error === "no_subscription" ? "No active subscription." : "Couldn't update — try again.");
+    setBusy(false); setMsg(j.error === "no_subscription" ? "No active subscription." : "Couldn't update. Try again.");
   }
 
   async function portal() {
@@ -19,7 +19,7 @@ export function BillingActions({ canceling, hasSub }: { canceling: boolean; hasS
     const r = await fetch("/api/v/portal", { method: "POST" });
     const j = await r.json().catch(() => ({}));
     if (j.url) { window.location.href = j.url; return; }
-    setBusy(false); setMsg(j.error === "no_subscription" ? "No billing account yet — subscribe first." : "Couldn't open billing.");
+    setBusy(false); setMsg(j.error === "no_subscription" ? "No billing account yet. Subscribe first." : "Couldn't open billing.");
   }
 
   return (

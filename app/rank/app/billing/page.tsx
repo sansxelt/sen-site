@@ -35,9 +35,9 @@ export default async function BillingPage() {
   const periodLabel = periodEnd ? new Date(periodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : null;
   const hasSub = !!sub?.stripe_subscription_id && plan !== "free";
 
-  const statusLine = plan === "free" ? "You're on the Free plan — no subscription."
-    : cancelAtEnd ? `Cancels on ${periodLabel ?? "period end"} — active until then.`
-    : liveStatus === "past_due" ? "Payment past due — update your card to keep your plan."
+  const statusLine = plan === "free" ? "You're on the Free plan."
+    : cancelAtEnd ? `Cancels on ${periodLabel ?? "period end"}. Active until then.`
+    : liveStatus === "past_due" ? "Payment past due. Update your card to keep your plan."
     : periodLabel ? `Renews ${periodLabel}.` : "Active.";
 
   return (

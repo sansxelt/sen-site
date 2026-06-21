@@ -44,7 +44,7 @@ export default function CreditsPage() {
         <div>
           <p className="eyebrow">Credits</p>
           <h1 className="display">Top up credits</h1>
-          <p>$1 = 10 credits · 1 credit = 1 real human vote · credits never expire.</p>
+          <p>$1 = 10 credits. 1 credit = 1 valid vote. Credits never expire.</p>
         </div>
         {bal !== null && (
           <div className="stat" style={{ minWidth: 150 }}>
@@ -57,7 +57,7 @@ export default function CreditsPage() {
 
       {paid && (
         <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Payment received — your new credits will appear here within a few seconds.</p>
+          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Payment received. Your new credits will appear here in a few seconds.</p>
         </div>
       )}
 
@@ -81,7 +81,7 @@ export default function CreditsPage() {
             <span className="lbl">Or a custom amount</span>
             <div style={{ position: "relative" }}>
               <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-4)" }}>$</span>
-              <input type="text" inputMode="numeric" value={custom} onChange={(e) => setCustom(e.target.value.replace(/[^0-9]/g, ""))} placeholder="—"
+              <input type="text" inputMode="numeric" value={custom} onChange={(e) => setCustom(e.target.value.replace(/[^0-9]/g, ""))} placeholder="0"
                 style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px 12px 30px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, outline: "none" }} />
             </div>
             {!valid && usingCustom && <span style={{ color: "var(--err)", fontSize: 12.5 }}>Enter an amount between ${MIN} and ${MAX.toLocaleString()}.</span>}
@@ -93,7 +93,7 @@ export default function CreditsPage() {
         <div className="card sticky-side" style={{ borderColor: "var(--acc-line)" }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>You'll receive</div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(2.2rem, 4vw, 2.8rem)", letterSpacing: "-0.03em", color: valid ? "var(--acc-deep)" : "var(--fg-4)", lineHeight: 1 }}>{credits.toLocaleString()}</div>
-          <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 4, marginBottom: 18 }}>credits for ${valid ? effective.toLocaleString() : "—"}</div>
+          <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 4, marginBottom: 18 }}>credits for ${valid ? effective.toLocaleString() : "0"}</div>
           <button onClick={go} disabled={!valid} className="btn btn--lg" style={{ width: "100%", justifyContent: "center", opacity: valid ? 1 : 0.55 }}>Continue to checkout <span aria-hidden>→</span></button>
           <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, lineHeight: 1.6 }}>Secure checkout on Vraelis (Stripe). No credits? <a href="/vote" style={{ color: "var(--acc-deep)" }}>Vote to earn →</a></p>
         </div>

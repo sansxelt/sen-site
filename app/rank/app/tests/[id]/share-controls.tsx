@@ -44,7 +44,7 @@ export function ShareControls({ testId, enabled: e0, token: t0 }: { testId: stri
         </>
       ) : (
         <>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 14 }}>Publish a clean, read-only public link to share these results with clients or teammates — no Vraelis account needed to view.</p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 14 }}>Publish a read-only public link to share with clients or teammates. No Vraelis account needed to view.</p>
           <button onClick={() => act("enable")} disabled={busy} className="btn">{busy ? "Enabling…" : "Enable public sharing"}</button>
         </>
       )}

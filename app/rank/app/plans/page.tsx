@@ -44,8 +44,8 @@ export default function PlansPage() {
       const r = await fetch("/api/v/portal", { method: "POST" });
       const j = await r.json().catch(() => ({}));
       if (j.url) window.location.href = j.url;
-      else setNote(j.error === "no_subscription" ? "No billing account yet — subscribe to a plan first." : "Couldn't open billing — please try again.");
-    } catch { setNote("Couldn't open billing — please try again."); } finally { setBusy(false); }
+      else setNote(j.error === "no_subscription" ? "No billing account yet. Subscribe to a plan first." : "Couldn't open billing. Try again.");
+    } catch { setNote("Couldn't open billing. Try again."); } finally { setBusy(false); }
   }
 
   return (
@@ -68,7 +68,7 @@ export default function PlansPage() {
 
       {subscribed && (
         <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Subscription received — your plan and monthly credits will activate within a few seconds.</p>
+          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Subscription received. Your plan and credits will activate in a few seconds.</p>
         </div>
       )}
       {note && <p style={{ color: "var(--fg-3)", fontSize: 13, marginBottom: 14 }}>{note}</p>}
@@ -108,7 +108,7 @@ export default function PlansPage() {
       </div>
 
       <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 26, lineHeight: 1.7 }}>
-        Plan credits refresh each billing cycle and don&apos;t roll over. Top-up credits you buy never expire. Cancel anytime — your plan stays active until the period ends.
+        Plan credits refresh each billing cycle and don&apos;t roll over. Top-up credits you buy never expire. Cancel anytime. Your plan stays active until the period ends.
       </p>
     </div>
   );

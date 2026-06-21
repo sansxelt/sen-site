@@ -16,7 +16,7 @@ const AUDIENCES: [string, string][] = [
 const TEMPLATES: { name: string; title: string; category: string; context: string }[] = [
   { name: "Two ad creatives", title: "Which ad creative performs better?", category: "ad", context: "Which of these grabs attention and makes you want to click?" },
   { name: "Logo options", title: "Which logo do you prefer?", category: "logo", context: "Which logo feels more trustworthy and memorable for a modern brand?" },
-  { name: "Thumbnails", title: "Which thumbnail would you click?", category: "thumbnail", context: "You're scrolling your feed — which thumbnail makes you stop and click?" },
+  { name: "Thumbnails", title: "Which thumbnail would you click?", category: "thumbnail", context: "You're scrolling your feed. Which thumbnail makes you stop and click?" },
   { name: "Landing hero", title: "Which hero concept is clearer?", category: "landing", context: "Which landing-page hero best explains the product at a glance?" },
   { name: "AI images", title: "Which AI image looks best?", category: "ai_image", context: "Which generated image looks the most polished and on-brand?" },
 ];
@@ -105,8 +105,8 @@ export default function NewTest() {
   async function addImages(files: FileList) {
     setError("");
     const arr = Array.from(files);
-    if (arr.some((f) => !f.type.startsWith("image/"))) { setError("Unsupported file — use JPG or PNG images."); return; }
-    if (arr.some((f) => f.size > MAX_FILE_MB * 1024 * 1024)) { setError(`Image too large — keep each under ${MAX_FILE_MB}MB.`); return; }
+    if (arr.some((f) => !f.type.startsWith("image/"))) { setError("Unsupported file. Use JPG or PNG images."); return; }
+    if (arr.some((f) => f.size > MAX_FILE_MB * 1024 * 1024)) { setError(`Image too large. Keep each under ${MAX_FILE_MB}MB.`); return; }
     const list = arr.slice(0, Math.max(0, maxOptions - assets.length));
     if (!list.length) return;
     setUploading((n) => n + list.length);
@@ -115,10 +115,10 @@ export default function NewTest() {
         const dataUrl = await resize(f);
         const r = await fetch("/api/v/upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dataUrl }) });
         const j = await r.json().catch(() => ({}));
-        if (r.status === 413) setError("That image is too large — try a smaller one.");
+        if (r.status === 413) setError("That image is too large. Try a smaller one.");
         else if (j.url) setAssets((p) => (p.length < maxOptions ? [...p, { url: j.url as string, path: (j.path as string) ?? null }] : p));
-        else setError("Couldn't upload an image — try again.");
-      } catch { setError("Couldn't read an image — try JPG or PNG."); }
+        else setError("Couldn't upload an image. Try again.");
+      } catch { setError("Couldn't read an image. Try JPG or PNG."); }
       finally { setUploading((n) => Math.max(0, n - 1)); }
     }
   }
@@ -139,12 +139,12 @@ export default function NewTest() {
       const res = await fetch("/api/v/tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, context, category, audience, votesTarget: votes, options }) });
       if (res.status === 401) { signIn("google", { callbackUrl: "/app/new" }); return; }
       const j = await res.json().catch(() => ({}));
-      if (res.status === 402) { setError(`Not enough credits — this test needs ${j.needed}. Earn by voting, or top up.`); return; }
+      if (res.status === 402) { setError(`Not enough credits. This test needs ${j.needed}. Earn by voting, or top up.`); return; }
       if (res.status === 403 && j.error === "plan_limit") { setError(`You've hit your plan's ${j.limit} active test${j.limit === 1 ? "" : "s"} this month. Upgrade for more.`); return; }
       if (res.status === 413) { setError("One of your images is too large. Try smaller or fewer images."); return; }
       if (!res.ok) { setError("Couldn't launch the test. Try again."); return; }
       window.location.href = `/app/tests/${j.id}/report?launched=1`;
-    } catch { setError("Network error — try again."); }
+    } catch { setError("Network error. Try again."); }
     finally { setBusy(false); }
   }
 
@@ -165,7 +165,7 @@ export default function NewTest() {
       </div>
 
       <div style={{ marginBottom: 26 }}>
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Start from a template <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>· optional — edit anything</span></div>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Start from a template <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(optional)</span></div>
         <div className="chips">
           {TEMPLATES.map((t) => (
             <button key={t.name} onClick={() => { setTitle(t.title); setCategory(t.category); setContext(t.context); }} className="chip" style={{ cursor: "pointer" }}>{t.name}</button>
@@ -185,7 +185,7 @@ export default function NewTest() {
                 <div><span style={lab}>Type</span><select style={inputStyle} value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
                 <div><span style={lab}>Audience</span><select style={inputStyle} value={audience} onChange={(e) => setAudience(e.target.value)}>{AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
               </div>
-              <div><span style={lab}>Context for voters (optional)</span><input style={inputStyle} value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g. This is for a gaming channel — which grabs attention?" /></div>
+              <div><span style={lab}>Context for voters (optional)</span><input style={inputStyle} value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g. for a gaming channel. Which grabs attention?" /></div>
             </div>
           </section>
 
@@ -214,7 +214,7 @@ export default function NewTest() {
                 >
                   <input ref={inputRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => e.target.files && addImages(e.target.files)} />
                   <div style={{ fontSize: 15, fontWeight: 600, color: "var(--fg-1)" }}>Drop images here or tap to choose</div>
-                  <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 4 }}>2–{maxOptions} options · JPG or PNG · up to {MAX_FILE_MB}MB each</div>
+                  <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 4 }}>2 to {maxOptions} options. JPG or PNG. Max {MAX_FILE_MB}MB each</div>
                 </div>
                 {(assets.length > 0 || uploading > 0) && (
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(92px, 1fr))", gap: 10, marginTop: 14 }}>
@@ -229,7 +229,7 @@ export default function NewTest() {
                     ))}
                   </div>
                 )}
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: optionCount >= 2 ? "var(--acc-deep)" : "var(--fg-4)", marginTop: 10 }}>{optionCount} / {maxOptions} options{optionCount < 2 ? " · need at least 2" : " ✓"}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: optionCount >= 2 ? "var(--acc-deep)" : "var(--fg-4)", marginTop: 10 }}>{optionCount} / {maxOptions} options{optionCount < 2 ? " (need at least 2)" : " ✓"}</div>
               </>
             )}
           </section>
@@ -244,7 +244,7 @@ export default function NewTest() {
             <input type="range" min={10} max={maxVotes} step={10} value={Math.min(votes, maxVotes)} onChange={(e) => setVotes(parseInt(e.target.value, 10))} style={{ width: "100%", accentColor: "var(--acc-deep)" }} />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 vote = 1 credit</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>Plan max {maxVotes.toLocaleString()} · <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>upgrade</a></span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>Plan max {maxVotes.toLocaleString()}. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</a></span>
             </div>
           </section>
         </div>
@@ -262,14 +262,14 @@ export default function NewTest() {
             </div>
             {error && <p style={{ color: "var(--err)", fontSize: 13 }}>{error}</p>}
             <button onClick={submit} disabled={busy || uploading > 0 || !ready} className="btn btn--lg" style={{ justifyContent: "center", opacity: busy || uploading > 0 || !ready ? 0.55 : 1 }}>
-              {busy ? "Launching…" : uploading > 0 ? "Uploading…" : <>Launch test · {votes} credits</>}
+              {busy ? "Launching…" : uploading > 0 ? "Uploading…" : <>Launch test, {votes} credits</>}
             </button>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", lineHeight: 1.6 }}>
               Credits held in escrow → real people vote → invalid votes filtered → unused credits refunded → report generated.
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7, padding: "0 4px" }}>
-            {["Invalid votes are filtered — only valid human judgments count.", "Unused credits are refunded when the test completes.", "Embed an active test anywhere to collect more votes."].map((x) => (
+            {["Invalid votes are filtered. Only valid judgments count.", "Unused credits are refunded when the test completes.", "Embed an active test anywhere to collect more votes."].map((x) => (
               <div key={x} style={{ display: "flex", gap: 8, fontSize: 12, color: "var(--fg-4)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</div>
             ))}
           </div>

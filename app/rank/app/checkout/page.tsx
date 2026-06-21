@@ -30,8 +30,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
     } catch { /* fall back to catalog price */ }
   }
   const heading = plan
-    ? `${plan.name} — $${planAmount.toLocaleString()}/${cycle === "yearly" ? "yr" : "mo"}`
-    : `${(amount * 10).toLocaleString()} credits — $${amount}`;
+    ? `${plan.name}, $${planAmount.toLocaleString()}/${cycle === "yearly" ? "yr" : "mo"}`
+    : `${(amount * 10).toLocaleString()} credits for $${amount}`;
   const sub = plan
     ? `${plan.monthlyCredits.toLocaleString()} credits every month. Cancel anytime.`
     : "Secure checkout, right here on Vraelis. Powered by Stripe.";

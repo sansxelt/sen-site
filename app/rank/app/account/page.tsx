@@ -41,14 +41,14 @@ export default async function AccountPage() {
         <span aria-hidden style={{ width: 52, height: 52, borderRadius: 14, flex: "none", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22 }}>{email.slice(0, 1).toUpperCase()}</span>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis" }}>{email}</div>
-          <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 2 }}>Signed in with Google · Vraelis account</div>
+          <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 2 }}>Signed in with Google</div>
         </div>
         <span className="badge-now" style={{ marginLeft: "auto" }}>{planName} plan</span>
       </div>
 
       {/* stats */}
       <div className="tile-grid cols-3" style={{ marginBottom: 26 }}>
-        <div className="stat"><div className="stat__l">Plan</div><div className="stat__v">{planName}</div><div className="stat__s">{plan === "free" ? "No subscription" : `Status: ${status}`}{renews ? ` · renews ${renews}` : ""}</div></div>
+        <div className="stat"><div className="stat__l">Plan</div><div className="stat__v">{planName}</div><div className="stat__s">{plan === "free" ? "No subscription" : `Status: ${status}`}{renews ? `, renews ${renews}` : ""}</div></div>
         <div className="stat"><div className="stat__l">Credit balance</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s">1 credit = 1 valid human judgment</div></div>
         <div className="stat"><div className="stat__l">Monthly credits</div><div className="stat__v tnum">{(sub?.monthly_credits ?? 0).toLocaleString()}</div><div className="stat__s">{plan === "free" ? "Upgrade for monthly credits" : "Refreshed each cycle"}</div></div>
       </div>
@@ -58,7 +58,7 @@ export default async function AccountPage() {
       <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
         {linkCard("/app/plans", "Plan", plan === "free" ? "Upgrade to unlock monthly credits and higher limits." : "Change plan, see what's included, or switch cycle.")}
         {linkCard("/app/billing", "Billing", "Subscription status, renewal, cancel or resume, payment.")}
-        {linkCard("/app/credits", "Credits", "Top up your balance — recommended packs or a custom amount.")}
+        {linkCard("/app/credits", "Credits", "Top up your balance with packs or a custom amount.")}
         {linkCard("/app/api-keys", "API & webhooks", "Create API keys, manage webhook endpoints and deliveries.")}
         {linkCard("/app/data", "Data & exports", "Aggregate results and JSON / CSV exports of your tests.")}
         {linkCard("/vote", "Vote & earn", "Vote on other tests and earn credits back.")}

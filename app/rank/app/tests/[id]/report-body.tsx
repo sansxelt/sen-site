@@ -68,7 +68,7 @@ export function ReportBody({ results, options, analysisSlot }: { results: VRepor
               <OptionThumb o={optById[row.id]} size={44} />
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600 }}>Option {OPTION_LETTERS[row.position]}{isWin ? " · winner" : ""}</span>
+                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600 }}>Option {OPTION_LETTERS[row.position]}{isWin ? " (winner)" : ""}</span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>{row.votes} vote{row.votes === 1 ? "" : "s"}</span>
                 </div>
                 <div style={{ height: 8, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden" }}>
@@ -91,7 +91,7 @@ export function ReportBody({ results, options, analysisSlot }: { results: VRepor
 
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>What voters said</div>
       {results.comments.length === 0 ? (
-        <p style={{ fontSize: 13.5, color: "var(--fg-4)", marginBottom: 26 }}>No written comments — voters chose without leaving a note.</p>
+        <p style={{ fontSize: 13.5, color: "var(--fg-4)", marginBottom: 26 }}>No written comments yet.</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 26 }}>
           {results.ranked.filter((row) => commentsByOption[row.id]?.length).map((row) => (

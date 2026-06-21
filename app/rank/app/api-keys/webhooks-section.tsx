@@ -61,11 +61,11 @@ export function WebhooksSection() {
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
         <h2 className="display" style={{ fontSize: "clamp(1.4rem, 2.4vw, 1.8rem)" }}>Webhooks</h2>
       </div>
-      <p className="lead-copy" style={{ marginBottom: 18 }}>Get a signed <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13 }}>test.completed</code> event pushed to your app the moment a test fills — then pull results from the export endpoint. <a href="/developers#webhooks" style={{ color: "var(--acc-deep)" }}>Docs →</a></p>
+      <p className="lead-copy" style={{ marginBottom: 18 }}>Get a signed <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13 }}>test.completed</code> event pushed to your app the moment a test fills. Then pull results from the export endpoint. <a href="/developers#webhooks" style={{ color: "var(--acc-deep)" }}>Docs →</a></p>
 
       {fresh && (
         <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line)", background: "var(--acc-soft)" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Signing secret — store it now</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Signing secret. Store it now</div>
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <code style={{ flex: 1, fontFamily: "var(--font-code, monospace)", fontSize: 13, color: "var(--fg-1)", wordBreak: "break-all", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 8, padding: "10px 12px" }}>{fresh.secret}</code>
             <button onClick={copySecret} className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>{copied ? "Copied ✓" : "Copy"}</button>
@@ -90,7 +90,7 @@ export function WebhooksSection() {
                 <div style={{ fontFamily: "var(--font-code, monospace)", fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.url}</div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", marginTop: 4 }}>
                   <span className="pill" style={h.enabled ? { background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" } : { color: "var(--fg-4)" }}>{h.enabled ? "enabled" : "disabled"}</span>
-                  {h.last_success_at ? " · last ✓ " + new Date(h.last_success_at).toLocaleDateString() : h.last_failure_at ? " · last ✗ " + new Date(h.last_failure_at).toLocaleDateString() : " · no deliveries yet"}
+                  {h.last_success_at ? " Last sent " + new Date(h.last_success_at).toLocaleDateString() : h.last_failure_at ? " Last failed " + new Date(h.last_failure_at).toLocaleDateString() : " No deliveries yet"}
                 </div>
               </div>
             </div>
@@ -107,7 +107,7 @@ export function WebhooksSection() {
               <div style={{ marginTop: 12, borderTop: "1px solid var(--line-1)", paddingTop: 10 }}>
                 {dels.length === 0 ? <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0 }}>No deliveries yet.</p> : dels.map((d) => (
                   <div key={d.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11.5, padding: "5px 0", color: "var(--fg-3)", borderTop: "1px solid var(--line-1)" }}>
-                    <span style={{ color: d.status === "success" ? "var(--acc-deep)" : "var(--err)", whiteSpace: "nowrap" }}>{d.status}{d.response_status ? ` ${d.response_status}` : ""}{d.attempts > 1 ? ` · try ${d.attempts}` : ""}{d.test_id ? "" : " · test"}</span>
+                    <span style={{ color: d.status === "success" ? "var(--acc-deep)" : "var(--err)", whiteSpace: "nowrap" }}>{d.status}{d.response_status ? ` ${d.response_status}` : ""}{d.attempts > 1 ? `, try ${d.attempts}` : ""}{d.test_id ? "" : ", test"}</span>
                     <span style={{ display: "flex", gap: 8, alignItems: "center", whiteSpace: "nowrap" }}>
                       <span>{new Date(d.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
                       {d.status === "failed" && <button onClick={() => retry(h, d)} className="btn btn--ghost" style={{ fontSize: 11, padding: "2px 9px" }}>Retry</button>}

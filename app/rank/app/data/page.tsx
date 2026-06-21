@@ -18,7 +18,7 @@ export default async function DataPage() {
         <div>
           <p className="eyebrow">Data</p>
           <h1 className="display">Your preference data</h1>
-          <p>Real human preference signal across your tests — export any completed result as JSON or CSV.</p>
+          <p>Real preference data from your tests. Export any completed result as JSON or CSV.</p>
         </div>
       </div>
 
@@ -34,7 +34,7 @@ export default async function DataPage() {
           <div style={head}>Most-tested categories</div>
           {stats.byCategory.length === 0 ? <p style={{ fontSize: 13.5, color: "var(--fg-4)" }}>No completed tests yet.</p> : (
             <div className="chips">
-              {stats.byCategory.map((c) => <span key={c.category} className="chip">{c.category.replace(/_/g, " ")} · {c.count}</span>)}
+              {stats.byCategory.map((c) => <span key={c.category} className="chip">{c.category.replace(/_/g, " ")} {c.count}</span>)}
             </div>
           )}
         </div>
@@ -45,7 +45,7 @@ export default async function DataPage() {
               {stats.recent.map((t, i) => (
                 <a key={t.id} href={`/app/tests/${t.id}/report`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, textDecoration: "none", padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
                   <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</span>
-                  <span className="badge-now" style={{ flex: "none" }}>{t.winner ?? "—"}</span>
+                  <span className="badge-now" style={{ flex: "none" }}>{t.winner ?? "Tie"}</span>
                 </a>
               ))}
             </div>
@@ -56,7 +56,7 @@ export default async function DataPage() {
       <div className="card cta-band" style={{ background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Export preference data</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Every completed report exports as JSON or CSV — winner, vote breakdown, valid-vs-filtered quality, comments, and AI analysis. Pull it into dashboards, analytics, or training pipelines.</p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Every completed report exports as JSON or CSV. Winner, vote breakdown, vote quality, comments, and AI analysis.</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <a href="/app/api-keys" className="btn">API keys</a>

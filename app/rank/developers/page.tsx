@@ -93,7 +93,7 @@ export default function DevelopersPage() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Developers</p>
           <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 820, margin: "0 auto 16px" }}>Add <span className="em">“Test with Vraelis”</span> to your app.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 24px", textAlign: "center" }}>Your users generate options. Vraelis tells you which one real people prefer — via one API call or an embeddable widget. The feedback becomes a data layer you own.</p>
+          <p className="lead-copy" style={{ margin: "0 auto 24px", textAlign: "center" }}>Your users generate options. Vraelis tells you which one real people prefer. Use one API call or an embed widget.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/api-keys" className="btn btn--lg">Create an API key</a>
             <a href="#embed" className="btn btn--ghost btn--lg">Embed widget</a>
@@ -114,8 +114,8 @@ export default function DevelopersPage() {
               </ul>
               <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <span className="pill">API access on Scale</span>
-                <span className="pill">SDKs — coming soon</span>
-                <span className="pill">Discord bot — coming soon</span>
+                <span className="pill">SDKs (coming soon)</span>
+                <span className="pill">Discord bot (coming soon)</span>
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -132,10 +132,10 @@ export default function DevelopersPage() {
           <div style={{ maxWidth: 660, marginBottom: "clamp(20px, 3vw, 32px)" }}>
             <p className="eyebrow">Preference data exports</p>
             <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Pull preference data into your product.</h2>
-            <p className="lead-copy">Use Vraelis exports to pull preference results into dashboards, training-data pipelines, analytics tools, or product workflows — as JSON or CSV. Owner- or API-key-authenticated.</p>
+            <p className="lead-copy">Pull results into dashboards, training pipelines, analytics, or your product. JSON or CSV. Owner or API key auth.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 18, alignItems: "start" }} className="cols-stack">
-            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Export — JSON or CSV</div><Code>{EXPORT_CURL}</Code></div>
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Export JSON or CSV</div><Code>{EXPORT_CURL}</Code></div>
             <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Response shape</div><Code>{EXPORT_SHAPE}</Code></div>
           </div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 14, maxWidth: 720 }}>Includes the winner, vote breakdown, percentages, <strong style={{ color: "var(--fg-2)" }}>valid vs filtered</strong> vote quality, comments, and the AI analysis. Never includes account email, voter identities, or raw IP/device data.</p>
@@ -155,7 +155,7 @@ export default function DevelopersPage() {
             <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Verify the signature</div><Code>{WEBHOOK_VERIFY}</Code></div>
           </div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 14, maxWidth: 760 }}>Sign base: <code style={{ fontFamily: "var(--font-code, monospace)" }}>{"`${X-Vraelis-Timestamp}.${rawBody}`"}</code>, HMAC-SHA256 with your endpoint secret, compared to <code style={{ fontFamily: "var(--font-code, monospace)" }}>X-Vraelis-Signature</code>. Check the timestamp is recent to prevent replay. Payloads never include account email, API keys, or private data. Events: <code style={{ fontFamily: "var(--font-code, monospace)" }}>test.completed</code> (more soon).</p>
-          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 760 }}><strong style={{ color: "var(--fg-2)" }}>Retries.</strong> Return a <code style={{ fontFamily: "var(--font-code, monospace)" }}>2xx</code> within 6s. Transient failures (timeout, 5xx, 429) are retried automatically with backoff — up to 5 attempts over ~6 hours; <code style={{ fontFamily: "var(--font-code, monospace)" }}>4xx</code> and unsafe URLs aren&apos;t retried. Every attempt reuses the same <code style={{ fontFamily: "var(--font-code, monospace)" }}>X-Vraelis-Delivery</code> id, so <strong style={{ color: "var(--fg-2)" }}>dedupe on it</strong> to stay idempotent. Disabled endpoints stop retrying; you can also re-send by hand from the dashboard.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 760 }}><strong style={{ color: "var(--fg-2)" }}>Retries.</strong> Return a <code style={{ fontFamily: "var(--font-code, monospace)" }}>2xx</code> within 6s. Transient failures (timeout, 5xx, 429) are retried automatically with backoff, up to 5 attempts over about 6 hours. <code style={{ fontFamily: "var(--font-code, monospace)" }}>4xx</code> and unsafe URLs aren&apos;t retried. Every attempt reuses the same <code style={{ fontFamily: "var(--font-code, monospace)" }}>X-Vraelis-Delivery</code> id, so <strong style={{ color: "var(--fg-2)" }}>dedupe on it</strong> to stay idempotent. Disabled endpoints stop retrying; you can also re-send by hand from the dashboard.</p>
         </div>
       </section>
 
@@ -166,7 +166,7 @@ export default function DevelopersPage() {
             <div>
               <p className="eyebrow">Embeddable widget</p>
               <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 14 }}>One line. Votes anywhere.</h2>
-              <p className="lead-copy" style={{ marginBottom: 16 }}>Drop a Vraelis test into your site, docs, or community and collect real votes — no code beyond one script tag. The widget is a responsive, self-resizing iframe.</p>
+              <p className="lead-copy" style={{ marginBottom: 16 }}>Drop a Vraelis test into your site, docs, or community and collect real votes. One script tag, no other code. The widget is a responsive iframe.</p>
               <Code>{EMBED}</Code>
               <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 12 }}>Get the snippet for any active test on its report page. Votes are quality-filtered (too-fast, duplicate, and spam votes are rejected automatically).</p>
             </div>
@@ -192,7 +192,7 @@ export default function DevelopersPage() {
           <p className="eyebrow">Use cases</p>
           <div className="cols-3" style={{ gap: 14, marginBottom: 28 }}>
             {[
-              ["AI image tools", "Let users pick the best of N generations before download — and learn which styles win."],
+              ["AI image tools", "Let users pick the best generation before download. Learn which styles win."],
               ["Copy & content apps", "Test headline, hook, or caption variants with real readers."],
               ["Design & brand platforms", "Validate logos, palettes, and layouts with an audience, in-product."],
             ].map(([t, d]) => (

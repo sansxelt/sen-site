@@ -136,7 +136,7 @@ export function VraelisSignIn({
       });
       if (result?.error) throw new Error(result.error);
       setPassword("");
-      setStatus({ tone: "success", message: "Welcome in — taking you through." });
+      setStatus({ tone: "success", message: "Signing you in." });
       router.push(result?.url ?? safeRedirect);
       router.refresh();
     } catch (error) {
@@ -155,7 +155,7 @@ export function VraelisSignIn({
           {mode === "signup" ? <>Create your <span className="em">account</span>.</> : <>Access your <span className="em">account</span>.</>}
         </h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
-          {mode === "signup" ? "Start testing with real people in minutes — 25 free credits." : "Sign in to your tests, credits, and reports."}
+          {mode === "signup" ? "Start testing with real people. 25 free credits." : "Sign in to your tests, credits, and reports."}
         </p>
       </div>
 
@@ -225,7 +225,7 @@ export function VraelisSignIn({
       </div>
 
       <p style={{ textAlign: "center", marginTop: 18, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)" }}>
-        No card required · cancel anytime
+        No card required. Cancel anytime.
       </p>
     </div>
   );

@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const data = await getSharedReport(token);
   // Unknown/disabled → generic card + generic copy (no report-specific preview).
   if (!data || (data.test.status !== "active" && data.test.status !== "complete")) {
-    return ogMeta({ title: "Report — Vraelis", description: "See which creative option real users preferred.", path: `/r/${token}`, index: false });
+    return ogMeta({ title: "Report", description: "See which creative option real users preferred.", path: `/r/${token}`, index: false });
   }
   const { test, report } = data;
   let description = "See which creative option real users preferred.";
@@ -19,10 +19,10 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
     const r = report.results;
     const win = r.winner_option_id ? r.ranked.find((x) => x.id === r.winner_option_id) : null;
     description = win
-      ? `Real users preferred Option ${OPTION_LETTERS[win.position]} — ${win.pct}%. See the full Vraelis report.`
+      ? `Real people preferred Option ${OPTION_LETTERS[win.position]}, ${win.pct}%. See the full report.`
       : "A clear, real-user verdict on which creative wins. See the full Vraelis report.";
   } else if (test.status === "active") {
-    description = `Collecting real-user votes — ${test.votes_valid} of ${test.votes_target} in. See it on Vraelis.`;
+    description = `Collecting votes. ${test.votes_valid} of ${test.votes_target} in.`;
   }
   // Per-report dynamic OG image (public-safe fields only); generic /og fallback.
   const image = `https://vraelis.com/og/r?token=${encodeURIComponent(token)}`;
@@ -42,7 +42,7 @@ function Frame({ children }: { children: ReactNode }) {
         <div className="wrap" style={{ position: "relative", padding: "clamp(40px, 6vw, 76px) var(--gutter)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Created with Vraelis</p>
           <div className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 10 }}>Test your creative with <span className="em">real people</span>.</div>
-          <p style={{ fontSize: 15, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 22px" }}>Upload your options and get a clear report on what wins — before you launch.</p>
+          <p style={{ fontSize: 15, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 22px" }}>Upload your options and get a clear report on what wins before launch.</p>
           <a href="https://vraelis.com/app/new" className="btn btn--lg">Run your own test →</a>
         </div>
       </footer>
@@ -112,7 +112,7 @@ export default async function PublicReport({ params }: { params: Promise<{ token
   if (!report) return <Unavailable />; // unreachable (handled above) — satisfies the type checker
   return (
     <Frame>
-      <p className="eyebrow">Shared report · complete</p>
+      <p className="eyebrow">Shared report</p>
       <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.5rem)", marginBottom: 8 }}>{test.title}</h1>
       <p style={{ fontSize: 14, color: "var(--fg-4)", marginBottom: 22 }}>A read-only verdict from real people, powered by Vraelis.</p>
       <ReportBody

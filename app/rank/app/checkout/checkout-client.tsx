@@ -17,7 +17,7 @@ export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.clientSecret) {
       setError(
-        j.error === "billing_unavailable" ? "Billing is temporarily unavailable — please try again later."
+        j.error === "billing_unavailable" ? "Billing is temporarily unavailable. Try again later."
         : j.error === "plan_unavailable" ? "This plan isn't available right now. Try another, or contact us."
         : j.error === "signin_required" ? "Please sign in to continue."
         : "Couldn't start checkout. Please try again.",

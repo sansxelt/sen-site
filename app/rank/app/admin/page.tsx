@@ -40,7 +40,7 @@ export default function AdminPage() {
         <div>
           <p className="eyebrow">Admin</p>
           <h1 className="display">Vote review</h1>
-          <p>Suspicious votes are filtered automatically. Review and override here — last 7 days.</p>
+          <p>Suspicious votes are filtered automatically. Review and override here. Last 7 days.</p>
         </div>
       </div>
 
@@ -68,10 +68,10 @@ export default function AdminPage() {
             <div key={v.id} className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: "12px 16px" }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                  <span className="pill" style={{ fontSize: 11, background: v.status === "rejected" ? "var(--acc-soft)" : "var(--bg-2)", color: v.status === "rejected" ? "var(--money, #c0392b)" : "var(--fg-3)" }}>{v.status}{v.reject_reason ? ` · ${v.reject_reason.replace(/_/g, " ")}` : ""}</span>
-                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>{v.title ?? "—"}</span>
+                  <span className="pill" style={{ fontSize: 11, background: v.status === "rejected" ? "var(--acc-soft)" : "var(--bg-2)", color: v.status === "rejected" ? "var(--money, #c0392b)" : "var(--fg-3)" }}>{v.status}{v.reject_reason ? `, ${v.reject_reason.replace(/_/g, " ")}` : ""}</span>
+                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis" }}>{v.title ?? "Untitled"}</span>
                 </div>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>{mask(v.voter_id)} · {v.time_spent_ms != null ? `${(v.time_spent_ms / 1000).toFixed(1)}s` : "—"}{v.reason ? ` · “${v.reason.slice(0, 60)}”` : ""}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>{mask(v.voter_id)}, {v.time_spent_ms != null ? `${(v.time_spent_ms / 1000).toFixed(1)}s` : "no time"}{v.reason ? ` “${v.reason.slice(0, 60)}”` : ""}</div>
               </div>
               {v.status === "rejected"
                 ? <button onClick={() => override(v.id, "valid")} className="btn btn--ghost" style={{ fontSize: 13 }}>Mark valid</button>

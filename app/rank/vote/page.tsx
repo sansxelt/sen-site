@@ -50,10 +50,10 @@ export default function VotePage() {
       } else if (r.status === 409 || r.status === 400) {
         fetchNext(); // already voted / test just filled or closed — move on
       } else {
-        setErr("Couldn't save your vote — try again.");
+        setErr("Couldn't save your vote. Try again.");
       }
     } catch {
-      setErr("Network error — try again.");
+      setErr("Network error. Try again.");
     } finally { setBusy(false); }
   }
 
@@ -65,7 +65,7 @@ export default function VotePage() {
     <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <p className="eyebrow">Vote &amp; earn</p>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.2vw, 2.3rem)", marginBottom: 10 }}>Help decide what <span className="em">wins</span>.</h1>
-      <p style={{ fontSize: 15, color: "var(--fg-3)", marginBottom: 20, maxWidth: 520, lineHeight: 1.55 }}>Vote on real creative tests and earn a credit for every valid vote — then spend them launching your own.</p>
+      <p style={{ fontSize: 15, color: "var(--fg-3)", marginBottom: 20, maxWidth: 520, lineHeight: 1.55 }}>Vote on real creative tests and earn a credit for every valid vote. Spend them on your own tests.</p>
 
       {ctx.signedIn && (
         <div className="card" style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap", marginBottom: 18, padding: "14px 18px" }}>
@@ -82,7 +82,7 @@ export default function VotePage() {
             <div style={{ height: 6, borderRadius: 99, background: "var(--bg-2)", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${Math.min(100, (earned / cap) * 100)}%`, background: capReached ? "var(--money)" : "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
             </div>
-            {capReached && <div style={{ fontSize: 11, color: "var(--money)", marginTop: 5 }}>Daily earning cap reached — your votes still count.</div>}
+            {capReached && <div style={{ fontSize: 11, color: "var(--money)", marginTop: 5 }}>Daily earning cap reached. Your votes still count.</div>}
           </div>
         </div>
       )}
@@ -116,7 +116,7 @@ export default function VotePage() {
       {phase === "signin" && (
         <div className="card" style={{ textAlign: "center", padding: "clamp(28px, 4vw, 48px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 700, marginBottom: 8 }}>Sign in to vote &amp; earn</div>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>Vote on real creative tests and earn 1 credit per valid vote — spend them launching your own. Takes a second.</p>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>Vote on real creative tests and earn 1 credit per valid vote. Spend them on your own tests.</p>
           <button onClick={() => signIn("google", { callbackUrl: "/vote" })} className="btn btn--lg">Continue with Google</button>
         </div>
       )}
@@ -124,7 +124,7 @@ export default function VotePage() {
       {phase === "empty" && (
         <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 5vw, 56px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 700, marginBottom: 8 }}>You&apos;re all caught up</div>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>No tests need your vote right now — you may have voted on all the active ones. Check back soon, or start your own.</p>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>No tests need your vote right now. Check back soon, or start your own.</p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/new" className="btn">Create a test</a>
             <a href="/app" className="btn btn--ghost">Dashboard</a>
@@ -158,7 +158,7 @@ export default function VotePage() {
               );
             })}
           </div>
-          <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why did you pick it? (optional — helps the report)" rows={2} style={{ width: "100%", padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box", marginBottom: 12, resize: "vertical" }} />
+          <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why did you pick it? (optional, helps the report)" rows={2} style={{ width: "100%", padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box", marginBottom: 12, resize: "vertical" }} />
           {err && <p style={{ color: "var(--err)", fontSize: 13, marginBottom: 10 }}>{err}</p>}
           <button onClick={submit} disabled={!selected || busy} className="btn btn--lg" style={{ justifyContent: "center", width: "100%", opacity: !selected || busy ? 0.55 : 1 }}>{busy ? "Saving…" : "Submit & next →"}</button>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, lineHeight: 1.6 }}>Only valid human feedback counts. Very fast, duplicate, or spammy votes may be filtered. Helpful comments improve report quality.</p>

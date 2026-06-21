@@ -111,14 +111,14 @@ export default function PricingPage() {
           <div className="card" style={{ marginTop: 22, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap", background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
             <div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Need credits without a plan?</div>
-              <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0 }}>Buy custom top-ups — $1 = 10 credits, from $5 to $9,999. Top-up credits never expire.</p>
+              <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0 }}>Buy custom top-ups. $1 = 10 credits, from $5 to $9,999. Top-up credits never expire.</p>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               {[9, 39, 99].map((a) => <span key={a} className="chip">${a} → {a * 10}</span>)}
               <a className="btn" href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</a>
             </div>
           </div>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 18, textAlign: "center" }}>Plans renew automatically; cancel anytime — your plan stays active until the period ends. Secure checkout on Vraelis, powered by Stripe.</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 18, textAlign: "center" }}>Plans renew automatically. Cancel anytime, your plan stays active until the period ends. Secure checkout on Vraelis, powered by Stripe.</p>
         </div>
       </section>
     </div>
