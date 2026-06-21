@@ -1,45 +1,18 @@
-"use client";
-
-import { useState } from "react";
-import { signOut } from "next-auth/react";
+// Danger-zone placeholder. Self-serve account deletion is intentionally NOT wired
+// yet — real deletion needs a dedicated data-safety pass (Stripe records, public
+// reports, billing retention, credits, keys, webhooks). For now this drafts the UX
+// and routes the request to support. No destructive action runs from the client.
 
 export function DeleteAccount() {
-  const [open, setOpen] = useState(false);
-  const [confirm, setConfirm] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
-
-  async function del() {
-    if (confirm !== "DELETE") return;
-    setBusy(true); setErr("");
-    try {
-      const r = await fetch("/api/v/account/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirm }) });
-      if (r.ok) { signOut({ callbackUrl: "/" }); return; }
-      setErr("Couldn't delete your account. Email help@vraelis.com and we'll help.");
-    } catch { setErr("Network error. Try again."); }
-    finally { setBusy(false); }
-  }
-
   return (
     <div className="card" style={{ borderColor: "rgba(220,38,38,0.28)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)" }}>Delete account</div>
-          <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2, maxWidth: 480 }}>Permanently delete your account and all of your tests, reports, credits, API keys, and webhooks. This cannot be undone.</div>
+          <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2, maxWidth: 480, lineHeight: 1.5 }}>Deleting your account permanently removes your tests, reports, credits, API keys, and webhooks. To request deletion, email us and we&apos;ll process it. Self-serve deletion is coming soon.</div>
         </div>
-        {!open && <button onClick={() => setOpen(true)} className="btn btn--ghost" style={{ color: "var(--err)", borderColor: "rgba(220,38,38,0.3)" }}>Delete account</button>}
+        <a href="mailto:help@vraelis.com?subject=Delete%20my%20Vraelis%20account" className="btn btn--ghost" style={{ color: "var(--err)", borderColor: "rgba(220,38,38,0.3)", whiteSpace: "nowrap" }}>Request deletion</a>
       </div>
-      {open && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line-1)" }}>
-          <div style={{ fontSize: 13.5, color: "var(--fg-2)", marginBottom: 10 }}>Type <b style={{ color: "var(--fg-1)" }}>DELETE</b> to confirm. This is permanent and cannot be undone.</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="DELETE" autoComplete="off" style={{ flex: 1, minWidth: 180, padding: "10px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
-            <button onClick={del} disabled={confirm !== "DELETE" || busy} className="btn" style={{ background: "var(--err)", borderColor: "var(--err)", boxShadow: "none", opacity: confirm === "DELETE" && !busy ? 1 : 0.5 }}>{busy ? "Deleting…" : "Permanently delete"}</button>
-            <button onClick={() => { setOpen(false); setConfirm(""); setErr(""); }} className="btn btn--ghost">Cancel</button>
-          </div>
-          {err && <p style={{ color: "var(--err)", fontSize: 13, marginTop: 10, marginBottom: 0 }}>{err}</p>}
-        </div>
-      )}
     </div>
   );
 }
