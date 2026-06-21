@@ -75,16 +75,22 @@ const EXPORT_SHAPE = `{
     "filtered_reasons": { "too_fast": 9, "spam_comment": 5 } }
 }`;
 
-function Code({ children }: { children: string }) {
-  return <pre style={{ fontFamily: "var(--font-code, monospace)", fontSize: 12.5, color: "var(--fg-1)", background: "var(--bg-2)", border: "1px solid var(--line-2)", borderRadius: 10, padding: "14px 16px", overflowX: "auto", lineHeight: 1.55, margin: 0 }}><code>{children}</code></pre>;
+function Code({ children, label = "shell" }: { children: string; label?: string }) {
+  return (
+    <div>
+      <div className="codebar"><i /><i /><i /><span>{label}</span></div>
+      <pre className="codeblock"><code>{children}</code></pre>
+    </div>
+  );
 }
 
 export default function DevelopersPage() {
   return (
     <div>
-      <section style={{ position: "relative", overflow: "hidden", borderBottom: "1px solid var(--line-1)" }}>
-        <div className="gridbg" />
-        <div className="wrap" style={{ position: "relative", paddingTop: "clamp(40px, 6vw, 72px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
+      <section style={{ position: "relative", overflow: "hidden" }}>
+        <div className="glow glow--soft" />
+        <div className="grid-faint" />
+        <div className="wrap" style={{ position: "relative", paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Developers</p>
           <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 820, margin: "0 auto 16px" }}>Add <span className="em">“Test with Vraelis”</span> to your app.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 24px", textAlign: "center" }}>Your users generate options. Vraelis tells you which one real people prefer — via one API call or an embeddable widget. The feedback becomes a data layer you own.</p>

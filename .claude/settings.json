@@ -1,4 +1,4 @@
-﻿{
+{
   "permissions": {
     "allow": [
       "Read(//c/Users/SenFR/Downloads/**)",
@@ -77,5 +77,8 @@
       "Bash(grep -n \"cr<\\\\|cr }\\\\|cr,\\\\|cr}\\\\|'cr'\\\\|\\\\\"cr\\\\\"\\\\| cr \\\\| cr$\\\\|}cr\\\\|≈ \\\\|cr·\\\\|cr ·\\\\|· cr\" components/web-chat.tsx components/billing-panel.tsx components/buy-credits-modal.tsx)",
       "Bash(grep -n '\"cr\"\\\\|cr<\\\\|cr \"\\\\|cr -\\\\|cr$\\\\|`\\\\${.*}cr`\\\\| cr\"\\\\|cr\"]\\\\|cr\",' desktop/src/billing-panel.tsx app/globals.css)"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
   }
 }

@@ -108,38 +108,30 @@ export default async function Dashboard() {
   const planName = plan === "free" ? "Free" : plan.charAt(0).toUpperCase() + plan.slice(1);
 
   return (
-    <div className="wrap" style={{ maxWidth: 1000, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 22 }}>
+    <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
+      <div className="phead">
         <div>
           <p className="eyebrow">Dashboard</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)" }}>Welcome back</h1>
+          <h1 className="display">Welcome back</h1>
         </div>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          {isAdmin(email) && <a href="/app/admin" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Admin</a>}
-          <a href="/app/data" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Data</a>
-          <a href="/app/billing" className="vra-nav-secondary" style={{ fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</a>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          {isAdmin(email) && <a href="/app/admin" style={{ fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" }}>Admin</a>}
           <a href="/app/new" className="btn">New test <span aria-hidden>→</span></a>
         </div>
       </div>
 
-      {/* metric strip */}
-      <div className="metric-strip" style={{ border: "1px solid var(--line-2)", borderRadius: 14, overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-card)", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", marginBottom: 22 }}>
-        <div className="metric"><div className="metric__label">Plan</div><div className="metric__val" style={{ fontFamily: "var(--font-display)" }}>{planName}</div><div className="metric__delta"><a href="/app/plans" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{plan === "free" ? "Upgrade →" : "Manage →"}</a></div></div>
-        <div className="metric"><div className="metric__label">Credits</div><div className="metric__val tnum">{bal.toLocaleString()}</div><div className="metric__delta"><a href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</a></div></div>
-        <div className="metric"><div className="metric__label">Active tests</div><div className="metric__val tnum">{active.length}</div><div className="metric__delta">collecting votes</div></div>
-        <div className="metric"><div className="metric__label">Completed</div><div className="metric__val tnum">{completed.length}</div><div className="metric__delta">reports ready</div></div>
+      {/* stats */}
+      <div className="tile-grid cols-4" style={{ marginBottom: 24 }}>
+        <div className="stat"><div className="stat__l">Plan</div><div className="stat__v">{planName}</div><div className="stat__s"><a href="/app/plans" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{plan === "free" ? "Upgrade →" : "Manage →"}</a></div></div>
+        <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><a href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</a></div></div>
+        <div className="stat"><div className="stat__l">Active tests</div><div className="stat__v tnum">{active.length}</div><div className="stat__s">collecting votes</div></div>
+        <div className="stat"><div className="stat__l">Completed</div><div className="stat__v tnum">{completed.length}</div><div className="stat__s">reports ready</div></div>
       </div>
 
       {tests.length === 0 ? (
         <FirstRun bal={bal} />
       ) : (
         <>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 28 }}>
-            <a href="/app/new" className="btn">Create a test</a>
-            <a href="/app/credits" className="btn btn--ghost">Buy credits</a>
-            <a href="/vote" className="btn btn--ghost">Vote &amp; earn</a>
-            <a href="/app/api-keys" className="btn btn--ghost">API &amp; embed</a>
-          </div>
           {active.length > 0 && <TestList title="Active" items={active} />}
           {completed.length > 0 && <TestList title="Completed" items={completed} />}
           {active.length === 0 && completed.length === 0 && tests.length > 0 && <TestList title="Tests" items={tests} />}

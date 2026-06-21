@@ -133,10 +133,16 @@ export default async function RootLayout({
           {/* Vraelis stylesheets load for every vraelis request (marketing
               pages AND the shared /signin, /account flows) so the whole
               brand renders light + green. tokens before styles. */}
+          {/* The brand's display/body faces (Bricolage Grotesque + Hanken
+              Grotesk) — load them so styles.css's --font-display/--font-sans
+              actually render instead of falling back to a system sans. */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" />
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=9" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=9" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=10" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=10" />
           {children}
         </body>
       </html>

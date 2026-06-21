@@ -64,7 +64,8 @@ export default function VotePage() {
   return (
     <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <p className="eyebrow">Vote &amp; earn</p>
-      <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.1rem)", marginBottom: 18 }}>Help decide what <span className="em">wins</span>.</h1>
+      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.2vw, 2.3rem)", marginBottom: 10 }}>Help decide what <span className="em">wins</span>.</h1>
+      <p style={{ fontSize: 15, color: "var(--fg-3)", marginBottom: 20, maxWidth: 520, lineHeight: 1.55 }}>Vote on real creative tests and earn a credit for every valid vote — then spend them launching your own.</p>
 
       {ctx.signedIn && (
         <div className="card" style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap", marginBottom: 18, padding: "14px 18px" }}>
@@ -104,10 +105,10 @@ export default function VotePage() {
 
       {phase === "loading" && (
         <div className="card">
-          <div style={{ height: 14, width: "55%", background: "var(--bg-2)", borderRadius: 6, marginBottom: 16 }} />
+          <div className="skel" style={{ height: 14, width: "55%", marginBottom: 16 }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <div style={{ aspectRatio: "1/1", background: "var(--bg-2)", borderRadius: "var(--r-sm)" }} />
-            <div style={{ aspectRatio: "1/1", background: "var(--bg-2)", borderRadius: "var(--r-sm)" }} />
+            <div className="skel" style={{ aspectRatio: "1/1" }} />
+            <div className="skel" style={{ aspectRatio: "1/1" }} />
           </div>
         </div>
       )}
