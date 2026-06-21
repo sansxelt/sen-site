@@ -270,20 +270,28 @@ async function attemptRetry(s: ReturnType<typeof getSupabaseAdminClient>, del: {
   return res;
 }
 
-// Cron sweep: re-send failed deliveries whose backoff has elapsed. Never throws.
+// Sweep: re-send failed deliveries whose backoff has elapsed. Runs from the daily
+// cron AND opportunistically after completions, so concurrent sweeps must not
+// double-send — each row is claimed atomically (push next_retry_at forward; only
+// the winning update sees it still-due) before re-posting. Never throws.
 export async function runWebhookRetries(max = 100): Promise<{ processed: number; succeeded: number; gaveUp: number }> {
   const out = { processed: 0, succeeded: 0, gaveUp: 0 };
   try {
     if (!isDatabaseConfigured()) return out;
     const s = getSupabaseAdminClient();
+    const nowIso = new Date().toISOString();
     const { data, error } = await s.from("v_webhook_deliveries" as never)
       .select("id,endpoint_id,event,attempts,payload")
       .eq("status", "failed").lt("attempts", MAX_ATTEMPTS)
-      .not("next_retry_at", "is", null).lte("next_retry_at", new Date().toISOString())
+      .not("next_retry_at", "is", null).lte("next_retry_at", nowIso)
       .order("next_retry_at", { ascending: true }).limit(max);
     if (error) return out; // column/index absent (pre-migration) → no-op
     const due = (data as unknown as { id: string; endpoint_id: string; event: string; attempts: number; payload: unknown }[]) ?? [];
     for (const d of due) {
+      // Claim: only one sweep can flip a still-due row; others match 0 rows + skip.
+      const lockUntil = new Date(Date.now() + 2 * 60_000).toISOString();
+      const { data: claim } = await s.from("v_webhook_deliveries" as never).update({ next_retry_at: lockUntil } as never).eq("id", d.id).eq("status", "failed").lte("next_retry_at", nowIso).select("id");
+      if (!claim || (claim as unknown[]).length === 0) continue; // already claimed
       const { data: epRow } = await s.from("v_webhook_endpoints" as never).select("id,url,secret,enabled").eq("id", d.endpoint_id).maybeSingle();
       const ep = epRow as unknown as { id: string; url: string; secret: string; enabled: boolean } | null;
       if (!ep) { await s.from("v_webhook_deliveries" as never).update({ next_retry_at: null } as never).eq("id", d.id); continue; } // endpoint deleted

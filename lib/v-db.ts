@@ -210,9 +210,13 @@ export async function completeTest(testId: string): Promise<void> {
   // completion. Delivery is idempotent (unique per endpoint/test/event).
   try {
     const ns = (await import("next/server")) as { after?: (cb: () => unknown) => void };
-    const { deliverTestCompleted } = await import("./v-webhooks");
-    if (ns.after) ns.after(() => deliverTestCompleted(testId).catch(() => {}));
-    else await deliverTestCompleted(testId);
+    const { deliverTestCompleted, runWebhookRetries } = await import("./v-webhooks");
+    // Deliver this test's event, then opportunistically flush any due retries — on
+    // an active platform this gives near-real-time retry recovery without a frequent
+    // cron (Hobby caps crons at daily; the daily sweep is the backstop).
+    const work = async () => { await deliverTestCompleted(testId).catch(() => {}); await runWebhookRetries(20).catch(() => {}); };
+    if (ns.after) ns.after(work);
+    else await work();
   } catch { /* webhooks must never affect completion */ }
 }
 
