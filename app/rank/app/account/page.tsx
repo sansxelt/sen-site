@@ -5,7 +5,7 @@ import { ensureProfile, getPlan, getSubscription } from "@/lib/v-db";
 import { balance } from "@/lib/v-credits";
 import { SignOutButton } from "../../_components/rank-ui";
 
-export const metadata: Metadata = { title: "Account — Vraelis" };
+export const metadata: Metadata = { title: "Account" };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 

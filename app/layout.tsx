@@ -81,25 +81,25 @@ const sansxelMetadata: Metadata = {
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
-    default: "Vraelis — test generated content with real users",
-    template: "%s",
+    default: "Test creative with real people | Vraelis",
+    template: "%s | Vraelis",
   },
   description:
-    "Vraelis is a feedback network for AI apps and creative teams. Test generated options with real users, get clear reports on what wins, and turn feedback into revenue.",
+    "Upload your options, collect valid votes from real people, and see what wins before launch. Real feedback for AI apps and creative teams.",
   alternates: { canonical: "https://vraelis.com" },
   icons: { icon: "/vraelis/mark.jpg" },
   openGraph: {
     type: "website",
     url: "https://vraelis.com",
     siteName: "Vraelis",
-    title: "Test generated content with real users",
-    description: "Real people vote on your creative options. Vraelis tells you what wins before you launch.",
+    title: "Test creative with real people",
+    description: "Real people vote on your options. See what wins before you launch.",
     images: [{ url: "/og", width: 1200, height: 630, alt: "Vraelis" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Test generated content with real users",
-    description: "Real people vote on your creative options. Vraelis tells you what wins before you launch.",
+    title: "Test creative with real people",
+    description: "Real people vote on your options. See what wins before you launch.",
     images: ["/og"],
   },
   robots: { index: true, follow: true },
@@ -141,8 +141,8 @@ export default async function RootLayout({
           <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" />
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=12" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=12" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=13" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=13" />
           {children}
         </body>
       </html>

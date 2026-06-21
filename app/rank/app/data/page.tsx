@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ownerStats } from "@/lib/v-db";
 
-export const metadata: Metadata = { title: "Data — Vraelis" };
+export const metadata: Metadata = { title: "Data" };
 
 export default async function DataPage() {
   const session = await auth();

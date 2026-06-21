@@ -9,7 +9,7 @@ import { ShareControls } from "../share-controls";
 import { ExportControls } from "../export-controls";
 import { ReportBody, OptionThumb } from "../report-body";
 
-export const metadata: Metadata = { title: "Report — Vraelis" };
+export const metadata: Metadata = { title: "Report" };
 
 function Msg({ title, body }: { title: string; body?: string }) {
   return (

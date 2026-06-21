@@ -84,7 +84,7 @@ function TestList({ title, items }: { title: string; items: Awaited<ReturnType<t
   );
 }
 
-export const metadata: Metadata = { title: "Dashboard — Vraelis" };
+export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function Dashboard() {
   const session = await auth();

@@ -1,8 +1,8 @@
 import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
-  title: "Developers — Vraelis API & embed",
-  description: "Add human preference testing to your app. Send generated options to the Vraelis API or drop in the embeddable “Test with Vraelis” widget and get back what real users prefer.",
+  title: "Developers",
+  description: "Add human feedback to your app. Create tests by API, collect votes, receive webhooks, and export results.",
   path: "/developers",
 });
 

@@ -2,8 +2,8 @@ import { PLAN_CATALOG } from "@/lib/v-plans";
 import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
-  title: "Vraelis — test generated content with real users",
-  description: "A feedback network for AI apps and creative teams. Test generated options with real users, get clear reports on what wins, and turn feedback into revenue.",
+  title: "Test creative with real people",
+  description: "Upload your options, collect valid votes from real people, and see what wins before launch.",
   path: "/",
 });
 
@@ -27,17 +27,17 @@ const ICONS = {
 };
 
 const AUDIENCE = [
-  { t: "AI apps", d: "Test generated outputs with real users right inside your product.", i: ICONS.spark },
+  { t: "AI apps", d: "Test generated outputs inside your product.", i: ICONS.spark },
   { t: "Creative tools", d: "Let users pick the best variation before they export.", i: ICONS.layers },
   { t: "Brands & agencies", d: "Validate campaigns and creative before you spend.", i: ICONS.flag },
   { t: "Creators & studios", d: "Know which thumbnail, cover, or cut actually wins.", i: ICONS.film },
 ];
 
 const STEPS = [
-  { k: "01", t: "Send your options", d: "Drop in 2–8 versions from your tool or pipeline — generated images, ads, thumbnails, landing pages, UI, or copy. Web, API, or embed.", i: ICONS.upload },
+  { k: "01", t: "Send your options", d: "Drop in 2 to 8 versions. Images, ads, thumbnails, landing pages, UI, or copy. Web, API, or embed.", i: ICONS.upload },
   { k: "02", t: "Real people choose & explain", d: "Vraelis routes your test to real humans who pick what they prefer and say why. Bots, rushers, and spam are filtered out automatically.", i: ICONS.users },
   { k: "03", t: "Get a clear report", d: "The winner, the vote breakdown, confidence, the reasons, an AI read on what to improve, and valid-vs-filtered vote quality.", i: ICONS.report },
-  { k: "04", t: "Turn feedback into revenue", d: "For AI apps, preference activity becomes a data layer you own — improve your model and open a feedback-driven revenue stream.", i: ICONS.revenue },
+  { k: "04", t: "Use the results", d: "For AI apps, vote data becomes a layer you own. Use it to improve your model and your product.", i: ICONS.revenue },
 ];
 
 const TESTABLE = ["Generated creative", "Campaign concepts", "Product visuals", "Landing pages", "Brand assets", "UI concepts", "Content variations", "Thumbnails & covers"];
@@ -59,7 +59,7 @@ const SUPPORTS: [string, string][] = [
   ["API for AI apps", "Send options, get a ranked result."],
   ["Webhooks", "Get notified the moment a test completes."],
   ["JSON / CSV exports", "Pull the structured preference data."],
-  ["On-site checkout", "Cards & wallets — never leave Vraelis."],
+  ["On-site checkout", "Cards and wallets. Never leave Vraelis."],
 ];
 
 const API_RESPONSE = `{
@@ -98,12 +98,12 @@ export default function RankLanding() {
         <div className="glow glow--bleed" />
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>A feedback network for AI apps & creative teams</p>
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Real feedback for AI apps and creative teams</p>
           <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
-            Test generated content with <span className="em">real users</span>.
+            Test creative with <span className="em">real people</span>.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 640, margin: "0 auto 30px", lineHeight: 1.55 }}>
-            Vraelis helps AI apps and creative teams learn what people prefer, turn that into clear feedback reports, and turn feedback into revenue.
+            Upload your options, collect valid votes from real people, and see what wins before launch.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/new" className="btn btn--lg">Start a test <span aria-hidden>→</span></a>
@@ -111,7 +111,7 @@ export default function RankLanding() {
             <a href="/developers" className="btn btn--ghost btn--lg">Developers</a>
           </div>
           <p className="rise" data-d="5" style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginTop: 22, letterSpacing: "0.01em" }}>
-            25 free credits to start · 1 credit = 1 real human judgment
+            25 free credits to start. 1 credit = 1 valid judgment.
           </p>
 
           {/* Product preview — the verdict, right up front */}
@@ -131,20 +131,20 @@ export default function RankLanding() {
                   </div>
                   <div style={{ marginTop: 16, padding: 13, borderRadius: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
                     <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5 }}>Vraelis analysis</div>
-                    <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, margin: 0 }}>B won on clarity and contrast — voters found A too busy. Push the focal subject harder to clear 70%.</p>
+                    <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, margin: 0 }}>B won on clarity and contrast. Voters found A too busy.</p>
                   </div>
                 </div>
                 <div style={{ padding: "clamp(18px,2.4vw,26px)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                     <div>
                       <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Winner</div>
-                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>Option B · 61%</div>
+                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>Option B, 61%</div>
                     </div>
                     <span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>high confidence</span>
                   </div>
                   <Verdict rows={[["A", 39, false], ["B", 61, true], ["C", 22, false]]} />
                   <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)" }}>
-                    <span>122 valid · 14 filtered</span>
+                    <span>122 valid, 14 filtered</span>
                     <span style={{ color: "var(--acc-deep)" }}>Shareable report ↗</span>
                   </div>
                 </div>
@@ -159,7 +159,7 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it's for</p>
-            <h2 className="display">Built for everyone who ships something people <span className="em">judge</span>.</h2>
+            <h2 className="display">Made for teams that ship <span className="em">creative</span>.</h2>
           </div>
           <div className="tile-grid cols-4">
             {AUDIENCE.map((a) => (
@@ -178,8 +178,8 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">How it works</p>
-            <h2 className="display">From a pile of options to a <span className="em">clear decision</span>.</h2>
-            <p>Four steps from upload to a verdict you can act on — and, for AI apps, a feedback stream you own.</p>
+            <h2 className="display">From options to a <span className="em">clear answer</span>.</h2>
+            <p>Four steps from upload to a result you can act on.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (
@@ -205,7 +205,7 @@ export default function RankLanding() {
             <div>
               <p className="eyebrow">The report</p>
               <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Not raw votes. A verdict you can <span className="em">act on</span>.</h2>
-              <p className="lead-copy" style={{ marginBottom: 22 }}>Every test returns a clean report — what won, how confident the result is, why people chose it, and what to change next.</p>
+              <p className="lead-copy" style={{ marginBottom: 22 }}>Every test returns a clean report. What won, how confident, and why people chose it.</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
                 {REPORT_PARTS.map((x) => (
                   <li key={x} style={{ display: "flex", gap: 11, fontSize: 14.5, color: "var(--fg-2)", alignItems: "flex-start" }}>
@@ -215,17 +215,17 @@ export default function RankLanding() {
               </ul>
               <div style={{ display: "flex", gap: 12, marginTop: 26, flexWrap: "wrap" }}>
                 <a href="/app/new" className="btn">Run a test</a>
-                <a href="/pricing" className="btn--quiet">See what's included →</a>
+                <a href="/pricing" style={{ alignSelf: "center", fontSize: 14, fontWeight: 500, color: "var(--acc-deep)", textDecoration: "none" }}>See what&apos;s included →</a>
               </div>
             </div>
             <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
               <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Report</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Complete</span></div>
               <div style={{ padding: "clamp(18px,2.4vw,26px)" }}>
                 <div className="card card--acc" style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16, boxShadow: "none", padding: 16 }}>
-                  <div style={{ width: 52, height: 52, borderRadius: 12, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", flex: "none" }} />
+                  <div style={{ width: 52, height: 52, borderRadius: 12, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22 }}>B</div>
                   <div>
                     <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Winner</div>
-                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21, color: "var(--fg-1)" }}>Option B — 61%</div>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21, color: "var(--fg-1)" }}>Option B, 61%</div>
                   </div>
                   <span className="pill" style={{ marginLeft: "auto", background: "var(--bg-1)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>+22 margin</span>
                 </div>
@@ -262,8 +262,8 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">For AI apps</p>
-            <h2 className="display">Turn user preferences into a data layer you own.</h2>
-            <p>Plug Vraelis into your product. Your users test generated outputs, you learn what they prefer, and that feedback becomes a stream you control — to improve your model and open new revenue.</p>
+            <h2 className="display">Add human feedback to your AI app.</h2>
+            <p>Create tests by API, collect votes, receive webhooks, and export results. Use them in your product.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: 18, alignItems: "stretch", marginBottom: 16 }} className="cols-stack">
             {/* left — the loop, on cream */}
@@ -289,7 +289,7 @@ export default function RankLanding() {
             </div>
           </div>
           <div className="tile-grid cols-3">
-            {[["Plug in", "One API call", "Send options, get a ranked result — or drop in the embeddable widget."], ["Learn", "What users prefer", "Real preference signal on your generated outputs, quality-filtered."], ["Earn", "Feedback → revenue", "Make user feedback a product surface, not a cost center."]].map(([k, t, d]) => (
+            {[["Plug in", "One API call", "Send options, get a ranked result. Or use the embed widget."], ["Learn", "What people prefer", "Real preference signal on your generated outputs, quality filtered."], ["Use it", "Results in your app", "Pull winners and vote data into your product."]].map(([k, t, d]) => (
               <div key={k} className="acard" style={{ gap: 6 }}>
                 <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)" }}>{k}</div>
                 <div className="acard__t">{t}</div>
@@ -329,8 +329,8 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">What's live today</p>
-            <h2 className="display">A complete loop, <span className="em">already shipping</span>.</h2>
-            <p>From upload to verdict to a shareable report — plus an API, webhooks, and exports for the apps that build on it.</p>
+            <h2 className="display">Everything you need, <span className="em">already live</span>.</h2>
+            <p>From upload to verdict to a shareable report. Plus an API, webhooks, and exports.</p>
           </div>
           <div className="tile-grid cols-4">
             {SUPPORTS.map(([t, d]) => (

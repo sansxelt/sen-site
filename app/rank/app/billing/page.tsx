@@ -6,7 +6,7 @@ import { balance } from "@/lib/v-credits";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { BillingActions } from "./billing-actions";
 
-export const metadata: Metadata = { title: "Billing — Vraelis" };
+export const metadata: Metadata = { title: "Billing" };
 
 const REASON: Record<string, string> = { signup: "Welcome credits", monthly_reset: "Monthly plan credits", topup: "Credit top-up", pack: "Credit pack", hold: "Test launch", refund: "Unfilled refund", reward: "Vote reward" };
 

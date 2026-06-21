@@ -5,7 +5,7 @@ import { PLAN_CATALOG, priceIdFor } from "@/lib/v-plans";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { CheckoutClient } from "./checkout-client";
 
-export const metadata: Metadata = { title: "Checkout — Vraelis" };
+export const metadata: Metadata = { title: "Checkout" };
 
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ amount?: string; plan?: string; cycle?: string }> }) {
   const sp = await searchParams;
