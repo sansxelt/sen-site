@@ -115,9 +115,9 @@ function Footer() {
           <a href="/app" style={a}>Dashboard</a><a href="/app/billing" style={a}>Billing</a><a href="/privacy" style={a}>Privacy</a><a href="/terms" style={a}>Terms</a>
         </div>
       </div>
-      <div className="wrap" style={{ padding: "0 var(--gutter) 30px", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 22 }}>
-        <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)" }}>© Vraelis. 1 credit = 1 human judgment</span>
-        <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)" }}>Made for AI apps &amp; creative teams</span>
+      <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
+        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© Vraelis</span>
+        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Built for AI apps and creative teams</span>
       </div>
     </footer>
   );

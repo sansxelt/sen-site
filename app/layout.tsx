@@ -81,7 +81,7 @@ const sansxelMetadata: Metadata = {
 const vraelisMetadata: Metadata = {
   metadataBase: new URL("https://vraelis.com"),
   title: {
-    default: "Test creative with real people | Vraelis",
+    default: "Vraelis",
     template: "%s | Vraelis",
   },
   description:
@@ -141,8 +141,8 @@ export default async function RootLayout({
           <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" />
           {/* ?v bust: bump on every CSS change so browsers don't serve a
               stale cached stylesheet (the static file URL is otherwise fixed). */}
-          <link rel="stylesheet" href="/vraelis/tokens.css?v=13" />
-          <link rel="stylesheet" href="/vraelis/styles.css?v=13" />
+          <link rel="stylesheet" href="/vraelis/tokens.css?v=14" />
+          <link rel="stylesheet" href="/vraelis/styles.css?v=14" />
           {children}
         </body>
       </html>

@@ -1,11 +1,14 @@
 import { PLAN_CATALOG } from "@/lib/v-plans";
 import { ogMeta } from "@/lib/og-meta";
 
-export const metadata = ogMeta({
-  title: "Test creative with real people",
-  description: "Upload your options, collect valid votes from real people, and see what wins before launch.",
-  path: "/",
-});
+export const metadata = {
+  ...ogMeta({
+    title: "Test creative with real people",
+    description: "Upload your options, collect valid votes from real people, and see what wins before launch.",
+    path: "/",
+  }),
+  title: { absolute: "Vraelis" },
+};
 
 // Minimal line icons — geometric, single-stroke, on-brand.
 function Icon({ d, size = 18 }: { d: string; size?: number }) {

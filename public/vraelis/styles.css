@@ -515,6 +515,9 @@ summary::-webkit-details-marker { display: none; }
   background: #16202B; color: #E7ECF3; overflow-x: auto; box-shadow: var(--shadow-lg);
   font-family: var(--font-code); font-size: 13px; line-height: 1.7;
 }
+/* the global `code` rule sets a dark ink color; inside the dark panel the inner
+   <code> must inherit the panel's light foreground, not the dark page color */
+.codeblock code, .codeblock kbd { color: inherit; background: none; border: none; padding: 0; font-size: inherit; }
 .codeblock .tk-key { color: #8CE0B4; } .codeblock .tk-str { color: #F0CE8E; } .codeblock .tk-com { color: #8B97A8; }
 .codebar { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-radius: var(--r-lg) var(--r-lg) 0 0; border: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.06); background: #1C2733; }
 .codebar i { width: 10px; height: 10px; border-radius: 50%; display: block; }
@@ -558,7 +561,7 @@ summary::-webkit-details-marker { display: none; }
 /* ─── App shell — sidebar that connects the product to the brand ─── */
 .app-shell { display: grid; grid-template-columns: 232px minmax(0,1fr); min-height: calc(100svh - 1px); }
 .app-side {
-  border-right: 1px solid var(--line-1); background: var(--bg-2);
+  border-right: 1px solid var(--line-2); background: var(--bg-0);
   padding: 18px 14px; display: flex; flex-direction: column; gap: 4px;
   position: sticky; top: 0; align-self: start; height: 100svh; overflow-y: auto;
 }

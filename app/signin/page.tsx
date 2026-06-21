@@ -8,9 +8,8 @@ import { getZone, ZONE_THEME } from "@/lib/zone";
 import { isVraelisRequest } from "@/lib/site-host";
 
 export const metadata: Metadata = {
-  title: "Sign In",
-  description:
-    "Sign in with email, Google, or GitHub.",
+  title: "Access",
+  description: "Sign in or create your account.",
 };
 
 export default async function SignInPage({
@@ -47,7 +46,7 @@ export default async function SignInPage({
     return (
       <div style={{ position: "relative", overflow: "hidden", minHeight: "100svh", padding: "clamp(56px, 8vw, 96px) 20px clamp(40px, 8vw, 80px)" }}>
         <div className="glow glow--soft" />
-        <a href="/" style={{ position: "fixed", top: 18, left: 18, zIndex: 10, display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 15px", borderRadius: 99, border: "1px solid var(--line-2)", background: "rgba(255,255,255,0.82)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", color: "var(--fg-2)", textDecoration: "none", fontSize: 13.5, fontWeight: 500, boxShadow: "var(--shadow-sm)" }}>← Back to site</a>
+        <a href="/" style={{ position: "fixed", bottom: 20, left: 20, zIndex: 20, display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 17px", borderRadius: 99, border: "1px solid var(--line-2)", background: "rgba(255,255,255,0.9)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", color: "var(--fg-2)", textDecoration: "none", fontSize: 14, fontWeight: 500, boxShadow: "var(--shadow-md)" }}>← Back to site</a>
         <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
           <VraelisSignIn
             callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
