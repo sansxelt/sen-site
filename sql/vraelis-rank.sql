@@ -377,3 +377,8 @@ create table if not exists v_webhook_deliveries (
 create index if not exists v_webhook_del_ep_idx on v_webhook_deliveries (endpoint_id, created_at desc);
 -- idempotency: a real test.completed is delivered at most once per endpoint.
 create unique index if not exists v_webhook_del_uniq on v_webhook_deliveries (endpoint_id, test_id, event) where test_id is not null;
+-- Retry/backoff: a failed delivery carries next_retry_at; the cron sweep re-sends
+-- due rows (transient failures only) until they succeed or hit the attempt cap.
+alter table v_webhook_deliveries add column if not exists next_retry_at timestamptz;
+create index if not exists v_webhook_del_retry_idx on v_webhook_deliveries (next_retry_at)
+  where status = 'failed' and next_retry_at is not null;

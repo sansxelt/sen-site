@@ -12,9 +12,25 @@ import { getTestWithOptions, getReport, OPTION_LETTERS, type VTest } from "./v-d
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://vraelis.com";
 const MAX_ENDPOINTS = 10;
 const DELIVERY_TIMEOUT_MS = 6000;
+const MAX_ATTEMPTS = 5;
+// Delay before the next retry, indexed by attempts-so-far: 2m, 10m, 1h, 6h.
+const BACKOFF_MS = [2 * 60_000, 10 * 60_000, 60 * 60_000, 6 * 60 * 60_000];
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function newSecret(): string { return "whsec_" + crypto.randomBytes(24).toString("hex"); }
+
+// When (ISO) the next retry is due, or null if the cap is reached.
+function nextRetryAt(attempts: number): string | null {
+  if (attempts >= MAX_ATTEMPTS) return null;
+  return new Date(Date.now() + BACKOFF_MS[Math.min(attempts - 1, BACKOFF_MS.length - 1)]).toISOString();
+}
+// Retry only transient failures. A bad/unsafe URL or a 4xx (non-429) won't fix
+// itself — don't hammer it.
+function isRetriable(res: { status: number | null; error: string | null }): boolean {
+  if (res.error === "blocked_url" || res.error === "unsafe_url") return false;
+  if (res.status && res.status >= 400 && res.status < 500 && res.status !== 429) return false;
+  return true; // timeout, delivery_failed, 5xx, 429
+}
 
 // True if an IP literal is private/reserved/loopback/link-local (incl. cloud
 // metadata 169.254.169.254). Covers IPv4 ranges + IPv6 (loopback, ULA, link-local,
@@ -137,13 +153,13 @@ export async function deleteWebhook(userId: string, id: string): Promise<void> {
   await getSupabaseAdminClient().from("v_webhook_endpoints" as never).delete().eq("id", id).eq("user_id", norm(userId));
 }
 
-export type DeliveryRow = { id: string; test_id: string | null; event: string; status: string; response_status: number | null; error: string | null; created_at: string };
+export type DeliveryRow = { id: string; test_id: string | null; event: string; status: string; response_status: number | null; error: string | null; attempts: number; created_at: string };
 export async function listDeliveries(userId: string, endpointId: string): Promise<DeliveryRow[]> {
   if (!isDatabaseConfigured()) return [];
   const s = getSupabaseAdminClient();
   const { data: ep } = await s.from("v_webhook_endpoints" as never).select("id").eq("id", endpointId).eq("user_id", norm(userId)).maybeSingle();
   if (!ep) return [];
-  const { data } = await s.from("v_webhook_deliveries" as never).select("id,test_id,event,status,response_status,error,created_at").eq("endpoint_id", endpointId).order("created_at", { ascending: false }).limit(20);
+  const { data } = await s.from("v_webhook_deliveries" as never).select("id,test_id,event,status,response_status,error,attempts,created_at").eq("endpoint_id", endpointId).order("created_at", { ascending: false }).limit(20);
   return (data as unknown as DeliveryRow[]) ?? [];
 }
 
@@ -223,11 +239,77 @@ export async function deliverTestCompleted(testId: string): Promise<void> {
       const res = await post(ep.url, ep.secret, "test.completed", deliveryId, payload);
       await s.from("v_webhook_deliveries" as never).update({ status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never).eq("id", deliveryId);
       if (res.ok) await s.from("v_webhook_endpoints" as never).update({ last_success_at: new Date().toISOString(), failure_count: 0 } as never).eq("id", ep.id);
-      else await s.from("v_webhook_endpoints" as never).update({ last_failure_at: new Date().toISOString() } as never).eq("id", ep.id);
+      else {
+        await s.from("v_webhook_endpoints" as never).update({ last_failure_at: new Date().toISOString() } as never).eq("id", ep.id);
+        // Schedule an auto-retry for transient failures. Separate, tolerant update:
+        // next_retry_at may not exist until the retry migration runs (ignored if so).
+        if (isRetriable(res)) { const nr = nextRetryAt(1); if (nr) await s.from("v_webhook_deliveries" as never).update({ next_retry_at: nr } as never).eq("id", deliveryId); }
+      }
     }));
   } catch (e) {
     console.error("deliverTestCompleted:", e);
   }
+}
+
+// Re-attempt one failed delivery against its endpoint. Reuses the stored payload
+// (same delivery_id → the customer can dedupe). Re-checks enabled + URL safety.
+// `count` true increments attempts toward the auto-retry cap. Returns the result.
+async function attemptRetry(s: ReturnType<typeof getSupabaseAdminClient>, del: { id: string; endpoint_id: string; event: string; attempts: number; payload: unknown }, ep: { id: string; url: string; secret: string; enabled: boolean }): Promise<{ ok: boolean; status: number | null; error: string | null }> {
+  const now = () => new Date().toISOString();
+  if (!ep.enabled) { await s.from("v_webhook_deliveries" as never).update({ next_retry_at: null } as never).eq("id", del.id); return { ok: false, status: null, error: "disabled" }; }
+  if (webhookUrlError(ep.url)) { await s.from("v_webhook_deliveries" as never).update({ status: "failed", error: "unsafe_url", next_retry_at: null } as never).eq("id", del.id); return { ok: false, status: null, error: "unsafe_url" }; }
+  const attempts = (del.attempts || 0) + 1;
+  const res = await post(ep.url, ep.secret, del.event, del.id, del.payload);
+  if (res.ok) {
+    await s.from("v_webhook_deliveries" as never).update({ status: "success", response_status: res.status, error: null, attempts, delivered_at: now(), next_retry_at: null } as never).eq("id", del.id);
+    await s.from("v_webhook_endpoints" as never).update({ last_success_at: now(), failure_count: 0 } as never).eq("id", ep.id);
+  } else {
+    await s.from("v_webhook_deliveries" as never).update({ status: "failed", response_status: res.status, error: res.error, attempts, next_retry_at: isRetriable(res) ? nextRetryAt(attempts) : null } as never).eq("id", del.id);
+    await s.from("v_webhook_endpoints" as never).update({ last_failure_at: now() } as never).eq("id", ep.id);
+  }
+  return res;
+}
+
+// Cron sweep: re-send failed deliveries whose backoff has elapsed. Never throws.
+export async function runWebhookRetries(max = 100): Promise<{ processed: number; succeeded: number; gaveUp: number }> {
+  const out = { processed: 0, succeeded: 0, gaveUp: 0 };
+  try {
+    if (!isDatabaseConfigured()) return out;
+    const s = getSupabaseAdminClient();
+    const { data, error } = await s.from("v_webhook_deliveries" as never)
+      .select("id,endpoint_id,event,attempts,payload")
+      .eq("status", "failed").lt("attempts", MAX_ATTEMPTS)
+      .not("next_retry_at", "is", null).lte("next_retry_at", new Date().toISOString())
+      .order("next_retry_at", { ascending: true }).limit(max);
+    if (error) return out; // column/index absent (pre-migration) → no-op
+    const due = (data as unknown as { id: string; endpoint_id: string; event: string; attempts: number; payload: unknown }[]) ?? [];
+    for (const d of due) {
+      const { data: epRow } = await s.from("v_webhook_endpoints" as never).select("id,url,secret,enabled").eq("id", d.endpoint_id).maybeSingle();
+      const ep = epRow as unknown as { id: string; url: string; secret: string; enabled: boolean } | null;
+      if (!ep) { await s.from("v_webhook_deliveries" as never).update({ next_retry_at: null } as never).eq("id", d.id); continue; } // endpoint deleted
+      out.processed++;
+      const res = await attemptRetry(s, d, ep);
+      if (res.ok) out.succeeded++;
+      else if (!isRetriable(res) || (d.attempts || 0) + 1 >= MAX_ATTEMPTS) out.gaveUp++;
+    }
+  } catch (e) {
+    console.error("runWebhookRetries:", e);
+  }
+  return out;
+}
+
+// Owner-triggered "retry now" for a single failed delivery (owner+endpoint scoped).
+export async function retryDelivery(userId: string, endpointId: string, deliveryId: string): Promise<{ ok: boolean; status?: number | null; error?: string }> {
+  if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const s = getSupabaseAdminClient();
+  const { data: epRow } = await s.from("v_webhook_endpoints" as never).select("id,url,secret,enabled").eq("id", endpointId).eq("user_id", norm(userId)).maybeSingle();
+  const ep = epRow as unknown as { id: string; url: string; secret: string; enabled: boolean } | null;
+  if (!ep) return { ok: false, error: "not_found" };
+  const { data: delRow } = await s.from("v_webhook_deliveries" as never).select("id,endpoint_id,event,attempts,payload").eq("id", deliveryId).eq("endpoint_id", endpointId).maybeSingle();
+  const del = delRow as unknown as { id: string; endpoint_id: string; event: string; attempts: number; payload: unknown } | null;
+  if (!del) return { ok: false, error: "not_found" };
+  const res = await attemptRetry(s, del, ep);
+  return { ok: res.ok, status: res.status, error: res.error ?? undefined };
 }
 
 // Owner-triggered test ping (a sample payload, not a real test).

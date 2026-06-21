@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type Hook = { id: string; url: string; enabled: boolean; failure_count: number; last_success_at: string | null; last_failure_at: string | null };
-type Delivery = { id: string; test_id: string | null; event: string; status: string; response_status: number | null; error: string | null; created_at: string };
+type Delivery = { id: string; test_id: string | null; event: string; status: string; response_status: number | null; error: string | null; attempts: number; created_at: string };
 
 export function WebhooksSection() {
   const [hooks, setHooks] = useState<Hook[]>([]);
@@ -47,6 +47,12 @@ export function WebhooksSection() {
     const r = await fetch(`/api/v/webhooks/${h.id}/deliveries`);
     const j = await r.json().catch(() => ({}));
     setDels(j.deliveries || []); setDelsFor(h.id);
+  }
+  async function retry(h: Hook, d: Delivery) {
+    setNote((n) => ({ ...n, [d.id]: "…" }));
+    await fetch(`/api/v/webhooks/${h.id}/deliveries`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deliveryId: d.id }) });
+    const j = await (await fetch(`/api/v/webhooks/${h.id}/deliveries`)).json().catch(() => ({}));
+    setDels(j.deliveries || []); load();
   }
   function copySecret() { if (fresh) navigator.clipboard?.writeText(fresh.secret).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {}); }
 
@@ -100,9 +106,12 @@ export function WebhooksSection() {
             {delsFor === h.id && (
               <div style={{ marginTop: 12, borderTop: "1px solid var(--line-1)", paddingTop: 10 }}>
                 {dels.length === 0 ? <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0 }}>No deliveries yet.</p> : dels.map((d) => (
-                  <div key={d.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, fontFamily: "var(--font-mono)", fontSize: 11.5, padding: "4px 0", color: "var(--fg-3)" }}>
-                    <span style={{ color: d.status === "success" ? "var(--acc-deep)" : "var(--err)" }}>{d.status}{d.response_status ? ` ${d.response_status}` : ""}{d.test_id ? "" : " · test"}</span>
-                    <span>{new Date(d.created_at).toLocaleString()}</span>
+                  <div key={d.id} style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", fontFamily: "var(--font-mono)", fontSize: 11.5, padding: "4px 0", color: "var(--fg-3)" }}>
+                    <span style={{ color: d.status === "success" ? "var(--acc-deep)" : "var(--err)" }}>{d.status}{d.response_status ? ` ${d.response_status}` : ""}{d.attempts > 1 ? ` · try ${d.attempts}` : ""}{d.test_id ? "" : " · test"}</span>
+                    <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span>{new Date(d.created_at).toLocaleString()}</span>
+                      {d.status === "failed" && <button onClick={() => retry(h, d)} className="btn btn--ghost" style={{ fontSize: 11, padding: "2px 9px" }}>Retry</button>}
+                    </span>
                   </div>
                 ))}
               </div>
