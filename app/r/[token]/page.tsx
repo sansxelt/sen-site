@@ -9,7 +9,10 @@ import { AnalysisPanel } from "@/app/rank/app/tests/[id]/analysis-panel";
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
   const { token } = await params;
   const data = await getSharedReport(token);
-  if (!data) return ogMeta({ title: "Report — Vraelis", description: "See which creative option real users preferred.", path: `/r/${token}`, index: false });
+  // Unknown/disabled → generic card + generic copy (no report-specific preview).
+  if (!data || (data.test.status !== "active" && data.test.status !== "complete")) {
+    return ogMeta({ title: "Report — Vraelis", description: "See which creative option real users preferred.", path: `/r/${token}`, index: false });
+  }
   const { test, report } = data;
   let description = "See which creative option real users preferred.";
   if (report && test.status === "complete") {
@@ -19,9 +22,11 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
       ? `Real users preferred Option ${OPTION_LETTERS[win.position]} — ${win.pct}%. See the full Vraelis report.`
       : "A clear, real-user verdict on which creative wins. See the full Vraelis report.";
   } else if (test.status === "active") {
-    description = "This creative test is collecting real-user votes on Vraelis.";
+    description = `Collecting real-user votes — ${test.votes_valid} of ${test.votes_target} in. See it on Vraelis.`;
   }
-  return ogMeta({ title: `Vraelis Report: ${test.title}`, description, path: `/r/${token}`, index: false });
+  // Per-report dynamic OG image (public-safe fields only); generic /og fallback.
+  const image = `https://vraelis.com/og/r?token=${encodeURIComponent(token)}`;
+  return ogMeta({ title: `Vraelis Report: ${test.title}`, description, path: `/r/${token}`, index: false, image });
 }
 
 function Frame({ children }: { children: ReactNode }) {
