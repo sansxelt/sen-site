@@ -16,6 +16,12 @@ const CLEAN_EXACT: Record<string, string> = {
   "/contact": "/rank/contact",
   "/refunds": "/v/refunds",
 };
+// Retired sansxel product routes (exact path or any subpath) -> redirect home.
+const SANSXEL = [
+  "/home", "/product", "/platform", "/platform-soon", "/learn", "/lens",
+  "/whisper", "/workshop", "/copilot", "/download", "/desktop-auth",
+  "/contribute", "/chat", "/account", "/book", "/pay",
+];
 const VANITY_EXACT: Record<string, string> = {
   "/v/privacy": "/privacy",
   "/v/terms": "/terms",
@@ -45,6 +51,15 @@ export default function proxy(req: NextRequest) {
     path.startsWith("/v/account") || path.startsWith("/v/articles") ||
     path.startsWith("/v/how") || path.startsWith("/v/demo") || path.startsWith("/v/pricing")
   ) {
+    return go(req, "/", "redirect");
+  }
+
+  // 2b) Retired sansxel "Vraelis AI" surface (the old marketing + app: glasses
+  // hero, product, platform, learn, chat, account, pay, …). vraelis.com is
+  // Vraelis Rank now, and `/` already serves Rank, so these stray routes just
+  // leak another product — send them all home. (Rank's own /app, /vote, /signin,
+  // /api, /r, /embed, /og, /auth are untouched.)
+  if (SANSXEL.some((p) => path === p || path.startsWith(p + "/"))) {
     return go(req, "/", "redirect");
   }
 

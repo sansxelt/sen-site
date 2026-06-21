@@ -52,23 +52,9 @@ export function SignOutButton({ className = "btn btn--ghost", label = "Sign out"
   return <button onClick={() => signOut({ callbackUrl: "/" })} className={className}>{label}</button>;
 }
 
-function BrandMark() {
-  // The verdict bar is the product's signature: a full winning bar over a
-  // shorter runner-up. Distills it into a small green tile so the wordmark
-  // reads as a real logo, not plain text.
-  return (
-    <span aria-hidden style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", display: "grid", placeItems: "center", boxShadow: "0 2px 8px rgba(20,120,80,0.28)", flexShrink: 0 }}>
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="3" rx="1.5" fill="#fff" /><rect x="2" y="9" width="7" height="3" rx="1.5" fill="rgba(255,255,255,0.62)" /></svg>
-    </span>
-  );
-}
-
 function Brand({ href }: { href: string }) {
   return (
-    <a href={href} style={{ display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none", color: "var(--fg-1)" }}>
-      <BrandMark />
-      <span style={{ fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em" }}>Vraelis</span>
-    </a>
+    <a href={href} style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</a>
   );
 }
 
@@ -143,7 +129,8 @@ function AppTopbar({ email }: { email: string | null }) {
   useEffect(() => { setMenu(false); }, [pathname]);
   return (
     <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-      <Brand href="/app" />
+      {/* in-app logo returns to the public home (sidebar's "Back to site" does too) */}
+      <Brand href="/" />
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</a>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>

@@ -20,15 +20,16 @@ export default async function SignInLayout({ children }: { children: ReactNode }
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 9,
+              fontFamily: "var(--font-display)",
+              fontSize: 20,
+              fontWeight: 700,
+              letterSpacing: "-0.04em",
+              lineHeight: 1,
               color: "var(--fg-1)",
               textDecoration: "none",
             }}
           >
-            <span aria-hidden style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", display: "grid", placeItems: "center", boxShadow: "0 2px 8px rgba(20,120,80,0.28)", flexShrink: 0 }}>
-              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="3" rx="1.5" fill="#fff" /><rect x="2" y="9" width="7" height="3" rx="1.5" fill="rgba(255,255,255,0.62)" /></svg>
-            </span>
-            <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.04em" }}>Vraelis</span>
+            Vraelis
           </a>
           <a
             href="/"

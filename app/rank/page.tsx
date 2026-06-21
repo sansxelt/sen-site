@@ -111,14 +111,10 @@ export default function RankLanding() {
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/new" className="btn btn--lg">Start a test <span aria-hidden>→</span></a>
             <a href="/pricing" className="btn btn--ghost btn--lg">View pricing</a>
-            <a href="/developers" className="btn btn--ghost btn--lg">Developers</a>
           </div>
-          <p className="rise" data-d="5" style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", marginTop: 22, letterSpacing: "0.01em" }}>
-            25 free credits to start. 1 credit = 1 valid judgment.
-          </p>
 
           {/* Product preview — the verdict, right up front */}
-          <div className="rise" data-d="6" style={{ position: "relative", maxWidth: 860, margin: "clamp(40px, 5vw, 64px) auto 0" }}>
+          <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 860, margin: "clamp(34px, 4vw, 52px) auto 0" }}>
             <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
               <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Report</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Complete</span></div>
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.05fr)", gap: 0 }} className="cols-stack">
