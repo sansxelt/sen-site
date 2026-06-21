@@ -85,8 +85,9 @@ export async function exportResponse(testId: string, userId: string, fmt: string
   if (fmt !== "json" && fmt !== "csv") return Response.json({ error: "invalid_format", allowed: ["json", "csv"] }, { status: 400 });
   const res = await buildExport(testId);
   if (!res) return Response.json({ error: "not_found" }, { status: 404 });
-  if (res.status === "draft" || res.status === "canceled") return Response.json({ error: "not_exportable" }, { status: 404 });
+  // Ownership BEFORE status, so a non-owner can't probe draft/canceled vs live.
   if (res.ownerId !== userId.trim().toLowerCase()) return Response.json({ error: "forbidden" }, { status: 403 });
+  if (res.status === "draft" || res.status === "canceled") return Response.json({ error: "not_exportable" }, { status: 404 });
   const slug = (res.data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40)) || "vraelis-export";
   if (fmt === "csv") {
     return new Response(toCSV(res.data), { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${slug}.csv"` } });
