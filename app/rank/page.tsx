@@ -30,17 +30,17 @@ const ICONS = {
 };
 
 const AUDIENCE = [
-  { t: "AI apps", d: "Test generated outputs inside your product.", i: ICONS.spark },
-  { t: "Creative tools", d: "Let users pick the best variation before they export.", i: ICONS.layers },
-  { t: "Brands & agencies", d: "Validate campaigns and creative before you spend.", i: ICONS.flag },
-  { t: "Creators & studios", d: "Know which thumbnail, cover, or cut actually wins.", i: ICONS.film },
+  { t: "Creators & studios", d: "Pick the thumbnail, cover, or title that wins before you post. Less guessing, faster calls.", i: ICONS.film },
+  { t: "Brands & agencies", d: "Test ads and concepts before you spend, and hand clients a report that backs the decision.", i: ICONS.flag },
+  { t: "AI apps & tools", d: "Let your users test generated outputs, and offer testing as a premium feature.", i: ICONS.spark },
+  { t: "Developers", d: "Create tests by API, collect votes, and pull the results straight into your product.", i: ICONS.layers },
 ];
 
 const STEPS = [
   { k: "01", t: "Send your options", d: "Drop in 2 to 8 versions. Images, ads, thumbnails, landing pages, UI, or copy. Web, API, or embed.", i: ICONS.upload },
   { k: "02", t: "Real people choose & explain", d: "Vraelis routes your test to real humans who pick what they prefer and say why. Bots, rushers, and spam are filtered out automatically.", i: ICONS.users },
   { k: "03", t: "Get a clear report", d: "The winner, the vote breakdown, confidence, the reasons, an AI read on what to improve, and valid-vs-filtered vote quality.", i: ICONS.report },
-  { k: "04", t: "Use the results", d: "For AI apps, vote data becomes a layer you own. Use it to improve your model and your product.", i: ICONS.revenue },
+  { k: "04", t: "Use the results", d: "Ship the winner, share the report with a client, or export the data. AI apps can pull it back in by API.", i: ICONS.revenue },
 ];
 
 const TESTABLE = ["Generated creative", "Campaign concepts", "Product visuals", "Landing pages", "Brand assets", "UI concepts", "Content variations", "Thumbnails & covers"];
@@ -158,7 +158,8 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it's for</p>
-            <h2 className="display">Made for teams that ship <span className="em">creative</span>.</h2>
+            <h2 className="display">Know what wins <span className="em">before you launch</span>.</h2>
+            <p>You&apos;re not paying for votes. You&apos;re paying to make the right call before you spend on the wrong option.</p>
           </div>
           <div className="tile-grid cols-4">
             {AUDIENCE.map((a) => (

@@ -111,7 +111,7 @@ export default function PricingPage() {
           <div className="card" style={{ marginTop: 22, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
             <div style={{ maxWidth: 520 }}>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Need credits without a plan?</div>
-              <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Buy custom top-ups from $5 to $9,999. Every $1 adds 10 credits, and they never expire.</p>
+              <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Buy custom top-ups from $5 to $99,999. Every $1 adds 10 credits, and they never expire.</p>
             </div>
             <a className="btn btn--lg" href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</a>
           </div>

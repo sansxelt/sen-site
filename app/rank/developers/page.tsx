@@ -190,6 +190,8 @@ export default function DevelopersPage() {
       <section className="section" style={{ borderBottom: "none" }}>
         <div className="wrap">
           <p className="eyebrow">Use cases</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Make testing a feature your users pay for.</h2>
+          <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>Add a &ldquo;test with real people&rdquo; action to your app. Vraelis runs the voting, filtering, and reports; you offer it as a premium feature and get structured preference data back.</p>
           <div className="cols-3" style={{ gap: 14, marginBottom: 28 }}>
             {[
               ["AI image tools", "Let users pick the best generation before download. Learn which styles win."],
