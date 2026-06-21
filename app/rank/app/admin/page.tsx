@@ -36,27 +36,33 @@ export default function AdminPage() {
 
   return (
     <div className="wrap" style={{ maxWidth: 1000, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <p className="eyebrow">Admin</p>
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 6 }}>Vote review</h1>
-      <p className="lead-copy" style={{ marginBottom: 22 }}>Suspicious votes are filtered automatically. Review and override here. Last 7 days.</p>
+      <div className="phead">
+        <div>
+          <p className="eyebrow">Admin</p>
+          <h1 className="display">Vote review</h1>
+          <p>Suspicious votes are filtered automatically. Review and override here — last 7 days.</p>
+        </div>
+      </div>
 
       {stats && (
-        <div className="cols-3" style={{ marginBottom: 24 }}>
-          <div className="card"><div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)" }}>{stats.valid.toLocaleString()}</div><div style={{ fontSize: 12, color: "var(--fg-4)" }}>valid votes</div></div>
-          <div className="card"><div style={{ fontSize: 26, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--money, #c0392b)" }}>{stats.rejected.toLocaleString()}</div><div style={{ fontSize: 12, color: "var(--fg-4)" }}>filtered</div></div>
-          <div className="card"><div style={{ fontSize: 11, color: "var(--fg-4)", marginBottom: 6, fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.06em" }}>By reason</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>{Object.entries(stats.byReason).length ? Object.entries(stats.byReason).map(([k, v]) => <span key={k} className="pill" style={{ fontSize: 11 }}>{k.replace(/_/g, " ")}: {v}</span>) : <span style={{ fontSize: 12, color: "var(--fg-5)" }}>none</span>}</div>
-          </div>
+        <div className="tile-grid cols-3" style={{ marginBottom: 22 }}>
+          <div className="stat"><div className="stat__l">Valid votes</div><div className="stat__v tnum">{stats.valid.toLocaleString()}</div></div>
+          <div className="stat"><div className="stat__l">Filtered</div><div className="stat__v tnum" style={{ color: "var(--money)" }}>{stats.rejected.toLocaleString()}</div></div>
+          <div className="stat"><div className="stat__l">By reason</div><div className="chips" style={{ marginTop: 2 }}>{Object.entries(stats.byReason).length ? Object.entries(stats.byReason).map(([k, v]) => <span key={k} className="chip" style={{ fontSize: 12, padding: "6px 11px" }}>{k.replace(/_/g, " ")}: {v}</span>) : <span style={{ fontSize: 12, color: "var(--fg-5)" }}>none</span>}</div></div>
         </div>
       )}
 
-      <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: 999, border: "1px solid var(--line-2)", background: "var(--bg-1)", marginBottom: 18 }}>
+      <div className="seg" style={{ marginBottom: 18 }}>
         {FILTERS.map((f) => (
-          <button key={f} onClick={() => setFilter(f)} style={{ padding: "7px 16px", borderRadius: 999, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 13, textTransform: "capitalize", background: filter === f ? "var(--acc)" : "transparent", color: filter === f ? "#fff" : "var(--fg-3)" }}>{f}</button>
+          <button key={f} onClick={() => setFilter(f)} className={filter === f ? "on" : ""} style={{ textTransform: "capitalize" }}>{f}</button>
         ))}
       </div>
 
-      {!loaded ? <p className="lead-copy">Loading…</p> : votes.length === 0 ? <p style={{ color: "var(--fg-4)" }}>No {filter === "all" ? "" : filter} votes.</p> : (
+      {!loaded ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{[0, 1, 2, 3].map((i) => <div key={i} className="skel" style={{ height: 62, borderRadius: "var(--r-lg)" }} />)}</div>
+      ) : votes.length === 0 ? (
+        <div className="empty"><div className="empty__icon">✓</div><h3>Nothing to review</h3><p>No {filter === "all" ? "" : filter} votes in the last 7 days.</p></div>
+      ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {votes.map((v) => (
             <div key={v.id} className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", padding: "12px 16px" }}>

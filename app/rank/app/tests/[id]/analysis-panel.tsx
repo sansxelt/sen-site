@@ -50,7 +50,7 @@ export function AnalysisPanel({ testId, initial, readOnly }: { testId: string; i
       {state === "ready" && analysis && (
         <>
           <p style={{ fontSize: 15.5, color: "var(--fg-1)", lineHeight: 1.55, marginBottom: 18, fontWeight: 500 }}>{analysis.summary}</p>
-          <div className="cols-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+          <div className="cols-2" style={{ display: "grid", gap: 18 }}>
             <div>
               <div style={{ ...headStyle, color: "var(--acc-deep)" }}>Why it won</div>
               <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55 }}>{analysis.why_winner}</p>

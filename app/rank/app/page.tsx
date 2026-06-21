@@ -65,14 +65,14 @@ function TestList({ title, items }: { title: string; items: Awaited<ReturnType<t
         {items.map((t, i) => {
           const pct = Math.min(100, Math.round((t.votes_valid / Math.max(1, t.votes_target)) * 100));
           return (
-            <a key={t.id} href={`/app/tests/${t.id}/report`} style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 110px auto auto", gap: 14, alignItems: "center", padding: "14px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", textDecoration: "none" }}>
-              <div style={{ minWidth: 0 }}>
+            <a key={t.id} href={`/app/tests/${t.id}/report`} style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", padding: "14px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", textDecoration: "none" }}>
+              <div style={{ minWidth: 0, flex: "1 1 200px" }}>
                 <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.title}</div>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>{t.category} · {t.votes_valid}/{t.votes_target} votes</div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>{t.category} · {t.votes_valid}/{t.votes_target} votes</div>
               </div>
-              <div style={{ height: 6, borderRadius: 99, background: "var(--bg-2)", overflow: "hidden" }}><div style={{ height: "100%", width: `${pct}%`, background: t.status === "complete" ? "var(--acc)" : "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} /></div>
+              <div style={{ flex: "0 0 90px", height: 6, borderRadius: 99, background: "var(--bg-2)", overflow: "hidden" }}><div style={{ height: "100%", width: `${pct}%`, background: t.status === "complete" ? "var(--acc)" : "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} /></div>
               <span className="pill" style={t.status === "complete" ? { background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" } : { color: "var(--fg-4)" }}>{t.status}</span>
-              <span style={{ fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, whiteSpace: "nowrap" }}>{t.status === "complete" ? "Report →" : "View →"}</span>
+              <span style={{ fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, whiteSpace: "nowrap", marginLeft: "auto" }}>{t.status === "complete" ? "Report →" : "View →"}</span>
             </a>
           );
         })}

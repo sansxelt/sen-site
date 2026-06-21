@@ -181,7 +181,7 @@ export default function NewTest() {
             <Step n={1} title="Test details" hint="What you're testing and what voters should know." />
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <div><span style={lab}>Title</span><input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Which thumbnail for my new video?" /></div>
-              <div className="cols-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div className="cols-2" style={{ display: "grid", gap: 14 }}>
                 <div><span style={lab}>Type</span><select style={inputStyle} value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
                 <div><span style={lab}>Audience</span><select style={inputStyle} value={audience} onChange={(e) => setAudience(e.target.value)}>{AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
               </div>
@@ -249,8 +249,8 @@ export default function NewTest() {
           </section>
         </div>
 
-        {/* ── sticky launch summary ── */}
-        <div style={{ position: "sticky", top: 80, display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* ── sticky launch summary (desktop) ── */}
+        <div className="sticky-side" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Launch summary</div>
             {[["Vote target", `${votes}`], ["Credits required", `${votes}`], ["Your balance", balance.toLocaleString()], ["Balance after", Math.max(0, balance - votes).toLocaleString()], ["Active tests", `${activeUsed} / ${activeCap}`]].map(([k, v]) => (

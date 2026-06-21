@@ -30,16 +30,24 @@ export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?
 
   if (error) {
     return (
-      <div className="card">
-        <p style={{ color: "var(--fg-2)", fontSize: 14, margin: 0 }}>{error}</p>
+      <div className="card" style={{ borderColor: "var(--line-2)" }}>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>Checkout couldn&apos;t start</div>
+        <p style={{ color: "var(--fg-3)", fontSize: 14, margin: 0 }}>{error}</p>
         <button onClick={() => window.location.reload()} className="btn btn--ghost" style={{ marginTop: 14 }}>Try again</button>
       </div>
     );
   }
 
   return (
-    <div style={{ borderRadius: "var(--r-sm)", overflow: "hidden", minHeight: 180 }}>
-      {!ready && <p style={{ color: "var(--fg-4)", fontSize: 14, padding: "20px 2px" }}>Loading secure checkout…</p>}
+    <div style={{ borderRadius: "var(--r-lg)", overflow: "hidden", minHeight: 200 }}>
+      {!ready && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="skel" style={{ height: 46 }} />
+          <div className="skel" style={{ height: 46 }} />
+          <div className="skel" style={{ height: 46, width: "72%" }} />
+          <p style={{ color: "var(--fg-4)", fontSize: 12.5, marginTop: 2, fontFamily: "var(--font-code)" }}>Loading secure checkout…</p>
+        </div>
+      )}
       <EmbeddedCheckoutProvider stripe={stripePromise} options={{ fetchClientSecret }}>
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>

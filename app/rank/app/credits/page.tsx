@@ -90,7 +90,7 @@ export default function CreditsPage() {
         </div>
 
         {/* summary */}
-        <div className="card" style={{ position: "sticky", top: 84, borderColor: "var(--acc-line)" }}>
+        <div className="card sticky-side" style={{ borderColor: "var(--acc-line)" }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>You'll receive</div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(2.2rem, 4vw, 2.8rem)", letterSpacing: "-0.03em", color: valid ? "var(--acc-deep)" : "var(--fg-4)", lineHeight: 1 }}>{credits.toLocaleString()}</div>
           <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 4, marginBottom: 18 }}>credits for ${valid ? effective.toLocaleString() : "—"}</div>
