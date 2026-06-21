@@ -16,20 +16,22 @@ export default async function SignInLayout({ children }: { children: ReactNode }
           <VraelisPromoBar />
           <div style={{ padding: "20px var(--gutter)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "rgba(250, 248, 244, 0.86)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid var(--line-1)" }}>
           <a
-            href="/v"
+            href="/"
             style={{
-              fontFamily: "var(--font-display)",
-              fontSize: 20,
-              fontWeight: 700,
-              letterSpacing: "-0.04em",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 9,
               color: "var(--fg-1)",
               textDecoration: "none",
             }}
           >
-            Vraelis
+            <span aria-hidden style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", display: "grid", placeItems: "center", boxShadow: "0 2px 8px rgba(20,120,80,0.28)", flexShrink: 0 }}>
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="3" rx="1.5" fill="#fff" /><rect x="2" y="9" width="7" height="3" rx="1.5" fill="rgba(255,255,255,0.62)" /></svg>
+            </span>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.04em" }}>Vraelis</span>
           </a>
           <a
-            href="/v"
+            href="/"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -44,7 +46,7 @@ export default async function SignInLayout({ children }: { children: ReactNode }
               whiteSpace: "nowrap",
             }}
           >
-            <span aria-hidden>←</span> Back
+            <span aria-hidden>←</span> Back to site
           </a>
           </div>
         </div>

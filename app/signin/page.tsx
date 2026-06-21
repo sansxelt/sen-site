@@ -46,7 +46,6 @@ export default async function SignInPage({
     return (
       <div style={{ position: "relative", overflow: "hidden", minHeight: "100svh", padding: "clamp(56px, 8vw, 96px) 20px clamp(40px, 8vw, 80px)" }}>
         <div className="glow glow--soft" />
-        <a href="/" style={{ position: "fixed", bottom: 20, left: 20, zIndex: 20, display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 17px", borderRadius: 99, border: "1px solid var(--line-2)", background: "rgba(255,255,255,0.9)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", color: "var(--fg-2)", textDecoration: "none", fontSize: 14, fontWeight: 500, boxShadow: "var(--shadow-md)" }}>← Back to site</a>
         <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
           <VraelisSignIn
             callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
