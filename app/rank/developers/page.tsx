@@ -30,6 +30,39 @@ const EXPORT_CURL = `curl "https://vraelis.com/api/v1/tests/{id}/export?format=j
   -H "X-Api-Key: vr_live_..."
 # CSV breakdown: ?format=csv`;
 
+const WEBHOOK_PAYLOAD = `POST https://your-app.com/webhooks/vraelis
+X-Vraelis-Event: test.completed
+X-Vraelis-Signature: sha256=…
+X-Vraelis-Timestamp: 1718…
+X-Vraelis-Delivery: <uuid>
+
+{
+  "event": "test.completed",
+  "delivery_id": "…",
+  "test": {
+    "id": "…", "title": "Which thumbnail?",
+    "status": "completed",
+    "votes_valid": 100, "votes_filtered": 8,
+    "winner": { "option": "B", "pct": 67 }
+  },
+  "links": {
+    "export_json": "https://vraelis.com/api/v1/tests/{id}/export?format=json",
+    "export_csv":  "https://vraelis.com/api/v1/tests/{id}/export?format=csv"
+  }
+}`;
+
+const WEBHOOK_VERIFY = `import crypto from "crypto";
+
+// X-Vraelis-Timestamp + raw request body
+const expected = "sha256=" + crypto
+  .createHmac("sha256", WEBHOOK_SECRET)
+  .update(\`\${timestamp}.\${rawBody}\`)
+  .digest("hex");
+
+const ok = crypto.timingSafeEqual(
+  Buffer.from(expected), Buffer.from(signature));
+// then GET links.export_json with your X-Api-Key.`;
+
 const EXPORT_SHAPE = `{
   "test_id": "…", "title": "Which thumbnail?",
   "status": "complete",
@@ -103,8 +136,24 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Webhooks */}
+      <section id="webhooks" className="section">
+        <div className="wrap">
+          <div style={{ maxWidth: 660, marginBottom: "clamp(20px, 3vw, 32px)" }}>
+            <p className="eyebrow">Webhooks</p>
+            <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Get notified the moment a test completes.</h2>
+            <p className="lead-copy"><strong style={{ color: "var(--fg-1)" }}>Webhooks push</strong> a signed <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 14 }}>test.completed</code> event to your app; <strong style={{ color: "var(--fg-1)" }}>exports let you pull</strong> the structured results. No polling. Add an endpoint in <a href="/app/api-keys" style={{ color: "var(--acc-deep)" }}>API keys</a>.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: 18, alignItems: "start" }} className="cols-stack">
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Event payload</div><Code>{WEBHOOK_PAYLOAD}</Code></div>
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Verify the signature</div><Code>{WEBHOOK_VERIFY}</Code></div>
+          </div>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 14, maxWidth: 760 }}>Sign base: <code style={{ fontFamily: "var(--font-code, monospace)" }}>{"`${X-Vraelis-Timestamp}.${rawBody}`"}</code>, HMAC-SHA256 with your endpoint secret, compared to <code style={{ fontFamily: "var(--font-code, monospace)" }}>X-Vraelis-Signature</code>. Check the timestamp is recent to prevent replay. Payloads never include account email, API keys, or private data. Events: <code style={{ fontFamily: "var(--font-code, monospace)" }}>test.completed</code> (more soon).</p>
+        </div>
+      </section>
+
       {/* Embed */}
-      <section id="embed" className="section">
+      <section id="embed" className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
             <div>

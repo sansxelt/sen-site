@@ -204,6 +204,16 @@ export async function completeTest(testId: string): Promise<void> {
   await s.from("v_reports" as never).upsert({ test_id: testId, winner_option_id: winnerId, results } as never, { onConflict: "test_id" } as never);
   const unfilled = Math.max(0, test.votes_target - total);
   if (unfilled > 0) await refund(test.user_id, testId, unfilled);
+
+  // Push test.completed webhooks — after the HTTP response when possible (so the
+  // completing vote isn't blocked), else best-effort awaited. Never affects
+  // completion. Delivery is idempotent (unique per endpoint/test/event).
+  try {
+    const ns = (await import("next/server")) as { after?: (cb: () => unknown) => void };
+    const { deliverTestCompleted } = await import("./v-webhooks");
+    if (ns.after) ns.after(() => deliverTestCompleted(testId).catch(() => {}));
+    else await deliverTestCompleted(testId);
+  } catch { /* webhooks must never affect completion */ }
 }
 
 // Atomic test launch — quota + balance check + create + options + escrow hold in

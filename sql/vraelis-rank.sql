@@ -340,3 +340,40 @@ insert into storage.buckets (id, name, public)
 alter table v_tests add column if not exists share_token   text;
 alter table v_tests add column if not exists share_enabled boolean not null default false;
 create unique index if not exists v_tests_share_token_uidx on v_tests (share_token) where share_token is not null;
+
+-- ── Webhooks (push events to API customers; pull data via the export endpoints) ──
+-- Each owner can register https endpoints. On test.completed we POST a signed
+-- (HMAC-SHA256) JSON event. The secret is symmetric (both sides need it to verify),
+-- stored in plaintext and revealable to the owner only. Deliveries are logged and
+-- idempotent per (endpoint, test, event).
+create table if not exists v_webhook_endpoints (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         text not null,
+  url             text not null,
+  secret          text not null,
+  enabled         boolean not null default true,
+  event_types     text[] not null default '{test.completed}',
+  failure_count   int not null default 0,
+  last_success_at timestamptz,
+  last_failure_at timestamptz,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+create index if not exists v_webhook_ep_user_idx on v_webhook_endpoints (user_id, created_at desc);
+
+create table if not exists v_webhook_deliveries (
+  id              uuid primary key default gen_random_uuid(),
+  endpoint_id     uuid not null references v_webhook_endpoints(id) on delete cascade,
+  test_id         uuid,
+  event           text not null,
+  status          text not null default 'pending',  -- pending|success|failed
+  response_status int,
+  error           text,
+  attempts        int not null default 0,
+  payload         jsonb,
+  created_at      timestamptz not null default now(),
+  delivered_at    timestamptz
+);
+create index if not exists v_webhook_del_ep_idx on v_webhook_deliveries (endpoint_id, created_at desc);
+-- idempotency: a real test.completed is delivered at most once per endpoint.
+create unique index if not exists v_webhook_del_uniq on v_webhook_deliveries (endpoint_id, test_id, event) where test_id is not null;

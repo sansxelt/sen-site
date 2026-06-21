@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { WebhooksSection } from "./webhooks-section";
 
 type Key = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string };
 
@@ -120,6 +121,8 @@ export default function ApiKeysPage() {
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
         Tests cost credits the same as the web app (1 credit = 1 human vote). Image options must be public URLs. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>
+
+      <WebhooksSection />
     </div>
   );
 }
