@@ -45,9 +45,10 @@ export default async function SignInPage({
   if (vraelis) {
     const modeParam = Array.isArray(params.mode) ? params.mode[0] : params.mode;
     return (
-      <div style={{ position: "relative", overflow: "hidden", minHeight: "100svh", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "clamp(40px, 8vw, 96px) 20px" }}>
+      <div style={{ position: "relative", overflow: "hidden", minHeight: "100svh", padding: "clamp(56px, 8vw, 96px) 20px clamp(40px, 8vw, 80px)" }}>
         <div className="glow glow--soft" />
-        <div style={{ position: "relative", width: "100%" }}>
+        <a href="/" style={{ position: "fixed", top: 18, left: 18, zIndex: 10, display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 15px", borderRadius: 99, border: "1px solid var(--line-2)", background: "rgba(255,255,255,0.82)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", color: "var(--fg-2)", textDecoration: "none", fontSize: 13.5, fontWeight: 500, boxShadow: "var(--shadow-sm)" }}>← Back to site</a>
+        <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
           <VraelisSignIn
             callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
             initialMode={modeParam === "signup" ? "signup" : "signin"}

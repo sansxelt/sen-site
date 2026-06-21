@@ -47,9 +47,9 @@ export default function PricingPage() {
 
   return (
     <div>
-      <section style={{ position: "relative", overflow: "hidden" }}>
-        <div className="glow glow--soft" />
-        <div className="wrap" style={{ position: "relative", paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
+      <section style={{ position: "relative" }}>
+        <div className="glow glow--soft glow--bleed" />
+        <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Simple plans. <span className="em">Real</span> feedback.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Every plan includes monthly credits. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong> Need more mid-cycle? Top up anytime.</p>

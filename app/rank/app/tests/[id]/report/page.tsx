@@ -43,7 +43,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         {justLaunched && test.status === "active" && (
           <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 4, display: "flex", alignItems: "center", gap: 9 }}><span className="dot dot--acc" />Your test is live</div>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 4 }}>Your test is live</div>
             <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>Real people are voting now. Share or embed it below to collect votes faster — we&apos;ll generate your report once enough valid votes come in.</p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
               <a href="/app/new" className="btn btn--ghost" style={{ fontSize: 13 }}>Create another</a>

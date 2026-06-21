@@ -33,9 +33,7 @@ function Frame({ children }: { children: ReactNode }) {
   return (
     <div className="rank-root">
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.9)" }}>
-        <a href="https://vraelis.com" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.04em", display: "flex", alignItems: "center", gap: 8 }}>
-          <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--acc)", boxShadow: "0 0 10px var(--acc-glow)" }} />Vraelis
-        </a>
+        <a href="https://vraelis.com" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em" }}>Vraelis</a>
         <a href="https://vraelis.com/app/new" className="btn">Run your own test</a>
       </nav>
       <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 60 }}>{children}</div>

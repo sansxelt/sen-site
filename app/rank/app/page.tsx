@@ -22,13 +22,16 @@ function FirstRun({ bal }: { bal: number }) {
   ];
   return (
     <>
-      <div style={{ background: "linear-gradient(150deg, var(--acc) 0%, var(--acc-deep) 100%)", borderRadius: 14, color: "#fff", padding: "clamp(24px, 3.5vw, 36px)", marginBottom: 16, boxShadow: "var(--shadow-win)" }}>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.85, marginBottom: 8 }}>Welcome to Vraelis</div>
-        <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", color: "#fff", marginBottom: 8 }}>You have {bal} starter credits.</h2>
-        <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 540, opacity: 0.95, marginBottom: 18 }}>Create your first test in under 2 minutes — upload a few options and real people will tell you what wins. <strong>1 credit = 1 valid human judgment.</strong></p>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <a href="/app/new" className="btn" style={{ background: "#fff", color: "var(--acc-deep)", borderColor: "#fff" }}>Create first test →</a>
-          <a href="/vote" className="btn btn--ghost" style={{ background: "transparent", color: "#fff", borderColor: "rgba(255,255,255,0.55)" }}>Try voting first</a>
+      <div style={{ position: "relative", overflow: "hidden", borderRadius: "var(--r-xl)", border: "1px solid var(--acc-line)", background: "var(--bg-1)", padding: "clamp(24px, 3.5vw, 38px)", marginBottom: 16, boxShadow: "var(--shadow-md)" }}>
+        <div className="glow glow--soft" style={{ opacity: 0.7 }} />
+        <div style={{ position: "relative" }}>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Welcome to Vraelis</div>
+          <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", marginBottom: 8 }}>You have {bal} starter credits.</h2>
+          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 540, color: "var(--fg-2)", marginBottom: 18 }}>Create your first test in under 2 minutes — upload a few options and real people will tell you what wins. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <a href="/app/new" className="btn">Create first test →</a>
+            <a href="/vote" className="btn btn--ghost">Try voting first</a>
+          </div>
         </div>
       </div>
       <div className="cols-2" style={{ gap: 14 }}>

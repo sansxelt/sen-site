@@ -87,10 +87,10 @@ function Code({ children, label = "shell" }: { children: string; label?: string 
 export default function DevelopersPage() {
   return (
     <div>
-      <section style={{ position: "relative", overflow: "hidden" }}>
-        <div className="glow glow--soft" />
+      <section style={{ position: "relative" }}>
+        <div className="glow glow--soft glow--bleed" />
         <div className="grid-faint" />
-        <div className="wrap" style={{ position: "relative", paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
+        <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Developers</p>
           <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 820, margin: "0 auto 16px" }}>Add <span className="em">“Test with Vraelis”</span> to your app.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 24px", textAlign: "center" }}>Your users generate options. Vraelis tells you which one real people prefer — via one API call or an embeddable widget. The feedback becomes a data layer you own.</p>

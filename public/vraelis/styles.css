@@ -99,16 +99,11 @@ summary::-webkit-details-marker { display: none; }
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: none;
-  color: var(--acc);
-  display: inline-flex; align-items: center; gap: 9px;
-  margin: 0 0 22px;
-}
-.eyebrow::before {
-  content: ""; width: 6px; height: 6px; border-radius: 50%;
-  background: var(--acc); box-shadow: 0 0 8px var(--acc-glow);
+  color: var(--acc-deep);
+  display: inline-flex; align-items: center;
+  margin: 0 0 18px;
 }
 .eyebrow--mut { color: var(--fg-4); }
-.eyebrow--mut::before { background: var(--fg-4); box-shadow: none; }
 
 .lead-copy {
   font-size: clamp(1.02rem, 1.25vw, 1.18rem);
@@ -410,6 +405,11 @@ summary::-webkit-details-marker { display: none; }
   --shadow-md: 0 1px 2px rgba(28,27,24,0.04), 0 14px 32px -18px rgba(28,27,24,0.18);
   --shadow-lg: 0 2px 8px rgba(28,27,24,0.05), 0 44px 84px -40px rgba(28,27,24,0.26);
   --paper-grad: radial-gradient(120% 90% at 50% -8%, #FFFFFF 0%, var(--bg-0) 46%);
+  /* tighter vertical rhythm — was clamp(80,11vw,144), which left big dead gaps */
+  --section-y: clamp(60px, 7.5vw, 104px);
+  /* slightly stronger hairlines so cards read as substantial, not flimsy */
+  --line-2: rgba(28,27,24,0.13);
+  --line-3: rgba(28,27,24,0.22);
 }
 
 /* the redesigned faces actually load now (see app/layout.tsx font link) */
@@ -430,6 +430,11 @@ summary::-webkit-details-marker { display: none; }
           mask-image: linear-gradient(180deg, #000 0%, transparent 86%);
 }
 .glow--soft::before { background: radial-gradient(closest-side, rgba(14,158,108,0.12), rgba(14,158,108,0.04) 52%, transparent 74%); }
+/* hero bloom that bleeds up behind the (transparent) sticky nav so the header
+   reads as part of the hero atmosphere. body has overflow-x:hidden, so the wide
+   gradient can't create a horizontal scrollbar. */
+.glow--bleed { overflow: visible; }
+.glow--bleed::before { top: -68%; height: 150%; }
 
 /* a quieter, edge-faded hairline grid */
 .grid-faint {
@@ -475,14 +480,13 @@ summary::-webkit-details-marker { display: none; }
   transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 .chip:hover { border-color: var(--acc-line); color: var(--fg-1); transform: translateY(-2px); }
-.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--acc); opacity: 0.55; }
 
 /* ─── The signature: a verdict bar (reused across site) ─── */
 .verdict { display: flex; flex-direction: column; gap: 11px; }
 .vrow { display: flex; align-items: center; gap: 12px; }
 .vrow__k { width: 16px; font-family: var(--font-code); font-size: 12px; color: var(--fg-4); flex: none; }
-.vrow__track { flex: 1; height: 12px; border-radius: 99px; background: var(--bg-2); overflow: hidden; }
-.vrow__fill { height: 100%; border-radius: 99px; background: var(--line-3); transition: width 700ms var(--ease-out); }
+.vrow__track { flex: 1; height: 12px; border-radius: 99px; background: var(--bg-3); box-shadow: inset 0 0 0 1px var(--line-1); overflow: hidden; }
+.vrow__fill { height: 100%; border-radius: 99px; background: #BDB7AC; transition: width 700ms var(--ease-out); }
 .vrow__fill.win { background: linear-gradient(90deg, var(--acc), var(--acc-deep)); }
 .vrow__p { width: 38px; text-align: right; font-family: var(--font-code); font-size: 12.5px; color: var(--fg-3); flex: none; }
 
@@ -507,14 +511,15 @@ summary::-webkit-details-marker { display: none; }
 
 /* ─── Code block ─── */
 .codeblock {
-  margin: 0; padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid var(--line-2);
-  background: #0E1117; color: #D7DCE3; overflow-x: auto; box-shadow: var(--shadow-md);
-  font-family: var(--font-code); font-size: 12.5px; line-height: 1.65;
+  margin: 0; padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid rgba(255,255,255,0.08);
+  background: #16202B; color: #E7ECF3; overflow-x: auto; box-shadow: var(--shadow-lg);
+  font-family: var(--font-code); font-size: 13px; line-height: 1.7;
 }
-.codeblock .tk-key { color: #7DD3A8; } .codeblock .tk-str { color: #E5C07B; } .codeblock .tk-com { color: #5A6573; }
-.codebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: var(--r-lg) var(--r-lg) 0 0; border: 1px solid var(--line-2); border-bottom: none; background: #161B24; }
-.codebar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.18); display: block; }
-.codebar span { margin-left: auto; font-family: var(--font-code); font-size: 11px; color: #6B7280; }
+.codeblock .tk-key { color: #8CE0B4; } .codeblock .tk-str { color: #F0CE8E; } .codeblock .tk-com { color: #8B97A8; }
+.codebar { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-radius: var(--r-lg) var(--r-lg) 0 0; border: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.06); background: #1C2733; }
+.codebar i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+.codebar i:nth-child(1) { background: #ED6A5E; } .codebar i:nth-child(2) { background: #F4BF4F; } .codebar i:nth-child(3) { background: #61C554; }
+.codebar span { margin-left: auto; font-family: var(--font-code); font-size: 11.5px; color: #94A1B2; }
 .codebar + .codeblock { border-radius: 0 0 var(--r-lg) var(--r-lg); }
 
 /* ─── Segmented toggle (monthly / yearly) ─── */

@@ -57,7 +57,7 @@ export default function CreditsPage() {
 
       {paid && (
         <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><span className="dot dot--acc" />Payment received — your new credits will appear here within a few seconds.</p>
+          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Payment received — your new credits will appear here within a few seconds.</p>
         </div>
       )}
 

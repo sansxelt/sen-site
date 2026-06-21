@@ -54,9 +54,7 @@ export function SignOutButton({ className = "btn btn--ghost", label = "Sign out"
 
 function Brand({ href }: { href: string }) {
   return (
-    <a href={href} style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.04em", display: "flex", alignItems: "center", gap: 8 }}>
-      <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--acc)", boxShadow: "0 0 10px var(--acc-glow)" }} />Vraelis
-    </a>
+    <a href={href} style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em" }}>Vraelis</a>
   );
 }
 
@@ -169,8 +167,8 @@ function AppSidebar() {
           ))}
         </div>
       ))}
-      <div className="app-side__foot" style={{ marginTop: "auto", padding: "14px 12px 4px" }}>
-        <a href="/" className="slink" style={{ fontSize: 13, color: "var(--fg-4)" }}>← Back to site</a>
+      <div className="app-side__foot" style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid var(--line-1)" }}>
+        <a href="/" className="slink" style={{ color: "var(--fg-3)" }}><span className="slink__i"><Ic d="M19 12H5M11 18l-6-6 6-6" /></span>Back to site</a>
       </div>
     </aside>
   );

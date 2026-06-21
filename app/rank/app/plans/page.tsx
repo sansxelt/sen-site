@@ -68,7 +68,7 @@ export default function PlansPage() {
 
       {subscribed && (
         <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><span className="dot dot--acc" />Subscription received — your plan and monthly credits will activate within a few seconds.</p>
+          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Subscription received — your plan and monthly credits will activate within a few seconds.</p>
         </div>
       )}
       {note && <p style={{ color: "var(--fg-3)", fontSize: 13, marginBottom: 14 }}>{note}</p>}

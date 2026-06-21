@@ -150,11 +150,9 @@ export function VraelisSignIn({
   return (
     <div style={{ width: "min(440px, 100%)", margin: "0 auto" }}>
       <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.04em", marginBottom: 18 }}>
-          <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--acc)", boxShadow: "0 0 10px var(--acc-glow)" }} />Vraelis
-        </a>
+        <a href="/" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em", display: "inline-block", marginBottom: 16 }}>Vraelis</a>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.6vw, 2.4rem)", marginBottom: 10 }}>
-          {mode === "signup" ? <>Create your <span className="em">account</span>.</> : <>Welcome <span className="em">back</span>.</>}
+          {mode === "signup" ? <>Create your <span className="em">account</span>.</> : <>Access your <span className="em">account</span>.</>}
         </h1>
         <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
           {mode === "signup" ? "Start testing with real people in minutes — 25 free credits." : "Sign in to your tests, credits, and reports."}
@@ -213,6 +211,7 @@ export function VraelisSignIn({
           <button type="submit" className="btn" disabled={emailBusy} style={{ width: "100%", justifyContent: "center", marginTop: 2, opacity: emailBusy ? 0.7 : 1 }}>
             {busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}
           </button>
+          {mode === "signup" && <p style={{ fontSize: 12, color: "var(--fg-4)", textAlign: "center", margin: "2px 0 0", lineHeight: 1.5 }}>We&apos;ll email you a verification link to confirm your address before your first sign-in.</p>}
           {mode === "signin" && (
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Link href="/auth/reset-password" style={{ fontSize: 12, color: "var(--fg-4)", textDecoration: "none" }}>

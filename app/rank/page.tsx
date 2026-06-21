@@ -62,6 +62,19 @@ const SUPPORTS: [string, string][] = [
   ["On-site checkout", "Cards & wallets — never leave Vraelis."],
 ];
 
+const API_RESPONSE = `{
+  "id": "test_9f2a3c",
+  "status": "complete",
+  "votes_valid": 122,
+  "votes_filtered": 14,
+  "winner": { "option": "B", "pct": 61 },
+  "ranked": [
+    { "option": "B", "pct": 61 },
+    { "option": "A", "pct": 39 },
+    { "option": "C", "pct": 22 }
+  ]
+}`;
+
 // the signature device — a verdict bar
 function Verdict({ rows }: { rows: [string, number, boolean][] }) {
   return (
@@ -81,10 +94,10 @@ export default function RankLanding() {
   return (
     <>
       {/* ── Hero ── */}
-      <section style={{ position: "relative", overflow: "hidden" }}>
-        <div className="glow" />
+      <section style={{ position: "relative" }}>
+        <div className="glow glow--bleed" />
         <div className="grid-faint" />
-        <div className="wrap" style={{ position: "relative", paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
+        <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
           <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>A feedback network for AI apps & creative teams</p>
           <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
             Test generated content with <span className="em">real users</span>.
@@ -104,7 +117,7 @@ export default function RankLanding() {
           {/* Product preview — the verdict, right up front */}
           <div className="rise" data-d="6" style={{ position: "relative", maxWidth: 860, margin: "clamp(40px, 5vw, 64px) auto 0" }}>
             <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
-              <div className="win__bar"><div className="win__dots"><i /><i /><i /></div><span className="win__addr">vraelis.com/app/tests/·/report</span></div>
+              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Report</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Complete</span></div>
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.05fr)", gap: 0 }} className="cols-stack">
                 <div style={{ padding: "clamp(18px,2.4vw,26px)", borderRight: "1px solid var(--line-1)" }}>
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Which thumbnail converts better?</div>
@@ -127,7 +140,7 @@ export default function RankLanding() {
                       <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Winner</div>
                       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>Option B · 61%</div>
                     </div>
-                    <span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}><span className="dot dot--acc" />high confidence</span>
+                    <span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>high confidence</span>
                   </div>
                   <Verdict rows={[["A", 39, false], ["B", 61, true], ["C", 22, false]]} />
                   <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)" }}>
@@ -206,7 +219,7 @@ export default function RankLanding() {
               </div>
             </div>
             <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
-              <div className="win__bar"><div className="win__dots"><i /><i /><i /></div><span className="win__addr">report · complete</span></div>
+              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Report</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Complete</span></div>
               <div style={{ padding: "clamp(18px,2.4vw,26px)" }}>
                 <div className="card card--acc" style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16, boxShadow: "none", padding: 16 }}>
                   <div style={{ width: 52, height: 52, borderRadius: 12, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", flex: "none" }} />
@@ -247,27 +260,42 @@ export default function RankLanding() {
       {/* ── For AI apps — the external loop ── */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
-          <div className="bento">
-            <div className="tile tile--accent span4" style={{ justifyContent: "center", gap: 16 }}>
-              <p style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", opacity: 0.85, margin: 0 }}>For AI apps</p>
-              <h3 style={{ fontSize: "clamp(1.5rem, 2.6vw, 2.1rem)", fontFamily: "var(--font-display)", lineHeight: 1.12 }}>Turn user preferences into a data layer you own.</h3>
-              <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 520 }}>Plug Vraelis into your product. Your users test generated outputs, you learn what they prefer, and that feedback becomes a stream you control — to improve your model and open new revenue.</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontFamily: "var(--font-code)", fontSize: 12.5, marginTop: 2 }}>
-                {["API create", "votes", "webhook", "export"].map((s, i) => (
-                  <span key={s} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ padding: "5px 11px", borderRadius: 99, background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.28)" }}>{s}</span>
-                    {i < 3 ? <span aria-hidden style={{ opacity: 0.7 }}>→</span> : null}
-                  </span>
+          <div className="sec-head">
+            <p className="eyebrow">For AI apps</p>
+            <h2 className="display">Turn user preferences into a data layer you own.</h2>
+            <p>Plug Vraelis into your product. Your users test generated outputs, you learn what they prefer, and that feedback becomes a stream you control — to improve your model and open new revenue.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: 18, alignItems: "stretch", marginBottom: 16 }} className="cols-stack">
+            {/* left — the loop, on cream */}
+            <div className="card" style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 20 }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>The external loop</div>
+              <div style={{ display: "grid", gap: 14 }}>
+                {[["API create", "POST a test with your options"], ["Votes", "Real people choose and explain"], ["Webhook", "We notify you the moment it's done"], ["Export", "Pull the structured result"]].map(([s, d], i) => (
+                  <div key={s as string} style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <span style={{ flex: "none", width: 28, height: 28, borderRadius: 9, background: "var(--acc-soft)", border: "1px solid var(--acc-line)", color: "var(--acc-deep)", display: "grid", placeItems: "center", fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600 }}>{i + 1}</span>
+                    <div><div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>{s}</div><div style={{ fontSize: 12.5, color: "var(--fg-4)" }}>{d}</div></div>
+                  </div>
                 ))}
               </div>
-              <div style={{ display: "flex", gap: 10, marginTop: 8, flexWrap: "wrap" }}>
-                <a href="/developers" className="btn" style={{ background: "#fff", color: "var(--acc-deep)", borderColor: "#fff" }}>See the API</a>
-                <a href="/developers#embed" className="btn btn--ghost" style={{ background: "transparent", color: "#fff", borderColor: "rgba(255,255,255,0.5)", boxShadow: "none" }}>Embed widget</a>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <a href="/developers" className="btn">See the API</a>
+                <a href="/developers#embed" className="btn btn--ghost">Embed widget</a>
               </div>
             </div>
-            <div className="tile span2"><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Plug in</div><h3 style={{ fontSize: 17 }}>One API call</h3><p style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Send options, get a ranked result — or drop in the embeddable widget.</p></div>
-            <div className="tile span2"><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Learn</div><h3 style={{ fontSize: 17 }}>What users prefer</h3><p style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Real preference signal on your generated outputs, quality-filtered.</p></div>
-            <div className="tile span2"><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Earn</div><h3 style={{ fontSize: 17 }}>Feedback → revenue</h3><p style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Make user feedback a product surface, not a cost center.</p></div>
+            {/* right — a real API response */}
+            <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
+              <div className="win__bar" style={{ background: "#1C2733", borderBottom: "1px solid rgba(255,255,255,0.06)" }}><span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "#94A1B2" }}>POST /api/v1/tests</span><span className="pill" style={{ marginLeft: "auto", background: "rgba(97,197,84,0.12)", color: "#8CE0B4", borderColor: "rgba(97,197,84,0.3)" }}>200 OK</span></div>
+              <pre className="codeblock" style={{ borderRadius: 0, border: "none", boxShadow: "none", height: "100%" }}>{API_RESPONSE}</pre>
+            </div>
+          </div>
+          <div className="tile-grid cols-3">
+            {[["Plug in", "One API call", "Send options, get a ranked result — or drop in the embeddable widget."], ["Learn", "What users prefer", "Real preference signal on your generated outputs, quality-filtered."], ["Earn", "Feedback → revenue", "Make user feedback a product surface, not a cost center."]].map(([k, t, d]) => (
+              <div key={k} className="acard" style={{ gap: 6 }}>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)" }}>{k}</div>
+                <div className="acard__t">{t}</div>
+                <div className="acard__d">{d}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
