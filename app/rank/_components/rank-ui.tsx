@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 const PUBLIC_LINKS = [
-  { href: "/#how", label: "How it works" },
+  { href: "/how-it-works", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
   { href: "/developers", label: "Developers" },
   { href: "/vote", label: "Vote & earn" },
@@ -98,26 +98,26 @@ function Footer() {
   const col = { display: "flex", flexDirection: "column", gap: 10 } as const;
   const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5 } as const;
   const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 } as const;
+  const Col = ({ title, links }: { title: string; links: [string, string][] }) => (
+    <div style={col}><div style={head}>{title}</div>
+      {links.map(([href, label]) => <a key={href} href={href} style={a}>{label}</a>)}
+    </div>
+  );
   return (
     <footer style={{ borderTop: "1px solid var(--line-1)", background: "var(--bg-2)" }}>
-      <div className="wrap" style={{ padding: "clamp(44px, 5vw, 68px) var(--gutter)", display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr", gap: 32 }}>
+      <div className="wrap foot-grid" style={{ padding: "clamp(44px, 5vw, 68px) var(--gutter)" }}>
         <div>
           <Brand href="/" />
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 290, marginTop: 14 }}>A feedback network for AI apps and creative teams. Test generated content with real users, learn what wins, turn feedback into revenue.</p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 260, marginTop: 14 }}>Real feedback for creative and AI apps.</p>
         </div>
-        <div style={col}><div style={head}>Product</div>
-          <a href="/#how" style={a}>How it works</a><a href="/pricing" style={a}>Pricing</a><a href="/vote" style={a}>Vote &amp; earn</a><a href="/app/new" style={a}>Start a test</a>
-        </div>
-        <div style={col}><div style={head}>Developers</div>
-          <a href="/developers" style={a}>API &amp; embed</a><a href="/developers#webhooks" style={a}>Webhooks</a><a href="/developers#export" style={a}>Exports</a><a href="/app/api-keys" style={a}>API keys</a>
-        </div>
-        <div style={col}><div style={head}>Account</div>
-          <a href="/app" style={a}>Dashboard</a><a href="/app/billing" style={a}>Billing</a><a href="/privacy" style={a}>Privacy</a><a href="/terms" style={a}>Terms</a>
-        </div>
+        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/vote", "Vote & earn"], ["/app/new", "Start a test"]]} />
+        <Col title="Developers" links={[["/developers", "Developers"], ["/app/api-keys", "API keys"], ["/app/api-keys", "Webhooks"], ["/app/data", "Data exports"]]} />
+        <Col title="Account" links={[["/app", "Dashboard"], ["/app/account", "Account"], ["/app/billing", "Billing"], ["/signin", "Sign in"]]} />
+        <Col title="Legal" links={[["/privacy", "Privacy"], ["/terms", "Terms"], ["/contact", "Contact"]]} />
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
-        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© Vraelis</span>
-        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Built for AI apps and creative teams</span>
+        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© 2026 Vraelis. All rights reserved.</span>
+        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>1 credit = 1 valid judgment</span>
       </div>
     </footer>
   );

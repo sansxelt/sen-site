@@ -8,12 +8,13 @@ import type { NextRequest } from "next/server";
 
 const CLEAN_EXACT: Record<string, string> = {
   "/": "/rank",
+  "/how-it-works": "/rank/how-it-works",
   "/pricing": "/rank/pricing",
   "/developers": "/rank/developers",
-  "/privacy": "/v/privacy",
-  "/terms": "/v/terms",
+  "/privacy": "/rank/privacy",
+  "/terms": "/rank/terms",
+  "/contact": "/rank/contact",
   "/refunds": "/v/refunds",
-  "/contact": "/v/contact",
 };
 const VANITY_EXACT: Record<string, string> = {
   "/v/privacy": "/privacy",

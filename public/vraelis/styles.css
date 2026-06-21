@@ -618,3 +618,8 @@ summary::-webkit-details-marker { display: none; }
 
 /* horizontal-scroll wrapper for anything that can get wide (logs, tables) */
 .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* responsive footer grid: brand + link columns, collapses cleanly on small screens */
+.foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 30px; }
+@media (max-width: 900px) { .foot-grid { grid-template-columns: 1.4fr 1fr 1fr; row-gap: 32px; } }
+@media (max-width: 560px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
