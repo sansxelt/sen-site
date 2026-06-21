@@ -129,8 +129,9 @@ function AppTopbar({ email }: { email: string | null }) {
   useEffect(() => { setMenu(false); }, [pathname]);
   return (
     <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-      {/* in-app logo returns to the public home (sidebar's "Back to site" does too) */}
-      <Brand href="/" />
+      {/* in-app logo returns to the public home (sidebar's "Back to site" does too);
+          small left nudge so the wordmark sits centered over the sidebar column */}
+      <span style={{ marginLeft: 14, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</a>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
