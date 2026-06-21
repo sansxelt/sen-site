@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
     // Tree-shake heavy packages so only used exports are bundled
     optimizePackageImports: ["resend", "@supabase/supabase-js", "stripe"],
   },
+  // Load undici from node_modules at runtime instead of bundling it — the webhook
+  // SSRF guard pairs undici's fetch with its Agent (IP pinning), and a bundled
+  // copy mismatches the runtime and breaks deliveries.
+  serverExternalPackages: ["undici"],
   // Compress responses
   compress: true,
   // Cache static assets aggressively
