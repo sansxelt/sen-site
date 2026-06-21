@@ -45,11 +45,14 @@ export default async function SignInPage({
   if (vraelis) {
     const modeParam = Array.isArray(params.mode) ? params.mode[0] : params.mode;
     return (
-      <div style={{ padding: "clamp(40px, 8vw, 96px) 20px" }}>
-        <VraelisSignIn
-          callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
-          initialMode={modeParam === "signup" ? "signup" : "signin"}
-        />
+      <div style={{ position: "relative", overflow: "hidden", minHeight: "100svh", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "clamp(40px, 8vw, 96px) 20px" }}>
+        <div className="glow glow--soft" />
+        <div style={{ position: "relative", width: "100%" }}>
+          <VraelisSignIn
+            callbackUrl={getSafeRedirectPath(callbackUrl ?? "/app")}
+            initialMode={modeParam === "signup" ? "signup" : "signin"}
+          />
+        </div>
       </div>
     );
   }

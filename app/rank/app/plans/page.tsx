@@ -8,8 +8,8 @@ const PLANS: { key: string; name: string; price: Record<Cycle, number>; credits:
   { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 one-time", perks: ["1 active test", "Up to 4 options", "Human votes + AI report"] },
   { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 / mo", perks: ["3 active tests / mo", "Up to 5 options", "AI winner report"] },
   { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 / mo", perks: ["10 active tests / mo", "Up to 6 options", "Audience targeting"] },
-  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 / mo", perks: ["30 active tests / mo", "Up to 8 options", "Targeting + Discord bot"], featured: true },
-  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 / mo", perks: ["100 active tests / mo", "Public API access", "Targeting + Discord bot"] },
+  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 / mo", perks: ["30 active tests / mo", "Up to 8 options", "Webhooks + exports"], featured: true },
+  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 / mo", perks: ["100 active tests / mo", "Public API + embed", "Webhooks + exports"] },
   { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom", perks: ["Unlimited tests", "SSO + SLA", "Dedicated support"] },
 ];
 
@@ -49,36 +49,31 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="wrap" style={{ paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+    <div className="wrap" style={{ paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
+      <div className="phead">
         <div>
           <p className="eyebrow">Plans</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)" }}>Pick a plan</h1>
-          <p className="lead-copy" style={{ marginTop: 4 }}>Plans refresh credits every month. Need more mid-cycle? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Top up anytime →</a></p>
+          <h1 className="display">Pick a plan</h1>
+          <p>Plans refresh credits every month. Need more mid-cycle? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Top up anytime →</a></p>
         </div>
-        {signedIn && (
-          <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div className="seg">
+            {(["monthly", "yearly"] as Cycle[]).map((c) => (
+              <button key={c} onClick={() => setCycle(c)} className={cycle === c ? "on" : ""}>{c === "monthly" ? "Monthly" : "Yearly"}{c === "yearly" ? <span className="seg__save">2 mo free</span> : null}</button>
+            ))}
+          </div>
+          {signedIn && <button onClick={manageBilling} disabled={busy} className="btn btn--ghost">{busy ? "Opening…" : "Manage billing"}</button>}
+        </div>
       </div>
 
       {subscribed && (
-        <div className="card" style={{ marginTop: 18, borderColor: "var(--acc)", background: "var(--acc-soft)" }}>
-          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600 }}>Subscription received — your plan and monthly credits will activate within a few seconds.</p>
+        <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
+          <p style={{ margin: 0, color: "var(--acc-deep)", fontSize: 14, fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><span className="dot dot--acc" />Subscription received — your plan and monthly credits will activate within a few seconds.</p>
         </div>
       )}
-      {note && <p style={{ color: "var(--fg-3)", fontSize: 13, marginTop: 12 }}>{note}</p>}
+      {note && <p style={{ color: "var(--fg-3)", fontSize: 13, marginBottom: 14 }}>{note}</p>}
 
-      {/* cycle toggle */}
-      <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: 999, border: "1px solid var(--line-2)", background: "var(--bg-1)", margin: "22px 0 30px" }}>
-        {(["monthly", "yearly"] as Cycle[]).map((c) => (
-          <button key={c} onClick={() => setCycle(c)} style={{
-            padding: "8px 18px", borderRadius: 999, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
-            background: cycle === c ? "var(--acc)" : "transparent", color: cycle === c ? "#fff" : "var(--fg-3)",
-          }}>{c === "monthly" ? "Monthly" : "Yearly"}</button>
-        ))}
-      </div>
-
-      <div className="cols-3" style={{ alignItems: "stretch" }}>
+      <div className="tile-grid cols-3">
         {PLANS.map((p) => {
           const isCurrent = signedIn && plan === p.key;
           const isEnterprise = p.key === "enterprise";
@@ -88,52 +83,32 @@ export default function PlansPage() {
           const available = isFree || isEnterprise || !!(cell?.available && cell.amount != null);
           const price = cell?.amount ?? p.price[cycle];
           return (
-            <div key={p.key} className="card" style={{
-              display: "flex", flexDirection: "column", gap: 12,
-              border: p.featured ? "1.5px solid var(--acc)" : "1px solid var(--line-2)",
-              boxShadow: p.featured ? "0 0 0 4px var(--acc-soft)" : "none", position: "relative",
-            }}>
-              {p.featured && <span className="pill" style={{ position: "absolute", top: -12, left: 20, background: "var(--acc)", color: "#fff", borderColor: "var(--acc)" }}>Most popular</span>}
+            <div key={p.key} className={`price${p.featured ? " price--hot" : ""}`}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700 }}>{p.name}</h3>
-                {isCurrent && <span className="pill" style={{ background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc)" }}>Current</span>}
+                <span className="price__name">{p.name}</span>
+                {isCurrent && <span className="badge-now">Current</span>}
               </div>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-                {isEnterprise ? (
-                  <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 700 }}>Custom</span>
-                ) : !available ? (
-                  <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--fg-4)" }}>Coming soon</span>
-                ) : (
-                  <>
-                    <span style={{ fontFamily: "var(--font-display)", fontSize: 34, fontWeight: 700, letterSpacing: "-0.02em" }}>${price.toLocaleString()}</span>
-                    <span style={{ color: "var(--fg-4)", fontSize: 14 }}>/{cycle === "yearly" ? "yr" : "mo"}</span>
-                  </>
-                )}
+              <div>
+                {isEnterprise ? <div className="price__amt">Custom</div>
+                  : !available ? <div className="price__amt" style={{ color: "var(--fg-4)", fontSize: "1.6rem" }}>Coming soon</div>
+                  : <div className="price__amt">${price.toLocaleString()}<small>/{cycle === "yearly" ? "yr" : "mo"}</small></div>}
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.credits} credits</div>
               </div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--acc-deep)", fontWeight: 600 }}>{p.credits} credits</div>
-              <ul style={{ listStyle: "none", padding: 0, margin: "4px 0 8px", display: "flex", flexDirection: "column", gap: 8, flex: 1 }}>
-                {p.perks.map((perk) => (
-                  <li key={perk} style={{ fontSize: 13.5, color: "var(--fg-2)", display: "flex", gap: 8 }}><span style={{ color: "var(--acc)" }}>✓</span>{perk}</li>
-                ))}
+              <ul className="price__feat">
+                {p.perks.map((perk) => <li key={perk}>{perk}</li>)}
               </ul>
-              {isCurrent ? (
-                <button className="btn btn--ghost" disabled style={{ opacity: 0.6 }}>Your plan</button>
-              ) : isEnterprise ? (
-                <a className="btn btn--ghost" href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise">Contact sales</a>
-              ) : isFree ? (
-                <a className="btn btn--ghost" href="/app">Get started free</a>
-              ) : !available ? (
-                <button className="btn btn--ghost" disabled style={{ opacity: 0.6 }}>Coming soon</button>
-              ) : (
-                <a className="btn" href={`/app/checkout?plan=${p.key}&cycle=${cycle}`}>{lower ? "Switch" : "Upgrade"} to {p.name}</a>
-              )}
+              {isCurrent ? <button className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center", opacity: 0.6 }} disabled>Your plan</button>
+                : isEnterprise ? <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise">Contact sales</a>
+                : isFree ? <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/app">Get started free</a>
+                : !available ? <button className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center", opacity: 0.6 }} disabled>Coming soon</button>
+                : <a className={p.featured ? "btn" : "btn btn--ghost"} style={{ marginTop: "auto", justifyContent: "center" }} href={`/app/checkout?plan=${p.key}&cycle=${cycle}`}>{lower ? "Switch" : "Upgrade"} to {p.name}</a>}
             </div>
           );
         })}
       </div>
 
-      <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 28, lineHeight: 1.7 }}>
-        Plan credits refresh each billing cycle and don&apos;t roll over. Top-up credits you buy never expire. Cancel anytime — your plan stays active until the end of the period. 1 credit = 1 real human vote.
+      <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 26, lineHeight: 1.7 }}>
+        Plan credits refresh each billing cycle and don&apos;t roll over. Top-up credits you buy never expire. Cancel anytime — your plan stays active until the period ends.
       </p>
     </div>
   );

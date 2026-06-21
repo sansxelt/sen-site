@@ -152,24 +152,23 @@ export default function NewTest() {
 
   return (
     <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 100 }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 6 }}>
+      <div className="phead">
         <div>
           <p className="eyebrow">Create</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)" }}>Create a new test</h1>
+          <h1 className="display">Create a new test</h1>
+          <p>Upload creative options, choose your vote target, and get a clear report on what real users prefer.</p>
         </div>
-        <div className="card" style={{ padding: "10px 16px", display: "flex", gap: 18, alignItems: "center" }}>
-          <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Plan</div><div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>{planName}</div></div>
-          <div style={{ width: 1, height: 28, background: "var(--line-2)" }} />
-          <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Credits</div><div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>{balance.toLocaleString()}</div></div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <div className="stat" style={{ padding: "12px 18px" }}><div className="stat__l">Plan</div><div className="stat__v" style={{ fontSize: 18 }}>{planName}</div></div>
+          <div className="stat" style={{ padding: "12px 18px" }}><div className="stat__l">Credits</div><div className="stat__v tnum" style={{ fontSize: 18 }}>{balance.toLocaleString()}</div></div>
         </div>
       </div>
-      <p className="lead-copy" style={{ marginBottom: 22 }}>Upload creative options, choose your vote target, and get a clear report on what real users prefer.</p>
 
       <div style={{ marginBottom: 26 }}>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Start from a template <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>· optional — edit anything</span></div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Start from a template <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>· optional — edit anything</span></div>
+        <div className="chips">
           {TEMPLATES.map((t) => (
-            <button key={t.name} onClick={() => { setTitle(t.title); setCategory(t.category); setContext(t.context); }} className="pill" style={{ cursor: "pointer", textTransform: "none", letterSpacing: 0, fontSize: 12.5, padding: "8px 14px" }}>{t.name}</button>
+            <button key={t.name} onClick={() => { setTitle(t.title); setCategory(t.category); setContext(t.context); }} className="chip" style={{ cursor: "pointer" }}>{t.name}</button>
           ))}
         </div>
       </div>

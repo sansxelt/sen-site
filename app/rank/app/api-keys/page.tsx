@@ -62,19 +62,19 @@ export default function ApiKeysPage() {
 
   return (
     <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
+      <div className="phead">
         <div>
           <p className="eyebrow">Developers</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)" }}>API keys</h1>
+          <h1 className="display">API &amp; webhooks</h1>
+          <p>Add human preference testing to your own app or AI tool — send creative options, get back a ranked result.</p>
         </div>
         <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
       </div>
-      <p className="lead-copy" style={{ marginBottom: 24 }}>Add human preference testing to your own app or AI tool. Send creative options, get back a ranked result.</p>
 
-      <div className="card" style={{ marginBottom: 24, background: "var(--bg-2)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
+      <div className="card cta-band" style={{ marginBottom: 24, background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, marginBottom: 4 }}>Preference data exports</div>
-          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed test results as JSON or CSV — winner, vote breakdown, valid-vs-filtered quality, comments, and AI analysis — for dashboards, analytics, or training pipelines.</p>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Preference data exports</div>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed results as JSON or CSV — winner, vote breakdown, valid-vs-filtered quality, comments, and AI analysis — for dashboards, analytics, or training pipelines.</p>
         </div>
         <a href="/developers#export" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Export docs →</a>
       </div>
@@ -97,8 +97,11 @@ export default function ApiKeysPage() {
 
       {/* keys list */}
       {loaded && keys.length === 0 && !fresh && (
-        <div className="card" style={{ textAlign: "center", padding: "clamp(28px,4vw,44px)", marginBottom: 28 }}>
-          <p style={{ fontSize: 14, color: "var(--fg-3)" }}>No keys yet. Create one to call the API.</p>
+        <div className="empty" style={{ marginBottom: 28 }}>
+          <div className="empty__icon">⌘</div>
+          <h3>No API keys yet</h3>
+          <p>Create a key to call the Vraelis API from your app. The full key is shown once at creation.</p>
+          <button onClick={create} disabled={busy} className="btn">{busy ? "Creating…" : "Create your first key"}</button>
         </div>
       )}
       {keys.length > 0 && (
@@ -116,8 +119,9 @@ export default function ApiKeysPage() {
       )}
 
       {/* docs */}
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Quickstart</div>
-      <pre style={{ margin: 0, padding: 18, borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-2)", overflowX: "auto", fontFamily: "var(--font-code)", fontSize: 12.5, lineHeight: 1.6, color: "var(--fg-2)" }}>{CURL}</pre>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Quickstart</div>
+      <div className="codebar"><i /><i /><i /><span>shell</span></div>
+      <pre className="codeblock"><code>{CURL}</code></pre>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
         Tests cost credits the same as the web app (1 credit = 1 human vote). Image options must be public URLs. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>

@@ -39,11 +39,13 @@ function Frame({ children }: { children: ReactNode }) {
         <a href="https://vraelis.com/app/new" className="btn">Run your own test</a>
       </nav>
       <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 60 }}>{children}</div>
-      <footer style={{ borderTop: "1px solid var(--line-1)", background: "var(--bg-2)" }}>
-        <div className="wrap" style={{ padding: "clamp(28px, 4vw, 44px) var(--gutter)", textAlign: "center" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, marginBottom: 6 }}>Made with Vraelis</div>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 420, margin: "0 auto 16px" }}>Test your own creative with real people and get a clear report on what wins.</p>
-          <a href="https://vraelis.com" className="btn btn--lg">Run your own test →</a>
+      <footer style={{ borderTop: "1px solid var(--line-1)", background: "var(--bg-2)", position: "relative", overflow: "hidden" }}>
+        <div className="glow glow--soft" />
+        <div className="wrap" style={{ position: "relative", padding: "clamp(40px, 6vw, 76px) var(--gutter)", textAlign: "center" }}>
+          <p className="eyebrow" style={{ justifyContent: "center" }}>Created with Vraelis</p>
+          <div className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 10 }}>Test your creative with <span className="em">real people</span>.</div>
+          <p style={{ fontSize: 15, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 22px" }}>Upload your options and get a clear report on what wins — before you launch.</p>
+          <a href="https://vraelis.com/app/new" className="btn btn--lg">Run your own test →</a>
         </div>
       </footer>
     </div>
@@ -53,10 +55,11 @@ function Frame({ children }: { children: ReactNode }) {
 function Unavailable() {
   return (
     <Frame>
-      <div style={{ textAlign: "center", padding: "clamp(40px, 7vw, 80px) 0" }}>
-        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.2vw, 2.4rem)", marginBottom: 12 }}>This report isn&apos;t available</h1>
-        <p className="lead-copy" style={{ margin: "0 auto 24px" }}>The link may have been disabled by its owner, or it doesn&apos;t exist.</p>
-        <a href="https://vraelis.com" className="btn btn--lg">Create your own test →</a>
+      <div className="empty" style={{ margin: "clamp(20px, 5vw, 48px) 0" }}>
+        <div className="empty__icon">∅</div>
+        <h3 style={{ fontSize: "1.4rem" }}>This report isn&apos;t available</h3>
+        <p>The link may have been disabled by its owner, or it doesn&apos;t exist.</p>
+        <a href="https://vraelis.com" className="btn">Create your own test →</a>
       </div>
     </Frame>
   );
@@ -74,9 +77,10 @@ export default async function PublicReport({ params }: { params: Promise<{ token
   if (test.status === "complete" && !report) {
     return (
       <Frame>
-        <div style={{ textAlign: "center", padding: "clamp(40px, 7vw, 80px) 0" }}>
-          <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", marginBottom: 10 }}>This test has closed</h1>
-          <p className="lead-copy" style={{ margin: "0 auto" }}>No report was generated for it.</p>
+        <div className="empty" style={{ margin: "clamp(20px, 5vw, 48px) 0" }}>
+          <div className="empty__icon">◷</div>
+          <h3 style={{ fontSize: "1.3rem" }}>This test has closed</h3>
+          <p>It closed before a report could be generated.</p>
         </div>
       </Frame>
     );
@@ -110,8 +114,9 @@ export default async function PublicReport({ params }: { params: Promise<{ token
   if (!report) return <Unavailable />; // unreachable (handled above) — satisfies the type checker
   return (
     <Frame>
-      <p className="eyebrow">Report · complete</p>
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 18 }}>{test.title}</h1>
+      <p className="eyebrow">Shared report · complete</p>
+      <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.5rem)", marginBottom: 8 }}>{test.title}</h1>
+      <p style={{ fontSize: 14, color: "var(--fg-4)", marginBottom: 22 }}>A read-only verdict from real people, powered by Vraelis.</p>
       <ReportBody
         results={report.results}
         options={options}

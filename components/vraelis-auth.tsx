@@ -24,14 +24,15 @@ type Status = { message: string; tone: Tone };
 
 const inputStyle: CSSProperties = {
   width: "100%",
-  borderRadius: "var(--r-xs)",
+  borderRadius: "var(--r-sm)",
   border: "1px solid var(--line-2)",
   background: "var(--bg-1)",
   padding: "12px 14px",
-  fontSize: 14,
+  fontSize: 14.5,
   color: "var(--fg-1)",
   outline: "none",
   fontFamily: "var(--font-sans)",
+  boxSizing: "border-box",
 };
 
 function GoogleIcon() {
@@ -148,43 +149,23 @@ export function VraelisSignIn({
 
   return (
     <div style={{ width: "min(440px, 100%)", margin: "0 auto" }}>
-      <div style={{ textAlign: "center", marginBottom: 26 }}>
-        <p className="eyebrow" style={{ justifyContent: "center", display: "inline-flex" }}>Sign in</p>
-        <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.6rem)", marginTop: 12, marginBottom: 10 }}>
-          {mode === "signup" ? (
-            <>Create your <span className="mark"><span>Vraelis</span></span> account.</>
-          ) : (
-            <>Welcome back to <span className="mark"><span>Vraelis</span></span>.</>
-          )}
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.04em", marginBottom: 18 }}>
+          <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--acc)", boxShadow: "0 0 10px var(--acc-glow)" }} />Vraelis
+        </a>
+        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.6vw, 2.4rem)", marginBottom: 10 }}>
+          {mode === "signup" ? <>Create your <span className="em">account</span>.</> : <>Welcome <span className="em">back</span>.</>}
         </h1>
-        <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.55 }}>
-          Email, Google, and GitHub all sign in to the same account.
+        <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
+          {mode === "signup" ? "Start testing with real people in minutes — 25 free credits." : "Sign in to your tests, credits, and reports."}
         </p>
       </div>
 
-      <div
-        className="win"
-        style={{ padding: "26px 26px 28px", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}
-      >
+      <div className="card" style={{ padding: "22px 24px 26px", borderRadius: "var(--r-xl)", boxShadow: "var(--shadow-lg)" }}>
         {/* mode toggle */}
-        <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: 999, border: "1px solid var(--line-2)", marginBottom: 22 }}>
+        <div className="seg" style={{ display: "flex", width: "100%", marginBottom: 20 }}>
           {(["signin", "signup"] as AuthMode[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => { setMode(m); setStatus(null); }}
-              style={{
-                border: "none",
-                cursor: "pointer",
-                borderRadius: 999,
-                padding: "7px 16px",
-                fontSize: 13,
-                fontWeight: mode === m ? 600 : 500,
-                background: mode === m ? "var(--acc)" : "transparent",
-                color: mode === m ? "var(--fg-on-accent)" : "var(--fg-3)",
-                transition: "background 160ms, color 160ms",
-              }}
-            >
+            <button key={m} type="button" onClick={() => { setMode(m); setStatus(null); }} className={mode === m ? "on" : ""} style={{ flex: 1 }}>
               {m === "signin" ? "Sign in" : "Create account"}
             </button>
           ))}
@@ -194,6 +175,7 @@ export function VraelisSignIn({
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {oauthProviders.map((opt) => {
             const providerBusy = busy === opt.provider;
+            const primary = opt.provider === "google";
             return (
               <button
                 key={opt.provider}
@@ -201,19 +183,10 @@ export function VraelisSignIn({
                 onClick={() => void handleOAuth(opt.provider)}
                 disabled={providerBusy}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 10,
-                  width: "100%",
-                  borderRadius: "var(--r-xs)",
-                  border: "1px solid var(--line-2)",
-                  background: "var(--bg-1)",
-                  padding: "11px 14px",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "var(--fg-1)",
-                  cursor: providerBusy ? "wait" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%",
+                  borderRadius: "var(--r-sm)", border: `1px solid ${primary ? "var(--line-3)" : "var(--line-2)"}`,
+                  background: "var(--bg-1)", padding: "12px 14px", fontSize: 14.5, fontWeight: 600, color: "var(--fg-1)",
+                  cursor: providerBusy ? "wait" : "pointer", boxShadow: primary ? "var(--shadow-sm)" : "none",
                 }}
               >
                 {opt.provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
@@ -226,7 +199,7 @@ export function VraelisSignIn({
         {/* divider */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 18px" }}>
           <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.06em" }}>or with email</span>
+          <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.04em" }}>or with email</span>
           <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
         </div>
 
@@ -237,7 +210,7 @@ export function VraelisSignIn({
           )}
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" disabled={emailBusy} required style={inputStyle} />
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" disabled={emailBusy} required minLength={8} style={inputStyle} />
-          <button type="submit" className="btn" disabled={emailBusy} style={{ justifyContent: "center", marginTop: 2, opacity: emailBusy ? 0.7 : 1 }}>
+          <button type="submit" className="btn" disabled={emailBusy} style={{ width: "100%", justifyContent: "center", marginTop: 2, opacity: emailBusy ? 0.7 : 1 }}>
             {busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}
           </button>
           {mode === "signin" && (
