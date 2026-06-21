@@ -5,7 +5,7 @@
 import crypto from "crypto";
 import dns from "dns/promises";
 import net from "net";
-import { Agent } from "undici";
+import { fetch as undiciFetch, Agent } from "undici";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getTestWithOptions, getReport, OPTION_LETTERS, type VTest } from "./v-db";
 
@@ -61,16 +61,20 @@ export function webhookUrlError(url: string): string | null {
 // Resolve the hostname, reject if ANY resolved address is private/reserved, then
 // pin the connection to the validated IP (no re-resolution → defeats DNS
 // rebinding). Throws "blocked" on any unsafe destination. https + port 443 only.
-async function safeFetch(url: string, init: RequestInit): Promise<Response> {
+async function safeFetch(url: string, init: RequestInit): Promise<{ status: number }> {
   const u = new URL(url);
   if (u.protocol !== "https:" || (u.port && u.port !== "443")) throw new Error("blocked");
   let addrs: { address: string; family: number }[];
   try { addrs = await dns.lookup(u.hostname, { all: true }); } catch { throw new Error("blocked"); }
   if (!addrs.length || addrs.some((a) => isPrivateIp(a.address))) throw new Error("blocked");
-  const pin = addrs[0];
-  const agent = new Agent({ connect: { lookup: (_h: string, _o: unknown, cb: (e: Error | null, a: string, f: number) => void) => cb(null, pin.address, pin.family) } as never });
+  // Pin undici to the validated address set so it can't re-resolve to a private
+  // IP between validation and connect (defeats rebinding). undici's connect.lookup
+  // expects the dns.lookup({all:true}) array form. Use undici's own fetch so the
+  // Agent dispatcher is version-matched (global fetch rejects a foreign Agent).
+  const validated = addrs.map((a) => ({ address: a.address, family: a.family }));
+  const agent = new Agent({ connect: { lookup: (_h: string, _o: unknown, cb: (e: Error | null, a: { address: string; family: number }[]) => void) => cb(null, validated) } as never });
   try {
-    return await fetch(url, { ...init, dispatcher: agent } as RequestInit & { dispatcher: Agent });
+    return (await undiciFetch(url, { ...init, dispatcher: agent } as never)) as unknown as { status: number };
   } finally {
     agent.close().catch(() => {});
   }
