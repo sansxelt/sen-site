@@ -406,3 +406,30 @@ create index if not exists v_events_user_idx  on v_events (user_id, created_at d
 create index if not exists v_events_test_idx  on v_events (test_id, created_at desc);
 create index if not exists v_events_type_idx  on v_events (event_type, created_at desc);
 create index if not exists v_events_time_idx  on v_events (created_at desc);
+
+-- ── Rate limiting (shared fixed-window counter) ──
+-- Backs lib/vraelis-ratelimit.ts allow()/vraelis_rate_check, used to throttle the
+-- public /api/v1/* endpoints per API key. Atomic single upsert; returns true while
+-- under the limit. Same definition as sql/vraelis.sql (idempotent — safe to re-run).
+-- The limiter FAILS OPEN if this isn't applied, so the API never breaks before it runs.
+create table if not exists vraelis_rate_limits (
+  key          text primary key,
+  count        integer not null default 0,
+  window_start timestamptz not null default now()
+);
+create or replace function vraelis_rate_check(p_key text, p_limit int, p_window_secs int)
+returns boolean language plpgsql as $$
+declare c int;
+begin
+  insert into vraelis_rate_limits (key, count, window_start)
+    values (p_key, 1, now())
+    on conflict (key) do update set
+      count = case
+        when now() - vraelis_rate_limits.window_start > make_interval(secs => p_window_secs)
+          then 1 else vraelis_rate_limits.count + 1 end,
+      window_start = case
+        when now() - vraelis_rate_limits.window_start > make_interval(secs => p_window_secs)
+          then now() else vraelis_rate_limits.window_start end
+    returning count into c;
+  return c <= p_limit;
+end $$;

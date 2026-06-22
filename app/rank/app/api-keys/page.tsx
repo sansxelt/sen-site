@@ -100,7 +100,7 @@ export default function ApiKeysPage() {
             <input value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Name it, e.g. Production or Zapier" maxLength={40} onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ flex: 1, minWidth: 220, padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
             <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
           </div>
-          <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation.</span>
+          <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation. Keep keys server-side only, and rotate or revoke a key if it&apos;s ever exposed. <a href="/developers" style={{ color: "var(--acc-deep)" }}>Developer docs →</a></span>
         </div>
       </div>
 
@@ -147,6 +147,7 @@ export default function ApiKeysPage() {
                   <code style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)" }}>{k.prefix}…</code>
                 </div>
                 <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>Created {new Date(k.created_at).toLocaleDateString()}, {k.last_used ? `last used ${new Date(k.last_used).toLocaleDateString()}` : "never used"}{u?.usage?.byPrefix?.[k.prefix] ? `, ${u.usage.byPrefix[k.prefix].toLocaleString()} request${u.usage.byPrefix[k.prefix] === 1 ? "" : "s"}` : ""}</div>
+                {k.scopes?.length ? <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-5)", marginTop: 3 }}>{k.scopes.join("  ")}</div> : null}
               </div>
               <button onClick={() => revoke(k.id)} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Revoke</button>
             </div>

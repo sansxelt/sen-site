@@ -7,8 +7,8 @@ import { exportResponse } from "@/lib/v-export";
 export const runtime = "nodejs";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const a = await apiAuth(req);
-  if (!a) return Response.json({ error: "invalid_api_key" }, { status: 401 });
+  const a = await apiAuth(req, "tests:read");
+  if (!a.ok) return a.response;
   const { id } = await params;
   const sp = new URL(req.url).searchParams;
   const fmt = sp.get("format") ?? "json";

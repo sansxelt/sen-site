@@ -34,7 +34,7 @@ export function WebhooksSection() {
     setNote((n) => ({ ...n, [h.id]: "Sending…" }));
     const r = await fetch(`/api/v/webhooks/${h.id}/test`, { method: "POST" });
     const j = await r.json().catch(() => ({}));
-    setNote((n) => ({ ...n, [h.id]: j.ok ? "Delivered ✓" : `Failed: ${j.error || j.status || "error"}` }));
+    setNote((n) => ({ ...n, [h.id]: j.ok ? `Delivered ✓${j.status ? ` (HTTP ${j.status})` : ""}` : `Failed${j.status ? ` (HTTP ${j.status})` : ""}: ${j.error || "no response"}` }));
     load();
   }
   async function reveal(h: Hook, rotate = false) {

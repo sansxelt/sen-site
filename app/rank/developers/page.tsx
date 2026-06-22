@@ -75,6 +75,33 @@ const EXPORT_SHAPE = `{
     "filtered_reasons": { "too_fast": 9, "spam_comment": 5 } }
 }`;
 
+const ERROR_EXAMPLE = `{
+  "error": {
+    "code": "unauthorized",
+    "message": "Missing or invalid API key.",
+    "request_id": "req_9f2a3c…"
+  }
+}`;
+
+const ERROR_CODES: [string, string, string][] = [
+  ["unauthorized", "401", "Missing or invalid API key."],
+  ["forbidden", "403", "Plan or scope doesn't allow this."],
+  ["validation_error", "400", "The request body was invalid."],
+  ["insufficient_credits", "402", "Not enough credits for this evaluation."],
+  ["not_found", "404", "No resource with that id."],
+  ["rate_limited", "429", "Too many requests; retry after the window."],
+  ["internal_error", "500", "Something went wrong on our side."],
+];
+
+const QUICKSTART: [string, string, string][] = [
+  ["1", "Create an API key", "On the API keys page. Store it server-side only."],
+  ["2", "Create an evaluation run", "POST /api/v1/tests with your candidate options."],
+  ["3", "Collect human signal", "Share or embed the run; real people evaluate it."],
+  ["4", "Receive a webhook", "A signed test.completed fires when it fills."],
+  ["5", "Fetch the result", "GET the test, or export JSON/CSV."],
+  ["6", "Use the recommendation", "Read recommended_output and the intelligence fields in your app."],
+];
+
 function Code({ children, label = "shell" }: { children: string; label?: string }) {
   return (
     <div>
@@ -101,6 +128,26 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Quickstart + Authentication */}
+      <section className="section" style={{ paddingBottom: 0 }}>
+        <div className="wrap">
+          <div className="sec-head"><p className="eyebrow">Quickstart</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>From key to recommendation in six steps.</h2></div>
+          <div className="tile-grid cols-3">
+            {QUICKSTART.map(([n, t, d]) => (
+              <div key={n} className="acard" style={{ gap: 6 }}>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--acc-deep)" }}>{n}</div>
+                <div className="acard__t">{t}</div>
+                <div className="acard__d">{d}</div>
+              </div>
+            ))}
+          </div>
+          <div className="card" style={{ marginTop: 18 }}>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Authentication</div>
+            <p style={{ fontSize: 14, color: "var(--fg-2)", margin: 0, lineHeight: 1.6 }}>Send your key as <code style={{ fontFamily: "var(--font-code, monospace)" }}>X-Api-Key: vr_live_…</code> or <code style={{ fontFamily: "var(--font-code, monospace)" }}>Authorization: Bearer vr_live_…</code>. Keep keys <strong style={{ color: "var(--fg-1)" }}>server-side only</strong> — never ship them in frontend code. The full secret is shown once at creation; after that only the prefix is shown and logged. Rotate or revoke a key immediately if it leaks. Keys carry scopes (<code style={{ fontFamily: "var(--font-code, monospace)" }}>tests:write</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>tests:read</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>credits:read</code>) enforced per endpoint.</p>
+          </div>
+        </div>
+      </section>
+
       {/* API */}
       <section className="section">
         <div className="wrap">
@@ -115,8 +162,8 @@ export default function DevelopersPage() {
               <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Each evaluation is a <code style={{ fontFamily: "var(--font-code, monospace)" }}>/tests</code> resource in the API (kept stable for compatibility); conceptually it&apos;s an evaluation run: submit candidates, collect human signal, get a recommendation.</p>
               <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <span className="pill">API access on Scale</span>
+                <span className="pill">Sandbox mode (coming soon)</span>
                 <span className="pill">SDKs (coming soon)</span>
-                <span className="pill">Discord bot (coming soon)</span>
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -127,8 +174,32 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Errors */}
+      <section id="errors" className="section" style={{ background: "var(--bg-2)" }}>
+        <div className="wrap">
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
+            <div>
+              <p className="eyebrow">Errors</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Predictable error responses.</h2>
+              <p className="lead-copy" style={{ marginBottom: 14 }}>Every <code style={{ fontFamily: "var(--font-code, monospace)" }}>/api/v1</code> error uses the same envelope: a stable <code style={{ fontFamily: "var(--font-code, monospace)" }}>error.code</code>, a human message, and a <code style={{ fontFamily: "var(--font-code, monospace)" }}>request_id</code> for support. Branch on the code, not the message.</p>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 7 }}>
+                {ERROR_CODES.map(([code, status, desc]) => (
+                  <li key={code} style={{ display: "flex", gap: 10, fontSize: 13.5, color: "var(--fg-2)", alignItems: "baseline" }}>
+                    <code style={{ fontFamily: "var(--font-code, monospace)", fontSize: 12.5, color: "var(--acc-deep)", minWidth: 150 }}>{code}</code>
+                    <span style={{ fontFamily: "var(--font-code, monospace)", fontSize: 12, color: "var(--fg-4)" }}>{status}</span>
+                    <span style={{ color: "var(--fg-3)" }}>{desc}</span>
+                  </li>
+                ))}
+              </ul>
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Rate limit: 120 requests per 60 seconds per key. A <code style={{ fontFamily: "var(--font-code, monospace)" }}>429</code> includes a <code style={{ fontFamily: "var(--font-code, monospace)" }}>Retry-After</code> header. Errors never include secrets, keys, or stack traces.</p>
+            </div>
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Error shape</div><Code label="json">{ERROR_EXAMPLE}</Code></div>
+          </div>
+        </div>
+      </section>
+
       {/* Export */}
-      <section id="export" className="section" style={{ background: "var(--bg-2)" }}>
+      <section id="export" className="section">
         <div className="wrap">
           <div style={{ maxWidth: 660, marginBottom: "clamp(20px, 3vw, 32px)" }}>
             <p className="eyebrow">Preference data exports</p>
@@ -141,6 +212,7 @@ export default function DevelopersPage() {
           </div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 14, maxWidth: 720 }}>Includes the winner, vote breakdown, percentages, <strong style={{ color: "var(--fg-2)" }}>valid vs filtered</strong> vote quality, comments, and the AI analysis. Never includes account email, voter identities, or raw IP/device data.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}><strong style={{ color: "var(--fg-2)" }}>Export tiers.</strong> Add <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=summary</code> for a basic result, <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=standard</code> (the default) for the full report, or <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=scale</code> for the developer export (adds quality detail, this test&apos;s webhook and export counts, and a machine-readable <code style={{ fontFamily: "var(--font-code, monospace)" }}>schema_version</code>). JSON always carries <code style={{ fontFamily: "var(--font-code, monospace)" }}>schema_version</code>; CSV is the same option-row breakdown across tiers. Account-level and governed cohort datasets are Enterprise (contact sales).</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}><strong style={{ color: "var(--fg-2)" }}>Evaluation intelligence.</strong> Every JSON export carries an <code style={{ fontFamily: "var(--font-code, monospace)" }}>intelligence</code> object you can act on directly: <code style={{ fontFamily: "var(--font-code, monospace)" }}>decision_summary</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>recommended_output</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>preference_margin</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>directional_confidence</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>signal_quality</code>, and <code style={{ fontFamily: "var(--font-code, monospace)" }}>action_recommendation</code>.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}>Exports never include raw API keys, key hashes, webhook secrets, raw voter IP/device signals, billing internals, or private owner fields.</p>
         </div>
       </section>
