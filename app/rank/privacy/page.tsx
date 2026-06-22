@@ -11,7 +11,7 @@ export default function PrivacyPage() {
   return (
     <LegalShell eyebrow="Legal" title="Privacy" updated="Updated June 2026">
       <H>Overview</H>
-      <P>Vraelis lets you test creative options with real people and get a report on what wins. This page explains how data is handled when you use the website, app, voting, API, webhooks, exports, and public reports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
+      <P>Vraelis is a human evaluation layer for creative and AI-generated outputs: you submit options, real people evaluate them, and you get a decision report. This page explains how data is handled when you use the website, app, evaluation/voting flow, API, webhooks, exports, and public reports at vraelis.com. We have kept it plain and specific to what the product actually does.</P>
 
       <H>Data we collect</H>
       <Ul items={[

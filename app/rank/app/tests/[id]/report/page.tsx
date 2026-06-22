@@ -43,17 +43,17 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         {justLaunched && test.status === "active" && (
           <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 4 }}>Your test is live</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>Real people are voting now. Share or embed it below to collect votes faster. We&apos;ll generate your report once enough valid votes come in.</p>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 4 }}>Your evaluation is live</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>Real people are evaluating now. Share or embed it below to collect judgments faster. We&apos;ll generate your report once enough valid judgments come in.</p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
               <a href="/app/new" className="btn btn--ghost" style={{ fontSize: 13 }}>Create another</a>
               <a href="/app" className="btn btn--ghost" style={{ fontSize: 13 }}>Dashboard</a>
             </div>
           </div>
         )}
-        <p className="eyebrow">Collecting votes</p>
+        <p className="eyebrow">Collecting judgments</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid votes</p>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid judgments</p>
         <div style={{ height: 10, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden", marginBottom: 24 }}>
           <div className="pulse" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
         </div>
@@ -85,7 +85,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
 
   return (
     <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 90 }}>
-      <p className="eyebrow">Report</p>
+      <p className="eyebrow">Evaluation result</p>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 18 }}>{test.title}</h1>
 
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
@@ -101,7 +101,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       </div>
 
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", lineHeight: 1.7 }}>
-        Credits were held in escrow while the test ran. Invalid votes were filtered, unused credits refunded, and this report is based only on valid human judgments.
+        Credits were held in escrow while the evaluation ran. Low-quality responses were filtered, unused credits refunded, and this report is based only on valid human judgments. It is directional feedback, not a guarantee of sales, clicks, conversions, or revenue.
       </p>
     </div>
   );

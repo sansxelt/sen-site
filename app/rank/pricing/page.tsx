@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 type Cycle = "monthly" | "yearly";
 
 const PLANS = [
-  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 one-time", blurb: "Try the full loop.", perks: ["1 active test", "Up to 4 options", "Human votes + AI report"] },
-  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 / mo", blurb: "Testing occasionally.", perks: ["3 active tests / mo", "Up to 5 options", "AI winner report", "Shareable report links"] },
+  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 one-time", blurb: "Try a full evaluation.", perks: ["1 active evaluation", "Up to 4 options", "Human signal + AI report"] },
+  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 / mo", blurb: "Evaluate now and then.", perks: ["3 active evaluations / mo", "Up to 5 options", "AI decision report", "Shareable report links"] },
   { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 / mo", blurb: "Active creators & designers.", perks: ["10 active tests / mo", "Up to 6 options", "Audience targeting", "Embeddable tests"] },
   { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 / mo", blurb: "Brands, studios & teams.", perks: ["30 active tests / mo", "Up to 8 options", "Targeting + priority", "Webhooks + exports"], featured: true },
   { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 / mo", blurb: "Agencies, AI tools & platforms.", perks: ["100 active tests / mo", "Public API + embed widget", "Webhooks + JSON/CSV exports", "Priority routing"] },
@@ -51,7 +51,7 @@ export default function PricingPage() {
         <div className="glow glow--soft glow--bleed" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Simple plans. <span className="em">Real</span> feedback.</h1>
+          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Simple plans. <span className="em">Real</span> evaluation.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Every plan includes monthly credits. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong> Need more mid-cycle? Top up anytime.</p>
           <div className="seg">
             {(["monthly", "yearly"] as Cycle[]).map((c) => (
@@ -95,7 +95,7 @@ export default function PricingPage() {
           <div style={{ marginTop: "clamp(36px, 5vw, 56px)" }}>
             <div className="sec-head sec-head--center" style={{ marginBottom: 24 }}>
               <p className="eyebrow">How credits work</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)" }}>Pay for real feedback, not noise.</h2>
+              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)" }}>Pay for valid human judgments, not noise.</h2>
             </div>
             <div className="tile-grid cols-4">
               {CREDIT_RULES.map(([t, d]) => (

@@ -30,15 +30,15 @@ export function ReportBody({ results, options, analysisSlot }: { results: VRepor
     <>
       {total === 0 ? (
         <div className="card" style={{ marginBottom: 22, textAlign: "center", padding: "clamp(28px, 4vw, 44px)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Not enough valid feedback yet</div>
-          <p style={{ fontSize: 14.5, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto" }}>This test closed before collecting valid votes.</p>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Not enough valid judgments yet</div>
+          <p style={{ fontSize: 14.5, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto" }}>This evaluation closed before collecting valid judgments.</p>
         </div>
       ) : winner && winnerRow ? (
         <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", display: "grid", gridTemplateColumns: "auto minmax(0,1fr)", gap: "clamp(16px, 3vw, 28px)", alignItems: "center" }}>
           <OptionThumb o={winner} size={112} />
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Recommended winner</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Recommended output</span>
               <span className="pill" style={{ background: "var(--bg-1)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>{marginLabel}</span>
             </div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
@@ -51,14 +51,14 @@ export function ReportBody({ results, options, analysisSlot }: { results: VRepor
       ) : (
         <div className="card" style={{ marginBottom: 22 }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--money)", marginBottom: 4 }}>Too close to call</div>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700 }}>No decisive winner</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700 }}>No clear recommendation</div>
           <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 4 }}>{results.recommendation}</p>
         </div>
       )}
 
       {analysisSlot}
 
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Vote breakdown</div>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Preference breakdown</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
         {results.ranked.map((row, i) => {
           const isWin = row.id === results.winner_option_id;
@@ -68,7 +68,7 @@ export function ReportBody({ results, options, analysisSlot }: { results: VRepor
               <OptionThumb o={optById[row.id]} size={44} />
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600 }}>Option {OPTION_LETTERS[row.position]}{isWin ? " (winner)" : ""}</span>
+                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600 }}>Option {OPTION_LETTERS[row.position]}{isWin ? " (recommended)" : ""}</span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>{row.votes} vote{row.votes === 1 ? "" : "s"}</span>
                 </div>
                 <div style={{ height: 8, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden" }}>
@@ -83,13 +83,13 @@ export function ReportBody({ results, options, analysisSlot }: { results: VRepor
 
       <div className="card" style={{ marginBottom: 26, background: "var(--bg-2)", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
         <div style={{ display: "flex", gap: 24 }}>
-          <div><div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--acc-deep)" }}>{total}</div><div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>valid votes</div></div>
+          <div><div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--acc-deep)" }}>{total}</div><div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>valid judgments</div></div>
           <div><div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--fg-3)" }}>{filtered}</div><div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>filtered</div></div>
         </div>
         <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, flex: 1, minWidth: 240, margin: 0 }}>Votes that were too fast, duplicated, or low-quality are filtered automatically. <strong style={{ color: "var(--fg-1)" }}>Only valid human judgments count</strong> toward this result.</p>
       </div>
 
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>What voters said</div>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Reasoning signals</div>
       {results.comments.length === 0 ? (
         <p style={{ fontSize: 13.5, color: "var(--fg-4)", marginBottom: 26 }}>No written comments yet.</p>
       ) : (

@@ -2,7 +2,7 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
   title: "Developers",
-  description: "Add human feedback to your app. Create tests by API, collect votes, receive webhooks, and export results.",
+  description: "Human evaluation API for creative and AI outputs. Create evaluation runs, collect human signal, receive signed webhooks, and pull schema-versioned results.",
   path: "/developers",
 });
 
@@ -92,8 +92,8 @@ export default function DevelopersPage() {
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Developers</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 820, margin: "0 auto 16px" }}>Add <span className="em">“Test with Vraelis”</span> to your app.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 24px", textAlign: "center" }}>Your users generate options. Vraelis tells you which one real people prefer. Use one API call or an embed widget.</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 820, margin: "0 auto 16px" }}>The <span className="em">human evaluation API</span> for creative and AI outputs.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 24px", textAlign: "center" }}>Your users generate options. Vraelis returns which one real people prefer as a structured result, with quality filtering, reasoning, and a recommendation. One API call or an embed widget.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/api-keys" className="btn btn--lg">Create an API key</a>
             <a href="#embed" className="btn btn--ghost btn--lg">Embed widget</a>
@@ -107,11 +107,12 @@ export default function DevelopersPage() {
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.9fr) minmax(0,1.1fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
             <div>
               <p className="eyebrow">REST API</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 14 }}>Send options, get a ranked result.</h2>
-              <p className="lead-copy" style={{ marginBottom: 16 }}>Authenticate with an API key, POST your creative options (image URLs or text), and poll for the result + report. Built for AI image tools, copy generators, and creative platforms.</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 14 }}>Send candidates, get a structured result.</h2>
+              <p className="lead-copy" style={{ marginBottom: 16 }}>Authenticate with an API key, POST your creative candidates (image URLs or text), and poll for the structured result and report. Built for AI image tools, copy generators, and creative platforms.</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9 }}>
-                {["X-Api-Key auth (vr_live_…)", "Create + launch in one call", "Poll status, votes, winner & report", "Quality-filtered votes (anti-abuse built in)"].map((x) => <li key={x} style={{ display: "flex", gap: 9, fontSize: 14.5, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</li>)}
+                {["X-Api-Key auth (vr_live_…)", "Create + launch an evaluation in one call", "Poll status, the recommended output & report", "Quality-filtered human signal (anti-abuse built in)"].map((x) => <li key={x} style={{ display: "flex", gap: 9, fontSize: 14.5, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</li>)}
               </ul>
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Each evaluation is a <code style={{ fontFamily: "var(--font-code, monospace)" }}>/tests</code> resource in the API (kept stable for compatibility); conceptually it&apos;s an evaluation run: submit candidates, collect human signal, get a recommendation.</p>
               <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <span className="pill">API access on Scale</span>
                 <span className="pill">SDKs (coming soon)</span>

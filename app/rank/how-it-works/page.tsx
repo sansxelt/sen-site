@@ -2,15 +2,15 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
   title: "How it works",
-  description: "Send options, collect valid votes, and see what wins.",
+  description: "Submit candidates, collect valid judgments, and get a decision report.",
   path: "/how-it-works",
 });
 
 const STEPS: [string, string, string][] = [
-  ["1", "Create a test", "Upload your options or create a test by API. Choose how many valid judgments you want."],
-  ["2", "People vote", "Real people choose, rank, or explain their preference. Low-quality votes are filtered out."],
-  ["3", "Get the result", "See the winner, the vote breakdown, comments, and confidence."],
-  ["4", "Use the data", "Share the report, export results, or receive a webhook."],
+  ["1", "Submit candidates", "Upload your options or create an evaluation by API. Choose how many valid judgments you want."],
+  ["2", "Collect human signal", "Real people choose, rank, or explain their preference. Low-quality responses are filtered out."],
+  ["3", "Get the decision report", "See the recommended output, preference breakdown, reasoning, and directional confidence."],
+  ["4", "Use the result", "Share the report, export structured data, or receive a webhook."],
 ];
 
 export default function HowItWorks() {
@@ -21,7 +21,7 @@ export default function HowItWorks() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(20px, 3vw, 32px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>How it works</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.4vw, 3.4rem)", marginBottom: 14 }}>How Vraelis works</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Send options, collect valid votes, and see what wins.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Submit candidates, collect valid judgments, and get a decision report.</p>
         </div>
       </section>
 
@@ -44,8 +44,8 @@ export default function HowItWorks() {
       <section className="section cta-band" style={{ borderBottom: "none" }}>
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 640, textAlign: "center" }}>
-          <h2 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)", marginBottom: 16 }}>Ready to test?</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Run your first test free with 25 credits.</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)", marginBottom: 16 }}>Ready to evaluate?</h2>
+          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Run your first evaluation free with 25 credits.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/new" className="btn btn--lg">Start a test</a>
             <a href="/pricing" className="btn btn--ghost btn--lg">View pricing</a>

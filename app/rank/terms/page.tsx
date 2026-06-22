@@ -13,7 +13,7 @@ export default function TermsPage() {
       <P>These terms cover your use of Vraelis at vraelis.com. By using the product, you agree to them. If you do not agree, do not use the service.</P>
 
       <H>What Vraelis provides</H>
-      <P>Vraelis is a creative testing and human preference platform. It includes:</P>
+      <P>Vraelis is a creative evaluation and human preference platform. It includes:</P>
       <Ul items={[
         "Creative testing and human voting.",
         "Vote filtering for quality.",

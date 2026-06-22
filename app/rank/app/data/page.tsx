@@ -72,9 +72,9 @@ export default async function DataPage() {
     <div className="wrap" style={{ maxWidth: 1000, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">Data</p>
-          <h1 className="display">Your data</h1>
-          <p>How your tests are performing, what you collected, and your API and export activity.</p>
+          <p className="eyebrow">Evaluation analytics</p>
+          <h1 className="display">Your evaluation analytics</h1>
+          <p>How your evaluations are performing, the human signal you collected, and your API and export activity.</p>
         </div>
       </div>
 
