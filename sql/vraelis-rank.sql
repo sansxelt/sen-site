@@ -433,3 +433,21 @@ begin
     returning count into c;
   return c <= p_limit;
 end $$;
+
+-- ── Data / privacy request workflow (intake only — NOT destructive) ──
+-- Signed-in users submit access/export, correction, and account-deletion requests;
+-- an admin reviews and resolves them manually. No automated deletion. The message
+-- is a short user note (avoid storing sensitive data); admin_note is admin-only.
+create table if not exists v_data_requests (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      text not null,                  -- lowercased email of the requester
+  request_type text not null,                  -- data_export|data_correction|account_deletion|privacy_question
+  status       text not null default 'open',   -- open|in_review|completed|rejected|cancelled
+  message      text,                           -- short user-provided detail
+  admin_note   text,                           -- admin-only resolution note
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  resolved_at  timestamptz
+);
+create index if not exists v_data_requests_user_idx on v_data_requests (user_id, created_at desc);
+create index if not exists v_data_requests_status_idx on v_data_requests (status, created_at desc);

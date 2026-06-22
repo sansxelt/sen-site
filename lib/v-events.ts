@@ -71,6 +71,7 @@ const ACCOUNT_EVENT_TYPES = [
   "api_key_created", "api_key_revoked", "webhook_endpoint_created", "webhook_endpoint_updated",
   "webhook_endpoint_deleted", "webhook_secret_rotated", "webhook_test_sent",
   "public_report_enabled", "public_report_disabled", "public_report_regenerated", "export_downloaded",
+  "data_export_requested", "data_correction_requested", "account_delete_requested", "privacy_question_submitted",
 ];
 export async function recentAccountEvents(userId: string, limit = 10): Promise<EventRow[]> {
   if (!userId || !isDatabaseConfigured()) return [];

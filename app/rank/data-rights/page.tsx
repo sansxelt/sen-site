@@ -9,27 +9,32 @@ export const metadata = ogMeta({
 
 export default function DataRightsPage() {
   return (
-    <LegalShell eyebrow="Privacy" title="Data rights" intro="Here is how to manage your data on Vraelis, or request a change. For anything that is not self-serve, email privacy@vraelis.com.">
-      <H>What you can do</H>
+    <LegalShell eyebrow="Privacy" title="Data rights" intro="Manage your data on Vraelis. Signed-in users can submit requests from account settings; you can also email privacy@vraelis.com.">
+      <H>Submit a request</H>
+      <P>From <a href="/app/account" style={{ color: "var(--acc-deep)" }}>account settings</a>, signed-in users can submit a request to:</P>
       <Ul items={[
-        "Request access to the account data we hold about you.",
-        "Request a correction to your account information.",
-        "Request deletion of your account and data.",
+        "Export the account data we hold about you.",
+        "Correct your account information.",
+        "Delete your account and data (a confirm-gated request).",
+      ]} />
+      <P>Prefer email? Write to <a href="mailto:privacy@vraelis.com" style={{ color: "var(--acc-deep)" }}>privacy@vraelis.com</a> and we will handle it the same way.</P>
+
+      <H>Self-serve controls</H>
+      <Ul items={[
         "Disable a public report link from that report's controls.",
         "Delete API keys you no longer use.",
         "Remove webhook endpoints you have added.",
-        "Export your test and report data as JSON or CSV, where available.",
-        "Contact support to delete your account. For safety, deletion may be handled manually.",
+        "Export any completed report as JSON or CSV.",
       ]} />
 
-      <H>Good to know</H>
+      <H>How requests are handled</H>
       <Ul items={[
-        "Billing records may be retained where required for accounting, fraud prevention, or legal reasons.",
-        "Raw voter, IP, and device data is never shown in reports.",
+        "Requests are reviewed manually. Account deletion is not instant.",
+        "Some billing, security, and legal records may be retained where required.",
+        "Public report links may be disabled while a deletion request is processed.",
+        "Raw voter, IP, and device data is never shown in reports or exports.",
       ]} />
-
-      <H>Contact</H>
-      <P>To make a request, email <a href="mailto:privacy@vraelis.com" style={{ color: "var(--acc-deep)" }}>privacy@vraelis.com</a>. For more detail on what we collect and why, see the <a href="/privacy" style={{ color: "var(--acc-deep)" }}>Privacy</a> page.</P>
+      <P>This is an honest description of our process, not a claim of automated regulatory compliance. See the <a href="/privacy" style={{ color: "var(--acc-deep)" }}>Privacy</a> page for what we collect and why.</P>
     </LegalShell>
   );
 }

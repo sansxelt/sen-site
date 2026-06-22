@@ -5,8 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 type Vote = { id: string; test_id: string; voter_id: string; status: string; reject_reason: string | null; reason: string | null; time_spent_ms: number | null; created_at: string; title: string | null };
 type Stats = { valid: number; rejected: number; byReason: Record<string, number> };
 type Audit = { id: string; user_id: string | null; test_id: string | null; event_type: string; actor_type: string; source: string | null; route: string | null; metadata: Record<string, unknown>; created_at: string };
+type DReq = { id: string; user_id: string; request_type: string; status: string; message: string | null; admin_note: string | null; created_at: string };
 const FILTERS = ["rejected", "valid", "all"] as const;
 const ACTORS = ["all", "owner", "admin", "api", "webhook", "system"] as const;
+const DREQ_TYPE: Record<string, string> = { data_export: "Data export", data_correction: "Correction", account_deletion: "Account deletion", privacy_question: "Privacy question" };
 
 export default function AdminPage() {
   const [votes, setVotes] = useState<Vote[]>([]);
@@ -30,12 +32,25 @@ export default function AdminPage() {
     if (r.ok) { const j = await r.json(); setAudit(j.events || []); }
   }, [actor]);
 
+  const [dreqs, setDreqs] = useState<DReq[]>([]);
+  const [dnote, setDnote] = useState<Record<string, string>>({});
+
+  const loadDreqs = useCallback(async () => {
+    const r = await fetch("/api/v/admin/data-requests");
+    if (r.ok) setDreqs((await r.json()).requests || []);
+  }, []);
+
   useEffect(() => { load(); }, [load]);
   useEffect(() => { loadAudit(); }, [loadAudit]);
+  useEffect(() => { loadDreqs(); }, [loadDreqs]);
 
   async function override(id: string, status: "valid" | "rejected") {
     await fetch("/api/v/admin/votes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
     load();
+  }
+  async function reqAction(id: string, body: object) {
+    await fetch("/api/v/admin/data-requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, ...body }) });
+    loadDreqs();
   }
 
   if (forbidden) {
@@ -86,6 +101,36 @@ export default function AdminPage() {
               {v.status === "rejected"
                 ? <button onClick={() => override(v.id, "valid")} className="btn btn--ghost" style={{ fontSize: 13 }}>Mark valid</button>
                 : <button onClick={() => override(v.id, "rejected")} className="btn btn--ghost" style={{ fontSize: 13 }}>Reject</button>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* data requests (admin only — gated server-side by isAdmin) */}
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "36px 0 12px" }}>Data requests</div>
+      {dreqs.length === 0 ? (
+        <div className="empty"><div className="empty__icon">✉</div><h3>No data requests</h3><p>Export, correction, and account-deletion requests from users appear here for manual review.</p></div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {dreqs.map((d) => (
+            <div key={d.id} className="card" style={{ padding: 16 }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14, color: "var(--fg-1)" }}>{DREQ_TYPE[d.request_type] ?? d.request_type}</span>
+                <span className="pill" style={{ fontSize: 10.5, background: d.status === "completed" ? "var(--acc-soft)" : d.status === "rejected" || d.status === "cancelled" ? "var(--bg-2)" : "var(--bg-1)", color: d.status === "completed" ? "var(--acc-deep)" : "var(--fg-3)" }}>{d.status.replace(/_/g, " ")}</span>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)" }}>{d.user_id}</span>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginLeft: "auto" }}>{new Date(d.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+              </div>
+              {d.message ? <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 8, lineHeight: 1.5 }}>{d.message}</div> : null}
+              {d.admin_note ? <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 6 }}>Note: {d.admin_note}</div> : null}
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 12 }}>
+                <button onClick={() => reqAction(d.id, { status: "in_review" })} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>In review</button>
+                <button onClick={() => reqAction(d.id, { status: "completed" })} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>Completed</button>
+                <button onClick={() => reqAction(d.id, { status: "rejected" })} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>Rejected</button>
+              </div>
+              <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                <input value={dnote[d.id] || ""} onChange={(e) => setDnote((n) => ({ ...n, [d.id]: e.target.value }))} placeholder="Add an admin note" style={{ flex: 1, minWidth: 200, padding: "8px 12px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 13, outline: "none" }} />
+                <button onClick={() => { if ((dnote[d.id] || "").trim()) { reqAction(d.id, { note: dnote[d.id] }); setDnote((n) => ({ ...n, [d.id]: "" })); } }} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>Save note</button>
+              </div>
             </div>
           ))}
         </div>

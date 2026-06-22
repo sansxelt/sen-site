@@ -6,6 +6,7 @@ import { balance } from "@/lib/v-credits";
 import { recentAccountEvents } from "@/lib/v-events";
 import { SignOutButton } from "../../_components/rank-ui";
 import { DeleteAccount } from "./delete-account";
+import { AccountRequests } from "./account-requests";
 
 export const metadata: Metadata = { title: "Account" };
 
@@ -16,7 +17,9 @@ const ACTIVITY_LABEL: Record<string, string> = {
   webhook_endpoint_deleted: "Webhook removed", webhook_secret_rotated: "Webhook secret rotated",
   webhook_test_sent: "Webhook test sent", public_report_enabled: "Public report enabled",
   public_report_disabled: "Public report disabled", public_report_regenerated: "Public link regenerated",
-  export_downloaded: "Export downloaded",
+  export_downloaded: "Export downloaded", data_export_requested: "Data export requested",
+  data_correction_requested: "Correction requested", account_delete_requested: "Account deletion requested",
+  privacy_question_submitted: "Privacy question submitted",
 };
 
 export default async function AccountPage() {
@@ -88,6 +91,13 @@ export default async function AccountPage() {
           </div>
         </>
       )}
+
+      {/* data & privacy requests */}
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Data &amp; privacy</div>
+      <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: -4, marginBottom: 14, maxWidth: 620, lineHeight: 1.55 }}>Submit a request to export, correct, or delete your data. Requests are reviewed manually, and some records may be retained where required. See <a href="/data-rights" style={{ color: "var(--acc-deep)" }}>Data rights</a>.</p>
+      <div style={{ marginBottom: 26 }}>
+        <AccountRequests />
+      </div>
 
       {/* security */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Security</div>
