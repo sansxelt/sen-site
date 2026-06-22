@@ -13,6 +13,8 @@ const CLEAN_EXACT: Record<string, string> = {
   "/developers": "/rank/developers",
   "/privacy": "/rank/privacy",
   "/terms": "/rank/terms",
+  "/data-rights": "/rank/data-rights",
+  "/trademark": "/rank/trademark",
   "/contact": "/rank/contact",
   "/refunds": "/v/refunds",
 };
