@@ -41,9 +41,9 @@ function Frame({ children }: { children: ReactNode }) {
         <div className="glow glow--soft" />
         <div className="wrap" style={{ position: "relative", padding: "clamp(40px, 6vw, 76px) var(--gutter)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Created with Vraelis</p>
-          <div className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 10 }}>Test your creative with <span className="em">real people</span>.</div>
-          <p style={{ fontSize: 15, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 22px" }}>Upload your options and get a clear report on what wins before launch.</p>
-          <a href="https://vraelis.com/app/new" className="btn btn--lg">Run your own test →</a>
+          <div className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 10 }}>Evaluate your creative with <span className="em">real people</span>.</div>
+          <p style={{ fontSize: 15, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 22px" }}>Submit your options and get a decision report before launch.</p>
+          <a href="https://vraelis.com/app/new" className="btn btn--lg">Run your own evaluation →</a>
         </div>
       </footer>
     </div>
@@ -89,9 +89,9 @@ export default async function PublicReport({ params }: { params: Promise<{ token
     const pct = Math.min(100, Math.round((test.votes_valid / Math.max(1, test.votes_target)) * 100));
     return (
       <Frame>
-        <p className="eyebrow">Collecting votes</p>
+        <p className="eyebrow">Collecting judgments</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid votes so far</p>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid judgments so far</p>
         <div style={{ height: 10, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden", marginBottom: 24 }}>
           <div className="pulse" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
         </div>
@@ -112,12 +112,13 @@ export default async function PublicReport({ params }: { params: Promise<{ token
   if (!report) return <Unavailable />; // unreachable (handled above) — satisfies the type checker
   return (
     <Frame>
-      <p className="eyebrow">Shared report</p>
+      <p className="eyebrow">Evaluation result</p>
       <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.5rem)", marginBottom: 8 }}>{test.title}</h1>
-      <p style={{ fontSize: 14, color: "var(--fg-4)", marginBottom: 22 }}>A read-only verdict from real people, powered by Vraelis.</p>
+      <p style={{ fontSize: 14, color: "var(--fg-4)", marginBottom: 22 }}>A read-only decision report from real people, powered by Vraelis.</p>
       <ReportBody
         results={report.results}
         options={options}
+        votesTarget={test.votes_target}
         analysisSlot={report.results.analysis ? <AnalysisPanel testId="" initial={report.results.analysis} readOnly /> : null}
       />
     </Frame>

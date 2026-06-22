@@ -7,6 +7,7 @@ import { getSupabaseAdminClient } from "./supabase-admin";
 import { getTestWithOptions, getReport, getPlan, OPTION_LETTERS } from "./v-db";
 import { logEvent } from "./v-events";
 import { apiAccessAllowed } from "./v-entitlements";
+import { evaluationIntelligence } from "./v-intelligence";
 
 export const EXPORT_SCHEMA_VERSION = "v1";
 export type ExportTier = "summary" | "standard" | "scale";
@@ -28,6 +29,15 @@ export type ExportData = {
   comments: { option: string; reason: string }[];
   analysis: { summary: string; why_winner: string; weaknesses: string[]; suggestions: string[]; confidence: string } | null;
   quality: { valid: number; filtered: number; filtered_reasons: Record<string, number> };
+  // Additive Evaluation Intelligence (derived, safe). schema_version stays v1.
+  intelligence: {
+    decision_summary: string;
+    recommended_output: string | null;
+    preference_margin: number | null;
+    directional_confidence: string;
+    signal_quality: string;
+    action_recommendation: string;
+  } | null;
   exported_at: string;
 };
 
@@ -53,6 +63,7 @@ export async function buildExport(testId: string): Promise<{ ownerId: string; st
   const ranked = r?.ranked ?? [];
   const winnerRow = r?.winner_option_id ? ranked.find((x) => x.id === r.winner_option_id) : null;
   const letter = (id: string) => OPTION_LETTERS[optById[id]?.position ?? 0] ?? "?";
+  const intel = r ? evaluationIntelligence(r, test.votes_target) : null;
 
   const data: ExportData = {
     test_id: test.id,
@@ -71,6 +82,14 @@ export async function buildExport(testId: string): Promise<{ ownerId: string; st
     comments: (r?.comments ?? []).map((c) => ({ option: letter(c.option_id), reason: c.reason })),
     analysis: r?.analysis ?? null,
     quality: { valid: r?.total ?? test.votes_valid, filtered: r?.filtered ?? filteredCount, filtered_reasons },
+    intelligence: intel ? {
+      decision_summary: intel.decisionSummary,
+      recommended_output: intel.recommendedOption,
+      preference_margin: intel.marginPts,
+      directional_confidence: intel.confidenceLabel,
+      signal_quality: intel.signalLabel,
+      action_recommendation: intel.action,
+    } : null,
     exported_at: new Date().toISOString(),
   };
   return { ownerId: test.user_id, status: test.status, data };
@@ -95,6 +114,7 @@ function summaryProjection(d: ExportData) {
     winner: d.winner ? { option: d.winner.option, label: d.winner.label, pct: d.winner.pct, votes: d.winner.votes } : null,
     options: d.options.map((o) => ({ option: o.option, label: o.label, votes: o.votes, pct: o.pct })),
     comments: d.comments.slice(0, 5),
+    intelligence: d.intelligence,
     exported_at: d.exported_at,
   };
 }

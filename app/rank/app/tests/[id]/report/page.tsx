@@ -90,7 +90,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
 
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
 
-      <ReportBody results={r} options={options} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
+      <ReportBody results={r} options={options} votesTarget={test.votes_target} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
 
       <ExportControls testId={test.id} />
 
