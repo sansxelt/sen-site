@@ -154,6 +154,32 @@ export async function deleteWebhook(userId: string, id: string): Promise<void> {
   await getSupabaseAdminClient().from("v_webhook_endpoints" as never).delete().eq("id", id).eq("user_id", norm(userId));
 }
 
+// Webhook reliability summary for an owner, aggregated from v_webhook_deliveries
+// across all of the owner's endpoints. No secrets or payloads leave here.
+export async function webhookStats(userId: string): Promise<{ endpoints: number; total: number; success: number; failed: number; retried: number; lastAt: string | null }> {
+  const empty = { endpoints: 0, total: 0, success: 0, failed: 0, retried: 0, lastAt: null as string | null };
+  if (!isDatabaseConfigured()) return empty;
+  try {
+    const s = getSupabaseAdminClient();
+    const { data: eps } = await s.from("v_webhook_endpoints" as never).select("id").eq("user_id", norm(userId));
+    const ids = ((eps as unknown as { id: string }[]) ?? []).map((e) => e.id);
+    if (!ids.length) return empty;
+    const inIds = (q: ReturnType<typeof s.from>) => q.in("endpoint_id", ids);
+    const head = () => inIds(s.from("v_webhook_deliveries" as never).select("*", { count: "exact", head: true }));
+    const [tot, suc, fail, ret, last] = await Promise.all([
+      head(),
+      head().eq("status", "success"),
+      head().eq("status", "failed"),
+      head().gt("attempts", 1),
+      inIds(s.from("v_webhook_deliveries" as never).select("created_at")).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    ]);
+    return {
+      endpoints: ids.length, total: tot.count ?? 0, success: suc.count ?? 0, failed: fail.count ?? 0,
+      retried: ret.count ?? 0, lastAt: (last.data as unknown as { created_at: string } | null)?.created_at ?? null,
+    };
+  } catch { return empty; }
+}
+
 export type DeliveryRow = { id: string; test_id: string | null; event: string; status: string; response_status: number | null; error: string | null; attempts: number; created_at: string };
 export async function listDeliveries(userId: string, endpointId: string): Promise<DeliveryRow[]> {
   if (!isDatabaseConfigured()) return [];

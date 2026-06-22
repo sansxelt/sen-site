@@ -24,7 +24,8 @@ export async function apiAuth(req: Request): Promise<{ userId: string; scopes: s
   const v = await verifyApiKey(key);
   if (!v) return null;
   if (!apiAccessAllowed(await getPlan(v.userId), v.userId)) return null;
-  // API usage analytics — coarse group + method only, never the key or full URL.
-  await logEvent({ userId: v.userId, eventType: "api_request_made", actorType: "api", source: "api", route: endpointGroup(req.url), metadata: { method: req.method, endpoint: endpointGroup(req.url) } });
+  // API usage analytics — coarse group + method + the public key prefix (for
+  // per-key attribution). Never the raw key, hash, auth header, or full URL.
+  await logEvent({ userId: v.userId, eventType: "api_request_made", actorType: "api", source: "api", route: endpointGroup(req.url), metadata: { method: req.method, endpoint: endpointGroup(req.url), prefix: v.prefix } });
   return v;
 }

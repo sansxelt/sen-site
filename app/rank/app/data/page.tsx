@@ -156,7 +156,10 @@ export default async function DataPage() {
       {/* API & webhook usage */}
       {(ins.hasApi || ins.hasWebhooks) && (
         <div className="card" style={{ marginBottom: 22 }}>
-          <div style={head}>API &amp; webhook usage</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
+            <div style={head}>API &amp; webhook usage</div>
+            <a href="/app/api-keys" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none", fontWeight: 500 }}>Full API analytics →</a>
+          </div>
           {(counts.api_request_made || counts.webhook_delivered || counts.webhook_failed) ? (
             <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
               <Perf l="API requests" v={(counts.api_request_made ?? 0).toLocaleString()} />

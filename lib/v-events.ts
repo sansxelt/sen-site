@@ -94,6 +94,63 @@ export async function eventCounts(userId: string, types: string[]): Promise<Reco
   } catch { return out; }
 }
 
+// API usage analytics for an owner, derived from api_request_made events.
+// Headline counts are exact (count queries); the per-endpoint / per-key breakdown
+// is computed from a recent sample (fine at current volume). Tolerant of missing table.
+export type ApiUsage = {
+  total: number; last24h: number; last7d: number; lastAt: string | null;
+  byEndpoint: { endpoint: string; method: string; count: number }[];
+  byPrefix: Record<string, number>;
+};
+export async function apiUsage(userId: string): Promise<ApiUsage> {
+  const empty: ApiUsage = { total: 0, last24h: 0, last7d: 0, lastAt: null, byEndpoint: [], byPrefix: {} };
+  if (!userId || !isDatabaseConfigured()) return empty;
+  try {
+    const s = getSupabaseAdminClient();
+    const uid = userId.trim().toLowerCase();
+    const base = () => s.from("v_events" as never).select("*", { count: "exact", head: true }).eq("user_id", uid).eq("event_type", "api_request_made");
+    const cut = (ms: number) => new Date(Date.now() - ms).toISOString();
+    const [tot, d1, d7, recent] = await Promise.all([
+      base(),
+      base().gte("created_at", cut(24 * 3600e3)),
+      base().gte("created_at", cut(7 * 24 * 3600e3)),
+      s.from("v_events" as never).select("metadata,created_at").eq("user_id", uid).eq("event_type", "api_request_made").order("created_at", { ascending: false }).limit(2000),
+    ]);
+    if (tot.error) return empty;
+    const rows = (recent.data as unknown as { metadata: Record<string, unknown>; created_at: string }[]) ?? [];
+    const epMap: Record<string, { endpoint: string; method: string; count: number }> = {};
+    const byPrefix: Record<string, number> = {};
+    for (const r of rows) {
+      const m = r.metadata || {};
+      const ep = String(m.endpoint ?? "other"); const method = String(m.method ?? "");
+      const k = `${method} ${ep}`;
+      (epMap[k] ??= { endpoint: ep, method, count: 0 }).count++;
+      if (m.prefix) byPrefix[String(m.prefix)] = (byPrefix[String(m.prefix)] ?? 0) + 1;
+    }
+    return {
+      total: tot.count ?? 0, last24h: d1.count ?? 0, last7d: d7.count ?? 0,
+      lastAt: rows[0]?.created_at ?? null,
+      byEndpoint: Object.values(epMap).sort((a, b) => b.count - a.count).slice(0, 8),
+      byPrefix,
+    };
+  } catch { return empty; }
+}
+
+// Recent developer-relevant events for an owner (API, exports, webhooks, launches).
+export async function recentDevEvents(userId: string, limit = 12): Promise<EventRow[]> {
+  if (!userId || !isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const { data, error } = await s.from("v_events" as never)
+      .select("id,user_id,test_id,event_type,actor_type,source,metadata,created_at")
+      .eq("user_id", userId.trim().toLowerCase())
+      .in("event_type", ["api_request_made", "export_downloaded", "webhook_delivered", "webhook_failed", "test_launched", "api_key_created"])
+      .order("created_at", { ascending: false }).limit(limit);
+    if (error) return [];
+    return (data as unknown as EventRow[]) ?? [];
+  } catch { return []; }
+}
+
 // Latest timestamp for a given event type for an owner (e.g. last API activity).
 export async function lastEventAt(userId: string, eventType: string): Promise<string | null> {
   if (!userId || !isDatabaseConfigured()) return null;

@@ -23,14 +23,16 @@ export async function generateApiKey(userId: string, name?: string): Promise<{ k
   return { key: raw, prefix };
 }
 
-export async function verifyApiKey(key: string): Promise<{ userId: string; scopes: string[] } | null> {
+export async function verifyApiKey(key: string): Promise<{ userId: string; scopes: string[]; prefix: string } | null> {
   if (!key || !isDatabaseConfigured()) return null;
   const s = getSupabaseAdminClient();
-  const { data } = await s.from("v_api_keys" as never).select("user_id,scopes,id").eq("key_hash", hash(key)).maybeSingle();
-  const r = data as unknown as { user_id: string; scopes: string[]; id: string } | null;
+  // prefix is the public, non-secret identifier (already shown in the UI) — used
+  // to attribute API usage per key. NEVER selects key_hash.
+  const { data } = await s.from("v_api_keys" as never).select("user_id,scopes,id,prefix").eq("key_hash", hash(key)).maybeSingle();
+  const r = data as unknown as { user_id: string; scopes: string[]; id: string; prefix: string } | null;
   if (!r) return null;
   await s.from("v_api_keys" as never).update({ last_used: new Date().toISOString() } as never).eq("id", r.id);
-  return { userId: r.user_id, scopes: r.scopes ?? [] };
+  return { userId: r.user_id, scopes: r.scopes ?? [], prefix: r.prefix };
 }
 
 export async function listApiKeys(userId: string): Promise<ApiKeyRow[]> {
