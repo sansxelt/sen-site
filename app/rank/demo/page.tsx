@@ -58,7 +58,7 @@ export default function DemoReport() {
 
       <p className="eyebrow">Example decision report</p>
       <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.5rem)", marginBottom: 8 }}>Which landing page hero should ship?</h1>
-      <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginBottom: 24, lineHeight: 1.55 }}>Three landing-page hero candidates, evaluated by people for a general audience. This is the exact output Vraelis returns — recommended output, preference margin, directional confidence, signal quality, and reasoning signals.</p>
+      <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginBottom: 24, lineHeight: 1.55 }}>A sample comparison of three landing-page hero candidates for a general audience. It shows the exact decision output Vraelis returns — recommended output, preference margin, directional confidence, signal quality, and reasoning signals. <strong style={{ color: "var(--fg-2)" }}>All figures below are illustrative demo data, not real judgments.</strong></p>
 
       {/* the candidates being evaluated */}
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>The candidates</div>

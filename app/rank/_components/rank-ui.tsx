@@ -31,7 +31,7 @@ const I = {
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Workspace", items: [
     { href: "/app", label: "Dashboard", d: I.grid },
-    { href: "/app/new", label: "New test", d: I.plus },
+    { href: "/app/new", label: "New evaluation", d: I.plus },
     { href: "/app/data", label: "Data", d: I.data },
   ] },
   { group: "Billing", items: [
@@ -141,7 +141,7 @@ function AppTopbar({ email }: { email: string | null }) {
           small left nudge so the wordmark sits centered over the sidebar column */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</a>
+        <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New evaluation</a>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(email || "?").slice(0, 1).toUpperCase()}</span>
           <span style={{ fontSize: 13, color: "var(--fg-3)" }} aria-hidden>▾</span>
