@@ -139,6 +139,8 @@ export default function DevelopersPage() {
             <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Response shape</div><Code>{EXPORT_SHAPE}</Code></div>
           </div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 14, maxWidth: 720 }}>Includes the winner, vote breakdown, percentages, <strong style={{ color: "var(--fg-2)" }}>valid vs filtered</strong> vote quality, comments, and the AI analysis. Never includes account email, voter identities, or raw IP/device data.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}><strong style={{ color: "var(--fg-2)" }}>Export tiers.</strong> Add <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=summary</code> for a basic result, <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=standard</code> (the default) for the full report, or <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=scale</code> for the developer export (adds quality detail, this test&apos;s webhook and export counts, and a machine-readable <code style={{ fontFamily: "var(--font-code, monospace)" }}>schema_version</code>). JSON always carries <code style={{ fontFamily: "var(--font-code, monospace)" }}>schema_version</code>; CSV is the same option-row breakdown across tiers. Account-level and governed cohort datasets are Enterprise (contact sales).</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}>Exports never include raw API keys, key hashes, webhook secrets, raw voter IP/device signals, billing internals, or private owner fields.</p>
         </div>
       </section>
 

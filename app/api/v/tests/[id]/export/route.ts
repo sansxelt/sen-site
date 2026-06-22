@@ -11,6 +11,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const email = session?.user?.email;
   if (!email) return Response.json({ error: "signin_required" }, { status: 401 });
   const { id } = await params;
-  const fmt = new URL(req.url).searchParams.get("format") ?? "json";
-  return exportResponse(id, email, fmt);
+  const sp = new URL(req.url).searchParams;
+  const fmt = sp.get("format") ?? "json";
+  const tier = (sp.get("tier") ?? "standard") as "summary" | "standard" | "scale";
+  return exportResponse(id, email, fmt, "owner", tier);
 }

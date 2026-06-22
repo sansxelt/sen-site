@@ -10,6 +10,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const a = await apiAuth(req);
   if (!a) return Response.json({ error: "invalid_api_key" }, { status: 401 });
   const { id } = await params;
-  const fmt = new URL(req.url).searchParams.get("format") ?? "json";
-  return exportResponse(id, a.userId, fmt, "api");
+  const sp = new URL(req.url).searchParams;
+  const fmt = sp.get("format") ?? "json";
+  const tier = (sp.get("tier") ?? "standard") as "summary" | "standard" | "scale";
+  return exportResponse(id, a.userId, fmt, "api", tier);
 }

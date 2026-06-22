@@ -4,8 +4,12 @@
 // API keys, admin fields, or share tokens. Draft/canceled tests don't export.
 
 import { getSupabaseAdminClient } from "./supabase-admin";
-import { getTestWithOptions, getReport, OPTION_LETTERS } from "./v-db";
+import { getTestWithOptions, getReport, getPlan, OPTION_LETTERS } from "./v-db";
 import { logEvent } from "./v-events";
+import { apiAccessAllowed } from "./v-entitlements";
+
+export const EXPORT_SCHEMA_VERSION = "v1";
+export type ExportTier = "summary" | "standard" | "scale";
 
 export type ExportData = {
   test_id: string;
@@ -81,18 +85,56 @@ export function toCSV(d: ExportData): string {
   return [header, ...rows].map((row) => row.map(esc).join(",")).join("\n");
 }
 
+// Free/summary projection — a basic result, no analysis or quality detail.
+function summaryProjection(d: ExportData) {
+  return {
+    schema_version: EXPORT_SCHEMA_VERSION, tier: "summary" as const,
+    test_id: d.test_id, title: d.title, status: d.status, category: d.category,
+    created_at: d.created_at, completed_at: d.completed_at,
+    votes_target: d.votes_target, votes_valid: d.votes_valid, votes_filtered: d.votes_filtered, inconclusive: d.inconclusive,
+    winner: d.winner ? { option: d.winner.option, label: d.winner.label, pct: d.winner.pct, votes: d.winner.votes } : null,
+    options: d.options.map((o) => ({ option: o.option, label: o.label, votes: o.votes, pct: o.pct })),
+    comments: d.comments.slice(0, 5),
+    exported_at: d.exported_at,
+  };
+}
+
+// Scale tier adds safe per-test delivery/export aggregates. No secrets, no payloads.
+async function scaleMeta(testId: string) {
+  try {
+    const s = getSupabaseAdminClient();
+    const [wd, wf, ex] = await Promise.all([
+      s.from("v_webhook_deliveries" as never).select("*", { count: "exact", head: true }).eq("test_id", testId).eq("status", "success"),
+      s.from("v_webhook_deliveries" as never).select("*", { count: "exact", head: true }).eq("test_id", testId).eq("status", "failed"),
+      s.from("v_events" as never).select("*", { count: "exact", head: true }).eq("test_id", testId).eq("event_type", "export_downloaded"),
+    ]);
+    return { webhook: { delivered: wd.count ?? 0, failed: wf.count ?? 0 }, exports: { total: ex.count ?? 0 } };
+  } catch { return { webhook: { delivered: 0, failed: 0 }, exports: { total: 0 } }; }
+}
+
 // Auth-agnostic: caller verifies who `userId` is (session or API key) first.
-export async function exportResponse(testId: string, userId: string, fmt: string, actor: "owner" | "api" = "owner"): Promise<Response> {
+// `tier` shapes the JSON payload; CSV is the same option-row breakdown for all
+// tiers. No tier (or an unknown one) defaults to standard — the existing full
+// export — so older clients and current users are never downgraded or broken.
+export async function exportResponse(testId: string, userId: string, fmt: string, actor: "owner" | "api" = "owner", tier: ExportTier = "standard"): Promise<Response> {
   if (fmt !== "json" && fmt !== "csv") return Response.json({ error: "invalid_format", allowed: ["json", "csv"] }, { status: 400 });
+  let t: ExportTier = tier === "summary" || tier === "scale" ? tier : "standard";
   const res = await buildExport(testId);
   if (!res) return Response.json({ error: "not_found" }, { status: 404 });
   // Ownership BEFORE status, so a non-owner can't probe draft/canceled vs live.
   if (res.ownerId !== userId.trim().toLowerCase()) return Response.json({ error: "forbidden" }, { status: 403 });
   if (res.status === "draft" || res.status === "canceled") return Response.json({ error: "not_exportable" }, { status: 404 });
-  await logEvent({ userId: res.ownerId, testId, eventType: "export_downloaded", actorType: actor, source: actor === "api" ? "api" : "web", metadata: { format: fmt, export_scope: "test" } });
+  // The scale tier is a Scale+/API feature. API callers are already gated to
+  // Scale+. For owners, gracefully fall back to standard (never hard-block).
+  if (t === "scale" && actor !== "api" && !apiAccessAllowed(await getPlan(res.ownerId), res.ownerId)) t = "standard";
+
+  await logEvent({ userId: res.ownerId, testId, eventType: "export_downloaded", actorType: actor, source: actor === "api" ? "api" : "web", metadata: { format: fmt, tier: t, export_scope: "test", schema_version: EXPORT_SCHEMA_VERSION } });
   const slug = (res.data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40)) || "vraelis-export";
   if (fmt === "csv") {
     return new Response(toCSV(res.data), { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${slug}.csv"` } });
   }
-  return new Response(JSON.stringify(res.data, null, 2), { headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="${slug}.json"` } });
+  const payload = t === "summary" ? summaryProjection(res.data)
+    : t === "scale" ? { schema_version: EXPORT_SCHEMA_VERSION, tier: "scale" as const, ...res.data, meta: await scaleMeta(testId) }
+    : { schema_version: EXPORT_SCHEMA_VERSION, tier: "standard" as const, ...res.data };
+  return new Response(JSON.stringify(payload, null, 2), { headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="${slug}.json"` } });
 }

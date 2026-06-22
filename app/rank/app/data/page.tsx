@@ -182,7 +182,7 @@ export default async function DataPage() {
       <div className="card cta-band" style={{ background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Export preference data</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Every completed report exports as JSON or CSV. Winner, vote breakdown, vote quality, comments, and AI analysis.</p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Summary, standard, and Scale data exports as JSON or CSV. Winner, vote breakdown, vote quality, comments, and AI analysis. Download from any completed report.</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <a href="/app/api-keys" className="btn">API keys</a>
