@@ -4,8 +4,11 @@
    ────────────────────────────────────────────────────────────────── */
 
 * { box-sizing: border-box; }
+/* overflow-x: clip (not hidden) on both — clips horizontal overflow on mobile
+   WITHOUT turning html/body into a scroll container, which would break the sticky
+   header/topbar (position: sticky needs no scroll-container ancestor). */
 html { scroll-behavior: smooth; overflow-x: clip; }
-body { margin: 0; overflow-x: hidden; max-width: 100%; }
+body { margin: 0; overflow-x: clip; max-width: 100%; }
 
 /* ── LIGHT THEME — warm paper, green primary, soft depth ─────────── */
 :root {
