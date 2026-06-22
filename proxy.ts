@@ -16,6 +16,7 @@ const CLEAN_EXACT: Record<string, string> = {
   "/data-rights": "/rank/data-rights",
   "/trademark": "/rank/trademark",
   "/contact": "/rank/contact",
+  "/demo": "/rank/demo",
   "/refunds": "/v/refunds",
 };
 // Retired sansxel product routes (exact path or any subpath) -> redirect home.
@@ -49,7 +50,7 @@ export default function proxy(req: NextRequest) {
   // 2) Archived / retired -> home.
   if (
     path === "/flip" || path.startsWith("/flip/") ||
-    ["/how", "/automates", "/demo", "/showcase", "/v"].includes(path) ||
+    ["/how", "/automates", "/showcase", "/v"].includes(path) ||
     path.startsWith("/v/account") || path.startsWith("/v/articles") ||
     path.startsWith("/v/how") || path.startsWith("/v/demo") || path.startsWith("/v/pricing")
   ) {

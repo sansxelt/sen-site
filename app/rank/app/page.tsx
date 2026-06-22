@@ -7,18 +7,18 @@ import { isAdmin } from "@/lib/v-entitlements";
 function FirstRun({ bal }: { bal: number }) {
   const steps: [string, string, boolean][] = [
     ["Claim your starter credits", `${bal} credits ready`, bal > 0],
-    ["Create your first test", "Upload 2–8 options", false],
-    ["Pick a vote target", "1 credit = 1 human vote", false],
-    ["Launch & collect votes", "Real people weigh in", false],
-    ["Read your report", "Winner, why, what to fix", false],
-    ["Embed or use the API", "Collect votes anywhere", false],
+    ["Submit your candidates", "2 to 8 options: images, AI outputs, copy, UI", false],
+    ["Choose a judgment target", "1 credit = 1 valid judgment", false],
+    ["Launch the evaluation", "Real people weigh in, low-quality filtered", false],
+    ["Review the decision report", "Recommended output, margin, confidence, reasons", false],
+    ["Share, export, or use the API", "A decision you can act on anywhere", false],
   ];
   const credits: [string, string][] = [
-    ["1 credit = 1 valid human vote", "You only pay for real judgments."],
+    ["1 credit = 1 valid human judgment", "You only pay for real human signal."],
     ["Credits are held when you launch", "Escrowed, not spent up front."],
-    ["Invalid votes are filtered", "Too-fast, duplicate and spam votes are rejected."],
-    ["Unused credits are refunded", "If a test doesn't fill, you get them back."],
-    ["Buy more anytime", "Top up from $5, or earn credits by voting."],
+    ["Low-quality responses are filtered", "Too-fast, duplicate and spam responses are rejected."],
+    ["Unused credits are refunded", "If an evaluation doesn't fill, you get them back."],
+    ["Buy more anytime", "Top up from $5, or earn credits by evaluating."],
   ];
   return (
     <>
@@ -27,10 +27,10 @@ function FirstRun({ bal }: { bal: number }) {
         <div style={{ position: "relative" }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Welcome to Vraelis</div>
           <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", marginBottom: 8 }}>You have {bal} starter credits.</h2>
-          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 540, color: "var(--fg-2)", marginBottom: 18 }}>Create your first test in under 2 minutes. Upload a few options and real people will tell you what wins. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
+          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Run your first evaluation in under 2 minutes. Submit a few candidates — images, AI-generated outputs, copy, landing heroes, UI — and real people tell you which to ship. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn">Create first test →</a>
-            <a href="/vote" className="btn btn--ghost">Try voting first</a>
+            <a href="/app/new" className="btn">Create first evaluation →</a>
+            <a href="/demo" className="btn btn--ghost">View a sample report</a>
           </div>
         </div>
       </div>
@@ -95,8 +95,8 @@ export default async function Dashboard() {
       <section className="section" style={{ borderBottom: "none" }}>
         <div className="wrap" style={{ maxWidth: 520, textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Dashboard</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Your <span className="em">tests</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to create tests, see results, and manage your credits.</p>
+          <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Your <span className="em">evaluations</span>.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to run evaluations, see decision reports, and manage your credits.</p>
           <a href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Continue with Google</a>
         </div>
       </section>
@@ -119,7 +119,7 @@ export default async function Dashboard() {
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           {isAdmin(email) && <a href="/app/admin" style={{ fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" }}>Admin</a>}
-          <a href="/app/new" className="btn">New test <span aria-hidden>→</span></a>
+          <a href="/app/new" className="btn">New evaluation <span aria-hidden>→</span></a>
         </div>
       </div>
 
@@ -127,8 +127,8 @@ export default async function Dashboard() {
       <div className="tile-grid cols-4" style={{ marginBottom: 24 }}>
         <div className="stat"><div className="stat__l">Plan</div><div className="stat__v">{planName}</div><div className="stat__s"><a href="/app/plans" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{plan === "free" ? "Upgrade →" : "Manage →"}</a></div></div>
         <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><a href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</a></div></div>
-        <div className="stat"><div className="stat__l">Active tests</div><div className="stat__v tnum">{active.length}</div><div className="stat__s">collecting votes</div></div>
-        <div className="stat"><div className="stat__l">Completed</div><div className="stat__v tnum">{completed.length}</div><div className="stat__s">reports ready</div></div>
+        <div className="stat"><div className="stat__l">Active</div><div className="stat__v tnum">{active.length}</div><div className="stat__s">collecting judgments</div></div>
+        <div className="stat"><div className="stat__l">Completed</div><div className="stat__v tnum">{completed.length}</div><div className="stat__s">decision reports ready</div></div>
       </div>
 
       {tests.length === 0 ? (

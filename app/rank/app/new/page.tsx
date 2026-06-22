@@ -4,21 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 
 const CATEGORIES: [string, string][] = [
-  ["thumbnail", "Thumbnail"], ["ad", "Ad"], ["logo", "Logo"], ["game_icon", "Game icon"],
-  ["app_icon", "App icon"], ["ui", "UI design"], ["product_image", "Product image"],
-  ["landing", "Landing page"], ["ai_image", "AI image"], ["brand_name", "Brand name"],
-  ["hook", "Text / hook"], ["other", "Other"],
+  ["ad", "Ad creative"], ["landing", "Landing page hero"], ["ai_image", "AI image / output"],
+  ["product_image", "Product image"], ["ui", "UI / screen"], ["logo", "Logo"],
+  ["thumbnail", "Thumbnail"], ["app_icon", "App icon"], ["game_icon", "Game icon"],
+  ["brand_name", "Brand name"], ["hook", "Copy / hook"], ["other", "Other"],
 ];
 const AUDIENCES: [string, string][] = [
   ["general", "General"], ["gamers", "Gamers"], ["creators", "Creators"], ["designers", "Designers"],
   ["gen_z", "Gen Z"], ["shoppers", "Shoppers"], ["entrepreneurs", "Entrepreneurs"],
 ];
 const TEMPLATES: { name: string; title: string; category: string; context: string }[] = [
-  { name: "Two ad creatives", title: "Which ad creative performs better?", category: "ad", context: "Which of these grabs attention and makes you want to click?" },
-  { name: "Logo options", title: "Which logo do you prefer?", category: "logo", context: "Which logo feels more trustworthy and memorable for a modern brand?" },
-  { name: "Thumbnails", title: "Which thumbnail would you click?", category: "thumbnail", context: "You're scrolling your feed. Which thumbnail makes you stop and click?" },
-  { name: "Landing hero", title: "Which hero concept is clearer?", category: "landing", context: "Which landing-page hero best explains the product at a glance?" },
-  { name: "AI images", title: "Which AI image looks best?", category: "ai_image", context: "Which generated image looks the most polished and on-brand?" },
+  { name: "Ad creatives", title: "Which ad creative should we ship?", category: "ad", context: "Which of these grabs attention and makes you want to click?" },
+  { name: "Landing hero", title: "Which landing hero should ship?", category: "landing", context: "Which hero best explains the product at a glance?" },
+  { name: "AI outputs", title: "Which AI output is best?", category: "ai_image", context: "Which generated result looks the most polished and on-brand?" },
+  { name: "Product images", title: "Which product image should we use?", category: "product_image", context: "Which image makes you most likely to buy?" },
+  { name: "Logo options", title: "Which logo should we pick?", category: "logo", context: "Which feels more trustworthy and memorable for a modern brand?" },
 ];
 
 const MAX_FILE_MB = 15;
@@ -60,7 +60,7 @@ type Ctx = { signedIn: boolean; plan?: string; balance?: number; activeTests?: n
 export default function NewTest() {
   const [title, setTitle] = useState("");
   const [context, setContext] = useState("");
-  const [category, setCategory] = useState("thumbnail");
+  const [category, setCategory] = useState("ad");
   const [audience, setAudience] = useState("general");
   const [votes, setVotes] = useState(50);
   const [assets, setAssets] = useState<{ url: string; path: string | null }[]>([]);
@@ -96,8 +96,8 @@ export default function NewTest() {
   const status: { t: string; tone: "ok" | "warn" | "bad"; cta?: { label: string; href: string } } =
     !title.trim() ? { t: "Add a title", tone: "warn" }
     : optionCount < 2 ? { t: `Add ${2 - optionCount} more option${2 - optionCount === 1 ? "" : "s"}`, tone: "warn" }
-    : overVotes ? { t: `Over your plan's ${maxVotes}-vote cap`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
-    : atTestCap ? { t: `Plan limit: ${activeCap} active test${activeCap === 1 ? "" : "s"}/mo`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
+    : overVotes ? { t: `Over your plan's ${maxVotes}-judgment cap`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
+    : atTestCap ? { t: `Plan limit: ${activeCap} active evaluation${activeCap === 1 ? "" : "s"}/mo`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
     : lowCredits ? { t: `Need ${votes - balance} more credits`, tone: "bad", cta: { label: "Buy credits", href: "/app/credits" } }
     : { t: "Ready to launch", tone: "ok" };
   const toneColor = status.tone === "ok" ? "var(--acc-deep)" : status.tone === "warn" ? "var(--money)" : "var(--err)";
@@ -155,8 +155,8 @@ export default function NewTest() {
       <div className="phead">
         <div>
           <p className="eyebrow">Create</p>
-          <h1 className="display">Create a new test</h1>
-          <p>Upload creative options, choose your vote target, and get a clear report on what real users prefer.</p>
+          <h1 className="display">Create a new evaluation</h1>
+          <p>Submit your candidates — images, AI outputs, copy, UI — choose a judgment target, and get a decision report on what to ship and why.</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <div className="stat" style={{ padding: "12px 18px" }}><div className="stat__l">Plan</div><div className="stat__v" style={{ fontSize: 18 }}>{planName}</div></div>
@@ -178,20 +178,20 @@ export default function NewTest() {
         <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
           {/* Step 1 */}
           <section>
-            <Step n={1} title="Test details" hint="What you're testing and what voters should know." />
+            <Step n={1} title="What you're evaluating" hint="The decision you want made, and what judges should know." />
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div><span style={lab}>Title</span><input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Which thumbnail for my new video?" /></div>
+              <div><span style={lab}>Title</span><input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Which landing hero should we ship?" /></div>
               <div className="cols-2" style={{ display: "grid", gap: 14 }}>
                 <div><span style={lab}>Type</span><select style={inputStyle} value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
                 <div><span style={lab}>Audience</span><select style={inputStyle} value={audience} onChange={(e) => setAudience(e.target.value)}>{AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
               </div>
-              <div><span style={lab}>Context for voters (optional)</span><input style={inputStyle} value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g. for a gaming channel. Which grabs attention?" /></div>
+              <div><span style={lab}>Context for judges (optional)</span><input style={inputStyle} value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g. for a B2B SaaS landing page. Which is clearest at a glance?" /></div>
             </div>
           </section>
 
           {/* Step 2 */}
           <section>
-            <Step n={2} title={isText ? "Your options" : "Upload options"} hint={`${isText ? "Add" : "Upload"} 2–${maxOptions}. Voters see these side by side.`} />
+            <Step n={2} title={isText ? "Your candidates" : "Submit candidates"} hint={`${isText ? "Add" : "Upload"} 2–${maxOptions}. Judges see these side by side.`} />
             {isText ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {texts.map((t, i) => (
@@ -236,14 +236,14 @@ export default function NewTest() {
 
           {/* Step 3 */}
           <section>
-            <Step n={3} title="Audience & vote target" hint="How many real people should weigh in." />
+            <Step n={3} title="Audience & judgment target" hint="How many valid human judgments to collect." />
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>{votes} <span style={{ fontSize: 14, color: "var(--fg-4)", fontWeight: 500 }}>votes</span></span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>{votes} <span style={{ fontSize: 14, color: "var(--fg-4)", fontWeight: 500 }}>judgments</span></span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>= {votes} credits</span>
             </div>
             <input type="range" min={10} max={maxVotes} step={10} value={Math.min(votes, maxVotes)} onChange={(e) => setVotes(parseInt(e.target.value, 10))} style={{ width: "100%", accentColor: "var(--acc-deep)" }} />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 vote = 1 credit</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 judgment = 1 credit</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>Plan max {maxVotes.toLocaleString()}. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</a></span>
             </div>
           </section>
@@ -253,7 +253,7 @@ export default function NewTest() {
         <div className="sticky-side" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Launch summary</div>
-            {[["Vote target", `${votes}`], ["Credits required", `${votes}`], ["Your balance", balance.toLocaleString()], ["Balance after", Math.max(0, balance - votes).toLocaleString()], ["Active tests", `${activeUsed} / ${activeCap}`]].map(([k, v]) => (
+            {[["Judgment target", `${votes}`], ["Credits required", `${votes}`], ["Your balance", balance.toLocaleString()], ["Balance after", Math.max(0, balance - votes).toLocaleString()], ["Active", `${activeUsed} / ${activeCap}`]].map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13.5 }}><span style={{ color: "var(--fg-4)" }}>{k}</span><span style={{ color: "var(--fg-1)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>{v}</span></div>
             ))}
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
@@ -262,14 +262,14 @@ export default function NewTest() {
             </div>
             {error && <p style={{ color: "var(--err)", fontSize: 13 }}>{error}</p>}
             <button onClick={submit} disabled={busy || uploading > 0 || !ready} className="btn btn--lg" style={{ justifyContent: "center", opacity: busy || uploading > 0 || !ready ? 0.55 : 1 }}>
-              {busy ? "Launching…" : uploading > 0 ? "Uploading…" : <>Launch test, {votes} credits</>}
+              {busy ? "Launching…" : uploading > 0 ? "Uploading…" : <>Launch evaluation, {votes} credits</>}
             </button>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", lineHeight: 1.6 }}>
-              Credits held in escrow → real people vote → invalid votes filtered → unused credits refunded → report generated.
+              Credits held in escrow → real people judge → low-quality filtered → unused credits refunded → decision report generated.
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7, padding: "0 4px" }}>
-            {["Invalid votes are filtered. Only valid judgments count.", "Unused credits are refunded when the test completes.", "Embed an active test anywhere to collect more votes."].map((x) => (
+            {["Low-quality responses are filtered. Only valid judgments count.", "Unused credits are refunded when the evaluation completes.", "Embed an active evaluation anywhere to collect more judgments."].map((x) => (
               <div key={x} style={{ display: "flex", gap: 8, fontSize: 12, color: "var(--fg-4)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</div>
             ))}
           </div>

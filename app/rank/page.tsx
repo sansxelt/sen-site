@@ -37,10 +37,11 @@ const AUDIENCE = [
 ];
 
 const STEPS = [
-  { k: "01", t: "Submit candidates", d: "Drop in 2 to 8 options. Images, ads, thumbnails, landing pages, UI, or copy. Web, API, or embed.", i: ICONS.upload },
-  { k: "02", t: "Collect human signal", d: "Vraelis routes your run to real people who pick what they prefer and say why. Bots, rushers, and spam are filtered out automatically.", i: ICONS.users },
-  { k: "03", t: "Get a decision report", d: "The recommended output, preference margin, directional confidence, the reasoning, an AI read on what to improve, and valid-vs-filtered quality.", i: ICONS.report },
-  { k: "04", t: "Use the recommendation", d: "Ship it, share the report with a client, or export the data. AI apps pull the result back in by API.", i: ICONS.revenue },
+  { k: "01", t: "Submit candidates", d: "Drop in 2 to 8 options — images, ads, AI outputs, landing heroes, UI, or copy. Web, API, or embed.", i: ICONS.upload },
+  { k: "02", t: "Collect valid judgments", d: "Vraelis routes your evaluation to real people who pick what they prefer and say why.", i: ICONS.users },
+  { k: "03", t: "Filter low-quality responses", d: "Bots, rushers, and duplicate or spam responses are rejected automatically. Only valid human judgments count.", i: ICONS.flag },
+  { k: "04", t: "Get decision analytics", d: "The recommended output, preference margin, directional confidence, signal quality, reasoning signals, and an AI read on what to improve.", i: ICONS.report },
+  { k: "05", t: "Share, export, or use", d: "Ship it, share a read-only report link with a client, or export to JSON / CSV. AI apps pull the recommendation back in by API.", i: ICONS.revenue },
 ];
 
 const TESTABLE = ["Generated creative", "Campaign concepts", "Product visuals", "Landing pages", "Brand assets", "UI concepts", "Content variations", "Thumbnails & covers"];
@@ -109,8 +110,8 @@ export default function RankLanding() {
             Vraelis turns human preference signals into structured decision analytics for creators, teams, agencies, and AI apps. Submit candidates, collect valid judgments, and get a report showing what to ship and why.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start a test <span aria-hidden>→</span></a>
-            <a href="/pricing" className="btn btn--ghost btn--lg">View pricing</a>
+            <a href="/app/new" className="btn btn--lg">Start an evaluation <span aria-hidden>→</span></a>
+            <a href="/demo" className="btn btn--ghost btn--lg">View demo report</a>
           </div>
 
           {/* Product preview — the verdict, right up front */}
@@ -179,7 +180,7 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">How it works</p>
             <h2 className="display">From candidates to a <span className="em">decision</span>.</h2>
-            <p>Four steps from submitting options to a result you can act on.</p>
+            <p>Five steps from submitting options to a recommendation you can act on.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (
@@ -350,8 +351,8 @@ export default function RankLanding() {
           <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Stop guessing. <span className="em">Evaluate with real people</span>.</h2>
           <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Run your first evaluation free with 25 credits. One credit = one valid human judgment.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start a test free <span aria-hidden>→</span></a>
-            <a href="/vote" className="btn btn--ghost btn--lg">Vote &amp; earn credits</a>
+            <a href="/app/new" className="btn btn--lg">Start an evaluation free <span aria-hidden>→</span></a>
+            <a href="/demo" className="btn btn--ghost btn--lg">View demo report</a>
             <a href="/developers" className="btn btn--ghost btn--lg">Developers</a>
           </div>
         </div>
