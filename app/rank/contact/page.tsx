@@ -29,6 +29,20 @@ export default function ContactPage() {
             </a>
           ))}
         </div>
+
+        <div style={{ marginTop: 40 }}>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Follow Vraelis</div>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <a href="https://instagram.com/usevraelis" target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "10px 16px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-2)", textDecoration: "none", fontSize: 14 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="2" width="20" height="20" rx="5.5" /><circle cx="12" cy="12" r="4.2" /><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" /></svg>
+              Instagram <span style={{ color: "var(--fg-4)" }}>@usevraelis</span>
+            </a>
+            <a href="https://facebook.com/vraelis" target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "10px 16px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-2)", textDecoration: "none", fontSize: 14 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z" /></svg>
+              Facebook <span style={{ color: "var(--fg-4)" }}>Vraelis</span>
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );
