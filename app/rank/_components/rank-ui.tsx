@@ -116,7 +116,7 @@ function Footer() {
         <Col title="Legal" links={[["/privacy", "Privacy"], ["/terms", "Terms"], ["/data-rights", "Data rights"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
-        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© 2026 Vraelis™. All rights reserved.</span>
+        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© 2026 Vraelis. All rights reserved.</span>
         <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Questions? <a href="mailto:help@vraelis.com" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>help@vraelis.com</a></span>
       </div>
     </footer>
