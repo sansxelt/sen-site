@@ -1,6 +1,7 @@
 // Vraelis API keys. Store only a SHA-256 hash; the raw key is shown once.
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
+import { logEvent } from "./v-events";
 import { createHash, randomBytes } from "crypto";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -20,6 +21,7 @@ export async function generateApiKey(userId: string, name?: string): Promise<{ k
   // unnamed key so key creation never breaks.
   if (error && clean) ({ error } = await s.from("v_api_keys" as never).insert(base as never));
   if (error) { console.error("generateApiKey:", error.message); return null; }
+  await logEvent({ userId: norm(userId), eventType: "api_key_created", actorType: "owner", source: "app", metadata: { prefix, name: clean || null } });
   return { key: raw, prefix };
 }
 
@@ -47,5 +49,9 @@ export async function listApiKeys(userId: string): Promise<ApiKeyRow[]> {
 export async function revokeApiKey(userId: string, id: string): Promise<void> {
   if (!isDatabaseConfigured()) return;
   const s = getSupabaseAdminClient();
+  // Capture safe metadata (prefix/name, never the hash) before deleting, for the audit log.
+  const { data } = await s.from("v_api_keys" as never).select("prefix,name").eq("user_id", norm(userId)).eq("id", id).maybeSingle();
+  const meta = data as unknown as { prefix?: string; name?: string | null } | null;
   await s.from("v_api_keys" as never).delete().eq("user_id", norm(userId)).eq("id", id);
+  if (meta) await logEvent({ userId: norm(userId), eventType: "api_key_revoked", actorType: "owner", source: "app", metadata: { prefix: meta.prefix ?? null, name: meta.name ?? null } });
 }

@@ -334,7 +334,8 @@ export async function setShare(testId: string, userId: string, action: "enable" 
   }
   const { error } = await s.from("v_tests" as never).update({ share_token: token, share_enabled: enabled } as never).eq("id", testId);
   if (error) { console.error("setShare:", error.message); return null; }
-  await logEvent({ userId: norm(userId), testId, eventType: enabled ? "public_report_enabled" : "public_report_disabled", actorType: "owner", source: "app", metadata: { action } });
+  const shareEvent = action === "regenerate" ? "public_report_regenerated" : enabled ? "public_report_enabled" : "public_report_disabled";
+  await logEvent({ userId: norm(userId), testId, eventType: shareEvent, actorType: "owner", source: "app", metadata: { action } });
   return { enabled, token };
 }
 

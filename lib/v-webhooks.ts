@@ -112,7 +112,9 @@ export async function createWebhook(userId: string, url: string): Promise<{ id: 
   const secret = newSecret();
   const { data, error } = await s.from("v_webhook_endpoints" as never).insert({ user_id: norm(userId), url, secret } as never).select("id").single();
   if (error || !data) return { error: "create_failed" };
-  return { id: (data as unknown as { id: string }).id, url, secret };
+  const id = (data as unknown as { id: string }).id;
+  await logEvent({ userId: norm(userId), eventType: "webhook_endpoint_created", actorType: "owner", source: "app", metadata: { endpoint_id: id } });
+  return { id, url, secret };
 }
 
 export type WebhookRow = { id: string; url: string; enabled: boolean; event_types: string[]; failure_count: number; last_success_at: string | null; last_failure_at: string | null; created_at: string };
@@ -138,6 +140,7 @@ export async function updateWebhook(userId: string, id: string, patch: { enabled
   if (typeof patch.enabled === "boolean") upd.enabled = patch.enabled;
   if (patch.url) upd.url = patch.url;
   const { data } = await s.from("v_webhook_endpoints" as never).update(upd as never).eq("id", id).eq("user_id", norm(userId)).select("id").maybeSingle();
+  if (data) await logEvent({ userId: norm(userId), eventType: "webhook_endpoint_updated", actorType: "owner", source: "app", metadata: { endpoint_id: id, ...(typeof patch.enabled === "boolean" ? { enabled: patch.enabled } : {}), url_changed: !!patch.url } });
   return { ok: !!data };
 }
 
@@ -146,12 +149,14 @@ export async function rotateWebhookSecret(userId: string, id: string): Promise<s
   const s = getSupabaseAdminClient();
   const secret = newSecret();
   const { data } = await s.from("v_webhook_endpoints" as never).update({ secret, updated_at: new Date().toISOString() } as never).eq("id", id).eq("user_id", norm(userId)).select("id").maybeSingle();
+  if (data) await logEvent({ userId: norm(userId), eventType: "webhook_secret_rotated", actorType: "owner", source: "app", metadata: { endpoint_id: id } });
   return data ? secret : null;
 }
 
 export async function deleteWebhook(userId: string, id: string): Promise<void> {
   if (!isDatabaseConfigured()) return;
   await getSupabaseAdminClient().from("v_webhook_endpoints" as never).delete().eq("id", id).eq("user_id", norm(userId));
+  await logEvent({ userId: norm(userId), eventType: "webhook_endpoint_deleted", actorType: "owner", source: "app", metadata: { endpoint_id: id } });
 }
 
 // Webhook reliability summary for an owner, aggregated from v_webhook_deliveries
@@ -364,5 +369,6 @@ export async function sendTestEvent(userId: string, endpointId: string): Promise
   };
   const res = await post(ep.url, ep.secret, "test.completed", deliveryId, payload);
   await s.from("v_webhook_deliveries" as never).insert({ endpoint_id: endpointId, test_id: null, event: "test.completed", status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never);
+  await logEvent({ userId: norm(userId), eventType: "webhook_test_sent", actorType: "owner", source: "app", metadata: { endpoint_id: endpointId, status_code: res.status ?? null } });
   return { ok: res.ok, status: res.status, error: res.error ?? undefined };
 }

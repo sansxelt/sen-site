@@ -63,7 +63,46 @@ export async function logEvent(e: {
   }
 }
 
-export type EventRow = { id: string; user_id: string | null; test_id: string | null; event_type: string; actor_type: string; source: string | null; metadata: Record<string, unknown>; created_at: string };
+export type EventRow = { id: string; user_id: string | null; test_id: string | null; event_type: string; actor_type: string; source: string | null; route?: string | null; metadata: Record<string, unknown>; created_at: string };
+
+// Account-relevant events for the signed-in owner (their own audit trail): keys,
+// webhooks, sharing, exports. Excludes test-lifecycle noise. User-scoped.
+const ACCOUNT_EVENT_TYPES = [
+  "api_key_created", "api_key_revoked", "webhook_endpoint_created", "webhook_endpoint_updated",
+  "webhook_endpoint_deleted", "webhook_secret_rotated", "webhook_test_sent",
+  "public_report_enabled", "public_report_disabled", "public_report_regenerated", "export_downloaded",
+];
+export async function recentAccountEvents(userId: string, limit = 10): Promise<EventRow[]> {
+  if (!userId || !isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const { data, error } = await s.from("v_events" as never)
+      .select("id,user_id,test_id,event_type,actor_type,source,metadata,created_at")
+      .eq("user_id", userId.trim().toLowerCase()).in("event_type", ACCOUNT_EVENT_TYPES)
+      .order("created_at", { ascending: false }).limit(limit);
+    if (error) return [];
+    return (data as unknown as EventRow[]) ?? [];
+  } catch { return []; }
+}
+
+// ADMIN-ONLY: recent audit events across ALL users. The single cross-user read in
+// this module — callers MUST gate with isAdmin() server-side. Optional filters.
+export async function recentAuditEvents(opts: { limit?: number; eventType?: string; actorType?: string; userId?: string; testId?: string } = {}): Promise<EventRow[]> {
+  if (!isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    let q = s.from("v_events" as never)
+      .select("id,user_id,test_id,event_type,actor_type,source,route,metadata,created_at")
+      .order("created_at", { ascending: false }).limit(Math.min(opts.limit ?? 50, 200));
+    if (opts.eventType) q = q.eq("event_type", opts.eventType);
+    if (opts.actorType) q = q.eq("actor_type", opts.actorType);
+    if (opts.userId) q = q.eq("user_id", opts.userId.trim().toLowerCase());
+    if (opts.testId) q = q.eq("test_id", opts.testId);
+    const { data, error } = await q;
+    if (error) return [];
+    return (data as unknown as EventRow[]) ?? [];
+  } catch { return []; }
+}
 
 // Recent owner activity (the owner's own events: launched, completed, export,
 // share, api, webhook). Vote events are test-scoped and intentionally excluded

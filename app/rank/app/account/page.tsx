@@ -3,12 +3,21 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan, getSubscription } from "@/lib/v-db";
 import { balance } from "@/lib/v-credits";
+import { recentAccountEvents } from "@/lib/v-events";
 import { SignOutButton } from "../../_components/rank-ui";
 import { DeleteAccount } from "./delete-account";
 
 export const metadata: Metadata = { title: "Account" };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const ACTIVITY_LABEL: Record<string, string> = {
+  api_key_created: "API key created", api_key_revoked: "API key revoked",
+  webhook_endpoint_created: "Webhook added", webhook_endpoint_updated: "Webhook updated",
+  webhook_endpoint_deleted: "Webhook removed", webhook_secret_rotated: "Webhook secret rotated",
+  webhook_test_sent: "Webhook test sent", public_report_enabled: "Public report enabled",
+  public_report_disabled: "Public report disabled", public_report_regenerated: "Public link regenerated",
+  export_downloaded: "Export downloaded",
+};
 
 export default async function AccountPage() {
   const session = await auth();
@@ -16,7 +25,7 @@ export default async function AccountPage() {
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Faccount");
 
   await ensureProfile(email, session.user?.name ?? undefined);
-  const [bal, plan, sub] = await Promise.all([balance(email), getPlan(email), getSubscription(email)]);
+  const [bal, plan, sub, activity] = await Promise.all([balance(email), getPlan(email), getSubscription(email), recentAccountEvents(email, 8)]);
   const planName = plan === "free" ? "Free" : cap(plan);
   const status = sub?.status ?? "active";
   const renews = sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
@@ -64,6 +73,21 @@ export default async function AccountPage() {
         {linkCard("/app/data", "Data & exports", "Aggregate results and JSON / CSV exports of your tests.")}
         {linkCard("/vote", "Vote & earn", "Vote on other tests and earn credits back.")}
       </div>
+
+      {/* account activity (your own audit trail) */}
+      {activity.length > 0 && (
+        <>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Recent account activity</div>
+          <div className="card" style={{ marginBottom: 26, padding: "6px 18px" }}>
+            {activity.map((e, i) => (
+              <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
+                <span style={{ fontSize: 13.5, color: "var(--fg-1)" }}>{ACTIVITY_LABEL[e.event_type] ?? e.event_type}{e.metadata?.name ? <span style={{ fontSize: 12, color: "var(--fg-4)", marginLeft: 8 }}>{String(e.metadata.name)}</span> : null}</span>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)" }}>{new Date(e.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* security */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Security</div>

@@ -4,7 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 
 type Vote = { id: string; test_id: string; voter_id: string; status: string; reject_reason: string | null; reason: string | null; time_spent_ms: number | null; created_at: string; title: string | null };
 type Stats = { valid: number; rejected: number; byReason: Record<string, number> };
+type Audit = { id: string; user_id: string | null; test_id: string | null; event_type: string; actor_type: string; source: string | null; route: string | null; metadata: Record<string, unknown>; created_at: string };
 const FILTERS = ["rejected", "valid", "all"] as const;
+const ACTORS = ["all", "owner", "admin", "api", "webhook", "system"] as const;
 
 export default function AdminPage() {
   const [votes, setVotes] = useState<Vote[]>([]);
@@ -12,6 +14,8 @@ export default function AdminPage() {
   const [filter, setFilter] = useState<string>("rejected");
   const [forbidden, setForbidden] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [audit, setAudit] = useState<Audit[]>([]);
+  const [actor, setActor] = useState<string>("all");
 
   const load = useCallback(async () => {
     setLoaded(false);
@@ -21,7 +25,13 @@ export default function AdminPage() {
     setVotes(j.votes || []); setStats(j.stats || null); setLoaded(true);
   }, [filter]);
 
+  const loadAudit = useCallback(async () => {
+    const r = await fetch(`/api/v/admin/audit${actor === "all" ? "" : `?actor_type=${actor}`}`);
+    if (r.ok) { const j = await r.json(); setAudit(j.events || []); }
+  }, [actor]);
+
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadAudit(); }, [loadAudit]);
 
   async function override(id: string, status: "valid" | "rejected") {
     await fetch("/api/v/admin/votes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
@@ -78,6 +88,34 @@ export default function AdminPage() {
                 : <button onClick={() => override(v.id, "rejected")} className="btn btn--ghost" style={{ fontSize: 13 }}>Reject</button>}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* audit activity (admin only — data is gated server-side by isAdmin) */}
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "36px 0 12px" }}>Audit activity</div>
+      <div className="seg" style={{ marginBottom: 14 }}>
+        {ACTORS.map((a) => <button key={a} onClick={() => setActor(a)} className={actor === a ? "on" : ""} style={{ textTransform: "capitalize" }}>{a}</button>)}
+      </div>
+      {audit.length === 0 ? (
+        <div className="empty"><div className="empty__icon">◷</div><h3>No audit events</h3><p>Account, key, webhook, sharing, export, and admin actions appear here as they happen.</p></div>
+      ) : (
+        <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)" }}>
+          {audit.map((e, i) => {
+            const meta = Object.entries(e.metadata || {}).filter(([, v]) => v !== null && v !== "").slice(0, 4).map(([k, v]) => `${k}: ${v}`).join(", ");
+            return (
+              <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 16px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600 }}>{e.event_type}</span>
+                    <span className="pill" style={{ fontSize: 10.5 }}>{e.actor_type}</span>
+                    {e.user_id ? <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)" }}>{e.user_id}</span> : null}
+                  </div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 3 }}>{meta || (e.test_id ? `test ${e.test_id.slice(0, 8)}` : "—")}</div>
+                </div>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", flex: "none" }}>{new Date(e.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
