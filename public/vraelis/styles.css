@@ -4,8 +4,8 @@
    ────────────────────────────────────────────────────────────────── */
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; overflow-x: hidden; }
+html { scroll-behavior: smooth; overflow-x: clip; }
+body { margin: 0; overflow-x: hidden; max-width: 100%; }
 
 /* ── LIGHT THEME — warm paper, green primary, soft depth ─────────── */
 :root {
@@ -604,7 +604,9 @@ summary::-webkit-details-marker { display: none; }
   .app-side {
     position: static; height: auto; flex-direction: row; overflow-x: auto; gap: 4px;
     border-right: none; border-bottom: 1px solid var(--line-1); padding: 10px var(--gutter);
+    scrollbar-width: none; /* hide the forced green strip scrollbar on mobile */
   }
+  .app-side::-webkit-scrollbar { display: none; }
   .app-side__group, .app-side__foot { display: none; }
   .slink { white-space: nowrap; padding: 8px 12px; }
 }
@@ -621,8 +623,11 @@ summary::-webkit-details-marker { display: none; }
 .sticky-side { position: sticky; top: 84px; }
 @media (max-width: 880px) { .sticky-side { position: static; top: auto; } }
 
-/* horizontal-scroll wrapper for anything that can get wide (logs, tables) */
-.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* horizontal-scroll wrapper for anything that can get wide (logs, tables).
+   Hide the scrollbar — the global light theme forces a chunky green bar that
+   reads as an off-center slider on mobile; the strip still scrolls by touch. */
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
 
 /* responsive footer grid: brand + link columns, collapses cleanly on small screens */
 .foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 30px; }
