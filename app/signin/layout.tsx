@@ -1,19 +1,17 @@
 ﻿import type { ReactNode } from "react";
 import { ZoneShell } from "@/components/zone-shell";
-import { VraelisPromoBar } from "@/components/vraelis-promo-bar";
 import { isVraelisRequest } from "@/lib/site-host";
 
 // /signin gets the zone-aware shell on sansxel hosts (workshop /
 // platform chrome). On vraelis it skips that entirely — the root
 // layout already provides the light body + vraelis stylesheets, so we
-// just render the centered sign-in surface with a small "back to
-// vraelis" link.
+// render a clean, product-first sign-in surface with just the brand and
+// a "back to site" link. No promo banner on auth pages (trust > social).
 export default async function SignInLayout({ children }: { children: ReactNode }) {
   if (await isVraelisRequest()) {
     return (
       <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <div style={{ position: "sticky", top: 0, zIndex: 50 }}>
-          <VraelisPromoBar />
           <div style={{ padding: "20px var(--gutter)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, background: "rgba(250, 248, 244, 0.86)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid var(--line-1)" }}>
           <a
             href="/"
