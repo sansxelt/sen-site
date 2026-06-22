@@ -8,6 +8,7 @@ import net from "net";
 import { fetch as undiciFetch, Agent } from "undici";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getTestWithOptions, getReport, OPTION_LETTERS, type VTest } from "./v-db";
+import { logEvent } from "./v-events";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://vraelis.com";
 const MAX_ENDPOINTS = 10;
@@ -238,6 +239,7 @@ export async function deliverTestCompleted(testId: string): Promise<void> {
       const payload = buildCompletedPayload(test, results, deliveryId);
       const res = await post(ep.url, ep.secret, "test.completed", deliveryId, payload);
       await s.from("v_webhook_deliveries" as never).update({ status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never).eq("id", deliveryId);
+      await logEvent({ userId: test.user_id, testId, eventType: res.ok ? "webhook_delivered" : "webhook_failed", actorType: "webhook", source: "webhook", metadata: { endpoint_id: ep.id, delivery_id: deliveryId, status_code: res.status, attempt: 1, event: "test.completed" } });
       if (res.ok) await s.from("v_webhook_endpoints" as never).update({ last_success_at: new Date().toISOString(), failure_count: 0 } as never).eq("id", ep.id);
       else {
         await s.from("v_webhook_endpoints" as never).update({ last_failure_at: new Date().toISOString() } as never).eq("id", ep.id);

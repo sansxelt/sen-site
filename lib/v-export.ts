@@ -5,6 +5,7 @@
 
 import { getSupabaseAdminClient } from "./supabase-admin";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "./v-db";
+import { logEvent } from "./v-events";
 
 export type ExportData = {
   test_id: string;
@@ -81,13 +82,14 @@ export function toCSV(d: ExportData): string {
 }
 
 // Auth-agnostic: caller verifies who `userId` is (session or API key) first.
-export async function exportResponse(testId: string, userId: string, fmt: string): Promise<Response> {
+export async function exportResponse(testId: string, userId: string, fmt: string, actor: "owner" | "api" = "owner"): Promise<Response> {
   if (fmt !== "json" && fmt !== "csv") return Response.json({ error: "invalid_format", allowed: ["json", "csv"] }, { status: 400 });
   const res = await buildExport(testId);
   if (!res) return Response.json({ error: "not_found" }, { status: 404 });
   // Ownership BEFORE status, so a non-owner can't probe draft/canceled vs live.
   if (res.ownerId !== userId.trim().toLowerCase()) return Response.json({ error: "forbidden" }, { status: 403 });
   if (res.status === "draft" || res.status === "canceled") return Response.json({ error: "not_exportable" }, { status: 404 });
+  await logEvent({ userId: res.ownerId, testId, eventType: "export_downloaded", actorType: actor, source: actor === "api" ? "api" : "web", metadata: { format: fmt, export_scope: "test" } });
   const slug = (res.data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40)) || "vraelis-export";
   if (fmt === "csv") {
     return new Response(toCSV(res.data), { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${slug}.csv"` } });

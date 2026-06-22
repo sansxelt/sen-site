@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ensureProfile } from "@/lib/v-db";
+import { logEvent } from "@/lib/v-events";
 import { getStripe, isStripeConfigured, APP_URL } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
       allow_promotion_codes: true,
       return_url: `${SITE_URL}/app/credits?session_id={CHECKOUT_SESSION_ID}`,
     });
+    await logEvent({ userId: email, eventType: "checkout_started", actorType: "owner", source: "web", metadata: { kind: "credit_topup", credits, amount: amountDollars } });
     return NextResponse.json({ clientSecret: checkout.client_secret });
   } catch (e) {
     console.error("[v checkout] failed:", e);

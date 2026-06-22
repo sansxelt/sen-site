@@ -3,6 +3,7 @@
 import crypto from "crypto";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { refund, hold, grant, rewardsToday } from "./v-credits";
+import { logEvent } from "./v-events";
 import type { ReportAnalysis } from "./v-ai";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -205,6 +206,15 @@ export async function completeTest(testId: string): Promise<void> {
   const unfilled = Math.max(0, test.votes_target - total);
   if (unfilled > 0) await refund(test.user_id, testId, unfilled);
 
+  await logEvent({
+    userId: test.user_id, testId, eventType: "test_completed", actorType: "system", source: "system",
+    metadata: {
+      category: test.category, audience: test.audience, votes_valid: total, votes_filtered: filtered,
+      option_count: options.length, result_status: total === 0 ? "no_votes" : winnerId ? "decisive" : "tie",
+      winner: winnerId ? (LETTERS[ranked.find((r) => r.id === winnerId)?.position ?? 0] ?? null) : null,
+    },
+  });
+
   // Push test.completed webhooks — after the HTTP response when possible (so the
   // completing vote isn't blocked), else best-effort awaited. Never affects
   // completion. Delivery is idempotent (unique per endpoint/test/event).
@@ -234,9 +244,13 @@ export async function launchTest(args: {
     p_category: args.category, p_audience: args.audience, p_votes: args.votesTarget,
     p_options: args.options, p_active_limit: args.activeLimit, p_max_options: args.maxOptions,
   } as never);
+  const logLaunch = (id?: string) => logEvent({
+    userId: args.userId, testId: id ?? null, eventType: "test_launched", actorType: "owner", source: "launch",
+    metadata: { category: args.category, audience: args.audience, votes_target: args.votesTarget, option_count: args.options.length, credits: args.votesTarget },
+  });
   if (!error && data) {
     const r = data as unknown as { status: string; id?: string; needed?: number; limit?: number };
-    if (r.status === "ok") return { status: "ok", id: r.id };
+    if (r.status === "ok") { await logLaunch(r.id); return { status: "ok", id: r.id }; }
     if (r.status === "insufficient_credits") return { status: "insufficient_credits", needed: r.needed };
     if (r.status === "plan_limit") return { status: "plan_limit", limit: r.limit };
     return { status: "err" };
@@ -251,6 +265,7 @@ export async function launchTest(args: {
   const ok = await hold(args.userId, id, args.votesTarget);
   if (!ok) { await deleteTest(id); return { status: "insufficient_credits", needed: args.votesTarget }; }
   await setTestActive(id, args.votesTarget);
+  await logLaunch(id);
   return { status: "ok", id };
 }
 
@@ -270,7 +285,11 @@ export async function recordVote(args: {
   } as never);
   if (!error && data) {
     const r = data as unknown as { status: string; earned?: boolean; should_complete?: boolean; vote_status?: "valid" | "rejected" };
-    if (r.status === "ok" && r.should_complete) await completeTest(args.testId);
+    if (r.status === "ok") {
+      // Vote events are test-scoped only — never store voter identity here.
+      await logEvent({ testId: args.testId, eventType: r.vote_status === "rejected" ? "vote_filtered" : "vote_recorded", actorType: "voter", metadata: r.vote_status === "rejected" && args.rejectReason ? { reject_reason: args.rejectReason } : {} });
+      if (r.should_complete) await completeTest(args.testId);
+    }
     return { status: (r.status as "ok" | "dup" | "invalid") ?? "err", earned: r.earned, voteStatus: r.vote_status };
   }
   if (error && (error as { code?: string }).code !== "42883") console.error("recordVote rpc:", error.message);
@@ -279,6 +298,7 @@ export async function recordVote(args: {
   // enforcement (rejection) begins once the v2 SQL is applied.
   const res = await recordJudgment({ testId: args.testId, voterId: args.voterId, optionId: args.optionId, reason: args.reason, timeSpentMs: args.timeSpentMs });
   if (res !== "ok") return { status: res };
+  await logEvent({ testId: args.testId, eventType: "vote_recorded", actorType: "voter", metadata: {} });
   let earned = false;
   if ((await rewardsToday(args.voterId)) < args.rewardCap) {
     await grant(args.voterId, 1, "reward", { refType: "vote", refId: args.testId, extRef: `reward:${args.testId}` });
@@ -314,6 +334,7 @@ export async function setShare(testId: string, userId: string, action: "enable" 
   }
   const { error } = await s.from("v_tests" as never).update({ share_token: token, share_enabled: enabled } as never).eq("id", testId);
   if (error) { console.error("setShare:", error.message); return null; }
+  await logEvent({ userId: norm(userId), testId, eventType: enabled ? "public_report_enabled" : "public_report_disabled", actorType: "owner", source: "app", metadata: { action } });
   return { enabled, token };
 }
 
@@ -475,38 +496,80 @@ export async function listRecentLedger(userId: string, limit = 12): Promise<{ de
   return (data as unknown as { delta: number; reason: string; created_at: string }[]) ?? [];
 }
 
-// Lightweight aggregate for the owner's data surface (/app/data).
-export async function ownerStats(userId: string): Promise<{
-  completed: number; active: number; totalValid: number; totalFiltered: number;
+// Customer analytics aggregate for the owner's data surface (/app/data). Pure
+// table reads (no events required) so it works for existing accounts immediately.
+export type DataInsights = {
+  totals: { tests: number; completed: number; active: number; draft: number; valid: number; filtered: number; publicShared: number };
+  performance: { completionRate: number; avgValidPerCompleted: number; filteredRate: number; avgWinMargin: number | null };
   byCategory: { category: string; count: number }[];
   recent: { id: string; title: string; category: string; winner: string | null; votes: number }[];
-}> {
-  const empty = { completed: 0, active: 0, totalValid: 0, totalFiltered: 0, byCategory: [], recent: [] };
+  hasApi: boolean; hasWebhooks: boolean;
+};
+
+export async function dataInsights(userId: string): Promise<DataInsights> {
+  const empty: DataInsights = {
+    totals: { tests: 0, completed: 0, active: 0, draft: 0, valid: 0, filtered: 0, publicShared: 0 },
+    performance: { completionRate: 0, avgValidPerCompleted: 0, filteredRate: 0, avgWinMargin: null },
+    byCategory: [], recent: [], hasApi: false, hasWebhooks: false,
+  };
   if (!userId || !isDatabaseConfigured()) return empty;
   const s = getSupabaseAdminClient();
-  const { data } = await s.from("v_tests" as never).select("id,title,category,status,votes_valid").eq("user_id", norm(userId)).order("created_at", { ascending: false }).limit(500);
-  const all = (data as unknown as { id: string; title: string; category: string; status: string; votes_valid: number }[]) ?? [];
+  const uid = norm(userId);
+  const { data } = await s.from("v_tests" as never).select("id,title,category,status,votes_valid,share_enabled").eq("user_id", uid).order("created_at", { ascending: false }).limit(500);
+  const all = (data as unknown as { id: string; title: string; category: string; status: string; votes_valid: number; share_enabled: boolean }[]) ?? [];
   const completedTests = all.filter((t) => t.status === "complete");
-  const totalValid = all.reduce((a, t) => a + (t.votes_valid || 0), 0);
+  const valid = all.reduce((a, t) => a + (t.votes_valid || 0), 0);
   const ids = all.map((t) => t.id);
-  const { count } = ids.length ? await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).in("test_id", ids).eq("status", "rejected") : { count: 0 };
+  const [{ count: rejected }, apiCount, hookCount] = await Promise.all([
+    ids.length ? s.from("v_judgments" as never).select("*", { count: "exact", head: true }).in("test_id", ids).eq("status", "rejected") : Promise.resolve({ count: 0 }),
+    s.from("v_api_keys" as never).select("id", { count: "exact", head: true }).eq("user_id", uid),
+    s.from("v_webhook_endpoints" as never).select("id", { count: "exact", head: true }).eq("user_id", uid),
+  ]);
+  const filtered = rejected ?? 0;
 
   const catMap: Record<string, number> = {};
   for (const t of completedTests) catMap[t.category] = (catMap[t.category] ?? 0) + 1;
   const byCategory = Object.entries(catMap).map(([category, c]) => ({ category, count: c })).sort((a, b) => b.count - a.count).slice(0, 6);
 
-  const recentCompleted = completedTests.slice(0, 5);
-  const recIds = recentCompleted.map((t) => t.id);
-  const { data: reps } = recIds.length ? await s.from("v_reports" as never).select("test_id,results").in("test_id", recIds) : { data: [] };
+  // Reports for completed tests (cap 100) → win margin + recent winners.
+  const compIds = completedTests.map((t) => t.id).slice(0, 100);
+  const { data: reps } = compIds.length ? await s.from("v_reports" as never).select("test_id,results").in("test_id", compIds) : { data: [] };
   const repMap = Object.fromEntries(((reps as unknown as { test_id: string; results: { winner_option_id?: string | null; ranked?: { id: string; position: number; pct: number }[] } }[]) ?? []).map((r) => [r.test_id, r.results]));
-  const recent = recentCompleted.map((t) => {
+  const margins: number[] = [];
+  for (const id of compIds) {
+    const res = repMap[id];
+    if (res?.winner_option_id && res.ranked && res.ranked.length) {
+      const ranked = [...res.ranked].sort((a, b) => b.pct - a.pct);
+      margins.push((ranked[0]?.pct ?? 0) - (ranked[1]?.pct ?? 0));
+    }
+  }
+  const avgWinMargin = margins.length ? Math.round(margins.reduce((a, b) => a + b, 0) / margins.length) : null;
+
+  const recent = completedTests.slice(0, 5).map((t) => {
     const res = repMap[t.id];
     let winner: string | null = null;
-    if (res?.winner_option_id) { const w = (res.ranked ?? []).find((x) => x.id === res.winner_option_id); winner = w ? `${LETTERS[w.position]} · ${w.pct}%` : null; }
+    if (res?.winner_option_id) { const w = (res.ranked ?? []).find((x) => x.id === res.winner_option_id); winner = w ? `${LETTERS[w.position]}, ${w.pct}%` : null; }
     return { id: t.id, title: t.title, category: t.category, winner, votes: t.votes_valid };
   });
 
-  return { completed: completedTests.length, active: all.filter((t) => t.status === "active").length, totalValid, totalFiltered: count ?? 0, byCategory, recent };
+  const completed = completedTests.length;
+  const launched = completed + all.filter((t) => t.status === "active").length;
+  const completedValid = completedTests.reduce((a, t) => a + (t.votes_valid || 0), 0);
+  return {
+    totals: {
+      tests: all.length, completed, active: all.filter((t) => t.status === "active").length,
+      draft: all.filter((t) => t.status === "draft").length, valid, filtered,
+      publicShared: all.filter((t) => t.share_enabled).length,
+    },
+    performance: {
+      completionRate: launched ? Math.round((completed / launched) * 100) : 0,
+      avgValidPerCompleted: completed ? Math.round(completedValid / completed) : 0,
+      filteredRate: valid + filtered ? Math.round((filtered / (valid + filtered)) * 100) : 0,
+      avgWinMargin,
+    },
+    byCategory, recent,
+    hasApi: (apiCount.count ?? 0) > 0, hasWebhooks: (hookCount.count ?? 0) > 0,
+  };
 }
 
 export const OPTION_LETTERS = LETTERS;

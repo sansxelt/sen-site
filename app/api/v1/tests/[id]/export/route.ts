@@ -11,5 +11,5 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!a) return Response.json({ error: "invalid_api_key" }, { status: 401 });
   const { id } = await params;
   const fmt = new URL(req.url).searchParams.get("format") ?? "json";
-  return exportResponse(id, a.userId, fmt);
+  return exportResponse(id, a.userId, fmt, "api");
 }

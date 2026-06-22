@@ -384,3 +384,25 @@ create unique index if not exists v_webhook_del_uniq on v_webhook_deliveries (en
 alter table v_webhook_deliveries add column if not exists next_retry_at timestamptz;
 create index if not exists v_webhook_del_retry_idx on v_webhook_deliveries (next_retry_at)
   where status = 'failed' and next_retry_at is not null;
+
+-- ── Product analytics events (append-only) ──
+-- Safe, minimal event log powering customer analytics (/app/data), API/webhook
+-- usage, and future audit logs. The app NEVER writes raw API keys/hashes, webhook
+-- secrets, raw IP/device signals, full payment details, or voter identity here —
+-- only the small, already-safe fields the logEvent() helper allows. Tolerant: the
+-- app degrades gracefully (table-aggregate fallbacks) until this is applied.
+create table if not exists v_events (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     text,                              -- owner/actor where safe (null for anonymous voter events)
+  test_id     uuid,                              -- related test where relevant
+  event_type  text not null,                     -- test_launched|vote_recorded|export_downloaded|...
+  actor_type  text not null,                     -- owner|voter|api|webhook|system|admin
+  source      text,                              -- web|embed|api|cron|stripe|...
+  route       text,                              -- coarse endpoint group, not a sensitive URL
+  metadata    jsonb not null default '{}'::jsonb,
+  created_at  timestamptz not null default now()
+);
+create index if not exists v_events_user_idx  on v_events (user_id, created_at desc);
+create index if not exists v_events_test_idx  on v_events (test_id, created_at desc);
+create index if not exists v_events_type_idx  on v_events (event_type, created_at desc);
+create index if not exists v_events_time_idx  on v_events (created_at desc);
