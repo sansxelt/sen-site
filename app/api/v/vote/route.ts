@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { ensureProfile, recordVote } from "@/lib/v-db";
 import { assessVote, hashToken, ipFromHeaders } from "@/lib/v-quality";
 import { deriveSource } from "@/lib/v-sources";
+import { screeningQuestionsForTest, evaluateQualification, recordScreeningOutcome } from "@/lib/v-screening";
 
 const REWARD_CAP_PER_DAY = 30;
 
@@ -19,10 +20,21 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const testId = String(body?.testId || "");
+  if (!testId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+
+  // Audience screening gate (before any judgment). Disqualified participants are
+  // recorded as a count only — no judgment, so no effect on the report or credits.
+  const questions = await screeningQuestionsForTest(testId);
+  if (questions.length) {
+    const qualified = evaluateQualification(questions, body?.screeningAnswers);
+    await recordScreeningOutcome(testId, qualified ? "qualified" : "disqualified");
+    if (!qualified) return NextResponse.json({ disqualified: true });
+  }
+
   const optionId = String(body?.optionId || "");
   const reason = String(body?.reason || "").trim().slice(0, 280) || undefined;
   const timeSpentMs = parseInt(body?.timeSpentMs, 10) || undefined;
-  if (!testId || !optionId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  if (!optionId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
   // Quality gate: too-fast / IP velocity / reputation / spam → vote is recorded
   // but rejected (doesn't count, earns nothing). Then the atomic record + reward.

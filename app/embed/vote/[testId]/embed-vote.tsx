@@ -5,17 +5,18 @@ import { useEffect, useRef, useState } from "react";
 const ACC = "#0E9E6C", LINE = "#e3e8e5";
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 type Opt = { id: string; position: number; asset_url: string | null; label: string | null };
+type Screen = { id: string; question: string; options: string[]; is_required: boolean };
 
-export function EmbedVote({ testId, title, options }: { testId: string; title: string; options: Opt[] }) {
+export function EmbedVote({ testId, title, options, screening = [] }: { testId: string; title: string; options: Opt[]; screening?: Screen[] }) {
   const [selected, setSelected] = useState("");
   const [reason, setReason] = useState("");
-  const [phase, setPhase] = useState<"vote" | "done" | "dup">("vote");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [phase, setPhase] = useState<"screen" | "vote" | "done" | "dup" | "disqualified">(screening.length ? "screen" : "vote");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const ref = useRef<HTMLDivElement>(null);
   const startRef = useRef(Date.now());
 
-  // Tell the host page how tall to make the iframe (the embed.js loader listens).
   useEffect(() => {
     const h = (ref.current?.scrollHeight ?? 400) + 64;
     window.parent?.postMessage({ type: "vraelis:height", test: testId, height: h }, "*");
@@ -29,12 +30,12 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
     } catch { return "s" + Date.now().toString(36); }
   }
 
+  const screenReady = screening.every((q) => !q.is_required || answers[q.id]);
+
   async function submit() {
     if (!selected || busy) return;
     setBusy(true); setErr("");
     try {
-      // Capture campaign source from this page's own URL (set by collection links),
-      // and whether we're rendered inside a widget iframe. Server re-derives + sanitizes.
       let utm_source, utm_campaign, framed = false;
       try {
         const q = new URLSearchParams(window.location.search);
@@ -42,7 +43,9 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
         utm_campaign = q.get("utm_campaign") || undefined;
         framed = window.self !== window.top;
       } catch { /* ignore */ }
-      const r = await fetch("/api/embed/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId, optionId: selected, reason, voterId: anonId(), timeSpentMs: Date.now() - startRef.current, utm_source, utm_campaign, framed }) });
+      const r = await fetch("/api/embed/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId, optionId: selected, reason, voterId: anonId(), timeSpentMs: Date.now() - startRef.current, utm_source, utm_campaign, framed, screeningAnswers: answers }) });
+      const j = await r.json().catch(() => ({}));
+      if (j.disqualified) { setPhase("disqualified"); return; }
       if (r.status === 409) { setPhase("dup"); return; }
       if (r.ok) { setPhase("done"); return; }
       setErr("Couldn't save your response — try again.");
@@ -50,12 +53,44 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
     finally { setBusy(false); }
   }
 
+  if (phase === "disqualified") {
+    return (
+      <div ref={ref} style={{ textAlign: "center", padding: "28px 12px" }}>
+        <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#f1eee7", color: "#5b6b63", display: "grid", placeItems: "center", margin: "0 auto 12px", fontSize: 22 }}>—</div>
+        <div style={{ fontWeight: 700, fontSize: 16 }}>Thanks for your answers</div>
+        <p style={{ color: "#5b6b63", fontSize: 13, marginTop: 6 }}>This evaluation is looking for a specific audience. Based on your answers, you may not be eligible to complete it.</p>
+      </div>
+    );
+  }
   if (phase === "done" || phase === "dup") {
     return (
       <div ref={ref} style={{ textAlign: "center", padding: "28px 12px" }}>
         <div style={{ width: 44, height: 44, borderRadius: "50%", background: ACC, color: "#fff", display: "grid", placeItems: "center", margin: "0 auto 12px", fontSize: 22 }}>✓</div>
         <div style={{ fontWeight: 700, fontSize: 16 }}>{phase === "done" ? "Thanks for evaluating!" : "You've already evaluated this."}</div>
         <p style={{ color: "#5b6b63", fontSize: 13, marginTop: 6 }}>Your judgment helps decide what gets made.</p>
+      </div>
+    );
+  }
+
+  if (phase === "screen") {
+    return (
+      <div ref={ref}>
+        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{title}</div>
+        <p style={{ color: "#5b6b63", fontSize: 12.5, marginBottom: 14 }}>A couple of quick questions first.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 14 }}>
+          {screening.map((q) => (
+            <div key={q.id}>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8 }}>{q.question}{q.is_required ? "" : <span style={{ color: "#9aa39c", fontWeight: 400 }}> (optional)</span>}</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {q.options.map((opt) => {
+                  const sel = answers[q.id] === opt;
+                  return <button key={opt} onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))} style={{ padding: "8px 14px", borderRadius: 99, border: `1.5px solid ${sel ? ACC : LINE}`, background: sel ? `${ACC}14` : "#fff", color: sel ? "#0A7B54" : "#0d1411", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>{opt}</button>;
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => setPhase("vote")} disabled={!screenReady} style={{ width: "100%", padding: 12, borderRadius: 10, border: "none", background: screenReady ? ACC : "#9bcabb", color: "#fff", fontWeight: 700, fontSize: 14, cursor: screenReady ? "pointer" : "default" }}>Continue</button>
       </div>
     );
   }

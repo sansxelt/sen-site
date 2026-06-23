@@ -7,17 +7,28 @@ import { NextResponse } from "next/server";
 import { recordVote } from "@/lib/v-db";
 import { assessVote, hashToken, ipFromHeaders } from "@/lib/v-quality";
 import { deriveSource } from "@/lib/v-sources";
+import { screeningQuestionsForTest, evaluateQualification, recordScreeningOutcome } from "@/lib/v-screening";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const testId = String(body?.testId || "");
+  const voter = String(body?.voterId || "").trim().slice(0, 64).replace(/[^a-zA-Z0-9_-]/g, "");
+  if (!testId || !voter) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+
+  // Audience screening gate — disqualified participants are counted only (no judgment).
+  const questions = await screeningQuestionsForTest(testId);
+  if (questions.length) {
+    const qualified = evaluateQualification(questions, body?.screeningAnswers);
+    await recordScreeningOutcome(testId, qualified ? "qualified" : "disqualified");
+    if (!qualified) return NextResponse.json({ disqualified: true });
+  }
+
   const optionId = String(body?.optionId || "");
   const reason = String(body?.reason || "").trim().slice(0, 280) || undefined;
   const timeSpentMs = parseInt(body?.timeSpentMs, 10) || undefined;
-  const voter = String(body?.voterId || "").trim().slice(0, 64).replace(/[^a-zA-Z0-9_-]/g, "");
-  if (!testId || !optionId || !voter) return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  if (!optionId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
   const voterId = `anon:${voter}`;
   const ip = ipFromHeaders(req.headers);

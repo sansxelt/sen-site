@@ -506,3 +506,37 @@ create table if not exists v_collection_links (
 create index if not exists v_collection_links_user_idx on v_collection_links (user_id, created_at desc);
 create index if not exists v_collection_links_test_idx on v_collection_links (test_id);
 create index if not exists v_collection_links_source_idx on v_collection_links (source);
+
+-- ── Audience qualification + screening ──
+-- A lightweight audience profile per evaluation, plus simple multiple-choice
+-- screening questions. Disqualified participants are recorded ONLY in
+-- v_screening_responses (a count) and never become judgments — so they never
+-- affect votes_valid, the report, or owner credits. Qualified participants vote
+-- normally. No individual screening answers are stored (privacy).
+alter table v_tests add column if not exists target_audience text;
+
+create table if not exists v_screening_questions (
+  id                 uuid primary key default gen_random_uuid(),
+  user_id            text not null,                -- owner (lowercased email)
+  test_id            uuid not null references v_tests(id) on delete cascade,
+  question           text not null,
+  options            jsonb not null default '[]'::jsonb,   -- ["Yes","No"]
+  qualifying_options jsonb,                          -- subset that qualifies (null = any)
+  is_required        boolean not null default true,
+  position           int not null default 0,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now()
+);
+create index if not exists v_screening_q_test_idx on v_screening_questions (test_id, position);
+create index if not exists v_screening_q_user_idx on v_screening_questions (user_id);
+
+-- One row per completed screening (qualified or disqualified). No voter identity,
+-- no answers — just the outcome, so the owner can see qualification rate / audience
+-- fit. on delete cascade with the evaluation.
+create table if not exists v_screening_responses (
+  id               uuid primary key default gen_random_uuid(),
+  test_id          uuid not null references v_tests(id) on delete cascade,
+  screening_status text not null,                   -- qualified|disqualified
+  created_at       timestamptz not null default now()
+);
+create index if not exists v_screening_resp_test_idx on v_screening_responses (test_id, screening_status);

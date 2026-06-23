@@ -5,12 +5,15 @@ import { signIn } from "next-auth/react";
 
 type Opt = { id: string; position: number; asset_url: string | null; label: string | null };
 type Test = { id: string; title: string; context: string | null; category: string };
+type SQ = { id: string; question: string; options: string[]; is_required: boolean };
 type Ctx = { signedIn: boolean; balance?: number; earnedToday?: number; rewardCap?: number };
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 export default function VotePage() {
   const [test, setTest] = useState<Test | null>(null);
   const [options, setOptions] = useState<Opt[]>([]);
+  const [screening, setScreening] = useState<SQ[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [phase, setPhase] = useState<"loading" | "vote" | "empty" | "signin" | "error">("loading");
   const [selected, setSelected] = useState("");
   const [reason, setReason] = useState("");
@@ -32,7 +35,7 @@ export default function VotePage() {
       if (!r.ok) { setPhase("error"); return; }
       const j = await r.json();
       if (!j.test) { setPhase("empty"); return; }
-      setTest(j.test); setOptions(j.options); startRef.current = Date.now(); setPhase("vote");
+      setTest(j.test); setOptions(j.options); setScreening(j.screening || []); setAnswers({}); startRef.current = Date.now(); setPhase("vote");
     } catch { setPhase("error"); }
   }, []);
   useEffect(() => { fetchNext(); }, [fetchNext]);
@@ -41,9 +44,10 @@ export default function VotePage() {
     if (!test || !selected || busy) return;
     setBusy(true); setErr("");
     try {
-      const r = await fetch("/api/v/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId: test.id, optionId: selected, reason, timeSpentMs: Date.now() - startRef.current }) });
+      const r = await fetch("/api/v/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId: test.id, optionId: selected, reason, timeSpentMs: Date.now() - startRef.current, screeningAnswers: answers }) });
       if (r.status === 401) { setPhase("signin"); return; }
       const j = await r.json().catch(() => ({}));
+      if (j.disqualified) { fetchNext(); return; } // didn't match the target audience — move on
       if (r.ok) {
         if (j.earned) setCtx((c) => ({ ...c, earnedToday: (c.earnedToday ?? 0) + 1, balance: (c.balance ?? 0) + 1 }));
         fetchNext();
@@ -144,6 +148,22 @@ export default function VotePage() {
         <div>
           <div style={{ marginBottom: 4, fontSize: 16, color: "var(--fg-1)", fontWeight: 700, fontFamily: "var(--font-display)" }}>{test.title}</div>
           {test.context && <div style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.context}</div>}
+          {screening.length > 0 && (
+            <div className="card" style={{ marginBottom: 16, marginTop: 14, display: "flex", flexDirection: "column", gap: 14, background: "var(--bg-2)" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>A few quick questions first</div>
+              {screening.map((q) => (
+                <div key={q.id}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-1)", marginBottom: 8 }}>{q.question}{q.is_required ? "" : <span style={{ color: "var(--fg-5)", fontWeight: 400 }}> (optional)</span>}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {q.options.map((opt) => {
+                      const sel = answers[q.id] === opt;
+                      return <button key={opt} onClick={() => setAnswers((a) => ({ ...a, [q.id]: opt }))} className="chip" style={{ cursor: "pointer", ...(sel ? { borderColor: "var(--acc)", color: "var(--acc-deep)", background: "var(--acc-soft)" } : {}) }}>{opt}</button>;
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px,1fr))", gap: 12, marginBottom: 16, marginTop: 14 }}>
             {options.map((o) => {
               const sel = selected === o.id;
@@ -160,7 +180,11 @@ export default function VotePage() {
           </div>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why did you pick it? (optional, helps the report)" rows={2} style={{ width: "100%", padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box", marginBottom: 12, resize: "vertical" }} />
           {err && <p style={{ color: "var(--err)", fontSize: 13, marginBottom: 10 }}>{err}</p>}
-          <button onClick={submit} disabled={!selected || busy} className="btn btn--lg" style={{ justifyContent: "center", width: "100%", opacity: !selected || busy ? 0.55 : 1 }}>{busy ? "Saving…" : "Submit & next →"}</button>
+          {(() => {
+            const screenReady = screening.every((q) => !q.is_required || answers[q.id]);
+            const ready = !!selected && screenReady && !busy;
+            return <button onClick={submit} disabled={!ready} className="btn btn--lg" style={{ justifyContent: "center", width: "100%", opacity: ready ? 1 : 0.55 }}>{busy ? "Saving…" : "Submit & next →"}</button>;
+          })()}
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, lineHeight: 1.6 }}>Only valid human judgments count. Very fast, duplicate, or spammy responses may be filtered. Helpful reasons improve the decision report.</p>
         </div>
       )}

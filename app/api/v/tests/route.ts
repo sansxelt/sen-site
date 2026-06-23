@@ -7,6 +7,7 @@ import { ensureProfile, getPlan, launchTest } from "@/lib/v-db";
 import { ensureSignupGrant } from "@/lib/v-credits";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
 import { assignTestToProject } from "@/lib/v-projects";
+import { setTargetAudience } from "@/lib/v-screening";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -59,5 +60,7 @@ export async function POST(req: Request) {
   // a bad/foreign project id just leaves it unfiled; the launch already succeeded.
   const projectId = typeof body?.projectId === "string" && body.projectId ? body.projectId : null;
   if (projectId && r.id) await assignTestToProject(email, r.id, projectId);
+  const targetAudience = typeof body?.targetAudience === "string" ? body.targetAudience : "";
+  if (targetAudience.trim() && r.id) await setTargetAudience(email, r.id, targetAudience);
   return NextResponse.json({ id: r.id, status: "active" });
 }

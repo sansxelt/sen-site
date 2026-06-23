@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { dataQuality, sourceQuality } from "@/lib/v-analytics";
+import { screeningStatsForUser } from "@/lib/v-screening";
 import { SectionHead, Bars } from "../_workspace/analytics-ui";
 
 export const metadata: Metadata = { title: "Data quality" };
@@ -10,7 +11,7 @@ export default async function DataQualityPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fdata-quality");
-  const [q, sources] = await Promise.all([dataQuality(email), sourceQuality(email)]);
+  const [q, sources, aud] = await Promise.all([dataQuality(email), sourceQuality(email), screeningStatsForUser(email)]);
   const hasData = q.responses > 0;
 
   return (
@@ -87,8 +88,31 @@ export default async function DataQualityPage() {
             <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Source is recorded privacy-safely (channel + referrer hostname only — never full URLs, share tokens, IPs, or user agents). Older judgments show as Direct link.</p>
           </div>
 
+          <SectionHead>Audience qualification</SectionHead>
+          {aud.evalsWithScreening > 0 ? (
+            <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
+              <div className="card">
+                <div className="tile-grid cols-2" style={{ gap: 14, marginBottom: 14 }}>
+                  <div><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Qualified</div><div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{aud.qualified.toLocaleString()}</div></div>
+                  <div><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Disqualified</div><div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{aud.disqualified.toLocaleString()}</div></div>
+                  <div><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Qualification rate</div><div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, color: "var(--acc-deep)", marginTop: 4 }}>{aud.rate}%</div></div>
+                  <div><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Screened evals</div><div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{aud.evalsWithScreening}</div></div>
+                </div>
+              </div>
+              <div className="card">
+                <SectionHead>Audience fit</SectionHead>
+                <Bars rows={[{ label: "Strong fit", value: aud.fit.strong }, { label: "Mixed fit", value: aud.fit.mixed }, { label: "Limited fit", value: aud.fit.limited }].filter((r) => r.value > 0)} unit=" evals" />
+                {aud.fit.strong + aud.fit.mixed + aud.fit.limited === 0 ? <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Audience fit appears once screened evaluations collect responses.</p> : null}
+              </div>
+            </div>
+          ) : (
+            <div className="card" style={{ marginBottom: 26 }}>
+              <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Add screening questions to measure audience fit and filter unqualified responses. Set them on an evaluation&apos;s report page.</p>
+            </div>
+          )}
+
           <div className="card" style={{ background: "var(--bg-2)" }}>
-            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0, lineHeight: 1.6 }}><strong style={{ color: "var(--fg-1)" }}>Vraelis is a signal-quality layer, not a poll.</strong> Every decision report is built only from valid human judgments — low-quality responses are detected and filtered before they can move a recommendation.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0, lineHeight: 1.6 }}><strong style={{ color: "var(--fg-1)" }}>Vraelis is a signal-quality layer, not a poll.</strong> Every decision report is built only from valid, qualified human judgments — low-quality and off-audience responses are filtered before they can move a recommendation.</p>
           </div>
         </>
       )}

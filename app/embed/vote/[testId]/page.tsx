@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTestWithOptions } from "@/lib/v-db";
+import { screeningQuestionsForTest } from "@/lib/v-screening";
 import { EmbedVote } from "./embed-vote";
 
 export const metadata: Metadata = { title: "Evaluate — Vraelis", robots: { index: false, follow: false } };
@@ -10,11 +11,13 @@ export default async function EmbedVotePage({ params }: { params: Promise<{ test
   const { testId } = await params;
   const data = await getTestWithOptions(testId);
   const live = data && data.test.status === "active";
+  // qualifying_options is intentionally NOT sent to the participant (server decides).
+  const screening = live ? (await screeningQuestionsForTest(testId)).map((q) => ({ id: q.id, question: q.question, options: q.options, is_required: q.is_required })) : [];
 
   return (
     <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, system-ui, sans-serif", background: "#fff", color: "#0d1411", padding: 18, boxSizing: "border-box", maxWidth: 440, margin: "0 auto" }}>
       {live ? (
-        <EmbedVote testId={testId} title={data!.test.title} options={data!.options} />
+        <EmbedVote testId={testId} title={data!.test.title} options={data!.options} screening={screening} />
       ) : (
         <div style={{ textAlign: "center", padding: "32px 12px" }}>
           <div style={{ fontWeight: 700, fontSize: 16 }}>This evaluation isn&apos;t open right now.</div>

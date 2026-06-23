@@ -6,6 +6,8 @@ import { testFilterReasons, testSourceQuality } from "@/lib/v-analytics";
 import { evaluationIntelligence, evaluationHealth } from "@/lib/v-intelligence";
 import { SectionHead, Bars, HealthBadge } from "../../../_workspace/analytics-ui";
 import { CollectionLinks } from "../../../_workspace/collection-links";
+import { ScreeningManager } from "../../../_workspace/screening-manager";
+import { screeningStats } from "@/lib/v-screening";
 import { balance } from "@/lib/v-credits";
 import { CloseButton } from "../close-button";
 import { EmbedSnippet } from "../embed-snippet";
@@ -45,6 +47,9 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   const projectLine = project ? (
     <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <a href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</a></p>
   ) : null;
+  // Owner-only audience profile + screening stats (never on the public /r report).
+  const screen = await screeningStats(id);
+  const audienceLine = test.target_audience ? <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Audience: {test.target_audience}</p> : null;
 
   // ── In progress (collecting votes) ──
   if (!report || test.status !== "complete") {
@@ -64,6 +69,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         <p className="eyebrow">Collecting judgments</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
         {projectLine}
+        {audienceLine}
         <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid judgments</p>
         <div style={{ height: 10, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden", marginBottom: 24 }}>
           <div className="pulse" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
@@ -84,7 +90,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
             </div>
             <EmbedSnippet testId={test.id} />
             <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
-            <div style={{ marginTop: 22 }}><CollectionLinks testId={test.id} /></div>
+            <div style={{ marginTop: 22 }}><ScreeningManager testId={test.id} /></div>
+            <CollectionLinks testId={test.id} />
           </>
         )}
       </div>
@@ -109,11 +116,26 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8, marginTop: 8 }}>{test.title}</h1>
       {projectLine}
+      {audienceLine}
 
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
 
       <ReportBody results={r} options={options} votesTarget={test.votes_target} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
 
+      {screen.enabled ? (
+        <div className="card" style={{ marginBottom: 22 }}>
+          <SectionHead>Audience quality</SectionHead>
+          {test.target_audience ? <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Target audience: <strong style={{ color: "var(--fg-1)" }}>{test.target_audience}</strong></p> : null}
+          {screen.screened > 0 ? (
+            <>
+              <Bars rows={[{ label: "Qualified judgments", value: test.votes_valid }, { label: "Disqualified responses", value: screen.disqualified }]} />
+              <p style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 12, marginBottom: 0 }}>{screen.qualified} of {screen.screened} screened qualified · {screen.rate}% qualification rate · audience fit <span className="pill" style={{ background: screen.fit === "Strong fit" ? "var(--acc-soft)" : "var(--bg-1)", color: screen.fit === "Strong fit" ? "var(--acc-deep)" : "var(--fg-3)", borderColor: "var(--line-2)" }}>{screen.fit}</span></p>
+            </>
+          ) : <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>No qualified judgments yet. Share this evaluation with the target audience, or adjust your screening criteria.</p>}
+        </div>
+      ) : null}
+
+      <ScreeningManager testId={test.id} />
       <CollectionLinks testId={test.id} />
 
       {filterReasons.length > 0 ? (

@@ -77,6 +77,7 @@ export default function NewTest() {
   const [ctx, setCtx] = useState<Ctx>({ signedIn: false });
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [projectId, setProjectId] = useState("");
+  const [targetAudience, setTargetAudience] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -148,7 +149,7 @@ export default function NewTest() {
     if (options.length < 2) return setError(isText ? "Add at least 2 text options." : "Upload at least 2 images.");
     setBusy(true);
     try {
-      const res = await fetch("/api/v/tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, context, category, audience, votesTarget: votes, options, projectId: projectId || undefined }) });
+      const res = await fetch("/api/v/tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, context, category, audience, votesTarget: votes, options, projectId: projectId || undefined, targetAudience: targetAudience || undefined }) });
       if (res.status === 401) { signIn("google", { callbackUrl: "/app/new" }); return; }
       const j = await res.json().catch(() => ({}));
       if (res.status === 402) { setError(`Not enough credits. This test needs ${j.needed}. Earn by voting, or top up.`); return; }
@@ -198,6 +199,7 @@ export default function NewTest() {
                 <div><span style={lab}>Audience</span><select style={inputStyle} value={audience} onChange={(e) => setAudience(e.target.value)}>{AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
               </div>
               <div><span style={lab}>Context for judges (optional)</span><input style={inputStyle} value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g. for a B2B SaaS landing page. Which is clearest at a glance?" /></div>
+              <div><span style={lab}>Target audience (optional)</span><input style={inputStyle} value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} placeholder="Who is this signal for? e.g. Mobile gamers choosing an app icon" maxLength={200} /><div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 6 }}>Define who you want the signal from. Add screening questions on the report to filter unqualified responses.</div></div>
               <div>
                 <span style={lab}>Project (optional)</span>
                 <select style={inputStyle} value={projectId} onChange={(e) => setProjectId(e.target.value)}>
