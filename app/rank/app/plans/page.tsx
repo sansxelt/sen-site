@@ -4,16 +4,20 @@ import { useEffect, useState } from "react";
 
 type Cycle = "monthly" | "yearly";
 
-const PLANS: { key: string; name: string; price: Record<Cycle, number>; credits: string; perks: string[]; featured?: boolean }[] = [
-  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 one-time", perks: ["1 active test", "Up to 4 options", "Human votes + AI report"] },
-  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 / mo", perks: ["3 active tests / mo", "Up to 5 options", "AI winner report"] },
-  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 / mo", perks: ["10 active tests / mo", "Up to 6 options", "Audience targeting"] },
-  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 / mo", perks: ["30 active tests / mo", "Up to 8 options", "Webhooks + exports"], featured: true },
-  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 / mo", perks: ["100 active tests / mo", "Public API + embed", "Webhooks + exports"] },
-  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom", perks: ["Unlimited tests", "SSO + SLA", "Dedicated support"] },
+const PLANS: { key: string; name: string; price: Record<Cycle, number>; credits: string; blurb: string; perks: string[]; featured?: boolean }[] = [
+  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 valid judgments", blurb: "Try one small evaluation.", perks: ["Compare up to 4 candidates", "Sample decision report"] },
+  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 valid judgments / mo", blurb: "For small creative decisions.", perks: ["3 evaluations / mo", "Recommendation + reasoning report"] },
+  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 valid judgments / mo", blurb: "For ongoing creative testing.", perks: ["10 evaluations / mo", "Audience targeting", "Shareable decision reports"] },
+  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 valid judgments / mo", blurb: "For teams and client work.", perks: ["30 evaluations / mo", "Client-ready reports", "Exports + webhooks"], featured: true },
+  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 valid judgments / mo", blurb: "For apps and high-volume teams.", perks: ["100 evaluations / mo", "Public API + embed", "Developer analytics + webhooks"] },
+  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom valid judgments", blurb: "For governed evaluation programs.", perks: ["Unlimited evaluations", "SSO, SLA, support", "Custom exports + workflows"] },
 ];
 
 const ORDER: Record<string, number> = { free: 0, starter: 1, creator: 2, pro: 3, scale: 4, enterprise: 5 };
+
+// Display-only whole-dollar formatting (live Stripe price may carry cents). Does
+// NOT change the amount Stripe charges at checkout.
+const fmtAmount = (n: number) => (Number.isInteger(n) ? n : Math.floor(n)).toLocaleString();
 
 export default function PlansPage() {
   const [cycle, setCycle] = useState<Cycle>("monthly");
@@ -54,7 +58,7 @@ export default function PlansPage() {
         <div>
           <p className="eyebrow">Plans</p>
           <h1 className="display">Pick a plan</h1>
-          <p>Plans refresh credits every month. Need more mid-cycle? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Top up anytime →</a></p>
+          <p>Each plan gives you valid human signal, a recommendation with reasoning, and exportable decision reports. Credits refresh monthly — <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>top up anytime →</a></p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <div className="seg">
@@ -91,9 +95,10 @@ export default function PlansPage() {
               <div>
                 {isEnterprise ? <div className="price__amt">Custom</div>
                   : !available ? <div className="price__amt" style={{ color: "var(--fg-4)", fontSize: "1.6rem" }}>Coming soon</div>
-                  : <div className="price__amt">${price.toLocaleString()}<small>/{cycle === "yearly" ? "yr" : "mo"}</small></div>}
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.credits} credits</div>
+                  : <div className="price__amt">${fmtAmount(price)}<small>/{cycle === "yearly" ? "yr" : "mo"}</small></div>}
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.credits}</div>
               </div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: 8 }}>{p.blurb}</div>
               <ul className="price__feat">
                 {p.perks.map((perk) => <li key={perk}>{perk}</li>)}
               </ul>

@@ -4,14 +4,21 @@ import { useEffect, useState } from "react";
 
 type Cycle = "monthly" | "yearly";
 
+// Cards lead with the outcome (blurb), then the value unit (valid judgments), then
+// what you can do. Credits stay the unit (1 credit = 1 valid judgment); decisions
+// are what you're buying.
 const PLANS = [
-  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 one-time", blurb: "Try a full evaluation.", perks: ["1 active evaluation", "Up to 4 candidates", "Human signal + AI report"] },
-  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 / mo", blurb: "Validate small creative decisions.", perks: ["3 active evaluations / mo", "Up to 5 candidates", "AI decision report", "Shareable report links"] },
-  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 / mo", blurb: "Confident calls on every creative.", perks: ["10 active evaluations / mo", "Up to 6 candidates", "Audience targeting", "Embeddable evaluations"] },
-  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 / mo", blurb: "Client-ready reports for teams.", perks: ["30 active evaluations / mo", "Up to 8 candidates", "Targeting + priority", "Webhooks + exports"], featured: true },
-  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 / mo", blurb: "API evaluations for apps & agencies.", perks: ["100 active evaluations / mo", "Public API + embed widget", "Webhooks + JSON/CSV exports", "Usage analytics"] },
-  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom", blurb: "Governed evaluation at scale.", perks: ["Unlimited evaluations", "Governed data + workflows", "SSO + SLA + dedicated support"] },
+  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 valid judgments", blurb: "Try one small evaluation.", perks: ["Compare up to 4 candidates", "Sample decision report"] },
+  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 valid judgments / mo", blurb: "For small creative decisions.", perks: ["3 evaluations / mo", "Recommendation + reasoning report"] },
+  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 valid judgments / mo", blurb: "For ongoing creative testing.", perks: ["10 evaluations / mo", "Audience targeting", "Shareable decision reports"] },
+  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 valid judgments / mo", blurb: "For teams and client work.", perks: ["30 evaluations / mo", "Client-ready reports", "Exports + webhooks"], featured: true },
+  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 valid judgments / mo", blurb: "For apps and high-volume teams.", perks: ["100 evaluations / mo", "Public API + embed", "Developer analytics + webhooks"] },
+  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom valid judgments", blurb: "For governed evaluation programs.", perks: ["Unlimited evaluations", "SSO, SLA, support", "Custom exports + workflows"] },
 ] as { key: string; name: string; price: Record<Cycle, number>; credits: string; blurb: string; perks: string[]; featured?: boolean }[];
+
+// Display-only: show whole-dollar amounts (the live Stripe price may carry cents,
+// e.g. 1499.99 → "1,499"). Does NOT change what Stripe charges at checkout.
+const fmtAmount = (n: number) => (Number.isInteger(n) ? n : Math.floor(n)).toLocaleString();
 
 const ORDER: Record<string, number> = { free: 0, starter: 1, creator: 2, pro: 3, scale: 4, enterprise: 5 };
 
@@ -63,6 +70,7 @@ export default function PricingPage() {
 
       <section className="section" style={{ paddingTop: "clamp(28px, 3vw, 40px)" }}>
         <div className="wrap">
+          <p style={{ textAlign: "center", maxWidth: 660, margin: "0 auto clamp(22px, 3vw, 32px)", fontSize: 14.5, color: "var(--fg-2)", lineHeight: 1.55 }}>You&apos;re not paying for votes — you&apos;re paying for a clearer decision before you spend, ship, or present the wrong creative. Every plan includes valid human signal, a recommendation with reasoning, and exportable decision reports.</p>
           <div className="tile-grid cols-3">
             {PLANS.map((p) => {
               const cell = prices[p.key]?.[cycle];
@@ -78,8 +86,8 @@ export default function PricingPage() {
                   <div>
                     {p.key === "enterprise" ? <div className="price__amt">Custom</div>
                       : !available ? <div className="price__amt" style={{ color: "var(--fg-4)", fontSize: "1.6rem" }}>Coming soon</div>
-                      : <div className="price__amt">${price.toLocaleString()}<small>/{cycle === "yearly" ? "yr" : "mo"}</small></div>}
-                    <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.credits} credits</div>
+                      : <div className="price__amt">${fmtAmount(price)}<small>/{cycle === "yearly" ? "yr" : "mo"}</small></div>}
+                    <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.credits}</div>
                   </div>
                   <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>{p.blurb}</div>
                   <ul className="price__feat">
