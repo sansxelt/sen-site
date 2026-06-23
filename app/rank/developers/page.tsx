@@ -151,6 +151,40 @@ export interface DecisionPackageV2 {
   source_quality?: SourceQualityBreakdown[];
 }`;
 
+const SDK_QUICKSTART = `import { Vraelis } from "@vraelis/sdk";
+
+const vraelis = new Vraelis({ apiKey: process.env.VRAELIS_API_KEY! });
+
+// Sandbox: sample decision package, no credits.
+const evaluation = await vraelis.evaluations.create({
+  title: "Sandbox hero test",
+  category: "landing",
+  sandbox: true,
+  options: [{ label: "Hero A" }, { label: "Hero B" }],
+});
+
+const result = await vraelis.evaluations.get(evaluation.id);
+console.log(result.decision_package?.decision.recommended_output);
+
+// Export + typed Decision Package v2
+const full = await vraelis.evaluations.exportJson(evaluation.id, { tier: "scale" });
+const csv  = await vraelis.evaluations.exportCsv(evaluation.id);`;
+
+const SDK_WEBHOOK = `import { verifyWebhookSignature } from "@vraelis/sdk";
+
+export async function POST(req: Request) {
+  const raw = await req.text(); // raw body — required
+  const ok = verifyWebhookSignature({
+    payload: raw,
+    signature: req.headers.get("x-vraelis-signature"),
+    timestamp: req.headers.get("x-vraelis-timestamp"),
+    secret: process.env.VRAELIS_WEBHOOK_SECRET!,
+    toleranceSeconds: 300,
+  });
+  if (!ok) return new Response("invalid signature", { status: 401 });
+  return new Response("ok");
+}`;
+
 const ERROR_EXAMPLE = `{
   "error": {
     "code": "unauthorized",
@@ -348,6 +382,22 @@ export default function DevelopersPage() {
             </div>
             <Code label="typescript">{TS_TYPES}</Code>
           </div>
+        </div>
+      </section>
+
+      {/* TypeScript SDK */}
+      <section id="sdk" className="section" style={{ background: "var(--bg-2)" }}>
+        <div className="wrap">
+          <div style={{ maxWidth: 720, marginBottom: "clamp(20px, 3vw, 32px)" }}>
+            <p className="eyebrow">TypeScript SDK <span className="pill" style={{ marginLeft: 8, fontSize: 10.5 }}>SDK starter · coming soon to npm</span></p>
+            <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>A typed client for the whole flow.</h2>
+            <p className="lead-copy">Create sandbox evaluations, fetch typed Decision Packages, export results, and verify webhooks — with full TypeScript types that match the <a href="/schemas/decision-package-v2.json">JSON Schema</a>. The SDK starter lives in the repo (<code style={{ fontFamily: "var(--font-code, monospace)" }}>sdk/typescript</code>) and is ready to publish; it&apos;s <strong style={{ color: "var(--fg-1)" }}>not on npm yet</strong>. Use <code style={{ fontFamily: "var(--font-code, monospace)" }}>sandbox: true</code> to integrate before spending credits.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Quickstart</div><Code label="typescript">{SDK_QUICKSTART}</Code></div>
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Verify a webhook</div><Code label="typescript">{SDK_WEBHOOK}</Code></div>
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Methods: <code style={{ fontFamily: "var(--font-code, monospace)" }}>evaluations.create / get / exportJson / exportCsv</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>credits.get</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>webhooks.verifySignature</code>. Errors throw a typed <code style={{ fontFamily: "var(--font-code, monospace)" }}>VraelisAPIError</code> (status, code, message, requestId). Node 18+.</p>
         </div>
       </section>
 
