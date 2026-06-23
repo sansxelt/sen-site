@@ -72,9 +72,10 @@ export async function listProjects(userId: string): Promise<Project[]> {
     const projects = (data as unknown as Project[]) ?? [];
     if (!projects.length) return projects;
     // Batch the per-project evaluation count in one query (user-scoped).
-    const { data: tests } = await s.from("v_tests" as never).select("project_id").eq("user_id", norm(userId));
+    let { data: tests, error: tErr } = await s.from("v_tests" as never).select("project_id,is_sandbox").eq("user_id", norm(userId));
+    if (tErr) ({ data: tests } = await s.from("v_tests" as never).select("project_id").eq("user_id", norm(userId))); // pre-migration
     const counts: Record<string, number> = {};
-    for (const t of (tests as unknown as { project_id: string | null }[]) ?? []) if (t.project_id) counts[t.project_id] = (counts[t.project_id] ?? 0) + 1;
+    for (const t of (tests as unknown as { project_id: string | null; is_sandbox?: boolean }[]) ?? []) if (t.project_id && !t.is_sandbox) counts[t.project_id] = (counts[t.project_id] ?? 0) + 1;
     return projects.map((p) => ({ ...p, evaluation_count: counts[p.id] ?? 0 }));
   } catch { return []; }
 }
@@ -105,7 +106,7 @@ export async function listEvaluations(userId: string, opts: { projectId?: string
     const s = getSupabaseAdminClient();
     const uid = norm(userId);
     const lim = Math.min(opts.limit ?? 60, 100);
-    const cols = "id,title,status,project_id,votes_valid,votes_target,created_at,completed_at,share_enabled,share_token";
+    const cols = "id,title,status,project_id,votes_valid,votes_target,created_at,completed_at,share_enabled,share_token,is_sandbox";
     let q = s.from("v_tests" as never).select(cols).eq("user_id", uid).order("created_at", { ascending: false }).limit(lim);
     if (opts.projectId) q = q.eq("project_id", opts.projectId);
     let { data: testsData, error } = await q;
@@ -119,7 +120,8 @@ export async function listEvaluations(userId: string, opts: { projectId?: string
         .eq("user_id", uid).order("created_at", { ascending: false }).limit(lim));
       if (error) return [];
     }
-    const tests = (testsData as unknown as VTest[]) ?? [];
+    // Exclude developer sandbox evaluations from the library (undefined = production).
+    const tests = ((testsData as unknown as VTest[]) ?? []).filter((t) => !t.is_sandbox);
     if (!tests.length) return [];
 
     const completedIds = tests.filter((t) => t.status === "complete").map((t) => t.id);
@@ -161,9 +163,10 @@ export async function workspaceStats(userId: string): Promise<WorkspaceStats> {
   if (!userId || !isDatabaseConfigured()) return empty;
   try {
     const s = getSupabaseAdminClient();
-    const { data, error } = await s.from("v_tests" as never).select("status,votes_valid").eq("user_id", norm(userId));
+    let { data, error } = await s.from("v_tests" as never).select("status,votes_valid,is_sandbox").eq("user_id", norm(userId));
+    if (error) ({ data, error } = await s.from("v_tests" as never).select("status,votes_valid").eq("user_id", norm(userId))); // pre-migration
     if (error) return empty;
-    const rows = (data as unknown as { status: string; votes_valid: number }[]) ?? [];
+    const rows = ((data as unknown as { status: string; votes_valid: number; is_sandbox?: boolean }[]) ?? []).filter((r) => !r.is_sandbox);
     return {
       total: rows.length,
       active: rows.filter((r) => r.status === "active").length,

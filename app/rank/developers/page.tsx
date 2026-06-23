@@ -45,6 +45,12 @@ X-Vraelis-Delivery: <uuid>
     "votes_valid": 100, "votes_filtered": 8,
     "winner": { "option": "B", "pct": 67 }
   },
+  "decision_package": {
+    "schema_version": "v2", "mode": "production",
+    "recommended_output": "B", "directional_confidence": "Strong",
+    "signal_quality": "Clean signal", "evaluation_health": "Ready to decide",
+    "audience_fit": "Strong fit"
+  },
   "links": {
     "export_json": "https://vraelis.com/api/v1/tests/{id}/export?format=json",
     "export_csv":  "https://vraelis.com/api/v1/tests/{id}/export?format=csv"
@@ -95,6 +101,54 @@ const DECISION_PKG = `{
       { "source": "discord", "valid_judgments": 100, "filter_rate": 19 }
     ]
   }
+}`;
+
+const SANDBOX_CURL = `# Create a SANDBOX evaluation — no credits, sample decision package.
+curl https://vraelis.com/api/v1/tests \\
+  -H "X-Api-Key: vr_live_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "title": "Sandbox hero test",
+    "category": "landing",
+    "sandbox": true,
+    "options": [ { "text": "Hero A" }, { "text": "Hero B" } ]
+  }'
+# → { "id": "…", "status": "complete", "sandbox": true, "mode": "sandbox", "credits_charged": 0 }
+
+# Then fetch the sample decision package (same endpoints as production):
+curl https://vraelis.com/api/v1/tests/{id} -H "X-Api-Key: vr_live_..."
+curl "https://vraelis.com/api/v1/tests/{id}/export?format=json" -H "X-Api-Key: vr_live_..."`;
+
+const TS_TYPES = `export type DecisionConfidence = "Strong" | "Moderate" | "Tentative" | "None";
+export type SignalQuality = "Clean signal" | "Limited signal" | "Needs more signal";
+export type EvaluationHealth =
+  | "Collecting" | "Ready to decide" | "Needs more judgments"
+  | "Noisy signal" | "Too close to call" | "Low-quality traffic";
+export type AudienceFit = "Strong fit" | "Mixed fit" | "Limited fit" | "Not screened";
+
+export interface SourceQualityBreakdown {
+  source: string; label?: string;
+  total_responses: number; valid_judgments: number;
+  filtered_responses: number; filter_rate: number; clean_signal_percent: number;
+}
+
+export interface DecisionPackageV2 {
+  schema_version: "v2";
+  mode: "production" | "sandbox";
+  test_id: string;
+  decision: {
+    recommended_output: string | null;
+    winner_label: string | null;
+    preference_margin: number | null;
+    directional_confidence: DecisionConfidence;
+    signal_quality: SignalQuality | null;
+    evaluation_health: EvaluationHealth;
+    action_recommendation: string | null;
+  };
+  counts: { valid_judgments: number; filtered_responses: number; total_responses: number; filter_rate: number };
+  options: { option_id: string; label: string | null; count: number; share: number; rank: number }[];
+  audience?: { screening_enabled: boolean; qualification_rate: number | null; audience_fit: AudienceFit };
+  source_quality?: SourceQualityBreakdown[];
 }`;
 
 const ERROR_EXAMPLE = `{
@@ -184,8 +238,8 @@ export default function DevelopersPage() {
               <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Each evaluation is a <code style={{ fontFamily: "var(--font-code, monospace)" }}>/tests</code> resource in the API (kept stable for compatibility); conceptually it&apos;s an evaluation run: submit candidates, collect human signal, get a recommendation.</p>
               <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <span className="pill">API access on Scale</span>
-                <span className="pill">Sandbox mode (coming soon)</span>
-                <span className="pill">SDKs (coming soon)</span>
+                <a href="#sandbox" className="pill" style={{ textDecoration: "none" }}>Sandbox mode</a>
+                <a href="/schemas/decision-package-v2.json" className="pill" style={{ textDecoration: "none" }}>JSON Schema</a>
               </div>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -252,7 +306,47 @@ export default function DevelopersPage() {
               </ul>
               <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Directional confidence from qualified human signal — not a guarantee of conversion lift, and not a substitute for statistical or legal research. The package never includes emails, raw IP/device data, share tokens, or raw screening answers. Summary and Standard tiers carry a trimmed package; Scale adds source quality and collection-link stats.</p>
             </div>
-            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>decision_package (excerpt)</div><Code label="json">{DECISION_PKG}</Code></div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>decision_package (excerpt)</div><Code label="json">{DECISION_PKG}</Code></div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Decision Package v2 JSON Schema →</a>
+                <a href="#types" className="btn btn--ghost" style={{ fontSize: 12.5 }}>TypeScript types →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sandbox */}
+      <section id="sandbox" className="section">
+        <div className="wrap">
+          <div style={{ maxWidth: 720, marginBottom: "clamp(20px, 3vw, 32px)" }}>
+            <p className="eyebrow">Sandbox</p>
+            <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Test the full flow before spending credits.</h2>
+            <p className="lead-copy">Create a <strong style={{ color: "var(--fg-1)" }}>sandbox evaluation</strong> to exercise the whole integration — create, decision package, export, webhook — with a deterministic <em>sample</em> decision package. Sandbox evaluations <strong style={{ color: "var(--fg-1)" }}>don&apos;t use credits</strong>, don&apos;t collect real human signal, and never appear in your analytics or reports. They&apos;re labeled <code style={{ fontFamily: "var(--font-code, monospace)" }}>mode: &quot;sandbox&quot;</code> everywhere.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,0.95fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Sandbox flow</div><Code>{SANDBOX_CURL}</Code></div>
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Full integration test</div>
+              <ol style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 8, fontSize: 14, color: "var(--fg-2)", lineHeight: 1.5 }}>
+                <li>Create a sandbox evaluation (<code style={{ fontFamily: "var(--font-code, monospace)" }}>sandbox: true</code>) — returns a complete eval, no credits.</li>
+                <li>Fetch its decision package: <code style={{ fontFamily: "var(--font-code, monospace)" }}>GET /api/v1/tests/&#123;id&#125;</code>.</li>
+                <li>Export JSON to wire up parsing: <code style={{ fontFamily: "var(--font-code, monospace)" }}>?format=json</code>.</li>
+                <li>Send a test webhook from <a href="/app/api-keys">API keys</a> — a signed <code style={{ fontFamily: "var(--font-code, monospace)" }}>test.completed</code> with a sample package.</li>
+                <li>Switch to production: drop <code style={{ fontFamily: "var(--font-code, monospace)" }}>sandbox</code>, add <code style={{ fontFamily: "var(--font-code, monospace)" }}>votes</code> + real options. Production uses real qualified human signal.</li>
+              </ol>
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Sandbox uses sample data for integration testing only. Sandbox creation needs the same API access (Scale) and <code style={{ fontFamily: "var(--font-code, monospace)" }}>tests:write</code> scope as production.</p>
+            </div>
+          </div>
+
+          {/* TypeScript types */}
+          <div id="types" style={{ marginTop: "clamp(28px, 4vw, 44px)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
+              <h3 className="display" style={{ fontSize: "clamp(1.2rem, 2vw, 1.5rem)" }}>TypeScript types</h3>
+              <a href="/schemas/decision-package-v2.json" style={{ fontSize: 12.5, color: "var(--acc-deep)" }}>JSON Schema ↗</a>
+            </div>
+            <Code label="typescript">{TS_TYPES}</Code>
           </div>
         </div>
       </section>

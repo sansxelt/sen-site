@@ -33,11 +33,14 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
   const filtered = r?.filtered ?? 0;
   const responses = valid + filtered;
 
+  const mode = test.is_sandbox ? "sandbox" : "production";
+
   // ── webhook scope: compact, safe ──
   if (scope === "webhook") {
     const [screen, sources] = await Promise.all([screeningStats(testId), testSourceQuality(testId)]);
     return {
       schema_version: DECISION_PACKAGE_VERSION,
+      mode,
       test_id: test.id,
       recommended_output: intel?.recommendedOption ?? null,
       winner_label: winnerRow ? optById[winnerRow.id]?.label ?? null : null,
@@ -57,6 +60,7 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
   // ── owner/API scopes (summary → standard → scale) ──
   const pkg: Record<string, unknown> = {
     schema_version: DECISION_PACKAGE_VERSION,
+    mode,
     test_id: test.id,
     title: test.title,
     status: test.status,
@@ -104,3 +108,26 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
   }
   return pkg;
 }
+
+// A deterministic, clearly-labeled SAMPLE compact package for the webhook test
+// console and docs — no real evaluation, no real people, no credits.
+export const SAMPLE_DECISION_PACKAGE = {
+  schema_version: DECISION_PACKAGE_VERSION,
+  mode: "sandbox" as const,
+  test_id: "sandbox_example",
+  recommended_output: "B",
+  winner_label: "Hero B (sample)",
+  preference_margin: 24,
+  directional_confidence: "Strong",
+  signal_quality: "Clean signal",
+  evaluation_health: "Ready to decide",
+  action_recommendation: "Ship Option B.",
+  valid_judgments: 120,
+  filtered_responses: 11,
+  qualified_judgments: 98,
+  audience_fit: "Strong fit",
+  source_quality: [
+    { source: "instagram", valid_judgments: 70, filter_rate: 8 },
+    { source: "discord", valid_judgments: 50, filter_rate: 14 },
+  ],
+};

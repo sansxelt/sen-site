@@ -6,6 +6,7 @@ import { apiError } from "../_lib";
 import { getPlan, launchTest } from "@/lib/v-db";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
 import { assignTestToProject } from "@/lib/v-projects";
+import { createSandboxEvaluation } from "@/lib/v-sandbox";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -28,7 +29,8 @@ export async function POST(req: Request) {
 
   const ent = entitlements(await getPlan(userId));
   const votes = Math.max(MIN_VOTES, Math.min(ent.maxVotes, parseInt(body?.votes, 10) || 0));
-  if (!title) return apiError("validation_error", "A title is required.", 400);
+  const sandbox = body?.sandbox === true || body?.sandbox === "true";
+  if (!title && !sandbox) return apiError("validation_error", "A title is required.", 400);
 
   const opts = rawOptions
     .slice(0, ent.maxOptions)
@@ -37,6 +39,16 @@ export async function POST(req: Request) {
       label: typeof o?.text === "string" ? o.text.slice(0, 120) : undefined,
     }))
     .filter((o: { asset?: string; label?: string }) => o.asset || o.label);
+
+  // ── Sandbox: test the integration WITHOUT credits, quota, or real judgments.
+  // Created directly with a sample decision package; clearly labeled sandbox.
+  if (sandbox) {
+    const projectId = typeof body?.project_id === "string" && body.project_id ? body.project_id : null;
+    const created = await createSandboxEvaluation(userId, { title, category, audience, options: opts });
+    if (!created) return apiError("internal_error", "Could not create the sandbox evaluation. Try again.", 500);
+    if (projectId) await assignTestToProject(userId, created.id, projectId);
+    return Response.json({ id: created.id, status: "complete", sandbox: true, mode: "sandbox", credits_charged: 0, note: "Sandbox evaluation — sample decision package, no credits used. Fetch it with GET /api/v1/tests/" + created.id + " or its export." });
+  }
 
   if (opts.length < MIN_OPTIONS) return apiError("validation_error", `At least ${MIN_OPTIONS} candidate options are required.`, 400);
   if (opts.some((o: { asset?: string }) => o.asset && o.asset.length > MAX_ASSET_CHARS)) {

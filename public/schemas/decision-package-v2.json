@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vraelis.com/schemas/decision-package-v2.json",
+  "title": "Vraelis Decision Package v2",
+  "description": "Structured, portable decision result produced by Vraelis from qualified human signal. Returned (additively) by JSON exports, GET /api/v1/tests/{id}, and (compact) test.completed webhooks. Contains no emails, user ids, raw IPs, device hashes, full referrers, share tokens, secrets, private project descriptions, or raw screening answers.",
+  "type": "object",
+  "required": ["schema_version", "test_id", "decision", "counts", "options"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "const": "v2" },
+    "mode": { "enum": ["production", "sandbox"], "description": "sandbox = sample data from a developer sandbox evaluation; no real people judged it." },
+    "test_id": { "type": "string" },
+    "title": { "type": "string" },
+    "status": { "type": "string", "enum": ["draft", "active", "complete", "canceled"] },
+    "category": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "decision": {
+      "type": "object",
+      "required": ["recommended_output", "directional_confidence", "evaluation_health"],
+      "properties": {
+        "recommended_output": { "type": ["string", "null"], "description": "Winning option letter (A/B/...), or null if inconclusive." },
+        "winner_option_id": { "type": ["string", "null"] },
+        "winner_label": { "type": ["string", "null"] },
+        "preference_margin": { "type": ["integer", "null"], "description": "Lead of the top option over the runner-up, in percentage points." },
+        "directional_confidence": { "enum": ["Strong", "Moderate", "Tentative", "None"] },
+        "signal_quality": { "type": ["string", "null"], "enum": ["Clean signal", "Limited signal", "Needs more signal", null] },
+        "evaluation_health": { "enum": ["Collecting", "Ready to decide", "Needs more judgments", "Noisy signal", "Too close to call", "Low-quality traffic"] },
+        "action_recommendation": { "type": ["string", "null"] },
+        "decision_summary": { "type": ["string", "null"] },
+        "inconclusive": { "type": ["boolean", "null"] }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "required": ["valid_judgments", "filtered_responses", "total_responses", "filter_rate"],
+      "properties": {
+        "valid_judgments": { "type": "integer" },
+        "filtered_responses": { "type": "integer" },
+        "total_responses": { "type": "integer" },
+        "filter_rate": { "type": "integer", "description": "Percent of responses filtered as low-quality." }
+      }
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["option_id", "rank"],
+        "properties": {
+          "option_id": { "type": "string" },
+          "option": { "type": "string", "description": "Display letter (A/B/...)." },
+          "label": { "type": ["string", "null"] },
+          "count": { "type": "integer" },
+          "share": { "type": "integer", "description": "Percent share of valid judgments." },
+          "rank": { "type": "integer" }
+        }
+      }
+    },
+    "audience": {
+      "type": "object",
+      "description": "Present from the Standard tier up. Audience qualification via screening.",
+      "properties": {
+        "screening_enabled": { "type": "boolean" },
+        "qualified_judgments": { "type": ["integer", "null"] },
+        "disqualified_responses": { "type": ["integer", "null"] },
+        "qualification_rate": { "type": ["integer", "null"] },
+        "audience_fit": { "enum": ["Strong fit", "Mixed fit", "Limited fit", "Not screened"] },
+        "target_audience": { "type": ["string", "null"] }
+      }
+    },
+    "source_quality": {
+      "type": "array",
+      "description": "Present at the Scale tier. Per-channel signal quality (privacy-safe channel names only).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string" },
+          "label": { "type": "string" },
+          "total_responses": { "type": "integer" },
+          "valid_judgments": { "type": "integer" },
+          "filtered_responses": { "type": "integer" },
+          "filter_rate": { "type": "integer" },
+          "clean_signal_percent": { "type": "integer" }
+        }
+      }
+    },
+    "collection_links": {
+      "type": "array",
+      "description": "Present at the Scale tier. Per-link stats. Never includes URLs or attribution tokens.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "collection_link_id": { "type": "string" },
+          "label": { "type": "string" },
+          "source": { "type": "string" },
+          "is_active": { "type": "boolean" },
+          "valid_judgments": { "type": "integer" },
+          "filtered_responses": { "type": "integer" },
+          "filter_rate": { "type": "integer" }
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "description": "Present at the Scale tier when the evaluation is filed under a project. Name only — never the private description.",
+      "properties": {
+        "project_id": { "type": "string" },
+        "project_name": { "type": ["string", "null"] }
+      }
+    },
+    "report_meta": {
+      "type": "object",
+      "properties": {
+        "public_report_enabled": { "type": "boolean" },
+        "public_report_url": { "type": ["string", "null"], "description": "The already-published public report link, only when sharing is enabled." },
+        "export_generated_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

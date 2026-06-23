@@ -104,12 +104,25 @@ export default function ApiKeysPage() {
         </div>
       </div>
 
-      <div className="card cta-band" style={{ marginBottom: 24, background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
+      <div className="card cta-band" style={{ marginBottom: 14, background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Preference data exports</div>
           <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed results as JSON or CSV. Winner, breakdown, quality, comments, and AI analysis.</p>
         </div>
         <a href="/developers#export" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Export docs →</a>
+      </div>
+
+      {/* Test your integration — sandbox, schema, types, test webhook */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div style={cardHead}>Test your integration</div>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Exercise the full flow — create, decision package, export, webhook — with a sample decision package. Sandbox evaluations don&apos;t use credits and never appear in your analytics or reports.</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <a href="/developers#sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Sandbox docs</a>
+          <a href="/developers#sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Sandbox API example</a>
+          <a href="#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Send test webhook</a>
+          <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Decision Package schema</a>
+        </div>
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "12px 0 0" }}>Sandbox creation: <code style={{ color: "var(--fg-3)" }}>POST /api/v1/tests</code> with <code style={{ color: "var(--fg-3)" }}>{`"sandbox": true`}</code>. Same Scale access + <code style={{ color: "var(--fg-3)" }}>tests:write</code> scope as production.</p>
       </div>
 
       {err && (
@@ -235,7 +248,7 @@ export default function ApiKeysPage() {
         Evaluations cost credits the same as the web app (1 credit = 1 valid judgment). Image candidates must be public URLs. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>
 
-      <WebhooksSection />
+      <div id="webhooks"><WebhooksSection /></div>
     </div>
   );
 }

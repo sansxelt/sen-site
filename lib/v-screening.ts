@@ -134,7 +134,9 @@ export async function screeningStatsForUser(userId: string): Promise<UserScreeni
   try {
     const s = getSupabaseAdminClient();
     const uid = norm(userId);
-    const ids = ((await s.from("v_tests" as never).select("id").eq("user_id", uid).limit(1000)).data as unknown as { id: string }[] ?? []).map((t) => t.id);
+    let tq = await s.from("v_tests" as never).select("id,is_sandbox").eq("user_id", uid).limit(1000);
+    if (tq.error) tq = await s.from("v_tests" as never).select("id").eq("user_id", uid).limit(1000); // pre-migration
+    const ids = ((tq.data as unknown as { id: string; is_sandbox?: boolean }[]) ?? []).filter((t) => !t.is_sandbox).map((t) => t.id);
     if (!ids.length) return empty;
     const [{ data: qs }, { data: resp }] = await Promise.all([
       s.from("v_screening_questions" as never).select("test_id").in("test_id", ids),

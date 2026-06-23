@@ -540,3 +540,12 @@ create table if not exists v_screening_responses (
   created_at       timestamptz not null default now()
 );
 create index if not exists v_screening_resp_test_idx on v_screening_responses (test_id, screening_status);
+
+-- ── Developer sandbox ──
+-- Sandbox evaluations let developers test the full integration (create → decision
+-- package → export → webhook) WITHOUT spending credits or polluting analytics.
+-- They are created directly (never through the credit-holding launch RPC), carry a
+-- deterministic SAMPLE decision package, and are excluded from all analytics/lists
+-- in app code (where is_sandbox = true). Old rows default to false (production).
+alter table v_tests add column if not exists is_sandbox boolean not null default false;
+create index if not exists v_tests_sandbox_idx on v_tests (user_id, is_sandbox);

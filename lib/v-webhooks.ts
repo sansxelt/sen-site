@@ -9,7 +9,7 @@ import { fetch as undiciFetch, Agent } from "undici";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getTestWithOptions, getReport, OPTION_LETTERS, type VTest } from "./v-db";
 import { logEvent } from "./v-events";
-import { buildDecisionPackage } from "./v-decision-package";
+import { buildDecisionPackage, SAMPLE_DECISION_PACKAGE } from "./v-decision-package";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://vraelis.com";
 const MAX_ENDPOINTS = 10;
@@ -368,9 +368,10 @@ export async function sendTestEvent(userId: string, endpointId: string): Promise
   if (webhookUrlError(ep.url)) return { ok: false, error: "unsafe_url" };
   const deliveryId = crypto.randomUUID();
   const payload = {
-    event: "test.completed", delivery_id: deliveryId, created_at: new Date().toISOString(), test_event: true,
-    test: { id: "test_example", title: "Example test", status: "completed", completed_at: new Date().toISOString(), votes_valid: 100, votes_filtered: 8, winner: { option: "B", pct: 67 }, inconclusive: false },
-    links: { report_url: `${SITE}/app/tests/test_example/report`, public_report_url: null, export_json: `${SITE}/api/v1/tests/test_example/export?format=json`, export_csv: `${SITE}/api/v1/tests/test_example/export?format=csv` },
+    event: "test.completed", delivery_id: deliveryId, created_at: new Date().toISOString(), test_event: true, mode: "sandbox" as const,
+    test: { id: "sandbox_example", title: "Sandbox example", status: "completed", completed_at: new Date().toISOString(), votes_valid: 120, votes_filtered: 11, winner: { option: "B", pct: 67 }, inconclusive: false },
+    decision_package: SAMPLE_DECISION_PACKAGE,
+    links: { report_url: `${SITE}/app/tests/sandbox_example/report`, public_report_url: null, export_json: `${SITE}/api/v1/tests/sandbox_example/export?format=json`, export_csv: `${SITE}/api/v1/tests/sandbox_example/export?format=csv` },
   };
   const res = await post(ep.url, ep.secret, "test.completed", deliveryId, payload);
   await s.from("v_webhook_deliveries" as never).insert({ endpoint_id: endpointId, test_id: null, event: "test.completed", status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never);

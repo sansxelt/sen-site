@@ -16,6 +16,7 @@ export type VTest = {
   share_token?: string | null; share_enabled?: boolean;
   project_id?: string | null;
   target_audience?: string | null;
+  is_sandbox?: boolean;
 };
 export type VOption = { id: string; test_id: string; position: number; asset_url: string | null; label: string | null };
 export type VReport = {

@@ -24,10 +24,10 @@ export const FILTER_REASON_LABEL: Record<string, string> = {
   device_daily_limit: "Device daily limit", low_reputation: "Low-reputation voter", admin: "Manually rejected", other: "Other",
 };
 
-type TestRow = { id: string; title: string; category: string; status: string; votes_valid: number; votes_target: number; created_at: string; completed_at: string | null; project_id: string | null; share_enabled: boolean };
+type TestRow = { id: string; title: string; category: string; status: string; votes_valid: number; votes_target: number; created_at: string; completed_at: string | null; project_id: string | null; share_enabled: boolean; is_sandbox?: boolean };
 type Derived = { id: string; category: string; project_id: string | null; filtered: number; marginPts: number | null; confidence: ConfidenceLabel; signal: SignalLabel | null; recommended: string | null; inconclusive: boolean; health: HealthState };
 
-const TEST_COLS = "id,title,category,status,votes_valid,votes_target,created_at,completed_at,project_id,share_enabled";
+const TEST_COLS = "id,title,category,status,votes_valid,votes_target,created_at,completed_at,project_id,share_enabled,is_sandbox";
 const TEST_COLS_NOPROJ = "id,title,category,status,votes_valid,votes_target,created_at,completed_at,share_enabled";
 
 // One load: a user's tests (optionally a single project) + their completed reports,
@@ -43,7 +43,9 @@ async function gather(userId: string, projectId?: string): Promise<{ tests: Test
     ({ data, error } = await s.from("v_tests" as never).select(TEST_COLS_NOPROJ).eq("user_id", uid).order("created_at", { ascending: false }).limit(1000));
     if (error) return { tests: [], derived: [], reportByTest: {} };
   }
-  const tests = ((data as unknown as TestRow[]) ?? []).map((t) => ({ ...t, project_id: t.project_id ?? null }));
+  // Sandbox evaluations are developer integration tests — never count them in real
+  // analytics (undefined is_sandbox = pre-migration / production row, kept).
+  const tests = ((data as unknown as TestRow[]) ?? []).map((t) => ({ ...t, project_id: t.project_id ?? null })).filter((t) => !t.is_sandbox);
   const completed = tests.filter((t) => t.status === "complete");
   const reportByTest: Record<string, VReport["results"]> = {};
   if (completed.length) {
