@@ -120,7 +120,7 @@ export default function DevelopersPage() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Developers</p>
           <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 820, margin: "0 auto 16px" }}>The <span className="em">human evaluation API</span> for creative and AI outputs.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 24px", textAlign: "center" }}>Your users generate options. Vraelis returns which one real people prefer as a structured result, with quality filtering, reasoning, and a recommendation. One API call or an embed widget.</p>
+          <p className="lead-copy" style={{ margin: "0 auto 24px", textAlign: "center" }}>Instead of building a human-evaluation pipeline from scratch, send candidates to Vraelis and receive a structured result your app can use — a recommendation, quality filtering, reasoning, and confidence. One API call or an embed widget.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/api-keys" className="btn btn--lg">Create an API key</a>
             <a href="#embed" className="btn btn--ghost btn--lg">Embed widget</a>
@@ -157,7 +157,7 @@ export default function DevelopersPage() {
               <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 14 }}>Send candidates, get a structured result.</h2>
               <p className="lead-copy" style={{ marginBottom: 16 }}>Authenticate with an API key, POST your creative candidates (image URLs or text), and poll for the structured result and report. Built for AI image tools, copy generators, and creative platforms.</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9 }}>
-                {["X-Api-Key auth (vr_live_…)", "Create + launch an evaluation in one call", "Poll status, the recommended output & report", "Quality-filtered human signal (anti-abuse built in)"].map((x) => <li key={x} style={{ display: "flex", gap: 9, fontSize: 14.5, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</li>)}
+                {["X-Api-Key auth (vr_live_…)", "Create + launch an evaluation in one call", "Poll status, the recommended output & report", "No eval pipeline to build — filtering, reasoning, exports & webhooks included"].map((x) => <li key={x} style={{ display: "flex", gap: 9, fontSize: 14.5, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</li>)}
               </ul>
               <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Each evaluation is a <code style={{ fontFamily: "var(--font-code, monospace)" }}>/tests</code> resource in the API (kept stable for compatibility); conceptually it&apos;s an evaluation run: submit candidates, collect human signal, get a recommendation.</p>
               <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -240,10 +240,10 @@ export default function DevelopersPage() {
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
             <div>
               <p className="eyebrow">Embeddable widget</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 14 }}>One line. Votes anywhere.</h2>
-              <p className="lead-copy" style={{ marginBottom: 16 }}>Drop a Vraelis test into your site, docs, or community and collect real votes. One script tag, no other code. The widget is a responsive iframe.</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 14 }}>One line. Evaluations anywhere.</h2>
+              <p className="lead-copy" style={{ marginBottom: 16 }}>Drop a Vraelis evaluation into your site, docs, or community and collect real judgments. One script tag, no other code. The widget is a responsive iframe.</p>
               <Code>{EMBED}</Code>
-              <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 12 }}>Get the snippet for any active test on its report page. Votes are quality-filtered (too-fast, duplicate, and spam votes are rejected automatically).</p>
+              <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 12 }}>Get the snippet for any active evaluation on its report page. Responses are quality-filtered (too-fast, duplicate, and spam responses are rejected automatically).</p>
             </div>
             <div className="win">
               <div className="win__bar"><div className="win__dots"><i /><i /><i /></div><span className="win__addr">your-site.com</span></div>
@@ -265,8 +265,8 @@ export default function DevelopersPage() {
       <section className="section" style={{ borderBottom: "none" }}>
         <div className="wrap">
           <p className="eyebrow">Use cases</p>
-          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Make testing a feature your users pay for.</h2>
-          <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>Add a &ldquo;test with real people&rdquo; action to your app. Vraelis runs the voting, filtering, and reports; you offer it as a premium feature and get structured preference data back.</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Make human evaluation a feature your users pay for.</h2>
+          <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>Add an &ldquo;evaluate with real people&rdquo; action to your app. Vraelis runs the routing, quality filtering, reports, webhooks, and exports — you offer it as a premium feature and get structured preference data back. No human-evaluation infrastructure to build or maintain.</p>
           <div className="cols-3" style={{ gap: 14, marginBottom: 28 }}>
             {[
               ["AI image tools", "Let users pick the best generation before download. Learn which styles win."],

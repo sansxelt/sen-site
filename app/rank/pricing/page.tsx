@@ -5,21 +5,21 @@ import { useEffect, useState } from "react";
 type Cycle = "monthly" | "yearly";
 
 const PLANS = [
-  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 one-time", blurb: "Try a full evaluation.", perks: ["1 active evaluation", "Up to 4 options", "Human signal + AI report"] },
-  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 / mo", blurb: "Evaluate now and then.", perks: ["3 active evaluations / mo", "Up to 5 options", "AI decision report", "Shareable report links"] },
-  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 / mo", blurb: "Active creators & designers.", perks: ["10 active tests / mo", "Up to 6 options", "Audience targeting", "Embeddable tests"] },
-  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 / mo", blurb: "Brands, studios & teams.", perks: ["30 active tests / mo", "Up to 8 options", "Targeting + priority", "Webhooks + exports"], featured: true },
-  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 / mo", blurb: "Agencies, AI tools & platforms.", perks: ["100 active tests / mo", "Public API + embed widget", "Webhooks + JSON/CSV exports", "Priority routing"] },
-  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom", blurb: "High volume + compliance.", perks: ["Unlimited tests", "SSO + SLA", "Dedicated support"] },
+  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 one-time", blurb: "Try a full evaluation.", perks: ["1 active evaluation", "Up to 4 candidates", "Human signal + AI report"] },
+  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 / mo", blurb: "Validate small creative decisions.", perks: ["3 active evaluations / mo", "Up to 5 candidates", "AI decision report", "Shareable report links"] },
+  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 / mo", blurb: "Confident calls on every creative.", perks: ["10 active evaluations / mo", "Up to 6 candidates", "Audience targeting", "Embeddable evaluations"] },
+  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 / mo", blurb: "Client-ready reports for teams.", perks: ["30 active evaluations / mo", "Up to 8 candidates", "Targeting + priority", "Webhooks + exports"], featured: true },
+  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 / mo", blurb: "API evaluations for apps & agencies.", perks: ["100 active evaluations / mo", "Public API + embed widget", "Webhooks + JSON/CSV exports", "Usage analytics"] },
+  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom", blurb: "Governed evaluation at scale.", perks: ["Unlimited evaluations", "Governed data + workflows", "SSO + SLA + dedicated support"] },
 ] as { key: string; name: string; price: Record<Cycle, number>; credits: string; blurb: string; perks: string[]; featured?: boolean }[];
 
 const ORDER: Record<string, number> = { free: 0, starter: 1, creator: 2, pro: 3, scale: 4, enterprise: 5 };
 
 const CREDIT_RULES: [string, string][] = [
-  ["1 credit = 1 valid judgment", "You only pay for real human feedback."],
+  ["1 credit = 1 valid judgment", "The unit you spend. What you buy is the decision."],
   ["Held when you launch", "Credits are escrowed, not spent up front."],
-  ["Invalid votes filtered", "Too-fast, duplicate and spam votes are rejected."],
-  ["Unused credits refunded", "If a test doesn't fill, the rest comes back."],
+  ["Low-quality filtered", "Too-fast, duplicate, and spam responses are rejected."],
+  ["Unused credits refunded", "If an evaluation doesn't fill, the rest comes back."],
 ];
 
 export default function PricingPage() {
@@ -51,8 +51,8 @@ export default function PricingPage() {
         <div className="glow glow--soft glow--bleed" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Simple plans. <span className="em">Real</span> evaluation.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Every plan includes monthly credits. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong> Need more mid-cycle? Top up anytime.</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Pay for <span className="em">decisions</span>, not votes.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Credits are the unit — <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment</strong> — but plans are sized by what you can decide: how many evaluations, how strong the reports, and whether you can share, export, or use the API. Top up anytime.</p>
           <div className="seg">
             {(["monthly", "yearly"] as Cycle[]).map((c) => (
               <button key={c} onClick={() => setCycle(c)} className={cycle === c ? "on" : ""}>{c === "monthly" ? "Monthly" : "Yearly"}</button>

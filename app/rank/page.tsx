@@ -66,6 +66,25 @@ const SUPPORTS: [string, string][] = [
   ["On-site checkout", "Cards and wallets. Never leave Vraelis."],
 ];
 
+// The value proposition — what an evaluation gives you, and what the wrong call costs.
+const WHAT_YOU_GET: [string, string][] = [
+  ["Recommended output", "the option to ship"],
+  ["Preference margin", "how clear the win was"],
+  ["Directional confidence", "how strong the signal is"],
+  ["Signal quality", "whether the data is clean"],
+  ["Reasoning signals", "why people preferred it"],
+  ["What to improve", "how to fix the weaker options"],
+  ["A shareable decision report", "for teams, clients, and stakeholders"],
+  ["Structured export + API result", "for apps and workflows"],
+];
+const COST_OF_WRONG: [string, string][] = [
+  ["The wrong ad creative", "burns ad spend before you learn it underperforms."],
+  ["The wrong landing hero", "quietly lowers conversion on every visit."],
+  ["The wrong thumbnail or icon", "loses attention before anyone sees the work."],
+  ["The wrong AI output", "ships generated content people don't trust."],
+  ["A creative call with no evidence", "turns client and team reviews into opinion fights."],
+];
+
 const API_RESPONSE = `{
   "id": "test_9f2a3c",
   "status": "complete",
@@ -154,13 +173,50 @@ export default function RankLanding() {
         </div>
       </section>
 
+      {/* ── Why pay ── */}
+      <section className="section">
+        <div className="wrap">
+          <div className="sec-head">
+            <p className="eyebrow">Why Vraelis</p>
+            <h2 className="display">You&apos;re not paying for votes. You&apos;re paying to <span className="em">avoid shipping the wrong thing</span>.</h2>
+            <p>Every evaluation is a decision you make <strong style={{ color: "var(--fg-1)" }}>before the expensive part</strong> — the ad spend, the launch, the post, the client review. Credits are the unit; the decision is the product.</p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.02fr) minmax(0,0.98fr)", gap: 16, alignItems: "stretch" }} className="cols-stack">
+            <div className="card">
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 16 }}>What you get from an evaluation</div>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 11 }}>
+                {WHAT_YOU_GET.map(([t, d]) => (
+                  <li key={t} style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
+                    <span style={{ width: 18, height: 18, flex: "none", marginTop: 2, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", color: "var(--acc-deep)", display: "grid", placeItems: "center", fontSize: 11 }}>✓</span>
+                    <span style={{ fontSize: 14.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>{t}</strong> — {d}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="card" style={{ background: "var(--bg-2)" }}>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 16 }}>The cost of the wrong call</div>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 13 }}>
+                {COST_OF_WRONG.map(([t, d]) => (
+                  <li key={t} style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>{t}</strong> {d}</li>
+                ))}
+              </ul>
+              <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 16, marginBottom: 0, fontWeight: 600 }}>Replace subjective creative debates with a recommendation backed by human signal.</p>
+            </div>
+          </div>
+          <div className="card card--acc" style={{ textAlign: "center", marginTop: 16, padding: "clamp(22px, 3vw, 30px)" }}>
+            <div className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Vraelis is cheaper than shipping the <span className="em">wrong creative</span>.</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}>Vraelis does not guarantee sales, clicks, conversions, or revenue. It helps you make a better-informed decision before you ship.</p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Who uses Vraelis ── */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it's for</p>
             <h2 className="display">Know what to ship <span className="em">before you launch</span>.</h2>
-            <p>Ad networks monetize attention. Vraelis measures preference, so you make the right call before you spend on the wrong option.</p>
+            <p>Ad networks monetize attention. Vraelis measures preference — a decision-analytics layer, not a survey builder, polling widget, or ad network. You make the right call before you spend on the wrong option.</p>
           </div>
           <div className="tile-grid cols-4">
             {AUDIENCE.map((a) => (

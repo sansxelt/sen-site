@@ -159,6 +159,24 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0 }: 
           ))}
         </div>
       )}
+
+      {/* ── Use this result ── */}
+      <div style={head}>Use this result</div>
+      <div className="card" style={{ marginBottom: 8, background: "var(--bg-2)" }}>
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
+          {[
+            ["Choose what to ship", "from the recommended output."],
+            ["Judge how strong the call is", "from the preference margin and directional confidence."],
+            ["Improve the weaker options", "using the reasoning signals."],
+            ["Share or export it", "as a decision report for clients, teams, or apps — or pull it by API."],
+          ].map(([t, d]) => (
+            <li key={t} style={{ display: "flex", gap: 11, alignItems: "flex-start", fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5 }}>
+              <span style={{ width: 18, height: 18, flex: "none", marginTop: 1, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", color: "var(--acc-deep)", display: "grid", placeItems: "center", fontSize: 11 }}>→</span>
+              <span><strong style={{ color: "var(--fg-1)" }}>{t}</strong> {d}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </>
   );
 }

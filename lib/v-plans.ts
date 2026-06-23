@@ -9,10 +9,10 @@ export const PLAN_CATALOG: {
   plan: PaidPlan; name: string; monthlyCredits: number;
   price: Record<PlanCycle, number>; blurb: string;
 }[] = [
-  { plan: "starter", name: "Starter", monthlyCredits: 150,  price: { monthly: 19,  yearly: 190 },  blurb: "For testing occasionally." },
-  { plan: "creator", name: "Creator", monthlyCredits: 500,  price: { monthly: 49,  yearly: 490 },  blurb: "For active creators & designers." },
-  { plan: "pro",     name: "Pro",     monthlyCredits: 2000, price: { monthly: 149, yearly: 1490 }, blurb: "For brands, studios & teams." },
-  { plan: "scale",   name: "Scale",   monthlyCredits: 7500, price: { monthly: 399, yearly: 3990 }, blurb: "For agencies, AI tools & platforms." },
+  { plan: "starter", name: "Starter", monthlyCredits: 150,  price: { monthly: 19,  yearly: 190 },  blurb: "Validate small creative decisions." },
+  { plan: "creator", name: "Creator", monthlyCredits: 500,  price: { monthly: 49,  yearly: 490 },  blurb: "Confident calls on every creative." },
+  { plan: "pro",     name: "Pro",     monthlyCredits: 2000, price: { monthly: 149, yearly: 1490 }, blurb: "Client-ready reports for teams." },
+  { plan: "scale",   name: "Scale",   monthlyCredits: 7500, price: { monthly: 399, yearly: 3990 }, blurb: "API evaluations for apps & agencies." },
 ];
 
 export function priceIdFor(plan: string, cycle: string): string | null {
