@@ -33,7 +33,16 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
     if (!selected || busy) return;
     setBusy(true); setErr("");
     try {
-      const r = await fetch("/api/embed/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId, optionId: selected, reason, voterId: anonId(), timeSpentMs: Date.now() - startRef.current }) });
+      // Capture campaign source from this page's own URL (set by collection links),
+      // and whether we're rendered inside a widget iframe. Server re-derives + sanitizes.
+      let utm_source, utm_campaign, framed = false;
+      try {
+        const q = new URLSearchParams(window.location.search);
+        utm_source = q.get("utm_source") || undefined;
+        utm_campaign = q.get("utm_campaign") || undefined;
+        framed = window.self !== window.top;
+      } catch { /* ignore */ }
+      const r = await fetch("/api/embed/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId, optionId: selected, reason, voterId: anonId(), timeSpentMs: Date.now() - startRef.current, utm_source, utm_campaign, framed }) });
       if (r.status === 409) { setPhase("dup"); return; }
       if (r.ok) { setPhase("done"); return; }
       setErr("Couldn't save your response — try again.");

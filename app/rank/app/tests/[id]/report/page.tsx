@@ -5,6 +5,7 @@ import { getProject } from "@/lib/v-projects";
 import { testFilterReasons, testSourceQuality } from "@/lib/v-analytics";
 import { evaluationIntelligence, evaluationHealth } from "@/lib/v-intelligence";
 import { SectionHead, Bars, HealthBadge } from "../../../_workspace/analytics-ui";
+import { CollectionLinks } from "../../../_workspace/collection-links";
 import { balance } from "@/lib/v-credits";
 import { CloseButton } from "../close-button";
 import { EmbedSnippet } from "../embed-snippet";
@@ -83,6 +84,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
             </div>
             <EmbedSnippet testId={test.id} />
             <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
+            <div style={{ marginTop: 22 }}><CollectionLinks testId={test.id} /></div>
           </>
         )}
       </div>
@@ -111,6 +113,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
 
       <ReportBody results={r} options={options} votesTarget={test.votes_target} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
+
+      <CollectionLinks testId={test.id} />
 
       {filterReasons.length > 0 ? (
         <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)" }}>

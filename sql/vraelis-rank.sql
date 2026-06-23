@@ -483,3 +483,26 @@ alter table v_judgments add column if not exists referrer_host text;
 alter table v_judgments add column if not exists utm_source    text;
 alter table v_judgments add column if not exists utm_campaign  text;
 create index if not exists v_judg_source_idx on v_judgments (source);
+create index if not exists v_judg_utm_idx on v_judgments (test_id, utm_campaign);
+
+-- ── Campaign / collection links (distribution layer) ──
+-- Named per-evaluation collection links so an owner can distribute one evaluation
+-- across channels (Instagram, Discord, email, embed, client review, …) and compare
+-- which channel produced the cleanest signal. Each link carries a channel `source`
+-- + a unique `utm_campaign` slug; judgments collected through it carry that slug, so
+-- per-link stats are matched on (test_id, utm_campaign). Owner-scoped in app code.
+create table if not exists v_collection_links (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      text not null,                 -- lowercased email of the owner
+  test_id      uuid not null references v_tests(id) on delete cascade,
+  label        text not null,
+  source       text not null,                 -- channel key: instagram|discord|email|embed|...
+  utm_source   text,
+  utm_campaign text,                           -- unique slug used to attribute judgments
+  is_active    boolean not null default true,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create index if not exists v_collection_links_user_idx on v_collection_links (user_id, created_at desc);
+create index if not exists v_collection_links_test_idx on v_collection_links (test_id);
+create index if not exists v_collection_links_source_idx on v_collection_links (source);

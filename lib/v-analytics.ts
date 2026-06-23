@@ -7,7 +7,7 @@
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { type VReport } from "./v-db";
 import { evaluationIntelligence, evaluationHealth, type ConfidenceLabel, type SignalLabel, type HealthState } from "./v-intelligence";
-import { sourceLabel } from "./v-sources";
+import { channelLabel } from "./v-sources";
 
 const norm = (e: string) => e.trim().toLowerCase();
 const dayKey = (d: Date) => d.toISOString().slice(0, 10);
@@ -259,14 +259,16 @@ export async function projectAnalytics(userId: string, projectId: string): Promi
 // ── Signal source quality ─────────────────────────────────────────────────
 export type SourceRow = { source: string; label: string; total: number; valid: number; filtered: number; filterRate: number };
 
-function aggregateSources(rows: { source: string | null; status: string }[]): SourceRow[] {
+// Channel = the named collection-link channel (utm_source) when present, else the
+// coarse source. This is the meaningful "which channel" view.
+function aggregateSources(rows: { source: string | null; utm_source: string | null; status: string }[]): SourceRow[] {
   const agg: Record<string, { total: number; valid: number; filtered: number }> = {};
   for (const r of rows) {
-    const k = r.source || "web";
+    const k = r.utm_source || r.source || "web";
     const a = (agg[k] ??= { total: 0, valid: 0, filtered: 0 });
     a.total++; if (r.status === "rejected") a.filtered++; else a.valid++;
   }
-  return Object.entries(agg).map(([source, a]) => ({ source, label: sourceLabel(source), total: a.total, valid: a.valid, filtered: a.filtered, filterRate: a.total ? Math.round((a.filtered / a.total) * 100) : 0 })).sort((x, y) => y.total - x.total);
+  return Object.entries(agg).map(([source, a]) => ({ source, label: channelLabel(source), total: a.total, valid: a.valid, filtered: a.filtered, filterRate: a.total ? Math.round((a.filtered / a.total) * 100) : 0 })).sort((x, y) => y.total - x.total);
 }
 
 // Source quality across a user's evaluations (recent sample for big accounts).
@@ -276,9 +278,9 @@ export async function sourceQuality(userId: string): Promise<SourceRow[]> {
     const { tests } = await gather(userId);
     const ids = tests.map((t) => t.id);
     if (!ids.length) return [];
-    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,status").in("test_id", ids).order("created_at", { ascending: false }).limit(5000);
+    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,utm_source,status").in("test_id", ids).order("created_at", { ascending: false }).limit(5000);
     if (error) return [];
-    return aggregateSources((data as unknown as { source: string | null; status: string }[]) ?? []);
+    return aggregateSources((data as unknown as { source: string | null; utm_source: string | null; status: string }[]) ?? []);
   } catch { return []; }
 }
 
@@ -286,9 +288,9 @@ export async function sourceQuality(userId: string): Promise<SourceRow[]> {
 export async function testSourceQuality(testId: string): Promise<SourceRow[]> {
   if (!testId || !isDatabaseConfigured()) return [];
   try {
-    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,status").eq("test_id", testId).limit(5000);
+    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,utm_source,status").eq("test_id", testId).limit(5000);
     if (error) return [];
-    return aggregateSources((data as unknown as { source: string | null; status: string }[]) ?? []);
+    return aggregateSources((data as unknown as { source: string | null; utm_source: string | null; status: string }[]) ?? []);
   } catch { return []; }
 }
 
@@ -299,8 +301,8 @@ export async function projectSourceQuality(userId: string, projectId: string): P
     const { tests } = await gather(userId, projectId);
     const ids = tests.map((t) => t.id);
     if (!ids.length) return [];
-    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,status").in("test_id", ids).limit(5000);
+    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,utm_source,status").in("test_id", ids).limit(5000);
     if (error) return [];
-    return aggregateSources((data as unknown as { source: string | null; status: string }[]) ?? []);
+    return aggregateSources((data as unknown as { source: string | null; utm_source: string | null; status: string }[]) ?? []);
   } catch { return []; }
 }

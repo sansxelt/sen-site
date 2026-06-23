@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const deviceHash = hashToken(voter);
   // Embed votes get the device daily limit + IP velocity in addition to the rest.
   const verdict = await assessVote({ voterId, timeSpentMs, reason, ipHash, deviceHash, isAnon: true });
-  const src = deriveSource({ channel: "embed", referer: req.headers.get("referer"), utmSource: body?.utm_source, utmCampaign: body?.utm_campaign });
+  const src = deriveSource({ channel: "embed", referer: req.headers.get("referer"), framed: body?.framed === true, utmSource: body?.utm_source, utmCampaign: body?.utm_campaign });
   const res = await recordVote({ testId, voterId, optionId, reason, timeSpentMs, rewardCap: 0, status: verdict.status, rejectReason: verdict.reason, ipHash, deviceHash, ...src });
   if (res.status === "dup") return NextResponse.json({ error: "already_voted" }, { status: 409 });
   if (res.status === "invalid") return NextResponse.json({ error: "invalid_vote" }, { status: 400 });
