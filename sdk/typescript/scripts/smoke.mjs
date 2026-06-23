@@ -41,12 +41,12 @@ const out = execSync("npm pack --dry-run --json --ignore-scripts", { encoding: "
 const json = out.slice(Math.max(out.indexOf("["), out.indexOf("{")) >= 0 ? out.search(/[[{]/) : 0);
 const files = (JSON.parse(json)[0]?.files ?? []).map((f) => f.path.replace(/\\/g, "/"));
 console.log("  packed:", files.join(", "));
-const allowed = (p) => p === "package.json" || p === "README.md" || p === "LICENSE" || p.startsWith("dist/");
+const allowed = (p) => p === "package.json" || p === "README.md" || p === "LICENSE" || p === "CHANGELOG.md" || p.startsWith("dist/");
 const stray = files.filter((p) => !allowed(p));
 ok(stray.length === 0, "no stray files in the tarball" + (stray.length ? " :: " + stray.join(",") : ""));
 const forbidden = files.filter((p) => /(^|\/)(src|scripts|examples|node_modules)\/|\.env|tsconfig|tsup\.config|\.map$|secret|_.*\.cjs/i.test(p));
 ok(forbidden.length === 0, "no source/scripts/env/secrets/config in the tarball" + (forbidden.length ? " :: " + forbidden.join(",") : ""));
-for (const need of ["package.json", "README.md", "LICENSE", "dist/index.js", "dist/index.cjs", "dist/index.d.ts"]) ok(files.includes(need), `ships ${need}`);
+for (const need of ["package.json", "README.md", "LICENSE", "CHANGELOG.md", "dist/index.js", "dist/index.cjs", "dist/index.d.ts"]) ok(files.includes(need), `ships ${need}`);
 
 console.log("\n" + pass + " passed, " + fail + " failed");
 process.exit(fail ? 1 : 0);

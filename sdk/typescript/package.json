@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Official TypeScript SDK for the Vraelis human-evaluation API — create sandbox evaluations, fetch Decision Package v2 results, export, and verify webhooks.",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "author": "Vraelis",
   "homepage": "https://vraelis.com/developers",
   "repository": { "type": "git", "url": "git+https://github.com/sansxelt/sen-site.git", "directory": "sdk/typescript" },
@@ -22,7 +22,7 @@
     "./package.json": "./package.json"
   },
   "sideEffects": false,
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
   "engines": { "node": ">=18" },
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",

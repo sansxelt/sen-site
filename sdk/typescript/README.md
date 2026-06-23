@@ -173,9 +173,20 @@ VRAELIS_API_KEY=vr_live_…          # server-side only, never ship to the clien
 VRAELIS_WEBHOOK_SECRET=whsec_…     # your endpoint's signing secret
 ```
 
-## Before publishing to npm
+## Before publishing
 
-- Decide the final package name/scope and set `"private": false` + a license.
-- Add a bundler/dual ESM+CJS build if needed (currently CommonJS via `tsc`).
-- Add CI typecheck/tests and a `.npmignore` (ship `dist/` + `README.md`).
-- Pin the API version / base URL strategy.
+This package is **not published to npm yet** (`"private": true`). When ready:
+
+- [ ] Confirm the npm scope `@vraelis` (exists / owned) and `npm login`
+- [ ] Confirm the package name `@vraelis/sdk`
+- [ ] Flip `"private"` to `false` in `package.json`
+- [ ] Run `npm run typecheck`
+- [ ] Run `npm run build`
+- [ ] Run `npm run check:exports` (package smoke tests)
+- [ ] Run `npm run check:schema` (type/schema drift)
+- [ ] Run `npm run test:integration` (live sandbox test, if `VRAELIS_API_KEY` is set)
+- [ ] Run `npm pack --dry-run` and confirm only `dist/`, `README.md`, `LICENSE`, `CHANGELOG.md`, `package.json` ship
+- [ ] Confirm no secrets or source-only files are included
+- [ ] Publish with explicit approval only
+
+License: MIT (see `LICENSE`).
