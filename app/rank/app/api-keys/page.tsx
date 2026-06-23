@@ -112,17 +112,20 @@ export default function ApiKeysPage() {
         <a href="/developers#export" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Export docs →</a>
       </div>
 
-      {/* Test your integration — sandbox, schema, types, test webhook */}
+      {/* Test your integration — opens the in-app sandbox console */}
       <div className="card" style={{ marginBottom: 24 }}>
-        <div style={cardHead}>Test your integration</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Exercise the full flow — create, decision package, export, webhook — with a sample decision package. Sandbox evaluations don&apos;t use credits and never appear in your analytics or reports.</p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <a href="/developers#sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Sandbox docs</a>
-          <a href="/developers#sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Sandbox API example</a>
-          <a href="#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Send test webhook</a>
-          <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Decision Package schema</a>
+        <div style={{ display: "flex", gap: 14, alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 320px", minWidth: 0 }}>
+            <div style={cardHead}>Test your integration</div>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Create a sandbox evaluation, preview a Decision Package, test exports, and send a signed webhook event — with sample data, 0 credits, 0 quota, and nothing in your production analytics.</p>
+            <a href="/app/sandbox" className="btn">Open sandbox console →</a>
+          </div>
         </div>
-        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "12px 0 0" }}>Sandbox creation: <code style={{ color: "var(--fg-3)" }}>POST /api/v1/tests</code> with <code style={{ color: "var(--fg-3)" }}>{`"sandbox": true`}</code>. Same Scale access + <code style={{ color: "var(--fg-3)" }}>tests:write</code> scope as production.</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+          <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Decision Package schema</a>
+          <a href="/developers#sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Developer docs</a>
+          <a href="/developers#sdk" className="btn btn--ghost" style={{ fontSize: 12.5 }}>SDK starter</a>
+        </div>
       </div>
 
       {err && (
