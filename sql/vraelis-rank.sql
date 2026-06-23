@@ -157,8 +157,11 @@ begin
   if p_votes <= 0 then return jsonb_build_object('status','bad_request'); end if;
   perform pg_advisory_xact_lock(hashtext(v_user)::bigint);
 
+  -- Sandbox evaluations (developer integration tests, created directly) never count
+  -- toward the monthly active-evaluation quota. coalesce keeps this valid before the
+  -- is_sandbox column exists (plpgsql binds the column at call time, post-migration).
   select count(*) into v_used from v_tests
-    where user_id = v_user and status <> 'draft'
+    where user_id = v_user and status <> 'draft' and coalesce(is_sandbox, false) = false
       and created_at >= (date_trunc('month', now() at time zone 'utc') at time zone 'utc');
   if v_used >= p_active_limit then
     return jsonb_build_object('status','plan_limit','limit',p_active_limit);
