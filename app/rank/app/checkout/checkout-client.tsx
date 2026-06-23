@@ -1,10 +1,34 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
+
+// Shows the live (rounded) plan price + which billing cycle the user picked, so
+// the order is unambiguous before they pay. Same source + rounding as /pricing;
+// the exact charge is confirmed in the Stripe panel.
+export function PlanPrice({ plan, cycle }: { plan: string; cycle: "monthly" | "yearly" }) {
+  const [amt, setAmt] = useState<number | null>(null);
+  useEffect(() => {
+    fetch("/api/v/plans").then((r) => r.json()).then((j) => {
+      const cell = j.plans?.[plan]?.[cycle];
+      if (cell?.available && cell.amount != null) setAmt(Math.round(cell.amount));
+    }).catch(() => {});
+  }, [plan, cycle]);
+  const per = cycle === "yearly" ? "/yr" : "/mo";
+  const label = cycle === "yearly" ? "Billed yearly · one charge every 12 months" : "Billed monthly · renews each month";
+  return (
+    <div style={{ marginTop: 14, display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+      <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 26, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>
+        {amt != null ? `$${amt.toLocaleString()}` : "—"}<span style={{ fontSize: 15, color: "var(--fg-4)", fontWeight: 500 }}>{per}</span>
+      </span>
+      <span className="pill" style={{ background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>{cycle === "yearly" ? "Yearly" : "Monthly"}</span>
+      <span style={{ fontSize: 12.5, color: "var(--fg-4)", width: "100%" }}>{label}</span>
+    </div>
+  );
+}
 
 export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?: string; cycle?: string }) {
   const [error, setError] = useState("");

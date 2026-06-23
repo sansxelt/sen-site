@@ -2,9 +2,45 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { PLAN_CATALOG } from "@/lib/v-plans";
-import { CheckoutClient } from "./checkout-client";
+import { CheckoutClient, PlanPrice } from "./checkout-client";
 
 export const metadata: Metadata = { title: "Checkout" };
+
+// Value-first "what's included" per plan — what you can DECIDE, not just credits.
+const PLAN_VALUE: Record<string, string[]> = {
+  starter: [
+    "150 valid human judgments every month",
+    "Run 3 evaluations / mo",
+    "Decision report: recommended output, margin & confidence",
+    "Reasoning signals — why people chose",
+    "Shareable report links",
+    "Cancel anytime, no lock-in",
+  ],
+  creator: [
+    "500 valid human judgments every month",
+    "Run 10 evaluations / mo",
+    "Full decision reports + reasoning signals",
+    "Audience targeting",
+    "Shareable decision reports + JSON / CSV exports",
+    "Cancel anytime, no lock-in",
+  ],
+  pro: [
+    "2,000 valid human judgments every month",
+    "Run 30 evaluations / mo",
+    "Client-ready decision reports",
+    "Exports + webhooks to automate your workflow",
+    "Priority routing",
+    "Cancel anytime, no lock-in",
+  ],
+  scale: [
+    "7,500 valid human judgments every month",
+    "Run 100 evaluations / mo",
+    "Human evaluation API + embeddable widget",
+    "Webhooks + developer usage analytics",
+    "Schema-versioned JSON / CSV exports",
+    "Cancel anytime, no lock-in",
+  ],
+};
 
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ amount?: string; plan?: string; cycle?: string }> }) {
   const sp = await searchParams;
@@ -23,8 +59,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const title = plan ? `${plan.name} plan` : `${(amount * 10).toLocaleString()} credits`;
   const backHref = plan ? "/app/plans" : "/app/credits";
   const included: string[] = plan
-    ? [`${plan.monthlyCredits.toLocaleString()} credits every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
-    : ["1 credit = 1 valid human judgment", "Credits are held when you launch a test", "Invalid votes are filtered out", "Unused credits are refunded", "Credits never expire"];
+    ? PLAN_VALUE[plan.plan] ?? [`${plan.monthlyCredits.toLocaleString()} valid judgments every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
+    : ["1 credit = 1 valid human judgment", "Credits are held when you launch an evaluation", "Low-quality responses are filtered out", "Unused credits are refunded", "Credits never expire"];
 
   return (
     <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)" }}>
@@ -35,6 +71,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           <div>
             <p className="eyebrow">Checkout</p>
             <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.6rem)" }}>{title}</h1>
+            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Turn human signal into a decision you can act on, share, and export.</p> : null}
+            {plan ? <PlanPrice plan={plan.plan} cycle={cycle} /> : null}
 
             <div className="card" style={{ marginTop: 22, padding: 20 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>{plan ? "What's included" : "How credits work"}</div>
