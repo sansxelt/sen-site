@@ -117,10 +117,11 @@ export default async function Dashboard() {
           <p className="eyebrow">Dashboard</p>
           <h1 className="display">Welcome back</h1>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          {isAdmin(email) && <a href="/app/admin" style={{ fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" }}>Admin</a>}
-          <a href="/app/new" className="btn">New evaluation <span aria-hidden>→</span></a>
-        </div>
+        {isAdmin(email) && (
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <a href="/app/admin" style={{ fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" }}>Admin</a>
+          </div>
+        )}
       </div>
 
       {/* stats */}
