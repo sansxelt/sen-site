@@ -1,4 +1,14 @@
 import type { ReactNode } from "react";
+import { healthTone, type HealthState } from "@/lib/v-intelligence";
+
+const HEALTH_BG: Record<string, string> = { good: "var(--acc-soft)", warn: "var(--bg-1)", bad: "rgba(220,38,38,0.10)", neutral: "var(--bg-1)" };
+const HEALTH_FG: Record<string, string> = { good: "var(--acc-deep)", warn: "var(--money)", bad: "var(--err)", neutral: "var(--fg-3)" };
+
+// Evaluation-health pill (Ready to decide / Needs more judgments / Noisy signal / …).
+export function HealthBadge({ state }: { state: string }) {
+  const tone = healthTone(state as HealthState);
+  return <span className="pill" style={{ background: HEALTH_BG[tone], color: HEALTH_FG[tone], borderColor: "var(--line-2)", fontSize: 10.5 }}>{state}</span>;
+}
 
 export function SectionHead({ children, right }: { children: ReactNode; right?: ReactNode }) {
   return (

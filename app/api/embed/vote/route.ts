@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { recordVote } from "@/lib/v-db";
 import { assessVote, hashToken, ipFromHeaders } from "@/lib/v-quality";
+import { deriveSource } from "@/lib/v-sources";
 
 export const runtime = "nodejs";
 
@@ -24,7 +25,8 @@ export async function POST(req: Request) {
   const deviceHash = hashToken(voter);
   // Embed votes get the device daily limit + IP velocity in addition to the rest.
   const verdict = await assessVote({ voterId, timeSpentMs, reason, ipHash, deviceHash, isAnon: true });
-  const res = await recordVote({ testId, voterId, optionId, reason, timeSpentMs, rewardCap: 0, status: verdict.status, rejectReason: verdict.reason, ipHash, deviceHash });
+  const src = deriveSource({ channel: "embed", referer: req.headers.get("referer"), utmSource: body?.utm_source, utmCampaign: body?.utm_campaign });
+  const res = await recordVote({ testId, voterId, optionId, reason, timeSpentMs, rewardCap: 0, status: verdict.status, rejectReason: verdict.reason, ipHash, deviceHash, ...src });
   if (res.status === "dup") return NextResponse.json({ error: "already_voted" }, { status: 409 });
   if (res.status === "invalid") return NextResponse.json({ error: "invalid_vote" }, { status: 400 });
   if (res.status === "err") return NextResponse.json({ error: "vote_failed" }, { status: 500 });

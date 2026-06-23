@@ -6,7 +6,8 @@
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { type VReport } from "./v-db";
-import { evaluationIntelligence, type ConfidenceLabel, type SignalLabel } from "./v-intelligence";
+import { evaluationIntelligence, evaluationHealth, type ConfidenceLabel, type SignalLabel, type HealthState } from "./v-intelligence";
+import { sourceLabel } from "./v-sources";
 
 const norm = (e: string) => e.trim().toLowerCase();
 const dayKey = (d: Date) => d.toISOString().slice(0, 10);
@@ -24,7 +25,7 @@ export const FILTER_REASON_LABEL: Record<string, string> = {
 };
 
 type TestRow = { id: string; title: string; category: string; status: string; votes_valid: number; votes_target: number; created_at: string; completed_at: string | null; project_id: string | null; share_enabled: boolean };
-type Derived = { id: string; category: string; project_id: string | null; filtered: number; marginPts: number | null; confidence: ConfidenceLabel; signal: SignalLabel | null; recommended: string | null; inconclusive: boolean };
+type Derived = { id: string; category: string; project_id: string | null; filtered: number; marginPts: number | null; confidence: ConfidenceLabel; signal: SignalLabel | null; recommended: string | null; inconclusive: boolean; health: HealthState };
 
 const TEST_COLS = "id,title,category,status,votes_valid,votes_target,created_at,completed_at,project_id,share_enabled";
 const TEST_COLS_NOPROJ = "id,title,category,status,votes_valid,votes_target,created_at,completed_at,share_enabled";
@@ -51,12 +52,13 @@ async function gather(userId: string, projectId?: string): Promise<{ tests: Test
   }
   const derived: Derived[] = completed.map((t) => {
     const results = reportByTest[t.id];
-    if (!results) return { id: t.id, category: t.category, project_id: t.project_id, filtered: 0, marginPts: null, confidence: "None" as ConfidenceLabel, signal: null, recommended: null, inconclusive: true };
+    if (!results) return { id: t.id, category: t.category, project_id: t.project_id, filtered: 0, marginPts: null, confidence: "None" as ConfidenceLabel, signal: null, recommended: null, inconclusive: true, health: "Needs more judgments" as HealthState };
     const intel = evaluationIntelligence(results, t.votes_target);
     return {
       id: t.id, category: t.category, project_id: t.project_id, filtered: intel.filtered,
       marginPts: intel.marginPts, confidence: intel.confidenceLabel, signal: intel.signalLabel,
       recommended: intel.recommendedOption ? `Option ${intel.recommendedOption}` : null, inconclusive: intel.inconclusive,
+      health: evaluationHealth("complete", intel),
     };
   });
   return { tests, derived, reportByTest };
@@ -79,6 +81,7 @@ function countSince(dates: (string | null)[], days: number): number {
 export type DecisionAnalytics = {
   core: { total: number; active: number; completed: number; draft: number; validJudgments: number; filtered: number; responses: number; filterRate: number; avgMargin: number | null };
   quality: { strong: number; moderate: number; tentative: number; inconclusive: number; clean: number; limited: number; needsMore: number };
+  health: { ready: number; needsMore: number; noisy: number; tooClose: number; lowQuality: number; collecting: number };
   byCategory: { category: string; label: string; count: number; completed: number; valid: number; avgMargin: number | null; strongRate: number; dominant: string }[];
   byProject: { project_id: string; completed: number; valid: number }[];
   trends: { createdDaily: number[]; completedDaily: number[]; created7: number; created30: number; completed7: number; completed30: number };
@@ -89,6 +92,7 @@ export async function decisionAnalytics(userId: string): Promise<DecisionAnalyti
   const empty: DecisionAnalytics = {
     core: { total: 0, active: 0, completed: 0, draft: 0, validJudgments: 0, filtered: 0, responses: 0, filterRate: 0, avgMargin: null },
     quality: { strong: 0, moderate: 0, tentative: 0, inconclusive: 0, clean: 0, limited: 0, needsMore: 0 },
+    health: { ready: 0, needsMore: 0, noisy: 0, tooClose: 0, lowQuality: 0, collecting: 0 },
     byCategory: [], byProject: [], trends: { createdDaily: [], completedDaily: [], created7: 0, created30: 0, completed7: 0, completed30: 0 }, credits: { used: 0, usedDaily: [] },
   };
   if (!userId || !isDatabaseConfigured()) return empty;
@@ -110,6 +114,15 @@ export async function decisionAnalytics(userId: string): Promise<DecisionAnalyti
       if (d.signal === "Clean signal") quality.clean++;
       else if (d.signal === "Limited signal") quality.limited++;
       else if (d.signal === "Needs more judgments") quality.needsMore++;
+    }
+
+    const health = { ready: 0, needsMore: 0, noisy: 0, tooClose: 0, lowQuality: 0, collecting: tests.filter((t) => t.status === "active").length };
+    for (const d of derived) {
+      if (d.health === "Ready to decide") health.ready++;
+      else if (d.health === "Noisy signal") health.noisy++;
+      else if (d.health === "Too close to call") health.tooClose++;
+      else if (d.health === "Low-quality traffic") health.lowQuality++;
+      else health.needsMore++;
     }
 
     // category breakdown
@@ -152,7 +165,7 @@ export async function decisionAnalytics(userId: string): Promise<DecisionAnalyti
 
     return {
       core: { total: tests.length, active: tests.filter((t) => t.status === "active").length, completed: completed.length, draft: tests.filter((t) => t.status === "draft").length, validJudgments, filtered, responses, filterRate: responses ? Math.round((filtered / responses) * 100) : 0, avgMargin: avg(margins) },
-      quality, byCategory, byProject,
+      quality, health, byCategory, byProject,
       trends: { createdDaily: dailyBuckets(createdDates), completedDaily: dailyBuckets(completedDates), created7: countSince(createdDates, 7), created30: countSince(createdDates, 30), completed7: countSince(completedDates, 7), completed30: countSince(completedDates, 30) },
       credits: { used, usedDaily: usedDailyArr },
     };
@@ -207,12 +220,13 @@ export async function testFilterReasons(testId: string): Promise<{ reason: strin
 export type ProjectAnalytics = {
   evaluations: number; active: number; completed: number; validJudgments: number; filtered: number; avgMargin: number | null;
   quality: { strong: number; moderate: number; tentative: number; inconclusive: number; clean: number; limited: number; needsMore: number };
+  health: { ready: number; noisy: number; tooClose: number; needsMore: number; lowQuality: number };
   byCategory: { category: string; label: string; count: number }[];
   recentRecommended: { id: string; recommended: string; confidence: string }[];
 };
 
 export async function projectAnalytics(userId: string, projectId: string): Promise<ProjectAnalytics> {
-  const empty: ProjectAnalytics = { evaluations: 0, active: 0, completed: 0, validJudgments: 0, filtered: 0, avgMargin: null, quality: { strong: 0, moderate: 0, tentative: 0, inconclusive: 0, clean: 0, limited: 0, needsMore: 0 }, byCategory: [], recentRecommended: [] };
+  const empty: ProjectAnalytics = { evaluations: 0, active: 0, completed: 0, validJudgments: 0, filtered: 0, avgMargin: null, quality: { strong: 0, moderate: 0, tentative: 0, inconclusive: 0, clean: 0, limited: 0, needsMore: 0 }, health: { ready: 0, noisy: 0, tooClose: 0, needsMore: 0, lowQuality: 0 }, byCategory: [], recentRecommended: [] };
   if (!userId || !projectId || !isDatabaseConfigured()) return empty;
   try {
     const { tests, derived } = await gather(userId, projectId);
@@ -225,6 +239,11 @@ export async function projectAnalytics(userId: string, projectId: string): Promi
       else if (d.confidence === "Strong") quality.strong++; else if (d.confidence === "Moderate") quality.moderate++; else if (d.confidence === "Tentative") quality.tentative++;
       if (d.signal === "Clean signal") quality.clean++; else if (d.signal === "Limited signal") quality.limited++; else if (d.signal === "Needs more judgments") quality.needsMore++;
     }
+    const health = { ready: 0, noisy: 0, tooClose: 0, needsMore: 0, lowQuality: 0 };
+    for (const d of derived) {
+      if (d.health === "Ready to decide") health.ready++; else if (d.health === "Noisy signal") health.noisy++;
+      else if (d.health === "Too close to call") health.tooClose++; else if (d.health === "Low-quality traffic") health.lowQuality++; else health.needsMore++;
+    }
     const catAgg: Record<string, number> = {};
     for (const t of tests) catAgg[t.category] = (catAgg[t.category] ?? 0) + 1;
     const byCategory = Object.entries(catAgg).map(([category, count]) => ({ category, label: CATEGORY_LABEL[category] ?? category.replace(/_/g, " "), count })).sort((a, b) => b.count - a.count);
@@ -232,7 +251,56 @@ export async function projectAnalytics(userId: string, projectId: string): Promi
     return {
       evaluations: tests.length, active: tests.filter((t) => t.status === "active").length, completed: completed.length,
       validJudgments: tests.reduce((a, t) => a + (t.votes_valid || 0), 0), filtered: derived.reduce((a, d) => a + (d.filtered || 0), 0), avgMargin: avg(margins),
-      quality, byCategory, recentRecommended,
+      quality, health, byCategory, recentRecommended,
     };
   } catch { return empty; }
+}
+
+// ── Signal source quality ─────────────────────────────────────────────────
+export type SourceRow = { source: string; label: string; total: number; valid: number; filtered: number; filterRate: number };
+
+function aggregateSources(rows: { source: string | null; status: string }[]): SourceRow[] {
+  const agg: Record<string, { total: number; valid: number; filtered: number }> = {};
+  for (const r of rows) {
+    const k = r.source || "web";
+    const a = (agg[k] ??= { total: 0, valid: 0, filtered: 0 });
+    a.total++; if (r.status === "rejected") a.filtered++; else a.valid++;
+  }
+  return Object.entries(agg).map(([source, a]) => ({ source, label: sourceLabel(source), total: a.total, valid: a.valid, filtered: a.filtered, filterRate: a.total ? Math.round((a.filtered / a.total) * 100) : 0 })).sort((x, y) => y.total - x.total);
+}
+
+// Source quality across a user's evaluations (recent sample for big accounts).
+export async function sourceQuality(userId: string): Promise<SourceRow[]> {
+  if (!userId || !isDatabaseConfigured()) return [];
+  try {
+    const { tests } = await gather(userId);
+    const ids = tests.map((t) => t.id);
+    if (!ids.length) return [];
+    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,status").in("test_id", ids).order("created_at", { ascending: false }).limit(5000);
+    if (error) return [];
+    return aggregateSources((data as unknown as { source: string | null; status: string }[]) ?? []);
+  } catch { return []; }
+}
+
+// Source quality for one evaluation (owner report panel).
+export async function testSourceQuality(testId: string): Promise<SourceRow[]> {
+  if (!testId || !isDatabaseConfigured()) return [];
+  try {
+    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,status").eq("test_id", testId).limit(5000);
+    if (error) return [];
+    return aggregateSources((data as unknown as { source: string | null; status: string }[]) ?? []);
+  } catch { return []; }
+}
+
+// Source quality across one owned project's evaluations.
+export async function projectSourceQuality(userId: string, projectId: string): Promise<SourceRow[]> {
+  if (!userId || !projectId || !isDatabaseConfigured()) return [];
+  try {
+    const { tests } = await gather(userId, projectId);
+    const ids = tests.map((t) => t.id);
+    if (!ids.length) return [];
+    const { data, error } = await getSupabaseAdminClient().from("v_judgments" as never).select("source,status").in("test_id", ids).limit(5000);
+    if (error) return [];
+    return aggregateSources((data as unknown as { source: string | null; status: string }[]) ?? []);
+  } catch { return []; }
 }

@@ -89,6 +89,19 @@ export default async function DataPage() {
         </div>
       </div>
 
+      {/* decision readiness (evaluation health) */}
+      <SectionHead right={<a href="/app/data-quality" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Signal quality →</a>}>Decision readiness</SectionHead>
+      <div className="card" style={{ marginBottom: 26 }}>
+        <Bars rows={[
+          { label: "Ready to decide", value: a.health.ready },
+          { label: "Needs more judgments", value: a.health.needsMore },
+          { label: "Noisy signal", value: a.health.noisy },
+          { label: "Too close to call", value: a.health.tooClose },
+          { label: "Low-quality traffic", value: a.health.lowQuality },
+          { label: "Collecting", value: a.health.collecting },
+        ].filter((r) => r.value > 0)} unit=" evals" />
+      </div>
+
       {/* trends */}
       <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
         <div className="card"><SectionHead>Evaluations created</SectionHead><Spark data={a.trends.createdDaily} caption={`${a.trends.created30} in last 30 days · ${a.trends.created7} in last 7`} /></div>

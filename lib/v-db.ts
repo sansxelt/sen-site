@@ -272,12 +272,25 @@ export async function launchTest(args: {
 
 // Atomic vote + daily-capped reward (v_record_vote RPC). Completion stays in JS.
 // Falls back to the JS path when the RPC isn't present yet.
+// Best-effort, privacy-safe source write on the just-recorded judgment. Tolerant
+// of the columns not existing yet (pre-migration) — never blocks a vote.
+async function tagJudgmentSource(testId: string, voterId: string, src?: { source?: string; referrerHost?: string | null; utmSource?: string | null; utmCampaign?: string | null }) {
+  if (!src?.source) return;
+  try {
+    await getSupabaseAdminClient().from("v_judgments" as never)
+      .update({ source: src.source, referrer_host: src.referrerHost ?? null, utm_source: src.utmSource ?? null, utm_campaign: src.utmCampaign ?? null } as never)
+      .eq("test_id", testId).eq("voter_id", norm(voterId));
+  } catch { /* columns may not exist pre-migration; ignore */ }
+}
+
 export async function recordVote(args: {
   testId: string; voterId: string; optionId: string; reason?: string; timeSpentMs?: number; rewardCap: number;
   status?: "valid" | "rejected"; rejectReason?: string; ipHash?: string | null; deviceHash?: string | null;
+  source?: string; referrerHost?: string | null; utmSource?: string | null; utmCampaign?: string | null;
 }): Promise<{ status: "ok" | "dup" | "invalid" | "err"; earned?: boolean; voteStatus?: "valid" | "rejected" }> {
   if (!isDatabaseConfigured()) return { status: "err" };
   const s = getSupabaseAdminClient();
+  const src = { source: args.source, referrerHost: args.referrerHost, utmSource: args.utmSource, utmCampaign: args.utmCampaign };
   const { data, error } = await s.rpc("v_record_vote" as never, {
     p_test: args.testId, p_voter: norm(args.voterId), p_option: args.optionId,
     p_reason: args.reason ?? null, p_time_spent: args.timeSpentMs ?? null, p_reward_cap: args.rewardCap,
@@ -287,6 +300,7 @@ export async function recordVote(args: {
   if (!error && data) {
     const r = data as unknown as { status: string; earned?: boolean; should_complete?: boolean; vote_status?: "valid" | "rejected" };
     if (r.status === "ok") {
+      await tagJudgmentSource(args.testId, args.voterId, src);
       // Vote events are test-scoped only — never store voter identity here.
       await logEvent({ testId: args.testId, eventType: r.vote_status === "rejected" ? "vote_filtered" : "vote_recorded", actorType: "voter", metadata: r.vote_status === "rejected" && args.rejectReason ? { reject_reason: args.rejectReason } : {} });
       if (r.should_complete) await completeTest(args.testId);
@@ -299,6 +313,7 @@ export async function recordVote(args: {
   // enforcement (rejection) begins once the v2 SQL is applied.
   const res = await recordJudgment({ testId: args.testId, voterId: args.voterId, optionId: args.optionId, reason: args.reason, timeSpentMs: args.timeSpentMs });
   if (res !== "ok") return { status: res };
+  await tagJudgmentSource(args.testId, args.voterId, src);
   await logEvent({ testId: args.testId, eventType: "vote_recorded", actorType: "voter", metadata: {} });
   let earned = false;
   if ((await rewardsToday(args.voterId)) < args.rewardCap) {

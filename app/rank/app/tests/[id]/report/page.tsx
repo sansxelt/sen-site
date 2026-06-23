@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
 import { getProject } from "@/lib/v-projects";
-import { testFilterReasons } from "@/lib/v-analytics";
-import { SectionHead, Bars } from "../../../_workspace/analytics-ui";
+import { testFilterReasons, testSourceQuality } from "@/lib/v-analytics";
+import { evaluationIntelligence, evaluationHealth } from "@/lib/v-intelligence";
+import { SectionHead, Bars, HealthBadge } from "../../../_workspace/analytics-ui";
 import { balance } from "@/lib/v-credits";
 import { CloseButton } from "../close-button";
 import { EmbedSnippet } from "../embed-snippet";
@@ -91,13 +92,20 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // ── Complete report ──
   const r = report.results;
   const bal = await balance(email);
-  // Owner-only response-quality detail (filter reasons). Never on public /r reports.
+  // Owner-only response-quality detail (filter reasons + source quality + health).
+  // None of this is rendered on the public /r report.
   const filterReasons = (r.filtered ?? 0) > 0 ? await testFilterReasons(id) : [];
+  const sources = await testSourceQuality(id);
+  const health = evaluationHealth("complete", evaluationIntelligence(r, test.votes_target));
+  const noisySource = sources.find((sq) => sq.total >= 10 && sq.filterRate >= 25);
 
   return (
     <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 90 }}>
-      <p className="eyebrow">Evaluation result</p>
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <p className="eyebrow" style={{ marginBottom: 0 }}>Evaluation result</p>
+        <HealthBadge state={health} />
+      </div>
+      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8, marginTop: 8 }}>{test.title}</h1>
       {projectLine}
 
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
@@ -109,6 +117,16 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
           <SectionHead>Response quality</SectionHead>
           <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: "0 0 14px", lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>{r.total.toLocaleString()} valid</strong> · {(r.filtered ?? 0).toLocaleString()} filtered before they could influence this decision:</p>
           <Bars rows={filterReasons.map((x) => ({ label: x.label, value: x.count }))} />
+        </div>
+      ) : null}
+
+      {sources.length > 0 ? (
+        <div className="card" style={{ marginBottom: 22 }}>
+          <SectionHead>Signal source quality</SectionHead>
+          <Bars rows={sources.map((sq) => ({ label: sq.label, value: sq.valid, sub: `${sq.filterRate}% filtered` }))} unit=" valid" />
+          {noisySource ? (
+            <p style={{ fontSize: 12.5, color: "var(--money)", marginTop: 12, marginBottom: 0, lineHeight: 1.5 }}>A high share of <strong>{noisySource.label}</strong> responses were filtered ({noisySource.filterRate}%). Consider collecting more judgments from another channel before acting on this result.</p>
+          ) : <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Source is captured for judgments collected after the latest update. Older judgments show as Direct link.</p>}
         </div>
       ) : null}
 

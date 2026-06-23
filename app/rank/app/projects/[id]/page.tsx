@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getProject, projectStats, listProjects } from "@/lib/v-projects";
-import { projectAnalytics } from "@/lib/v-analytics";
+import { projectAnalytics, projectSourceQuality } from "@/lib/v-analytics";
 import { EvaluationList } from "../../_workspace/evaluation-list";
 import { EditProjectForm } from "../../_workspace/workspace-client";
 import { SectionHead, Dist, Bars, CONF_COLORS, SIGNAL_COLORS } from "../../_workspace/analytics-ui";
@@ -26,7 +26,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
     );
   }
 
-  const [stats, projects, pa] = await Promise.all([projectStats(email, id), listProjects(email), projectAnalytics(email, id)]);
+  const [stats, projects, pa, sources] = await Promise.all([projectStats(email, id), listProjects(email), projectAnalytics(email, id), projectSourceQuality(email, id)]);
   const projOpts = projects.map((p) => ({ id: p.id, name: p.name }));
 
   return (
@@ -69,6 +69,25 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
                   { label: "Limited", value: pa.quality.limited, color: SIGNAL_COLORS.Limited },
                   { label: "Needs more", value: pa.quality.needsMore, color: SIGNAL_COLORS.NeedsMore },
                 ]} />}
+          </div>
+        </div>
+      ) : null}
+
+      {pa.completed > 0 ? (
+        <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
+          <div className="card">
+            <SectionHead>Decision readiness</SectionHead>
+            <Bars rows={[
+              { label: "Ready to decide", value: pa.health.ready },
+              { label: "Needs more judgments", value: pa.health.needsMore },
+              { label: "Noisy signal", value: pa.health.noisy },
+              { label: "Too close to call", value: pa.health.tooClose },
+              { label: "Low-quality traffic", value: pa.health.lowQuality },
+            ].filter((r) => r.value > 0)} unit=" evals" />
+          </div>
+          <div className="card">
+            <SectionHead>Signal sources</SectionHead>
+            {sources.length > 0 ? <Bars rows={sources.map((sq) => ({ label: sq.label, value: sq.valid, sub: `${sq.filterRate}% filtered` }))} unit=" valid" /> : <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Source analytics appear for judgments collected after the latest update.</p>}
           </div>
         </div>
       ) : null}

@@ -472,3 +472,14 @@ create index if not exists v_projects_user_idx on v_projects (user_id, updated_a
 -- intact if a project is removed.
 alter table v_tests add column if not exists project_id uuid references v_projects(id) on delete set null;
 create index if not exists v_tests_project_idx on v_tests (project_id);
+
+-- ── Signal source tracking (privacy-safe) ──
+-- Where a judgment came from, normalized to a coarse channel + safe attributes.
+-- The app writes ONLY: a normalized source (internal|embed|campaign|direct_link|
+-- referral), a referrer HOSTNAME (never the full URL — so no share tokens or query
+-- params), and short sanitized utm_source/utm_campaign. Never raw IPs, user agents,
+-- or full referrers. Old judgments stay null (shown as "Unknown"/"Direct" in the UI).
+alter table v_judgments add column if not exists referrer_host text;
+alter table v_judgments add column if not exists utm_source    text;
+alter table v_judgments add column if not exists utm_campaign  text;
+create index if not exists v_judg_source_idx on v_judgments (source);

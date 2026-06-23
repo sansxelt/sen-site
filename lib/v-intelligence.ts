@@ -99,3 +99,26 @@ export function evaluationIntelligence(r: IntelInput, votesTarget = 0): Intellig
     decisionSummary, marginText, signalText, action,
   };
 }
+
+// Evaluation health — a single trustworthiness state derived from the same real
+// metrics (no new statistics). Order matters: data-quality problems first, then
+// decisiveness, then sufficiency, then readiness. Active evaluations are "Collecting".
+export type HealthState = "Collecting" | "Ready to decide" | "Needs more judgments" | "Noisy signal" | "Too close to call" | "Low-quality traffic";
+
+export function evaluationHealth(status: string, intel: Intelligence): HealthState {
+  if (status !== "complete") return "Collecting";
+  if (intel.totalValid > 0 && intel.filteredRate >= 40) return "Low-quality traffic";
+  if (intel.totalValid > 0 && intel.filteredRate >= 25) return "Noisy signal";
+  if (intel.inconclusive) return "Too close to call";
+  if (intel.signalLabel !== "Clean signal") return "Needs more judgments";
+  if (intel.confidenceLabel === "Strong" || intel.confidenceLabel === "Moderate") return "Ready to decide";
+  return "Needs more judgments";
+}
+
+// Tone for the health badge (maps to the app's accent/money/err palette).
+export function healthTone(h: HealthState): "good" | "warn" | "bad" | "neutral" {
+  if (h === "Ready to decide") return "good";
+  if (h === "Low-quality traffic") return "bad";
+  if (h === "Noisy signal" || h === "Too close to call" || h === "Needs more judgments") return "warn";
+  return "neutral";
+}

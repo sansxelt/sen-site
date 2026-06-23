@@ -257,6 +257,12 @@ export default function NewTest() {
           {/* Step 3 */}
           <section>
             <Step n={3} title="Audience & judgment target" hint="How many valid human judgments to collect." />
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+              {([["Quick read", 50], ["Balanced", 150], ["Strong signal", 500]] as [string, number][]).map(([label, v]) => {
+                const target = Math.min(v, maxVotes);
+                return <button key={label} type="button" onClick={() => setVotes(target)} className="chip" style={{ cursor: "pointer", ...(votes === target ? { borderColor: "var(--acc)", color: "var(--acc-deep)" } : {}) }}>{label}</button>;
+              })}
+            </div>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
               <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>{votes} <span style={{ fontSize: 14, color: "var(--fg-4)", fontWeight: 500 }}>judgments</span></span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>= {votes} credits</span>
@@ -266,6 +272,7 @@ export default function NewTest() {
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 judgment = 1 credit</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>Plan max {maxVotes.toLocaleString()}. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</a></span>
             </div>
+            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 8, lineHeight: 1.5 }}>Higher judgment targets create stronger decision confidence — a quick read (~50) for a gut-check, balanced (~150) for most decisions, strong signal (500+) before a big spend.</p>
           </section>
         </div>
 

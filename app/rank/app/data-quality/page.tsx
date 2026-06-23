@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { dataQuality } from "@/lib/v-analytics";
+import { dataQuality, sourceQuality } from "@/lib/v-analytics";
 import { SectionHead, Bars } from "../_workspace/analytics-ui";
 
 export const metadata: Metadata = { title: "Data quality" };
@@ -10,7 +10,7 @@ export default async function DataQualityPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fdata-quality");
-  const q = await dataQuality(email);
+  const [q, sources] = await Promise.all([dataQuality(email), sourceQuality(email)]);
   const hasData = q.responses > 0;
 
   return (
@@ -57,6 +57,34 @@ export default async function DataQualityPage() {
                 <div><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>In progress</div><div style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{q.active}</div></div>
               </div>
             </div>
+          </div>
+
+          <SectionHead>Signal sources</SectionHead>
+          <div className="card" style={{ marginBottom: 26, overflowX: "auto" }}>
+            {sources.length > 0 ? (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", color: "var(--fg-4)", fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                    <th style={{ padding: "0 0 10px" }}>Source</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Responses</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Valid</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Filtered</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Filter rate</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Clean</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sources.map((sq) => (
+                    <tr key={sq.source} style={{ borderTop: "1px solid var(--line-1)" }}>
+                      <td style={{ padding: "10px 0", color: "var(--fg-1)", fontWeight: 600 }}>{sq.label}</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{sq.total.toLocaleString()}</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{sq.valid.toLocaleString()}</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{sq.filtered.toLocaleString()}</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: sq.filterRate >= 25 ? "var(--money)" : "var(--fg-3)", fontWeight: 600 }}>{sq.filterRate}%</td>
+                      <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--acc-deep)", fontWeight: 600 }}>{sq.total ? Math.round((sq.valid / sq.total) * 100) : 0}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>New judgments will include source quality analytics from now on — direct link, embed, campaign, and referral, with valid and filter rates per source.</p>
+            )}
+            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Source is recorded privacy-safely (channel + referrer hostname only — never full URLs, share tokens, IPs, or user agents). Older judgments show as Direct link.</p>
           </div>
 
           <div className="card" style={{ background: "var(--bg-2)" }}>

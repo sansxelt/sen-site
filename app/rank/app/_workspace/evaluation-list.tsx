@@ -1,5 +1,6 @@
 import type { EvalRow } from "@/lib/v-projects";
 import { MoveToProject, CopyReportLink } from "./workspace-client";
+import { HealthBadge } from "./analytics-ui";
 
 const STATUS_TONE: Record<string, { bg: string; fg: string }> = {
   complete: { bg: "var(--acc-soft)", fg: "var(--acc-deep)" },
@@ -27,7 +28,7 @@ export function EvaluationList({ rows, projects, showProject = true, showMove = 
                 <span style={{ color: "var(--fg-5)" }}>{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
               </div>
             </div>
-            <span className="pill" style={{ background: tone.bg, color: tone.fg, borderColor: "var(--acc-line)" }}>{r.status}</span>
+            {r.health ? <HealthBadge state={r.health} /> : <span className="pill" style={{ background: tone.bg, color: tone.fg, borderColor: "var(--acc-line)" }}>{r.status}</span>}
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               {showMove ? <MoveToProject testId={r.id} projectId={r.project_id} projects={projects} /> : null}
               {r.share_enabled && r.share_token ? <CopyReportLink token={r.share_token} /> : null}

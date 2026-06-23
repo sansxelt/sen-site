@@ -5,7 +5,7 @@
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { OPTION_LETTERS, type VTest, type VReport } from "./v-db";
-import { evaluationIntelligence } from "./v-intelligence";
+import { evaluationIntelligence, evaluationHealth } from "./v-intelligence";
 import { logEvent } from "./v-events";
 
 const norm = (e: string) => e.trim().toLowerCase();
@@ -16,7 +16,7 @@ export type EvalRow = {
   id: string; title: string; status: string; project_id: string | null; project_name: string | null;
   votes_valid: number; votes_target: number; created_at: string; completed_at: string | null;
   share_enabled: boolean; share_token: string | null;
-  recommended: string | null; confidence: string | null;
+  recommended: string | null; confidence: string | null; health: string | null;
 };
 
 export type WorkspaceStats = { total: number; active: number; completed: number; validJudgments: number };
@@ -137,18 +137,20 @@ export async function listEvaluations(userId: string, opts: { projectId?: string
 
     return tests.map((t) => {
       let recommended: string | null = null, confidence: string | null = null;
+      let health: string | null = t.status === "active" ? "Collecting" : null;
       const results = reportByTest[t.id];
       if (results) {
         const intel = evaluationIntelligence(results, t.votes_target);
         recommended = intel.recommendedOption ? `Option ${intel.recommendedOption}` : null;
         confidence = intel.confidenceLabel === "None" ? null : intel.confidenceLabel;
+        health = evaluationHealth("complete", intel);
       }
       return {
         id: t.id, title: t.title, status: t.status, project_id: t.project_id ?? null,
         project_name: t.project_id ? projById[t.project_id] ?? null : null,
         votes_valid: t.votes_valid, votes_target: t.votes_target, created_at: t.created_at, completed_at: t.completed_at,
         share_enabled: !!t.share_enabled, share_token: t.share_token ?? null,
-        recommended, confidence,
+        recommended, confidence, health,
       };
     });
   } catch { return []; }
