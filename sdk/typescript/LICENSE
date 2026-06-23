@@ -1,0 +1,11 @@
+Copyright (c) 2026 Vraelis. All rights reserved.
+
+This package is currently UNLICENSED (proprietary). No public open-source
+license has been chosen yet. Do not redistribute outside of authorized
+Vraelis use until a license is finalized.
+
+TODO (before npm publish): choose the final license and replace this file
+accordingly, and set the matching `license` field in package.json:
+  - MIT or Apache-2.0  → for an openly published, freely usable SDK
+  - a proprietary EULA → if the SDK should remain restricted
+Then flip `"private": false` in package.json to allow publishing.

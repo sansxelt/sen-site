@@ -12,13 +12,22 @@ Official TypeScript SDK for the [Vraelis](https://vraelis.com) human-evaluation 
 # from the Vraelis repo
 cd sdk/typescript
 npm install
-npm run build      # emits dist/
+npm run build      # emits dist/ — ESM (index.js) + CJS (index.cjs) + types (index.d.ts)
 ```
 
 Then import from the built `dist/`, or copy the package into your project. Once published:
 
 ```bash
-npm install @vraelis/sdk   # future
+npm install @vraelis/sdk   # future — not on npm yet
+```
+
+Works in both ESM and CommonJS:
+
+```ts
+import { Vraelis } from "@vraelis/sdk";          // ESM
+```
+```js
+const { Vraelis } = require("@vraelis/sdk");     // CommonJS
 ```
 
 Requires Node 18+ (uses the global `fetch` and the `crypto` module). On older Node, pass a `fetch` implementation in the client options.
@@ -42,7 +51,30 @@ const result = await vraelis.evaluations.get(evaluation.id);
 console.log(result.decision_package?.decision.recommended_output);
 ```
 
-Use `sandbox: true` to build and test your whole integration before spending any credits. Drop it (and add `votes` + real options) to launch a production evaluation backed by real qualified human signal.
+Sandbox evaluations **charge 0 credits and use 0 quota**, return a sample Decision Package, and never appear in production analytics — ideal for building and testing your integration.
+
+## Production quickstart
+
+Drop `sandbox` and add `votes` + real candidates to launch a real evaluation backed by qualified human signal:
+
+```ts
+const evaluation = await vraelis.evaluations.create({
+  title: "Landing hero — Q3",
+  category: "landing",
+  votes: 200,
+  options: [
+    { image_url: "https://cdn.you/hero-a.jpg" },
+    { image_url: "https://cdn.you/hero-b.jpg" },
+  ],
+});
+// { id, status: "active", credits_charged: 200 }
+
+// Poll until complete, or receive a signed test.completed webhook (see below).
+const result = await vraelis.evaluations.get(evaluation.id);
+
+// Current credit balance
+const credits = await vraelis.credits.get();
+```
 
 ## Methods
 
