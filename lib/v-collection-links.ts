@@ -88,3 +88,24 @@ export async function listCollectionLinks(userId: string, testId: string): Promi
     });
   } catch { return []; }
 }
+
+// Collection-link summaries for the Decision Package — NO urls or tokens, just safe
+// per-link stats. By test_id (the export/API caller already authorized ownership).
+export async function collectionLinkSummaries(testId: string): Promise<{ collection_link_id: string; label: string; source: string; is_active: boolean; valid_judgments: number; filtered_responses: number; filter_rate: number }[]> {
+  if (!testId || !isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const { data, error } = await s.from("v_collection_links" as never).select("id,label,source,utm_campaign,is_active").eq("test_id", testId).order("created_at", { ascending: true });
+    if (error) return [];
+    const links = (data as unknown as { id: string; label: string; source: string; utm_campaign: string | null; is_active: boolean }[]) ?? [];
+    if (!links.length) return [];
+    const { data: jud } = await s.from("v_judgments" as never).select("utm_campaign,status").eq("test_id", testId).limit(5000);
+    const by: Record<string, { v: number; f: number }> = {};
+    for (const j of (jud as unknown as { utm_campaign: string | null; status: string }[]) ?? []) { if (!j.utm_campaign) continue; const a = (by[j.utm_campaign] ??= { v: 0, f: 0 }); if (j.status === "rejected") a.f++; else a.v++; }
+    return links.map((l) => {
+      const a = (l.utm_campaign && by[l.utm_campaign]) || { v: 0, f: 0 };
+      const total = a.v + a.f;
+      return { collection_link_id: l.id, label: l.label, source: l.source, is_active: l.is_active, valid_judgments: a.v, filtered_responses: a.f, filter_rate: total ? Math.round((a.f / total) * 100) : 0 };
+    });
+  } catch { return []; }
+}

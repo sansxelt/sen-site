@@ -75,6 +75,28 @@ const EXPORT_SHAPE = `{
     "filtered_reasons": { "too_fast": 9, "spam_comment": 5 } }
 }`;
 
+const DECISION_PKG = `{
+  "decision_package": {
+    "schema_version": "v2",
+    "test_id": "…",
+    "decision": {
+      "recommended_output": "B",
+      "winner_label": "Hero B",
+      "preference_margin": 26,
+      "directional_confidence": "Strong",
+      "signal_quality": "Clean signal",
+      "evaluation_health": "Ready to decide",
+      "action_recommendation": "Ship Option B."
+    },
+    "counts": { "valid_judgments": 240, "filtered_responses": 31, "filter_rate": 11 },
+    "audience": { "screening_enabled": true, "qualification_rate": 82, "audience_fit": "Strong fit" },
+    "source_quality": [
+      { "source": "instagram", "valid_judgments": 140, "filter_rate": 8 },
+      { "source": "discord", "valid_judgments": 100, "filter_rate": 19 }
+    ]
+  }
+}`;
+
 const ERROR_EXAMPLE = `{
   "error": {
     "code": "unauthorized",
@@ -214,6 +236,24 @@ export default function DevelopersPage() {
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}><strong style={{ color: "var(--fg-2)" }}>Export tiers.</strong> Add <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=summary</code> for a basic result, <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=standard</code> (the default) for the full report, or <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=scale</code> for the developer export (adds quality detail, this test&apos;s webhook and export counts, and a machine-readable <code style={{ fontFamily: "var(--font-code, monospace)" }}>schema_version</code>). JSON always carries <code style={{ fontFamily: "var(--font-code, monospace)" }}>schema_version</code>; CSV is the same option-row breakdown across tiers. Account-level and governed cohort datasets are Enterprise (contact sales).</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}><strong style={{ color: "var(--fg-2)" }}>Evaluation intelligence.</strong> Every JSON export carries an <code style={{ fontFamily: "var(--font-code, monospace)" }}>intelligence</code> object you can act on directly: <code style={{ fontFamily: "var(--font-code, monospace)" }}>decision_summary</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>recommended_output</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>preference_margin</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>directional_confidence</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>signal_quality</code>, and <code style={{ fontFamily: "var(--font-code, monospace)" }}>action_recommendation</code>.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}>Exports never include raw API keys, key hashes, webhook secrets, raw voter IP/device signals, billing internals, or private owner fields.</p>
+        </div>
+      </section>
+
+      {/* Decision Package */}
+      <section id="decision-package" className="section" style={{ background: "var(--bg-2)" }}>
+        <div className="wrap">
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
+            <div>
+              <p className="eyebrow">Decision Package</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>A structured result your product can use.</h2>
+              <p className="lead-copy" style={{ marginBottom: 14 }}>Every JSON export and the <code style={{ fontFamily: "var(--font-code, monospace)" }}>GET /api/v1/tests/&#123;id&#125;</code> response carry a <code style={{ fontFamily: "var(--font-code, monospace)" }}>decision_package</code> (schema_version <code style={{ fontFamily: "var(--font-code, monospace)" }}>v2</code>): the recommendation, directional confidence, preference margin, signal quality, evaluation health, audience fit, source quality, and the next action — ready to act on in your app.</p>
+              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9 }}>
+                {["recommended_output + winner_label + preference_margin", "directional_confidence + signal_quality + evaluation_health", "audience qualification (qualification_rate, audience_fit)", "source/channel quality breakdown", "action_recommendation — what to do next"].map((x) => <li key={x} style={{ display: "flex", gap: 9, fontSize: 14.5, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</li>)}
+              </ul>
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.6 }}>Directional confidence from qualified human signal — not a guarantee of conversion lift, and not a substitute for statistical or legal research. The package never includes emails, raw IP/device data, share tokens, or raw screening answers. Summary and Standard tiers carry a trimmed package; Scale adds source quality and collection-link stats.</p>
+            </div>
+            <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>decision_package (excerpt)</div><Code label="json">{DECISION_PKG}</Code></div>
+          </div>
         </div>
       </section>
 

@@ -8,6 +8,7 @@ import { getTestWithOptions, getReport, getPlan, OPTION_LETTERS } from "./v-db";
 import { logEvent } from "./v-events";
 import { apiAccessAllowed } from "./v-entitlements";
 import { evaluationIntelligence } from "./v-intelligence";
+import { buildDecisionPackage } from "./v-decision-package";
 
 export const EXPORT_SCHEMA_VERSION = "v1";
 export type ExportTier = "summary" | "standard" | "scale";
@@ -153,8 +154,12 @@ export async function exportResponse(testId: string, userId: string, fmt: string
   if (fmt === "csv") {
     return new Response(toCSV(res.data), { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="${slug}.csv"` } });
   }
-  const payload = t === "summary" ? summaryProjection(res.data)
+  // Decision Package v2 — additive, tier-scoped. Existing top-level fields are
+  // unchanged; clients that ignore decision_package keep working.
+  const decision_package = await buildDecisionPackage(testId, t);
+  const base = t === "summary" ? summaryProjection(res.data)
     : t === "scale" ? { schema_version: EXPORT_SCHEMA_VERSION, tier: "scale" as const, ...res.data, meta: await scaleMeta(testId) }
     : { schema_version: EXPORT_SCHEMA_VERSION, tier: "standard" as const, ...res.data };
+  const payload = { ...base, decision_package };
   return new Response(JSON.stringify(payload, null, 2), { headers: { "Content-Type": "application/json; charset=utf-8", "Content-Disposition": `attachment; filename="${slug}.json"` } });
 }

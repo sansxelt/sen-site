@@ -3,6 +3,7 @@
 import { apiAuth } from "../../_auth";
 import { apiError } from "../../_lib";
 import { getTestWithOptions, getReport } from "@/lib/v-db";
+import { buildDecisionPackage } from "@/lib/v-decision-package";
 
 export const runtime = "nodejs";
 
@@ -20,9 +21,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const rep = await getReport(id);
     results = rep?.results ?? null;
   }
+  // Additive: the full Decision Package for the (owned) evaluation. Old clients
+  // that read `results` are unaffected.
+  const decision_package = await buildDecisionPackage(id, "scale");
   return Response.json({
     id: test.id, status: test.status,
     votes_valid: test.votes_valid, votes_target: test.votes_target,
     results,
+    decision_package,
   });
 }

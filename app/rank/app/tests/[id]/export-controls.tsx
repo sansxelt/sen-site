@@ -27,18 +27,18 @@ export function ExportControls({ testId }: { testId: string }) {
   return (
     <div className="card" style={{ marginBottom: 26 }}>
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 }}>Export data</div>
-      <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 4 }}>Download this report. Exports never include account email, voter identities, raw IP or device data, billing internals, API keys, or share tokens.</p>
+      <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 4 }}>Download this report. Every JSON export includes a <strong style={{ color: "var(--fg-2)" }}>decision package</strong> — recommendation, confidence, signal quality, source quality, and audience fit where available. Exports never include account email, voter identities, raw IP or device data, billing internals, API keys, or share tokens.</p>
 
-      <Row name="Summary" desc="Result, winner, and per-candidate judgment counts.">
-        <a href={`${base}?format=json&tier=summary`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>JSON</a>
+      <Row name="Summary" desc="Recommendation, counts, and a core decision package.">
+        <a href={`${base}?format=json&tier=summary`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Decision package JSON</a>
       </Row>
-      <Row name="Standard report" desc="Full breakdown, comments, AI analysis, and response quality.">
-        <a href={`${base}?format=json&tier=standard`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>JSON</a>
-        <a href={`${base}?format=csv&tier=standard`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>CSV</a>
+      <Row name="Standard report" desc="Full breakdown, comments, AI analysis, audience fit, response quality.">
+        <a href={`${base}?format=json&tier=standard`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Decision package JSON</a>
+        <a href={`${base}?format=csv&tier=standard`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>CSV breakdown</a>
       </Row>
-      <Row name="Scale data export" plan={scale ? undefined : "Scale"} desc="Standard plus quality detail, webhook + export counts, and a machine-readable schema_version.">
+      <Row name="Scale data export" plan={scale ? undefined : "Scale"} desc="Full decision package — adds source quality, collection-link stats, and machine-readable schema_version.">
         {scale
-          ? <a href={`${base}?format=json&tier=scale`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>JSON</a>
+          ? <a href={`${base}?format=json&tier=scale`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Decision package JSON</a>
           : <a href="/app/plans" className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>See plans</a>}
       </Row>
       <Row name="Enterprise dataset" plan="Enterprise" desc="Account-level and governed cohort exports, under data terms.">

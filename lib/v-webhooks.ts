@@ -9,6 +9,7 @@ import { fetch as undiciFetch, Agent } from "undici";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getTestWithOptions, getReport, OPTION_LETTERS, type VTest } from "./v-db";
 import { logEvent } from "./v-events";
+import { buildDecisionPackage } from "./v-decision-package";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || "https://vraelis.com";
 const MAX_ENDPOINTS = 10;
@@ -196,9 +197,12 @@ export async function listDeliveries(userId: string, endpointId: string): Promis
 }
 
 // ── Payload (no private fields) ──
-function buildCompletedPayload(test: VTest, results: unknown, deliveryId: string) {
+async function buildCompletedPayload(test: VTest, results: unknown, deliveryId: string) {
   const r = results as { total?: number; filtered?: number; winner_option_id?: string | null; ranked?: { id: string; position: number; pct: number }[] } | null;
   const winnerRow = r?.winner_option_id ? (r.ranked ?? []).find((x) => x.id === r.winner_option_id) : null;
+  // Compact, safe Decision Package (recommendation, confidence, signal/audience/source
+  // summary). No URLs, tokens, answers, or secrets.
+  const decision_package = await buildDecisionPackage(test.id, "webhook").catch(() => null);
   return {
     event: "test.completed",
     delivery_id: deliveryId,
@@ -213,6 +217,7 @@ function buildCompletedPayload(test: VTest, results: unknown, deliveryId: string
       winner: winnerRow ? { option: OPTION_LETTERS[winnerRow.position], pct: winnerRow.pct } : null,
       inconclusive: !!r && !r.winner_option_id,
     },
+    decision_package,
     links: {
       report_url: `${SITE}/app/tests/${test.id}/report`,
       public_report_url: test.share_enabled && test.share_token ? `${SITE}/r/${test.share_token}` : null,
@@ -267,7 +272,7 @@ export async function deliverTestCompleted(testId: string): Promise<void> {
       if (error || !del) return; // already delivered (unique conflict) or insert failed
       const deliveryId = (del as unknown as { id: string }).id;
       if (webhookUrlError(ep.url)) { await s.from("v_webhook_deliveries" as never).update({ status: "failed", error: "unsafe_url", attempts: 1 } as never).eq("id", deliveryId); return; }
-      const payload = buildCompletedPayload(test, results, deliveryId);
+      const payload = await buildCompletedPayload(test, results, deliveryId);
       const res = await post(ep.url, ep.secret, "test.completed", deliveryId, payload);
       await s.from("v_webhook_deliveries" as never).update({ status: res.ok ? "success" : "failed", response_status: res.status, error: res.error, attempts: 1, payload, delivered_at: res.ok ? new Date().toISOString() : null } as never).eq("id", deliveryId);
       await logEvent({ userId: test.user_id, testId, eventType: res.ok ? "webhook_delivered" : "webhook_failed", actorType: "webhook", source: "webhook", metadata: { endpoint_id: ep.id, delivery_id: deliveryId, status_code: res.status, attempt: 1, event: "test.completed" } });
