@@ -1,191 +1,154 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { dataInsights } from "@/lib/v-db";
 import { balance } from "@/lib/v-credits";
-import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
-import { recentEvents, eventCounts, lastEventAt, type EventRow } from "@/lib/v-events";
+import { eventCounts, lastEventAt } from "@/lib/v-events";
+import { decisionAnalytics } from "@/lib/v-analytics";
+import { listProjects } from "@/lib/v-projects";
+import { SectionHead, Bars, Spark, Dist, CONF_COLORS, SIGNAL_COLORS } from "../_workspace/analytics-ui";
 
-export const metadata: Metadata = { title: "Data" };
+export const metadata: Metadata = { title: "Analytics" };
 
-// Credits consumed on tests = holds net of refunds (both are test-scoped).
-async function creditsUsed(email: string): Promise<number> {
-  if (!isDatabaseConfigured()) return 0;
-  const { data } = await getSupabaseAdminClient().from("v_credit_ledger" as never)
-    .select("delta,reason").eq("user_id", email.toLowerCase()).in("reason", ["hold", "refund"]);
-  let used = 0;
-  for (const r of (data as unknown as { delta: number }[]) ?? []) used -= r.delta;
-  return Math.max(0, used);
-}
-
-const EVENT_LABEL: Record<string, string> = {
-  test_launched: "Test launched",
-  test_completed: "Test completed",
-  export_downloaded: "Export downloaded",
-  public_report_enabled: "Public report enabled",
-  public_report_disabled: "Public report disabled",
-  api_request_made: "API request",
-  webhook_delivered: "Webhook delivered",
-  webhook_failed: "Webhook failed",
-  checkout_started: "Checkout started",
-};
-
-function fmtDate(s: string): string {
-  try { return new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return ""; }
-}
-function eventDetail(e: EventRow): string {
-  const m = e.metadata || {};
-  if (e.event_type === "export_downloaded" && m.format) return String(m.format).toUpperCase();
-  if (e.event_type === "test_completed" && m.winner) return `Winner ${m.winner}`;
-  if (e.event_type === "test_launched" && m.category) return String(m.category).replace(/_/g, " ");
-  if (e.event_type === "api_request_made" && m.endpoint) return String(m.endpoint);
-  if (e.event_type === "webhook_failed" && m.status_code) return `HTTP ${m.status_code}`;
-  return "";
-}
+const fmtDate = (s: string | null) => { try { return s ? new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"; } catch { return "—"; } };
 
 export default async function DataPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fdata");
 
-  const [ins, bal, used, events, counts, lastApi, lastHook] = await Promise.all([
-    dataInsights(email),
+  const [a, bal, projects, counts, lastApi, lastHook] = await Promise.all([
+    decisionAnalytics(email),
     balance(email),
-    creditsUsed(email),
-    recentEvents(email, 10),
+    listProjects(email),
     eventCounts(email, ["export_downloaded", "api_request_made", "webhook_delivered", "webhook_failed"]),
     lastEventAt(email, "api_request_made"),
     lastEventAt(email, "webhook_delivered"),
   ]);
+  const projName: Record<string, string> = Object.fromEntries(projects.map((p) => [p.id, p.name]));
+  const hasData = a.core.total > 0;
+  const hasApi = (counts.api_request_made ?? 0) > 0 || (counts.webhook_delivered ?? 0) > 0;
 
-  const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
-  const exportsCount = counts.export_downloaded ?? 0;
-  const hasData = ins.totals.tests > 0;
-  const Perf = ({ l, v }: { l: string; v: string }) => (
-    <div style={{ flex: "1 1 160px" }}>
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>{l}</div>
-      <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{v}</div>
-    </div>
-  );
+  if (!hasData) {
+    return (
+      <div className="wrap" style={{ maxWidth: 1000, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
+        <div className="phead"><div><p className="eyebrow">Decision analytics</p><h1 className="display">Decision analytics</h1></div></div>
+        <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 6vw, 64px)" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 8 }}>No analytics yet</div>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.55 }}>Run your first evaluation to see decision quality, signal cleanliness, confidence, and category trends here — all from your real results.</p>
+          <a href="/app/new" className="btn btn--lg">Create an evaluation →</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="wrap" style={{ maxWidth: 1000, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">Evaluation analytics</p>
-          <h1 className="display">Your evaluation analytics</h1>
-          <p>How your evaluations are performing, the human signal you collected, and your API and export activity.</p>
+          <p className="eyebrow">Decision analytics</p>
+          <h1 className="display">Decision analytics</h1>
+          <p>Decision quality, signal cleanliness, and category trends — derived from your real evaluations and reports.</p>
         </div>
+        <a href="/app/data-quality" className="btn btn--ghost">Data quality →</a>
       </div>
 
-      {/* credit usage */}
-      <div className="card" style={{ marginBottom: 18, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: "clamp(28px, 5vw, 56px)", flexWrap: "wrap" }}>
-          <div>
-            <div style={head}>Credits remaining</div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--fg-1)" }}>{bal.toLocaleString()}</div>
-          </div>
-          <div>
-            <div style={head}>Credits used</div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--fg-1)" }}>{used.toLocaleString()}</div>
-          </div>
-        </div>
-        <a href="/app/credits" className="btn btn--ghost">Top up →</a>
+      {/* core metrics */}
+      <div className="tile-grid cols-4" style={{ marginBottom: 14 }}>
+        <div className="stat"><div className="stat__l">Evaluations</div><div className="stat__v tnum">{a.core.total.toLocaleString()}</div><div className="stat__s">{a.core.completed} completed, {a.core.active} active</div></div>
+        <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{a.core.validJudgments.toLocaleString()}</div><div className="stat__s">real human signal</div></div>
+        <div className="stat"><div className="stat__l">Filtered</div><div className="stat__v tnum">{a.core.filtered.toLocaleString()}</div><div className="stat__s">{a.core.filterRate}% filter rate</div></div>
+        <div className="stat"><div className="stat__l">Avg preference margin</div><div className="stat__v tnum">{a.core.avgMargin == null ? "—" : `${a.core.avgMargin} pts`}</div><div className="stat__s">across decisions</div></div>
+      </div>
+      <div className="tile-grid cols-4" style={{ marginBottom: 26 }}>
+        <div className="stat"><div className="stat__l">Total responses</div><div className="stat__v tnum">{a.core.responses.toLocaleString()}</div><div className="stat__s">valid + filtered</div></div>
+        <div className="stat"><div className="stat__l">Credits used</div><div className="stat__v tnum">{a.credits.used.toLocaleString()}</div><div className="stat__s">on evaluations</div></div>
+        <div className="stat"><div className="stat__l">Credits remaining</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><a href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Top up →</a></div></div>
+        <div className="stat"><div className="stat__l">Completed (30d)</div><div className="stat__v tnum">{a.trends.completed30}</div><div className="stat__s">{a.trends.completed7} in last 7 days</div></div>
       </div>
 
-      {/* summary cards */}
-      <div className="tile-grid cols-4" style={{ marginBottom: 18 }}>
-        <div className="stat"><div className="stat__l">Total tests</div><div className="stat__v tnum">{ins.totals.tests.toLocaleString()}</div><div className="stat__s">{ins.totals.completed} completed, {ins.totals.active} active</div></div>
-        <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{ins.totals.valid.toLocaleString()}</div><div className="stat__s">real human votes</div></div>
-        <div className="stat"><div className="stat__l">Filtered votes</div><div className="stat__v tnum">{ins.totals.filtered.toLocaleString()}</div><div className="stat__s">rejected by quality gate</div></div>
-        <div className="stat"><div className="stat__l">Public reports</div><div className="stat__v tnum">{ins.totals.publicShared.toLocaleString()}</div><div className="stat__s">{exportsCount.toLocaleString()} export{exportsCount === 1 ? "" : "s"} downloaded</div></div>
-      </div>
-
-      {/* test performance */}
-      <div className="card" style={{ marginBottom: 22 }}>
-        <div style={head}>Test performance</div>
-        {hasData ? (
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-            <Perf l="Completion rate" v={`${ins.performance.completionRate}%`} />
-            <Perf l="Avg valid votes / test" v={ins.performance.avgValidPerCompleted.toLocaleString()} />
-            <Perf l="Filtered rate" v={`${ins.performance.filteredRate}%`} />
-            <Perf l="Avg win margin" v={ins.performance.avgWinMargin == null ? "—" : `${ins.performance.avgWinMargin} pts`} />
-          </div>
-        ) : <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>Run your first test to see performance here.</p>}
-      </div>
-
-      {/* recent activity + top categories */}
-      <div className="tile-grid cols-2" style={{ marginBottom: 22 }}>
+      {/* decision + signal quality */}
+      <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
         <div className="card">
-          <div style={head}>Recent activity</div>
-          {events.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {events.map((e, i) => (
-                <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
-                  <div style={{ minWidth: 0 }}>
-                    <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500 }}>{EVENT_LABEL[e.event_type] ?? e.event_type}</span>
-                    {eventDetail(e) ? <span style={{ fontSize: 12, color: "var(--fg-4)", marginLeft: 8 }}>{eventDetail(e)}</span> : null}
-                  </div>
-                  <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", flex: "none" }}>{fmtDate(e.created_at)}</span>
-                </div>
-              ))}
-            </div>
-          ) : ins.recent.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {ins.recent.map((t, i) => (
-                <a key={t.id} href={`/app/tests/${t.id}/report`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, textDecoration: "none", padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
-                  <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</span>
-                  <span className="badge-now" style={{ flex: "none" }}>{t.winner ?? "Tie"}</span>
-                </a>
-              ))}
-              <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 10, marginBottom: 0 }}>A live activity feed appears here as you launch evaluations, collect judgments, and export.</p>
-            </div>
-          ) : <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>Your launches, completions, exports, and API activity will appear here.</p>}
+          <SectionHead>Decision quality</SectionHead>
+          <Dist items={[
+            { label: "Strong", value: a.quality.strong, color: CONF_COLORS.Strong },
+            { label: "Moderate", value: a.quality.moderate, color: CONF_COLORS.Moderate },
+            { label: "Tentative", value: a.quality.tentative, color: CONF_COLORS.Tentative },
+            { label: "Inconclusive", value: a.quality.inconclusive, color: CONF_COLORS.Inconclusive },
+          ]} />
+          <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Directional confidence across completed evaluations.</p>
         </div>
-
         <div className="card">
-          <div style={head}>Most-tested categories</div>
-          {ins.byCategory.length === 0 ? <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>No completed tests yet.</p> : (
-            <div className="chips">
-              {ins.byCategory.map((c) => <span key={c.category} className="chip">{c.category.replace(/_/g, " ")} {c.count}</span>)}
-            </div>
-          )}
+          <SectionHead>Signal quality</SectionHead>
+          <Dist items={[
+            { label: "Clean", value: a.quality.clean, color: SIGNAL_COLORS.Clean },
+            { label: "Limited", value: a.quality.limited, color: SIGNAL_COLORS.Limited },
+            { label: "Needs more", value: a.quality.needsMore, color: SIGNAL_COLORS.NeedsMore },
+          ]} />
+          <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>How clean and sufficient the human signal was.</p>
         </div>
       </div>
 
-      {/* API & webhook usage */}
-      {(ins.hasApi || ins.hasWebhooks) && (
-        <div className="card" style={{ marginBottom: 22 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
-            <div style={head}>API &amp; webhook usage</div>
-            <a href="/app/api-keys" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none", fontWeight: 500 }}>Full API analytics →</a>
+      {/* trends */}
+      <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
+        <div className="card"><SectionHead>Evaluations created</SectionHead><Spark data={a.trends.createdDaily} caption={`${a.trends.created30} in last 30 days · ${a.trends.created7} in last 7`} /></div>
+        <div className="card"><SectionHead>Credits used</SectionHead><Spark data={a.credits.usedDaily} caption="Last 30 days" /></div>
+      </div>
+
+      {/* category intelligence */}
+      <SectionHead>Category intelligence</SectionHead>
+      <div className="card" style={{ marginBottom: 26, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <thead>
+            <tr style={{ textAlign: "left", color: "var(--fg-4)", fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              <th style={{ padding: "0 0 10px" }}>Category</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Evals</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Done</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Valid</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Avg margin</th><th style={{ padding: "0 0 10px", textAlign: "right" }}>Strong</th>
+            </tr>
+          </thead>
+          <tbody>
+            {a.byCategory.map((c) => (
+              <tr key={c.category} style={{ borderTop: "1px solid var(--line-1)" }}>
+                <td style={{ padding: "10px 0", color: "var(--fg-1)", fontWeight: 600 }}>{c.label}</td>
+                <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.count}</td>
+                <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.completed}</td>
+                <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.valid.toLocaleString()}</td>
+                <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.avgMargin == null ? "—" : `${c.avgMargin} pts`}</td>
+                <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: c.strongRate >= 50 ? "var(--acc-deep)" : "var(--fg-3)", fontWeight: 600 }}>{c.strongRate}%</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* project breakdown */}
+      {a.byProject.length > 0 ? (
+        <>
+          <SectionHead right={<a href="/app/projects" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>All projects →</a>}>Valid judgments by project</SectionHead>
+          <div className="card" style={{ marginBottom: 26 }}>
+            <Bars rows={a.byProject.map((p) => ({ label: projName[p.project_id] ?? "Project", value: p.valid, sub: `${p.completed} completed` })).sort((x, y) => y.value - x.value).slice(0, 8)} />
           </div>
-          {(counts.api_request_made || counts.webhook_delivered || counts.webhook_failed) ? (
-            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-              <Perf l="API requests" v={(counts.api_request_made ?? 0).toLocaleString()} />
-              <Perf l="Webhooks delivered" v={(counts.webhook_delivered ?? 0).toLocaleString()} />
-              <Perf l="Webhook failures" v={(counts.webhook_failed ?? 0).toLocaleString()} />
-              <div style={{ flex: "1 1 200px" }}>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Last activity</div>
-                <div style={{ fontSize: 13, color: "var(--fg-2)", marginTop: 6, lineHeight: 1.6 }}>
-                  API: {lastApi ? fmtDate(lastApi) : "—"}<br />Webhook: {lastHook ? fmtDate(lastHook) : "—"}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>API requests and webhook deliveries will show here once your integration starts sending traffic. See the <a href="/developers" style={{ color: "var(--acc-deep)" }}>developer docs</a>.</p>
-          )}
-        </div>
-      )}
+        </>
+      ) : null}
+
+      {/* API & webhook usage (kept from before) */}
+      {hasApi ? (
+        <>
+          <SectionHead right={<a href="/app/api-keys" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Full API analytics →</a>}>API &amp; webhook usage</SectionHead>
+          <div className="card" style={{ marginBottom: 26, display: "flex", gap: 24, flexWrap: "wrap" }}>
+            {[["API requests", (counts.api_request_made ?? 0).toLocaleString()], ["Webhooks delivered", (counts.webhook_delivered ?? 0).toLocaleString()], ["Webhook failures", (counts.webhook_failed ?? 0).toLocaleString()], ["Last API / webhook", `${fmtDate(lastApi)} / ${fmtDate(lastHook)}`]].map(([l, v]) => (
+              <div key={l} style={{ flex: "1 1 160px" }}><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>{l}</div><div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{v}</div></div>
+            ))}
+          </div>
+        </>
+      ) : null}
 
       {/* export */}
-      <div className="card cta-band" style={{ background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+      <div className="card" style={{ background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Export preference data</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Summary, standard, and Scale data exports as JSON or CSV. Winner, vote breakdown, vote quality, comments, and AI analysis. Download from any completed report.</p>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Export your decision data</div>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Summary, standard, and Scale exports as JSON or CSV — recommended output, margin, confidence, judgment quality, and reasoning. From any completed report.</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <a href="/app/api-keys" className="btn">API keys</a>
+          <a href="/app/data-quality" className="btn btn--ghost">Data quality</a>
           <a href="/developers#export" className="btn btn--ghost">Export docs →</a>
         </div>
       </div>

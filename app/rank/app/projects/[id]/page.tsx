@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getProject, projectStats, listProjects } from "@/lib/v-projects";
+import { projectAnalytics } from "@/lib/v-analytics";
 import { EvaluationList } from "../../_workspace/evaluation-list";
 import { EditProjectForm } from "../../_workspace/workspace-client";
+import { SectionHead, Dist, Bars, CONF_COLORS, SIGNAL_COLORS } from "../../_workspace/analytics-ui";
 
 export const metadata: Metadata = { title: "Project" };
 
@@ -24,7 +26,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
     );
   }
 
-  const [stats, projects] = await Promise.all([projectStats(email, id), listProjects(email)]);
+  const [stats, projects, pa] = await Promise.all([projectStats(email, id), listProjects(email), projectAnalytics(email, id)]);
   const projOpts = projects.map((p) => ({ id: p.id, name: p.name }));
 
   return (
@@ -45,6 +47,31 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
         <div className="stat"><div className="stat__l">Completed</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">decision reports</div></div>
         <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">collected</div></div>
       </div>
+
+      {pa.completed > 0 ? (
+        <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
+          <div className="card">
+            <SectionHead>Decision quality</SectionHead>
+            <Dist items={[
+              { label: "Strong", value: pa.quality.strong, color: CONF_COLORS.Strong },
+              { label: "Moderate", value: pa.quality.moderate, color: CONF_COLORS.Moderate },
+              { label: "Tentative", value: pa.quality.tentative, color: CONF_COLORS.Tentative },
+              { label: "Inconclusive", value: pa.quality.inconclusive, color: CONF_COLORS.Inconclusive },
+            ]} />
+            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Avg preference margin {pa.avgMargin == null ? "—" : `${pa.avgMargin} pts`} · {pa.filtered.toLocaleString()} filtered</p>
+          </div>
+          <div className="card">
+            <SectionHead>{pa.byCategory.length > 1 ? "Categories" : "Signal quality"}</SectionHead>
+            {pa.byCategory.length > 1
+              ? <Bars rows={pa.byCategory.map((c) => ({ label: c.label, value: c.count }))} unit=" evals" />
+              : <Dist items={[
+                  { label: "Clean", value: pa.quality.clean, color: SIGNAL_COLORS.Clean },
+                  { label: "Limited", value: pa.quality.limited, color: SIGNAL_COLORS.Limited },
+                  { label: "Needs more", value: pa.quality.needsMore, color: SIGNAL_COLORS.NeedsMore },
+                ]} />}
+          </div>
+        </div>
+      ) : null}
 
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Evaluations</div>
       {stats.rows.length > 0 ? (

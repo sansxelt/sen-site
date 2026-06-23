@@ -27,6 +27,7 @@ const I = {
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M5 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1",
   vote: "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",
   folder: "M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
+  shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4",
 };
 
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
@@ -34,7 +35,8 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
     { href: "/app", label: "Dashboard", d: I.grid },
     { href: "/app/new", label: "New evaluation", d: I.plus },
     { href: "/app/projects", label: "Projects", d: I.folder },
-    { href: "/app/data", label: "Data", d: I.data },
+    { href: "/app/data", label: "Analytics", d: I.data },
+    { href: "/app/data-quality", label: "Data quality", d: I.shield },
   ] },
   { group: "Billing", items: [
     { href: "/app/credits", label: "Credits", d: I.coin },
@@ -166,7 +168,7 @@ function AppTopbar({ email }: { email: string | null }) {
 
 function AppSidebar() {
   const pathname = usePathname() || "";
-  const active = (href: string) => href === "/app" ? pathname === "/app" : pathname.startsWith(href);
+  const active = (href: string) => href === "/app" ? pathname === "/app" : (pathname === href || pathname.startsWith(href + "/"));
   return (
     <aside className="app-side">
       {APP_NAV.map((g) => (

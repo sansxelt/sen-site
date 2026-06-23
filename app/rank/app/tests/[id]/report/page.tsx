@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
 import { getProject } from "@/lib/v-projects";
+import { testFilterReasons } from "@/lib/v-analytics";
+import { SectionHead, Bars } from "../../../_workspace/analytics-ui";
 import { balance } from "@/lib/v-credits";
 import { CloseButton } from "../close-button";
 import { EmbedSnippet } from "../embed-snippet";
@@ -89,6 +91,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // ── Complete report ──
   const r = report.results;
   const bal = await balance(email);
+  // Owner-only response-quality detail (filter reasons). Never on public /r reports.
+  const filterReasons = (r.filtered ?? 0) > 0 ? await testFilterReasons(id) : [];
 
   return (
     <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 90 }}>
@@ -99,6 +103,14 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
 
       <ReportBody results={r} options={options} votesTarget={test.votes_target} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
+
+      {filterReasons.length > 0 ? (
+        <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)" }}>
+          <SectionHead>Response quality</SectionHead>
+          <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: "0 0 14px", lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>{r.total.toLocaleString()} valid</strong> · {(r.filtered ?? 0).toLocaleString()} filtered before they could influence this decision:</p>
+          <Bars rows={filterReasons.map((x) => ({ label: x.label, value: x.count }))} />
+        </div>
+      ) : null}
 
       <ExportControls testId={test.id} />
 
