@@ -585,6 +585,11 @@ summary::-webkit-details-marker { display: none; }
 .slink__i { width: 17px; height: 17px; flex: none; color: var(--fg-4); display: grid; place-items: center; }
 .app-main { min-width: 0; }
 
+/* Stripe Embedded Checkout: the iframe sets its own height. Never clip it or cap
+   its height — let the wrapper (and the page) grow so the whole panel is visible. */
+.checkout-pay { overflow: visible; max-height: none; }
+.checkout-pay iframe { width: 100% !important; max-height: none !important; }
+
 /* page header inside the app */
 .phead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: clamp(18px, 2.4vw, 28px); }
 .phead h1 { font-size: clamp(1.5rem, 2.6vw, 2rem); }

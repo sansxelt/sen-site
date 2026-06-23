@@ -63,7 +63,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
     : ["1 credit = 1 valid human judgment", "Credits are held when you launch an evaluation", "Low-quality responses are filtered out", "Unused credits are refunded", "Credits never expire"];
 
   return (
-    <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)" }}>
+    <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)", paddingBottom: "clamp(56px, 7vw, 96px)" }}>
       <div className="wrap" style={{ maxWidth: 960 }}>
         <a href={backHref} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 22 }}>← Back</a>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.82fr) minmax(0,1.18fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">

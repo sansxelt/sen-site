@@ -63,7 +63,9 @@ export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?
   }
 
   return (
-    <div style={{ borderRadius: "var(--r-lg)", overflow: "hidden", minHeight: 200 }}>
+    // No overflow:hidden / fixed height here — Stripe sets the iframe height
+    // dynamically, and clipping it cuts off the bottom of the checkout.
+    <div className="checkout-pay" style={{ minHeight: 200 }}>
       {!ready && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="skel" style={{ height: 46 }} />
