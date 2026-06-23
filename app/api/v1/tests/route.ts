@@ -5,6 +5,7 @@ import { apiAuth } from "../_auth";
 import { apiError } from "../_lib";
 import { getPlan, launchTest } from "@/lib/v-db";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
+import { assignTestToProject } from "@/lib/v-projects";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -47,5 +48,9 @@ export async function POST(req: Request) {
   if (r.status === "plan_limit") return apiError("forbidden", `Monthly active-evaluation limit (${r.limit}) reached on the ${ent.plan} plan.`, 403);
   if (r.status === "insufficient_credits") return apiError("insufficient_credits", `Not enough credits. This evaluation needs ${r.needed}.`, 402);
   if (r.status !== "ok") return apiError("internal_error", "Could not create the evaluation. Try again.", 500);
+  // Optional: API clients may pass project_id to file the run under one of THEIR
+  // projects. Old clients omit it (stays unfiled); a foreign id is ignored.
+  const projectId = typeof body?.project_id === "string" && body.project_id ? body.project_id : null;
+  if (projectId && r.id) await assignTestToProject(userId, r.id, projectId);
   return Response.json({ id: r.id, status: "active", votes, credits_charged: votes });
 }

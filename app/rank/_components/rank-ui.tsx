@@ -26,12 +26,14 @@ const I = {
   code: "M8 9l-3 3 3 3M16 9l3 3-3 3",
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M5 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1",
   vote: "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",
+  folder: "M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
 };
 
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Workspace", items: [
     { href: "/app", label: "Dashboard", d: I.grid },
     { href: "/app/new", label: "New evaluation", d: I.plus },
+    { href: "/app/projects", label: "Projects", d: I.folder },
     { href: "/app/data", label: "Data", d: I.data },
   ] },
   { group: "Billing", items: [

@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { ensureProfile, getPlan, launchTest } from "@/lib/v-db";
 import { ensureSignupGrant } from "@/lib/v-credits";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
+import { assignTestToProject } from "@/lib/v-projects";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -54,5 +55,9 @@ export async function POST(req: Request) {
   if (r.status === "plan_limit") return NextResponse.json({ error: "plan_limit", limit: r.limit, plan: ent.plan }, { status: 403 });
   if (r.status === "insufficient_credits") return NextResponse.json({ error: "insufficient_credits", needed: r.needed }, { status: 402 });
   if (r.status !== "ok") return NextResponse.json({ error: "create_failed" }, { status: 500 });
+  // Optional: file the new evaluation under a project the user owns. Non-blocking —
+  // a bad/foreign project id just leaves it unfiled; the launch already succeeded.
+  const projectId = typeof body?.projectId === "string" && body.projectId ? body.projectId : null;
+  if (projectId && r.id) await assignTestToProject(email, r.id, projectId);
   return NextResponse.json({ id: r.id, status: "active" });
 }

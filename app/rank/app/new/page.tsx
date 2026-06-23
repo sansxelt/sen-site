@@ -13,12 +13,17 @@ const AUDIENCES: [string, string][] = [
   ["general", "General"], ["gamers", "Gamers"], ["creators", "Creators"], ["designers", "Designers"],
   ["gen_z", "Gen Z"], ["shoppers", "Shoppers"], ["entrepreneurs", "Entrepreneurs"],
 ];
-const TEMPLATES: { name: string; title: string; category: string; context: string }[] = [
-  { name: "Ad creatives", title: "Which ad creative should we ship?", category: "ad", context: "Which of these grabs attention and makes you want to click?" },
-  { name: "Landing hero", title: "Which landing hero should ship?", category: "landing", context: "Which hero best explains the product at a glance?" },
-  { name: "AI outputs", title: "Which AI output is best?", category: "ai_image", context: "Which generated result looks the most polished and on-brand?" },
-  { name: "Product images", title: "Which product image should we use?", category: "product_image", context: "Which image makes you most likely to buy?" },
-  { name: "Logo options", title: "Which logo should we pick?", category: "logo", context: "Which feels more trustworthy and memorable for a modern brand?" },
+// Real evaluation types — each prefills the title/question, category, a suggested
+// judgment target, and a hover helper. Compact on purpose.
+const TEMPLATES: { name: string; title: string; category: string; context: string; votes: number; helper: string }[] = [
+  { name: "Ad creative", title: "Which ad creative should we ship?", category: "ad", context: "Which grabs attention and makes you want to click?", votes: 100, helper: "2–4 creatives, ~100 judgments before you spend on ads." },
+  { name: "Landing hero", title: "Which landing hero should ship?", category: "landing", context: "Which hero best explains the product at a glance?", votes: 100, helper: "Compare 2–3 hero concepts before a redesign." },
+  { name: "AI image output", title: "Which AI output is best?", category: "ai_image", context: "Which generated result looks the most polished and on-brand?", votes: 50, helper: "Pick the strongest generation before you ship it." },
+  { name: "Product image", title: "Which product image should we use?", category: "product_image", context: "Which makes you most likely to buy?", votes: 80, helper: "Choose the listing image most likely to convert." },
+  { name: "Copy / headline", title: "Which headline is clearest?", category: "hook", context: "Which line is clearest and most compelling?", votes: 60, helper: "Text options — add each headline as a candidate." },
+  { name: "App / game icon", title: "Which icon would you tap?", category: "app_icon", context: "Which icon stands out and feels trustworthy on a busy screen?", votes: 80, helper: "Icons fight for attention — test 2–4." },
+  { name: "Client creative decision", title: "Which option should we present to the client?", category: "other", context: "Which is the strongest creative direction?", votes: 100, helper: "Back your recommendation with human signal." },
+  { name: "General creative", title: "Which option should we ship?", category: "other", context: "Which do you prefer, and why?", votes: 50, helper: "Any creative or AI output — 2 to 8 candidates." },
 ];
 
 const MAX_FILE_MB = 15;
@@ -70,6 +75,8 @@ export default function NewTest() {
   const [error, setError] = useState("");
   const [drag, setDrag] = useState(false);
   const [ctx, setCtx] = useState<Ctx>({ signedIn: false });
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+  const [projectId, setProjectId] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -77,6 +84,11 @@ export default function NewTest() {
       setCtx(j);
       if (j.maxVotes) setVotes((v) => Math.min(v, j.maxVotes));
     }).catch(() => {});
+    fetch("/api/v/projects").then((r) => r.json()).then((j) => setProjects(j.projects || [])).catch(() => {});
+    try {
+      const pre = new URLSearchParams(window.location.search).get("project");
+      if (pre) setProjectId(pre);
+    } catch { /* ignore */ }
   }, []);
 
   const isText = category === "brand_name" || category === "hook";
@@ -136,7 +148,7 @@ export default function NewTest() {
     if (options.length < 2) return setError(isText ? "Add at least 2 text options." : "Upload at least 2 images.");
     setBusy(true);
     try {
-      const res = await fetch("/api/v/tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, context, category, audience, votesTarget: votes, options }) });
+      const res = await fetch("/api/v/tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, context, category, audience, votesTarget: votes, options, projectId: projectId || undefined }) });
       if (res.status === 401) { signIn("google", { callbackUrl: "/app/new" }); return; }
       const j = await res.json().catch(() => ({}));
       if (res.status === 402) { setError(`Not enough credits. This test needs ${j.needed}. Earn by voting, or top up.`); return; }
@@ -168,7 +180,7 @@ export default function NewTest() {
         <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Start from a template <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(optional)</span></div>
         <div className="chips">
           {TEMPLATES.map((t) => (
-            <button key={t.name} onClick={() => { setTitle(t.title); setCategory(t.category); setContext(t.context); }} className="chip" style={{ cursor: "pointer" }}>{t.name}</button>
+            <button key={t.name} title={t.helper} onClick={() => { setTitle(t.title); setCategory(t.category); setContext(t.context); setVotes(Math.min(t.votes, maxVotes)); }} className="chip" style={{ cursor: "pointer" }}>{t.name}</button>
           ))}
         </div>
       </div>
@@ -186,6 +198,14 @@ export default function NewTest() {
                 <div><span style={lab}>Audience</span><select style={inputStyle} value={audience} onChange={(e) => setAudience(e.target.value)}>{AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
               </div>
               <div><span style={lab}>Context for judges (optional)</span><input style={inputStyle} value={context} onChange={(e) => setContext(e.target.value)} placeholder="e.g. for a B2B SaaS landing page. Which is clearest at a glance?" /></div>
+              <div>
+                <span style={lab}>Project (optional)</span>
+                <select style={inputStyle} value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+                  <option value="">No project</option>
+                  {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 6 }}>Group this evaluation with related ones. <a href="/app/projects" style={{ color: "var(--acc-deep)" }}>Manage projects →</a></div>
+              </div>
             </div>
           </section>
 

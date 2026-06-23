@@ -14,6 +14,7 @@ export type VTest = {
   votes_target: number; votes_valid: number; credits_held: number;
   created_at: string; completed_at: string | null;
   share_token?: string | null; share_enabled?: boolean;
+  project_id?: string | null;
 };
 export type VOption = { id: string; test_id: string; position: number; asset_url: string | null; label: string | null };
 export type VReport = {

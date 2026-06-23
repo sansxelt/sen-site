@@ -451,3 +451,24 @@ create table if not exists v_data_requests (
 );
 create index if not exists v_data_requests_user_idx on v_data_requests (user_id, created_at desc);
 create index if not exists v_data_requests_status_idx on v_data_requests (status, created_at desc);
+
+-- ── Evaluation workspace: projects ──
+-- Group evaluations into projects (campaigns, redesigns, AI-output tests, ...).
+-- Scoped per user_id in app code. Evaluations reference a project via the nullable
+-- v_tests.project_id below — old tests and API clients are unaffected (it stays null).
+create table if not exists v_projects (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     text not null,                 -- lowercased email of the owner
+  name        text not null,
+  description text,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create index if not exists v_projects_user_idx on v_projects (user_id, updated_at desc);
+
+-- Optional project link on an evaluation. Nullable so the v_launch_test RPC, old
+-- rows, and API clients keep working (it stays null); the app sets it only to a
+-- project the same user owns, after launch. on delete set null keeps evaluations
+-- intact if a project is removed.
+alter table v_tests add column if not exists project_id uuid references v_projects(id) on delete set null;
+create index if not exists v_tests_project_idx on v_tests (project_id);

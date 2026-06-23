@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
+import { getProject } from "@/lib/v-projects";
 import { balance } from "@/lib/v-credits";
 import { CloseButton } from "../close-button";
 import { EmbedSnippet } from "../embed-snippet";
@@ -35,6 +36,11 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
 
   const { test, options } = data;
   const report = await getReport(id);
+  // Owner-only context — never shown on the public /r/<token> report.
+  const project = test.project_id ? await getProject(email, test.project_id) : null;
+  const projectLine = project ? (
+    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <a href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</a></p>
+  ) : null;
 
   // ── In progress (collecting votes) ──
   if (!report || test.status !== "complete") {
@@ -53,6 +59,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         )}
         <p className="eyebrow">Collecting judgments</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
+        {projectLine}
         <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid judgments</p>
         <div style={{ height: 10, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden", marginBottom: 24 }}>
           <div className="pulse" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
@@ -86,7 +93,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   return (
     <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 90 }}>
       <p className="eyebrow">Evaluation result</p>
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 18 }}>{test.title}</h1>
+      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
+      {projectLine}
 
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
 
