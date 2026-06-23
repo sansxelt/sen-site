@@ -15,9 +15,10 @@ const PLANS: { key: string; name: string; price: Record<Cycle, number>; credits:
 
 const ORDER: Record<string, number> = { free: 0, starter: 1, creator: 2, pro: 3, scale: 4, enterprise: 5 };
 
-// Display-only whole-dollar formatting (live Stripe price may carry cents). Does
-// NOT change the amount Stripe charges at checkout.
-const fmtAmount = (n: number) => (Number.isInteger(n) ? n : Math.floor(n)).toLocaleString();
+// Display-only: round to the nearest whole dollar (live Stripe price may carry
+// cents). Rounds rather than truncates so the shown price is never below checkout.
+// Does NOT change the amount Stripe charges.
+const fmtAmount = (n: number) => Math.round(n).toLocaleString();
 
 export default function PlansPage() {
   const [cycle, setCycle] = useState<Cycle>("monthly");

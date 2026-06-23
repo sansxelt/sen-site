@@ -16,9 +16,10 @@ const PLANS = [
   { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom valid judgments", blurb: "For governed evaluation programs.", perks: ["Unlimited evaluations", "SSO, SLA, support", "Custom exports + workflows"] },
 ] as { key: string; name: string; price: Record<Cycle, number>; credits: string; blurb: string; perks: string[]; featured?: boolean }[];
 
-// Display-only: show whole-dollar amounts (the live Stripe price may carry cents,
-// e.g. 1499.99 → "1,499"). Does NOT change what Stripe charges at checkout.
-const fmtAmount = (n: number) => (Number.isInteger(n) ? n : Math.floor(n)).toLocaleString();
+// Display-only: round to the nearest whole dollar (the live Stripe price may carry
+// cents, e.g. 1499.99 → "1,500"). Rounds rather than truncates so the shown price
+// is never below the checkout total. Does NOT change what Stripe charges.
+const fmtAmount = (n: number) => Math.round(n).toLocaleString();
 
 const ORDER: Record<string, number> = { free: 0, starter: 1, creator: 2, pro: 3, scale: 4, enterprise: 5 };
 

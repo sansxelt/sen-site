@@ -14,8 +14,11 @@ body { margin: 0; overflow-x: clip; max-width: 100%; }
    whole Vraelis surface to 0.9 makes the default match what looked best at ~90%
    browser zoom. Scoped to .rank-root so it does NOT shrink the embed widget on
    customers' sites; on a container (not html), so media-query breakpoints stay
-   keyed to the real viewport and nothing reflows. Tune the single value below. */
-.rank-root { zoom: 0.9; }
+   keyed to the real viewport and nothing reflows. Desktop/tablet only — phones
+   (< 768px) stay at 100% so text never feels tiny. Tune the single value below. */
+@media (min-width: 768px) {
+  .rank-root { zoom: 0.9; }
+}
 
 /* ── LIGHT THEME — warm paper, green primary, soft depth ─────────── */
 :root {
