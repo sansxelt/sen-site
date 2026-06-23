@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
-  title: "Vote",
-  description: "Vote on real creative tests and earn credits for valid feedback.",
+  title: "Evaluate & earn",
+  description: "Evaluate real creative candidates and earn credits for every valid judgment.",
   path: "/vote",
 });
 

@@ -36,7 +36,7 @@ export function GET() {
         </div>
 
         <div style={{ display: "flex", gap: "14px", fontSize: "23px" }}>
-          <div style={pill}>Real-user voting</div>
+          <div style={pill}>Human evaluation</div>
           <div style={pill}>AI report</div>
           <div style={pill}>Embed &amp; API</div>
         </div>

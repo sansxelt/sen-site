@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { getTestWithOptions } from "@/lib/v-db";
 import { EmbedVote } from "./embed-vote";
 
-export const metadata: Metadata = { title: "Vote — Vraelis", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Evaluate — Vraelis", robots: { index: false, follow: false } };
 
-// Standalone, self-contained voting widget meant to be iframed on any site
+// Standalone, self-contained evaluation widget meant to be iframed on any site
 // (see /embed.js). Inline styles so it renders cleanly regardless of host CSS.
 export default async function EmbedVotePage({ params }: { params: Promise<{ testId: string }> }) {
   const { testId } = await params;
@@ -17,7 +17,7 @@ export default async function EmbedVotePage({ params }: { params: Promise<{ test
         <EmbedVote testId={testId} title={data!.test.title} options={data!.options} />
       ) : (
         <div style={{ textAlign: "center", padding: "32px 12px" }}>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>This test isn&apos;t taking votes right now.</div>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>This evaluation isn&apos;t open right now.</div>
           <p style={{ color: "#5b6b63", fontSize: 13, marginTop: 6 }}>It may have finished collecting responses.</p>
         </div>
       )}

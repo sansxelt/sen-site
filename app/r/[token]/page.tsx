@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
       ? `Real people preferred Option ${OPTION_LETTERS[win.position]}, ${win.pct}%. See the full report.`
       : "A clear, real-user verdict on which creative wins. See the full Vraelis report.";
   } else if (test.status === "active") {
-    description = `Collecting votes. ${test.votes_valid} of ${test.votes_target} in.`;
+    description = `Collecting judgments. ${test.votes_valid} of ${test.votes_target} in.`;
   }
   // Per-report dynamic OG image (public-safe fields only); generic /og fallback.
   const image = `https://vraelis.com/og/r?token=${encodeURIComponent(token)}`;

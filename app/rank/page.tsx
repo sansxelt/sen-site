@@ -150,7 +150,7 @@ export default function RankLanding() {
                   </div>
                   <div style={{ marginTop: 16, padding: 13, borderRadius: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
                     <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5 }}>Vraelis analysis</div>
-                    <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, margin: 0 }}>B won on clarity and contrast. Voters found A too busy.</p>
+                    <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, margin: 0 }}>B won on clarity and contrast. People found A too busy.</p>
                   </div>
                 </div>
                 <div style={{ padding: "clamp(18px,2.4vw,26px)" }}>

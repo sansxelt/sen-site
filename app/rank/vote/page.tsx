@@ -50,7 +50,7 @@ export default function VotePage() {
       } else if (r.status === 409 || r.status === 400) {
         fetchNext(); // already voted / test just filled or closed — move on
       } else {
-        setErr("Couldn't save your vote. Try again.");
+        setErr("Couldn't save your judgment. Try again.");
       }
     } catch {
       setErr("Network error. Try again.");
@@ -63,7 +63,7 @@ export default function VotePage() {
 
   return (
     <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <p className="eyebrow">Vote &amp; earn</p>
+      <p className="eyebrow">Evaluate &amp; earn</p>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.2vw, 2.3rem)", marginBottom: 10 }}>Help evaluate <span className="em">creative options</span>.</h1>
       <p style={{ fontSize: 15, color: "var(--fg-3)", marginBottom: 20, maxWidth: 520, lineHeight: 1.55 }}>Evaluate real creative options and earn a credit for every valid judgment. Spend them on your own evaluations.</p>
 
@@ -82,7 +82,7 @@ export default function VotePage() {
             <div style={{ height: 6, borderRadius: 99, background: "var(--bg-2)", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${Math.min(100, (earned / cap) * 100)}%`, background: capReached ? "var(--money)" : "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
             </div>
-            {capReached && <div style={{ fontSize: 11, color: "var(--money)", marginTop: 5 }}>Daily earning cap reached. Your votes still count.</div>}
+            {capReached && <div style={{ fontSize: 11, color: "var(--money)", marginTop: 5 }}>Daily earning cap reached. Your judgments still count.</div>}
           </div>
         </div>
       )}
@@ -124,9 +124,9 @@ export default function VotePage() {
       {phase === "empty" && (
         <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 5vw, 56px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 700, marginBottom: 8 }}>You&apos;re all caught up</div>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>No tests need your vote right now. Check back soon, or start your own.</p>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>No evaluations need your judgment right now. Check back soon, or start your own.</p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn">Create a test</a>
+            <a href="/app/new" className="btn">Create an evaluation</a>
             <a href="/app" className="btn btn--ghost">Dashboard</a>
           </div>
         </div>

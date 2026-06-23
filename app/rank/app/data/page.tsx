@@ -138,7 +138,7 @@ export default async function DataPage() {
                   <span className="badge-now" style={{ flex: "none" }}>{t.winner ?? "Tie"}</span>
                 </a>
               ))}
-              <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 10, marginBottom: 0 }}>A live activity feed appears here as you launch tests, collect votes, and export.</p>
+              <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 10, marginBottom: 0 }}>A live activity feed appears here as you launch evaluations, collect judgments, and export.</p>
             </div>
           ) : <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>Your launches, completions, exports, and API activity will appear here.</p>}
         </div>

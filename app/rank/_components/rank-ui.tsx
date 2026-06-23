@@ -10,7 +10,7 @@ const PUBLIC_LINKS = [
   { href: "/how-it-works", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
   { href: "/developers", label: "Developers" },
-  { href: "/vote", label: "Vote & earn" },
+  { href: "/vote", label: "Evaluate & earn" },
 ];
 
 function Ic({ d }: { d: string }) {
@@ -44,7 +44,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
   ] },
   { group: "Account", items: [
     { href: "/app/account", label: "Account", d: I.user },
-    { href: "/vote", label: "Vote & earn", d: I.vote },
+    { href: "/vote", label: "Evaluate & earn", d: I.vote },
   ] },
 ];
 
@@ -118,7 +118,7 @@ function Footer() {
             </a>
           </div>
         </div>
-        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/vote", "Vote & earn"], ["/app/new", "Start a test"]]} />
+        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/vote", "Evaluate & earn"], ["/app/new", "Start an evaluation"]]} />
         <Col title="Developers" links={[["/developers", "Developers"], ["/app/api-keys", "API keys"], ["/app/api-keys", "Webhooks"], ["/app/data", "Data exports"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/app/account", "Account"], ["/app/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/privacy", "Privacy"], ["/terms", "Terms"], ["/data-rights", "Data rights"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />

@@ -50,13 +50,13 @@ export async function GET(req: Request) {
   const title = clamp(test.title || "Vraelis report", 92);
 
   if (test.status === "active") {
-    return new ImageResponse(<Card eyebrow="Collecting feedback" title={title} verdict="Real people are voting now" metric={`${test.votes_valid}/${test.votes_target} votes`} accent />, { ...SIZE, headers });
+    return new ImageResponse(<Card eyebrow="Collecting feedback" title={title} verdict="Real people are evaluating now" metric={`${test.votes_valid}/${test.votes_target} judgments`} accent />, { ...SIZE, headers });
   }
   if (report) {
     const r = report.results;
     const win = r.winner_option_id ? r.ranked.find((x) => x.id === r.winner_option_id) : null;
-    if (win) return new ImageResponse(<Card eyebrow="Real-user verdict" title={title} verdict={`Option ${OPTION_LETTERS[win.position]} wins`} metric={`${win.pct}% of ${r.total} vote${r.total === 1 ? "" : "s"}`} accent />, { ...SIZE, headers });
-    return new ImageResponse(<Card eyebrow="Real-user verdict" title={title} verdict="Too close to call" metric={`${r.total} vote${r.total === 1 ? "" : "s"}`} accent />, { ...SIZE, headers });
+    if (win) return new ImageResponse(<Card eyebrow="Real-user verdict" title={title} verdict={`Option ${OPTION_LETTERS[win.position]} wins`} metric={`${win.pct}% of ${r.total} judgment${r.total === 1 ? "" : "s"}`} accent />, { ...SIZE, headers });
+    return new ImageResponse(<Card eyebrow="Real-user verdict" title={title} verdict="Too close to call" metric={`${r.total} judgment${r.total === 1 ? "" : "s"}`} accent />, { ...SIZE, headers });
   }
   // complete but no report → generic (nothing to show)
   return new ImageResponse(generic(), { ...SIZE, headers });

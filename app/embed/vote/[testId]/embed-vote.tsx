@@ -36,8 +36,8 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
       const r = await fetch("/api/embed/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId, optionId: selected, reason, voterId: anonId(), timeSpentMs: Date.now() - startRef.current }) });
       if (r.status === 409) { setPhase("dup"); return; }
       if (r.ok) { setPhase("done"); return; }
-      setErr("Couldn't save your vote — try again.");
-    } catch { setErr("Couldn't save your vote — try again."); }
+      setErr("Couldn't save your response — try again.");
+    } catch { setErr("Couldn't save your response — try again."); }
     finally { setBusy(false); }
   }
 
@@ -45,8 +45,8 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
     return (
       <div ref={ref} style={{ textAlign: "center", padding: "28px 12px" }}>
         <div style={{ width: 44, height: 44, borderRadius: "50%", background: ACC, color: "#fff", display: "grid", placeItems: "center", margin: "0 auto 12px", fontSize: 22 }}>✓</div>
-        <div style={{ fontWeight: 700, fontSize: 16 }}>{phase === "done" ? "Thanks for voting!" : "You already voted on this."}</div>
-        <p style={{ color: "#5b6b63", fontSize: 13, marginTop: 6 }}>Your response helps decide what gets made.</p>
+        <div style={{ fontWeight: 700, fontSize: 16 }}>{phase === "done" ? "Thanks for evaluating!" : "You've already evaluated this."}</div>
+        <p style={{ color: "#5b6b63", fontSize: 13, marginTop: 6 }}>Your judgment helps decide what gets made.</p>
       </div>
     );
   }
@@ -69,7 +69,7 @@ export function EmbedVote({ testId, title, options }: { testId: string; title: s
       </div>
       <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why? (optional)" style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 13, boxSizing: "border-box", marginBottom: 10, outline: "none" }} />
       {err && <p style={{ color: "#d33", fontSize: 12, marginBottom: 8 }}>{err}</p>}
-      <button onClick={submit} disabled={!selected || busy} style={{ width: "100%", padding: 12, borderRadius: 10, border: "none", background: !selected || busy ? "#9bcabb" : ACC, color: "#fff", fontWeight: 700, fontSize: 14, cursor: !selected || busy ? "default" : "pointer" }}>{busy ? "Saving…" : "Submit vote"}</button>
+      <button onClick={submit} disabled={!selected || busy} style={{ width: "100%", padding: 12, borderRadius: 10, border: "none", background: !selected || busy ? "#9bcabb" : ACC, color: "#fff", fontWeight: 700, fontSize: 14, cursor: !selected || busy ? "default" : "pointer" }}>{busy ? "Saving…" : "Submit judgment"}</button>
     </div>
   );
 }

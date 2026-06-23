@@ -45,7 +45,7 @@ export default function NotFound() {
 
         <div className="v404-actions v404-in v404-d3">
           <Link href="/" className="btn btn--lg">Back home</Link>
-          <Link href="/vote" className="v404-link">Vote &amp; earn credits</Link>
+          <Link href="/vote" className="v404-link">Evaluate &amp; earn credits</Link>
         </div>
       </div>
     </main>

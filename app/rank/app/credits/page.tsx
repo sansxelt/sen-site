@@ -6,10 +6,10 @@ const RECOMMENDED = [9, 39, 99, 299, 999];
 const MIN = 5, MAX = 99999, RATE = 10;
 
 const RULES: [string, string][] = [
-  ["1 credit = 1 valid judgment", "You only pay for real human feedback."],
+  ["1 credit = 1 valid judgment", "You only pay for real human signal."],
   ["Held when you launch", "Credits are escrowed, not spent up front."],
-  ["Invalid votes filtered", "Too-fast, duplicate and spam votes are rejected."],
-  ["Unused credits refunded", "If a test doesn't fill, the rest comes back."],
+  ["Low-quality filtered", "Too-fast, duplicate, and spam responses are rejected."],
+  ["Unused credits refunded", "If an evaluation doesn't fill, the rest comes back."],
 ];
 
 const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
@@ -47,7 +47,7 @@ export default function CreditsPage() {
         <div>
           <p className="eyebrow">Credits</p>
           <h1 className="display">Top up credits</h1>
-          <p>$1 = 10 credits. 1 credit = 1 valid vote. Credits never expire.</p>
+          <p>$1 = 10 credits. 1 credit = 1 valid judgment. Credits never expire.</p>
         </div>
       </div>
 
@@ -104,7 +104,7 @@ export default function CreditsPage() {
             </div>
             <div style={{ marginTop: 16 }}>
               <button onClick={go} disabled={!valid} className="btn btn--lg" style={{ width: "100%", justifyContent: "center", opacity: valid ? 1 : 0.55 }}>Continue to checkout <span aria-hidden>→</span></button>
-              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis (Stripe). No credits? <a href="/vote" style={{ color: "var(--acc-deep)" }}>Vote to earn →</a></p>
+              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis (Stripe). No credits? <a href="/vote" style={{ color: "var(--acc-deep)" }}>Evaluate to earn →</a></p>
             </div>
           </div>
         </div>

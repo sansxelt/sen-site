@@ -30,7 +30,7 @@ export default function PrivacyPage() {
       <H>How we use data</H>
       <Ul items={[
         "Operate the product and your account.",
-        "Create and complete tests, collect votes, and filter low-quality votes.",
+        "Run evaluations, collect human judgments, and filter low-quality responses.",
         "Generate reports and enable sharing, exports, webhooks, and the API.",
         "Manage credits, plans, billing, and checkout.",
         "Prevent spam, duplicate voting, fraud, and abuse.",

@@ -15,8 +15,8 @@ export default function TermsPage() {
       <H>What Vraelis provides</H>
       <P>Vraelis is a creative evaluation and human preference platform. It includes:</P>
       <Ul items={[
-        "Creative testing and human voting.",
-        "Vote filtering for quality.",
+        "Creative evaluation with real human judgment.",
+        "Quality filtering of low-quality responses.",
         "Reports and optional public report links.",
         "Credits and plans.",
         "API keys, webhooks, and data exports.",

@@ -42,7 +42,7 @@ export function AnalysisPanel({ testId, initial, readOnly }: { testId: string; i
 
       {state === "error" && (
         <div style={{ padding: "6px 0" }}>
-          <p style={{ fontSize: 14, color: "var(--fg-2)", marginBottom: 12 }}>The AI analysis didn&apos;t generate this time. Your votes and breakdown below are unaffected.</p>
+          <p style={{ fontSize: 14, color: "var(--fg-2)", marginBottom: 12 }}>The AI analysis didn&apos;t generate this time. Your judgments and breakdown below are unaffected.</p>
           <button onClick={load} className="btn btn--ghost">Retry analysis</button>
         </div>
       )}

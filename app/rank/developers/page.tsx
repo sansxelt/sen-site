@@ -210,7 +210,7 @@ export default function DevelopersPage() {
             <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Export JSON or CSV</div><Code>{EXPORT_CURL}</Code></div>
             <div><div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Response shape</div><Code>{EXPORT_SHAPE}</Code></div>
           </div>
-          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 14, maxWidth: 720 }}>Includes the winner, vote breakdown, percentages, <strong style={{ color: "var(--fg-2)" }}>valid vs filtered</strong> vote quality, comments, and the AI analysis. Never includes account email, voter identities, or raw IP/device data.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 14, maxWidth: 720 }}>Includes the winner, judgment breakdown, percentages, <strong style={{ color: "var(--fg-2)" }}>valid vs filtered</strong> response quality, comments, and the AI analysis. Never includes account email, voter identities, or raw IP/device data.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}><strong style={{ color: "var(--fg-2)" }}>Export tiers.</strong> Add <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=summary</code> for a basic result, <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=standard</code> (the default) for the full report, or <code style={{ fontFamily: "var(--font-code, monospace)" }}>tier=scale</code> for the developer export (adds quality detail, this test&apos;s webhook and export counts, and a machine-readable <code style={{ fontFamily: "var(--font-code, monospace)" }}>schema_version</code>). JSON always carries <code style={{ fontFamily: "var(--font-code, monospace)" }}>schema_version</code>; CSV is the same option-row breakdown across tiers. Account-level and governed cohort datasets are Enterprise (contact sales).</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}><strong style={{ color: "var(--fg-2)" }}>Evaluation intelligence.</strong> Every JSON export carries an <code style={{ fontFamily: "var(--font-code, monospace)" }}>intelligence</code> object you can act on directly: <code style={{ fontFamily: "var(--font-code, monospace)" }}>decision_summary</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>recommended_output</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>preference_margin</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>directional_confidence</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>signal_quality</code>, and <code style={{ fontFamily: "var(--font-code, monospace)" }}>action_recommendation</code>.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 10, maxWidth: 720 }}>Exports never include raw API keys, key hashes, webhook secrets, raw voter IP/device signals, billing internals, or private owner fields.</p>
@@ -239,21 +239,21 @@ export default function DevelopersPage() {
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
             <div>
-              <p className="eyebrow">Embeddable widget</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 14 }}>One line. Evaluations anywhere.</h2>
-              <p className="lead-copy" style={{ marginBottom: 16 }}>Drop a Vraelis evaluation into your site, docs, or community and collect real judgments. One script tag, no other code. The widget is a responsive iframe.</p>
+              <p className="eyebrow">Embeddable evaluation widget</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 14 }}>One line. Human signal anywhere.</h2>
+              <p className="lead-copy" style={{ marginBottom: 16 }}>Drop a Vraelis evaluation into your site, app, docs, or community and collect valid judgments. One script tag, no other code. The widget is a responsive iframe.</p>
               <Code>{EMBED}</Code>
-              <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 12 }}>Get the snippet for any active evaluation on its report page. Responses are quality-filtered (too-fast, duplicate, and spam responses are rejected automatically).</p>
+              <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 12 }}>Get the snippet for any active evaluation on its report page. Low-quality responses are filtered automatically, so the result feeds a cleaner decision report.</p>
             </div>
             <div className="win">
               <div className="win__bar"><div className="win__dots"><i /><i /><i /></div><span className="win__addr">your-site.com</span></div>
               <div style={{ padding: 18, background: "var(--bg-1)" }}>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10 }}>Which cover do you prefer?</div>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 10 }}>Which candidate should ship?</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
                   <div style={{ aspectRatio: "1/1", borderRadius: 10, border: "2px solid var(--acc)", background: "linear-gradient(135deg, var(--acc-soft), #fff)" }} />
                   <div style={{ aspectRatio: "1/1", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--bg-2)" }} />
                 </div>
-                <div style={{ padding: "10px", borderRadius: 8, background: "var(--acc)", color: "#fff", textAlign: "center", fontWeight: 700, fontSize: 13 }}>Submit vote</div>
+                <div style={{ padding: "10px", borderRadius: 8, background: "var(--acc)", color: "#fff", textAlign: "center", fontWeight: 700, fontSize: 13 }}>Submit judgment</div>
                 <div style={{ textAlign: "center", marginTop: 8, fontSize: 10.5, color: "var(--acc-deep)", fontWeight: 600 }}>Powered by Vraelis</div>
               </div>
             </div>
