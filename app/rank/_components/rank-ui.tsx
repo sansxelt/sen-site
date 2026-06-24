@@ -167,11 +167,43 @@ function AppTopbar({ email }: { email: string | null }) {
   );
 }
 
+const WS_ROLE: Record<string, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
+function WorkspaceSwitcher() {
+  const [data, setData] = useState<{ available: { id: string; name: string; role: string; isPersonal: boolean }[]; selectedId: string | null } | null>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => { fetch("/api/v/workspace/available").then((r) => (r.ok ? r.json() : null)).then(setData).catch(() => {}); }, []);
+  if (!data || !data.available || data.available.length <= 1) return null; // only when the user belongs to >1 workspace
+  const current = data.available.find((w) => w.id === data.selectedId) || data.available[0];
+  function select(id: string) { document.cookie = `vws=${id}; path=/; max-age=31536000; samesite=lax`; window.location.href = "/app"; }
+  return (
+    <div style={{ position: "relative", margin: "2px 0 14px" }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "9px 11px", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", textAlign: "left" }}>
+        <span style={{ minWidth: 0 }}>
+          <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{current.isPersonal ? "Personal workspace" : current.name}</span>
+          <span style={{ display: "block", fontFamily: "var(--font-code)", fontSize: 10, color: "var(--fg-4)", marginTop: 1 }}>{WS_ROLE[current.role] ?? current.role}</span>
+        </span>
+        <span style={{ fontSize: 11, color: "var(--fg-4)" }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 12, boxShadow: "var(--shadow-lg)", padding: 6, zIndex: 70 }}>
+          {data.available.map((w) => (
+            <button key={w.id} onClick={() => select(w.id)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 10px", borderRadius: 8, border: "none", background: w.id === current.id ? "var(--acc-soft)" : "transparent", cursor: "pointer", textAlign: "left" }}>
+              <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.isPersonal ? "Personal workspace" : w.name}</span><span style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{WS_ROLE[w.role] ?? w.role}</span></span>
+              {w.id === current.id ? <span style={{ color: "var(--acc-deep)", fontSize: 12 }}>✓</span> : null}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AppSidebar() {
   const pathname = usePathname() || "";
   const active = (href: string) => href === "/app" ? pathname === "/app" : (pathname === href || pathname.startsWith(href + "/"));
   return (
     <aside className="app-side">
+      <WorkspaceSwitcher />
       {APP_NAV.map((g) => (
         <div key={g.group}>
           <div className="app-side__group">{g.group}</div>

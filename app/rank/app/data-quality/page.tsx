@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { cookies } from "next/headers";
 import { dataQuality, sourceQuality } from "@/lib/v-analytics";
 import { screeningStatsForUser } from "@/lib/v-screening";
-import { getWorkspaceContext } from "@/lib/v-workspace";
+import { getWorkspaceContext, resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
 import { SectionHead, Bars } from "../_workspace/analytics-ui";
 import { SharedWithYou } from "../_workspace/shared-with-you";
+import { WorkspaceMemberView } from "../_workspace/workspace-member-view";
 
 export const metadata: Metadata = { title: "Data quality" };
 
@@ -13,6 +15,8 @@ export default async function DataQualityPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fdata-quality");
+  const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
+  if (selected && !selected.isPersonal) return <WorkspaceMemberView selected={selected} summary={await workspaceProjectSummaries(selected)} variant="data-quality" />;
   const [q, sources, aud, ctx] = await Promise.all([dataQuality(email), sourceQuality(email), screeningStatsForUser(email), getWorkspaceContext(email)]);
   const hasData = q.responses > 0;
   const sharedCard = <SharedWithYou shared={ctx.shared.map((w) => ({ workspace_id: w.workspace_id, name: w.name, role: w.role }))} sharedProjects={ctx.sharedProjects.map((p) => ({ project_id: p.project_id, name: p.name, workspace_name: p.workspace_name, role: p.role }))} />;

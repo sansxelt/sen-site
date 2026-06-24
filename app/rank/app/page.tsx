@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan } from "@/lib/v-db";
 import { ensureSignupGrant, balance } from "@/lib/v-credits";
 import { isAdmin } from "@/lib/v-entitlements";
 import { listProjects, listEvaluations, workspaceStats } from "@/lib/v-projects";
+import { resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
 import { EvaluationList } from "./_workspace/evaluation-list";
 import { NewProjectForm } from "./_workspace/workspace-client";
+import { WorkspaceMemberView } from "./_workspace/workspace-member-view";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -77,6 +80,13 @@ export default async function Dashboard() {
 
   await ensureProfile(email, session.user?.name ?? undefined);
   await ensureSignupGrant(email);
+
+  // A selected SHARED workspace renders the read-only member dashboard; the personal
+  // workspace (default) keeps the full owner dashboard below, unchanged.
+  const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
+  if (selected && !selected.isPersonal) {
+    return <WorkspaceMemberView selected={selected} summary={await workspaceProjectSummaries(selected)} variant="dashboard" />;
+  }
   const [bal, plan, stats, projects, evaluations] = await Promise.all([
     balance(email), getPlan(email), workspaceStats(email), listProjects(email), listEvaluations(email, { limit: 60 }),
   ]);

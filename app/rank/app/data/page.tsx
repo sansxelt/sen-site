@@ -3,11 +3,13 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { balance } from "@/lib/v-credits";
 import { eventCounts, lastEventAt } from "@/lib/v-events";
+import { cookies } from "next/headers";
 import { decisionAnalytics } from "@/lib/v-analytics";
 import { listProjects } from "@/lib/v-projects";
-import { getWorkspaceContext } from "@/lib/v-workspace";
+import { getWorkspaceContext, resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
 import { SectionHead, Bars, Spark, Dist, CONF_COLORS, SIGNAL_COLORS } from "../_workspace/analytics-ui";
 import { SharedWithYou } from "../_workspace/shared-with-you";
+import { WorkspaceMemberView } from "../_workspace/workspace-member-view";
 
 export const metadata: Metadata = { title: "Analytics" };
 
@@ -17,6 +19,9 @@ export default async function DataPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fdata");
+
+  const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
+  if (selected && !selected.isPersonal) return <WorkspaceMemberView selected={selected} summary={await workspaceProjectSummaries(selected)} variant="data" />;
 
   const [a, bal, projects, counts, lastApi, lastHook, ctx] = await Promise.all([
     decisionAnalytics(email),

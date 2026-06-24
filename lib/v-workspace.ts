@@ -308,6 +308,79 @@ export async function isClientSafeOnly(email: string, projectId: string): Promis
   return a?.role === "client_viewer";
 }
 
+// ── Workspace switcher + workspace-scoped member dashboards ──
+export type AvailableWorkspace = { id: string; name: string; role: Role; isPersonal: boolean; ownerId: string };
+export type SelectedWorkspace = AvailableWorkspace & { isOwner: boolean; clientSafeOnly: boolean };
+export const canViewWorkspaceDashboard = (role: Role) => role !== "client_viewer";
+export const isWorkspaceClientSafeOnly = (role: Role) => role === "client_viewer";
+
+// Workspaces the user can switch to: their personal (owned) workspace + every
+// workspace they're an active member of.
+export async function getAvailableWorkspaces(email: string): Promise<AvailableWorkspace[]> {
+  if (!email || !isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const uid = norm(email);
+    const personal = await getOrCreatePersonalWorkspace(uid);
+    const out: AvailableWorkspace[] = personal ? [{ id: personal.id, name: personal.name, role: "owner", isPersonal: true, ownerId: personal.owner_user_id }] : [];
+    const { data: mem } = await s.from("v_workspace_members" as never).select("workspace_id,role").eq("email", uid).eq("status", "active");
+    const rows = ((mem as unknown as { workspace_id: string; role: Role }[]) ?? []).filter((m) => m.workspace_id !== personal?.id);
+    if (rows.length) {
+      const { data: wss } = await s.from("v_workspaces" as never).select("id,name,owner_user_id").in("id", rows.map((r) => r.workspace_id));
+      const roleById = Object.fromEntries(rows.map((r) => [r.workspace_id, r.role]));
+      for (const w of (wss as unknown as { id: string; name: string; owner_user_id: string }[]) ?? []) {
+        out.push({ id: w.id, name: w.name, role: roleById[w.id] ?? "viewer", isPersonal: false, ownerId: w.owner_user_id });
+      }
+    }
+    return out;
+  } catch { return []; }
+}
+
+// Resolve the active workspace from a (possibly stale/revoked) selected id. Falls
+// back to the personal workspace gracefully if the selection is no longer valid.
+export async function resolveWorkspaceSelection(email: string, selectedId?: string | null): Promise<{ available: AvailableWorkspace[]; selected: SelectedWorkspace | null }> {
+  const available = await getAvailableWorkspaces(email);
+  const uid = norm(email);
+  const pick = available.find((w) => w.id === selectedId) ?? available.find((w) => w.isPersonal) ?? available[0] ?? null;
+  const selected = pick ? { ...pick, isOwner: pick.ownerId === uid, clientSafeOnly: pick.role === "client_viewer" } : null;
+  return { available, selected };
+}
+
+// Read-only team view of a SHARED workspace (selected in the switcher). Non-client
+// members see the member list + project-access overview (read-only — no manage
+// controls); client viewers see neither (reports only).
+export async function sharedTeamView(selected: SelectedWorkspace): Promise<{ role: Role; clientSafe: boolean; members: Member[] | null; projects: ProjectAccessSummary[] }> {
+  const clientSafe = selected.clientSafeOnly;
+  const members = clientSafe ? null : await listMembers(selected.id);
+  const projects = clientSafe ? [] : await workspaceProjectAccess(selected.id);
+  return { role: selected.role, clientSafe, members, projects };
+}
+
+export type WorkspaceProjectSummary = { id: string; name: string; evaluations: number; active: number; completed: number; validJudgments: number };
+export type WorkspaceSummary = { totals: { evaluations: number; active: number; completed: number; validJudgments: number }; projects: WorkspaceProjectSummary[]; clientSafe: boolean };
+
+// Workspace-scoped project rollups (all projects in the workspace; owned by the
+// workspace owner). Read-only aggregates — counts + valid judgments only.
+export async function workspaceProjectSummaries(selected: SelectedWorkspace): Promise<WorkspaceSummary> {
+  const empty: WorkspaceSummary = { totals: { evaluations: 0, active: 0, completed: 0, validJudgments: 0 }, projects: [], clientSafe: selected.clientSafeOnly };
+  if (!isDatabaseConfigured()) return empty;
+  try {
+    const s = getSupabaseAdminClient();
+    const { data: projs } = await s.from("v_projects" as never).select("id,name").eq("workspace_id", selected.id).order("updated_at", { ascending: false }).limit(200);
+    const projects = (projs as unknown as { id: string; name: string }[]) ?? [];
+    if (!projects.length) return empty;
+    const ids = projects.map((p) => p.id);
+    const { data: td } = await s.from("v_tests" as never).select("project_id,status,votes_valid,is_sandbox").in("project_id", ids).eq("user_id", selected.ownerId).limit(3000);
+    const tests = ((td as unknown as { project_id: string; status: string; votes_valid: number; is_sandbox?: boolean }[]) ?? []).filter((t) => !t.is_sandbox);
+    const by: Record<string, WorkspaceProjectSummary> = {};
+    for (const p of projects) by[p.id] = { id: p.id, name: p.name, evaluations: 0, active: 0, completed: 0, validJudgments: 0 };
+    for (const t of tests) { const a = by[t.project_id]; if (!a) continue; a.evaluations++; if (t.status === "active") a.active++; if (t.status === "complete") a.completed++; a.validJudgments += t.votes_valid || 0; }
+    const list = Object.values(by);
+    const totals = list.reduce((acc, p) => ({ evaluations: acc.evaluations + p.evaluations, active: acc.active + p.active, completed: acc.completed + p.completed, validJudgments: acc.validJudgments + p.validJudgments }), { evaluations: 0, active: 0, completed: 0, validJudgments: 0 });
+    return { totals, projects: list, clientSafe: selected.clientSafeOnly };
+  } catch { return empty; }
+}
+
 export async function listProjectMembers(email: string, projectId: string): Promise<ProjectMember[]> {
   if (!(await canManageProjectMembers(email, projectId))) return [];
   try {

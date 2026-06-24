@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { cookies } from "next/headers";
 import { ensureProfile } from "@/lib/v-db";
 import { listProjects } from "@/lib/v-projects";
-import { getWorkspaceContext } from "@/lib/v-workspace";
+import { getWorkspaceContext, resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
 import { NewProjectForm } from "../_workspace/workspace-client";
 import { SharedWithYou } from "../_workspace/shared-with-you";
+import { WorkspaceMemberView } from "../_workspace/workspace-member-view";
 
 export const metadata: Metadata = { title: "Projects" };
 
@@ -14,6 +16,8 @@ export default async function ProjectsPage() {
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fprojects");
   await ensureProfile(email, session.user?.name ?? undefined);
+  const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
+  if (selected && !selected.isPersonal) return <WorkspaceMemberView selected={selected} summary={await workspaceProjectSummaries(selected)} variant="projects" />;
   const [projects, ctx] = await Promise.all([listProjects(email), getWorkspaceContext(email)]);
   const sharedCard = <SharedWithYou shared={ctx.shared.map((w) => ({ workspace_id: w.workspace_id, name: w.name, role: w.role }))} sharedProjects={ctx.sharedProjects.map((p) => ({ project_id: p.project_id, name: p.name, workspace_name: p.workspace_name, role: p.role }))} />;
 
