@@ -552,3 +552,43 @@ create index if not exists v_screening_resp_test_idx on v_screening_responses (t
 -- in app code (where is_sandbox = true). Old rows default to false (production).
 alter table v_tests add column if not exists is_sandbox boolean not null default false;
 create index if not exists v_tests_sandbox_idx on v_tests (user_id, is_sandbox);
+
+-- ── Team workspaces + client seats (v1 collaboration) ──
+-- A workspace groups a team's projects/evaluations. Every user lazily gets a
+-- personal workspace they own. Members are invited by email; an invite is `pending`
+-- until that email signs in (matched + activated in app code). Roles gate access in
+-- app code via lib/v-workspace.ts — no billing/credit/API change. Existing
+-- evaluations stay owned by user_id; projects link to a workspace via the nullable
+-- v_projects.workspace_id below (old projects stay null and keep working for the owner).
+create table if not exists v_workspaces (
+  id            uuid primary key default gen_random_uuid(),
+  owner_user_id text not null,                 -- lowercased email of the owner (billing stays this user)
+  name          text not null,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+create index if not exists v_workspaces_owner_idx on v_workspaces (owner_user_id);
+
+create table if not exists v_workspace_members (
+  id           uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references v_workspaces(id) on delete cascade,
+  user_id      text,                            -- set once the invited email signs in (else null = pending)
+  email        text not null,                   -- lowercased invited email
+  role         text not null,                   -- owner|admin|editor|viewer|client_viewer
+  status       text not null default 'pending', -- pending|active|revoked
+  invited_by   text,                            -- lowercased email of the inviter (not shown to clients)
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create index if not exists v_ws_members_ws_idx on v_workspace_members (workspace_id);
+create index if not exists v_ws_members_user_idx on v_workspace_members (user_id);
+create index if not exists v_ws_members_email_idx on v_workspace_members (email);
+create index if not exists v_ws_members_status_idx on v_workspace_members (workspace_id, status);
+-- one membership per (workspace, email)
+create unique index if not exists v_ws_members_uniq on v_workspace_members (workspace_id, email);
+
+-- Optional workspace link on a project. Nullable so old projects + the existing
+-- owner-scoped paths keep working unchanged (stays null). New projects set it to the
+-- creator's personal workspace in app code.
+alter table v_projects add column if not exists workspace_id uuid references v_workspaces(id) on delete set null;
+create index if not exists v_projects_workspace_idx on v_projects (workspace_id);

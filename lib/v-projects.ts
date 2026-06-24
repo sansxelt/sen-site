@@ -7,6 +7,7 @@ import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { OPTION_LETTERS, type VTest, type VReport } from "./v-db";
 import { evaluationIntelligence, evaluationHealth } from "./v-intelligence";
 import { logEvent } from "./v-events";
+import { getOrCreatePersonalWorkspace } from "./v-workspace";
 
 const norm = (e: string) => e.trim().toLowerCase();
 
@@ -27,12 +28,17 @@ export async function createProject(userId: string, name: string, description?: 
   const nm = (name || "").trim().slice(0, 120);
   if (!nm) return { ok: false };
   const s = getSupabaseAdminClient();
-  const { data, error } = await s.from("v_projects" as never)
-    .insert({ user_id: norm(userId), name: nm, description: (description || "").trim().slice(0, 600) || null } as never)
-    .select("id").single();
+  // New projects belong to the creator's personal workspace (null pre-migration so
+  // old paths keep working). Retry without workspace_id if the column isn't there yet.
+  const ws = await getOrCreatePersonalWorkspace(userId);
+  const base = { user_id: norm(userId), name: nm, description: (description || "").trim().slice(0, 600) || null };
+  let res = await s.from("v_projects" as never).insert((ws ? { ...base, workspace_id: ws.id } : base) as never).select("id").single();
+  if (res.error && ws) res = await s.from("v_projects" as never).insert(base as never).select("id").single();
+  const { data, error } = res;
   if (error || !data) { console.error("createProject:", error?.message); return { ok: false }; }
   const id = (data as unknown as { id: string }).id;
   await logEvent({ userId: norm(userId), eventType: "project_created", actorType: "owner", source: "app", metadata: { project_id: id } });
+  if (ws) await logEvent({ userId: norm(userId), eventType: "project_added_to_workspace", actorType: "owner", source: "app", metadata: { project_id: id, workspace_id: ws.id } });
   return { ok: true, id };
 }
 
