@@ -5,8 +5,9 @@ import { useState } from "react";
 type Role = "owner" | "admin" | "editor" | "viewer" | "client_viewer";
 type Member = { id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string };
 type Shared = { workspace_id: string; name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
+type SharedProject = { project_id: string; name: string; workspace_name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
 type Workspace = { id: string; owner_user_id: string; name: string } | null;
-type Ctx = { workspace: Workspace; myRole: Role; members: Member[]; shared: Shared[] };
+type Ctx = { workspace: Workspace; myRole: Role; members: Member[]; shared: Shared[]; sharedProjects: SharedProject[] };
 
 const INVITABLE: Role[] = ["admin", "editor", "viewer", "client_viewer"];
 const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
@@ -127,10 +128,28 @@ export function TeamClient({ email, initial }: { email: string; initial: Ctx }) 
         </>
       )}
 
-      {/* Shared with you */}
+      {/* Project-level shares */}
+      {ctx.sharedProjects.length > 0 && (
+        <>
+          <div style={cardHead}>Projects shared with you</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
+            {ctx.sharedProjects.map((p) => (
+              <a key={p.project_id} href={`/app/shared/projects/${p.project_id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <div>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>{p.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2 }}>{p.workspace_name} · {p.evaluations.length} report{p.evaluations.length === 1 ? "" : "s"} · project access</div>
+                </div>
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}><RolePill role={p.role} /><span style={{ fontSize: 12.5, color: "var(--acc-deep)" }}>Open →</span></span>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Shared with you (workspace-level) */}
       {ctx.shared.length > 0 && (
         <>
-          <div style={cardHead}>Shared with you</div>
+          <div style={cardHead}>Workspaces shared with you</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
             {ctx.shared.map((w) => (
               <div key={w.workspace_id} className="card">

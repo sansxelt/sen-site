@@ -592,3 +592,29 @@ create unique index if not exists v_ws_members_uniq on v_workspace_members (work
 -- creator's personal workspace in app code.
 alter table v_projects add column if not exists workspace_id uuid references v_workspaces(id) on delete set null;
 create index if not exists v_projects_workspace_idx on v_projects (workspace_id);
+
+-- ── Project-limited client sharing ──
+-- Project-scoped access so a client/collaborator can be invited to ONE project
+-- (its client-ready reports) without seeing the rest of the workspace. This is a
+-- NARROWER layer on top of workspace membership — workspace owner/admin/editor/viewer
+-- access is unchanged. Invites are by email, pending until that email signs in
+-- (activated in app code), same as workspace invites. workspace_id is denormalized
+-- from the project for faster access checks (kept consistent in app code).
+create table if not exists v_project_members (
+  id           uuid primary key default gen_random_uuid(),
+  project_id   uuid not null references v_projects(id) on delete cascade,
+  workspace_id uuid references v_workspaces(id) on delete cascade,
+  user_id      text,                            -- set once the invited email signs in (else null = pending)
+  email        text not null,                   -- lowercased invited email
+  role         text not null,                   -- editor|viewer|client_viewer
+  status       text not null default 'pending', -- pending|active|revoked
+  invited_by   text,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create index if not exists v_proj_members_proj_idx on v_project_members (project_id);
+create index if not exists v_proj_members_ws_idx on v_project_members (workspace_id);
+create index if not exists v_proj_members_user_idx on v_project_members (user_id);
+create index if not exists v_proj_members_email_idx on v_project_members (email);
+create index if not exists v_proj_members_status_idx on v_project_members (project_id, status);
+create unique index if not exists v_proj_members_uniq on v_project_members (project_id, email);

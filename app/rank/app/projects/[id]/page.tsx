@@ -6,6 +6,7 @@ import { projectAnalytics, projectSourceQuality } from "@/lib/v-analytics";
 import { EvaluationList } from "../../_workspace/evaluation-list";
 import { EditProjectForm } from "../../_workspace/workspace-client";
 import { SectionHead, Dist, Bars, CONF_COLORS, SIGNAL_COLORS } from "../../_workspace/analytics-ui";
+import { ProjectAccess } from "./project-access";
 
 export const metadata: Metadata = { title: "Project" };
 
@@ -102,6 +103,8 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
           <a href="/app/new" className="btn">New evaluation →</a>
         </div>
       )}
+
+      <ProjectAccess projectId={project.id} />
     </div>
   );
 }
