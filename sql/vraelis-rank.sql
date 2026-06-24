@@ -636,3 +636,23 @@ alter table v_project_members add column if not exists invite_accepted_at  times
 alter table v_project_members add column if not exists invite_last_sent_at timestamptz;
 alter table v_project_members add column if not exists invite_send_count   integer not null default 0;
 create index if not exists v_proj_members_token_idx on v_project_members (invite_token_hash) where invite_token_hash is not null;
+
+-- ── Per-seat / team billing (v1) ──
+-- Optional per-workspace team-seat subscription (Stripe). A paid seat is an ACTIVE
+-- workspace member with role admin/editor/viewer. Owner (the billing account holder)
+-- and client_viewer are FREE; pending/revoked don't count. Self-contained — does NOT
+-- touch personal billing. Gated behind STRIPE_TEAM_SEAT_PRICE_ID; absent => "not
+-- configured" and no seat enforcement (collaboration stays open). One row per workspace.
+create table if not exists v_workspace_billing (
+  id                          uuid primary key default gen_random_uuid(),
+  workspace_id                uuid not null references v_workspaces(id) on delete cascade,
+  stripe_customer_id          text,
+  stripe_subscription_id      text,
+  stripe_subscription_item_id text,
+  seat_quantity               integer not null default 0,
+  status                      text,                 -- active|trialing|past_due|canceled|...
+  current_period_end          timestamptz,
+  created_at                  timestamptz not null default now(),
+  updated_at                  timestamptz not null default now()
+);
+create unique index if not exists v_workspace_billing_ws_uidx on v_workspace_billing (workspace_id);

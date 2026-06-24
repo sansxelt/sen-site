@@ -12,6 +12,7 @@ import { evaluationIntelligence } from "./v-intelligence";
 import { projectAnalytics, projectSourceQuality } from "./v-analytics";
 import { sendInviteEmail, type InviteDelivery } from "./email";
 import { allow } from "./vraelis-ratelimit";
+import { canAddPaidSeat, logSeatChange, PAID_SEAT_ROLES } from "./v-team-billing";
 
 const norm = (e: string) => e.trim().toLowerCase();
 const SITE = "https://vraelis.com";
@@ -213,6 +214,14 @@ export async function inviteMember(actorEmail: string, workspaceId: string, invi
   const actorMember = await membershipFor(actor, workspaceId);
   if (ownerId !== actor && !canManageMembers(actorMember?.role ?? null)) return { ok: false, error: "forbidden" };
   if (invitee === ownerId) return { ok: false, error: "already_member" };
+  // Seat enforcement: admin/editor/viewer are PAID seats; client_viewer is free.
+  if ((PAID_SEAT_ROLES as readonly string[]).includes(role)) {
+    const seat = await canAddPaidSeat(workspaceId);
+    if (!seat.ok) {
+      await logEvent({ userId: actor, eventType: "team_seat_limit_reached", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, seat_count: seat.used, role } });
+      return { ok: false, error: "seat_limit" };
+    }
+  }
   if (!(await allow(`ws-invite:${workspaceId}`, 10, 3600))) return { ok: false, error: "rate_limited" };
   const { data: inserted, error } = await s.from("v_workspace_members" as never).insert({ workspace_id: workspaceId, email: invitee, role, status: "pending", invited_by: actor } as never).select("id").single();
   if (error || !inserted) {
@@ -240,6 +249,7 @@ export async function changeMemberRole(actorEmail: string, memberId: string, rol
   if (ownerId !== actor && !canManageMembers((await membershipFor(actor, m.workspace_id))?.role ?? null)) return { ok: false, error: "forbidden" };
   await s.from("v_workspace_members" as never).update({ role, updated_at: new Date().toISOString() } as never).eq("id", memberId);
   await logEvent({ userId: actor, eventType: "workspace_member_role_changed", actorType: "owner", source: "app", metadata: { workspace_id: m.workspace_id, role } });
+  await logSeatChange(actor, m.workspace_id, "role_changed");
   return { ok: true };
 }
 
@@ -256,6 +266,7 @@ export async function revokeMember(actorEmail: string, memberId: string): Promis
   if (ownerId !== actor && !canManageMembers((await membershipFor(actor, m.workspace_id))?.role ?? null)) return { ok: false, error: "forbidden" };
   await s.from("v_workspace_members" as never).update({ status: "revoked", updated_at: new Date().toISOString() } as never).eq("id", memberId);
   await logEvent({ userId: actor, eventType: "workspace_member_revoked", actorType: "owner", source: "app", metadata: { workspace_id: m.workspace_id, role: m.role } });
+  await logSeatChange(actor, m.workspace_id, "revoked");
   return { ok: true };
 }
 

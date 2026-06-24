@@ -3,14 +3,16 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { getWorkspaceContext, resolveWorkspaceSelection, sharedTeamView, workspaceProjectSummaries, ROLE_LABEL } from "@/lib/v-workspace";
+import { teamSeatState, syncTeamCheckout } from "@/lib/v-team-billing";
 import { TeamClient } from "./team-client";
 
 export const metadata: Metadata = { title: "Team" };
 
-export default async function TeamPage() {
+export default async function TeamPage({ searchParams }: { searchParams: Promise<{ session_id?: string; team?: string }> }) {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fteam");
+  const sp = await searchParams;
 
   // A selected SHARED workspace shows a read-only team view; the personal workspace
   // (default) keeps the full management UI.
@@ -55,5 +57,8 @@ export default async function TeamPage() {
   }
 
   const ctx = await getWorkspaceContext(email);
-  return <TeamClient email={email.trim().toLowerCase()} initial={ctx} />;
+  // Owner's personal workspace: team-seat billing card. Sync after a checkout return.
+  if (ctx.workspace && sp.session_id) await syncTeamCheckout(ctx.workspace.id, sp.session_id);
+  const billing = ctx.workspace ? await teamSeatState(ctx.workspace.id) : null;
+  return <TeamClient email={email.trim().toLowerCase()} initial={ctx} billing={billing} />;
 }
