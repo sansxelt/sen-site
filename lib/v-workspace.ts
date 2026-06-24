@@ -718,6 +718,23 @@ export async function canTransferWorkspaceOwnership(ownerEmail: string, workspac
   return { ok: true, blocked: false };
 }
 
+// Resolve the workspace whose TEAM BILLING the caller manages: the selected workspace
+// if they OWN it (e.g. one received via ownership migration), else their personal
+// workspace. Keeps team billing checkout/portal/state reachable for a non-personal owned
+// workspace. Backward-compatible: no/personal selection => personal workspace as before.
+export async function ownedWorkspaceForBilling(email: string, selectedWorkspaceId?: string | null): Promise<{ id: string; name: string } | null> {
+  const personal = await getOrCreatePersonalWorkspace(email);
+  if (!personal) return null;
+  if (selectedWorkspaceId && selectedWorkspaceId !== personal.id) {
+    try {
+      const { data } = await getSupabaseAdminClient().from("v_workspaces" as never).select("id,owner_user_id,name").eq("id", selectedWorkspaceId).maybeSingle();
+      const ws = data as unknown as { id: string; owner_user_id: string; name: string } | null;
+      if (ws && ws.owner_user_id === norm(email)) return { id: ws.id, name: ws.name };
+    } catch { /* fall back to personal */ }
+  }
+  return { id: personal.id, name: personal.name };
+}
+
 // ── Billing ownership migration (v1) ──
 // Active billing no longer hard-blocks transfer: it creates a PENDING transfer the
 // target must accept by setting up their OWN team billing. Once the new subscription is
