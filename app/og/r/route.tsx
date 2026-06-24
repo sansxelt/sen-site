@@ -27,14 +27,14 @@ function Card({ eyebrow, title, verdict, metric, accent }: { eyebrow: string; ti
         </div>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 22, color: "rgba(255,255,255,0.6)" }}>
-        <div style={{ display: "flex" }}>Real people voted. Vraelis reports what wins.</div>
+        <div style={{ display: "flex" }}>Real people evaluated. Vraelis reports what wins.</div>
         <div style={{ display: "flex" }}>vraelis.com</div>
       </div>
     </div>
   );
 }
 
-const generic = () => <Card eyebrow="Vraelis" title="Test generated content with real users." verdict="Learn what wins before you launch." />;
+const generic = () => <Card eyebrow="Vraelis" title="Evaluate creative and AI outputs with real people." verdict="Get a decision package before you ship." />;
 
 export async function GET(req: Request) {
   const token = new URL(req.url).searchParams.get("token") || "";
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
   const title = clamp(test.title || "Vraelis report", 92);
 
   if (test.status === "active") {
-    return new ImageResponse(<Card eyebrow="Collecting feedback" title={title} verdict="Real people are evaluating now" metric={`${test.votes_valid}/${test.votes_target} judgments`} accent />, { ...SIZE, headers });
+    return new ImageResponse(<Card eyebrow="Collecting judgments" title={title} verdict="Real people are evaluating now" metric={`${test.votes_valid}/${test.votes_target} judgments`} accent />, { ...SIZE, headers });
   }
   if (report) {
     const r = report.results;

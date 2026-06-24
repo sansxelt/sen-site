@@ -145,17 +145,17 @@ export default function NewTest() {
   async function submit() {
     setError("");
     const options = isText ? texts.map((t) => t.trim()).filter(Boolean).map((t) => ({ label: t })) : assets.map((a) => ({ asset: a.url, path: a.path ?? undefined }));
-    if (!title.trim()) return setError("Give your test a title.");
+    if (!title.trim()) return setError("Give your evaluation a title.");
     if (options.length < 2) return setError(isText ? "Add at least 2 text options." : "Upload at least 2 images.");
     setBusy(true);
     try {
       const res = await fetch("/api/v/tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, context, category, audience, votesTarget: votes, options, projectId: projectId || undefined, targetAudience: targetAudience || undefined }) });
       if (res.status === 401) { signIn("google", { callbackUrl: "/app/new" }); return; }
       const j = await res.json().catch(() => ({}));
-      if (res.status === 402) { setError(`Not enough credits. This test needs ${j.needed}. Earn by voting, or top up.`); return; }
-      if (res.status === 403 && j.error === "plan_limit") { setError(`You've hit your plan's ${j.limit} active test${j.limit === 1 ? "" : "s"} this month. Upgrade for more.`); return; }
+      if (res.status === 402) { setError(`Not enough credits. This evaluation needs ${j.needed}. Earn credits by giving feedback in other evaluations, or top up.`); return; }
+      if (res.status === 403 && j.error === "plan_limit") { setError(`You've hit your plan's ${j.limit} active evaluation${j.limit === 1 ? "" : "s"} this month. Upgrade for more.`); return; }
       if (res.status === 413) { setError("One of your images is too large. Try smaller or fewer images."); return; }
-      if (!res.ok) { setError("Couldn't launch the test. Try again."); return; }
+      if (!res.ok) { setError("Couldn't launch the evaluation. Try again."); return; }
       window.location.href = `/app/tests/${j.id}/report?launched=1`;
     } catch { setError("Network error. Try again."); }
     finally { setBusy(false); }
@@ -167,9 +167,9 @@ export default function NewTest() {
     <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 100 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">Create</p>
-          <h1 className="display">Create a new evaluation</h1>
-          <p>Submit your candidates — images, AI outputs, copy, UI — choose a judgment target, and get a decision report on what to ship and why.</p>
+          <p className="eyebrow">New evaluation</p>
+          <h1 className="display">What decision are you making?</h1>
+          <p>Submit your candidates — images, AI outputs, copy, UI — collect qualified human signal, and get a decision package: the recommended option, confidence, signal quality, and what to do next.</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <div className="stat" style={{ padding: "12px 18px" }}><div className="stat__l">Plan</div><div className="stat__v" style={{ fontSize: 18 }}>{planName}</div></div>

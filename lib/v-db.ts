@@ -197,12 +197,12 @@ export async function completeTest(testId: string): Promise<void> {
   let winnerId: string | null = null;
   let recommendation: string;
   if (total === 0) {
-    recommendation = "Not enough votes yet to call a winner.";
+    recommendation = "Not enough judgments yet to call a winner.";
   } else if (!decisive) {
-    recommendation = `It's a tie at the top (${top.pct}%). Collect more votes to break it.`;
+    recommendation = `It's a tie at the top (${top.pct}%). Collect more judgments to break it.`;
   } else {
     winnerId = top.id;
-    recommendation = `Option ${LETTERS[top.position] ?? "?"} won with ${top.pct}% of ${total} vote${total === 1 ? "" : "s"} — go with it.`;
+    recommendation = `Option ${LETTERS[top.position] ?? "?"} won with ${top.pct}% of ${total} judgment${total === 1 ? "" : "s"} — go with it.`;
   }
   const results = { total, filtered, ranked, winner_option_id: winnerId, comments, recommendation };
   await s.from("v_reports" as never).upsert({ test_id: testId, winner_option_id: winnerId, results } as never, { onConflict: "test_id" } as never);

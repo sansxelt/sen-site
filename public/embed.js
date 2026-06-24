@@ -1,7 +1,7 @@
-/* Vraelis embeddable vote widget loader.
+/* Vraelis embedded evaluation widget loader.
  * Usage on any site:
  *   <script async src="https://vraelis.com/embed.js" data-vraelis-test="TEST_ID"></script>
- * Replaces the script tag with a responsive iframe of the vote widget.
+ * Replaces the script tag with a responsive iframe of the evaluation widget.
  */
 (function () {
   var ORIGIN = "https://vraelis.com";
@@ -14,7 +14,7 @@
 
     var iframe = document.createElement("iframe");
     iframe.src = ORIGIN + "/embed/vote/" + encodeURIComponent(testId);
-    iframe.title = "Vraelis — vote";
+    iframe.title = "Vraelis — evaluate";
     iframe.loading = "lazy";
     iframe.setAttribute("scrolling", "no");
     iframe.style.cssText = "width:100%;max-width:440px;height:520px;border:0;border-radius:14px;display:block;";

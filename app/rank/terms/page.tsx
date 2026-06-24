@@ -29,10 +29,10 @@ export default function TermsPage() {
       <P>You are responsible for the content you upload, link, test, or share, and you must have the right to use it. Do not submit content that is illegal, harmful, infringing, deceptive, abusive, or that violates someone&apos;s privacy.</P>
 
       <H>Credits</H>
-      <P>One credit equals one valid judgment. Credits are held when a test launches. Invalid or low-quality votes may be filtered and do not count. Held credits for votes that are never collected are returned when a test completes. Prices, packs, plans, and limits may change over time.</P>
+      <P>One credit equals one valid judgment. Credits are held when an evaluation launches. Invalid or low-quality responses may be filtered and do not count. Held credits for judgments that are never collected are returned when an evaluation completes. Prices, packs, plans, and limits may change over time.</P>
 
       <H>Reports and results</H>
-      <P>Reports are informational feedback based on the votes collected. Vraelis does not guarantee sales, clicks, conversions, revenue, or campaign performance. You are responsible for the business decisions you make from a report. Public report links are optional and can be viewed by anyone who has the link.</P>
+      <P>Reports are informational feedback based on the judgments collected. Vraelis does not guarantee sales, clicks, conversions, revenue, or campaign performance. You are responsible for the business decisions you make from a report. Public report links are optional and can be viewed by anyone who has the link.</P>
 
       <H>API keys, webhooks, and exports</H>
       <P>API keys are secrets, and you are responsible for keeping them secure. Webhook events may be signed so you can verify them. Handle exported data responsibly. Abuse, scraping, excessive requests, or attempts to bypass limits may be rate-limited or blocked.</P>
@@ -44,9 +44,9 @@ export default function TermsPage() {
       <Ul items={[
         "Fraud.",
         "Spam.",
-        "Bot or automated voting.",
-        "Vote manipulation.",
-        "Duplicate-voting abuse.",
+        "Bot or automated participation.",
+        "Signal manipulation.",
+        "Duplicate-participation abuse.",
         "Scraping or attacking the service.",
         "Uploading infringing or illegal content.",
         "Using Vraelis to mislead people.",

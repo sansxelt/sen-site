@@ -134,7 +134,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0 }: 
           <Metric l="Filtered rate" v={`${intel.filteredRate}%`} />
           {votesTarget ? <Metric l="Target" v={votesTarget.toLocaleString()} /> : null}
         </div>
-        <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginTop: 12, marginBottom: 0 }}>Low-quality, too-fast, or duplicate responses are filtered automatically. <strong style={{ color: "var(--fg-1)" }}>Only valid human judgments count</strong>. Raw voter, IP, and device data is never shown.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginTop: 12, marginBottom: 0 }}>Low-quality, too-fast, or duplicate responses are filtered automatically. <strong style={{ color: "var(--fg-1)" }}>Only valid human judgments count</strong>. Raw participant, IP, and device data is never shown.</p>
       </div>
 
       {/* ── Reasoning signals ── */}

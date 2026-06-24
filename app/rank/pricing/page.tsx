@@ -66,7 +66,7 @@ export default function PricingPage() {
         <div className="glow glow--soft glow--bleed" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Pay for <span className="em">decisions</span>, not votes.</h1>
+          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Pay for <span className="em">decisions</span>, not raw counts.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Credits are the unit — <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment</strong> — but plans are sized by what you can decide: how many evaluations, how strong the reports, and whether you can share, export, or use the API. Top up anytime.</p>
           <div className="seg">
             {(["monthly", "yearly"] as Cycle[]).map((c) => (
@@ -78,7 +78,7 @@ export default function PricingPage() {
 
       <section className="section" style={{ paddingTop: "clamp(28px, 3vw, 40px)" }}>
         <div className="wrap">
-          <p style={{ textAlign: "center", maxWidth: 660, margin: "0 auto clamp(22px, 3vw, 32px)", fontSize: 14.5, color: "var(--fg-2)", lineHeight: 1.55 }}>You&apos;re not paying for votes — you&apos;re paying for a clearer decision before you spend, ship, or present the wrong creative. Every plan includes valid human signal, a recommendation with reasoning, and exportable decision reports.</p>
+          <p style={{ textAlign: "center", maxWidth: 660, margin: "0 auto clamp(22px, 3vw, 32px)", fontSize: 14.5, color: "var(--fg-2)", lineHeight: 1.55 }}>You&apos;re not paying for raw counts — you&apos;re paying for a clearer decision before you spend, ship, or present the wrong creative. Every plan includes valid human signal, a recommendation with reasoning, and exportable decision reports.</p>
           <div className="tile-grid cols-3">
             {PLANS.map((p) => {
               const cell = prices[p.key]?.[cycle];

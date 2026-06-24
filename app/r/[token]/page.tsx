@@ -11,10 +11,10 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const data = await getSharedReport(token);
   // Unknown/disabled → generic card + generic copy (no report-specific preview).
   if (!data || (data.test.status !== "active" && data.test.status !== "complete")) {
-    return ogMeta({ title: "Report", description: "See which creative option real users preferred.", path: `/r/${token}`, index: false });
+    return ogMeta({ title: "Report", description: "Get a structured decision report from real evaluators on which creative option wins.", path: `/r/${token}`, index: false });
   }
   const { test, report } = data;
-  let description = "See which creative option real users preferred.";
+  let description = "Get a structured decision report from real evaluators on which creative option wins.";
   if (report && test.status === "complete") {
     const r = report.results;
     const win = r.winner_option_id ? r.ranked.find((x) => x.id === r.winner_option_id) : null;
@@ -34,7 +34,7 @@ function Frame({ children }: { children: ReactNode }) {
     <div className="rank-root">
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.9)" }}>
         <a href="https://vraelis.com" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em" }}>Vraelis</a>
-        <a href="https://vraelis.com/app/new" className="btn">Run your own test</a>
+        <a href="https://vraelis.com/app/new" className="btn">Run your own evaluation</a>
       </nav>
       <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 60 }}>{children}</div>
       <footer style={{ borderTop: "1px solid var(--line-1)", background: "var(--bg-2)", position: "relative", overflow: "hidden" }}>
@@ -57,7 +57,7 @@ function Unavailable() {
         <div className="empty__icon">∅</div>
         <h3 style={{ fontSize: "1.4rem" }}>This report isn&apos;t available</h3>
         <p>The link may have been disabled by its owner, or it doesn&apos;t exist.</p>
-        <a href="https://vraelis.com" className="btn">Create your own test →</a>
+        <a href="https://vraelis.com" className="btn">Create your own evaluation →</a>
       </div>
     </Frame>
   );

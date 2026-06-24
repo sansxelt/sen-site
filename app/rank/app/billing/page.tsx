@@ -12,7 +12,7 @@ import { TeamBillingPanel } from "./team-billing-panel";
 
 export const metadata: Metadata = { title: "Billing" };
 
-const REASON: Record<string, string> = { signup: "Welcome credits", monthly_reset: "Monthly plan credits", topup: "Credit top-up", pack: "Credit pack", hold: "Test launch", refund: "Unfilled refund", reward: "Vote reward" };
+const REASON: Record<string, string> = { signup: "Welcome credits", monthly_reset: "Monthly plan credits", topup: "Credit top-up", pack: "Credit pack", hold: "Test launch", refund: "Unfilled refund", reward: "Participation reward" };
 
 export default async function BillingPage() {
   const session = await auth();

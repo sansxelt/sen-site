@@ -53,7 +53,7 @@ export default async function DataQualityPage() {
             <div className="card">
               <SectionHead>Why responses were filtered</SectionHead>
               {q.reasons.length > 0 ? <Bars rows={q.reasons.map((r) => ({ label: r.label, value: r.count }))} /> : <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>No responses have been filtered yet — your collected signal has been clean.</p>}
-              <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Too-fast, duplicate, source-velocity, device-limit, and low-reputation responses are rejected automatically. Raw voter, IP, and device data is never shown.</p>
+              <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Too-fast, duplicate, source-velocity, device-limit, and low-reputation responses are rejected automatically. Raw participant, IP, and device data is never shown.</p>
             </div>
             <div className="card">
               <SectionHead>Signal across evaluations</SectionHead>
@@ -121,7 +121,7 @@ export default async function DataQualityPage() {
           )}
 
           <div className="card" style={{ background: "var(--bg-2)" }}>
-            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0, lineHeight: 1.6 }}><strong style={{ color: "var(--fg-1)" }}>Vraelis is a signal-quality layer, not a poll.</strong> Every decision report is built only from valid, qualified human judgments — low-quality and off-audience responses are filtered before they can move a recommendation.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0, lineHeight: 1.6 }}><strong style={{ color: "var(--fg-1)" }}>Vraelis is a signal-quality layer, not a voting or survey tool.</strong> Every decision report is built only from valid, qualified human judgments — low-quality and off-audience responses are filtered before they can move a recommendation.</p>
           </div>
         </>
       )}

@@ -46,6 +46,19 @@ const STEPS = [
 
 const TESTABLE = ["Generated creative", "Campaign concepts", "Product visuals", "Landing pages", "Brand assets", "UI concepts", "Content variations", "Thumbnails & covers"];
 
+// Decision workflows teams actually run — what's compared, and the decision you get back.
+const USE_CASES: { t: string; c: string; g: string }[] = [
+  { t: "AI output evaluation", c: "Competing generations from your model or pipeline", g: "The output to ship, with confidence and a signal-quality read." },
+  { t: "Ad creative decisions", c: "2–8 ad concepts, before you spend on media", g: "The creative most likely to land, backed by qualified human signal." },
+  { t: "Landing page & copy", c: "Hero variants, headlines, and value props", g: "The clearest message — and the reasoning behind why." },
+  { t: "Product concept validation", c: "Concepts, features, or directions", g: "Which direction people prefer, and the audience fit behind it." },
+  { t: "Client creative approval", c: "The options you're choosing between for a client", g: "A client-ready decision report that backs your recommendation." },
+  { t: "Design & image selection", c: "Thumbnails, icons, covers, product shots", g: "The pick that wins attention — not the loudest opinion in the room." },
+];
+
+const IS_THINGS = ["A human-signal layer for creative and AI decisions", "A way to compare candidates before you ship", "A decision-package generator for teams and clients"];
+const IS_NOT_THINGS = ["A generic poll or survey builder", "An embed traffic or ad network", "A raw analytics dashboard"];
+
 const REPORT_PARTS = [
   "The recommended output + full breakdown",
   "Preference margin and directional confidence",
@@ -178,7 +191,7 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Why Vraelis</p>
-            <h2 className="display">You&apos;re not paying for votes. You&apos;re paying to <span className="em">avoid shipping the wrong thing</span>.</h2>
+            <h2 className="display">You&apos;re not paying for raw counts. You&apos;re paying to <span className="em">avoid shipping the wrong thing</span>.</h2>
             <p>Every evaluation is a decision you make <strong style={{ color: "var(--fg-1)" }}>before the expensive part</strong> — the ad spend, the launch, the post, the client review. Credits are the unit; the decision is the product.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.02fr) minmax(0,0.98fr)", gap: 16, alignItems: "stretch" }} className="cols-stack">
@@ -216,7 +229,7 @@ export default function RankLanding() {
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it's for</p>
             <h2 className="display">Know what to ship <span className="em">before you launch</span>.</h2>
-            <p>Ad networks monetize attention. Vraelis measures preference — a decision-analytics layer, not a survey builder, polling widget, or ad network. You make the right call before you spend on the wrong option.</p>
+            <p>Vraelis measures human preference and turns it into a decision — a decision-intelligence layer for teams evaluating creative options and AI outputs, not a survey builder, polling tool, or ad network. You make the right call before you spend on the wrong option.</p>
           </div>
           <div className="tile-grid cols-4">
             {AUDIENCE.map((a) => (
@@ -261,7 +274,7 @@ export default function RankLanding() {
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: "clamp(28px, 4vw, 60px)", alignItems: "center" }} className="cols-stack">
             <div>
               <p className="eyebrow">The report</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Decision analytics, <span className="em">not raw votes</span>.</h2>
+              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Decision analytics, <span className="em">not raw counts</span>.</h2>
               <p className="lead-copy" style={{ marginBottom: 22 }}>Every evaluation returns a clean report: the recommended output, how confident, and why people chose it.</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
                 {REPORT_PARTS.map((x) => (
@@ -305,11 +318,35 @@ export default function RankLanding() {
       <section className="section">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">What teams evaluate</p>
-            <h2 className="display">If people will judge it, you can evaluate it.</h2>
+            <p className="eyebrow">Decisions Vraelis is built for</p>
+            <h2 className="display">A decision workflow, <span className="em">not a poll</span>.</h2>
+            <p>Submit the candidates, collect qualified human signal, get a decision package, and hand your team or client the call — with the reasoning behind it.</p>
+          </div>
+          <div className="tile-grid cols-3" style={{ marginBottom: 22 }}>
+            {USE_CASES.map((u) => (
+              <div key={u.t} className="acard" style={{ gap: 8 }}>
+                <div className="acard__t" style={{ fontSize: 15.5 }}>{u.t}</div>
+                <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55 }}><span style={{ color: "var(--fg-4)" }}>Compare:</span> {u.c}</div>
+                <div style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.55 }}><span style={{ color: "var(--acc-deep)" }}>You get:</span> {u.g}</div>
+              </div>
+            ))}
           </div>
           <div className="chips">
             {TESTABLE.map((t) => <span key={t} className="chip">{t}</span>)}
+          </div>
+
+          {/* What Vraelis is / is not — own the category, not defensive */}
+          <div className="card" style={{ marginTop: 26, background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
+            <div className="cols-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(18px, 3vw, 36px)" }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 10 }}>Vraelis is</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{IS_THINGS.map((x) => <div key={x} style={{ display: "flex", gap: 9, fontSize: 13.5, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</div>)}</div>
+              </div>
+              <div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Vraelis is not</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{IS_NOT_THINGS.map((x) => <div key={x} style={{ display: "flex", gap: 9, fontSize: 13.5, color: "var(--fg-4)" }}><span style={{ color: "var(--fg-5)" }}>—</span>{x}</div>)}</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

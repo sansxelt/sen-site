@@ -32,7 +32,7 @@ export default function DataRightsPage() {
         "Requests are reviewed manually. Account deletion is not instant.",
         "Some billing, security, and legal records may be retained where required.",
         "Public report links may be disabled while a deletion request is processed.",
-        "Raw voter, IP, and device data is never shown in reports or exports.",
+        "Raw participant, IP, and device data is never shown in reports or exports.",
       ]} />
       <P>This is an honest description of our process, not a claim of automated regulatory compliance. See the <a href="/privacy" style={{ color: "var(--acc-deep)" }}>Privacy</a> page for what we collect and why.</P>
     </LegalShell>

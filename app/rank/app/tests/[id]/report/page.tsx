@@ -159,7 +159,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <ExportControls testId={test.id} />
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 22 }}>
-        <a href="/app/new" className="btn">Run another test <span aria-hidden>→</span></a>
+        <a href="/app/new" className="btn">Run another evaluation <span aria-hidden>→</span></a>
         <a href="/app" className="btn btn--ghost">Dashboard</a>
         {bal < 50 && <a href="/app/credits" className="btn btn--ghost">Buy credits</a>}
       </div>

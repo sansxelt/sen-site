@@ -50,6 +50,7 @@ export default function DevelopersPage() {
             <a href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">View JSON Schema</a>
           </div>
           <p style={{ fontSize: 12.5, color: "var(--fg-5)", marginTop: 14 }}>Sign in to test the API — full SDK and curl examples live in the signed-in sandbox console.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", maxWidth: 660, margin: "20px auto 0", lineHeight: 1.6 }}>A <strong style={{ color: "var(--fg-1)" }}>human-evaluation layer for AI and creative decisions</strong> — submit candidates, collect qualified judgments, retrieve a decision package. Not a polling or survey widget, and not a traffic or ad network.</p>
         </div>
       </section>
 
@@ -119,7 +120,7 @@ export default function DevelopersPage() {
             <div>
               <p className="eyebrow">Exports</p>
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Pull results into your stack.</h2>
-              <p className="lead-copy" style={{ marginBottom: 12 }}>Export any completed evaluation as <strong style={{ color: "var(--fg-1)" }}>tiered JSON</strong> (summary, standard, or scale — each carrying the decision package) or a stable <strong style={{ color: "var(--fg-1)" }}>CSV</strong> breakdown. Owner or API-key auth. Exports never include account email, voter identities, or raw IP/device data.</p>
+              <p className="lead-copy" style={{ marginBottom: 12 }}>Export any completed evaluation as <strong style={{ color: "var(--fg-1)" }}>tiered JSON</strong> (summary, standard, or scale — each carrying the decision package) or a stable <strong style={{ color: "var(--fg-1)" }}>CSV</strong> breakdown. Owner or API-key auth. Exports never include account email, participant identities, or raw IP/device data.</p>
               <a href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Test exports in the console →</a>
             </div>
           </div>
@@ -145,7 +146,7 @@ export default function DevelopersPage() {
         <div className="wrap" style={{ maxWidth: 760 }}>
           <p className="eyebrow">Security &amp; privacy</p>
           <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Safe by design.</h2>
-          <p className="lead-copy" style={{ marginBottom: 12 }}>API keys are server-side secrets, shown once and stored only as a hash. Errors use a stable envelope with a request id — never secrets or stack traces. Per-key rate limiting protects the API. Results and webhooks never include account email, voter identities, raw IP/device data, share tokens, or private fields.</p>
+          <p className="lead-copy" style={{ marginBottom: 12 }}>API keys are server-side secrets, shown once and stored only as a hash. Errors use a stable envelope with a request id — never secrets or stack traces. Per-key rate limiting protects the API. Results and webhooks never include account email, participant identities, raw IP/device data, share tokens, or private fields.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6 }}>Decision Package v2 is backed by a public JSON Schema for typed integrations. Source, audience, and signal quality are captured privacy-safely — channel and hostname only, never full referrers or personal data.</p>
         </div>
       </section>
