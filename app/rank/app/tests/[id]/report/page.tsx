@@ -53,6 +53,11 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // Owner-only audience profile + screening stats (never on the public /r report).
   const screen = await screeningStats(id);
   const audienceLine = test.target_audience ? <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Audience: {test.target_audience}</p> : null;
+  // Follow-up lineage — shown on BOTH the collecting and completed report views.
+  const lineage = await followupLineage(id, email);
+  const lineageHeader = lineage.parent ? (
+    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}><span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", marginRight: 8 }}>Confirmation round</span>Follow-up of <a href={`/app/tests/${lineage.parent.id}/report`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{lineage.parent.title}</a></p>
+  ) : null;
 
   // ── In progress (collecting votes) ──
   if (!report || test.status !== "complete") {
@@ -71,6 +76,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         )}
         <p className="eyebrow">Collecting judgments</p>
         <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
+        {lineageHeader}
         {projectLine}
         {audienceLine}
         <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid judgments</p>
@@ -115,7 +121,6 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   const readiness = decisionReadiness({ complete: true, intel, valid: r.total, target: test.votes_target, audienceFit: screen.fit, screeningEnabled: screen.enabled });
   const followPlan = followupForReadiness(readiness.label);
   const followTarget = followPlan && (followPlan.type === "retest_top_two" || followPlan.type === "confirm_recommendation") ? Math.max(test.votes_target || 100, 150) : (test.votes_target || 100);
-  const lineage = await followupLineage(id, email);
 
   return (
     <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 90 }}>
@@ -124,9 +129,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         <HealthBadge state={health} />
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8, marginTop: 8 }}>{test.title}</h1>
-      {lineage.parent ? (
-        <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}><span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", marginRight: 8 }}>Confirmation round</span>Follow-up of <a href={`/app/tests/${lineage.parent.id}/report`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{lineage.parent.title}</a></p>
-      ) : null}
+      {lineageHeader}
       {projectLine}
       {audienceLine}
 
