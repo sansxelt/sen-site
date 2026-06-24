@@ -618,3 +618,21 @@ create index if not exists v_proj_members_user_idx on v_project_members (user_id
 create index if not exists v_proj_members_email_idx on v_project_members (email);
 create index if not exists v_proj_members_status_idx on v_project_members (project_id, status);
 create unique index if not exists v_proj_members_uniq on v_project_members (project_id, email);
+
+-- ── Tokenized invite links ──
+-- Secure one-time, expiring accept links for workspace + project invites. Only the
+-- token HASH is stored (sha256); the raw token lives only inside the email link.
+-- Old email-match activation still works (these columns stay null for legacy invites).
+alter table v_workspace_members add column if not exists invite_token_hash  text;
+alter table v_workspace_members add column if not exists invite_expires_at   timestamptz;
+alter table v_workspace_members add column if not exists invite_accepted_at  timestamptz;
+alter table v_workspace_members add column if not exists invite_last_sent_at timestamptz;
+alter table v_workspace_members add column if not exists invite_send_count   integer not null default 0;
+create index if not exists v_ws_members_token_idx on v_workspace_members (invite_token_hash) where invite_token_hash is not null;
+
+alter table v_project_members add column if not exists invite_token_hash  text;
+alter table v_project_members add column if not exists invite_expires_at   timestamptz;
+alter table v_project_members add column if not exists invite_accepted_at  timestamptz;
+alter table v_project_members add column if not exists invite_last_sent_at timestamptz;
+alter table v_project_members add column if not exists invite_send_count   integer not null default 0;
+create index if not exists v_proj_members_token_idx on v_project_members (invite_token_hash) where invite_token_hash is not null;

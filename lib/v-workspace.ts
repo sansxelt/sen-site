@@ -4,15 +4,40 @@
 // (centralized permission helpers) — NO billing/credit/API/schema behavior change.
 // Tolerant of the tables being absent (pre-migration) — degrades to "just you".
 
+import crypto from "crypto";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { logEvent } from "./v-events";
 import { getReport } from "./v-db";
 import { evaluationIntelligence } from "./v-intelligence";
 import { projectAnalytics, projectSourceQuality } from "./v-analytics";
 import { sendInviteEmail, type InviteDelivery } from "./email";
+import { allow } from "./vraelis-ratelimit";
 
 const norm = (e: string) => e.trim().toLowerCase();
 const SITE = "https://vraelis.com";
+const INVITE_TTL_DAYS = 7;
+const hashToken = (t: string) => crypto.createHash("sha256").update(t).digest("hex");
+
+// Mint a secure one-time, expiring invite token: store ONLY the hash + expiry, return
+// the raw token (which goes only into the email link). Tolerant of missing columns
+// (pre-migration) — returns null so callers fall back to the sign-in (email-match) link.
+async function mintInviteToken(table: "v_workspace_members" | "v_project_members", memberId: string): Promise<string | null> {
+  try {
+    const s = getSupabaseAdminClient();
+    const token = crypto.randomBytes(24).toString("hex");
+    const now = new Date();
+    const expires = new Date(now.getTime() + INVITE_TTL_DAYS * 86400_000).toISOString();
+    const { data: cur } = await s.from(table as never).select("invite_send_count").eq("id", memberId).maybeSingle();
+    const count = ((cur as unknown as { invite_send_count?: number } | null)?.invite_send_count ?? 0) + 1;
+    const { error } = await s.from(table as never).update({ invite_token_hash: hashToken(token), invite_expires_at: expires, invite_last_sent_at: now.toISOString(), invite_send_count: count } as never).eq("id", memberId);
+    if (error) return null; // columns not present yet
+    return token;
+  } catch { return null; }
+}
+
+function inviteAcceptUrl(token: string | null, fallbackPath: string): string {
+  return token ? `${SITE}/invite/${token}` : `${SITE}/signin?callbackUrl=${encodeURIComponent(fallbackPath)}`;
+}
 
 // Best-effort invite email + safe delivery-status event. Never throws; the invite
 // row is already stored by the caller. Logs invite_email_sent / invite_email_failed
@@ -40,7 +65,7 @@ export const ROLE_DESC: Record<Role, string> = {
 };
 
 export type Workspace = { id: string; owner_user_id: string; name: string; created_at: string };
-export type Member = { id: string; workspace_id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string };
+export type Member = { id: string; workspace_id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null };
 export type SharedWorkspace = { workspace_id: string; name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
 
 // ── Permission helpers (centralized — no scattered role checks) ──
@@ -98,8 +123,9 @@ export async function membershipFor(email: string, workspaceId: string): Promise
 async function listMembers(workspaceId: string): Promise<Member[]> {
   try {
     const s = getSupabaseAdminClient();
-    const { data } = await s.from("v_workspace_members" as never).select("id,workspace_id,user_id,email,role,status,created_at").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true });
-    return (data as unknown as Member[]) ?? [];
+    let q = await s.from("v_workspace_members" as never).select("id,workspace_id,user_id,email,role,status,created_at,invite_expires_at").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true });
+    if (q.error) q = await s.from("v_workspace_members" as never).select("id,workspace_id,user_id,email,role,status,created_at").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true }); // pre-migration
+    return (q.data as unknown as Member[]) ?? [];
   } catch { return []; }
 }
 
@@ -187,13 +213,16 @@ export async function inviteMember(actorEmail: string, workspaceId: string, invi
   const actorMember = await membershipFor(actor, workspaceId);
   if (ownerId !== actor && !canManageMembers(actorMember?.role ?? null)) return { ok: false, error: "forbidden" };
   if (invitee === ownerId) return { ok: false, error: "already_member" };
-  const { error } = await s.from("v_workspace_members" as never).insert({ workspace_id: workspaceId, email: invitee, role, status: "pending", invited_by: actor } as never);
-  if (error) {
-    if (String(error.message || "").includes("duplicate")) return { ok: false, error: "already_member" };
+  if (!(await allow(`ws-invite:${workspaceId}`, 10, 3600))) return { ok: false, error: "rate_limited" };
+  const { data: inserted, error } = await s.from("v_workspace_members" as never).insert({ workspace_id: workspaceId, email: invitee, role, status: "pending", invited_by: actor } as never).select("id").single();
+  if (error || !inserted) {
+    if (String(error?.message || "").includes("duplicate")) return { ok: false, error: "already_member" };
     return { ok: false, error: "failed" };
   }
   await logEvent({ userId: actor, eventType: "workspace_member_invited", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, role } });
-  const email = await dispatchInvite(actor, { type: "workspace", to: invitee, workspaceName: wsRow?.name, role, acceptUrl: `${SITE}/signin?callbackUrl=${encodeURIComponent("/app/team")}`, workspace_id: workspaceId });
+  const token = await mintInviteToken("v_workspace_members", (inserted as unknown as { id: string }).id);
+  if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "workspace", workspace_id: workspaceId, role } });
+  const email = await dispatchInvite(actor, { type: "workspace", to: invitee, workspaceName: wsRow?.name, role, acceptUrl: inviteAcceptUrl(token, "/app/team"), workspace_id: workspaceId });
   return { ok: true, email };
 }
 
@@ -256,7 +285,7 @@ export async function reportAccessRole(email: string, testId: string): Promise<R
 // ── Project-limited client sharing ──
 export type ProjectRole = "editor" | "viewer" | "client_viewer";
 export const PROJECT_ROLES: ProjectRole[] = ["editor", "viewer", "client_viewer"];
-export type ProjectMember = { id: string; project_id: string; user_id: string | null; email: string; role: ProjectRole; status: "pending" | "active" | "revoked"; created_at: string };
+export type ProjectMember = { id: string; project_id: string; user_id: string | null; email: string; role: ProjectRole; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null };
 export type ProjectAccess = { role: Role; level: "owner" | "workspace" | "project" };
 
 export const canEditProjectFromRole = (r: Role | null) => r === "owner" || r === "admin" || r === "editor";
@@ -400,8 +429,9 @@ export async function listProjectMembers(email: string, projectId: string): Prom
   if (!(await canManageProjectMembers(email, projectId))) return [];
   try {
     const s = getSupabaseAdminClient();
-    const { data } = await s.from("v_project_members" as never).select("id,project_id,user_id,email,role,status,created_at").eq("project_id", projectId).neq("status", "revoked").order("created_at", { ascending: true });
-    return (data as unknown as ProjectMember[]) ?? [];
+    let q = await s.from("v_project_members" as never).select("id,project_id,user_id,email,role,status,created_at,invite_expires_at").eq("project_id", projectId).neq("status", "revoked").order("created_at", { ascending: true });
+    if (q.error) q = await s.from("v_project_members" as never).select("id,project_id,user_id,email,role,status,created_at").eq("project_id", projectId).neq("status", "revoked").order("created_at", { ascending: true }); // pre-migration
+    return (q.data as unknown as ProjectMember[]) ?? [];
   } catch { return []; }
 }
 
@@ -414,11 +444,14 @@ export async function inviteProjectMember(actorEmail: string, projectId: string,
   if (!(await canManageProjectMembers(actorEmail, projectId))) return { ok: false, error: "forbidden" };
   const meta = await projectMeta(projectId);
   if (meta && invitee === meta.owner) return { ok: false, error: "already_member" };
+  if (!(await allow(`proj-invite:${projectId}`, 10, 3600))) return { ok: false, error: "rate_limited" };
   const s = getSupabaseAdminClient();
-  const { error } = await s.from("v_project_members" as never).insert({ project_id: projectId, workspace_id: meta?.workspace_id ?? null, email: invitee, role, status: "pending", invited_by: actor } as never);
-  if (error) return { ok: false, error: String(error.message || "").includes("duplicate") ? "already_member" : "failed" };
+  const { data: inserted, error } = await s.from("v_project_members" as never).insert({ project_id: projectId, workspace_id: meta?.workspace_id ?? null, email: invitee, role, status: "pending", invited_by: actor } as never).select("id").single();
+  if (error || !inserted) return { ok: false, error: String(error?.message || "").includes("duplicate") ? "already_member" : "failed" };
   await logEvent({ userId: actor, eventType: "project_member_invited", actorType: "owner", source: "app", metadata: { project_id: projectId, workspace_id: meta?.workspace_id ?? null, role } });
-  const email = await dispatchInvite(actor, { type: "project", to: invitee, projectName: meta?.name, role, acceptUrl: `${SITE}/signin?callbackUrl=${encodeURIComponent("/app/shared/projects/" + projectId)}`, project_id: projectId, workspace_id: meta?.workspace_id ?? null });
+  const token = await mintInviteToken("v_project_members", (inserted as unknown as { id: string }).id);
+  if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "project", project_id: projectId, workspace_id: meta?.workspace_id ?? null, role } });
+  const email = await dispatchInvite(actor, { type: "project", to: invitee, projectName: meta?.name, role, acceptUrl: inviteAcceptUrl(token, "/app/shared/projects/" + projectId), project_id: projectId, workspace_id: meta?.workspace_id ?? null });
   return { ok: true, email };
 }
 
@@ -434,8 +467,11 @@ export async function resendWorkspaceInvite(actorEmail: string, memberId: string
   const { data: ws } = await s.from("v_workspaces" as never).select("owner_user_id,name").eq("id", m.workspace_id).maybeSingle();
   const wsRow = ws as unknown as { owner_user_id: string; name: string } | null;
   if (wsRow?.owner_user_id !== actor && !canManageMembers((await membershipFor(actor, m.workspace_id))?.role ?? null)) return { ok: false, error: "forbidden" };
+  if (!(await allow(`invite-resend:${memberId}`, 5, 3600))) { await logEvent({ userId: actor, eventType: "invite_resend_rate_limited", actorType: "owner", source: "app", metadata: { invite_type: "workspace", workspace_id: m.workspace_id, role: m.role } }); return { ok: false, error: "rate_limited" }; }
   await logEvent({ userId: actor, eventType: "workspace_invite_resent", actorType: "owner", source: "app", metadata: { workspace_id: m.workspace_id, role: m.role } });
-  const email = await dispatchInvite(actor, { type: "workspace", to: m.email, workspaceName: wsRow?.name, role: m.role, acceptUrl: `${SITE}/signin?callbackUrl=${encodeURIComponent("/app/team")}`, workspace_id: m.workspace_id });
+  const token = await mintInviteToken("v_workspace_members", memberId); // new token + extended expiry
+  if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "workspace", workspace_id: m.workspace_id, role: m.role } });
+  const email = await dispatchInvite(actor, { type: "workspace", to: m.email, workspaceName: wsRow?.name, role: m.role, acceptUrl: inviteAcceptUrl(token, "/app/team"), workspace_id: m.workspace_id });
   return { ok: true, email };
 }
 
@@ -450,8 +486,11 @@ export async function resendProjectInvite(actorEmail: string, memberId: string):
   if (m.status !== "pending") return { ok: false, error: "not_pending" };
   if (!(await canManageProjectMembers(actor, m.project_id))) return { ok: false, error: "forbidden" };
   const meta = await projectMeta(m.project_id);
+  if (!(await allow(`invite-resend:${memberId}`, 5, 3600))) { await logEvent({ userId: actor, eventType: "invite_resend_rate_limited", actorType: "owner", source: "app", metadata: { invite_type: "project", project_id: m.project_id, role: m.role } }); return { ok: false, error: "rate_limited" }; }
   await logEvent({ userId: actor, eventType: "project_invite_resent", actorType: "owner", source: "app", metadata: { project_id: m.project_id, workspace_id: meta?.workspace_id ?? null, role: m.role } });
-  const email = await dispatchInvite(actor, { type: "project", to: m.email, projectName: meta?.name, role: m.role, acceptUrl: `${SITE}/signin?callbackUrl=${encodeURIComponent("/app/shared/projects/" + m.project_id)}`, project_id: m.project_id, workspace_id: meta?.workspace_id ?? null });
+  const token = await mintInviteToken("v_project_members", memberId);
+  if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "project", project_id: m.project_id, workspace_id: meta?.workspace_id ?? null, role: m.role } });
+  const email = await dispatchInvite(actor, { type: "project", to: m.email, projectName: meta?.name, role: m.role, acceptUrl: inviteAcceptUrl(token, "/app/shared/projects/" + m.project_id), project_id: m.project_id, workspace_id: meta?.workspace_id ?? null });
   return { ok: true, email };
 }
 
@@ -571,4 +610,58 @@ export async function sharedProjectView(email: string, projectId: string): Promi
     showAnalytics ? projectSourceQuality(meta.owner, projectId) : Promise.resolve(null),
   ]);
   return { project: { id: projectId, name: meta.name, description: meta.description }, role: access.role, level: access.level, evaluations, analytics, sources };
+}
+
+// ── Tokenized invite acceptance ──
+type InviteLookup = { table: "v_workspace_members" | "v_project_members"; type: "workspace" | "project"; id: string; email: string; role: Role; status: string; expires: string | null; workspace_id?: string | null; project_id?: string | null; contextName: string; redirect: string };
+
+async function lookupInviteByToken(token: string): Promise<InviteLookup | null> {
+  try {
+    const s = getSupabaseAdminClient();
+    const hash = hashToken(token);
+    const { data: wm } = await s.from("v_workspace_members" as never).select("id,workspace_id,email,role,status,invite_expires_at").eq("invite_token_hash", hash).maybeSingle();
+    const w = wm as unknown as { id: string; workspace_id: string; email: string; role: Role; status: string; invite_expires_at: string | null } | null;
+    if (w) {
+      const { data: ws } = await s.from("v_workspaces" as never).select("name").eq("id", w.workspace_id).maybeSingle();
+      return { table: "v_workspace_members", type: "workspace", id: w.id, email: w.email, role: w.role, status: w.status, expires: w.invite_expires_at, workspace_id: w.workspace_id, contextName: (ws as unknown as { name: string } | null)?.name ?? "this workspace", redirect: "/app/team" };
+    }
+    const { data: pm } = await s.from("v_project_members" as never).select("id,project_id,workspace_id,email,role,status,invite_expires_at").eq("invite_token_hash", hash).maybeSingle();
+    const p = pm as unknown as { id: string; project_id: string; workspace_id: string | null; email: string; role: Role; status: string; invite_expires_at: string | null } | null;
+    if (p) {
+      const meta = await projectMeta(p.project_id);
+      return { table: "v_project_members", type: "project", id: p.id, email: p.email, role: p.role, status: p.status, expires: p.invite_expires_at, project_id: p.project_id, workspace_id: p.workspace_id, contextName: meta?.name ?? "this project", redirect: `/app/shared/projects/${p.project_id}` };
+    }
+    return null;
+  } catch { return null; }
+}
+
+export type InviteAcceptState =
+  | { state: "not_found" }
+  | { state: "rate_limited" }
+  | { state: "revoked" | "expired"; type: "workspace" | "project"; contextName: string; role: Role }
+  | { state: "signed_out" | "wrong_email"; type: "workspace" | "project"; contextName: string; role: Role; invitedEmail: string }
+  | { state: "already" | "accepted"; type?: "workspace" | "project"; contextName?: string; role?: Role; redirect: string };
+
+// Resolve (and, when valid + matching, ACTIVATE) a tokenized invite. Never exposes
+// the token; logs safe outcomes only.
+export async function resolveInviteForAccept(email: string | null, token: string): Promise<InviteAcceptState> {
+  if (!token || !isDatabaseConfigured()) return { state: "not_found" };
+  if (!(await allow(`invite-accept:${hashToken(token).slice(0, 16)}`, 20, 3600))) return { state: "rate_limited" };
+  const inv = await lookupInviteByToken(token);
+  const uid = email ? norm(email) : undefined;
+  const logFail = (reason: string) => logEvent({ userId: uid, eventType: "invite_accept_failed", actorType: "owner", source: "app", metadata: { invite_type: inv?.type ?? null, workspace_id: inv?.workspace_id ?? null, project_id: inv?.project_id ?? null, role: inv?.role ?? null, reason } });
+  if (!inv) { await logFail("not_found"); return { state: "not_found" }; }
+  if (inv.status === "revoked") { await logFail("revoked"); return { state: "revoked", type: inv.type, contextName: inv.contextName, role: inv.role }; }
+  if (inv.status === "active") return { state: "already", redirect: inv.redirect, type: inv.type, contextName: inv.contextName, role: inv.role };
+  if (inv.expires && new Date(inv.expires).getTime() < Date.now()) {
+    await logEvent({ userId: uid, eventType: "invite_expired", actorType: "owner", source: "app", metadata: { invite_type: inv.type, workspace_id: inv.workspace_id ?? null, project_id: inv.project_id ?? null, role: inv.role } });
+    await logFail("expired");
+    return { state: "expired", type: inv.type, contextName: inv.contextName, role: inv.role };
+  }
+  if (!email) return { state: "signed_out", type: inv.type, contextName: inv.contextName, role: inv.role, invitedEmail: inv.email };
+  if (norm(email) !== inv.email) { await logFail("wrong_email"); return { state: "wrong_email", type: inv.type, contextName: inv.contextName, role: inv.role, invitedEmail: inv.email }; }
+  const s = getSupabaseAdminClient();
+  await s.from(inv.table as never).update({ status: "active", user_id: norm(email), invite_accepted_at: new Date().toISOString() } as never).eq("id", inv.id);
+  await logEvent({ userId: norm(email), eventType: "invite_accepted", actorType: "owner", source: "app", metadata: { invite_type: inv.type, workspace_id: inv.workspace_id ?? null, project_id: inv.project_id ?? null, role: inv.role } });
+  return { state: "accepted", type: inv.type, contextName: inv.contextName, role: inv.role, redirect: inv.redirect };
 }
