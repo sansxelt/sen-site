@@ -31,7 +31,7 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
       <a href="/app/team" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</a>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <p className="eyebrow" style={{ margin: 0 }}>Shared project</p>
-        <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[view.role]} · read-only</span>
+        <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[view.role]} · client-safe view</span>
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 8 }}>{view.project.name}</h1>
       {view.project.description ? <p className="lead-copy" style={{ marginBottom: 8 }}>{view.project.description}</p> : null}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
-import { reportAccessRole, ROLE_LABEL } from "@/lib/v-workspace";
+import { reportAccessRole, canViewSharedProject, ROLE_LABEL } from "@/lib/v-workspace";
 import { ReportBody, OptionThumb } from "@/app/rank/app/tests/[id]/report-body";
 import { AnalysisPanel } from "@/app/rank/app/tests/[id]/analysis-panel";
 
@@ -36,12 +36,16 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
   const { test, options } = data;
   const report = test.status === "complete" ? await getReport(testId) : null;
 
+  // Back to the shared project when the viewer reached this via a shared project.
+  const inSharedProject = test.project_id ? await canViewSharedProject(email, test.project_id) : false;
+  const back = inSharedProject ? { href: `/app/shared/projects/${test.project_id}`, label: "Project" } : { href: "/app/team", label: "Team" };
+
   return (
     <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <a href="/app/team" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</a>
+      <a href={back.href} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← {back.label}</a>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <p className="eyebrow" style={{ margin: 0 }}>Shared decision report</p>
-        <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[role]} · read-only</span>
+        <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[role]} · client-safe view</span>
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 8 }}>{test.title}</h1>
 

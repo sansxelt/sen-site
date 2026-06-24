@@ -6,18 +6,21 @@ type Role = "owner" | "admin" | "editor" | "viewer" | "client_viewer";
 type Member = { id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string };
 type Shared = { workspace_id: string; name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
 type SharedProject = { project_id: string; name: string; workspace_name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
+type ProjRole = "editor" | "viewer" | "client_viewer";
+type ProjectAccessSummary = { project_id: string; project_name: string; members: { email: string; role: ProjRole; status: string }[] };
 type Workspace = { id: string; owner_user_id: string; name: string } | null;
-type Ctx = { workspace: Workspace; myRole: Role; members: Member[]; shared: Shared[]; sharedProjects: SharedProject[] };
+type Ctx = { workspace: Workspace; myRole: Role; members: Member[]; shared: Shared[]; sharedProjects: SharedProject[]; projectAccess: ProjectAccessSummary[] };
 
 const INVITABLE: Role[] = ["admin", "editor", "viewer", "client_viewer"];
 const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 const ROLE_DESC: Record<Role, string> = {
-  owner: "Full access. Manages the team and owns billing.",
-  admin: "Manage projects, evaluations, and members. See analytics and reports.",
-  editor: "Create and manage projects and evaluations. See analytics and reports.",
-  viewer: "Read-only access to projects, evaluations, and reports.",
-  client_viewer: "Read-only access to shared decision reports only — no team, billing, API, or private internals.",
+  owner: "Full workspace control. Manages the team and owns billing.",
+  admin: "Manage members and project access. See analytics and reports.",
+  editor: "Create and edit evaluations and projects. See analytics and reports.",
+  viewer: "Read-only workspace access to projects, evaluations, and reports.",
+  client_viewer: "Client-safe reports only — no team, billing, API, or private internals.",
 };
+const PROJ_ROLE_LABEL: Record<ProjRole, string> = { editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 
 const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" } as const;
 const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
@@ -122,6 +125,31 @@ export function TeamClient({ email, initial }: { email: string; initial: Ctx }) 
               <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
                 <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>{m.email} <RolePill role={m.role} /> <span style={{ fontSize: 11.5, color: "var(--fg-5)" }}>· activates on sign-in</span></div>
                 {canManage && <button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "5px 10px", fontSize: 12 }}>Cancel</button>}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Project access overview (owner/admin) */}
+      {canManage && ctx.projectAccess.length > 0 && (
+        <>
+          <div style={cardHead}>Project access</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
+            {ctx.projectAccess.map((p) => (
+              <div key={p.project_id} className="card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>{p.project_name}</div>
+                  <a href={`/app/projects/${p.project_id}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Manage project access →</a>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {p.members.map((m, i) => (
+                    <div key={m.email} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "7px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 13, color: "var(--fg-2)" }}>{m.email}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 8 }}><span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>{PROJ_ROLE_LABEL[m.role]}</span>{m.status === "pending" ? <span style={{ fontSize: 11, color: "var(--fg-5)" }}>pending</span> : null}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>

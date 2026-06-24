@@ -124,7 +124,8 @@ async function sharedWorkspaces(email: string, ownWorkspaceId: string | null): P
 }
 
 export type SharedProject = { project_id: string; name: string; workspace_name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
-export type WorkspaceContext = { workspace: Workspace | null; myRole: Role; members: Member[]; shared: SharedWorkspace[]; sharedProjects: SharedProject[] };
+export type ProjectAccessSummary = { project_id: string; project_name: string; members: { email: string; role: ProjectRole; status: string }[] };
+export type WorkspaceContext = { workspace: Workspace | null; myRole: Role; members: Member[]; shared: SharedWorkspace[]; sharedProjects: SharedProject[]; projectAccess: ProjectAccessSummary[] };
 
 export async function getWorkspaceContext(email: string): Promise<WorkspaceContext> {
   await activateInvitesForEmail(email);
@@ -133,7 +134,28 @@ export async function getWorkspaceContext(email: string): Promise<WorkspaceConte
   const members = workspace ? await listMembers(workspace.id) : [];
   const shared = await sharedWorkspaces(email, workspace?.id ?? null);
   const sharedProjects = await sharedProjectsForEmail(email);
-  return { workspace, myRole: "owner", members, shared, sharedProjects };
+  const projectAccess = workspace ? await workspaceProjectAccess(workspace.id) : [];
+  return { workspace, myRole: "owner", members, shared, sharedProjects, projectAccess };
+}
+
+// Projects in a workspace that have project-level members (for the owner/admin
+// "Project access" overview on /app/team). Members only — no analytics/private data.
+async function workspaceProjectAccess(workspaceId: string): Promise<ProjectAccessSummary[]> {
+  try {
+    const s = getSupabaseAdminClient();
+    const { data: pms } = await s.from("v_project_members" as never).select("project_id,email,role,status").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true }).limit(500);
+    const rows = (pms as unknown as { project_id: string; email: string; role: ProjectRole; status: string }[]) ?? [];
+    if (!rows.length) return [];
+    const projIds = [...new Set(rows.map((r) => r.project_id))];
+    const { data: projs } = await s.from("v_projects" as never).select("id,name").in("id", projIds);
+    const nameById = Object.fromEntries(((projs as unknown as { id: string; name: string }[]) ?? []).map((p) => [p.id, p.name]));
+    const byProj: Record<string, ProjectAccessSummary> = {};
+    for (const r of rows) {
+      const ps = (byProj[r.project_id] ??= { project_id: r.project_id, project_name: nameById[r.project_id] ?? "Project", members: [] });
+      ps.members.push({ email: r.email, role: r.role, status: r.status });
+    }
+    return Object.values(byProj);
+  } catch { return []; }
 }
 
 // ── Member management (owner/admin only) ──
@@ -223,11 +245,19 @@ export type ProjectAccess = { role: Role; level: "owner" | "workspace" | "projec
 
 export const canEditProjectFromRole = (r: Role | null) => r === "owner" || r === "admin" || r === "editor";
 
-async function projectMeta(projectId: string): Promise<{ owner: string; workspace_id: string | null; name: string; description: string | null } | null> {
+export async function projectMeta(projectId: string): Promise<{ owner: string; workspace_id: string | null; name: string; description: string | null } | null> {
   const s = getSupabaseAdminClient();
   const { data } = await s.from("v_projects" as never).select("user_id,workspace_id,name,description").eq("id", projectId).maybeSingle();
   const p = data as unknown as { user_id: string; workspace_id: string | null; name: string; description: string | null } | null;
   return p ? { owner: p.user_id, workspace_id: p.workspace_id, name: p.name, description: p.description } : null;
+}
+
+// A project's manageable basics for a non-owner workspace manager (admin) UI.
+// Returns null unless the caller can manage this project's members.
+export async function managedProjectMeta(email: string, projectId: string): Promise<{ id: string; name: string; description: string | null } | null> {
+  if (!(await canManageProjectMembers(email, projectId))) return null;
+  const meta = await projectMeta(projectId);
+  return meta ? { id: projectId, name: meta.name, description: meta.description } : null;
 }
 
 export async function projectMembershipFor(email: string, projectId: string): Promise<ProjectMember | null> {

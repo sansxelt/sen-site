@@ -45,7 +45,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // Owner-only context — never shown on the public /r/<token> report.
   const project = test.project_id ? await getProject(email, test.project_id) : null;
   const projectLine = project ? (
-    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <a href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</a></p>
+    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <a href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</a> <span style={{ color: "var(--fg-5)" }}>·</span> <a href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Share this project with a client →</a></p>
   ) : null;
   // Owner-only audience profile + screening stats (never on the public /r report).
   const screen = await screeningStats(id);

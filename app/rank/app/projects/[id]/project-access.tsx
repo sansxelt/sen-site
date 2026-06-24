@@ -8,9 +8,9 @@ type Member = { id: string; user_id: string | null; email: string; role: Role; s
 const ROLES: Role[] = ["editor", "viewer", "client_viewer"];
 const ROLE_LABEL: Record<Role, string> = { editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 const ROLE_DESC: Record<Role, string> = {
-  editor: "Can view this project's evaluations and reports.",
-  viewer: "Read-only access to this project's evaluations and reports.",
-  client_viewer: "Read-only access to this project's client-ready reports only.",
+  editor: "Collaborate on this project — view its evaluations and reports.",
+  viewer: "View this project's evaluations and reports (read-only).",
+  client_viewer: "Client-safe project reports only — no private internals.",
 };
 const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
 

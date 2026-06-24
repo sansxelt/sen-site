@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getProject, projectStats, listProjects } from "@/lib/v-projects";
 import { projectAnalytics, projectSourceQuality } from "@/lib/v-analytics";
+import { managedProjectMeta, getProjectAccessRole } from "@/lib/v-workspace";
 import { EvaluationList } from "../../_workspace/evaluation-list";
 import { EditProjectForm } from "../../_workspace/workspace-client";
 import { SectionHead, Dist, Bars, CONF_COLORS, SIGNAL_COLORS } from "../../_workspace/analytics-ui";
@@ -18,10 +19,25 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
 
   const project = await getProject(email, id);
   if (!project) {
+    // Not the project owner — but a workspace owner/admin can still manage access,
+    // and project/workspace read-members get the client-safe shared view.
+    const managed = await managedProjectMeta(email, id);
+    if (managed) {
+      return (
+        <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
+          <a href="/app/team" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</a>
+          <div className="phead"><div><p className="eyebrow">Project access · Workspace admin</p><h1 className="display">{managed.name}</h1>{managed.description ? <p>{managed.description}</p> : null}</div></div>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "0 0 4px", maxWidth: 620, lineHeight: 1.6 }}>You manage this project&apos;s access as a workspace admin. The project&apos;s analytics stay with its owner; you can invite clients and collaborators and manage their roles below.</p>
+          <ProjectAccess projectId={id} />
+          <div style={{ marginTop: 22 }}><a href={`/app/shared/projects/${id}`} className="btn btn--ghost">Open client-safe view →</a></div>
+        </div>
+      );
+    }
+    if (await getProjectAccessRole(email, id)) redirect(`/app/shared/projects/${id}`);
     return (
       <div className="wrap" style={{ maxWidth: 560, paddingTop: "clamp(28px, 5vw, 56px)", textAlign: "center" }}>
         <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", marginBottom: 12 }}>Project not found</h1>
-        <p className="lead-copy" style={{ margin: "0 auto 22px" }}>It may have been removed, or it isn&apos;t yours.</p>
+        <p className="lead-copy" style={{ margin: "0 auto 22px" }}>It may have been removed, or you don&apos;t have access to it.</p>
         <a href="/app/projects" className="btn btn--ghost">Back to projects</a>
       </div>
     );
