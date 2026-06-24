@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type Role = "owner" | "admin" | "editor" | "viewer" | "client_viewer";
-type Member = { id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null };
+type Member = { id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null; can_manage_billing?: boolean };
 type Shared = { workspace_id: string; name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
 type SharedProject = { project_id: string; name: string; workspace_name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
 type ProjRole = "editor" | "viewer" | "client_viewer";
@@ -90,6 +90,12 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
     } finally { setBusy(false); }
   }
   async function setRole(id: string, role: Role) { await fetch(`/api/v/workspace/members/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) }); refresh(); }
+  async function toggleBillingAdmin(id: string, value: boolean) {
+    const r = await fetch(`/api/v/workspace/members/${id}/billing-admin`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ value }) });
+    const j = await r.json().catch(() => ({}));
+    if (j.ok) { setMsg({ kind: "ok", text: value ? "Billing admin granted." : "Billing admin removed." }); refresh(); }
+    else setMsg({ kind: "err", text: j.error === "not_eligible" ? "Only active Admins, Editors, or Viewers can be billing admins." : j.error === "forbidden" ? "Only the workspace owner can change billing admins." : "Couldn't update billing admin." });
+  }
   async function revoke(id: string) { await fetch(`/api/v/workspace/members/${id}`, { method: "DELETE" }); refresh(); }
   async function resend(id: string) { const r = await fetch(`/api/v/workspace/members/${id}/resend`, { method: "POST" }); const j = await r.json().catch(() => ({})); setMsg({ kind: j.ok && j.email !== "failed" ? "ok" : "err", text: j.ok ? deliveryText(j.email, true) : j.error === "rate_limited" ? "Too many resends for this invite — try again later." : "Couldn't resend the invite." }); refresh(); }
   async function teamBilling(path: string, body?: Record<string, string>) {
@@ -228,10 +234,13 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
         {active.map((m, i) => (
           <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "13px 16px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>{m.email}{m.email === email ? " (you)" : ""}</div>
+              <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>{m.email}{m.email === email ? " (you)" : ""}{m.can_manage_billing && m.role !== "owner" ? <span className="pill" style={{ fontSize: 9.5, marginLeft: 8, color: "var(--acc-deep)" }}>Billing admin</span> : null}</div>
               <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 2 }}>Joined {new Date(m.created_at).toLocaleDateString()}</div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              {isOwner && m.status === "active" && (["admin", "editor", "viewer"] as Role[]).includes(m.role) && (
+                <button onClick={() => toggleBillingAdmin(m.id, !m.can_manage_billing)} className="btn btn--ghost" style={{ padding: "6px 10px", fontSize: 12 }} title="Billing admins can view invoices and manage team billing, but cannot transfer ownership or access personal billing.">{m.can_manage_billing ? "Remove billing admin" : "Make billing admin"}</button>
+              )}
               {m.role === "owner" || !canManage ? <RolePill role={m.role} /> : (
                 <>
                   <select value={m.role} onChange={(e) => setRole(m.id, e.target.value as Role)} style={{ ...input, padding: "6px 10px", fontSize: 12.5 } as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
@@ -243,6 +252,9 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
         ))}
         {active.length === 1 && <div style={{ padding: "16px", fontSize: 13, color: "var(--fg-4)", borderTop: "1px solid var(--line-1)" }}>Your workspace is just you for now. Invite collaborators or clients to review decision reports with you.</div>}
       </div>
+      {isOwner && active.some((m) => (["admin", "editor", "viewer"] as Role[]).includes(m.role)) && (
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "-8px 0 18px", lineHeight: 1.6 }}>Billing admins can view invoices and manage team billing, but cannot transfer ownership or access personal billing. Client viewers can never be billing admins.</p>
+      )}
 
       {/* Pending */}
       {pending.length > 0 && (

@@ -66,7 +66,7 @@ export const ROLE_DESC: Record<Role, string> = {
 };
 
 export type Workspace = { id: string; owner_user_id: string; name: string; created_at: string };
-export type Member = { id: string; workspace_id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null };
+export type Member = { id: string; workspace_id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null; can_manage_billing?: boolean };
 export type SharedWorkspace = { workspace_id: string; name: string; role: Role; evaluations: { test_id: string; title: string; status: string }[] };
 
 // ── Permission helpers (centralized — no scattered role checks) ──
@@ -124,7 +124,8 @@ export async function membershipFor(email: string, workspaceId: string): Promise
 async function listMembers(workspaceId: string): Promise<Member[]> {
   try {
     const s = getSupabaseAdminClient();
-    let q = await s.from("v_workspace_members" as never).select("id,workspace_id,user_id,email,role,status,created_at,invite_expires_at").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true });
+    let q = await s.from("v_workspace_members" as never).select("id,workspace_id,user_id,email,role,status,created_at,invite_expires_at,can_manage_billing").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true });
+    if (q.error) q = await s.from("v_workspace_members" as never).select("id,workspace_id,user_id,email,role,status,created_at,invite_expires_at").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true }); // can_manage_billing absent
     if (q.error) q = await s.from("v_workspace_members" as never).select("id,workspace_id,user_id,email,role,status,created_at").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true }); // pre-migration
     return (q.data as unknown as Member[]) ?? [];
   } catch { return []; }
@@ -733,6 +734,60 @@ export async function ownedWorkspaceForBilling(email: string, selectedWorkspaceI
     } catch { /* fall back to personal */ }
   }
   return { id: personal.id, name: personal.name };
+}
+
+// ── Billing admin role (v1) ──
+const BILLING_ADMIN_ROLES = ["admin", "editor", "viewer"];
+
+// Is the caller an ACTIVE internal member with billing-admin permission on this workspace?
+// Tolerant of the can_manage_billing column being absent (pre-migration) — false.
+export async function isBillingAdminMember(workspaceId: string, email: string): Promise<boolean> {
+  try {
+    const { data, error } = await getSupabaseAdminClient().from("v_workspace_members" as never).select("status,role,can_manage_billing").eq("workspace_id", workspaceId).eq("email", norm(email)).maybeSingle();
+    if (error) return false; // can_manage_billing column absent (pre-migration) — not a billing admin
+    const m = data as unknown as { status: string; role: Role; can_manage_billing?: boolean } | null;
+    return !!m && m.status === "active" && BILLING_ADMIN_ROLES.includes(m.role) && m.can_manage_billing === true;
+  } catch { return false; }
+}
+
+// Resolve the workspace whose team billing the caller may VIEW/MANAGE — owner OR billing
+// admin. Returns the selected workspace if they manage it; if they selected a workspace
+// they can't manage, unauthorizedSelection=true (sensitive routes 403); otherwise their
+// personal workspace.
+export async function billingManageableWorkspace(email: string, selectedWorkspaceId?: string | null): Promise<{ id: string; name: string; isOwner: boolean; isBillingAdmin: boolean; unauthorizedSelection?: boolean } | null> {
+  const personal = await getOrCreatePersonalWorkspace(email);
+  if (selectedWorkspaceId && (!personal || selectedWorkspaceId !== personal.id)) {
+    try {
+      const { data } = await getSupabaseAdminClient().from("v_workspaces" as never).select("id,owner_user_id,name").eq("id", selectedWorkspaceId).maybeSingle();
+      const ws = data as unknown as { id: string; owner_user_id: string; name: string } | null;
+      if (ws) {
+        if (ws.owner_user_id === norm(email)) return { id: ws.id, name: ws.name, isOwner: true, isBillingAdmin: false };
+        if (await isBillingAdminMember(ws.id, email)) return { id: ws.id, name: ws.name, isOwner: false, isBillingAdmin: true };
+        if (personal) return { id: personal.id, name: personal.name, isOwner: true, isBillingAdmin: false, unauthorizedSelection: true };
+        return null;
+      }
+    } catch { /* fall through to personal */ }
+  }
+  if (!personal) return null;
+  return { id: personal.id, name: personal.name, isOwner: true, isBillingAdmin: false };
+}
+
+// Owner grants/revokes billing-admin on an ACTIVE internal member (admin/editor/viewer).
+// Owner-only; never on owner-self / client_viewer / pending / revoked.
+export async function setBillingAdmin(ownerEmail: string, memberId: string, value: boolean): Promise<{ ok: boolean; error?: string }> {
+  if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const s = getSupabaseAdminClient();
+  const uid = norm(ownerEmail);
+  const { data: md } = await s.from("v_workspace_members" as never).select("id,workspace_id,role,status").eq("id", memberId).maybeSingle();
+  const m = md as unknown as { id: string; workspace_id: string; role: Role; status: string } | null;
+  if (!m) return { ok: false, error: "not_found" };
+  const { data: ws } = await s.from("v_workspaces" as never).select("owner_user_id").eq("id", m.workspace_id).maybeSingle();
+  if ((ws as unknown as { owner_user_id: string } | null)?.owner_user_id !== uid) return { ok: false, error: "forbidden" };
+  if (m.status !== "active" || !BILLING_ADMIN_ROLES.includes(m.role)) return { ok: false, error: "not_eligible" };
+  const upd = await s.from("v_workspace_members" as never).update({ can_manage_billing: value, updated_at: new Date().toISOString() } as never).eq("id", m.id);
+  if (upd.error) return { ok: false, error: "failed" };
+  await logEvent({ userId: uid, eventType: value ? "workspace_billing_admin_granted" : "workspace_billing_admin_revoked", actorType: "owner", source: "app", metadata: { workspace_id: m.workspace_id, action: value ? "grant" : "revoke", role: m.role } });
+  return { ok: true };
 }
 
 // ── Billing ownership migration (v1) ──

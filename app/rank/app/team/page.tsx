@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
-import { getWorkspaceContext, resolveWorkspaceSelection, sharedTeamView, workspaceProjectSummaries, eligibleOwnershipTransferTargets, canTransferWorkspaceOwnership, pendingOutgoingTransfer, pendingIncomingTransfer, ROLE_LABEL } from "@/lib/v-workspace";
+import { getWorkspaceContext, resolveWorkspaceSelection, sharedTeamView, workspaceProjectSummaries, eligibleOwnershipTransferTargets, canTransferWorkspaceOwnership, pendingOutgoingTransfer, pendingIncomingTransfer, isBillingAdminMember, ROLE_LABEL } from "@/lib/v-workspace";
 import { teamSeatState, syncTeamCheckout, syncMigrationCheckout } from "@/lib/v-team-billing";
 import { TeamClient } from "./team-client";
+import { TeamBillingPanel } from "../billing/team-billing-panel";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -24,11 +25,19 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   // they OWN (personal or one transferred to them) keeps the full management UI.
   const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
   if (selected && !selected.isOwner) {
-    const [view, summary] = await Promise.all([sharedTeamView(selected), workspaceProjectSummaries(selected)]);
+    const [view, summary, billingAdmin] = await Promise.all([sharedTeamView(selected), workspaceProjectSummaries(selected), isBillingAdminMember(selected.id, email)]);
+    const baBilling = billingAdmin ? await teamSeatState(selected.id) : null;
     return (
       <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="phead"><div><p className="eyebrow">Workspace: {selected.name}</p><h1 className="display">Team</h1><p>{view.clientSafe ? "Client-safe access — shared reports only." : "Read-only view of this shared workspace."}</p></div></div>
-        <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}><div style={{ fontSize: 13.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>Workspace: {selected.name}</strong> · Role: {ROLE_LABEL[selected.role]} · {view.clientSafe ? "Client-safe access" : "Read-only"}</div></div>
+        <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}><div style={{ fontSize: 13.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>Workspace: {selected.name}</strong> · Role: {ROLE_LABEL[selected.role]}{billingAdmin ? " · Billing admin" : ""} · {view.clientSafe ? "Client-safe access" : "Read-only"}</div></div>
+
+        {baBilling ? (
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Team billing</div>
+            <TeamBillingPanel workspaceName={selected.name} billing={baBilling} canManage={false} />
+          </div>
+        ) : null}
 
         {view.clientSafe ? (
           <>

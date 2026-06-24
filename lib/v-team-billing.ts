@@ -178,16 +178,19 @@ export async function startTeamCheckout(workspaceId: string, ownerEmail: string,
   } catch (e) { console.error("startTeamCheckout:", e); return { error: "checkout_failed" }; }
 }
 
-export async function openTeamPortal(workspaceId: string, ownerEmail: string, ownerName: string | null, intent: "manage" | "invoices" = "manage"): Promise<{ url?: string; error?: string }> {
+export async function openTeamPortal(workspaceId: string, actorEmail: string, _actorName: string | null, intent: "manage" | "invoices" = "manage", actorType: "owner" | "admin" = "owner"): Promise<{ url?: string; error?: string }> {
   if (!isTeamBillingConfigured()) return { error: "not_configured" }; // team billing isn't set up -> don't open personal billing
   if (!isStripeConfigured()) return { error: "billing_unavailable" };
   try {
     const stripe = getStripe();
     const row = await readBillingRow(workspaceId);
-    const customerId = row?.stripe_customer_id ?? (await findOrCreateCustomer(ownerEmail, ownerName));
-    await upsertBilling(workspaceId, { stripe_customer_id: customerId });
+    // NEVER create a customer here — the portal opens the workspace's EXISTING team-billing
+    // customer only (owner establishes it via checkout). Prevents a billing admin (or anyone)
+    // from minting a Stripe customer under their own email for an unconfigured workspace.
+    const customerId = row?.stripe_customer_id;
+    if (!customerId) return { error: "not_configured" };
     const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${SITE}/app/team` });
-    await logEvent({ userId: norm(ownerEmail), eventType: intent === "invoices" ? "team_invoice_portal_opened" : "team_billing_portal_opened", actorType: "owner", source: "web", metadata: { workspace_id: workspaceId, action: intent } });
+    await logEvent({ userId: norm(actorEmail), eventType: intent === "invoices" ? "team_invoice_portal_opened" : "team_billing_portal_opened", actorType, source: "web", metadata: { workspace_id: workspaceId, action: intent } });
     return { url: portal.url };
   } catch (e) { console.error("openTeamPortal:", e); return { error: "portal_failed" }; }
 }
@@ -209,6 +212,35 @@ export async function syncTeamCheckout(workspaceId: string, sessionId: string): 
     await upsertBilling(workspaceId, { stripe_customer_id: custId ?? null, stripe_subscription_id: subId, stripe_subscription_item_id: item?.id ?? null, seat_quantity: item?.quantity ?? 0, status: sub.status, current_period_end: periodEndIso(sub) });
     await logEvent({ userId: "system", eventType: "team_billing_configured", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, seat_count: item?.quantity ?? 0, billing_status: sub.status, interval: intervalForPriceId(item?.price?.id) } });
   } catch (e) { console.error("syncTeamCheckout:", e); }
+}
+
+// Recent invoices for a workspace's team-billing customer — SAFE fields only (no Stripe
+// customer/subscription/invoice ids, no payment method, no addresses). hosted_url/pdf_url
+// are unguessable Stripe-hosted links returned only to authorized callers (owner/billing
+// admin) by the route. Returns [] if no customer / Stripe unconfigured.
+export type SafeInvoice = { date: string; status: string; amountPaid: number; amountDue: number; currency: string; hostedUrl: string | null; pdfUrl: string | null; periodStart: string | null; periodEnd: string | null };
+export async function listTeamInvoices(workspaceId: string, limit = 12): Promise<SafeInvoice[]> {
+  if (!isStripeConfigured()) return [];
+  try {
+    const row = await readBillingRow(workspaceId);
+    if (!row?.stripe_customer_id) return [];
+    const list = await getStripe().invoices.list({ customer: row.stripe_customer_id, limit });
+    const iso = (u?: number | null) => (u ? new Date(u * 1000).toISOString() : null);
+    return list.data.map((inv) => {
+      const i = inv as unknown as { created?: number; status?: string; amount_paid?: number; amount_due?: number; currency?: string; hosted_invoice_url?: string | null; invoice_pdf?: string | null; period_start?: number; period_end?: number };
+      return {
+        date: iso(i.created) ?? new Date().toISOString(),
+        status: i.status ?? "open",
+        amountPaid: (i.amount_paid ?? 0) / 100,
+        amountDue: (i.amount_due ?? 0) / 100,
+        currency: (i.currency ?? "usd").toUpperCase(),
+        hostedUrl: i.hosted_invoice_url ?? null,
+        pdfUrl: i.invoice_pdf ?? null,
+        periodStart: iso(i.period_start),
+        periodEnd: iso(i.period_end),
+      };
+    });
+  } catch (e) { console.error("listTeamInvoices:", e); return []; }
 }
 
 // ── Billing ownership migration ──

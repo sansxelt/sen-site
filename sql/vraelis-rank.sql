@@ -685,3 +685,10 @@ create index if not exists v_wot_to_user_idx on v_workspace_ownership_transfers 
 -- If active billing belongs to the old owner, transfer requires migration; once it equals
 -- the new owner, the migration is complete. Server-only; never exposed publicly.
 alter table v_workspace_billing add column if not exists billing_owner_user_id text;
+
+-- ── Billing admin role (v1) ──
+-- Lets the workspace owner grant a trusted ACTIVE internal member (admin/editor/viewer)
+-- permission to view invoices + manage team billing (portal) WITHOUT becoming owner.
+-- Billing admins cannot transfer ownership, change the owner, or touch personal billing.
+-- client_viewer / pending / revoked / project-only members can never be billing admins.
+alter table v_workspace_members add column if not exists can_manage_billing boolean not null default false;

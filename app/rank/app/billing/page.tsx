@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { getSubscription, listRecentLedger } from "@/lib/v-db";
 import { balance } from "@/lib/v-credits";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
-import { resolveWorkspaceSelection, ownedWorkspaceForBilling } from "@/lib/v-workspace";
+import { resolveWorkspaceSelection, ownedWorkspaceForBilling, isBillingAdminMember } from "@/lib/v-workspace";
 import { teamSeatState } from "@/lib/v-team-billing";
 import { BillingActions, PaymentMethodButton } from "./billing-actions";
 import { TeamBillingPanel } from "./team-billing-panel";
@@ -21,16 +21,19 @@ export default async function BillingPage() {
 
   const [sub, bal, ledger] = await Promise.all([getSubscription(email), balance(email), listRecentLedger(email, 12)]);
 
-  // Team seats for the selected workspace. Owner of the selection -> full transparency;
-  // a member of someone else's workspace -> safe generic copy; client_viewer -> nothing.
+  // Team seats for the selected workspace. Owner -> full controls; billing admin -> view +
+  // portal + invoices (no setup); regular member -> generic copy; client_viewer -> nothing.
   const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
-  const teamIsForeign = !!(selected && !selected.isOwner);
-  const teamForeignShow = teamIsForeign && selected!.role !== "client_viewer";
   let teamBilling: Awaited<ReturnType<typeof teamSeatState>> | null = null;
   let teamWsName = "";
-  if (!teamIsForeign) {
+  let teamAccess: "owner" | "billing_admin" | "member" | "client" = "member";
+  if (!selected || selected.isOwner) {
     const wsB = await ownedWorkspaceForBilling(email, selected?.id);
-    if (wsB) { teamBilling = await teamSeatState(wsB.id); teamWsName = wsB.name; }
+    if (wsB) { teamBilling = await teamSeatState(wsB.id); teamWsName = wsB.name; teamAccess = "owner"; }
+  } else if (await isBillingAdminMember(selected.id, email)) {
+    teamBilling = await teamSeatState(selected.id); teamWsName = selected.name; teamAccess = "billing_admin";
+  } else if (selected.role === "client_viewer") {
+    teamAccess = "client";
   }
   const plan = sub && sub.status === "active" ? sub.plan : "free";
   const planName = plan === "free" ? "Free" : plan.charAt(0).toUpperCase() + plan.slice(1);
@@ -95,15 +98,15 @@ export default async function BillingPage() {
         <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 16, marginBottom: 0, lineHeight: 1.6 }}>Plan changes, cancel and resume happen here on Vraelis.</p>
       </div>
 
-      {/* Team seats (workspace billing, owner-only detail) */}
+      {/* Team seats (workspace billing — owner / billing-admin detail) */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Team seats</div>
-      {teamForeignShow ? (
+      {(teamAccess === "owner" || teamAccess === "billing_admin") && teamBilling ? (
+        <div style={{ marginBottom: 28 }}><TeamBillingPanel workspaceName={teamWsName} billing={teamBilling} canManage={teamAccess === "owner"} /></div>
+      ) : teamAccess === "member" ? (
         <div className="card" style={{ marginBottom: 28, background: "var(--bg-2)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{selected!.name}</div>
-          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team billing is managed by the workspace owner. Client viewers are always free.</p>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{selected?.name ?? "Workspace"}</div>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team billing is managed by the workspace owner or billing admin. Client viewers are always free.</p>
         </div>
-      ) : !teamIsForeign && teamBilling ? (
-        <div style={{ marginBottom: 28 }}><TeamBillingPanel workspaceName={teamWsName} billing={teamBilling} /></div>
       ) : (
         <div className="card" style={{ marginBottom: 28, background: "var(--bg-2)" }}>
           <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Team billing is managed by the workspace owner.</p>
