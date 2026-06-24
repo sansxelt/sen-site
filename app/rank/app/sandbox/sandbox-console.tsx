@@ -47,6 +47,24 @@ const CURL_EXPORT = `curl "https://vraelis.com/api/v1/tests/EVAL_ID/export?forma
   -H "X-Api-Key: $VRAELIS_API_KEY"
 # CSV: ?format=csv`;
 
+const SDK_WEBHOOK = `import { verifyWebhookSignature } from "@vraelis/sdk"
+
+export async function POST(req: Request) {
+  const raw = await req.text() // raw body — required
+  const ok = verifyWebhookSignature({
+    payload: raw,
+    signature: req.headers.get("x-vraelis-signature"),
+    timestamp: req.headers.get("x-vraelis-timestamp"),
+    secret: process.env.VRAELIS_WEBHOOK_SECRET!,
+    toleranceSeconds: 300,
+  })
+  if (!ok) return new Response("invalid signature", { status: 401 })
+  return new Response("ok")
+}
+
+// Or verify by hand: sha256=HMAC_SHA256(secret, \`\${timestamp}.\${rawBody}\`)
+// compared (constant-time) to the X-Vraelis-Signature header.`;
+
 const lbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" } as const;
 const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
 const inputStyle = { width: "100%", padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
@@ -232,13 +250,14 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
       )}
 
       {/* Snippets + links (always shown) */}
-      <div style={lbl}>SDK &amp; curl</div>
+      <div style={lbl}>Implementation examples</div>
       <div className="card" style={{ marginBottom: 18 }}>
         <Snippet label="typescript · SDK starter · coming soon to npm" text={SDK_SNIPPET} copied={copied === "sdk"} onCopy={() => copy("sdk", SDK_SNIPPET)} />
         <Snippet label="curl · create sandbox evaluation" text={CURL_CREATE} copied={copied === "cc"} onCopy={() => copy("cc", CURL_CREATE)} />
         <Snippet label="curl · fetch decision package" text={CURL_GET} copied={copied === "cg"} onCopy={() => copy("cg", CURL_GET)} />
         <Snippet label="curl · export JSON" text={CURL_EXPORT} copied={copied === "ce"} onCopy={() => copy("ce", CURL_EXPORT)} />
-        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "6px 0 0" }}>Set <code style={{ fontFamily: "var(--font-code)" }}>$VRAELIS_API_KEY</code> to your key. Keep keys server-side only — never ship them to the client.</p>
+        <Snippet label="typescript · verify a webhook signature" text={SDK_WEBHOOK} copied={copied === "wv"} onCopy={() => copy("wv", SDK_WEBHOOK)} />
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "6px 0 0" }}>Set <code style={{ fontFamily: "var(--font-code)" }}>$VRAELIS_API_KEY</code> to your key. Keep keys server-side only — never ship them to the client. Full reference: the SDK README in the repository.</p>
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

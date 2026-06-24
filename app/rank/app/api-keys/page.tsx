@@ -109,7 +109,7 @@ export default function ApiKeysPage() {
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Preference data exports</div>
           <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed results as JSON or CSV. Winner, breakdown, quality, comments, and AI analysis.</p>
         </div>
-        <a href="/developers#export" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Export docs →</a>
+        <a href="/app/sandbox" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Test exports →</a>
       </div>
 
       {/* Test your integration — opens the in-app sandbox console */}
@@ -117,14 +117,15 @@ export default function ApiKeysPage() {
         <div style={{ display: "flex", gap: 14, alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 320px", minWidth: 0 }}>
             <div style={cardHead}>Test your integration</div>
-            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Create a sandbox evaluation, preview a Decision Package, test exports, and send a signed webhook event — with sample data, 0 credits, 0 quota, and nothing in your production analytics.</p>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Use the sandbox console to create a sandbox evaluation, preview a Decision Package, test exports, and send a signed webhook event — with sample data, 0 credits, 0 quota, and nothing in your production analytics.</p>
             <a href="/app/sandbox" className="btn">Open sandbox console →</a>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
-          <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Decision Package schema</a>
-          <a href="/developers#sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Developer docs</a>
+          <a href="/developers" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Developer overview</a>
+          <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>JSON Schema</a>
           <a href="/developers#sdk" className="btn btn--ghost" style={{ fontSize: 12.5 }}>SDK starter</a>
+          <a href="/developers#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Webhook signing</a>
         </div>
       </div>
 
