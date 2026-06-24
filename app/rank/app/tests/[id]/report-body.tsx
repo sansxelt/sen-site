@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { OPTION_LETTERS, type VOption, type VReport } from "@/lib/v-db";
 import { evaluationIntelligence, intelligenceDisclaimer } from "@/lib/v-intelligence";
-import { decisionReadiness, REPORT_GLOSSARY } from "@/lib/v-readiness";
+import { decisionReadiness, followupForReadiness, REPORT_GLOSSARY } from "@/lib/v-readiness";
 
 const READY_TONE: Record<string, { bg: string; fg: string }> = {
   good: { bg: "var(--acc-soft)", fg: "var(--acc-deep)" },
@@ -41,7 +41,7 @@ const CONF_TONE: Record<string, { bg: string; fg: string }> = {
 // margin, signal quality, action), preference breakdown, optional AI analysis
 // slot, and reasoning signals. Pure render from results + options; used by both
 // the owner report and the public /r/<token> report.
-export function ReportBody({ results, options, analysisSlot, votesTarget = 0, complete = true, audienceFit, screeningEnabled }: { results: VReport["results"]; options: VOption[]; analysisSlot?: ReactNode; votesTarget?: number; complete?: boolean; audienceFit?: string | null; screeningEnabled?: boolean }) {
+export function ReportBody({ results, options, analysisSlot, votesTarget = 0, complete = true, audienceFit, screeningEnabled, viewerCanAct = false }: { results: VReport["results"]; options: VOption[]; analysisSlot?: ReactNode; votesTarget?: number; complete?: boolean; audienceFit?: string | null; screeningEnabled?: boolean; viewerCanAct?: boolean }) {
   const optById: Record<string, VOption> = Object.fromEntries(options.map((o) => [o.id, o]));
   const total = results.total;
   const filtered = results.filtered ?? 0;
@@ -52,6 +52,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
   const conf = CONF_TONE[intel.confidenceLabel] ?? CONF_TONE.None;
   const readiness = decisionReadiness({ complete, intel, valid: total, target: votesTarget, audienceFit, screeningEnabled });
   const rt = READY_TONE[readiness.tone] ?? READY_TONE.neutral;
+  const followPlan = followupForReadiness(readiness.label);
   const ranked = [...results.ranked].sort((a, b) => b.votes - a.votes);
   const commentsByOption: Record<string, string[]> = {};
   for (const c of results.comments) (commentsByOption[c.option_id] ||= []).push(c.reason);
@@ -117,6 +118,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
           <Metric l="Signal quality" v={readiness.signals.signalQuality} />
           {readiness.signals.audienceFit ? <Metric l="Audience fit" v={readiness.signals.audienceFit} /> : null}
         </div>
+        {followPlan && !viewerCanAct ? <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.55 }}>The evaluation owner can run a confirmation round ({followPlan.actionLabel.toLowerCase()}) if more signal is needed.</p> : null}
       </div>
 
       {/* ── Preference breakdown ── */}

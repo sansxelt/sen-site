@@ -8,7 +8,7 @@
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "./v-db";
 import { evaluationIntelligence, evaluationHealth } from "./v-intelligence";
-import { decisionReadiness } from "./v-readiness";
+import { decisionReadiness, followupForReadiness, type ReadinessLabel } from "./v-readiness";
 import { testSourceQuality } from "./v-analytics";
 import { screeningStats } from "./v-screening";
 import { collectionLinkSummaries } from "./v-collection-links";
@@ -42,6 +42,7 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
   const readiness = intel
     ? decisionReadiness({ complete: test.status === "complete", intel, valid, target: test.votes_target, audienceFit: screen.fit, screeningEnabled: screen.enabled })
     : { label: test.status === "complete" ? "Needs more judgments" : "Collecting judgments", reason: test.status === "complete" ? "Not enough qualified judgments to produce a recommendation." : "Collecting qualified judgments — readiness is assessed once enough signal arrives.", nextStep: "Collect more qualified judgments before treating any lead as a decision." };
+  const follow = followupForReadiness(readiness.label as ReadinessLabel);
 
   // ── webhook scope: compact, safe ──
   if (scope === "webhook") {
@@ -58,6 +59,8 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
       evaluation_health: health,
       readiness_label: readiness.label,
       recommended_next_step: readiness.nextStep,
+      followup_recommended: !!follow,
+      followup_type: follow?.type ?? null,
       action_recommendation: intel?.action ?? null,
       valid_judgments: valid,
       filtered_responses: filtered,
@@ -88,6 +91,10 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
       readiness_label: readiness.label,
       readiness_reason: readiness.reason,
       recommended_next_step: readiness.nextStep,
+      followup_recommended: !!follow,
+      followup_type: follow?.type ?? null,
+      followup_reason: follow?.reason ?? null,
+      followup_action_label: follow?.actionLabel ?? null,
       action_recommendation: intel?.action ?? null,
       decision_summary: intel?.decisionSummary ?? null,
       inconclusive: intel ? intel.inconclusive : null,
@@ -135,6 +142,8 @@ export const SAMPLE_DECISION_PACKAGE = {
   evaluation_health: "Ready to decide",
   readiness_label: "Strong recommendation",
   recommended_next_step: "Ship Option B, or use it as the client-approved direction.",
+  followup_recommended: false,
+  followup_type: null,
   action_recommendation: "Ship Option B.",
   valid_judgments: 120,
   filtered_responses: 11,

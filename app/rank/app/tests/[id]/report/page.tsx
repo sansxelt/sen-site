@@ -4,6 +4,9 @@ import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
 import { getProject } from "@/lib/v-projects";
 import { testFilterReasons, testSourceQuality } from "@/lib/v-analytics";
 import { evaluationIntelligence, evaluationHealth } from "@/lib/v-intelligence";
+import { decisionReadiness, followupForReadiness } from "@/lib/v-readiness";
+import { followupLineage } from "@/lib/v-followup";
+import { FollowupPanel } from "../followup-panel";
 import { SectionHead, Bars, HealthBadge } from "../../../_workspace/analytics-ui";
 import { CollectionLinks } from "../../../_workspace/collection-links";
 import { ScreeningManager } from "../../../_workspace/screening-manager";
@@ -105,8 +108,14 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // None of this is rendered on the public /r report.
   const filterReasons = (r.filtered ?? 0) > 0 ? await testFilterReasons(id) : [];
   const sources = await testSourceQuality(id);
-  const health = evaluationHealth("complete", evaluationIntelligence(r, test.votes_target));
+  const intel = evaluationIntelligence(r, test.votes_target);
+  const health = evaluationHealth("complete", intel);
   const noisySource = sources.find((sq) => sq.total >= 10 && sq.filterRate >= 25);
+  // Decision readiness → suggested confirmation round (owner-only action) + lineage.
+  const readiness = decisionReadiness({ complete: true, intel, valid: r.total, target: test.votes_target, audienceFit: screen.fit, screeningEnabled: screen.enabled });
+  const followPlan = followupForReadiness(readiness.label);
+  const followTarget = followPlan && (followPlan.type === "retest_top_two" || followPlan.type === "confirm_recommendation") ? Math.max(test.votes_target || 100, 150) : (test.votes_target || 100);
+  const lineage = await followupLineage(id, email);
 
   return (
     <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 90 }}>
@@ -115,12 +124,30 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         <HealthBadge state={health} />
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8, marginTop: 8 }}>{test.title}</h1>
+      {lineage.parent ? (
+        <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}><span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", marginRight: 8 }}>Confirmation round</span>Follow-up of <a href={`/app/tests/${lineage.parent.id}/report`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{lineage.parent.title}</a></p>
+      ) : null}
       {projectLine}
       {audienceLine}
 
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
 
-      <ReportBody results={r} options={options} votesTarget={test.votes_target} complete audienceFit={screen.fit} screeningEnabled={screen.enabled} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
+      <ReportBody results={r} options={options} votesTarget={test.votes_target} complete viewerCanAct audienceFit={screen.fit} screeningEnabled={screen.enabled} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
+
+      <FollowupPanel testId={test.id} plan={followPlan} defaultTarget={followTarget} balance={bal} />
+      {lineage.children.length > 0 ? (
+        <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Confirmation rounds</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {lineage.children.map((c) => (
+              <a key={c.id} href={`/app/tests/${c.id}/report`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13.5, color: "var(--fg-1)", textDecoration: "none" }}>
+                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)", marginRight: 8 }}>{c.type ?? "follow-up"}</span>{c.title}</span>
+                <span style={{ fontSize: 12, color: "var(--acc-deep)" }}>{c.status === "complete" ? "Report →" : "View →"}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {screen.enabled ? (
         <div className="card" style={{ marginBottom: 22 }}>

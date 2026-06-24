@@ -77,6 +77,25 @@ export function decisionReadiness(opts: {
   return make("Directional signal", `Option ${L} leads, but the margin is narrow — treat it as directional, not definitive.`, "Collect more judgments, or retest the top two options, before committing budget.", "neutral");
 }
 
+// ── Confirmation rounds: map a readiness state to the suggested follow-up action ──
+export type FollowupType = "top_up" | "retest_top_two" | "cleaner_audience" | "confirm_recommendation" | "narrow_audience";
+export const FOLLOWUP_TYPES: FollowupType[] = ["top_up", "retest_top_two", "cleaner_audience", "confirm_recommendation", "narrow_audience"];
+export type FollowupPlan = { type: FollowupType; actionLabel: string; reason: string; creates: string };
+
+const FOLLOWUP_BY_READINESS: Partial<Record<ReadinessLabel, FollowupPlan>> = {
+  "Needs more judgments": { type: "top_up", actionLabel: "Top up judgments", reason: "There aren't enough qualified judgments yet to decide confidently.", creates: "A follow-up round with the same options and audience, adding more target judgments." },
+  "Too close to call": { type: "retest_top_two", actionLabel: "Retest top two", reason: "The top options are too close — narrowing to the leaders gives a cleaner read.", creates: "A confirmation round with only the top two options and a stronger target." },
+  "Noisy signal": { type: "cleaner_audience", actionLabel: "Rerun with cleaner audience", reason: "A high share of responses was filtered, so the result may be unreliable.", creates: "A fresh round with the same options — tighten the audience or distribution to collect cleaner signal." },
+  "Directional signal": { type: "confirm_recommendation", actionLabel: "Confirm the recommendation", reason: "There's a leading option, but more signal would firm up the call.", creates: "A confirmation round of the recommended option versus its strongest challenger." },
+  "Audience mismatch": { type: "narrow_audience", actionLabel: "Narrow audience and rerun", reason: "Few respondents matched your intended audience.", creates: "A new round with the same options and your target audience carried over — tighten screening before launch." },
+};
+
+// The suggested follow-up for a readiness state — or null when no confirmation is needed
+// (Strong recommendation / Ready to decide) or the evaluation is still collecting.
+export function followupForReadiness(label: ReadinessLabel): FollowupPlan | null {
+  return FOLLOWUP_BY_READINESS[label] ?? null;
+}
+
 // "How to read this report" glossary — concise, client-friendly, premium.
 export const REPORT_GLOSSARY: { term: string; meaning: string }[] = [
   { term: "Recommendation", meaning: "The option Vraelis suggests, based on qualified human signal — a strong starting point, not a guarantee." },

@@ -692,3 +692,13 @@ alter table v_workspace_billing add column if not exists billing_owner_user_id t
 -- Billing admins cannot transfer ownership, change the owner, or touch personal billing.
 -- client_viewer / pending / revoked / project-only members can never be billing admins.
 alter table v_workspace_members add column if not exists can_manage_billing boolean not null default false;
+
+-- ── Confirmation rounds / follow-up lineage (v1) ──
+-- When decision readiness says a result isn't ready (needs more / too close / noisy /
+-- directional / audience mismatch), the owner can launch a follow-up round in one click.
+-- These additive columns link a follow-up back to the evaluation it came from. Nullable +
+-- tolerant (old rows stay null); no behavior change to existing evaluations.
+alter table v_tests add column if not exists parent_test_id  uuid references v_tests(id) on delete set null;
+alter table v_tests add column if not exists followup_type    text;   -- top_up|retest_top_two|cleaner_audience|confirm_recommendation|narrow_audience
+alter table v_tests add column if not exists followup_reason  text;
+create index if not exists v_tests_parent_idx on v_tests (parent_test_id) where parent_test_id is not null;

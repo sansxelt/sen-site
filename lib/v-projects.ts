@@ -18,6 +18,7 @@ export type EvalRow = {
   votes_valid: number; votes_target: number; created_at: string; completed_at: string | null;
   share_enabled: boolean; share_token: string | null;
   recommended: string | null; confidence: string | null; health: string | null;
+  followup_type?: string | null;
 };
 
 export type WorkspaceStats = { total: number; active: number; completed: number; validJudgments: number };
@@ -112,10 +113,11 @@ export async function listEvaluations(userId: string, opts: { projectId?: string
     const s = getSupabaseAdminClient();
     const uid = norm(userId);
     const lim = Math.min(opts.limit ?? 60, 100);
-    const cols = "id,title,status,project_id,votes_valid,votes_target,created_at,completed_at,share_enabled,share_token,is_sandbox";
-    let q = s.from("v_tests" as never).select(cols).eq("user_id", uid).order("created_at", { ascending: false }).limit(lim);
-    if (opts.projectId) q = q.eq("project_id", opts.projectId);
-    let { data: testsData, error } = await q;
+    const COLS_FULL = "id,title,status,project_id,votes_valid,votes_target,created_at,completed_at,share_enabled,share_token,is_sandbox,followup_type";
+    const COLS_NOFOLLOWUP = "id,title,status,project_id,votes_valid,votes_target,created_at,completed_at,share_enabled,share_token,is_sandbox";
+    const run = (cols: string) => { let q = s.from("v_tests" as never).select(cols).eq("user_id", uid).order("created_at", { ascending: false }).limit(lim); if (opts.projectId) q = q.eq("project_id", opts.projectId); return q; };
+    let { data: testsData, error } = await run(COLS_FULL);
+    if (error) ({ data: testsData, error } = await run(COLS_NOFOLLOWUP)); // followup_type column absent (pre-this-migration) — keep project filter
     if (error) {
       // Pre-migration: project_id may not exist yet. Fall back without it so a
       // user's existing evaluations still list (just unfiled). A project filter
@@ -159,6 +161,7 @@ export async function listEvaluations(userId: string, opts: { projectId?: string
         votes_valid: t.votes_valid, votes_target: t.votes_target, created_at: t.created_at, completed_at: t.completed_at,
         share_enabled: !!t.share_enabled, share_token: t.share_token ?? null,
         recommended, confidence, health,
+        followup_type: (t as unknown as { followup_type?: string | null }).followup_type ?? null,
       };
     });
   } catch { return []; }

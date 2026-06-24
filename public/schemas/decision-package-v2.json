@@ -30,6 +30,10 @@
         "readiness_label": { "type": ["string", "null"], "enum": ["Strong recommendation", "Ready to decide", "Directional signal", "Needs more judgments", "Too close to call", "Noisy signal", "Audience mismatch", "Collecting judgments", null], "description": "Decision readiness — whether the result is strong enough to act on now, or needs more signal first. Additive in this release." },
         "readiness_reason": { "type": ["string", "null"], "description": "Plain-language explanation of the readiness label. Additive in this release." },
         "recommended_next_step": { "type": ["string", "null"], "description": "The specific next action to take (e.g. ship the recommended output, collect more judgments, retest the top two). Additive in this release." },
+        "followup_recommended": { "type": ["boolean", "null"], "description": "Whether a confirmation / follow-up round is suggested because the result isn't ready to act on. Additive." },
+        "followup_type": { "type": ["string", "null"], "enum": ["top_up", "retest_top_two", "cleaner_audience", "confirm_recommendation", "narrow_audience", null], "description": "Suggested follow-up round type. Additive." },
+        "followup_reason": { "type": ["string", "null"], "description": "Why a follow-up round is suggested. Additive." },
+        "followup_action_label": { "type": ["string", "null"], "description": "Human-readable label for the suggested follow-up action. Additive." },
         "decision_summary": { "type": ["string", "null"] },
         "inconclusive": { "type": ["boolean", "null"] }
       }
