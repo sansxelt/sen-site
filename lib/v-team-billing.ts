@@ -130,6 +130,7 @@ export async function startTeamCheckout(workspaceId: string, ownerEmail: string,
 }
 
 export async function openTeamPortal(workspaceId: string, ownerEmail: string, ownerName: string | null): Promise<{ url?: string; error?: string }> {
+  if (!isTeamBillingConfigured()) return { error: "not_configured" }; // team billing isn't set up -> don't open personal billing
   if (!isStripeConfigured()) return { error: "billing_unavailable" };
   try {
     const stripe = getStripe();

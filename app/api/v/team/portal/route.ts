@@ -14,6 +14,6 @@ export async function POST() {
   const ws = await getOrCreatePersonalWorkspace(email);
   if (!ws) return NextResponse.json({ error: "no_workspace" }, { status: 400 });
   const res = await openTeamPortal(ws.id, email, session.user?.name ?? null);
-  if (res.error) return NextResponse.json({ error: res.error }, { status: res.error === "billing_unavailable" ? 503 : 500 });
+  if (res.error) return NextResponse.json({ error: res.error }, { status: res.error === "billing_unavailable" || res.error === "not_configured" ? 503 : 500 });
   return NextResponse.json({ url: res.url });
 }
