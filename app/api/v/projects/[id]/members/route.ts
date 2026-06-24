@@ -23,5 +23,5 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const body = await req.json().catch(() => ({}));
   const res = await inviteProjectMember(email, id, String(body?.email || ""), String(body?.role || "client_viewer") as ProjectRole);
   if (!res.ok) return NextResponse.json({ error: res.error }, { status: res.error === "forbidden" ? 403 : 400 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, email: res.email ?? "not_configured" });
 }

@@ -18,5 +18,5 @@ export async function POST(req: Request) {
   if (!workspaceId) return NextResponse.json({ error: "no_workspace" }, { status: 400 });
   const res = await inviteMember(email, workspaceId, inviteEmail, role);
   if (!res.ok) return NextResponse.json({ error: res.error }, { status: res.error === "forbidden" ? 403 : 400 });
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, email: res.email ?? "not_configured" });
 }

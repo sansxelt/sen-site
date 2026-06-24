@@ -14,6 +14,12 @@ const ROLE_DESC: Record<Role, string> = {
 };
 const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
 
+function deliveryText(status: string, resend = false): string {
+  if (status === "sent") return resend ? "Invite email re-sent." : "Invite saved and email sent.";
+  if (status === "failed") return "Invite saved, but the email couldn't be sent. They can still sign in with the invited email.";
+  return "Invite saved. Email delivery isn't connected yet — access activates when they sign in with the invited email.";
+}
+
 export function ProjectAccess({ projectId }: { projectId: string }) {
   const [members, setMembers] = useState<Member[] | null>(null);
   const [email, setEmail] = useState("");
@@ -33,12 +39,13 @@ export function ProjectAccess({ projectId }: { projectId: string }) {
     try {
       const r = await fetch(`/api/v/projects/${projectId}/members`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email.trim(), role }) });
       const j = await r.json();
-      if (j.ok) { setEmail(""); setMsg({ kind: "ok", text: "Invite created. Access activates when they sign in with this email." }); load(); }
+      if (j.ok) { setEmail(""); setMsg({ kind: "ok", text: deliveryText(j.email) }); load(); }
       else setMsg({ kind: "err", text: j.error === "already_member" ? "That email already has access." : j.error === "invalid_email" ? "Enter a valid email." : j.error === "forbidden" ? "You can't manage access for this project." : "Couldn't create the invite." });
     } finally { setBusy(false); }
   }
   async function setMemberRole(id: string, r: Role) { await fetch(`/api/v/projects/${projectId}/members/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: r }) }); load(); }
   async function revoke(id: string) { await fetch(`/api/v/projects/${projectId}/members/${id}`, { method: "DELETE" }); load(); }
+  async function resend(id: string) { const r = await fetch(`/api/v/projects/${projectId}/members/${id}/resend`, { method: "POST" }); const j = await r.json().catch(() => ({})); setMsg({ kind: j.email === "failed" ? "err" : "ok", text: j.ok ? deliveryText(j.email, true) : "Couldn't resend the invite." }); }
 
   if (members === null) return null; // not a manager / loading
   const activeM = members.filter((m) => m.status === "active");
@@ -75,8 +82,8 @@ export function ProjectAccess({ projectId }: { projectId: string }) {
           <div style={{ marginTop: 12 }}>
             {pending.map((m) => (
               <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 0", borderTop: "1px solid var(--line-1)", flexWrap: "wrap" }}>
-                <div style={{ fontSize: 13, color: "var(--fg-3)" }}>{m.email} <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>{ROLE_LABEL[m.role]}</span> <span style={{ fontSize: 11.5, color: "var(--fg-5)" }}>· this invite will activate when the recipient signs in with this email</span></div>
-                <button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "5px 10px", fontSize: 12 }}>Cancel</button>
+                <div style={{ fontSize: 13, color: "var(--fg-3)" }}>{m.email} <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>{ROLE_LABEL[m.role]}</span> <span style={{ fontSize: 11.5, color: "var(--fg-5)" }}>· activates when the recipient signs in with this email</span></div>
+                <span style={{ display: "flex", gap: 6 }}><button onClick={() => resend(m.id)} className="btn btn--ghost" style={{ padding: "5px 10px", fontSize: 12 }}>Resend invite</button><button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "5px 10px", fontSize: 12 }}>Cancel</button></span>
               </div>
             ))}
           </div>

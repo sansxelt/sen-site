@@ -851,3 +851,62 @@ export async function sendNewsletterEmail(opts: {
     console.error("sendNewsletterEmail failed:", err);
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WORKSPACE / PROJECT COLLABORATION INVITES
+//
+// Invite emails for team workspaces + project sharing. The invite is stored
+// pending regardless; the email is best-effort and reports a delivery status so
+// the UI can show "sent / email not configured / failed". The body never includes
+// tokens, private descriptions, analytics, or secrets — only the workspace/project
+// name + role + a sign-in link (activation happens by email match on sign-in).
+// ═══════════════════════════════════════════════════════════════════════════
+
+const INVITE_ROLE_LABEL: Record<string, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
+
+export type InviteEmail = {
+  type: "workspace" | "project";
+  to: string;
+  workspaceName?: string;
+  projectName?: string;
+  role: string;
+  acceptUrl: string;
+};
+export type InviteDelivery = "sent" | "not_configured" | "failed";
+
+export function inviteHtml(opts: Omit<InviteEmail, "to">) {
+  const isProject = opts.type === "project";
+  const context = escapeHtml((isProject ? opts.projectName : opts.workspaceName) || "a Vraelis workspace");
+  const roleLabel = INVITE_ROLE_LABEL[opts.role] ?? escapeHtml(opts.role);
+  const clientSafe = opts.role === "client_viewer";
+  const access = clientSafe
+    ? "You'll have client-safe access to this project's decision reports — read-only, with no access to private workspace controls."
+    : isProject
+      ? `You'll have ${roleLabel} access to this project's evaluations and reports.`
+      : `You'll join this workspace as ${roleLabel}.`;
+  return baseHtml(`
+    <p style="${KICKER_STYLE}">${isProject ? "Project invite" : "Workspace invite"}</p>
+    <h1 class="vrl-h1" style="${H1_STYLE}">You were invited to ${isProject ? "review " : ""}${context}.</h1>
+    <p style="${BODY_STYLE}">You&apos;ve been invited to ${isProject ? "review" : "join"} <strong style="color:#0a0a0a;">${context}</strong> as <strong style="color:#0a0a0a;">${roleLabel}</strong>. ${access}</p>
+    <p style="${BODY_STYLE}">Vraelis helps teams turn qualified human signal into decision reports.</p>
+    <a href="${opts.acceptUrl}" class="vrl-btn" style="${BTN_STYLE}">${isProject ? "View project" : "Accept invite"}</a>
+    <div style="${HR_STYLE}"></div>
+    <p style="${META_STYLE}">Sign in with <strong style="color:#0a0a0a;">this email address</strong> to access the ${isProject ? "project" : "workspace"} — your invite activates automatically.</p>
+    <div style="${NOTE_STYLE}">If you were not expecting this invite, you can ignore this email.</div>
+  `);
+}
+
+// Returns a delivery status; never throws (the invite is already saved by the caller).
+export async function sendInviteEmail(opts: InviteEmail): Promise<InviteDelivery> {
+  const resend = getResend();
+  if (!resend) return "not_configured";
+  try {
+    const subject = opts.type === "project" ? "You're invited to review a Vraelis project" : "You're invited to a Vraelis workspace";
+    const result = await resend.emails.send({ from: fromAccount, to: opts.to, subject, html: inviteHtml(opts) });
+    if (result.error) { console.error("sendInviteEmail rejected:", result.error); return "failed"; }
+    return "sent";
+  } catch (err) {
+    console.error("sendInviteEmail failed:", err);
+    return "failed";
+  }
+}
