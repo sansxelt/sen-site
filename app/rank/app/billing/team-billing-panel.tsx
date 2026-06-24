@@ -1,0 +1,55 @@
+"use client";
+
+import { useState } from "react";
+
+type Billing = { configured: boolean; used: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: "monthly" | "yearly" | null; billingOwnerIsCurrentOwner: boolean };
+
+const BILLING_STATUS: Record<string, string> = { active: "Active", trialing: "Trialing", past_due: "Payment issue", incomplete: "Setup incomplete", incomplete_expired: "Setup incomplete", unpaid: "Payment required", canceled: "Canceled", paused: "Paused" };
+const statusLabel = (s: string | null) => (s ? BILLING_STATUS[s] ?? "Active" : "Not active");
+
+// Owner-only team-seat billing transparency on /app/billing. The portal/checkout routes
+// resolve the selected owned workspace from the vws cookie, so no ids are passed here.
+export function TeamBillingPanel({ workspaceName, billing }: { workspaceName: string; billing: Billing }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  async function open(path: string, body?: Record<string, string>) {
+    setBusy(true); setErr(null);
+    const r = await fetch(`/api/v/team/${path}`, { method: "POST", headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if (j.url) { window.location.href = j.url; return; }
+    setBusy(false);
+    setErr(j.error === "not_configured" ? "Team billing isn't configured yet." : "Couldn't open the billing portal. Try again.");
+  }
+  const payIssue = billing.status === "past_due" || billing.status === "unpaid";
+  return (
+    <div className="card" style={{ marginBottom: 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>{workspaceName}</div>
+          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>{billing.used} paid seat{billing.used === 1 ? "" : "s"}{billing.limit != null ? ` of ${billing.limit}` : ""} · Admin, Editor, Viewer are paid. <strong style={{ color: "var(--fg-2)" }}>Client viewers are free.</strong></div>
+        </div>
+        {(billing.hasSubscription || billing.status) ? <span className="pill" style={{ fontSize: 10.5, color: payIssue ? "var(--money)" : "var(--acc-deep)" }}>{statusLabel(billing.status)}</span> : null}
+      </div>
+
+      {!billing.configured ? (
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing isn&apos;t configured yet — seat counts are informational. Client viewers are free.</p>
+      ) : billing.hasSubscription ? (
+        <>
+          <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "12px 0 0", lineHeight: 1.6 }}>Interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong>{billing.periodEnd ? ` · Next renewal ${new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}` : ""} · {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}.</p>
+          {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "8px 0 0" }}>You&apos;re over your seat limit. Existing members keep access.</p>}
+          {payIssue && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "8px 0 0" }}>Open the billing portal to update payment details.</p>}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
+            <button onClick={() => open("portal")} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>Manage billing</button>
+            <button onClick={() => open("portal", { intent: "invoices" })} disabled={busy} className="btn btn--ghost">View invoices</button>
+          </div>
+        </>
+      ) : (
+        <div style={{ marginTop: 14 }}>
+          <a href="/app/team" className="btn">Set up team seats →</a>
+        </div>
+      )}
+      {err && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{err}</p>}
+      <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Taxes, receipts, and invoices are handled by Stripe and available in the billing portal.</p>
+    </div>
+  );
+}

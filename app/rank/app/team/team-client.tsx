@@ -11,7 +11,11 @@ type ProjectAccessSummary = { project_id: string; project_name: string; members:
 type Workspace = { id: string; owner_user_id: string; name: string } | null;
 type Ctx = { workspace: Workspace; myRole: Role; members: Member[]; shared: Shared[]; sharedProjects: SharedProject[]; projectAccess: ProjectAccessSummary[] };
 type Interval = "monthly" | "yearly";
-type Billing = { configured: boolean; yearlyConfigured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: Interval | null } | null;
+type Billing = { configured: boolean; yearlyConfigured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: Interval | null; billingOwnerIsCurrentOwner: boolean } | null;
+
+// Calm, normalized billing status labels (shared shape with /app/billing).
+const BILLING_STATUS: Record<string, string> = { active: "Active", trialing: "Trialing", past_due: "Payment issue", incomplete: "Setup incomplete", incomplete_expired: "Setup incomplete", unpaid: "Payment required", canceled: "Canceled", paused: "Paused" };
+const statusLabel = (s: string | null) => (s ? BILLING_STATUS[s] ?? "Active" : "Not active");
 type Pricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
 type TransferInfo = { blocked: boolean; eligible: { id: string; email: string; role: Role }[]; workspaceName: string; pending: { id: string; status: string; toEmail: string } | null; incoming: { id: string; status: string; workspaceName: string } | null };
 
@@ -88,11 +92,11 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
   async function setRole(id: string, role: Role) { await fetch(`/api/v/workspace/members/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) }); refresh(); }
   async function revoke(id: string) { await fetch(`/api/v/workspace/members/${id}`, { method: "DELETE" }); refresh(); }
   async function resend(id: string) { const r = await fetch(`/api/v/workspace/members/${id}/resend`, { method: "POST" }); const j = await r.json().catch(() => ({})); setMsg({ kind: j.ok && j.email !== "failed" ? "ok" : "err", text: j.ok ? deliveryText(j.email, true) : j.error === "rate_limited" ? "Too many resends for this invite — try again later." : "Couldn't resend the invite." }); refresh(); }
-  async function teamBilling(path: string, interval?: Interval) {
-    const r = await fetch(`/api/v/team/${path}`, { method: "POST", headers: interval ? { "Content-Type": "application/json" } : undefined, body: interval ? JSON.stringify({ interval }) : undefined });
+  async function teamBilling(path: string, body?: Record<string, string>) {
+    const r = await fetch(`/api/v/team/${path}`, { method: "POST", headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
     const j = await r.json().catch(() => ({}));
     if (j.url) window.location.href = j.url;
-    else setMsg({ kind: "err", text: j.error === "not_configured" ? (interval === "yearly" ? "Annual team billing isn't configured yet." : "Team billing isn't configured yet.") : "Couldn't open billing. Try again." });
+    else setMsg({ kind: "err", text: j.error === "not_configured" ? (body?.interval === "yearly" ? "Annual team billing isn't configured yet." : "Team billing isn't configured yet.") : "Couldn't open billing. Try again." });
   }
   async function doTransfer() {
     if (!tgt || tBusy) return;
@@ -163,13 +167,14 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>{billing.used} paid seat{billing.used === 1 ? "" : "s"} used{billing.limit != null ? ` of ${billing.limit}` : ""}</div>
               <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>Admin, Editor, and Viewer are paid seats. <strong style={{ color: "var(--fg-2)" }}>Client viewers are free</strong> and can only access client-safe reports.</div>
             </div>
-            {billing.status ? <span className="pill" style={{ fontSize: 10.5, color: "var(--acc-deep)" }}>{billing.status}</span> : null}
+            {(billing.hasSubscription || billing.status) ? <span className="pill" style={{ fontSize: 10.5, color: billing.status === "past_due" || billing.status === "unpaid" ? "var(--money)" : "var(--acc-deep)" }}>{statusLabel(billing.status)}</span> : null}
           </div>
           {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0", lineHeight: 1.5 }}>You&apos;re over your seat limit. Add seats to invite more internal collaborators, or change roles to Client viewer. Existing members keep their access.</p>}
+          {(billing.status === "past_due" || billing.status === "unpaid") && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0", lineHeight: 1.5 }}>Open the billing portal to update payment details.</p>}
           <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Pending invites don&apos;t count until accepted. Team seats are for additional internal collaborators; client viewers are always free.</p>
 
           {billing.configured && billing.hasSubscription && (
-            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong>. Change your plan or interval from the billing portal.</p>
+            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong> · {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}. Change your plan, interval, or payment method in the billing portal.</p>
           )}
 
           {billing.configured && !billing.hasSubscription && (
@@ -187,11 +192,15 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12, alignItems: "center" }}>
             {billing.configured ? (
               billing.hasSubscription
-                ? <button onClick={() => teamBilling("portal")} className="btn">Manage team billing</button>
-                : <button onClick={() => teamBilling("checkout", seatInterval)} className="btn">Add team seats — {seatInterval === "yearly" ? "Annual" : "Monthly"}</button>
+                ? <>
+                    <button onClick={() => teamBilling("portal")} className="btn">Manage team billing</button>
+                    <button onClick={() => teamBilling("portal", { intent: "invoices" })} className="btn btn--ghost">View invoices</button>
+                  </>
+                : <button onClick={() => teamBilling("checkout", { interval: seatInterval })} className="btn">Add team seats — {seatInterval === "yearly" ? "Annual" : "Monthly"}</button>
             ) : <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Team billing isn&apos;t configured yet — seat counts are informational. Client viewers are free.</span>}
           </div>
-          {billing.periodEnd && billing.hasSubscription ? <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0" }}>Renews {new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p> : null}
+          {billing.periodEnd && billing.hasSubscription ? <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0" }}>Next renewal {new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p> : null}
+          <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Taxes, receipts, and invoices are handled by Stripe and available in the billing portal.</p>
         </div>
         );
       })()}

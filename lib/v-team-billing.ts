@@ -86,7 +86,20 @@ async function syncFromStripe(workspaceId: string, row: BillingRow): Promise<{ r
 }
 
 // Owner-facing seat state — SAFE (no Stripe ids).
-export type TeamSeatState = { configured: boolean; yearlyConfigured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: BillingInterval | null };
+export type TeamSeatState = { configured: boolean; yearlyConfigured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: BillingInterval | null; billingOwnerIsCurrentOwner: boolean };
+
+// Is the billing owner the current workspace owner? (true when no migrated billing owner
+// is recorded). Tolerant of the column being absent (pre-migration) — defaults true.
+async function billingOwnerIsCurrentOwner(workspaceId: string): Promise<boolean> {
+  try {
+    const s = getSupabaseAdminClient();
+    const { data: br } = await s.from("v_workspace_billing" as never).select("billing_owner_user_id").eq("workspace_id", workspaceId).maybeSingle();
+    const bo = (br as unknown as { billing_owner_user_id: string | null } | null)?.billing_owner_user_id ?? null;
+    if (!bo) return true;
+    const { data: wsr } = await s.from("v_workspaces" as never).select("owner_user_id").eq("id", workspaceId).maybeSingle();
+    return (wsr as unknown as { owner_user_id: string } | null)?.owner_user_id === bo;
+  } catch { return true; }
+}
 
 export async function teamSeatState(workspaceId: string): Promise<TeamSeatState> {
   const configured = isTeamBillingConfigured();
@@ -100,6 +113,7 @@ export async function teamSeatState(workspaceId: string): Promise<TeamSeatState>
     configured, yearlyConfigured: isYearlyTeamBillingConfigured(), enforced: configured, used: counts.active, pendingPaid: counts.pendingPaid,
     limit, overLimit: !!(configured && limit != null && counts.active > limit),
     status: row?.status ?? null, periodEnd: row?.current_period_end ?? null, hasSubscription: !!row?.stripe_subscription_id, interval,
+    billingOwnerIsCurrentOwner: await billingOwnerIsCurrentOwner(workspaceId),
   };
 }
 
@@ -164,7 +178,7 @@ export async function startTeamCheckout(workspaceId: string, ownerEmail: string,
   } catch (e) { console.error("startTeamCheckout:", e); return { error: "checkout_failed" }; }
 }
 
-export async function openTeamPortal(workspaceId: string, ownerEmail: string, ownerName: string | null): Promise<{ url?: string; error?: string }> {
+export async function openTeamPortal(workspaceId: string, ownerEmail: string, ownerName: string | null, intent: "manage" | "invoices" = "manage"): Promise<{ url?: string; error?: string }> {
   if (!isTeamBillingConfigured()) return { error: "not_configured" }; // team billing isn't set up -> don't open personal billing
   if (!isStripeConfigured()) return { error: "billing_unavailable" };
   try {
@@ -173,7 +187,7 @@ export async function openTeamPortal(workspaceId: string, ownerEmail: string, ow
     const customerId = row?.stripe_customer_id ?? (await findOrCreateCustomer(ownerEmail, ownerName));
     await upsertBilling(workspaceId, { stripe_customer_id: customerId });
     const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${SITE}/app/team` });
-    await logEvent({ userId: norm(ownerEmail), eventType: "team_billing_portal_opened", actorType: "owner", source: "web", metadata: { workspace_id: workspaceId } });
+    await logEvent({ userId: norm(ownerEmail), eventType: intent === "invoices" ? "team_invoice_portal_opened" : "team_billing_portal_opened", actorType: "owner", source: "web", metadata: { workspace_id: workspaceId, action: intent } });
     return { url: portal.url };
   } catch (e) { console.error("openTeamPortal:", e); return { error: "portal_failed" }; }
 }
