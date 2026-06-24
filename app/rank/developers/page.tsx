@@ -15,7 +15,7 @@ const EMBED = `<script async src="https://vraelis.com/embed.js"
 
 const CAPS: [string, string][] = [
   ["Human evaluation API", "Send candidates, get a structured result — recommendation, quality filtering, and confidence — in one authenticated call. No evaluation pipeline to build."],
-  ["Decision Package v2", "A typed, portable result: recommended output, preference margin, directional confidence, signal quality, evaluation health, audience fit, and source quality."],
+  ["Decision Package v2", "A typed, portable result: recommended output, preference margin, directional confidence, signal quality, audience fit, source quality — plus decision readiness and a recommended next step, so you know whether the result is ready to act on."],
   ["Sandbox mode", "Exercise the whole integration with sample data — 0 credits, 0 quota, never in your production analytics. Labeled mode: sandbox everywhere."],
   ["Signed webhooks", "A signed test.completed fires the moment an evaluation fills — HMAC-verified, retried with backoff, idempotent by delivery id. No polling."],
   ["JSON & CSV exports", "Pull qualified human signal into dashboards, training pipelines, or your product. Tiered JSON or a stable CSV breakdown."],

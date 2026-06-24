@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
 import { OPTION_LETTERS, type VOption, type VReport } from "@/lib/v-db";
 import { evaluationIntelligence, intelligenceDisclaimer } from "@/lib/v-intelligence";
+import { decisionReadiness, REPORT_GLOSSARY } from "@/lib/v-readiness";
+
+const READY_TONE: Record<string, { bg: string; fg: string }> = {
+  good: { bg: "var(--acc-soft)", fg: "var(--acc-deep)" },
+  warn: { bg: "var(--bg-1)", fg: "var(--money)" },
+  bad: { bg: "var(--bg-1)", fg: "var(--err)" },
+  neutral: { bg: "var(--bg-1)", fg: "var(--fg-3)" },
+};
 
 export function OptionThumb({ o, size = 56 }: { o?: VOption; size?: number }) {
   if (!o) return <div style={{ width: size, height: size, flex: "none", borderRadius: 10, border: "1px solid var(--line-2)", background: "var(--bg-2)" }} />;
@@ -33,7 +41,7 @@ const CONF_TONE: Record<string, { bg: string; fg: string }> = {
 // margin, signal quality, action), preference breakdown, optional AI analysis
 // slot, and reasoning signals. Pure render from results + options; used by both
 // the owner report and the public /r/<token> report.
-export function ReportBody({ results, options, analysisSlot, votesTarget = 0 }: { results: VReport["results"]; options: VOption[]; analysisSlot?: ReactNode; votesTarget?: number }) {
+export function ReportBody({ results, options, analysisSlot, votesTarget = 0, complete = true, audienceFit, screeningEnabled }: { results: VReport["results"]; options: VOption[]; analysisSlot?: ReactNode; votesTarget?: number; complete?: boolean; audienceFit?: string | null; screeningEnabled?: boolean }) {
   const optById: Record<string, VOption> = Object.fromEntries(options.map((o) => [o.id, o]));
   const total = results.total;
   const filtered = results.filtered ?? 0;
@@ -42,6 +50,8 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0 }: 
   const winnerRow = results.winner_option_id ? results.ranked.find((x) => x.id === results.winner_option_id) : undefined;
   const intel = evaluationIntelligence(results, votesTarget);
   const conf = CONF_TONE[intel.confidenceLabel] ?? CONF_TONE.None;
+  const readiness = decisionReadiness({ complete, intel, valid: total, target: votesTarget, audienceFit, screeningEnabled });
+  const rt = READY_TONE[readiness.tone] ?? READY_TONE.neutral;
   const ranked = [...results.ranked].sort((a, b) => b.votes - a.votes);
   const commentsByOption: Record<string, string[]> = {};
   for (const c of results.comments) (commentsByOption[c.option_id] ||= []).push(c.reason);
@@ -88,12 +98,24 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0 }: 
 
       {analysisSlot}
 
-      {/* ── What to do next ── */}
-      <div className="card" style={{ marginBottom: 22, display: "flex", gap: 14, alignItems: "flex-start" }}>
-        <span aria-hidden style={{ flex: "none", width: 34, height: 34, borderRadius: 9, background: "var(--acc-soft)", border: "1px solid var(--acc-line)", color: "var(--acc-deep)", display: "grid", placeItems: "center", fontSize: 16 }}>→</span>
-        <div>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", marginBottom: 2 }}>What to do next</div>
-          <p style={{ fontSize: 14, color: "var(--fg-2)", margin: 0, lineHeight: 1.55 }}>{intel.action}</p>
+      {/* ── Decision readiness ── */}
+      <div className="card" style={{ marginBottom: 22, borderColor: readiness.tone === "good" ? "var(--acc-line)" : "var(--line-2)" }}>
+        <div style={head}>Decision readiness</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+          <span className="pill" style={{ background: rt.bg, color: rt.fg, borderColor: "var(--acc-line)", fontSize: 12, fontWeight: 700 }}>{readiness.label}</span>
+          {readiness.signals.targetProgress != null && <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{readiness.signals.validJudgments.toLocaleString()}{readiness.signals.target ? ` / ${readiness.signals.target.toLocaleString()}` : ""} judgments · {readiness.signals.targetProgress}% of target</span>}
+        </div>
+        <p style={{ fontSize: 14, color: "var(--fg-2)", margin: "0 0 12px", lineHeight: 1.55 }}>{readiness.reason}</p>
+        <div style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
+          <span aria-hidden style={{ flex: "none", width: 22, height: 22, marginTop: 1, borderRadius: 7, background: "var(--acc-soft)", border: "1px solid var(--acc-line)", color: "var(--acc-deep)", display: "grid", placeItems: "center", fontSize: 13 }}>→</span>
+          <p style={{ fontSize: 14, color: "var(--fg-1)", margin: 0, lineHeight: 1.55 }}><strong>Recommended next step:</strong> {readiness.nextStep}</p>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+          <Metric l="Valid judgments" v={readiness.signals.validJudgments.toLocaleString()} accent />
+          {readiness.signals.target != null ? <Metric l="Target progress" v={`${readiness.signals.targetProgress}%`} /> : null}
+          <Metric l="Preference margin" v={readiness.signals.marginPts == null ? "—" : `${readiness.signals.marginPts} pts`} />
+          <Metric l="Signal quality" v={readiness.signals.signalQuality} />
+          {readiness.signals.audienceFit ? <Metric l="Audience fit" v={readiness.signals.audienceFit} /> : null}
         </div>
       </div>
 
@@ -176,6 +198,20 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0 }: 
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* ── How to read this report ── */}
+      <div style={{ ...head, marginTop: 26 }}>How to read this report</div>
+      <div className="card" style={{ marginBottom: 8, background: "var(--bg-2)" }}>
+        <div style={{ display: "grid", gap: 11 }}>
+          {REPORT_GLOSSARY.map((g) => (
+            <div key={g.term} style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
+              <span style={{ minWidth: 130, fontSize: 13, fontWeight: 700, color: "var(--fg-1)" }}>{g.term}</span>
+              <span style={{ flex: "1 1 240px", fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5 }}>{g.meaning}</span>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", marginTop: 14, marginBottom: 0, lineHeight: 1.6 }}>{intelligenceDisclaimer()}</p>
       </div>
     </>
   );

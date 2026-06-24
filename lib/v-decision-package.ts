@@ -8,6 +8,7 @@
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "./v-db";
 import { evaluationIntelligence, evaluationHealth } from "./v-intelligence";
+import { decisionReadiness } from "./v-readiness";
 import { testSourceQuality } from "./v-analytics";
 import { screeningStats } from "./v-screening";
 import { collectionLinkSummaries } from "./v-collection-links";
@@ -35,9 +36,16 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
 
   const mode = test.is_sandbox ? "sandbox" : "production";
 
+  // Decision readiness — derived once from the same intel + audience fit, shared by all
+  // scopes so the package and the report UI always agree (additive, non-breaking).
+  const screen = await screeningStats(testId);
+  const readiness = intel
+    ? decisionReadiness({ complete: test.status === "complete", intel, valid, target: test.votes_target, audienceFit: screen.fit, screeningEnabled: screen.enabled })
+    : { label: test.status === "complete" ? "Needs more judgments" : "Collecting judgments", reason: test.status === "complete" ? "Not enough qualified judgments to produce a recommendation." : "Collecting qualified judgments — readiness is assessed once enough signal arrives.", nextStep: "Collect more qualified judgments before treating any lead as a decision." };
+
   // ── webhook scope: compact, safe ──
   if (scope === "webhook") {
-    const [screen, sources] = await Promise.all([screeningStats(testId), testSourceQuality(testId)]);
+    const sources = await testSourceQuality(testId);
     return {
       schema_version: DECISION_PACKAGE_VERSION,
       mode,
@@ -48,6 +56,8 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
       directional_confidence: intel?.confidenceLabel ?? "None",
       signal_quality: intel?.signalLabel ?? null,
       evaluation_health: health,
+      readiness_label: readiness.label,
+      recommended_next_step: readiness.nextStep,
       action_recommendation: intel?.action ?? null,
       valid_judgments: valid,
       filtered_responses: filtered,
@@ -75,6 +85,9 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
       directional_confidence: intel?.confidenceLabel ?? "None",
       signal_quality: intel?.signalLabel ?? null,
       evaluation_health: health,
+      readiness_label: readiness.label,
+      readiness_reason: readiness.reason,
+      recommended_next_step: readiness.nextStep,
       action_recommendation: intel?.action ?? null,
       decision_summary: intel?.decisionSummary ?? null,
       inconclusive: intel ? intel.inconclusive : null,
@@ -85,8 +98,7 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
   };
   if (scope === "summary") return pkg;
 
-  // standard adds audience qualification
-  const screen = await screeningStats(testId);
+  // standard adds audience qualification (screen already fetched above)
   pkg.audience = {
     screening_enabled: screen.enabled,
     qualified_judgments: screen.enabled ? screen.qualified : null,
@@ -121,6 +133,8 @@ export const SAMPLE_DECISION_PACKAGE = {
   directional_confidence: "Strong",
   signal_quality: "Clean signal",
   evaluation_health: "Ready to decide",
+  readiness_label: "Strong recommendation",
+  recommended_next_step: "Ship Option B, or use it as the client-approved direction.",
   action_recommendation: "Ship Option B.",
   valid_judgments: 120,
   filtered_responses: 11,

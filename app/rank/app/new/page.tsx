@@ -260,7 +260,7 @@ export default function NewTest() {
           <section>
             <Step n={3} title="Audience & judgment target" hint="How many valid human judgments to collect." />
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-              {([["Quick read", 50], ["Balanced", 150], ["Strong signal", 500]] as [string, number][]).map(([label, v]) => {
+              {([["Quick directional read", 50], ["Balanced decision", 150], ["Strong decision signal", 500]] as [string, number][]).map(([label, v]) => {
                 const target = Math.min(v, maxVotes);
                 return <button key={label} type="button" onClick={() => setVotes(target)} className="chip" style={{ cursor: "pointer", ...(votes === target ? { borderColor: "var(--acc)", color: "var(--acc-deep)" } : {}) }}>{label}</button>;
               })}
@@ -274,7 +274,7 @@ export default function NewTest() {
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 judgment = 1 credit</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>Plan max {maxVotes.toLocaleString()}. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</a></span>
             </div>
-            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 8, lineHeight: 1.5 }}>Higher judgment targets create stronger decision confidence — a quick read (~50) for a gut-check, balanced (~150) for most decisions, strong signal (500+) before a big spend.</p>
+            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 8, lineHeight: 1.5 }}>Higher judgment targets create stronger decision confidence — a quick read (~50) for a gut-check, balanced (~150) for most decisions, strong signal (500+) before a big spend. Vraelis tells you whether the result is <strong style={{ color: "var(--fg-3)" }}>ready to act on</strong> — not just which option is leading.</p>
           </section>
         </div>
 

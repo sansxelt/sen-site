@@ -27,6 +27,9 @@
         "signal_quality": { "type": ["string", "null"], "enum": ["Clean signal", "Limited signal", "Needs more signal", null] },
         "evaluation_health": { "enum": ["Collecting", "Ready to decide", "Needs more judgments", "Noisy signal", "Too close to call", "Low-quality traffic"] },
         "action_recommendation": { "type": ["string", "null"] },
+        "readiness_label": { "type": ["string", "null"], "enum": ["Strong recommendation", "Ready to decide", "Directional signal", "Needs more judgments", "Too close to call", "Noisy signal", "Audience mismatch", "Collecting judgments", null], "description": "Decision readiness — whether the result is strong enough to act on now, or needs more signal first. Additive in this release." },
+        "readiness_reason": { "type": ["string", "null"], "description": "Plain-language explanation of the readiness label. Additive in this release." },
+        "recommended_next_step": { "type": ["string", "null"], "description": "The specific next action to take (e.g. ship the recommended output, collect more judgments, retest the top two). Additive in this release." },
         "decision_summary": { "type": ["string", "null"] },
         "inconclusive": { "type": ["boolean", "null"] }
       }
