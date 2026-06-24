@@ -11,6 +11,7 @@ type ProjectAccessSummary = { project_id: string; project_name: string; members:
 type Workspace = { id: string; owner_user_id: string; name: string } | null;
 type Ctx = { workspace: Workspace; myRole: Role; members: Member[]; shared: Shared[]; sharedProjects: SharedProject[]; projectAccess: ProjectAccessSummary[] };
 type Billing = { configured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean } | null;
+type TransferInfo = { blocked: boolean; eligible: { id: string; email: string; role: Role }[]; workspaceName: string };
 
 const INVITABLE: Role[] = ["admin", "editor", "viewer", "client_viewer"];
 const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
@@ -43,12 +44,17 @@ function RolePill({ role }: { role: Role }) {
   return <span className="pill" style={{ fontSize: 10.5, color: c, borderColor: "var(--line-2)" }}>{ROLE_LABEL[role]}</span>;
 }
 
-export function TeamClient({ email, initial, billing }: { email: string; initial: Ctx; billing: Billing }) {
+export function TeamClient({ email, initial, billing, transfer }: { email: string; initial: Ctx; billing: Billing; transfer: TransferInfo }) {
   const [ctx, setCtx] = useState<Ctx>(initial);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Role>("viewer");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [tgt, setTgt] = useState(transfer.eligible[0]?.id ?? "");
+  const [confirmName, setConfirmName] = useState("");
+  const [tBusy, setTBusy] = useState(false);
+  const [tMsg, setTMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const wsId = ctx.workspace?.id;
 
   const isOwner = ctx.workspace?.owner_user_id === email;
   const canManage = isOwner || ctx.myRole === "admin";
@@ -63,7 +69,7 @@ export function TeamClient({ email, initial, billing }: { email: string; initial
     if (!inviteEmail.trim()) return;
     setBusy(true); setMsg(null);
     try {
-      const r = await fetch("/api/v/workspace/members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }) });
+      const r = await fetch("/api/v/workspace/members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole, workspace_id: wsId }) });
       const j = await r.json();
       if (j.ok) { setInviteEmail(""); setMsg({ kind: "ok", text: deliveryText(j.email) }); refresh(); }
       else setMsg({ kind: "err", text: j.error === "already_member" ? "That email is already a member." : j.error === "invalid_email" ? "Enter a valid email." : j.error === "forbidden" ? "You can't invite members." : j.error === "rate_limited" ? "You're sending invites too quickly — try again shortly." : j.error === "seat_limit" ? "You've reached your team seat limit. Add team seats below, or invite as Client viewer (free)." : "Couldn't create the invite." });
@@ -73,6 +79,16 @@ export function TeamClient({ email, initial, billing }: { email: string; initial
   async function revoke(id: string) { await fetch(`/api/v/workspace/members/${id}`, { method: "DELETE" }); refresh(); }
   async function resend(id: string) { const r = await fetch(`/api/v/workspace/members/${id}/resend`, { method: "POST" }); const j = await r.json().catch(() => ({})); setMsg({ kind: j.ok && j.email !== "failed" ? "ok" : "err", text: j.ok ? deliveryText(j.email, true) : j.error === "rate_limited" ? "Too many resends for this invite — try again later." : "Couldn't resend the invite." }); refresh(); }
   async function teamBilling(path: string) { const r = await fetch(`/api/v/team/${path}`, { method: "POST" }); const j = await r.json().catch(() => ({})); if (j.url) window.location.href = j.url; else setMsg({ kind: "err", text: j.error === "not_configured" ? "Team billing isn't configured yet." : "Couldn't open billing. Try again." }); }
+  async function doTransfer() {
+    if (!tgt || tBusy) return;
+    setTBusy(true); setTMsg(null);
+    try {
+      const r = await fetch("/api/v/workspace/transfer-owner", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspace_id: wsId, target_member_id: tgt, confirmation: confirmName }) });
+      const j = await r.json().catch(() => ({}));
+      if (j.ok) { setTMsg({ kind: "ok", text: "Ownership transferred. Refreshing…" }); setTimeout(() => window.location.reload(), 700); }
+      else setTMsg({ kind: "err", text: j.error === "confirmation_mismatch" ? "Type the workspace name exactly to confirm." : j.error === "billing_active" ? "Blocked while team billing is active." : j.error === "target_not_eligible" ? "That member can't become owner." : j.error === "forbidden" ? "Only the current owner can transfer." : "Couldn't transfer ownership." });
+    } finally { setTBusy(false); }
+  }
 
   return (
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -252,6 +268,30 @@ export function TeamClient({ email, initial, billing }: { email: string; initial
         ))}
         <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Team seats are collaboration access, not paid seat billing. Billing stays with the workspace owner. Client viewers never see billing, API keys, webhooks, screening, source details, or collection-link management.</p>
       </div>
+
+      {/* Transfer ownership (owner only) */}
+      {isOwner && (
+        <>
+          <div style={{ ...cardHead, marginTop: 30 }}>Transfer ownership</div>
+          <div className="card" style={{ borderColor: "var(--line-2)" }}>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.6 }}>Transfer ownership of <strong style={{ color: "var(--fg-1)" }}>{transfer.workspaceName}</strong> to another active internal member. They become Owner; you become Admin. Billing, API keys, and client data are not exposed.</p>
+            {transfer.blocked ? (
+              <div style={{ fontSize: 12.5, color: "var(--money)", padding: "12px 14px", background: "var(--bg-2)", borderRadius: "var(--r-sm)", lineHeight: 1.6 }}>Ownership transfer is blocked while team billing is active. Billing ownership transfer is not supported yet — cancel or move billing before transferring workspace ownership.</div>
+            ) : transfer.eligible.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Invite an Admin, Editor, or Viewer and have them accept, then you can transfer ownership to them. Client viewers and pending invites aren&apos;t eligible.</p>
+            ) : (
+              <>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                  <select value={tgt} onChange={(e) => setTgt(e.target.value)} style={{ ...input, flex: "1 1 240px" } as React.CSSProperties}>{transfer.eligible.map((m) => <option key={m.id} value={m.id}>{m.email} ({ROLE_LABEL[m.role]})</option>)}</select>
+                </div>
+                <label style={{ display: "block" }}><span style={{ display: "block", fontSize: 12, color: "var(--fg-4)", marginBottom: 5 }}>Type the workspace name <strong style={{ color: "var(--fg-2)" }}>{transfer.workspaceName}</strong> to confirm</span><input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={transfer.workspaceName} style={{ ...input, width: "100%" }} /></label>
+                <button onClick={doTransfer} disabled={tBusy || confirmName.trim() !== transfer.workspaceName.trim()} className="btn" style={{ marginTop: 12, opacity: tBusy || confirmName.trim() !== transfer.workspaceName.trim() ? 0.5 : 1 }}>{tBusy ? "Transferring…" : "Transfer ownership"}</button>
+                {tMsg && <p style={{ fontSize: 12.5, color: tMsg.kind === "ok" ? "var(--acc-deep)" : "var(--money)", margin: "10px 0 0" }}>{tMsg.text}</p>}
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

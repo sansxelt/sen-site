@@ -12,7 +12,7 @@ import { evaluationIntelligence } from "./v-intelligence";
 import { projectAnalytics, projectSourceQuality } from "./v-analytics";
 import { sendInviteEmail, type InviteDelivery } from "./email";
 import { allow } from "./vraelis-ratelimit";
-import { canAddPaidSeat, logSeatChange, PAID_SEAT_ROLES } from "./v-team-billing";
+import { canAddPaidSeat, logSeatChange, PAID_SEAT_ROLES, hasActiveTeamBillingForTransferGuard } from "./v-team-billing";
 
 const norm = (e: string) => e.trim().toLowerCase();
 const SITE = "https://vraelis.com";
@@ -168,10 +168,19 @@ export type SharedProject = { project_id: string; name: string; workspace_name: 
 export type ProjectAccessSummary = { project_id: string; project_name: string; members: { email: string; role: ProjectRole; status: string }[] };
 export type WorkspaceContext = { workspace: Workspace | null; myRole: Role; members: Member[]; shared: SharedWorkspace[]; sharedProjects: SharedProject[]; projectAccess: ProjectAccessSummary[] };
 
-export async function getWorkspaceContext(email: string): Promise<WorkspaceContext> {
+export async function getWorkspaceContext(email: string, selectedWorkspaceId?: string): Promise<WorkspaceContext> {
   await activateInvitesForEmail(email);
   await activateProjectInvitesForEmail(email);
-  const workspace = await getOrCreatePersonalWorkspace(email);
+  let workspace = await getOrCreatePersonalWorkspace(email);
+  // Manage a selected workspace the user OWNS (e.g. one transferred to them), not only
+  // their personal workspace. Falls back to personal if they don't own the selection.
+  if (selectedWorkspaceId && workspace && selectedWorkspaceId !== workspace.id) {
+    try {
+      const { data } = await getSupabaseAdminClient().from("v_workspaces" as never).select("id,owner_user_id,name,created_at").eq("id", selectedWorkspaceId).maybeSingle();
+      const ws = data as unknown as Workspace | null;
+      if (ws && ws.owner_user_id === norm(email)) workspace = ws;
+    } catch { /* keep personal */ }
+  }
   const members = workspace ? await listMembers(workspace.id) : [];
   const shared = await sharedWorkspaces(email, workspace?.id ?? null);
   const sharedProjects = await sharedProjectsForEmail(email);
@@ -425,7 +434,9 @@ export async function workspaceProjectSummaries(selected: SelectedWorkspace): Pr
     const projects = (projs as unknown as { id: string; name: string }[]) ?? [];
     if (!projects.length) return empty;
     const ids = projects.map((p) => p.id);
-    const { data: td } = await s.from("v_tests" as never).select("project_id,status,votes_valid,is_sandbox").in("project_id", ids).eq("user_id", selected.ownerId).limit(3000);
+    // Scope by the workspace's projects (not the workspace owner id) so rollups stay
+    // correct after an ownership transfer — evaluations keep their original creator.
+    const { data: td } = await s.from("v_tests" as never).select("project_id,status,votes_valid,is_sandbox").in("project_id", ids).limit(3000);
     const tests = ((td as unknown as { project_id: string; status: string; votes_valid: number; is_sandbox?: boolean }[]) ?? []).filter((t) => !t.is_sandbox);
     const by: Record<string, WorkspaceProjectSummary> = {};
     for (const p of projects) by[p.id] = { id: p.id, name: p.name, evaluations: 0, active: 0, completed: 0, validJudgments: 0 };
@@ -675,4 +686,71 @@ export async function resolveInviteForAccept(email: string | null, token: string
   await s.from(inv.table as never).update({ status: "active", user_id: norm(email), invite_accepted_at: new Date().toISOString() } as never).eq("id", inv.id);
   await logEvent({ userId: norm(email), eventType: "invite_accepted", actorType: "owner", source: "app", metadata: { invite_type: inv.type, workspace_id: inv.workspace_id ?? null, project_id: inv.project_id ?? null, role: inv.role } });
   return { state: "accepted", type: inv.type, contextName: inv.contextName, role: inv.role, redirect: inv.redirect };
+}
+
+// ── Workspace ownership transfer (v1) ──
+// Transfers who MANAGES a workspace (members/billing visibility/transfer). Does NOT
+// move Stripe billing ownership or re-own evaluations (they keep their creator).
+// Blocked while a team-seat subscription is active (billing ownership transfer is later).
+export const TRANSFERABLE_ROLES: Role[] = ["admin", "editor", "viewer"];
+export type TransferTarget = { id: string; email: string; role: Role };
+
+export async function eligibleOwnershipTransferTargets(ownerEmail: string, workspaceId: string): Promise<TransferTarget[]> {
+  if (!isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const uid = norm(ownerEmail);
+    const { data: ws } = await s.from("v_workspaces" as never).select("owner_user_id").eq("id", workspaceId).maybeSingle();
+    if ((ws as unknown as { owner_user_id: string } | null)?.owner_user_id !== uid) return []; // owner-only
+    const { data } = await s.from("v_workspace_members" as never).select("id,email,role,status,user_id").eq("workspace_id", workspaceId).eq("status", "active").in("role", TRANSFERABLE_ROLES as unknown as string[]);
+    return ((data as unknown as { id: string; email: string; role: Role; status: string; user_id: string | null }[]) ?? [])
+      .filter((m) => m.user_id && norm(m.email) !== uid)
+      .map((m) => ({ id: m.id, email: m.email, role: m.role }));
+  } catch { return []; }
+}
+
+export async function canTransferWorkspaceOwnership(ownerEmail: string, workspaceId: string): Promise<{ ok: boolean; blocked: boolean; reason?: string }> {
+  if (!isDatabaseConfigured()) return { ok: false, blocked: false, reason: "unavailable" };
+  const s = getSupabaseAdminClient();
+  const { data: ws } = await s.from("v_workspaces" as never).select("owner_user_id").eq("id", workspaceId).maybeSingle();
+  if ((ws as unknown as { owner_user_id: string } | null)?.owner_user_id !== norm(ownerEmail)) return { ok: false, blocked: false, reason: "not_owner" };
+  if (await hasActiveTeamBillingForTransferGuard(workspaceId)) return { ok: false, blocked: true, reason: "billing_active" };
+  return { ok: true, blocked: false };
+}
+
+export async function transferWorkspaceOwnership(ownerEmail: string, workspaceId: string, targetMemberId: string, confirmation: string): Promise<{ ok: boolean; error?: string; workspace_id?: string; old_role?: string; new_role?: string }> {
+  if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const s = getSupabaseAdminClient();
+  const uid = norm(ownerEmail);
+  const { data: wsd } = await s.from("v_workspaces" as never).select("owner_user_id,name").eq("id", workspaceId).maybeSingle();
+  const ws = wsd as unknown as { owner_user_id: string; name: string } | null;
+  if (!ws) return { ok: false, error: "not_found" };
+  if (ws.owner_user_id !== uid) return { ok: false, error: "forbidden" };
+  if (String(confirmation || "").trim() !== (ws.name || "").trim()) return { ok: false, error: "confirmation_mismatch" };
+  // Team-billing guardrail (block while a seat subscription is live).
+  if (await hasActiveTeamBillingForTransferGuard(workspaceId)) {
+    await logEvent({ userId: uid, eventType: "workspace_ownership_transfer_blocked", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, action: "transfer", reason: "billing_active" } });
+    return { ok: false, error: "billing_active" };
+  }
+  // Target validation: active internal member with a real user_id, not client_viewer/owner/self.
+  const { data: tmd } = await s.from("v_workspace_members" as never).select("id,email,role,status,user_id").eq("id", targetMemberId).eq("workspace_id", workspaceId).maybeSingle();
+  const t = tmd as unknown as { id: string; email: string; role: Role; status: string; user_id: string | null } | null;
+  if (!t) return { ok: false, error: "target_not_found" };
+  if (t.status !== "active") return { ok: false, error: "target_inactive" };
+  if (!t.user_id) return { ok: false, error: "target_no_user" };
+  if (!TRANSFERABLE_ROLES.includes(t.role)) return { ok: false, error: "target_not_eligible" }; // excludes client_viewer + owner
+  if (norm(t.email) === uid) return { ok: false, error: "same_owner" };
+  const ts = new Date().toISOString();
+  // Ordered updates (supabase-js has no cross-statement txn): set the new owner, demote
+  // the old owner, then flip workspace authority last; verify a single active owner.
+  const r1 = await s.from("v_workspace_members" as never).update({ role: "owner", user_id: t.user_id, updated_at: ts } as never).eq("id", t.id);
+  if (r1.error) return { ok: false, error: "failed" };
+  await s.from("v_workspace_members" as never).update({ role: "admin", updated_at: ts } as never).eq("workspace_id", workspaceId).eq("email", uid).eq("role", "owner");
+  const r3 = await s.from("v_workspaces" as never).update({ owner_user_id: t.user_id, updated_at: ts } as never).eq("id", workspaceId);
+  if (r3.error) return { ok: false, error: "failed" };
+  // Guard against duplicate active owners — keep the target, demote any others.
+  const { data: owners } = await s.from("v_workspace_members" as never).select("id").eq("workspace_id", workspaceId).eq("status", "active").eq("role", "owner");
+  for (const o of ((owners as unknown as { id: string }[]) ?? [])) if (o.id !== t.id) await s.from("v_workspace_members" as never).update({ role: "admin" } as never).eq("id", o.id);
+  await logEvent({ userId: uid, eventType: "workspace_ownership_transferred", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, action: "transfer", old_role: "admin", new_role: "owner" } });
+  return { ok: true, workspace_id: workspaceId, old_role: "admin", new_role: "owner" };
 }

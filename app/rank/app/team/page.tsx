@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
-import { getWorkspaceContext, resolveWorkspaceSelection, sharedTeamView, workspaceProjectSummaries, ROLE_LABEL } from "@/lib/v-workspace";
+import { getWorkspaceContext, resolveWorkspaceSelection, sharedTeamView, workspaceProjectSummaries, eligibleOwnershipTransferTargets, canTransferWorkspaceOwnership, ROLE_LABEL } from "@/lib/v-workspace";
 import { teamSeatState, syncTeamCheckout } from "@/lib/v-team-billing";
 import { TeamClient } from "./team-client";
 
@@ -14,10 +14,10 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fteam");
   const sp = await searchParams;
 
-  // A selected SHARED workspace shows a read-only team view; the personal workspace
-  // (default) keeps the full management UI.
+  // A workspace the caller does NOT own shows the read-only team view; a workspace
+  // they OWN (personal or one transferred to them) keeps the full management UI.
   const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
-  if (selected && !selected.isPersonal) {
+  if (selected && !selected.isOwner) {
     const [view, summary] = await Promise.all([sharedTeamView(selected), workspaceProjectSummaries(selected)]);
     return (
       <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -56,9 +56,13 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
     );
   }
 
-  const ctx = await getWorkspaceContext(email);
-  // Owner's personal workspace: team-seat billing card. Sync after a checkout return.
+  // Owner-managed workspace (the selected one if they own it, else personal).
+  const ctx = await getWorkspaceContext(email, selected?.isOwner ? selected.id : undefined);
   if (ctx.workspace && sp.session_id) await syncTeamCheckout(ctx.workspace.id, sp.session_id);
-  const billing = ctx.workspace ? await teamSeatState(ctx.workspace.id) : null;
-  return <TeamClient email={email.trim().toLowerCase()} initial={ctx} billing={billing} />;
+  const wsId = ctx.workspace?.id ?? null;
+  const [billing, transferTargets, transferGuard] = wsId
+    ? await Promise.all([teamSeatState(wsId), eligibleOwnershipTransferTargets(email, wsId), canTransferWorkspaceOwnership(email, wsId)])
+    : [null, [], { ok: false, blocked: false }];
+  const transfer = { blocked: !!transferGuard.blocked, eligible: transferTargets, workspaceName: ctx.workspace?.name ?? "" };
+  return <TeamClient email={email.trim().toLowerCase()} initial={ctx} billing={billing} transfer={transfer} />;
 }

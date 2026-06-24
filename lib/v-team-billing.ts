@@ -81,6 +81,17 @@ export async function teamSeatState(workspaceId: string): Promise<TeamSeatState>
   };
 }
 
+// Ownership-transfer guardrail: block transfer while a team-seat subscription is in a
+// live/owing state (billing ownership transfer is NOT supported in v1). Allow when no
+// row / no subscription / canceled / inactive. Syncs fresh status via teamSeatState.
+const ACTIVE_BILLING_STATES = new Set(["active", "trialing", "past_due", "incomplete", "unpaid", "paused"]);
+export async function hasActiveTeamBillingForTransferGuard(workspaceId: string): Promise<boolean> {
+  try {
+    const st = await teamSeatState(workspaceId);
+    return st.hasSubscription && !!st.status && ACTIVE_BILLING_STATES.has(st.status);
+  } catch { return false; } // fail-open is unsafe here -> but a thrown sync error shouldn't hard-block; logged elsewhere
+}
+
 // Invite-time gate: counts ACTIVE + PENDING paid so a workspace can't over-provision
 // past its limit. Unconfigured => no enforcement (collaboration stays open).
 export async function canAddPaidSeat(workspaceId: string): Promise<{ ok: boolean; used: number; limit: number | null }> {
