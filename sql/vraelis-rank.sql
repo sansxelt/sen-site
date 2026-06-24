@@ -656,3 +656,32 @@ create table if not exists v_workspace_billing (
   updated_at                  timestamptz not null default now()
 );
 create unique index if not exists v_workspace_billing_ws_uidx on v_workspace_billing (workspace_id);
+
+-- ── Billing ownership migration (v1) ──
+-- When active team billing exists, ownership transfer no longer hard-blocks: it creates
+-- a PENDING transfer the target must accept by setting up THEIR OWN team billing. Once
+-- the new subscription is active, ownership swaps and the old subscription is canceled.
+-- No Stripe ids are stored here. One ACTIVE (pending/awaiting_billing) transfer per ws.
+create table if not exists v_workspace_ownership_transfers (
+  id                          uuid primary key default gen_random_uuid(),
+  workspace_id                uuid not null references v_workspaces(id) on delete cascade,
+  from_user_id                text not null,
+  to_user_id                  text not null,
+  to_member_id                uuid not null references v_workspace_members(id) on delete cascade,
+  status                      text not null default 'pending',   -- pending|awaiting_billing|completed|canceled|expired
+  requires_billing_migration  boolean not null default false,
+  old_subscription_id_present boolean not null default false,
+  expires_at                  timestamptz,
+  accepted_at                 timestamptz,
+  completed_at                timestamptz,
+  created_at                  timestamptz not null default now(),
+  updated_at                  timestamptz not null default now()
+);
+-- only one active transfer per workspace
+create unique index if not exists v_wot_active_uidx on v_workspace_ownership_transfers (workspace_id) where status in ('pending','awaiting_billing');
+create index if not exists v_wot_to_user_idx on v_workspace_ownership_transfers (to_user_id) where status in ('pending','awaiting_billing');
+
+-- Distinguish the workspace owner from the billing owner (the Stripe customer holder).
+-- If active billing belongs to the old owner, transfer requires migration; once it equals
+-- the new owner, the migration is complete. Server-only; never exposed publicly.
+alter table v_workspace_billing add column if not exists billing_owner_user_id text;

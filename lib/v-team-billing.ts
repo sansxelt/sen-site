@@ -185,6 +185,7 @@ export async function syncTeamCheckout(workspaceId: string, sessionId: string): 
   try {
     const stripe = getStripe();
     const sess = await stripe.checkout.sessions.retrieve(sessionId);
+    if (sess.metadata?.billing_migration === "true") return; // migration sessions are finalized only by completeOwnershipMigration
     if (sess.metadata?.workspace_id !== workspaceId) return; // guard against mismatched session
     const subId = typeof sess.subscription === "string" ? sess.subscription : (sess.subscription as { id?: string } | null)?.id;
     const custId = typeof sess.customer === "string" ? sess.customer : (sess.customer as { id?: string } | null)?.id;
@@ -194,6 +195,59 @@ export async function syncTeamCheckout(workspaceId: string, sessionId: string): 
     await upsertBilling(workspaceId, { stripe_customer_id: custId ?? null, stripe_subscription_id: subId, stripe_subscription_item_id: item?.id ?? null, seat_quantity: item?.quantity ?? 0, status: sub.status, current_period_end: periodEndIso(sub) });
     await logEvent({ userId: "system", eventType: "team_billing_configured", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, seat_count: item?.quantity ?? 0, billing_status: sub.status, interval: intervalForPriceId(item?.price?.id) } });
   } catch (e) { console.error("syncTeamCheckout:", e); }
+}
+
+// ── Billing ownership migration ──
+// Checkout for the TARGET of an ownership transfer to set up THEIR OWN team billing.
+// Does NOT touch v_workspace_billing (the old owner's billing row stays intact until the
+// migration completes). Carries ownership_transfer_id so the webhook can finalize.
+export async function startMigrationCheckout(workspaceId: string, targetEmail: string, targetName: string | null, transferId: string, interval: BillingInterval, qty: number): Promise<{ url?: string; error?: string }> {
+  if (!isTeamBillingConfigured()) return { error: "not_configured" };
+  const priceId = teamSeatPriceId(interval);
+  if (!priceId) return { error: "not_configured" };
+  try {
+    const stripe = getStripe();
+    const customerId = await findOrCreateCustomer(targetEmail, targetName);
+    const checkout = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      line_items: [{ price: priceId, quantity: Math.max(1, qty) }],
+      customer: customerId,
+      success_url: `${SITE}/app/team?team=migrated&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${SITE}/app/team?team=cancel`,
+      allow_promotion_codes: true,
+      metadata: { type: "team_seats", workspace_id: workspaceId, interval, ownership_transfer_id: transferId, billing_migration: "true" },
+      subscription_data: { metadata: { type: "team_seats", workspace_id: workspaceId, interval, ownership_transfer_id: transferId, billing_migration: "true" } },
+    });
+    return { url: checkout.url ?? undefined };
+  } catch (e) { console.error("startMigrationCheckout:", e); return { error: "checkout_failed" }; }
+}
+
+// Cancel a subscription immediately (used to retire the OLD subscription after a new one
+// is active — avoids a long double-charge, esp. for annual). Best-effort.
+export async function cancelSubscriptionSafely(subscriptionId: string): Promise<boolean> {
+  if (!isStripeConfigured() || !subscriptionId) return false;
+  try { await getStripe().subscriptions.cancel(subscriptionId); return true; } catch (e) { console.error("cancelSubscriptionSafely:", e); return false; }
+}
+
+// Page-load fallback for migration completion (mirrors the webhook) on the target's
+// `?team=migrated&session_id=…` return — resilient if the webhook is delayed.
+export async function syncMigrationCheckout(sessionId: string): Promise<void> {
+  if (!isStripeConfigured() || !sessionId) return;
+  try {
+    const stripe = getStripe();
+    const sess = await stripe.checkout.sessions.retrieve(sessionId);
+    const transferId = sess.metadata?.ownership_transfer_id;
+    const workspaceId = sess.metadata?.workspace_id;
+    if (sess.metadata?.billing_migration !== "true" || !transferId || !workspaceId) return;
+    const subId = typeof sess.subscription === "string" ? sess.subscription : (sess.subscription as { id?: string } | null)?.id;
+    if (!subId) return;
+    const sub = await stripe.subscriptions.retrieve(subId) as unknown as { id: string; status: string; current_period_end?: number; customer: string | { id?: string } | null; items: { data: { id: string; quantity?: number; current_period_end?: number; price?: { id?: string } | null }[] } };
+    if (!(sub.status === "active" || sub.status === "trialing")) return;
+    const item = sub.items.data.find((i) => isTeamSeatPriceId(i.price?.id)) ?? sub.items.data[0];
+    const custId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null;
+    const { completeOwnershipMigration } = await import("./v-workspace");
+    await completeOwnershipMigration(workspaceId, transferId, { customerId: custId, subscriptionId: subId, itemId: item?.id ?? null, seatQty: item?.quantity ?? 0, status: sub.status, periodEnd: periodEndIso(sub) });
+  } catch (e) { console.error("syncMigrationCheckout:", e); }
 }
 
 // ── Webhook-driven sync (real-time) ──
@@ -219,6 +273,19 @@ export async function handleTeamSubscriptionEvent(eventType: string, sub: Stripe
     const s = getSupabaseAdminClient();
     const { data: ws } = await s.from("v_workspaces" as never).select("id").eq("id", workspaceId).maybeSingle();
     if (!ws) { await ignored("workspace_not_found"); return true; }
+    // Billing-migration subscription (target setting up new billing for an ownership
+    // transfer). Finalize only once it is active/trialing — until then leave the existing
+    // billing row intact so the OLD subscription id isn't lost before we can cancel it.
+    const migrationId = sub.metadata?.ownership_transfer_id;
+    if (migrationId) {
+      if (sub.status === "active" || sub.status === "trialing") {
+        const mItem = (sub.items?.data ?? []).find((i) => isTeamSeatPriceId(i.price?.id)) ?? sub.items?.data?.[0];
+        const mCust = typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null;
+        const { completeOwnershipMigration } = await import("./v-workspace");
+        await completeOwnershipMigration(workspaceId, migrationId, { customerId: mCust, subscriptionId: sub.id, itemId: mItem?.id ?? null, seatQty: mItem?.quantity ?? 0, status: sub.status, periodEnd: periodEndIso(sub) });
+      }
+      return true; // migration path handled (no normal sync)
+    }
     const deleted = eventType === "customer.subscription.deleted";
     const canceled = deleted || TEAM_TERMINAL_STATES.has(sub.status);
     const pastDue = !canceled && sub.status === "past_due";

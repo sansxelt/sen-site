@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
-import { getWorkspaceContext, resolveWorkspaceSelection, sharedTeamView, workspaceProjectSummaries, eligibleOwnershipTransferTargets, canTransferWorkspaceOwnership, ROLE_LABEL } from "@/lib/v-workspace";
-import { teamSeatState, syncTeamCheckout } from "@/lib/v-team-billing";
+import { getWorkspaceContext, resolveWorkspaceSelection, sharedTeamView, workspaceProjectSummaries, eligibleOwnershipTransferTargets, canTransferWorkspaceOwnership, pendingOutgoingTransfer, pendingIncomingTransfer, ROLE_LABEL } from "@/lib/v-workspace";
+import { teamSeatState, syncTeamCheckout, syncMigrationCheckout } from "@/lib/v-team-billing";
 import { TeamClient } from "./team-client";
 
 export const metadata: Metadata = { title: "Team" };
@@ -13,6 +13,12 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fteam");
   const sp = await searchParams;
+
+  // Billing-migration completion fallback (target's checkout return) — runs regardless of
+  // which workspace is selected, in case the webhook is delayed. Idempotent.
+  if (sp.session_id) await syncMigrationCheckout(sp.session_id);
+  // A pending transfer addressed to this user (target) — show the accept card anywhere.
+  const incoming = await pendingIncomingTransfer(email);
 
   // A workspace the caller does NOT own shows the read-only team view; a workspace
   // they OWN (personal or one transferred to them) keeps the full management UI.
@@ -58,11 +64,13 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
 
   // Owner-managed workspace (the selected one if they own it, else personal).
   const ctx = await getWorkspaceContext(email, selected?.isOwner ? selected.id : undefined);
-  if (ctx.workspace && sp.session_id) await syncTeamCheckout(ctx.workspace.id, sp.session_id);
+  // Normal team-checkout sync — NOT for migration returns (those are handled by
+  // syncMigrationCheckout above + the webhook, so they never fall through to normal sync).
+  if (ctx.workspace && sp.session_id && sp.team !== "migrated") await syncTeamCheckout(ctx.workspace.id, sp.session_id);
   const wsId = ctx.workspace?.id ?? null;
-  const [billing, transferTargets, transferGuard] = wsId
-    ? await Promise.all([teamSeatState(wsId), eligibleOwnershipTransferTargets(email, wsId), canTransferWorkspaceOwnership(email, wsId)])
-    : [null, [], { ok: false, blocked: false }];
-  const transfer = { blocked: !!transferGuard.blocked, eligible: transferTargets, workspaceName: ctx.workspace?.name ?? "" };
+  const [billing, transferTargets, transferGuard, outgoing] = wsId
+    ? await Promise.all([teamSeatState(wsId), eligibleOwnershipTransferTargets(email, wsId), canTransferWorkspaceOwnership(email, wsId), pendingOutgoingTransfer(wsId)])
+    : [null, [], { ok: false, blocked: false }, null];
+  const transfer = { blocked: !!transferGuard.blocked, eligible: transferTargets, workspaceName: ctx.workspace?.name ?? "", pending: outgoing, incoming };
   return <TeamClient email={email.trim().toLowerCase()} initial={ctx} billing={billing} transfer={transfer} />;
 }

@@ -614,9 +614,13 @@ export async function POST(request: Request) {
           await handleVraelisPayment(s);
         } else if (s.metadata?.type === "team_seats" && s.metadata.workspace_id) {
           // Team-seat checkout completed — sync v_workspace_billing from the session's
-          // subscription (belt-and-suspenders with customer.subscription.created).
-          const { syncTeamCheckout } = await import("../../../../lib/v-team-billing");
-          await syncTeamCheckout(s.metadata.workspace_id, s.id);
+          // subscription (belt-and-suspenders with customer.subscription.created). A
+          // billing-migration checkout is finalized via the subscription event instead,
+          // so the old subscription id isn't overwritten before it can be canceled.
+          if (s.metadata.billing_migration !== "true") {
+            const { syncTeamCheckout } = await import("../../../../lib/v-team-billing");
+            await syncTeamCheckout(s.metadata.workspace_id, s.id);
+          }
         } else {
           await recordVraelisPlan(s.metadata, "active");
         }

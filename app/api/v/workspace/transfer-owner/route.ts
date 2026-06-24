@@ -14,8 +14,10 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const res = await transferWorkspaceOwnership(email, String(body?.workspace_id || ""), String(body?.target_member_id || ""), String(body?.confirmation || ""));
   if (!res.ok) {
-    const status = res.error === "forbidden" ? 403 : res.error === "billing_active" ? 409 : 400;
+    const status = res.error === "forbidden" ? 403 : res.error === "billing_active" || res.error === "transfer_pending" ? 409 : 400;
     return NextResponse.json({ error: res.error }, { status });
   }
+  // Active billing -> a pending transfer the target must accept + set up billing for.
+  if (res.pending) return NextResponse.json({ ok: true, pending: true, transfer_id: res.transfer_id, status: res.status });
   return NextResponse.json({ ok: true, workspace_id: res.workspace_id, old_role: res.old_role, new_role: res.new_role });
 }

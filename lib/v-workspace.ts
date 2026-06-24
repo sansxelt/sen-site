@@ -718,7 +718,69 @@ export async function canTransferWorkspaceOwnership(ownerEmail: string, workspac
   return { ok: true, blocked: false };
 }
 
-export async function transferWorkspaceOwnership(ownerEmail: string, workspaceId: string, targetMemberId: string, confirmation: string): Promise<{ ok: boolean; error?: string; workspace_id?: string; old_role?: string; new_role?: string }> {
+// ── Billing ownership migration (v1) ──
+// Active billing no longer hard-blocks transfer: it creates a PENDING transfer the
+// target must accept by setting up their OWN team billing. Once the new subscription is
+// active, ownership swaps and the old subscription is canceled. Statuses: pending ->
+// awaiting_billing -> completed | canceled | expired. One active transfer per workspace.
+const ACTIVE_TRANSFER_STATES = ["pending", "awaiting_billing"];
+const TRANSFER_TTL_DAYS = 7;
+type TransferRow = { id: string; workspace_id: string; from_user_id: string; to_user_id: string; to_member_id: string; status: string; requires_billing_migration: boolean; expires_at: string | null };
+
+// Ordered role swap (no cross-statement txn): new owner -> owner, old owner -> admin,
+// flip workspace authority last, then dedupe active owners. Shared by direct transfer
+// and billing-migration completion.
+async function applyOwnershipSwap(workspaceId: string, fromUid: string, toMemberId: string, toUid: string): Promise<boolean> {
+  const s = getSupabaseAdminClient();
+  const ts = new Date().toISOString();
+  const r1 = await s.from("v_workspace_members" as never).update({ role: "owner", user_id: toUid, updated_at: ts } as never).eq("id", toMemberId);
+  if (r1.error) return false;
+  await s.from("v_workspace_members" as never).update({ role: "admin", updated_at: ts } as never).eq("workspace_id", workspaceId).eq("email", fromUid).eq("role", "owner");
+  const r3 = await s.from("v_workspaces" as never).update({ owner_user_id: toUid, updated_at: ts } as never).eq("id", workspaceId);
+  if (r3.error) return false;
+  const { data: owners } = await s.from("v_workspace_members" as never).select("id").eq("workspace_id", workspaceId).eq("status", "active").eq("role", "owner");
+  for (const o of ((owners as unknown as { id: string }[]) ?? [])) if (o.id !== toMemberId) await s.from("v_workspace_members" as never).update({ role: "admin" } as never).eq("id", o.id);
+  return true;
+}
+
+const TRANSFER_COLS = "id,workspace_id,from_user_id,to_user_id,to_member_id,status,requires_billing_migration,expires_at";
+async function readActiveTransfer(workspaceId: string): Promise<TransferRow | null> {
+  try { const { data } = await getSupabaseAdminClient().from("v_workspace_ownership_transfers" as never).select(TRANSFER_COLS).eq("workspace_id", workspaceId).in("status", ACTIVE_TRANSFER_STATES).maybeSingle(); return (data as unknown as TransferRow) ?? null; } catch { return null; }
+}
+async function readTransferById(transferId: string): Promise<TransferRow | null> {
+  try { const { data } = await getSupabaseAdminClient().from("v_workspace_ownership_transfers" as never).select(TRANSFER_COLS).eq("id", transferId).maybeSingle(); return (data as unknown as TransferRow) ?? null; } catch { return null; }
+}
+async function markTransferStatus(id: string, status: string, extra?: Record<string, unknown>): Promise<void> {
+  try { await getSupabaseAdminClient().from("v_workspace_ownership_transfers" as never).update({ status, updated_at: new Date().toISOString(), ...(extra || {}) } as never).eq("id", id); } catch {}
+}
+
+// Owner-facing: the outgoing pending transfer for a workspace (member email for display).
+export async function pendingOutgoingTransfer(workspaceId: string): Promise<{ id: string; status: string; toEmail: string } | null> {
+  const t = await readActiveTransfer(workspaceId);
+  if (!t) return null;
+  let toEmail = "the new owner";
+  try { const { data } = await getSupabaseAdminClient().from("v_workspace_members" as never).select("email").eq("id", t.to_member_id).maybeSingle(); toEmail = (data as unknown as { email: string } | null)?.email ?? toEmail; } catch {}
+  return { id: t.id, status: t.status, toEmail };
+}
+
+// Target-facing: a pending transfer addressed to this user (to accept).
+export async function pendingIncomingTransfer(email: string): Promise<{ id: string; status: string; workspaceName: string } | null> {
+  if (!email || !isDatabaseConfigured()) return null;
+  try {
+    const s = getSupabaseAdminClient();
+    const { data } = await s.from("v_workspace_ownership_transfers" as never).select("id,workspace_id,status,to_member_id").eq("to_user_id", norm(email)).in("status", ACTIVE_TRANSFER_STATES).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const t = data as unknown as { id: string; workspace_id: string; status: string; to_member_id: string } | null;
+    if (!t) return null;
+    // Only surface to a target who is still an active internal member (not revoked/demoted).
+    const { data: m } = await s.from("v_workspace_members" as never).select("status,role").eq("id", t.to_member_id).maybeSingle();
+    const mm = m as unknown as { status: string; role: Role } | null;
+    if (!mm || mm.status !== "active" || !TRANSFERABLE_ROLES.includes(mm.role)) return null;
+    const { data: ws } = await s.from("v_workspaces" as never).select("name").eq("id", t.workspace_id).maybeSingle();
+    return { id: t.id, status: t.status, workspaceName: (ws as unknown as { name: string } | null)?.name ?? "this workspace" };
+  } catch { return null; }
+}
+
+export async function transferWorkspaceOwnership(ownerEmail: string, workspaceId: string, targetMemberId: string, confirmation: string): Promise<{ ok: boolean; error?: string; workspace_id?: string; old_role?: string; new_role?: string; pending?: boolean; transfer_id?: string; status?: string }> {
   if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
   const s = getSupabaseAdminClient();
   const uid = norm(ownerEmail);
@@ -727,11 +789,6 @@ export async function transferWorkspaceOwnership(ownerEmail: string, workspaceId
   if (!ws) return { ok: false, error: "not_found" };
   if (ws.owner_user_id !== uid) return { ok: false, error: "forbidden" };
   if (String(confirmation || "").trim() !== (ws.name || "").trim()) return { ok: false, error: "confirmation_mismatch" };
-  // Team-billing guardrail (block while a seat subscription is live).
-  if (await hasActiveTeamBillingForTransferGuard(workspaceId)) {
-    await logEvent({ userId: uid, eventType: "workspace_ownership_transfer_blocked", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, action: "transfer", reason: "billing_active" } });
-    return { ok: false, error: "billing_active" };
-  }
   // Target validation: active internal member with a real user_id, not client_viewer/owner/self.
   const { data: tmd } = await s.from("v_workspace_members" as never).select("id,email,role,status,user_id").eq("id", targetMemberId).eq("workspace_id", workspaceId).maybeSingle();
   const t = tmd as unknown as { id: string; email: string; role: Role; status: string; user_id: string | null } | null;
@@ -740,17 +797,107 @@ export async function transferWorkspaceOwnership(ownerEmail: string, workspaceId
   if (!t.user_id) return { ok: false, error: "target_no_user" };
   if (!TRANSFERABLE_ROLES.includes(t.role)) return { ok: false, error: "target_not_eligible" }; // excludes client_viewer + owner
   if (norm(t.email) === uid) return { ok: false, error: "same_owner" };
-  const ts = new Date().toISOString();
-  // Ordered updates (supabase-js has no cross-statement txn): set the new owner, demote
-  // the old owner, then flip workspace authority last; verify a single active owner.
-  const r1 = await s.from("v_workspace_members" as never).update({ role: "owner", user_id: t.user_id, updated_at: ts } as never).eq("id", t.id);
-  if (r1.error) return { ok: false, error: "failed" };
-  await s.from("v_workspace_members" as never).update({ role: "admin", updated_at: ts } as never).eq("workspace_id", workspaceId).eq("email", uid).eq("role", "owner");
-  const r3 = await s.from("v_workspaces" as never).update({ owner_user_id: t.user_id, updated_at: ts } as never).eq("id", workspaceId);
-  if (r3.error) return { ok: false, error: "failed" };
-  // Guard against duplicate active owners — keep the target, demote any others.
-  const { data: owners } = await s.from("v_workspace_members" as never).select("id").eq("workspace_id", workspaceId).eq("status", "active").eq("role", "owner");
-  for (const o of ((owners as unknown as { id: string }[]) ?? [])) if (o.id !== t.id) await s.from("v_workspace_members" as never).update({ role: "admin" } as never).eq("id", o.id);
+
+  // Active team billing -> create a pending transfer requiring billing migration (the
+  // target must set up their own billing). Pre-migration (table absent) this falls back
+  // to the safe block. No active billing -> direct swap as before.
+  if (await hasActiveTeamBillingForTransferGuard(workspaceId)) {
+    if (await readActiveTransfer(workspaceId)) return { ok: false, error: "transfer_pending" };
+    let oldSubPresent = false;
+    try { const { data } = await s.from("v_workspace_billing" as never).select("stripe_subscription_id").eq("workspace_id", workspaceId).maybeSingle(); oldSubPresent = !!(data as unknown as { stripe_subscription_id: string | null } | null)?.stripe_subscription_id; } catch {}
+    const expires = new Date(Date.now() + TRANSFER_TTL_DAYS * 86400_000).toISOString();
+    try {
+      const { data: created, error } = await s.from("v_workspace_ownership_transfers" as never).insert({ workspace_id: workspaceId, from_user_id: uid, to_user_id: norm(t.email), to_member_id: t.id, status: "pending", requires_billing_migration: true, old_subscription_id_present: oldSubPresent, expires_at: expires } as never).select("id").single();
+      if (error || !created) throw error || new Error("no_row");
+      const id = (created as unknown as { id: string }).id;
+      await logEvent({ userId: uid, eventType: "workspace_ownership_transfer_requested", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, transfer_id: id, action: "request", status: "pending", reason: "billing_active" } });
+      return { ok: true, pending: true, transfer_id: id, status: "pending" };
+    } catch {
+      // table not present yet (pre-migration) -> safe legacy block
+      await logEvent({ userId: uid, eventType: "workspace_ownership_transfer_blocked", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, action: "transfer", reason: "billing_active" } });
+      return { ok: false, error: "billing_active" };
+    }
+  }
+
+  const swapped = await applyOwnershipSwap(workspaceId, uid, t.id, t.user_id);
+  if (!swapped) return { ok: false, error: "failed" };
   await logEvent({ userId: uid, eventType: "workspace_ownership_transferred", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, action: "transfer", old_role: "admin", new_role: "owner" } });
   return { ok: true, workspace_id: workspaceId, old_role: "admin", new_role: "owner" };
+}
+
+// Target accepts a pending transfer -> starts a team-billing checkout under THEIR customer.
+export async function acceptOwnershipTransfer(targetEmail: string, transferId: string): Promise<{ ok: boolean; error?: string; url?: string }> {
+  if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const s = getSupabaseAdminClient();
+  const uid = norm(targetEmail);
+  const t = await readTransferById(transferId);
+  if (!t) return { ok: false, error: "not_found" };
+  if (t.to_user_id !== uid) return { ok: false, error: "forbidden" };
+  if (!ACTIVE_TRANSFER_STATES.includes(t.status)) return { ok: false, error: "not_pending" };
+  if (t.expires_at && new Date(t.expires_at).getTime() < Date.now()) { await markTransferStatus(t.id, "expired"); await logEvent({ userId: uid, eventType: "workspace_ownership_transfer_failed", actorType: "owner", source: "app", metadata: { workspace_id: t.workspace_id, transfer_id: t.id, action: "accept", reason: "expired" } }); return { ok: false, error: "expired" }; }
+  const { data: m } = await s.from("v_workspace_members" as never).select("status,role,user_id").eq("id", t.to_member_id).maybeSingle();
+  const mm = m as unknown as { status: string; role: Role; user_id: string | null } | null;
+  if (!mm || mm.status !== "active" || !mm.user_id || !TRANSFERABLE_ROLES.includes(mm.role)) return { ok: false, error: "not_eligible" };
+  const { teamSeatState, startMigrationCheckout } = await import("./v-team-billing");
+  const st = await teamSeatState(t.workspace_id);
+  const res = await startMigrationCheckout(t.workspace_id, uid, null, t.id, st.interval ?? "monthly", Math.max(1, st.used));
+  if (res.error) return { ok: false, error: res.error };
+  await markTransferStatus(t.id, "awaiting_billing", { accepted_at: new Date().toISOString() });
+  await logEvent({ userId: uid, eventType: "workspace_ownership_transfer_billing_started", actorType: "owner", source: "web", metadata: { workspace_id: t.workspace_id, transfer_id: t.id, action: "accept", status: "awaiting_billing" } });
+  return { ok: true, url: res.url };
+}
+
+// Current owner cancels a pending transfer.
+export async function cancelOwnershipTransfer(actorEmail: string, transferId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const uid = norm(actorEmail);
+  const t = await readTransferById(transferId);
+  if (!t) return { ok: false, error: "not_found" };
+  if (t.from_user_id !== uid) return { ok: false, error: "forbidden" };
+  if (!ACTIVE_TRANSFER_STATES.includes(t.status)) return { ok: false, error: "not_pending" };
+  await markTransferStatus(t.id, "canceled");
+  await logEvent({ userId: uid, eventType: "workspace_ownership_transfer_canceled", actorType: "owner", source: "app", metadata: { workspace_id: t.workspace_id, transfer_id: t.id, action: "cancel", status: "canceled" } });
+  return { ok: true };
+}
+
+// Webhook/return completion: the target's migration subscription is active. Attach new
+// billing under the target as billing owner, cancel the old subscription, swap roles,
+// mark completed. Idempotent.
+export async function completeOwnershipMigration(workspaceId: string, transferId: string, nb: { customerId: string | null; subscriptionId: string; itemId: string | null; seatQty: number; status: string; periodEnd: string | null }): Promise<void> {
+  if (!isDatabaseConfigured()) return;
+  const s = getSupabaseAdminClient();
+  const t = await readTransferById(transferId);
+  if (!t || t.workspace_id !== workspaceId || t.status !== "awaiting_billing") return; // idempotent
+  // Atomic claim: only ONE caller (webhook OR page-load fallback OR a retry) wins the
+  // awaiting_billing -> completing transition, so the swap + old-sub cancel run once.
+  let claimed: { id: string }[] | null = null;
+  try { const { data } = await s.from("v_workspace_ownership_transfers" as never).update({ status: "completing", updated_at: new Date().toISOString() } as never).eq("id", transferId).eq("status", "awaiting_billing").select("id"); claimed = data as unknown as { id: string }[]; }
+  catch { return; }
+  if (!claimed || claimed.length === 0) return; // lost the claim — another caller is finishing
+  // Reset to awaiting_billing on any failure so a later event/return can safely retry.
+  const fail = async (reason: string) => { await markTransferStatus(transferId, "awaiting_billing"); await logEvent({ userId: "system", eventType: "workspace_ownership_transfer_failed", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, transfer_id: transferId, action: "complete", reason } }); };
+  try {
+    // Capture the OLD subscription id BEFORE overwriting the billing row. If this read
+    // errors we MUST NOT complete (else the old sub would never be canceled) — retry later.
+    const { data: ob, error: obErr } = await s.from("v_workspace_billing" as never).select("stripe_subscription_id").eq("workspace_id", workspaceId).maybeSingle();
+    if (obErr) { await fail("old_sub_read_failed"); return; }
+    const oldSubId = (ob as unknown as { stripe_subscription_id: string | null } | null)?.stripe_subscription_id ?? null;
+    const base = { workspace_id: workspaceId, stripe_customer_id: nb.customerId, stripe_subscription_id: nb.subscriptionId, stripe_subscription_item_id: nb.itemId, seat_quantity: nb.seatQty, status: nb.status, current_period_end: nb.periodEnd, updated_at: new Date().toISOString() };
+    let up = await s.from("v_workspace_billing" as never).upsert({ ...base, billing_owner_user_id: t.to_user_id } as never, { onConflict: "workspace_id" });
+    if (up.error) up = await s.from("v_workspace_billing" as never).upsert(base as never, { onConflict: "workspace_id" }); // billing_owner_user_id column absent
+    if (up.error) { await fail("billing_write_failed"); return; }
+    if (oldSubId && oldSubId !== nb.subscriptionId) {
+      const { cancelSubscriptionSafely } = await import("./v-team-billing");
+      const canceled = await cancelSubscriptionSafely(oldSubId);
+      await logEvent({ userId: "system", eventType: "workspace_billing_owner_changed", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, transfer_id: transferId, action: "billing_owner_changed", old_subscription_canceled: canceled } });
+    }
+    const swapped = await applyOwnershipSwap(workspaceId, t.from_user_id, t.to_member_id, t.to_user_id);
+    if (!swapped) { await fail("swap_failed"); return; }
+    await markTransferStatus(transferId, "completed", { completed_at: new Date().toISOString() });
+    await logEvent({ userId: "system", eventType: "workspace_ownership_transfer_billing_completed", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, transfer_id: transferId, action: "billing_completed", status: "completed" } });
+    await logEvent({ userId: "system", eventType: "workspace_ownership_transfer_completed", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, transfer_id: transferId, action: "complete", status: "completed" } });
+  } catch (e) {
+    console.error("completeOwnershipMigration:", e);
+    await fail("exception");
+  }
 }

@@ -13,7 +13,7 @@ type Ctx = { workspace: Workspace; myRole: Role; members: Member[]; shared: Shar
 type Interval = "monthly" | "yearly";
 type Billing = { configured: boolean; yearlyConfigured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: Interval | null } | null;
 type Pricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
-type TransferInfo = { blocked: boolean; eligible: { id: string; email: string; role: Role }[]; workspaceName: string };
+type TransferInfo = { blocked: boolean; eligible: { id: string; email: string; role: Role }[]; workspaceName: string; pending: { id: string; status: string; toEmail: string } | null; incoming: { id: string; status: string; workspaceName: string } | null };
 
 const INVITABLE: Role[] = ["admin", "editor", "viewer", "client_viewer"];
 const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
@@ -56,6 +56,8 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
   const [confirmName, setConfirmName] = useState("");
   const [tBusy, setTBusy] = useState(false);
   const [tMsg, setTMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [aBusy, setABusy] = useState(false);
+  const [aMsg, setAMsg] = useState<string | null>(null);
   const [seatInterval, setSeatInterval] = useState<Interval>(billing?.interval ?? "monthly");
   const [pricing, setPricing] = useState<Pricing | null>(null);
   const wsId = ctx.workspace?.id;
@@ -98,9 +100,23 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
     try {
       const r = await fetch("/api/v/workspace/transfer-owner", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspace_id: wsId, target_member_id: tgt, confirmation: confirmName }) });
       const j = await r.json().catch(() => ({}));
-      if (j.ok) { setTMsg({ kind: "ok", text: "Ownership transferred. Refreshing…" }); setTimeout(() => window.location.reload(), 700); }
-      else setTMsg({ kind: "err", text: j.error === "confirmation_mismatch" ? "Type the workspace name exactly to confirm." : j.error === "billing_active" ? "Blocked while team billing is active." : j.error === "target_not_eligible" ? "That member can't become owner." : j.error === "forbidden" ? "Only the current owner can transfer." : "Couldn't transfer ownership." });
+      if (j.ok) { setTMsg({ kind: "ok", text: j.pending ? "Transfer requested — waiting for the new owner to set up billing. Refreshing…" : "Ownership transferred. Refreshing…" }); setTimeout(() => window.location.reload(), 800); }
+      else setTMsg({ kind: "err", text: j.error === "confirmation_mismatch" ? "Type the workspace name exactly to confirm." : j.error === "transfer_pending" ? "A transfer is already pending for this workspace." : j.error === "target_not_eligible" ? "That member can't become owner." : j.error === "forbidden" ? "Only the current owner can transfer." : "Couldn't transfer ownership." });
     } finally { setTBusy(false); }
+  }
+  async function acceptIncoming() {
+    if (!transfer.incoming || aBusy) return;
+    setABusy(true); setAMsg(null);
+    const r = await fetch(`/api/v/workspace/ownership-transfer/${transfer.incoming.id}/accept`, { method: "POST" });
+    const j = await r.json().catch(() => ({}));
+    if (j.url) { window.location.href = j.url; return; }
+    setABusy(false);
+    setAMsg(j.error === "not_configured" ? "Team billing isn't configured yet." : j.error === "expired" ? "This transfer request has expired." : j.error === "not_eligible" ? "You're no longer eligible to accept this transfer." : "Couldn't start billing setup. Try again.");
+  }
+  async function cancelOutgoing() {
+    if (!transfer.pending) return;
+    await fetch(`/api/v/workspace/ownership-transfer/${transfer.pending.id}/cancel`, { method: "POST" });
+    window.location.reload();
   }
 
   return (
@@ -119,6 +135,17 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
           <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>{active.length} member{active.length === 1 ? "" : "s"} · You are {ROLE_LABEL[ctx.myRole]}</div>
         </div>
       </div>
+
+      {/* Incoming ownership transfer (you are the target) */}
+      {transfer.incoming && (
+        <div className="card" style={{ marginBottom: 18, borderColor: "var(--acc-line-2)", background: "var(--acc-soft)" }}>
+          <div style={cardHead}>Ownership transfer</div>
+          <p style={{ fontSize: 14.5, color: "var(--fg-1)", margin: "0 0 6px", fontWeight: 600 }}>You&apos;ve been asked to become owner of {transfer.incoming.workspaceName}.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.6 }}>To accept, set up team billing for this workspace. Your subscription takes over once active, and the previous owner&apos;s subscription is then canceled. Client viewers stay free.</p>
+          <button onClick={acceptIncoming} disabled={aBusy} className="btn" style={{ opacity: aBusy ? 0.6 : 1 }}>{aBusy ? "Starting…" : "Accept ownership and set up billing"}</button>
+          {aMsg && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{aMsg}</p>}
+        </div>
+      )}
 
       {/* Team seats (owner only) */}
       {isOwner && billing && (() => {
@@ -313,17 +340,21 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
           <div style={{ ...cardHead, marginTop: 30 }}>Transfer ownership</div>
           <div className="card" style={{ borderColor: "var(--line-2)" }}>
             <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.6 }}>Transfer ownership of <strong style={{ color: "var(--fg-1)" }}>{transfer.workspaceName}</strong> to another active internal member. They become Owner; you become Admin. Billing, API keys, and client data are not exposed.</p>
-            {transfer.blocked ? (
-              <div style={{ fontSize: 12.5, color: "var(--money)", padding: "12px 14px", background: "var(--bg-2)", borderRadius: "var(--r-sm)", lineHeight: 1.6 }}>Ownership transfer is blocked while team billing is active. Billing ownership transfer is not supported yet — cancel or move billing before transferring workspace ownership.</div>
+            {transfer.pending ? (
+              <>
+                <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0, lineHeight: 1.6 }}>Waiting for <strong style={{ color: "var(--fg-1)" }}>{transfer.pending.toEmail}</strong> to accept billing responsibility{transfer.pending.status === "awaiting_billing" ? " and finish billing setup" : ""}. Ownership transfers automatically once their team billing is active.</p>
+                <button onClick={cancelOutgoing} className="btn btn--ghost" style={{ marginTop: 12 }}>Cancel transfer</button>
+              </>
             ) : transfer.eligible.length === 0 ? (
               <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Invite an Admin, Editor, or Viewer and have them accept, then you can transfer ownership to them. Client viewers and pending invites aren&apos;t eligible.</p>
             ) : (
               <>
+                {transfer.blocked && <div style={{ fontSize: 12.5, color: "var(--fg-2)", padding: "12px 14px", background: "var(--bg-2)", borderRadius: "var(--r-sm)", lineHeight: 1.6, marginBottom: 12 }}>This workspace has active team billing. The new owner must accept billing responsibility before ownership can transfer — they&apos;ll set up their own team seats, then your subscription is canceled.</div>}
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
                   <select value={tgt} onChange={(e) => setTgt(e.target.value)} style={{ ...input, flex: "1 1 240px" } as React.CSSProperties}>{transfer.eligible.map((m) => <option key={m.id} value={m.id}>{m.email} ({ROLE_LABEL[m.role]})</option>)}</select>
                 </div>
                 <label style={{ display: "block" }}><span style={{ display: "block", fontSize: 12, color: "var(--fg-4)", marginBottom: 5 }}>Type the workspace name <strong style={{ color: "var(--fg-2)" }}>{transfer.workspaceName}</strong> to confirm</span><input value={confirmName} onChange={(e) => setConfirmName(e.target.value)} placeholder={transfer.workspaceName} style={{ ...input, width: "100%" }} /></label>
-                <button onClick={doTransfer} disabled={tBusy || confirmName.trim() !== transfer.workspaceName.trim()} className="btn" style={{ marginTop: 12, opacity: tBusy || confirmName.trim() !== transfer.workspaceName.trim() ? 0.5 : 1 }}>{tBusy ? "Transferring…" : "Transfer ownership"}</button>
+                <button onClick={doTransfer} disabled={tBusy || confirmName.trim() !== transfer.workspaceName.trim()} className="btn" style={{ marginTop: 12, opacity: tBusy || confirmName.trim() !== transfer.workspaceName.trim() ? 0.5 : 1 }}>{tBusy ? (transfer.blocked ? "Requesting…" : "Transferring…") : (transfer.blocked ? "Request transfer" : "Transfer ownership")}</button>
                 {tMsg && <p style={{ fontSize: 12.5, color: tMsg.kind === "ok" ? "var(--acc-deep)" : "var(--money)", margin: "10px 0 0" }}>{tMsg.text}</p>}
               </>
             )}
