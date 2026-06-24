@@ -171,3 +171,46 @@ export async function syncTeamCheckout(workspaceId: string, sessionId: string): 
     await logEvent({ userId: "system", eventType: "team_billing_configured", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, seat_count: item?.quantity ?? 0, billing_status: sub.status } });
   } catch (e) { console.error("syncTeamCheckout:", e); }
 }
+
+// ── Webhook-driven sync (real-time) ──
+// Called from the Stripe webhook for customer.subscription.* events. Identifies a
+// team-seat subscription by metadata.type === "team_seats" + workspace_id (set as
+// subscription_data.metadata at checkout). Returns true if this was a team-seat event
+// (handled here — caller must NOT fall through to personal-billing handling). The
+// page-load syncFromStripe() stays as a backup. No Stripe ids logged.
+type StripeSubLike = {
+  id: string; status: string; customer: string | { id?: string } | null; current_period_end?: number;
+  metadata?: Record<string, string> | null;
+  items: { data: { id: string; quantity?: number; current_period_end?: number; price?: { id?: string } | null }[] };
+};
+const TEAM_TERMINAL_STATES = new Set(["canceled", "unpaid", "incomplete_expired"]);
+export const isTeamSeatSubscription = (meta: Record<string, string> | null | undefined): boolean => meta?.type === "team_seats";
+
+export async function handleTeamSubscriptionEvent(eventType: string, sub: StripeSubLike): Promise<boolean> {
+  if (!isTeamSeatSubscription(sub?.metadata)) return false; // not a team-seat sub — let other handlers run
+  const workspaceId = sub.metadata?.workspace_id || "";
+  const ignored = async (reason: string) => { try { await logEvent({ userId: "system", eventType: "team_billing_webhook_ignored", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId || null, action: "subscription", event_type: eventType, reason } }); } catch {} };
+  if (!workspaceId) { await ignored("no_workspace_id"); return true; }
+  try {
+    const s = getSupabaseAdminClient();
+    const { data: ws } = await s.from("v_workspaces" as never).select("id").eq("id", workspaceId).maybeSingle();
+    if (!ws) { await ignored("workspace_not_found"); return true; }
+    const deleted = eventType === "customer.subscription.deleted";
+    const canceled = deleted || TEAM_TERMINAL_STATES.has(sub.status);
+    const pastDue = !canceled && sub.status === "past_due";
+    const items = sub.items?.data ?? [];
+    const seatItem = items.find((i) => i.price?.id === process.env.STRIPE_TEAM_SEAT_PRICE_ID) ?? items[0];
+    const status = deleted ? "canceled" : sub.status;
+    const seatQty = canceled ? 0 : (seatItem?.quantity ?? 0); // no active sub -> 0 seats; members are kept, never auto-revoked
+    const custId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null;
+    // Keep historical Stripe ids server-side (audit) even on cancel.
+    await upsertBilling(workspaceId, { stripe_customer_id: custId, stripe_subscription_id: sub.id, stripe_subscription_item_id: seatItem?.id ?? null, seat_quantity: seatQty, status, current_period_end: periodEndIso(sub) });
+    const evt = canceled ? "team_billing_canceled" : pastDue ? "team_billing_past_due" : "team_billing_synced";
+    await logEvent({ userId: "system", eventType: evt, actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, status, seat_quantity: seatQty, action: deleted ? "deleted" : "sync", event_type: eventType } });
+    return true;
+  } catch (e) {
+    console.error("handleTeamSubscriptionEvent:", e);
+    try { await logEvent({ userId: "system", eventType: "team_billing_webhook_failed", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, action: "subscription", event_type: eventType } }); } catch {}
+    return true; // handled (do not fall through to personal billing)
+  }
+}

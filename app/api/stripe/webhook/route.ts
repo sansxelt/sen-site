@@ -180,6 +180,14 @@ async function resolveContext(subscription: Stripe.Subscription): Promise<{
 }
 
 async function handleSubscriptionChange(event: Stripe.Event, subscription: Stripe.Subscription) {
+  // Team-seat subscription? Sync v_workspace_billing (real-time) and stop BEFORE any
+  // personal/plan handling — a team sub must never be recorded as a personal plan.
+  if (subscription.metadata?.type === "team_seats") {
+    const { handleTeamSubscriptionEvent } = await import("../../../../lib/v-team-billing");
+    await handleTeamSubscriptionEvent(event.type, subscription as unknown as Parameters<typeof handleTeamSubscriptionEvent>[1]);
+    return;
+  }
+
   // Vraelis Rank subscription? Update plan/status on v_subscriptions and stop.
   if (subscription.metadata?.type === "v_plan") {
     const { handleRankSubChange } = await import("../../../../lib/v-subscriptions");
@@ -352,6 +360,9 @@ function formatInvoiceAmount(invoice: Stripe.Invoice): string {
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+  // Team-seat invoices are reflected via subscription webhooks (past_due/canceled) —
+  // skip the personal "payment failed" email path.
+  if (process.env.STRIPE_TEAM_SEAT_PRICE_ID && priceIdFromInvoice(invoice) === process.env.STRIPE_TEAM_SEAT_PRICE_ID) return;
   const email = invoice.customer_email ?? null;
   if (!email) return;
   await sendPaymentFailedEmail({
@@ -374,6 +385,9 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
     const { handleRankInvoicePaid } = await import("../../../../lib/v-subscriptions");
     if (await handleRankInvoicePaid(invoice)) return;
   }
+  // Team-seat invoices are reflected via subscription webhooks — don't credit or send a
+  // personal renewal email for them.
+  if (process.env.STRIPE_TEAM_SEAT_PRICE_ID && priceIdFromInvoice(invoice) === process.env.STRIPE_TEAM_SEAT_PRICE_ID) return;
   const email = invoice.customer_email ?? null;
   if (!email) return;
   const reason = (invoice as unknown as { billing_reason?: string }).billing_reason;
@@ -597,6 +611,11 @@ export async function POST(request: Request) {
           });
         } else if (s.metadata?.kind === "vraelis_payment") {
           await handleVraelisPayment(s);
+        } else if (s.metadata?.type === "team_seats" && s.metadata.workspace_id) {
+          // Team-seat checkout completed — sync v_workspace_billing from the session's
+          // subscription (belt-and-suspenders with customer.subscription.created).
+          const { syncTeamCheckout } = await import("../../../../lib/v-team-billing");
+          await syncTeamCheckout(s.metadata.workspace_id, s.id);
         } else {
           await recordVraelisPlan(s.metadata, "active");
         }
