@@ -10,6 +10,8 @@ export type {
   SignalQuality,
   EvaluationHealth,
   AudienceFit,
+  ReadinessLabel,
+  FollowupType,
   DecisionOption,
   SourceQualityBreakdown,
   CollectionLinkStat,

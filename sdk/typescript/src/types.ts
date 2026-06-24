@@ -12,6 +12,16 @@ export type EvaluationHealth =
   | "Too close to call"
   | "Low-quality traffic";
 export type AudienceFit = "Strong fit" | "Mixed fit" | "Limited fit" | "Not screened";
+export type ReadinessLabel =
+  | "Strong recommendation"
+  | "Ready to decide"
+  | "Directional signal"
+  | "Needs more judgments"
+  | "Too close to call"
+  | "Noisy signal"
+  | "Audience mismatch"
+  | "Collecting judgments";
+export type FollowupType = "top_up" | "retest_top_two" | "cleaner_audience" | "confirm_recommendation" | "narrow_audience";
 
 export interface DecisionOption {
   option_id: string;
@@ -59,6 +69,15 @@ export interface DecisionPackageV2 {
     directional_confidence: DecisionConfidence;
     signal_quality: SignalQuality | null;
     evaluation_health: EvaluationHealth;
+    /** Decision readiness — whether the result is ready to act on. Additive (v2). */
+    readiness_label?: ReadinessLabel | null;
+    readiness_reason?: string | null;
+    recommended_next_step?: string | null;
+    /** Suggested confirmation round when the result isn't ready. Additive (v2). */
+    followup_recommended?: boolean | null;
+    followup_type?: FollowupType | null;
+    followup_reason?: string | null;
+    followup_action_label?: string | null;
     action_recommendation: string | null;
     decision_summary: string | null;
     inconclusive: boolean | null;

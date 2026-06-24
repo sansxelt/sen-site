@@ -1,0 +1,12 @@
+{
+  "//": "Editor/typecheck config for the example snippets. They import the package by its published name '@vraelis/sdk'; locally that resolves to ../src via the path mapping below, so VS Code stops flagging 'Cannot find module' (the package is private/unpublished). The main tsconfig still builds only src/ — examples are never bundled.",
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "..",
+    "baseUrl": "..",
+    "paths": { "@vraelis/sdk": ["src/index.ts"] }
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
