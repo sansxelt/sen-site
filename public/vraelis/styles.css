@@ -441,13 +441,14 @@ summary::-webkit-details-marker { display: none; }
 .glow--bleed { overflow: visible; }
 .glow--bleed::before { top: -68%; height: 150%; }
 
-/* a quieter, edge-faded hairline grid */
+/* a quieter, edge-faded hairline grid — larger cells, carried further down the hero
+   (solid through 38%, then a long fade) so it doesn't cut off near the top */
 .grid-faint {
-  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5;
+  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.55;
   background-image: linear-gradient(var(--line-1) 1px, transparent 1px), linear-gradient(90deg, var(--line-1) 1px, transparent 1px);
-  background-size: 64px 64px;
-  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 0%, transparent 75%);
-          mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, #000 0%, transparent 75%);
+  background-size: 94px 94px;
+  -webkit-mask-image: radial-gradient(ellipse 96% 120% at 50% 0%, #000 0%, #000 38%, transparent 94%);
+          mask-image: radial-gradient(ellipse 96% 120% at 50% 0%, #000 0%, #000 38%, transparent 94%);
 }
 
 /* ─── Section header — one consistent rhythm everywhere ─── */
