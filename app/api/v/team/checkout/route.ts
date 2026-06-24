@@ -3,17 +3,19 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { getOrCreatePersonalWorkspace } from "@/lib/v-workspace";
-import { startTeamCheckout } from "@/lib/v-team-billing";
+import { startTeamCheckout, type BillingInterval } from "@/lib/v-team-billing";
 
 export const runtime = "nodejs";
 
-export async function POST() {
+export async function POST(req: Request) {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  const body = await req.json().catch(() => ({}));
+  const interval: BillingInterval = body?.interval === "yearly" ? "yearly" : "monthly";
   const ws = await getOrCreatePersonalWorkspace(email);
   if (!ws) return NextResponse.json({ error: "no_workspace" }, { status: 400 });
-  const res = await startTeamCheckout(ws.id, email, session.user?.name ?? null);
+  const res = await startTeamCheckout(ws.id, email, session.user?.name ?? null, interval);
   if (res.error) return NextResponse.json({ error: res.error }, { status: res.error === "not_configured" ? 503 : 500 });
   return NextResponse.json({ url: res.url });
 }

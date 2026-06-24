@@ -19,6 +19,26 @@ export function isTeamBillingConfigured(): boolean {
   return isStripeConfigured() && Boolean(process.env.STRIPE_TEAM_SEAT_PRICE_ID);
 }
 
+// ── Billing interval (monthly | yearly) ──
+// Monthly = STRIPE_TEAM_SEAT_PRICE_ID (required), yearly = STRIPE_TEAM_SEAT_YEARLY_PRICE_ID
+// (optional). No price IDs are ever hardcoded; interval is derived from the price ID
+// wherever the subscription is available, so no schema column is needed.
+export type BillingInterval = "monthly" | "yearly";
+export function isYearlyTeamBillingConfigured(): boolean {
+  return isStripeConfigured() && Boolean(process.env.STRIPE_TEAM_SEAT_YEARLY_PRICE_ID);
+}
+export function teamSeatPriceId(interval: BillingInterval): string | undefined {
+  return interval === "yearly" ? process.env.STRIPE_TEAM_SEAT_YEARLY_PRICE_ID : process.env.STRIPE_TEAM_SEAT_PRICE_ID;
+}
+export const isTeamSeatPriceId = (id: string | null | undefined): boolean =>
+  !!id && (id === process.env.STRIPE_TEAM_SEAT_PRICE_ID || (!!process.env.STRIPE_TEAM_SEAT_YEARLY_PRICE_ID && id === process.env.STRIPE_TEAM_SEAT_YEARLY_PRICE_ID));
+function intervalForPriceId(id: string | null | undefined): BillingInterval | null {
+  if (!id) return null;
+  if (process.env.STRIPE_TEAM_SEAT_YEARLY_PRICE_ID && id === process.env.STRIPE_TEAM_SEAT_YEARLY_PRICE_ID) return "yearly";
+  if (id === process.env.STRIPE_TEAM_SEAT_PRICE_ID) return "monthly";
+  return null;
+}
+
 export async function paidSeatCounts(workspaceId: string): Promise<{ active: number; pendingPaid: number }> {
   if (!workspaceId || !isDatabaseConfigured()) return { active: 0, pendingPaid: 0 };
   try {
@@ -52,32 +72,34 @@ function periodEndIso(sub: { current_period_end?: number; items?: { data?: { cur
   return ts ? new Date(ts * 1000).toISOString() : null;
 }
 
-// Refresh the stored row from Stripe (no webhook dependency). Best-effort.
-async function syncFromStripe(workspaceId: string, row: BillingRow): Promise<BillingRow> {
-  if (!row?.stripe_subscription_id || !isStripeConfigured()) return row;
+// Refresh the stored row from Stripe (no webhook dependency). Best-effort. Also derives
+// the current billing interval (monthly/yearly) from the seat item's price id.
+async function syncFromStripe(workspaceId: string, row: BillingRow): Promise<{ row: BillingRow; interval: BillingInterval | null }> {
+  if (!row?.stripe_subscription_id || !isStripeConfigured()) return { row, interval: null };
   try {
-    const sub = await getStripe().subscriptions.retrieve(row.stripe_subscription_id) as unknown as { status: string; current_period_end?: number; items: { data: { id: string; quantity?: number; current_period_end?: number }[] } };
-    const item = sub.items.data[0];
+    const sub = await getStripe().subscriptions.retrieve(row.stripe_subscription_id) as unknown as { status: string; current_period_end?: number; items: { data: { id: string; quantity?: number; current_period_end?: number; price?: { id?: string } | null }[] } };
+    const item = sub.items.data.find((i) => isTeamSeatPriceId(i.price?.id)) ?? sub.items.data[0];
     const upd = { status: sub.status, seat_quantity: item?.quantity ?? row.seat_quantity, stripe_subscription_item_id: item?.id ?? row.stripe_subscription_item_id, current_period_end: periodEndIso(sub) };
     await upsertBilling(workspaceId, upd);
-    return { ...row, ...upd };
-  } catch { return row; }
+    return { row: { ...row, ...upd }, interval: intervalForPriceId(item?.price?.id) };
+  } catch { return { row, interval: null }; }
 }
 
 // Owner-facing seat state — SAFE (no Stripe ids).
-export type TeamSeatState = { configured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean };
+export type TeamSeatState = { configured: boolean; yearlyConfigured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: BillingInterval | null };
 
 export async function teamSeatState(workspaceId: string): Promise<TeamSeatState> {
   const configured = isTeamBillingConfigured();
   const counts = await paidSeatCounts(workspaceId);
   let row = await readBillingRow(workspaceId);
-  if (configured) row = await syncFromStripe(workspaceId, row);
+  let interval: BillingInterval | null = null;
+  if (configured) { const r = await syncFromStripe(workspaceId, row); row = r.row; interval = r.interval; }
   const subActive = !!row && (row.status === "active" || row.status === "trialing");
   const limit = configured ? INCLUDED_FREE_SEATS + (subActive ? row!.seat_quantity || 0 : 0) : null;
   return {
-    configured, enforced: configured, used: counts.active, pendingPaid: counts.pendingPaid,
+    configured, yearlyConfigured: isYearlyTeamBillingConfigured(), enforced: configured, used: counts.active, pendingPaid: counts.pendingPaid,
     limit, overLimit: !!(configured && limit != null && counts.active > limit),
-    status: row?.status ?? null, periodEnd: row?.current_period_end ?? null, hasSubscription: !!row?.stripe_subscription_id,
+    status: row?.status ?? null, periodEnd: row?.current_period_end ?? null, hasSubscription: !!row?.stripe_subscription_id, interval,
   };
 }
 
@@ -118,8 +140,10 @@ async function findOrCreateCustomer(email: string, name?: string | null): Promis
   return created.id;
 }
 
-export async function startTeamCheckout(workspaceId: string, ownerEmail: string, ownerName: string | null): Promise<{ url?: string; error?: string }> {
+export async function startTeamCheckout(workspaceId: string, ownerEmail: string, ownerName: string | null, interval: BillingInterval = "monthly"): Promise<{ url?: string; error?: string }> {
   if (!isTeamBillingConfigured()) return { error: "not_configured" };
+  const priceId = teamSeatPriceId(interval);
+  if (!priceId) return { error: "not_configured" }; // yearly requested but STRIPE_TEAM_SEAT_YEARLY_PRICE_ID missing
   try {
     const stripe = getStripe();
     const customerId = await findOrCreateCustomer(ownerEmail, ownerName);
@@ -127,15 +151,15 @@ export async function startTeamCheckout(workspaceId: string, ownerEmail: string,
     const qty = Math.max(1, (await paidSeatCounts(workspaceId)).active);
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: process.env.STRIPE_TEAM_SEAT_PRICE_ID!, quantity: qty }],
+      line_items: [{ price: priceId, quantity: qty }],
       customer: customerId,
       success_url: `${SITE}/app/team?team=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${SITE}/app/team?team=cancel`,
       allow_promotion_codes: true,
-      metadata: { type: "team_seats", workspace_id: workspaceId },
-      subscription_data: { metadata: { type: "team_seats", workspace_id: workspaceId } },
+      metadata: { type: "team_seats", workspace_id: workspaceId, interval },
+      subscription_data: { metadata: { type: "team_seats", workspace_id: workspaceId, interval } },
     });
-    await logEvent({ userId: norm(ownerEmail), eventType: "team_checkout_started", actorType: "owner", source: "web", metadata: { workspace_id: workspaceId, seat_count: qty } });
+    await logEvent({ userId: norm(ownerEmail), eventType: "team_checkout_started", actorType: "owner", source: "web", metadata: { workspace_id: workspaceId, seat_count: qty, interval } });
     return { url: checkout.url ?? undefined };
   } catch (e) { console.error("startTeamCheckout:", e); return { error: "checkout_failed" }; }
 }
@@ -165,10 +189,10 @@ export async function syncTeamCheckout(workspaceId: string, sessionId: string): 
     const subId = typeof sess.subscription === "string" ? sess.subscription : (sess.subscription as { id?: string } | null)?.id;
     const custId = typeof sess.customer === "string" ? sess.customer : (sess.customer as { id?: string } | null)?.id;
     if (!subId) return;
-    const sub = await stripe.subscriptions.retrieve(subId) as unknown as { status: string; current_period_end?: number; items: { data: { id: string; quantity?: number; current_period_end?: number }[] } };
-    const item = sub.items.data[0];
+    const sub = await stripe.subscriptions.retrieve(subId) as unknown as { status: string; current_period_end?: number; items: { data: { id: string; quantity?: number; current_period_end?: number; price?: { id?: string } | null }[] } };
+    const item = sub.items.data.find((i) => isTeamSeatPriceId(i.price?.id)) ?? sub.items.data[0];
     await upsertBilling(workspaceId, { stripe_customer_id: custId ?? null, stripe_subscription_id: subId, stripe_subscription_item_id: item?.id ?? null, seat_quantity: item?.quantity ?? 0, status: sub.status, current_period_end: periodEndIso(sub) });
-    await logEvent({ userId: "system", eventType: "team_billing_configured", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, seat_count: item?.quantity ?? 0, billing_status: sub.status } });
+    await logEvent({ userId: "system", eventType: "team_billing_configured", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, seat_count: item?.quantity ?? 0, billing_status: sub.status, interval: intervalForPriceId(item?.price?.id) } });
   } catch (e) { console.error("syncTeamCheckout:", e); }
 }
 
@@ -199,18 +223,43 @@ export async function handleTeamSubscriptionEvent(eventType: string, sub: Stripe
     const canceled = deleted || TEAM_TERMINAL_STATES.has(sub.status);
     const pastDue = !canceled && sub.status === "past_due";
     const items = sub.items?.data ?? [];
-    const seatItem = items.find((i) => i.price?.id === process.env.STRIPE_TEAM_SEAT_PRICE_ID) ?? items[0];
+    // Accept BOTH monthly and yearly team-seat prices; price id only selects the item.
+    const seatItem = items.find((i) => isTeamSeatPriceId(i.price?.id)) ?? items[0];
+    const interval = intervalForPriceId(seatItem?.price?.id) ?? (sub.metadata?.interval === "yearly" || sub.metadata?.interval === "monthly" ? (sub.metadata.interval as BillingInterval) : null);
     const status = deleted ? "canceled" : sub.status;
     const seatQty = canceled ? 0 : (seatItem?.quantity ?? 0); // no active sub -> 0 seats; members are kept, never auto-revoked
     const custId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null;
     // Keep historical Stripe ids server-side (audit) even on cancel.
     await upsertBilling(workspaceId, { stripe_customer_id: custId, stripe_subscription_id: sub.id, stripe_subscription_item_id: seatItem?.id ?? null, seat_quantity: seatQty, status, current_period_end: periodEndIso(sub) });
     const evt = canceled ? "team_billing_canceled" : pastDue ? "team_billing_past_due" : "team_billing_synced";
-    await logEvent({ userId: "system", eventType: evt, actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, status, seat_quantity: seatQty, action: deleted ? "deleted" : "sync", event_type: eventType } });
+    await logEvent({ userId: "system", eventType: evt, actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, status, seat_quantity: seatQty, action: deleted ? "deleted" : "sync", event_type: eventType, interval } });
     return true;
   } catch (e) {
     console.error("handleTeamSubscriptionEvent:", e);
     try { await logEvent({ userId: "system", eventType: "team_billing_webhook_failed", actorType: "system", source: "stripe", metadata: { workspace_id: workspaceId, action: "subscription", event_type: eventType } }); } catch {}
     return true; // handled (do not fall through to personal billing)
   }
+}
+
+// ── Public, SAFE team-seat pricing (per-seat unit amounts only — no price/Stripe ids) ──
+// Used by /pricing + the owner team card. Cached in-memory (warm instance) to avoid a
+// Stripe call on every public pricing-page load.
+export type TeamSeatPricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
+let _pricingCache: { at: number; value: TeamSeatPricing } | null = null;
+const PRICING_TTL_MS = 10 * 60 * 1000;
+export async function teamSeatPricing(): Promise<TeamSeatPricing> {
+  const now = Date.now();
+  if (_pricingCache && now - _pricingCache.at < PRICING_TTL_MS) return _pricingCache.value;
+  const value: TeamSeatPricing = { configured: isTeamBillingConfigured(), yearlyConfigured: isYearlyTeamBillingConfigured(), monthly: null, yearly: null };
+  if (isStripeConfigured()) {
+    const stripe = getStripe();
+    const load = async (id: string | undefined): Promise<{ amount: number; currency: string } | null> => {
+      if (!id) return null;
+      try { const p = await stripe.prices.retrieve(id); return { amount: (p.unit_amount ?? 0) / 100, currency: (p.currency || "usd").toUpperCase() }; } catch { return null; }
+    };
+    value.monthly = await load(process.env.STRIPE_TEAM_SEAT_PRICE_ID);
+    value.yearly = await load(process.env.STRIPE_TEAM_SEAT_YEARLY_PRICE_ID);
+  }
+  _pricingCache = { at: now, value };
+  return value;
 }

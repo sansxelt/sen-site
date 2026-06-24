@@ -29,6 +29,7 @@ import { maybeProvisionAgentNumber, releaseAgentNumber } from "../../../../lib/v
 import { notifyOwnerPlanLapse } from "../../../../lib/vraelis-notify";
 import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
 import { setFlipPlan } from "../../../../lib/flip-db";
+import { isTeamSeatPriceId } from "../../../../lib/v-team-billing";
 
 // Vraelis runs in this same Stripe account. Vraelis checkout sessions +
 // subscriptions carry metadata { owner_email, plan, cycle }. When an
@@ -360,9 +361,9 @@ function formatInvoiceAmount(invoice: Stripe.Invoice): string {
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  // Team-seat invoices are reflected via subscription webhooks (past_due/canceled) —
-  // skip the personal "payment failed" email path.
-  if (process.env.STRIPE_TEAM_SEAT_PRICE_ID && priceIdFromInvoice(invoice) === process.env.STRIPE_TEAM_SEAT_PRICE_ID) return;
+  // Team-seat invoices (monthly OR yearly) are reflected via subscription webhooks
+  // (past_due/canceled) — skip the personal "payment failed" email path.
+  if (isTeamSeatPriceId(priceIdFromInvoice(invoice))) return;
   const email = invoice.customer_email ?? null;
   if (!email) return;
   await sendPaymentFailedEmail({
@@ -385,9 +386,9 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
     const { handleRankInvoicePaid } = await import("../../../../lib/v-subscriptions");
     if (await handleRankInvoicePaid(invoice)) return;
   }
-  // Team-seat invoices are reflected via subscription webhooks — don't credit or send a
-  // personal renewal email for them.
-  if (process.env.STRIPE_TEAM_SEAT_PRICE_ID && priceIdFromInvoice(invoice) === process.env.STRIPE_TEAM_SEAT_PRICE_ID) return;
+  // Team-seat invoices (monthly OR yearly) are reflected via subscription webhooks —
+  // don't credit or send a personal renewal email for them.
+  if (isTeamSeatPriceId(priceIdFromInvoice(invoice))) return;
   const email = invoice.customer_email ?? null;
   if (!email) return;
   const reason = (invoice as unknown as { billing_reason?: string }).billing_reason;

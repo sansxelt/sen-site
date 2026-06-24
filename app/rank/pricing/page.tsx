@@ -30,16 +30,23 @@ const CREDIT_RULES: [string, string][] = [
   ["Unused credits refunded", "If an evaluation doesn't fill, the rest comes back."],
 ];
 
+type TeamPricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
+
 export default function PricingPage() {
   const [cycle, setCycle] = useState<Cycle>("monthly");
   const [signedIn, setSignedIn] = useState(false);
   const [plan, setPlan] = useState("free");
   const [prices, setPrices] = useState<Record<string, Record<string, { available: boolean; amount?: number }>>>({});
+  const [team, setTeam] = useState<TeamPricing | null>(null);
 
   useEffect(() => {
     fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setSignedIn(true); setPlan(j.plan || "free"); } }).catch(() => {});
     fetch("/api/v/plans").then((r) => r.json()).then((j) => setPrices(j.plans || {})).catch(() => {});
+    fetch("/api/v/team/pricing").then((r) => r.json()).then(setTeam).catch(() => {});
   }, []);
+
+  const seatSym = (c?: string) => (!c || c === "USD" ? "$" : c + " ");
+  const seatMoney = (m: { amount: number; currency: string } | null | undefined) => (m ? `${seatSym(m.currency)}${fmtAmount(m.amount)}` : null);
 
   function cta(p: typeof PLANS[number], available: boolean) {
     const base = { marginTop: "auto", justifyContent: "center" } as const;
@@ -124,6 +131,24 @@ export default function PricingPage() {
             </div>
             <a className="btn btn--lg" href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</a>
           </div>
+
+          {/* team seats */}
+          <div className="card" style={{ marginTop: 18, background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
+              <div style={{ maxWidth: 560 }}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Working with a team?</div>
+                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team seats are for internal collaborators — Admins, Editors, and Viewers who run evaluations and read analytics with you. <strong style={{ color: "var(--fg-1)" }}>Client viewers are free</strong>: invite clients to read client-safe decision reports without a paid seat.</p>
+              </div>
+              {team?.monthly && (
+                <div style={{ textAlign: "right", minWidth: 180 }}>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>{seatMoney(team.monthly)}/seat/month</div>
+                  {team.yearly && <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-3)", marginTop: 4 }}>or {seatMoney(team.yearly)}/seat/year</div>}
+                  <div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 6 }}>Manage seats in your workspace</div>
+                </div>
+              )}
+            </div>
+          </div>
+
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Plans renew automatically. Cancel anytime, and your plan stays active until the period ends. Secure checkout on Vraelis, powered by Stripe.</p>
         </div>
       </section>

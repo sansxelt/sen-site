@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Role = "owner" | "admin" | "editor" | "viewer" | "client_viewer";
 type Member = { id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null };
@@ -10,7 +10,9 @@ type ProjRole = "editor" | "viewer" | "client_viewer";
 type ProjectAccessSummary = { project_id: string; project_name: string; members: { email: string; role: ProjRole; status: string }[] };
 type Workspace = { id: string; owner_user_id: string; name: string } | null;
 type Ctx = { workspace: Workspace; myRole: Role; members: Member[]; shared: Shared[]; sharedProjects: SharedProject[]; projectAccess: ProjectAccessSummary[] };
-type Billing = { configured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean } | null;
+type Interval = "monthly" | "yearly";
+type Billing = { configured: boolean; yearlyConfigured: boolean; enforced: boolean; used: number; pendingPaid: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: Interval | null } | null;
+type Pricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
 type TransferInfo = { blocked: boolean; eligible: { id: string; email: string; role: Role }[]; workspaceName: string };
 
 const INVITABLE: Role[] = ["admin", "editor", "viewer", "client_viewer"];
@@ -54,10 +56,16 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
   const [confirmName, setConfirmName] = useState("");
   const [tBusy, setTBusy] = useState(false);
   const [tMsg, setTMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [seatInterval, setSeatInterval] = useState<Interval>(billing?.interval ?? "monthly");
+  const [pricing, setPricing] = useState<Pricing | null>(null);
   const wsId = ctx.workspace?.id;
 
   const isOwner = ctx.workspace?.owner_user_id === email;
   const canManage = isOwner || ctx.myRole === "admin";
+
+  useEffect(() => {
+    if (isOwner && billing?.configured) fetch("/api/v/team/pricing").then((r) => r.json()).then(setPricing).catch(() => {});
+  }, [isOwner, billing?.configured]);
   const active = ctx.members.filter((m) => m.status === "active");
   const pending = ctx.members.filter((m) => m.status === "pending");
 
@@ -78,7 +86,12 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
   async function setRole(id: string, role: Role) { await fetch(`/api/v/workspace/members/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) }); refresh(); }
   async function revoke(id: string) { await fetch(`/api/v/workspace/members/${id}`, { method: "DELETE" }); refresh(); }
   async function resend(id: string) { const r = await fetch(`/api/v/workspace/members/${id}/resend`, { method: "POST" }); const j = await r.json().catch(() => ({})); setMsg({ kind: j.ok && j.email !== "failed" ? "ok" : "err", text: j.ok ? deliveryText(j.email, true) : j.error === "rate_limited" ? "Too many resends for this invite — try again later." : "Couldn't resend the invite." }); refresh(); }
-  async function teamBilling(path: string) { const r = await fetch(`/api/v/team/${path}`, { method: "POST" }); const j = await r.json().catch(() => ({})); if (j.url) window.location.href = j.url; else setMsg({ kind: "err", text: j.error === "not_configured" ? "Team billing isn't configured yet." : "Couldn't open billing. Try again." }); }
+  async function teamBilling(path: string, interval?: Interval) {
+    const r = await fetch(`/api/v/team/${path}`, { method: "POST", headers: interval ? { "Content-Type": "application/json" } : undefined, body: interval ? JSON.stringify({ interval }) : undefined });
+    const j = await r.json().catch(() => ({}));
+    if (j.url) window.location.href = j.url;
+    else setMsg({ kind: "err", text: j.error === "not_configured" ? (interval === "yearly" ? "Annual team billing isn't configured yet." : "Team billing isn't configured yet.") : "Couldn't open billing. Try again." });
+  }
   async function doTransfer() {
     if (!tgt || tBusy) return;
     setTBusy(true); setTMsg(null);
@@ -108,7 +121,14 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
       </div>
 
       {/* Team seats (owner only) */}
-      {isOwner && billing && (
+      {isOwner && billing && (() => {
+        const sym = (c?: string) => (!c || c === "USD" ? "$" : c + " ");
+        const money = (m: { amount: number; currency: string } | null | undefined) => (m ? `${sym(m.currency)}${Math.round(m.amount).toLocaleString()}` : null);
+        const savings = pricing?.monthly && pricing?.yearly && pricing.monthly.amount > 0 ? Math.round((1 - pricing.yearly.amount / (pricing.monthly.amount * 12)) * 100) : null;
+        const priceLabel = seatInterval === "yearly"
+          ? (money(pricing?.yearly) ? `${money(pricing?.yearly)} / seat / year${savings && savings > 0 ? ` — save ${savings}%` : ""}` : null)
+          : (money(pricing?.monthly) ? `${money(pricing?.monthly)} / seat / month` : null);
+        return (
         <div className="card" style={{ marginBottom: 18 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
             <div>
@@ -120,16 +140,34 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
           </div>
           {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0", lineHeight: 1.5 }}>You&apos;re over your seat limit. Add seats to invite more internal collaborators, or change roles to Client viewer. Existing members keep their access.</p>}
           <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Pending invites don&apos;t count until accepted. Team seats are for additional internal collaborators; client viewers are always free.</p>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+
+          {billing.configured && billing.hasSubscription && (
+            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong>. Change your plan or interval from the billing portal.</p>
+          )}
+
+          {billing.configured && !billing.hasSubscription && (
+            <div style={{ marginTop: 14 }}>
+              <div className="seg" style={{ marginBottom: 8 }}>
+                <button className={seatInterval === "monthly" ? "on" : ""} onClick={() => setSeatInterval("monthly")}>Monthly</button>
+                <button className={seatInterval === "yearly" ? "on" : ""} disabled={!billing.yearlyConfigured} onClick={() => billing.yearlyConfigured && setSeatInterval("yearly")} style={{ opacity: billing.yearlyConfigured ? 1 : 0.45, cursor: billing.yearlyConfigured ? "pointer" : "not-allowed" }}>Annual{savings && savings > 0 ? ` · save ${savings}%` : ""}</button>
+              </div>
+              {!billing.yearlyConfigured && <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "0 0 6px" }}>Annual team billing is not configured yet.</p>}
+              {priceLabel && <div style={{ fontSize: 13.5, color: "var(--fg-2)", fontWeight: 500 }}>{priceLabel}</div>}
+              <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "6px 0 0", lineHeight: 1.6 }}>Save with annual team seats while keeping client viewers free.</p>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12, alignItems: "center" }}>
             {billing.configured ? (
               billing.hasSubscription
                 ? <button onClick={() => teamBilling("portal")} className="btn">Manage team billing</button>
-                : <button onClick={() => teamBilling("checkout")} className="btn">Add team seats</button>
+                : <button onClick={() => teamBilling("checkout", seatInterval)} className="btn">Add team seats — {seatInterval === "yearly" ? "Annual" : "Monthly"}</button>
             ) : <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Team billing isn&apos;t configured yet — seat counts are informational. Client viewers are free.</span>}
           </div>
           {billing.periodEnd && billing.hasSubscription ? <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0" }}>Renews {new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p> : null}
         </div>
-      )}
+        );
+      })()}
 
       {/* Invite */}
       {canManage && (
