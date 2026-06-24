@@ -5,7 +5,9 @@ import { balance } from "@/lib/v-credits";
 import { eventCounts, lastEventAt } from "@/lib/v-events";
 import { decisionAnalytics } from "@/lib/v-analytics";
 import { listProjects } from "@/lib/v-projects";
+import { getWorkspaceContext } from "@/lib/v-workspace";
 import { SectionHead, Bars, Spark, Dist, CONF_COLORS, SIGNAL_COLORS } from "../_workspace/analytics-ui";
+import { SharedWithYou } from "../_workspace/shared-with-you";
 
 export const metadata: Metadata = { title: "Analytics" };
 
@@ -16,14 +18,16 @@ export default async function DataPage() {
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fdata");
 
-  const [a, bal, projects, counts, lastApi, lastHook] = await Promise.all([
+  const [a, bal, projects, counts, lastApi, lastHook, ctx] = await Promise.all([
     decisionAnalytics(email),
     balance(email),
     listProjects(email),
     eventCounts(email, ["export_downloaded", "api_request_made", "webhook_delivered", "webhook_failed"]),
     lastEventAt(email, "api_request_made"),
     lastEventAt(email, "webhook_delivered"),
+    getWorkspaceContext(email),
   ]);
+  const sharedCard = <SharedWithYou shared={ctx.shared.map((w) => ({ workspace_id: w.workspace_id, name: w.name, role: w.role }))} sharedProjects={ctx.sharedProjects.map((p) => ({ project_id: p.project_id, name: p.name, workspace_name: p.workspace_name, role: p.role }))} />;
   const projName: Record<string, string> = Object.fromEntries(projects.map((p) => [p.id, p.name]));
   const hasData = a.core.total > 0;
   const hasApi = (counts.api_request_made ?? 0) > 0 || (counts.webhook_delivered ?? 0) > 0;
@@ -32,9 +36,10 @@ export default async function DataPage() {
     return (
       <div className="wrap" style={{ maxWidth: 1000, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
         <div className="phead"><div><p className="eyebrow">Decision analytics</p><h1 className="display">Decision analytics</h1></div></div>
+        {sharedCard}
         <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 6vw, 64px)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 8 }}>No analytics yet</div>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.55 }}>Run your first evaluation to see decision quality, signal cleanliness, confidence, and category trends here — all from your real results.</p>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 8 }}>No analytics in your workspace yet</div>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.55 }}>Run your first evaluation to see decision quality, signal cleanliness, confidence, and category trends here — all from your real results. Analytics shared with you appear above.</p>
           <a href="/app/new" className="btn btn--lg">Create an evaluation →</a>
         </div>
       </div>
@@ -51,6 +56,8 @@ export default async function DataPage() {
         </div>
         <a href="/app/data-quality" className="btn btn--ghost">Data quality →</a>
       </div>
+
+      {sharedCard}
 
       {/* core metrics */}
       <div className="tile-grid cols-4" style={{ marginBottom: 14 }}>

@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { dataQuality, sourceQuality } from "@/lib/v-analytics";
 import { screeningStatsForUser } from "@/lib/v-screening";
+import { getWorkspaceContext } from "@/lib/v-workspace";
 import { SectionHead, Bars } from "../_workspace/analytics-ui";
+import { SharedWithYou } from "../_workspace/shared-with-you";
 
 export const metadata: Metadata = { title: "Data quality" };
 
@@ -11,8 +13,9 @@ export default async function DataQualityPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fdata-quality");
-  const [q, sources, aud] = await Promise.all([dataQuality(email), sourceQuality(email), screeningStatsForUser(email)]);
+  const [q, sources, aud, ctx] = await Promise.all([dataQuality(email), sourceQuality(email), screeningStatsForUser(email), getWorkspaceContext(email)]);
   const hasData = q.responses > 0;
+  const sharedCard = <SharedWithYou shared={ctx.shared.map((w) => ({ workspace_id: w.workspace_id, name: w.name, role: w.role }))} sharedProjects={ctx.sharedProjects.map((p) => ({ project_id: p.project_id, name: p.name, workspace_name: p.workspace_name, role: p.role }))} />;
 
   return (
     <div className="wrap" style={{ maxWidth: 900, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
@@ -24,6 +27,8 @@ export default async function DataQualityPage() {
         </div>
         <a href="/app/data" className="btn btn--ghost">← Analytics</a>
       </div>
+
+      {sharedCard}
 
       {!hasData ? (
         <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 6vw, 64px)" }}>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { sharedProjectView, ROLE_LABEL } from "@/lib/v-workspace";
+import { SectionHead, Dist, Bars, CONF_COLORS, SIGNAL_COLORS } from "../../../_workspace/analytics-ui";
 
 export const metadata: Metadata = { title: "Shared project" };
 
@@ -35,8 +36,52 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 8 }}>{view.project.name}</h1>
       {view.project.description ? <p className="lead-copy" style={{ marginBottom: 8 }}>{view.project.description}</p> : null}
-      <p style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 24 }}>You have access to this project&apos;s client-ready reports.</p>
+      <p style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 24 }}>{view.analytics ? "Read-only project analytics and client-ready reports." : "You have access to this project's client-ready reports."}</p>
 
+      {/* Read-only project analytics — editor/viewer/admin/owner only (not client viewers) */}
+      {view.analytics && view.analytics.completed > 0 && (
+        <>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Project analytics · read-only</div>
+          <div className="tile-grid cols-2" style={{ marginBottom: 16 }}>
+            <div className="card">
+              <SectionHead>Decision quality</SectionHead>
+              <Dist items={[
+                { label: "Strong", value: view.analytics.quality.strong, color: CONF_COLORS.Strong },
+                { label: "Moderate", value: view.analytics.quality.moderate, color: CONF_COLORS.Moderate },
+                { label: "Tentative", value: view.analytics.quality.tentative, color: CONF_COLORS.Tentative },
+                { label: "Inconclusive", value: view.analytics.quality.inconclusive, color: CONF_COLORS.Inconclusive },
+              ]} />
+              <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Avg preference margin {view.analytics.avgMargin == null ? "—" : `${view.analytics.avgMargin} pts`} · {view.analytics.filtered.toLocaleString()} filtered</p>
+            </div>
+            <div className="card">
+              <SectionHead>Signal quality</SectionHead>
+              <Dist items={[
+                { label: "Clean", value: view.analytics.quality.clean, color: SIGNAL_COLORS.Clean },
+                { label: "Limited", value: view.analytics.quality.limited, color: SIGNAL_COLORS.Limited },
+                { label: "Needs more", value: view.analytics.quality.needsMore, color: SIGNAL_COLORS.NeedsMore },
+              ]} />
+            </div>
+          </div>
+          <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
+            <div className="card">
+              <SectionHead>Decision readiness</SectionHead>
+              <Bars rows={[
+                { label: "Ready to decide", value: view.analytics.health.ready },
+                { label: "Needs more judgments", value: view.analytics.health.needsMore },
+                { label: "Noisy signal", value: view.analytics.health.noisy },
+                { label: "Too close to call", value: view.analytics.health.tooClose },
+                { label: "Low-quality traffic", value: view.analytics.health.lowQuality },
+              ].filter((r) => r.value > 0)} unit=" evals" />
+            </div>
+            <div className="card">
+              <SectionHead>Signal sources</SectionHead>
+              {view.sources && view.sources.length > 0 ? <Bars rows={view.sources.map((sq) => ({ label: sq.label, value: sq.valid, sub: `${sq.filterRate}% filtered` }))} unit=" valid" /> : <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Source quality appears as judgments are collected. Channel-level only — no personal data.</p>}
+            </div>
+          </div>
+        </>
+      )}
+
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Reports</div>
       {completed.length === 0 && inProgress.length === 0 ? (
         <div className="empty"><div className="empty__icon">◷</div><h3>Nothing to review yet</h3><p>No completed evaluations are ready to share yet.</p></div>
       ) : (

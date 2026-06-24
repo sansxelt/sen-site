@@ -8,6 +8,7 @@ import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { logEvent } from "./v-events";
 import { getReport } from "./v-db";
 import { evaluationIntelligence } from "./v-intelligence";
+import { projectAnalytics, projectSourceQuality } from "./v-analytics";
 
 const norm = (e: string) => e.trim().toLowerCase();
 
@@ -296,6 +297,17 @@ export async function canManageProjectMembers(email: string, projectId: string):
 
 export const canViewSharedProject = async (email: string, projectId: string) => (await getProjectAccessRole(email, projectId)) != null;
 
+// Analytics visibility: any role with project access EXCEPT client_viewer may see
+// aggregate (read-only) analytics for the project. Client viewers get reports only.
+export async function canViewProjectAnalytics(email: string, projectId: string): Promise<boolean> {
+  const a = await getProjectAccessRole(email, projectId);
+  return a != null && a.role !== "client_viewer";
+}
+export async function isClientSafeOnly(email: string, projectId: string): Promise<boolean> {
+  const a = await getProjectAccessRole(email, projectId);
+  return a?.role === "client_viewer";
+}
+
 export async function listProjectMembers(email: string, projectId: string): Promise<ProjectMember[]> {
   if (!(await canManageProjectMembers(email, projectId))) return [];
   try {
@@ -413,16 +425,27 @@ async function projectSharedEvals(projectId: string): Promise<SharedEval[]> {
   } catch { return []; }
 }
 
-// The client-safe shared-project view (project members / client viewers).
-export type SharedProjectView = { project: { id: string; name: string; description: string | null }; role: Role; level: "owner" | "workspace" | "project"; evaluations: SharedEval[] };
+// The shared-project view. Client viewers get the client-safe report list only;
+// editor/viewer/admin/owner additionally get read-only aggregate analytics (decision
+// quality, signal quality, source quality) — computed via the project OWNER's id so
+// it reuses the verified analytics aggregation, gated by the access check above.
+export type SharedProjectView = {
+  project: { id: string; name: string; description: string | null };
+  role: Role; level: "owner" | "workspace" | "project";
+  evaluations: SharedEval[];
+  analytics: Awaited<ReturnType<typeof projectAnalytics>> | null;
+  sources: Awaited<ReturnType<typeof projectSourceQuality>> | null;
+};
 export async function sharedProjectView(email: string, projectId: string): Promise<SharedProjectView | null> {
   const access = await getProjectAccessRole(email, projectId);
   if (!access) return null;
   const meta = await projectMeta(projectId);
   if (!meta) return null;
-  return {
-    project: { id: projectId, name: meta.name, description: meta.description },
-    role: access.role, level: access.level,
-    evaluations: await projectSharedEvals(projectId),
-  };
+  const showAnalytics = access.role !== "client_viewer";
+  const [evaluations, analytics, sources] = await Promise.all([
+    projectSharedEvals(projectId),
+    showAnalytics ? projectAnalytics(meta.owner, projectId) : Promise.resolve(null),
+    showAnalytics ? projectSourceQuality(meta.owner, projectId) : Promise.resolve(null),
+  ]);
+  return { project: { id: projectId, name: meta.name, description: meta.description }, role: access.role, level: access.level, evaluations, analytics, sources };
 }
