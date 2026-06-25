@@ -243,8 +243,8 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
       {/* Enterprise / SSO readiness */}
       <div style={cardHead}>Enterprise readiness</div>
       <div className="card" style={{ background: "var(--bg-2)" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>SSO &amp; provisioning are not enabled yet</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>This organization layer prepares domain ownership, member governance, and audit trails for enterprise SSO. SSO and SCIM provisioning are planned for larger organizations and can be layered onto organizations later. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>SSO and SCIM provisioning are not enabled yet</div>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>This organization layer prepares domain ownership, member governance, and audit trails for enterprise SSO. They are planned for larger organizations and can be layered onto organizations later. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
       </div>
     </>
   );
