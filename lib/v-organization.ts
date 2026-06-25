@@ -35,6 +35,9 @@ export type Organization = { id: string; name: string; owner_user_id: string; cr
 export type OrgMember = { id: string; organization_id: string; user_id: string | null; email: string; role: OrgRole; status: "pending" | "active" | "revoked"; can_manage_billing: boolean; created_at: string };
 export type OrgDomain = { id: string; organization_id: string; domain: string; status: "unverified" | "verified" | "rejected"; verified_at: string | null; created_at: string };
 export type LinkableWorkspace = { id: string; name: string; organization_id: string | null };
+export type JoinMode = "disabled" | "request" | "auto_member";
+export type DomainDefaultRole = "member" | "viewer";
+export type OrgJoinRequest = { id: string; email: string; requested_role: string; created_at: string };
 export type OrgContext = {
   organization: Organization | null;
   myRole: OrgRole | null;
@@ -44,6 +47,8 @@ export type OrgContext = {
   domains: OrgDomain[];
   linkedWorkspaces: { id: string; name: string }[];
   linkableWorkspaces: { id: string; name: string }[];
+  provisioning: { joinMode: JoinMode; defaultRole: DomainDefaultRole };
+  joinRequests: OrgJoinRequest[];
 };
 
 // ── Reads ──────────────────────────────────────────────────────────────────
@@ -160,13 +165,14 @@ export async function canLinkWorkspaceToOrganization(email: string, orgId: strin
 // ── Full context for /app/organization ───────────────────────────────────────
 
 export async function getOrganizationContext(email: string): Promise<OrgContext> {
-  const empty: OrgContext = { organization: null, myRole: null, canManage: false, isBillingAdmin: false, members: [], domains: [], linkedWorkspaces: [], linkableWorkspaces: [] };
+  const empty: OrgContext = { organization: null, myRole: null, canManage: false, isBillingAdmin: false, members: [], domains: [], linkedWorkspaces: [], linkableWorkspaces: [], provisioning: { joinMode: "request", defaultRole: "member" }, joinRequests: [] };
   if (!email || !isDatabaseConfigured()) return empty;
   const owned = await ownedWorkspaces(email);
   const org = await getPrimaryOrganization(email);
   if (!org) return { ...empty, linkableWorkspaces: owned.filter((w) => !w.organization_id).map((w) => ({ id: w.id, name: w.name })) };
   const [role, members, domains, linked] = await Promise.all([myOrgRole(email, org), listOrgMembers(org.id), listOrgDomains(org.id), linkedWorkspaces(org.id)]);
   const canManage = role === "owner" || role === "admin";
+  const [provisioning, joinRequests] = await Promise.all([orgProvisioningSettings(org.id), canManage ? pendingJoinRequests(org.id) : Promise.resolve([])]);
   return {
     organization: org,
     myRole: role,
@@ -176,6 +182,8 @@ export async function getOrganizationContext(email: string): Promise<OrgContext>
     domains,
     linkedWorkspaces: linked,
     linkableWorkspaces: canManage ? owned.filter((w) => !w.organization_id).map((w) => ({ id: w.id, name: w.name })) : [],
+    provisioning,
+    joinRequests,
   };
 }
 
@@ -422,4 +430,194 @@ export async function removeOrganizationDomain(email: string, domainId: string):
     await logEvent({ userId: norm(email), eventType: "organization_domain_removed", actorType: "owner", source: "app", metadata: { organization_id: org.id, domain: row.domain } });
     return { ok: true };
   } catch { return { ok: false, error: "remove_failed" }; }
+}
+
+// ── Domain auto-provisioning (v1) ─────────────────────────────────────────────
+// Matching an email domain to a VERIFIED org domain only ever yields ORG-LEVEL membership at a
+// safe role — never workspace/project/billing/API access (those are managed separately). Default
+// mode is 'request' (admin approves). Everything below tolerates pre-migration absence (returns []
+// / safe defaults) so existing org/workspace flows keep working before the SQL is applied.
+
+const SAFE_DEFAULT_ROLES = ["member", "viewer"] as const;
+
+// Safely parse the registrable email domain. Returns null for malformed input.
+function emailDomain(email: string): string | null {
+  const e = norm(email);
+  const at = e.lastIndexOf("@");
+  if (at < 1) return null;
+  const d = e.slice(at + 1).trim();
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(d) && d.length <= 253 ? d : null;
+}
+
+async function orgProvisioningSettings(orgId: string): Promise<{ joinMode: JoinMode; defaultRole: DomainDefaultRole }> {
+  try {
+    const { data, error } = await getSupabaseAdminClient().from("v_organizations" as never).select("domain_join_mode,domain_default_role").eq("id", orgId).maybeSingle();
+    if (error) return { joinMode: "request", defaultRole: "member" }; // columns absent (pre-migration)
+    const r = data as unknown as { domain_join_mode?: string; domain_default_role?: string } | null;
+    const joinMode = (["disabled", "request", "auto_member"].includes(r?.domain_join_mode ?? "") ? r!.domain_join_mode : "request") as JoinMode;
+    const defaultRole = (r?.domain_default_role === "viewer" ? "viewer" : "member") as DomainDefaultRole;
+    return { joinMode, defaultRole };
+  } catch { return { joinMode: "request", defaultRole: "member" }; }
+}
+
+async function pendingJoinRequests(orgId: string): Promise<OrgJoinRequest[]> {
+  try {
+    const { data, error } = await getSupabaseAdminClient().from("v_organization_join_requests" as never).select("id,email,requested_role,created_at").eq("organization_id", orgId).eq("status", "pending").order("created_at", { ascending: true });
+    if (error) return []; // table absent (pre-migration)
+    return (data as unknown as OrgJoinRequest[]) ?? [];
+  } catch { return []; }
+}
+
+// Verified-domain orgs whose domain == the caller's email domain. Uses the authenticated email
+// only (callers pass session email; never client-supplied). Exact match in v1 (no subdomains).
+export async function getVerifiedDomainOrganizationsForEmail(email: string): Promise<{ id: string; name: string; owner_user_id: string; joinMode: JoinMode; defaultRole: DomainDefaultRole }[]> {
+  if (!isDatabaseConfigured()) return [];
+  const dom = emailDomain(email);
+  if (!dom) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const { data: dms, error } = await s.from("v_organization_domains" as never).select("organization_id").eq("domain", dom).eq("status", "verified");
+    if (error) return [];
+    const orgIds = [...new Set(((dms as unknown as { organization_id: string }[]) ?? []).map((d) => d.organization_id))];
+    if (!orgIds.length) return [];
+    const { data: orgs } = await s.from("v_organizations" as never).select("id,name,owner_user_id,domain_join_mode,domain_default_role").in("id", orgIds);
+    return ((orgs as unknown as { id: string; name: string; owner_user_id: string; domain_join_mode?: string; domain_default_role?: string }[]) ?? []).map((o) => ({
+      id: o.id, name: o.name, owner_user_id: o.owner_user_id,
+      joinMode: (["disabled", "request", "auto_member"].includes(o.domain_join_mode ?? "") ? o.domain_join_mode : "request") as JoinMode,
+      defaultRole: (o.domain_default_role === "viewer" ? "viewer" : "member") as DomainDefaultRole,
+    }));
+  } catch { return []; }
+}
+
+export type DomainAccessOption = { id: string; name: string; joinMode: JoinMode; requestStatus: "pending" | null };
+
+// What the signed-in user can do via verified-domain matching: eligible orgs they are NOT already
+// a member of, with any pending request status. Drives the join card. Safe display only — no org
+// internals (members/workspaces/billing/audit) are exposed here.
+export async function getDomainAccessForEmail(email: string): Promise<DomainAccessOption[]> {
+  if (!isDatabaseConfigured()) return [];
+  const uid = norm(email);
+  const matches = await getVerifiedDomainOrganizationsForEmail(email);
+  if (!matches.length) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const orgIds = matches.map((m) => m.id);
+    const { data: mems } = await s.from("v_organization_members" as never).select("organization_id").eq("email", uid).eq("status", "active").in("organization_id", orgIds);
+    const memberOf = new Set(((mems as unknown as { organization_id: string }[]) ?? []).map((m) => m.organization_id));
+    const { data: reqs } = await s.from("v_organization_join_requests" as never).select("organization_id,status").eq("email", uid).eq("status", "pending").in("organization_id", orgIds);
+    const pendingOf = new Set(((reqs as unknown as { organization_id: string }[]) ?? []).map((r) => r.organization_id));
+    return matches
+      .filter((m) => m.joinMode !== "disabled" && !memberOf.has(m.id) && m.owner_user_id !== uid)
+      .map((m) => ({ id: m.id, name: m.name, joinMode: m.joinMode, requestStatus: pendingOf.has(m.id) ? ("pending" as const) : null }));
+  } catch { return []; }
+}
+
+async function upsertOrgMember(orgId: string, email: string, role: DomainDefaultRole, invitedBy: string): Promise<boolean> {
+  try {
+    const s = getSupabaseAdminClient();
+    const { data: existing } = await s.from("v_organization_members" as never).select("id").eq("organization_id", orgId).eq("email", email).maybeSingle();
+    if ((existing as unknown as { id: string } | null)?.id) {
+      const { error } = await s.from("v_organization_members" as never).update({ role, status: "active", can_manage_billing: false, updated_at: new Date().toISOString() } as never).eq("id", (existing as unknown as { id: string }).id);
+      return !error;
+    }
+    const { error } = await s.from("v_organization_members" as never).insert({ organization_id: orgId, email, role, status: "active", can_manage_billing: false, invited_by: invitedBy } as never);
+    return !error;
+  } catch { return false; }
+}
+
+// User requests access to (or auto-joins) an org whose VERIFIED domain matches their email. The
+// org is validated against the caller's email domain server-side — a client cannot request access
+// to an org their domain doesn't match. Never grants more than a safe org role; never touches
+// workspace/project/billing/API access.
+export async function requestOrganizationAccess(email: string, orgId: string): Promise<Result<{ mode: JoinMode; joined?: boolean; pending?: boolean }>> {
+  if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const uid = norm(email);
+  if (!orgId) return { ok: false, error: "not_found" };
+  const dom = emailDomain(uid);
+  if (!dom) return { ok: false, error: "no_domain" };
+  try {
+    const s = getSupabaseAdminClient();
+    // Re-validate eligibility: this org has a VERIFIED domain equal to the caller's email domain.
+    const { data: dmatch } = await s.from("v_organization_domains" as never).select("id").eq("organization_id", orgId).eq("domain", dom).eq("status", "verified").maybeSingle();
+    if (!(dmatch as unknown as { id: string } | null)?.id) return { ok: false, error: "not_eligible" };
+    const { data: orgRow } = await s.from("v_organizations" as never).select("id,owner_user_id,domain_join_mode,domain_default_role").eq("id", orgId).maybeSingle();
+    const org = orgRow as unknown as { id: string; owner_user_id: string; domain_join_mode?: string; domain_default_role?: string } | null;
+    if (!org) return { ok: false, error: "not_found" };
+    const mode = (["disabled", "request", "auto_member"].includes(org.domain_join_mode ?? "") ? org.domain_join_mode : "request") as JoinMode;
+    if (mode === "disabled") return { ok: false, error: "join_disabled" };
+    // Look up membership at ANY status: an active member is already in; a REVOKED member must NOT
+    // be allowed to silently self-reinstate via auto-join — reversing a deliberate revocation
+    // requires explicit admin approval, so a revoked member is routed to a pending request.
+    const { data: memRow } = await s.from("v_organization_members" as never).select("status").eq("organization_id", orgId).eq("email", uid).maybeSingle();
+    const memStatus = (memRow as unknown as { status: string } | null)?.status ?? null;
+    if (org.owner_user_id === uid || memStatus === "active") return { ok: false, error: "already_member" };
+    const wasRevoked = memStatus === "revoked";
+    const role: DomainDefaultRole = org.domain_default_role === "viewer" ? "viewer" : "member";
+
+    if (mode === "auto_member" && !wasRevoked) {
+      if (!(await upsertOrgMember(orgId, uid, role, uid))) return { ok: false, error: "join_failed" };
+      await logEvent({ userId: uid, eventType: "organization_domain_user_auto_joined", actorType: "owner", source: "app", metadata: { organization_id: orgId, role, mode } });
+      return { ok: true, mode, joined: true };
+    }
+    // request mode, OR a revoked member in auto_member mode — create an idempotent pending request
+    // (partial unique index on (org, email) where pending) that an admin must approve.
+    const { error } = await s.from("v_organization_join_requests" as never).insert({ organization_id: orgId, email: uid, status: "pending", requested_role: role } as never);
+    if (error) {
+      if (String(error.message || "").includes("duplicate")) return { ok: true, mode, pending: true }; // already pending
+      return { ok: false, error: "request_failed" };
+    }
+    await logEvent({ userId: uid, eventType: "organization_join_request_created", actorType: "owner", source: "app", metadata: { organization_id: orgId, role, status: "pending", mode } });
+    return { ok: true, mode, pending: true };
+  } catch { return { ok: false, error: "request_failed" }; }
+}
+
+// Cancel one's own pending request.
+export async function cancelOrganizationJoinRequest(email: string, orgId: string): Promise<Result> {
+  if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const uid = norm(email);
+  try {
+    const { error } = await getSupabaseAdminClient().from("v_organization_join_requests" as never).update({ status: "canceled", updated_at: new Date().toISOString() } as never).eq("organization_id", orgId).eq("email", uid).eq("status", "pending");
+    return error ? { ok: false, error: "cancel_failed" } : { ok: true };
+  } catch { return { ok: false, error: "cancel_failed" }; }
+}
+
+// Owner/admin approves or rejects a pending join request. Approval activates an org membership at
+// the (clamped) safe role; rejection records the decision and grants nothing. Org-scoped.
+export async function decideOrganizationJoinRequest(email: string, requestId: string, decision: "approve" | "reject"): Promise<Result> {
+  const org = await getPrimaryOrganization(email);
+  if (!org) return { ok: false, error: "no_organization" };
+  if (!(await canManageOrganizationMembers(email, org.id))) return { ok: false, error: "forbidden" };
+  if (!requestId) return { ok: false, error: "not_found" };
+  try {
+    const s = getSupabaseAdminClient();
+    const { data } = await s.from("v_organization_join_requests" as never).select("id,email,requested_role,status").eq("id", requestId).eq("organization_id", org.id).maybeSingle();
+    const req = data as unknown as { id: string; email: string; requested_role: string; status: string } | null;
+    if (!req) return { ok: false, error: "not_found" };
+    if (req.status !== "pending") return { ok: false, error: "not_pending" };
+    if (decision === "approve") {
+      const role: DomainDefaultRole = req.requested_role === "viewer" ? "viewer" : "member"; // clamp — never admin/owner
+      if (!(await upsertOrgMember(org.id, norm(req.email), role, norm(email)))) return { ok: false, error: "approve_failed" };
+      await s.from("v_organization_join_requests" as never).update({ status: "approved", decided_at: new Date().toISOString(), decided_by_user_id: norm(email), updated_at: new Date().toISOString() } as never).eq("id", requestId).eq("organization_id", org.id);
+      await logEvent({ userId: norm(email), eventType: "organization_join_request_approved", actorType: "owner", source: "app", metadata: { organization_id: org.id, role, status: "approved" } });
+      return { ok: true };
+    }
+    await s.from("v_organization_join_requests" as never).update({ status: "rejected", decided_at: new Date().toISOString(), decided_by_user_id: norm(email), updated_at: new Date().toISOString() } as never).eq("id", requestId).eq("organization_id", org.id);
+    await logEvent({ userId: norm(email), eventType: "organization_join_request_rejected", actorType: "owner", source: "app", metadata: { organization_id: org.id, status: "rejected" } });
+    return { ok: true };
+  } catch { return { ok: false, error: "decide_failed" }; }
+}
+
+// Owner/admin updates verified-domain provisioning settings (join mode + safe default role).
+export async function updateOrganizationProvisioningSettings(email: string, joinMode: string, defaultRole: string): Promise<Result> {
+  const org = await getPrimaryOrganization(email);
+  if (!org) return { ok: false, error: "no_organization" };
+  if (!(await canManageOrganization(email, org.id))) return { ok: false, error: "forbidden" };
+  if (!["disabled", "request", "auto_member"].includes(joinMode)) return { ok: false, error: "invalid_mode" };
+  if (!SAFE_DEFAULT_ROLES.includes(defaultRole as (typeof SAFE_DEFAULT_ROLES)[number])) return { ok: false, error: "invalid_role" };
+  try {
+    const { error } = await getSupabaseAdminClient().from("v_organizations" as never).update({ domain_join_mode: joinMode, domain_default_role: defaultRole, updated_at: new Date().toISOString() } as never).eq("id", org.id);
+    if (error) return { ok: false, error: "update_failed" };
+    await logEvent({ userId: norm(email), eventType: "organization_provisioning_settings_updated", actorType: "owner", source: "app", metadata: { organization_id: org.id, mode: joinMode, role: defaultRole } });
+    return { ok: true };
+  } catch { return { ok: false, error: "update_failed" }; }
 }

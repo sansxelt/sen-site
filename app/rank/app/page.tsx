@@ -6,6 +6,7 @@ import { ensureSignupGrant, balance } from "@/lib/v-credits";
 import { isAdmin } from "@/lib/v-entitlements";
 import { listProjects, listEvaluations, workspaceStats } from "@/lib/v-projects";
 import { resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
+import { getDomainAccessForEmail } from "@/lib/v-organization";
 import { EvaluationList } from "./_workspace/evaluation-list";
 import { NewProjectForm } from "./_workspace/workspace-client";
 import { WorkspaceMemberView } from "./_workspace/workspace-member-view";
@@ -87,8 +88,8 @@ export default async function Dashboard() {
   if (selected && !selected.isPersonal) {
     return <WorkspaceMemberView selected={selected} summary={await workspaceProjectSummaries(selected)} variant="dashboard" />;
   }
-  const [bal, plan, stats, projects, evaluations] = await Promise.all([
-    balance(email), getPlan(email), workspaceStats(email), listProjects(email), listEvaluations(email, { limit: 60 }),
+  const [bal, plan, stats, projects, evaluations, domainAccess] = await Promise.all([
+    balance(email), getPlan(email), workspaceStats(email), listProjects(email), listEvaluations(email, { limit: 60 }), getDomainAccessForEmail(email),
   ]);
   const planName = plan === "free" ? "Free" : plan.charAt(0).toUpperCase() + plan.slice(1);
   const projOpts = projects.map((p) => ({ id: p.id, name: p.name }));
@@ -106,6 +107,16 @@ export default async function Dashboard() {
           {isAdmin(email) && <a href="/app/admin" style={{ fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" }}>Admin</a>}
         </div>
       </div>
+
+      {domainAccess.length > 0 && (
+        <a href="/app/organization" className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18, background: "var(--bg-2)" }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14.5 }}>You may belong to {domainAccess[0].name}</div>
+            <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>Your email domain matches a verified organization domain. {domainAccess[0].requestStatus === "pending" ? "Your access request is pending admin approval." : "Request access to join this organization."}</div>
+          </div>
+          <span style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>{domainAccess[0].requestStatus === "pending" ? "View →" : "Request access →"}</span>
+        </a>
+      )}
 
       {/* quick actions */}
       <div className="tile-grid cols-4" style={{ marginBottom: 22 }}>

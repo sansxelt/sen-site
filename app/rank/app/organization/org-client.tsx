@@ -7,6 +7,9 @@ type OrgMember = { id: string; email: string; role: OrgRole; status: "pending" |
 type OrgDomain = { id: string; domain: string; status: "unverified" | "verified" | "rejected"; verified_at: string | null };
 type AuditEntry = { id: string; label: string; when: string; actor: string; context: string };
 type Org = { id: string; name: string; owner_user_id: string; created_at: string };
+type JoinMode = "disabled" | "request" | "auto_member";
+type OrgJoinRequest = { id: string; email: string; requested_role: string; created_at: string };
+type DomainAccessOption = { id: string; name: string; joinMode: JoinMode; requestStatus: "pending" | null };
 type Ctx = {
   organization: Org | null;
   myRole: OrgRole | null;
@@ -16,6 +19,8 @@ type Ctx = {
   domains: OrgDomain[];
   linkedWorkspaces: { id: string; name: string }[];
   linkableWorkspaces: { id: string; name: string }[];
+  provisioning: { joinMode: JoinMode; defaultRole: "member" | "viewer" };
+  joinRequests: OrgJoinRequest[];
 };
 
 const ROLE_LABEL: Record<OrgRole, string> = { owner: "Owner", admin: "Organization admin", billing_admin: "Account billing admin", member: "Member", viewer: "Viewer" };
@@ -24,7 +29,7 @@ const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing
 const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
 const when = (iso: string) => { const d = new Date(iso); const m = Math.round((Date.now() - d.getTime()) / 60000); if (m < 60) return `${Math.max(1, m)}m ago`; const h = Math.round(m / 60); return h < 24 ? `${h}h ago` : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
 
-export function OrgClient({ email, ctx, activity }: { email: string; ctx: Ctx; activity: AuditEntry[] }) {
+export function OrgClient({ email, ctx, activity, domainAccess = [] }: { email: string; ctx: Ctx; activity: AuditEntry[]; domainAccess?: DomainAccessOption[] }) {
   const org = ctx.organization;
   return (
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -36,8 +41,42 @@ export function OrgClient({ email, ctx, activity }: { email: string; ctx: Ctx; a
         </div>
         {org ? <a href="/app/audit" className="btn btn--ghost">Activity →</a> : null}
       </div>
-      {org ? <OrgView email={email} ctx={ctx} activity={activity} /> : <CreateOrg />}
+      {org ? <OrgView email={email} ctx={ctx} activity={activity} /> : domainAccess.length ? <JoinCard options={domainAccess} /> : <CreateOrg />}
     </div>
+  );
+}
+
+// Shown to a signed-in user with NO org of their own whose email domain matches a verified org
+// domain. Exposes ONLY the org name + a request/pending state — never members, workspaces, billing,
+// or audit. Joining grants org membership only; workspace/project access is managed separately.
+function JoinCard({ options }: { options: DomainAccessOption[] }) {
+  const [state, setState] = useState<Record<string, "idle" | "busy" | "pending" | "joined">>(Object.fromEntries(options.map((o) => [o.id, o.requestStatus === "pending" ? "pending" : "idle"])));
+  async function request(o: DomainAccessOption) {
+    setState((s) => ({ ...s, [o.id]: "busy" }));
+    const r = await fetch("/api/v/org/join", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "request", organizationId: o.id }) });
+    const j = await r.json().catch(() => ({}));
+    if (j.ok && j.joined) { window.location.reload(); return; }
+    setState((s) => ({ ...s, [o.id]: j.ok ? "pending" : "idle" }));
+  }
+  return (
+    <>
+      <div style={cardHead}>Verified domain access</div>
+      {options.map((o) => {
+        const st = state[o.id];
+        return (
+          <div key={o.id} className="card" style={{ marginBottom: 14 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 4 }}>You may belong to {o.name}</div>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 14px", lineHeight: 1.6, maxWidth: 560 }}>Your email domain matches a verified organization domain. {o.joinMode === "auto_member" ? "You can join this organization as a member." : "Request access to join this organization — an admin approves before access is granted."} Joining the organization does not automatically grant access to every workspace; workspace and project permissions are managed separately.</p>
+            {st === "pending" ? (
+              <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0 }}>Your request is pending. An organization admin needs to approve it.</p>
+            ) : (
+              <button onClick={() => request(o)} disabled={st === "busy"} className="btn" style={{ opacity: st === "busy" ? 0.6 : 1 }}>{st === "busy" ? "…" : o.joinMode === "auto_member" ? "Join organization" : "Request access"}</button>
+            )}
+          </div>
+        );
+      })}
+      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "4px 0 0", lineHeight: 1.6 }}>SSO and SCIM provisioning are not enabled yet. Domain-based access prepares this organization for future SSO and automated provisioning.</p>
+    </>
   );
 }
 
@@ -126,6 +165,23 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
   const onToken = (id: string, tok: { name: string; value: string }) => setTokens((t) => ({ ...t, [id]: tok }));
   const onRemoved = (id: string) => { setDomains((ds) => ds.filter((d) => d.id !== id)); setTokens((t) => { const c = { ...t }; delete c[id]; return c; }); };
 
+  // verified-domain provisioning settings
+  const [joinMode, setJoinMode] = useState<JoinMode>(ctx.provisioning.joinMode);
+  const [defaultRole, setDefaultRole] = useState<"member" | "viewer">(ctx.provisioning.defaultRole);
+  const [sBusy, setSBusy] = useState(false);
+  const [sMsg, setSMsg] = useState("");
+  async function saveProvisioning() {
+    setSBusy(true); setSMsg("");
+    const r = await fetch("/api/v/org/provisioning", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ joinMode, defaultRole }) });
+    setSBusy(false); setSMsg((await r.json().catch(() => ({}))).ok ? "Saved." : "Couldn't save. Try again.");
+  }
+  // domain access requests (admin)
+  const [requests, setRequests] = useState<OrgJoinRequest[]>(ctx.joinRequests);
+  async function decide(id: string, action: "approve" | "reject") {
+    const r = await fetch("/api/v/org/requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, requestId: id }) });
+    if ((await r.json().catch(() => ({}))).ok) setRequests((rs) => rs.filter((x) => x.id !== id));
+  }
+
   return (
     <>
       <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -210,6 +266,49 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
           </div>
         )}
         {dErr && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{dErr}</p>}
+      </div>
+
+      {/* Verified domain access (provisioning) */}
+      <div style={cardHead}>Verified domain access</div>
+      <div className="card">
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>People who sign in with a verified company domain can request access to this organization. {joinMode === "auto_member" ? "Auto-join is on: " : "Admins approve requests before access is granted."}{joinMode === "auto_member" ? "anyone who signs in with a verified domain email can join as a member. Workspace and project access still require separate permissions." : ""} Joining never grants workspace, project, billing, or API access — those are managed separately.</p>
+        {ctx.canManage ? (
+          <>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <select value={joinMode} onChange={(e) => setJoinMode(e.target.value as JoinMode)} style={input as React.CSSProperties}>
+                <option value="disabled">Disabled — no domain access</option>
+                <option value="request">Request — admin approves</option>
+                <option value="auto_member">Auto-join as member</option>
+              </select>
+              <select value={defaultRole} onChange={(e) => setDefaultRole(e.target.value as "member" | "viewer")} style={input as React.CSSProperties}>
+                <option value="member">Default role: Member</option>
+                <option value="viewer">Default role: Viewer</option>
+              </select>
+              <button onClick={saveProvisioning} disabled={sBusy} className="btn" style={{ opacity: sBusy ? 0.6 : 1 }}>{sBusy ? "Saving…" : "Save"}</button>
+              {sMsg && <span style={{ fontSize: 12.5, color: "var(--fg-3)" }}>{sMsg}</span>}
+            </div>
+            {requests.length > 0 && (
+              <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line-1)" }}>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Domain access requests</div>
+                {requests.map((r, i) => (
+                  <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13.5, color: "var(--fg-1)" }}>{r.email}</div>
+                      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>Requested {ROLE_LABEL[(r.requested_role as OrgRole)] ?? r.requested_role} · {when(r.created_at)}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => decide(r.id, "approve")} className="btn" style={{ padding: "5px 12px", fontSize: 12.5 }}>Approve</button>
+                      <button onClick={() => decide(r.id, "reject")} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12.5, color: "var(--money)" }}>Reject</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {requests.length === 0 && <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "12px 0 0" }}>No pending domain access requests.</p>}
+          </>
+        ) : (
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0 }}>Domain access is managed by organization admins.</p>
+        )}
       </div>
 
       {/* Organization activity */}
