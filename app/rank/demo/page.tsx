@@ -77,6 +77,24 @@ export default function DemoReport() {
 
       <ReportBody results={results} options={options} votesTarget={250} />
 
+      {/* This is more than a result */}
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" }}>This is more than a result</div>
+      <div className="tile-grid cols-3" style={{ marginBottom: 30 }}>
+        {[
+          ["Recommendation", "The output to ship — not a raw tally."],
+          ["Confidence & signal quality", "Preference margin, directional confidence, and how clean the human signal was."],
+          ["Decision readiness", "Whether the result is ready to act on — or needs more signal."],
+          ["Confirmation round", "If it's close or noisy, run a follow-up round to confirm the call before you commit."],
+          ["Audit-ready record", "The decision is logged to your workspace and organization activity trail."],
+          ["Governed & client-safe", "Share a read-only report; private controls, costs, and participant data never leak."],
+        ].map(([t, d]) => (
+          <div key={t} className="card" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)" }}>{t}</div>
+            <div style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55 }}>{d}</div>
+          </div>
+        ))}
+      </div>
+
       {/* share / export / API-ready framing */}
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "8px 0 12px" }}>On a real report, you can</div>
       <div className="tile-grid cols-3" style={{ marginBottom: 30 }}>

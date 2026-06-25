@@ -183,9 +183,9 @@ export default function DevelopersPage() {
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "center" }} className="cols-stack">
             <div>
-              <p className="eyebrow">Embeddable evaluation widget</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>One line. Human signal anywhere.</h2>
-              <p className="lead-copy" style={{ marginBottom: 14 }}>Drop a Vraelis evaluation into your site, app, or community with one script tag and collect qualified judgments. Low-quality responses are filtered automatically.</p>
+              <p className="eyebrow">Embedded evaluation widget — one collection surface</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Collect signal anywhere. The output is the Decision Package.</h2>
+              <p className="lead-copy" style={{ marginBottom: 14 }}>The embed is one way to collect qualified human signal — alongside the web console and the API. Whatever the channel, the platform output is the same governed Decision Package. Low-quality responses are filtered automatically.</p>
               <Code label="html">{EMBED}</Code>
             </div>
             <div className="win">

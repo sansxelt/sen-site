@@ -13,7 +13,7 @@ const PLANS = [
   { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 valid judgments / mo", blurb: "For ongoing creative testing.", perks: ["10 evaluations / mo", "Audience targeting", "Shareable decision reports"] },
   { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 valid judgments / mo", blurb: "For teams and client work.", perks: ["30 evaluations / mo", "Client-ready reports", "Exports + webhooks"], featured: true },
   { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 valid judgments / mo", blurb: "For apps and high-volume teams.", perks: ["100 evaluations / mo", "Public API + embed", "Developer analytics + webhooks"] },
-  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom valid judgments", blurb: "For governed evaluation programs.", perks: ["Unlimited evaluations", "Organization governance + audit", "SSO for verified domains · SLA · support"] },
+  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom valid judgments", blurb: "For governed evaluation programs.", perks: ["Unlimited evaluations", "Organization governance + audit activity", "OIDC SSO + verified domains", "Client-safe sharing + billing admins"] },
 ] as { key: string; name: string; price: Record<Cycle, number>; credits: string; blurb: string; perks: string[]; featured?: boolean }[];
 
 // Display-only: round to the nearest whole dollar (the live Stripe price may carry
@@ -147,6 +147,11 @@ export default function PricingPage() {
                 </div>
               )}
             </div>
+          </div>
+
+          <div className="card" style={{ marginTop: 18, textAlign: "center" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Enterprise: governed decisions across the org</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Organization governance, verified domains, OIDC single sign-on, audit activity, client-safe sharing, team roles, and billing-admin separation. SAML and SCIM support are planned for larger organizations. <a href="/security" style={{ color: "var(--acc-deep)" }}>See the trust overview →</a> or <a href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise" style={{ color: "var(--acc-deep)" }}>contact us</a> about enterprise requirements.</p>
           </div>
 
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Plans renew automatically. Cancel anytime, and your plan stays active until the period ends. Secure checkout on Vraelis, powered by Stripe.</p>

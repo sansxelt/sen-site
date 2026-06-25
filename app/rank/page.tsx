@@ -375,7 +375,7 @@ export default function RankLanding() {
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <a href="/developers" className="btn">See the API</a>
-                <a href="/developers#embed" className="btn btn--ghost">Embed widget</a>
+                <a href="/developers#embed" className="btn btn--ghost">Embed in your site</a>
               </div>
             </div>
             {/* right — a real API response */}
@@ -385,7 +385,7 @@ export default function RankLanding() {
             </div>
           </div>
           <div className="tile-grid cols-3">
-            {[["Plug in", "One API call", "Send candidates, get a structured result. Or use the embed widget."], ["Measure", "What people prefer", "Real preference signal on your generated outputs, quality filtered."], ["Use it", "Results in your app", "Pull the recommendation and structured data into your product."]].map(([k, t, d]) => (
+            {[["Plug in", "One API call", "Send candidates, get a structured Decision Package. Or embed it in your site."], ["Measure", "What people prefer", "Real preference signal on your generated outputs, quality filtered."], ["Use it", "Results in your app", "Pull the recommendation and structured data into your product."]].map(([k, t, d]) => (
               <div key={k} className="acard" style={{ gap: 6 }}>
                 <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)" }}>{k}</div>
                 <div className="acard__t">{t}</div>

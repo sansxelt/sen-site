@@ -18,6 +18,7 @@ const CLEAN_EXACT: Record<string, string> = {
   "/contact": "/rank/contact",
   "/demo": "/rank/demo",
   "/sso": "/rank/sso",
+  "/security": "/rank/security",
   "/refunds": "/v/refunds",
 };
 // Retired sansxel product routes (exact path or any subpath) -> redirect home.

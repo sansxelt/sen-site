@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { workspaceActivity } from "@/lib/v-audit";
+import { workspaceActivity, organizationActivity, type AuditEntry } from "@/lib/v-audit";
 import { getPrimaryOrganization, canViewOrganizationAudit } from "@/lib/v-organization";
+import { AuditExport } from "./audit-export";
 
-export const metadata: Metadata = { title: "Workspace activity" };
+export const metadata: Metadata = { title: "Activity & trust" };
 
 const when = (iso: string) => {
   const d = new Date(iso);
-  const diff = Date.now() - d.getTime();
-  const mins = Math.round(diff / 60000);
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.round(mins / 60);
@@ -17,57 +17,94 @@ const when = (iso: string) => {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 };
 
+const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "28px 0 12px" } as const;
+
+function EventList({ events, empty }: { events: AuditEntry[]; empty: string }) {
+  if (events.length === 0) return <div className="card" style={{ background: "var(--bg-2)" }}><p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>{empty}</p></div>;
+  return (
+    <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)" }}>
+      {events.map((e, i) => (
+        <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>{e.label}</div>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 2, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <span className="pill" style={{ fontSize: 9.5, color: e.actor === "System" ? "var(--fg-4)" : "var(--acc-deep)" }}>{e.actor}</span>
+              {e.context ? <span>{e.context}</span> : null}
+            </div>
+          </div>
+          <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", whiteSpace: "nowrap" }}>{when(e.when)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const TRUST_CONTROLS: [string, string, string][] = [
+  ["Organization", "Members, roles & domains", "/app/organization"],
+  ["Verified domains", "DNS ownership & health", "/app/organization"],
+  ["Single sign-on", "OIDC for verified domains", "/app/organization"],
+  ["Domain provisioning", "Governed join / approval", "/app/organization"],
+  ["Team roles", "Access per member", "/app/team"],
+  ["Billing admins", "Billing without ownership", "/app/billing"],
+  ["Client-safe sharing", "Read-only report access", "/app/team"],
+  ["API & webhooks", "Keys & signed deliveries", "/app/api-keys"],
+];
+
 export default async function AuditPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Faudit");
   const events = await workspaceActivity(email, 60);
   const org = await getPrimaryOrganization(email);
-  const showOrgNote = org ? await canViewOrganizationAudit(email, org.id) : false;
+  const canOrgAudit = org ? await canViewOrganizationAudit(email, org.id) : false;
+  const orgEvents = org && canOrgAudit ? await organizationActivity(email, org.id, 60) : [];
 
   return (
-    <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">Governance</p>
-          <h1 className="display">Workspace activity</h1>
-          <p>A running record of governance and billing actions across your workspace — for accountability and auditability. Read-only.</p>
+          <p className="eyebrow">Trust &amp; governance</p>
+          <h1 className="display">Activity</h1>
+          <p>A read-only audit trail of governance actions across your workspace and organization — for accountability and defensibility.</p>
         </div>
-        <a href="/app/team" className="btn btn--ghost">Manage team</a>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <AuditExport workspace={events} organization={orgEvents} />
+          <a href="/security" className="btn btn--ghost">Trust overview →</a>
+        </div>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
-        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>This log records member, project-access, billing, ownership, and integration changes. It never shows participant identities, payment details, Stripe identifiers, invite tokens, webhook secrets, or raw evaluation data.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records key governance events such as organization changes, domain verification, SSO provider changes, billing-admin changes, confirmation rounds, ownership transfers, and team-access updates. Audit events never include participant identities, payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw evaluation data.</p>
       </div>
 
-      {showOrgNote && (
-        <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>This is workspace activity. Account-level governance events live in your <strong style={{ color: "var(--fg-2)" }}>{org!.name}</strong> organization. Organization-wide audit export is planned.</p>
-          <a href="/app/organization" className="btn btn--ghost">Organization activity →</a>
-        </div>
-      )}
-
-      {events.length === 0 ? (
-        <div className="empty" style={{ margin: "clamp(20px, 5vw, 48px) 0" }}>
-          <div className="empty__icon">◷</div>
-          <h3 style={{ fontSize: "1.3rem" }}>No activity yet</h3>
-          <p>Invites, role changes, billing actions, ownership transfers, and confirmation rounds will appear here as your team works.</p>
-        </div>
-      ) : (
-        <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)" }}>
-          {events.map((e, i) => (
-            <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "13px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>{e.label}</div>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 2, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <span className="pill" style={{ fontSize: 9.5, color: e.actor === "System" ? "var(--fg-4)" : "var(--acc-deep)" }}>{e.actor}</span>
-                  {e.context ? <span>{e.context}</span> : null}
-                </div>
-              </div>
-              <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", whiteSpace: "nowrap" }}>{when(e.when)}</span>
+      {/* Trust controls */}
+      <div style={cardHead}>Trust controls</div>
+      <div className="tile-grid cols-2" style={{ gap: 10 }}>
+        {TRUST_CONTROLS.map(([t, d, href]) => (
+          <a key={t + d} href={href} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "13px 16px" }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 14 }}>{t}</div>
+              <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 1 }}>{d}</div>
             </div>
-          ))}
-        </div>
+            <span style={{ color: "var(--acc-deep)", fontSize: 13 }}>→</span>
+          </a>
+        ))}
+      </div>
+
+      {/* Workspace activity */}
+      <div style={cardHead}>Workspace activity</div>
+      <EventList events={events} empty="Invites, role changes, billing actions, ownership transfers, and confirmation rounds will appear here as your team works." />
+
+      {/* Organization activity */}
+      {org && canOrgAudit && (
+        <>
+          <div style={cardHead}>Organization activity — {org.name}</div>
+          <EventList events={orgEvents} empty="Organization, domain, SSO, and provisioning changes will appear here." />
+          <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Account-level governance events. Org-wide and per-workspace activity can be exported above; broader enterprise audit export is planned.</p>
+        </>
+      )}
+      {org && !canOrgAudit && (
+        <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "18px 0 0", lineHeight: 1.6 }}>Organization-level activity is visible to organization owners and admins.</p>
       )}
     </div>
   );
