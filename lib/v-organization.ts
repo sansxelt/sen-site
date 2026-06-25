@@ -307,11 +307,34 @@ function normalizeDomain(raw: string): string {
 // Each label is 1–63 chars, alphanumeric, hyphens only internal (no leading/trailing hyphen).
 const VALID_DOMAIN = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/;
 
-// Domain capture v1: SCAFFOLD ONLY. We store the domain + the SHA-256 of a DNS TXT token and
-// return the raw token ONCE for the owner to publish. There is NO automatic DNS verification
-// and NO auto-join in this pass — status stays 'unverified'. The raw token is never stored or
-// logged. Domain ownership here only prepares the org for future SSO / provisioning.
-export async function addOrganizationDomain(email: string, domainRaw: string): Promise<Result<{ domain: string; txtName: string; txtValue: string }>> {
+// Mint a DNS TXT challenge. We store only the SHA-256 of the raw token; the raw token is
+// returned ONCE for the owner to publish and is never persisted or logged.
+const DNS_PREFIX = "_vraelis-challenge.";
+const TXT_PREFIX = "vraelis-verify=";
+function newDomainToken(domain: string) {
+  const token = crypto.randomBytes(18).toString("hex");
+  return { token, hash: crypto.createHash("sha256").update(token).digest("hex"), txtName: `${DNS_PREFIX}${domain}`, txtValue: `${TXT_PREFIX}${token}` };
+}
+
+// Pure, unit-testable: does any resolved TXT record hash to the stored challenge hash?
+// Handles providers that split a TXT value into chunks, surrounding quotes/whitespace, and
+// values published with or without the "vraelis-verify=" prefix. Constant-time compare.
+export function txtRecordsMatchHash(records: string[][], storedHash: string): boolean {
+  if (!storedHash) return false;
+  for (const chunks of records) {
+    const joined = (Array.isArray(chunks) ? chunks.join("") : String(chunks)).trim().replace(/^"|"$/g, "").trim();
+    const bare = joined.replace(new RegExp("^" + TXT_PREFIX, "i"), "").trim();
+    for (const cand of [bare, joined]) {
+      const h = crypto.createHash("sha256").update(cand).digest("hex");
+      if (h.length === storedHash.length && crypto.timingSafeEqual(Buffer.from(h), Buffer.from(storedHash))) return true;
+    }
+  }
+  return false;
+}
+
+// Domain capture v1: store the domain + SHA-256 of a DNS TXT token; return the raw token ONCE.
+// Status starts 'unverified'. Real verification happens in verifyOrganizationDomain. No auto-join.
+export async function addOrganizationDomain(email: string, domainRaw: string): Promise<Result<{ id: string; domain: string; txtName: string; txtValue: string }>> {
   const org = await getPrimaryOrganization(email);
   if (!org) return { ok: false, error: "no_organization" };
   if (!(await canManageOrganizationDomains(email, org.id))) return { ok: false, error: "forbidden" };
@@ -319,13 +342,84 @@ export async function addOrganizationDomain(email: string, domainRaw: string): P
   if (!VALID_DOMAIN.test(domain) || domain.length > 253) return { ok: false, error: "invalid_domain" };
   try {
     const s = getSupabaseAdminClient();
-    const token = crypto.randomBytes(18).toString("hex");
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const { error } = await s.from("v_organization_domains" as never).insert({ organization_id: org.id, domain, status: "unverified", verification_token_hash: tokenHash } as never);
-    if (error) return { ok: false, error: String(error.message || "").includes("duplicate") ? "already_added" : "add_failed" };
+    const t = newDomainToken(domain);
+    const { data, error } = await s.from("v_organization_domains" as never).insert({ organization_id: org.id, domain, status: "unverified", verification_token_hash: t.hash } as never).select("id").single();
+    if (error || !data) return { ok: false, error: String(error?.message || "").includes("duplicate") ? "already_added" : "add_failed" };
+    const id = (data as unknown as { id: string }).id;
     await logEvent({ userId: norm(email), eventType: "organization_domain_added", actorType: "owner", source: "app", metadata: { organization_id: org.id, domain } });
     await logEvent({ userId: norm(email), eventType: "organization_domain_verification_started", actorType: "owner", source: "app", metadata: { organization_id: org.id, domain } });
     // Raw token returned ONCE here for DNS instructions; never persisted, never logged.
-    return { ok: true, domain, txtName: `_vraelis-challenge.${domain}`, txtValue: `vraelis-verify=${token}` };
+    return { ok: true, id, domain, txtName: t.txtName, txtValue: t.txtValue };
   } catch { return { ok: false, error: "add_failed" }; }
+}
+
+// Look up the domain row scoped to the caller's org (never trusts a client org id).
+async function ownedOrgDomain(email: string, domainId: string): Promise<{ org: Organization; row: { id: string; domain: string; status: string; verification_token_hash: string | null } } | { error: string }> {
+  const org = await getPrimaryOrganization(email);
+  if (!org) return { error: "no_organization" };
+  if (!(await canManageOrganizationDomains(email, org.id))) return { error: "forbidden" };
+  if (!domainId) return { error: "not_found" };
+  try {
+    const { data } = await getSupabaseAdminClient().from("v_organization_domains" as never).select("id,domain,status,verification_token_hash").eq("id", domainId).eq("organization_id", org.id).maybeSingle();
+    const row = data as unknown as { id: string; domain: string; status: string; verification_token_hash: string | null } | null;
+    return row ? { org, row } : { error: "not_found" };
+  } catch { return { error: "not_found" }; }
+}
+
+// Real DNS TXT verification. Resolves _vraelis-challenge.<domain>, hashes each TXT value, and
+// marks the domain verified iff one matches the stored challenge hash. DNS failures fail
+// gracefully (never crash). Owner/admin only; org-scoped; never returns or logs the token/hash.
+export async function verifyOrganizationDomain(email: string, domainId: string): Promise<Result<{ verified: boolean; reason?: string }>> {
+  const r = await ownedOrgDomain(email, domainId);
+  if ("error" in r) return { ok: false, error: r.error };
+  const { org, row } = r;
+  if (row.status === "verified") return { ok: true, verified: true }; // idempotent
+  if (!row.verification_token_hash) return { ok: false, error: "no_token" };
+  let records: string[][] = [];
+  try {
+    const { resolveTxt } = await import("node:dns/promises");
+    records = await Promise.race([
+      resolveTxt(`${DNS_PREFIX}${row.domain}`),
+      new Promise<string[][]>((_, rej) => setTimeout(() => rej(new Error("dns_timeout")), 5000)),
+    ]);
+  } catch {
+    await logEvent({ userId: norm(email), eventType: "organization_domain_verification_failed", actorType: "owner", source: "app", metadata: { organization_id: org.id, domain: row.domain, action: "dns_lookup_failed" } });
+    return { ok: true, verified: false, reason: "not_found_yet" };
+  }
+  if (txtRecordsMatchHash(records, row.verification_token_hash)) {
+    try { await getSupabaseAdminClient().from("v_organization_domains" as never).update({ status: "verified", verified_at: new Date().toISOString(), updated_at: new Date().toISOString() } as never).eq("id", domainId).eq("organization_id", org.id); } catch { return { ok: false, error: "update_failed" }; }
+    await logEvent({ userId: norm(email), eventType: "organization_domain_verified", actorType: "owner", source: "app", metadata: { organization_id: org.id, domain: row.domain, status: "verified" } });
+    return { ok: true, verified: true };
+  }
+  await logEvent({ userId: norm(email), eventType: "organization_domain_verification_failed", actorType: "owner", source: "app", metadata: { organization_id: org.id, domain: row.domain, action: "no_match" } });
+  return { ok: true, verified: false, reason: "not_found_yet" };
+}
+
+// Regenerate the challenge token (e.g. the owner lost the DNS value). Unverified domains only —
+// a verified domain keeps its status. New raw token returned once; old token is invalidated.
+export async function regenerateOrganizationDomainToken(email: string, domainId: string): Promise<Result<{ domain: string; txtName: string; txtValue: string }>> {
+  const r = await ownedOrgDomain(email, domainId);
+  if ("error" in r) return { ok: false, error: r.error };
+  const { org, row } = r;
+  if (row.status === "verified") return { ok: false, error: "already_verified" };
+  try {
+    const t = newDomainToken(row.domain);
+    const { error } = await getSupabaseAdminClient().from("v_organization_domains" as never).update({ verification_token_hash: t.hash, verified_at: null, updated_at: new Date().toISOString() } as never).eq("id", domainId).eq("organization_id", org.id);
+    if (error) return { ok: false, error: "regenerate_failed" };
+    await logEvent({ userId: norm(email), eventType: "organization_domain_token_regenerated", actorType: "owner", source: "app", metadata: { organization_id: org.id, domain: row.domain } });
+    return { ok: true, domain: row.domain, txtName: t.txtName, txtValue: t.txtValue };
+  } catch { return { ok: false, error: "regenerate_failed" }; }
+}
+
+// Remove a domain. Owner/admin only, org-scoped. Does NOT touch members, workspace links, or billing.
+export async function removeOrganizationDomain(email: string, domainId: string): Promise<Result> {
+  const r = await ownedOrgDomain(email, domainId);
+  if ("error" in r) return { ok: false, error: r.error };
+  const { org, row } = r;
+  try {
+    const { error } = await getSupabaseAdminClient().from("v_organization_domains" as never).delete().eq("id", domainId).eq("organization_id", org.id);
+    if (error) return { ok: false, error: "remove_failed" };
+    await logEvent({ userId: norm(email), eventType: "organization_domain_removed", actorType: "owner", source: "app", metadata: { organization_id: org.id, domain: row.domain } });
+    return { ok: true };
+  } catch { return { ok: false, error: "remove_failed" }; }
 }

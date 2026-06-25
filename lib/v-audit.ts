@@ -52,12 +52,16 @@ const AUDIT_LABELS: Record<string, string> = {
   organization_member_revoked: "Organization member revoked",
   organization_domain_added: "Organization domain added",
   organization_domain_verification_started: "Domain verification started",
+  organization_domain_verified: "Domain verified",
+  organization_domain_verification_failed: "Domain verification failed",
+  organization_domain_token_regenerated: "Domain token regenerated",
+  organization_domain_removed: "Organization domain removed",
   workspace_linked_to_organization: "Workspace linked to organization",
   workspace_unlinked_from_organization: "Workspace unlinked from organization",
 };
 const AUDIT_TYPES = Object.keys(AUDIT_LABELS);
 // Org-level governance events (filtered by metadata.organization_id) for the org activity view.
-const ORG_AUDIT_TYPES = ["organization_created", "organization_member_added", "organization_member_role_changed", "organization_member_revoked", "organization_domain_added", "organization_domain_verification_started", "workspace_linked_to_organization", "workspace_unlinked_from_organization"];
+const ORG_AUDIT_TYPES = ["organization_created", "organization_member_added", "organization_member_role_changed", "organization_member_revoked", "organization_domain_added", "organization_domain_verification_started", "organization_domain_verified", "organization_domain_verification_failed", "organization_domain_token_regenerated", "organization_domain_removed", "workspace_linked_to_organization", "workspace_unlinked_from_organization"];
 // "domain" is a safe bare hostname (acme.com) — not PII; looksSensitive still blocks anything with @.
 const SAFE_KEYS = ["role", "new_role", "old_role", "action", "status", "interval", "seat_count", "count", "delivery_status", "reason", "domain"];
 const looksSensitive = (v: string) => /@|cus_[A-Za-z0-9]|sub_[A-Za-z0-9]|si_[A-Za-z0-9]|price_|sk_|whsec_|^[0-9a-f]{8}-[0-9a-f]{4}-/.test(v) || v.length > 48;

@@ -70,7 +70,8 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
   const org = ctx.organization!;
   const activeCount = ctx.members.filter((m) => m.status === "active").length;
   const [domains, setDomains] = useState<OrgDomain[]>(ctx.domains);
-  const [txt, setTxt] = useState<{ name: string; value: string } | null>(null);
+  // Freshly-minted TXT tokens (from add/regenerate), keyed by domain id — shown once until reload.
+  const [tokens, setTokens] = useState<Record<string, { name: string; value: string }>>({});
 
   // members
   const [inviteEmail, setInviteEmail] = useState("");
@@ -112,15 +113,18 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
   async function addDomain() {
     if (!domain.trim()) return;
     setDBusy(true); setDErr("");
-    const r = await fetch("/api/v/org/domains", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ domain }) });
+    const r = await fetch("/api/v/org/domains", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "add", domain }) });
     const j = await r.json().catch(() => ({}));
     if (j.ok) {
-      setDomains((d) => [...d, { id: j.domain, domain: j.domain, status: "unverified", verified_at: null }]);
-      setTxt({ name: j.txtName, value: j.txtValue });
+      setDomains((d) => [...d, { id: j.id, domain: j.domain, status: "unverified", verified_at: null }]);
+      setTokens((t) => ({ ...t, [j.id]: { name: j.txtName, value: j.txtValue } }));
       setDomain("");
     } else setDErr(j.error === "already_added" ? "That domain is already added." : j.error === "invalid_domain" ? "Enter a valid domain (e.g. acme.com)." : "Couldn't add the domain. Try again.");
     setDBusy(false);
   }
+  const onVerified = (id: string) => setDomains((ds) => ds.map((d) => (d.id === id ? { ...d, status: "verified" } : d)));
+  const onToken = (id: string, tok: { name: string; value: string }) => setTokens((t) => ({ ...t, [id]: tok }));
+  const onRemoved = (id: string) => { setDomains((ds) => ds.filter((d) => d.id !== id)); setTokens((t) => { const c = { ...t }; delete c[id]; return c; }); };
 
   return (
     <>
@@ -191,26 +195,16 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
       {/* Domains */}
       <div style={cardHead}>Domains</div>
       <div className="card">
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 12px", lineHeight: 1.6 }}>Domain verification prepares this organization for future SSO and automated provisioning. Adding a domain does not auto-add users yet.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>Verify a domain to prepare your organization for future SSO and automated provisioning. Adding a domain does not auto-add users yet.</p>
         {domains.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: domains.length ? 16 : 0 }}>
             {domains.map((d) => (
-              <div key={d.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                <span style={{ fontFamily: "var(--font-code)", fontSize: 13, color: "var(--fg-1)" }}>{d.domain}</span>
-                <span className="pill" style={{ fontSize: 10, color: d.status === "verified" ? "var(--acc-deep)" : "var(--fg-4)" }}>{d.status === "verified" ? "Verified" : d.status === "rejected" ? "Rejected" : "Unverified"}</span>
-              </div>
+              <DomainRow key={d.id} d={d} token={tokens[d.id]} canManage={ctx.canManage} onVerified={onVerified} onToken={onToken} onRemoved={onRemoved} />
             ))}
           </div>
         )}
-        {txt && (
-          <div style={{ border: "1px solid var(--acc-line-2)", background: "var(--acc-soft)", borderRadius: "var(--r-sm)", padding: "12px 14px", marginBottom: 12 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 600, marginBottom: 6 }}>Add this DNS TXT record to verify ownership</div>
-            <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-2)", wordBreak: "break-all" }}>Name: {txt.name}<br />Value: {txt.value}</div>
-            <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Shown once — copy it now. Verification is part of the SSO-readiness scaffold; it stays unverified until automated DNS checks ship.</p>
-          </div>
-        )}
         {ctx.canManage && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: domains.length ? 14 : 0, borderTop: domains.length ? "1px solid var(--line-1)" : "none" }}>
             <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="acme.com" onKeyDown={(e) => { if (e.key === "Enter" && !dBusy) addDomain(); }} style={{ ...input, flex: "1 1 220px" }} />
             <button onClick={addDomain} disabled={dBusy} className="btn" style={{ opacity: dBusy ? 0.6 : 1 }}>{dBusy ? "Adding…" : "Add domain"}</button>
           </div>
@@ -247,5 +241,74 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
         <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>This organization layer prepares domain ownership, member governance, and audit trails for enterprise SSO. They are planned for larger organizations and can be layered onto organizations later. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
       </div>
     </>
+  );
+}
+
+function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved }: {
+  d: OrgDomain;
+  token?: { name: string; value: string };
+  canManage: boolean;
+  onVerified: (id: string) => void;
+  onToken: (id: string, tok: { name: string; value: string }) => void;
+  onRemoved: (id: string) => void;
+}) {
+  const [busy, setBusy] = useState<"" | "verify" | "regen" | "remove">("");
+  const [msg, setMsg] = useState<{ kind: "ok" | "err" | "info"; text: string } | null>(null);
+  const verified = d.status === "verified";
+
+  async function call(action: string) {
+    return (await fetch("/api/v/org/domains", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, domainId: d.id }) }).then((r) => r.json()).catch(() => ({}))) as { ok?: boolean; verified?: boolean; reason?: string; error?: string; txtName?: string; txtValue?: string };
+  }
+  async function verify() {
+    setBusy("verify"); setMsg(null);
+    const j = await call("verify");
+    setBusy("");
+    if (j.ok && j.verified) { onVerified(d.id); setMsg({ kind: "ok", text: "Domain verified. This organization is now prepared for future SSO and automated provisioning." }); }
+    else if (j.ok && !j.verified) setMsg({ kind: "info", text: "TXT record not found yet. DNS changes can take a few minutes to propagate." });
+    else setMsg({ kind: "err", text: j.error === "no_token" ? "Regenerate a token first." : "Couldn't check DNS. Try again." });
+  }
+  async function regen() {
+    setBusy("regen"); setMsg(null);
+    const j = await call("regenerate");
+    setBusy("");
+    if (j.ok && j.txtName && j.txtValue) { onToken(d.id, { name: j.txtName, value: j.txtValue }); setMsg({ kind: "info", text: "New TXT token generated — copy it now. The previous token no longer works." }); }
+    else setMsg({ kind: "err", text: j.error === "already_verified" ? "This domain is already verified." : "Couldn't regenerate the token. Try again." });
+  }
+  async function remove() {
+    setBusy("remove");
+    const j = await call("remove");
+    if (j.ok) { onRemoved(d.id); return; }
+    setBusy(""); setMsg({ kind: "err", text: "Couldn't remove the domain. Try again." });
+  }
+
+  return (
+    <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", padding: "13px 15px", background: "var(--bg-1)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ fontFamily: "var(--font-code)", fontSize: 13.5, color: "var(--fg-1)", fontWeight: 600 }}>{d.domain}</span>
+        <span className="pill" style={{ fontSize: 10, color: verified ? "var(--acc-deep)" : "var(--fg-4)" }}>{verified ? "Verified" : "Unverified"}</span>
+      </div>
+
+      {!verified && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 5 }}>DNS TXT record</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-2)", wordBreak: "break-all", lineHeight: 1.7 }}>
+            Name: {token?.name ?? `_vraelis-challenge.${d.domain}`}<br />
+            Value: {token ? token.value : <span style={{ color: "var(--fg-5)" }}>Token hidden for security. Regenerate a new token if you lost it.</span>}
+          </div>
+          {token && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "6px 0 0" }}>Shown once — copy it now.</p>}
+        </div>
+      )}
+      {verified && <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "8px 0 0", lineHeight: 1.6 }}>This domain is verified. Future SSO and provisioning rules can use this domain.</p>}
+
+      {canManage && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+          {!verified && <button onClick={verify} disabled={!!busy} className="btn" style={{ padding: "6px 13px", fontSize: 12.5, opacity: busy ? 0.6 : 1 }}>{busy === "verify" ? "Checking DNS…" : "Verify DNS"}</button>}
+          {!verified && <button onClick={regen} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5 }}>{busy === "regen" ? "…" : "Regenerate token"}</button>}
+          <button onClick={remove} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5, color: "var(--money)" }}>{busy === "remove" ? "…" : "Remove"}</button>
+        </div>
+      )}
+      {!verified && canManage && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Regenerate only if you lost the original DNS value — it invalidates the previous token.</p>}
+      {msg && <p style={{ fontSize: 12, color: msg.kind === "ok" ? "var(--acc-deep)" : msg.kind === "err" ? "var(--money)" : "var(--fg-3)", margin: "10px 0 0", lineHeight: 1.6 }}>{msg.text}</p>}
+    </div>
   );
 }
