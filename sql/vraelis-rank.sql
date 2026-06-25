@@ -702,3 +702,55 @@ alter table v_tests add column if not exists parent_test_id  uuid references v_t
 alter table v_tests add column if not exists followup_type    text;   -- top_up|retest_top_two|cleaner_audience|confirm_recommendation|narrow_audience
 alter table v_tests add column if not exists followup_reason  text;
 create index if not exists v_tests_parent_idx on v_tests (parent_test_id) where parent_test_id is not null;
+
+-- ── Organizations / account layer (enterprise foundation, v1) ──
+-- A thin org layer ABOVE workspaces so larger teams can govern multiple workspaces,
+-- domains, members, billing admins, and audit trails from one account. OPTIONAL:
+-- existing workspace-only users keep working without an org (organization_id stays null).
+-- This is the foundation SSO / SCIM / domain auto-provisioning will sit on later — none
+-- of those are implemented here. Server-only access via the service-role client.
+create table if not exists v_organizations (
+  id            uuid primary key default gen_random_uuid(),
+  name          text not null,
+  owner_user_id text not null,                    -- lowercased email of the org owner
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+create index if not exists v_orgs_owner_idx on v_organizations (owner_user_id);
+-- One owned org per user in v1 — makes createOrganization's duplicate guard concurrency-safe.
+create unique index if not exists v_orgs_owner_uniq on v_organizations (owner_user_id);
+
+create table if not exists v_organization_members (
+  id                 uuid primary key default gen_random_uuid(),
+  organization_id    uuid not null references v_organizations(id) on delete cascade,
+  user_id            text,                         -- set once the invited email signs in (else null = pending)
+  email              text not null,                -- lowercased member email
+  role               text not null,                -- owner|admin|billing_admin|member|viewer
+  status             text not null default 'active', -- pending|active|revoked
+  can_manage_billing boolean not null default false, -- org-level billing-admin permission (limited)
+  invited_by         text,                         -- lowercased email of the inviter (not shown to others)
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz not null default now()
+);
+create index if not exists v_org_members_org_idx on v_organization_members (organization_id);
+create index if not exists v_org_members_email_idx on v_organization_members (email);
+create index if not exists v_org_members_status_idx on v_organization_members (organization_id, status);
+create unique index if not exists v_org_members_uniq on v_organization_members (organization_id, email);
+
+create table if not exists v_organization_domains (
+  id                      uuid primary key default gen_random_uuid(),
+  organization_id         uuid not null references v_organizations(id) on delete cascade,
+  domain                  text not null,           -- lowercased bare domain, e.g. acme.com
+  status                  text not null default 'unverified', -- unverified|verified|rejected
+  verification_token_hash text,                    -- sha256 of the DNS TXT token; the raw token is shown once and NEVER stored
+  verified_at             timestamptz,
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now()
+);
+create index if not exists v_org_domains_org_idx on v_organization_domains (organization_id);
+create unique index if not exists v_org_domains_uniq on v_organization_domains (organization_id, domain);
+
+-- Link a workspace to at most one organization. Nullable + ON DELETE SET NULL: deleting an
+-- org never deletes its workspaces, it just unlinks them. Existing workspaces stay null.
+alter table v_workspaces add column if not exists organization_id uuid references v_organizations(id) on delete set null;
+create index if not exists v_workspaces_org_idx on v_workspaces (organization_id);

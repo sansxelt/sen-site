@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { workspaceActivity } from "@/lib/v-audit";
+import { getPrimaryOrganization, canViewOrganizationAudit } from "@/lib/v-organization";
 
 export const metadata: Metadata = { title: "Workspace activity" };
 
@@ -21,6 +22,8 @@ export default async function AuditPage() {
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Faudit");
   const events = await workspaceActivity(email, 60);
+  const org = await getPrimaryOrganization(email);
+  const showOrgNote = org ? await canViewOrganizationAudit(email, org.id) : false;
 
   return (
     <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -36,6 +39,13 @@ export default async function AuditPage() {
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
         <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>This log records member, project-access, billing, ownership, and integration changes. It never shows participant identities, payment details, Stripe identifiers, invite tokens, webhook secrets, or raw evaluation data.</p>
       </div>
+
+      {showOrgNote && (
+        <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>This is workspace activity. Account-level governance events live in your <strong style={{ color: "var(--fg-2)" }}>{org!.name}</strong> organization. Organization-wide audit export is planned.</p>
+          <a href="/app/organization" className="btn btn--ghost">Organization activity →</a>
+        </div>
+      )}
 
       {events.length === 0 ? (
         <div className="empty" style={{ margin: "clamp(20px, 5vw, 48px) 0" }}>

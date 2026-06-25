@@ -29,6 +29,7 @@ const I = {
   folder: "M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
   shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4",
   clock: "M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
+  building: "M4 21V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v17M13 9h6a1 1 0 0 1 1 1v11M3 21h18M7 7h2M7 11h2M7 15h2M16 13h1M16 17h1",
 };
 
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
@@ -37,6 +38,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
     { href: "/app/new", label: "New evaluation", d: I.plus },
     { href: "/app/projects", label: "Projects", d: I.folder },
     { href: "/app/team", label: "Team", d: I.user },
+    { href: "/app/organization", label: "Organization", d: I.building },
     { href: "/app/data", label: "Analytics", d: I.data },
     { href: "/app/data-quality", label: "Data quality", d: I.shield },
     { href: "/app/audit", label: "Activity", d: I.clock },

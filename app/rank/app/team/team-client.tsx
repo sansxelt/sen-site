@@ -50,7 +50,7 @@ function RolePill({ role }: { role: Role }) {
   return <span className="pill" style={{ fontSize: 10.5, color: c, borderColor: "var(--line-2)" }}>{ROLE_LABEL[role]}</span>;
 }
 
-export function TeamClient({ email, initial, billing, transfer }: { email: string; initial: Ctx; billing: Billing; transfer: TransferInfo }) {
+export function TeamClient({ email, initial, billing, transfer, orgLink }: { email: string; initial: Ctx; billing: Billing; transfer: TransferInfo; orgLink?: { id: string; name: string } | null }) {
   const [ctx, setCtx] = useState<Ctx>(initial);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Role>("viewer");
@@ -156,6 +156,15 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
           ))}
         </ul>
         <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0", lineHeight: 1.6 }}>SSO and enterprise provisioning are planned for larger organizations. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+      </div>
+
+      {/* Organization (account layer) */}
+      <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>Organization</div>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "3px 0 0", lineHeight: 1.6 }}>{orgLink ? <>This workspace is part of <strong style={{ color: "var(--fg-2)" }}>{orgLink.name}</strong>.</> : "Govern multiple workspaces, domains, and billing admins from one account layer."}</p>
+        </div>
+        <a href="/app/organization" className="btn btn--ghost">{orgLink ? "Open organization →" : "Set up organization →"}</a>
       </div>
 
       {/* Incoming ownership transfer (you are the target) */}

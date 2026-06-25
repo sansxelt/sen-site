@@ -5,6 +5,7 @@
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getOrCreatePersonalWorkspace } from "./v-workspace";
+import { canViewOrganizationAudit } from "./v-organization";
 
 const norm = (e: string) => e.trim().toLowerCase();
 
@@ -45,14 +46,35 @@ const AUDIT_LABELS: Record<string, string> = {
   webhook_endpoint_deleted: "Webhook endpoint deleted",
   webhook_endpoint_updated: "Webhook endpoint updated",
   webhook_secret_rotated: "Webhook secret rotated",
+  organization_created: "Organization created",
+  organization_member_added: "Organization member added",
+  organization_member_role_changed: "Organization member role changed",
+  organization_member_revoked: "Organization member revoked",
+  organization_domain_added: "Organization domain added",
+  organization_domain_verification_started: "Domain verification started",
+  workspace_linked_to_organization: "Workspace linked to organization",
+  workspace_unlinked_from_organization: "Workspace unlinked from organization",
 };
 const AUDIT_TYPES = Object.keys(AUDIT_LABELS);
-const SAFE_KEYS = ["role", "new_role", "old_role", "action", "status", "interval", "seat_count", "count", "delivery_status", "reason"];
+// Org-level governance events (filtered by metadata.organization_id) for the org activity view.
+const ORG_AUDIT_TYPES = ["organization_created", "organization_member_added", "organization_member_role_changed", "organization_member_revoked", "organization_domain_added", "organization_domain_verification_started", "workspace_linked_to_organization", "workspace_unlinked_from_organization"];
+// "domain" is a safe bare hostname (acme.com) — not PII; looksSensitive still blocks anything with @.
+const SAFE_KEYS = ["role", "new_role", "old_role", "action", "status", "interval", "seat_count", "count", "delivery_status", "reason", "domain"];
 const looksSensitive = (v: string) => /@|cus_[A-Za-z0-9]|sub_[A-Za-z0-9]|si_[A-Za-z0-9]|price_|sk_|whsec_|^[0-9a-f]{8}-[0-9a-f]{4}-/.test(v) || v.length > 48;
 
 export type AuditEntry = { id: string; label: string; when: string; actor: string; context: string };
 
 type Row = { id: string; user_id: string | null; event_type: string; actor_type: string; metadata: Record<string, unknown> | null; created_at: string };
+
+function toEntry(r: Row, uid: string): AuditEntry {
+  const md = (r.metadata ?? {}) as Record<string, unknown>;
+  const context = SAFE_KEYS
+    .filter((k) => md[k] != null && typeof md[k] !== "object" && !looksSensitive(String(md[k])))
+    .map((k) => `${k.replace(/_/g, " ")}: ${md[k]}`)
+    .join(" · ");
+  const actor = r.user_id === uid ? "You" : r.actor_type === "system" ? "System" : r.actor_type === "api" ? "API" : r.actor_type === "webhook" ? "Webhook" : "Team";
+  return { id: r.id, label: AUDIT_LABELS[r.event_type] ?? r.event_type, when: r.created_at, actor, context };
+}
 
 export async function workspaceActivity(email: string, limit = 40): Promise<AuditEntry[]> {
   if (!email || !isDatabaseConfigured()) return [];
@@ -68,14 +90,20 @@ export async function workspaceActivity(email: string, limit = 40): Promise<Audi
     const byId = new Map<string, Row>();
     for (const r of [...((mine.data as unknown as Row[]) ?? []), ...(((sys as { data?: Row[] }).data) ?? [])]) byId.set(r.id, r);
     const rows = [...byId.values()].sort((a, b) => (a.created_at < b.created_at ? 1 : -1)).slice(0, limit);
-    return rows.map((r) => {
-      const md = (r.metadata ?? {}) as Record<string, unknown>;
-      const context = SAFE_KEYS
-        .filter((k) => md[k] != null && typeof md[k] !== "object" && !looksSensitive(String(md[k])))
-        .map((k) => `${k.replace(/_/g, " ")}: ${md[k]}`)
-        .join(" · ");
-      const actor = r.user_id === uid ? "You" : r.actor_type === "system" ? "System" : r.actor_type === "api" ? "API" : r.actor_type === "webhook" ? "Webhook" : "Team";
-      return { id: r.id, label: AUDIT_LABELS[r.event_type] ?? r.event_type, when: r.created_at, actor, context };
-    });
+    return rows.map((r) => toEntry(r, uid));
+  } catch { return []; }
+}
+
+// Org-level governance activity, filtered by metadata.organization_id. Self-guards: returns []
+// unless the caller can view this org's audit (owner/admin). Org-LEVEL events only — it does NOT
+// aggregate the activity of linked workspaces, so no cross-workspace data leaks here.
+export async function organizationActivity(email: string, orgId: string, limit = 40): Promise<AuditEntry[]> {
+  if (!email || !orgId || !isDatabaseConfigured()) return [];
+  if (!(await canViewOrganizationAudit(email, orgId))) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const uid = norm(email);
+    const { data } = await s.from("v_events" as never).select("id,user_id,event_type,actor_type,metadata,created_at").eq("metadata->>organization_id", orgId).in("event_type", ORG_AUDIT_TYPES).order("created_at", { ascending: false }).limit(limit);
+    return ((data as unknown as Row[]) ?? []).map((r) => toEntry(r, uid));
   } catch { return []; }
 }

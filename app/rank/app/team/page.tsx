@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { getWorkspaceContext, resolveWorkspaceSelection, sharedTeamView, workspaceProjectSummaries, eligibleOwnershipTransferTargets, canTransferWorkspaceOwnership, pendingOutgoingTransfer, pendingIncomingTransfer, isBillingAdminMember, ROLE_LABEL } from "@/lib/v-workspace";
 import { teamSeatState, syncTeamCheckout, syncMigrationCheckout } from "@/lib/v-team-billing";
+import { workspaceOrganizationLink } from "@/lib/v-organization";
 import { TeamClient } from "./team-client";
 import { TeamBillingPanel } from "../billing/team-billing-panel";
 
@@ -77,9 +78,9 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   // syncMigrationCheckout above + the webhook, so they never fall through to normal sync).
   if (ctx.workspace && sp.session_id && sp.team !== "migrated") await syncTeamCheckout(ctx.workspace.id, sp.session_id);
   const wsId = ctx.workspace?.id ?? null;
-  const [billing, transferTargets, transferGuard, outgoing] = wsId
-    ? await Promise.all([teamSeatState(wsId), eligibleOwnershipTransferTargets(email, wsId), canTransferWorkspaceOwnership(email, wsId), pendingOutgoingTransfer(wsId)])
-    : [null, [], { ok: false, blocked: false }, null];
+  const [billing, transferTargets, transferGuard, outgoing, orgLink] = wsId
+    ? await Promise.all([teamSeatState(wsId), eligibleOwnershipTransferTargets(email, wsId), canTransferWorkspaceOwnership(email, wsId), pendingOutgoingTransfer(wsId), workspaceOrganizationLink(wsId)])
+    : [null, [], { ok: false, blocked: false }, null, null];
   const transfer = { blocked: !!transferGuard.blocked, eligible: transferTargets, workspaceName: ctx.workspace?.name ?? "", pending: outgoing, incoming };
-  return <TeamClient email={email.trim().toLowerCase()} initial={ctx} billing={billing} transfer={transfer} />;
+  return <TeamClient email={email.trim().toLowerCase()} initial={ctx} billing={billing} transfer={transfer} orgLink={orgLink} />;
 }
