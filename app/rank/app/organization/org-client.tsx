@@ -10,6 +10,9 @@ type Org = { id: string; name: string; owner_user_id: string; created_at: string
 type JoinMode = "disabled" | "request" | "auto_member";
 type OrgJoinRequest = { id: string; email: string; requested_role: string; created_at: string };
 type DomainAccessOption = { id: string; name: string; joinMode: JoinMode; requestStatus: "pending" | null };
+type SsoType = "saml" | "oidc";
+type SsoProviderSafe = { id: string; type: SsoType; status: "disabled" | "active" | "error"; domain: string; display_name: string | null; issuer: string | null; sso_url: string | null; certificate_fingerprint: string | null; metadata_url: string | null; client_id: string | null; oidc_discovery_url: string | null; hasSecret: boolean };
+type SsoView = { providers: SsoProviderSafe[]; verifiedDomains: string[]; redirectUriBase: string; acsUrlBase: string; metadataUrlBase: string };
 type Ctx = {
   organization: Org | null;
   myRole: OrgRole | null;
@@ -29,7 +32,7 @@ const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing
 const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
 const when = (iso: string) => { const d = new Date(iso); const m = Math.round((Date.now() - d.getTime()) / 60000); if (m < 60) return `${Math.max(1, m)}m ago`; const h = Math.round(m / 60); return h < 24 ? `${h}h ago` : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
 
-export function OrgClient({ email, ctx, activity, domainAccess = [] }: { email: string; ctx: Ctx; activity: AuditEntry[]; domainAccess?: DomainAccessOption[] }) {
+export function OrgClient({ email, ctx, activity, domainAccess = [], sso = null }: { email: string; ctx: Ctx; activity: AuditEntry[]; domainAccess?: DomainAccessOption[]; sso?: SsoView | null }) {
   const org = ctx.organization;
   return (
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -41,7 +44,7 @@ export function OrgClient({ email, ctx, activity, domainAccess = [] }: { email: 
         </div>
         {org ? <a href="/app/audit" className="btn btn--ghost">Activity →</a> : null}
       </div>
-      {org ? <OrgView email={email} ctx={ctx} activity={activity} /> : domainAccess.length ? <JoinCard options={domainAccess} /> : <CreateOrg />}
+      {org ? <OrgView email={email} ctx={ctx} activity={activity} sso={sso} /> : domainAccess.length ? <JoinCard options={domainAccess} /> : <CreateOrg />}
     </div>
   );
 }
@@ -75,7 +78,7 @@ function JoinCard({ options }: { options: DomainAccessOption[] }) {
           </div>
         );
       })}
-      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "4px 0 0", lineHeight: 1.6 }}>SSO and SCIM provisioning are not enabled yet. Domain-based access prepares this organization for future SSO and automated provisioning.</p>
+      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "4px 0 0", lineHeight: 1.6 }}>Domain-based access maps you into the organization only. Workspace and project permissions are managed separately by your organization&apos;s admins.</p>
     </>
   );
 }
@@ -105,7 +108,7 @@ function CreateOrg() {
   );
 }
 
-function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: AuditEntry[] }) {
+function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activity: AuditEntry[]; sso: SsoView | null }) {
   const org = ctx.organization!;
   const activeCount = ctx.members.filter((m) => m.status === "active").length;
   const [domains, setDomains] = useState<OrgDomain[]>(ctx.domains);
@@ -311,6 +314,9 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
         )}
       </div>
 
+      {/* Enterprise SSO */}
+      {ctx.canManage && sso && <SsoCard sso={sso} />}
+
       {/* Organization activity */}
       {ctx.canManage && (
         <>
@@ -336,8 +342,8 @@ function OrgView({ email, ctx, activity }: { email: string; ctx: Ctx; activity: 
       {/* Enterprise / SSO readiness */}
       <div style={cardHead}>Enterprise readiness</div>
       <div className="card" style={{ background: "var(--bg-2)" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>SSO and SCIM provisioning are not enabled yet</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>This organization layer prepares domain ownership, member governance, and audit trails for enterprise SSO. They are planned for larger organizations and can be layered onto organizations later. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>OIDC SSO is available · SCIM is not enabled yet</div>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only — workspace and project access stay separate. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
       </div>
     </>
   );
@@ -409,5 +415,111 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved }: {
       {!verified && canManage && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Regenerate only if you lost the original DNS value — it invalidates the previous token.</p>}
       {msg && <p style={{ fontSize: 12, color: msg.kind === "ok" ? "var(--acc-deep)" : msg.kind === "err" ? "var(--money)" : "var(--fg-3)", margin: "10px 0 0", lineHeight: 1.6 }}>{msg.text}</p>}
     </div>
+  );
+}
+
+function SsoCard({ sso }: { sso: SsoView }) {
+  const [type, setType] = useState<SsoType>("oidc");
+  const [domain, setDomain] = useState(sso.verifiedDomains[0] ?? "");
+  const [displayName, setDisplayName] = useState("");
+  const [discoveryUrl, setDiscoveryUrl] = useState("");
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
+  const [issuer, setIssuer] = useState("");
+  const [ssoUrl, setSsoUrl] = useState("");
+  const [cert, setCert] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const hasDomain = sso.verifiedDomains.length > 0;
+
+  async function call(body: Record<string, unknown>) {
+    return fetch("/api/v/sso/providers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json()).catch(() => ({ error: "network" }));
+  }
+  async function save() {
+    if (!domain) { setMsg({ kind: "err", text: "Select a verified domain." }); return; }
+    setBusy(true); setMsg(null);
+    const j = await call({ action: "save", provider: { type, domain, displayName, oidcDiscoveryUrl: discoveryUrl, clientId, clientSecret, issuer, ssoUrl: ssoUrl, certificateFingerprint: cert } });
+    setBusy(false);
+    if (j.ok) { window.location.reload(); return; }
+    setMsg({ kind: "err", text: j.error === "domain_not_verified" ? "That domain isn't verified." : j.error === "invalid_discovery_url" ? "Enter a valid OIDC discovery URL (https)." : "Couldn't save the provider." });
+  }
+  async function act(action: string, providerId: string) {
+    const j = await call({ action, providerId });
+    if (j.ok) { window.location.reload(); return; }
+    setMsg({ kind: "err", text: j.error === "saml_not_enabled" ? "SAML assertion sign-in isn't enabled yet — use OIDC." : j.error === "incomplete_config" ? "Complete the OIDC config before enabling." : "Action failed." });
+  }
+  const lbl = { fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "var(--fg-5)", display: "block", margin: "10px 0 4px" };
+
+  return (
+    <>
+      <div style={cardHead}>Enterprise SSO</div>
+      <div className="card">
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>Configure SSO for verified organization domains. Users who authenticate through your identity provider are mapped into the organization according to your provisioning settings. <strong style={{ color: "var(--fg-2)" }}>SSO authenticates users into the organization. Workspace and project permissions remain separate.</strong></p>
+
+        {sso.providers.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+            {sso.providers.map((p) => (
+              <div key={p.id} style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", padding: "12px 14px", background: "var(--bg-1)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{p.type.toUpperCase()} · {p.domain}</span>
+                  <span className="pill" style={{ fontSize: 10, color: p.status === "active" ? "var(--acc-deep)" : "var(--fg-4)" }}>{p.status === "active" ? "Active" : p.status === "error" ? "Error" : "Disabled"}</span>
+                </div>
+                {p.type === "oidc" ? (
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 6, wordBreak: "break-all", lineHeight: 1.7 }}>Redirect URI: {sso.redirectUriBase}/{p.id}/callback<br />Client ID: {p.client_id ?? "—"} · Secret: {p.hasSecret ? "stored ✓" : "missing"}</div>
+                ) : (
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 6, wordBreak: "break-all", lineHeight: 1.7 }}>SP metadata: {sso.metadataUrlBase}/{p.id}/metadata<br /><span style={{ color: "var(--fg-5)" }}>SAML assertion sign-in is a configuration scaffold — not enabled in this version.</span></div>
+                )}
+                <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                  {p.status !== "active" ? <button onClick={() => act("enable", p.id)} className="btn" style={{ padding: "5px 12px", fontSize: 12 }} disabled={p.type === "saml"}>Enable</button> : <button onClick={() => act("disable", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12 }}>Disable</button>}
+                  <button onClick={() => act("delete", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12, color: "var(--money)" }}>Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!hasDomain ? (
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: 0 }}>Add and verify a domain above before configuring SSO.</p>
+        ) : (
+          <div style={{ paddingTop: sso.providers.length ? 14 : 0, borderTop: sso.providers.length ? "1px solid var(--line-1)" : "none" }}>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Add or update a provider</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <select value={type} onChange={(e) => setType(e.target.value as SsoType)} style={input as React.CSSProperties}>
+                <option value="oidc">OIDC (live)</option>
+                <option value="saml">SAML (scaffold)</option>
+              </select>
+              <select value={domain} onChange={(e) => setDomain(e.target.value)} style={input as React.CSSProperties}>
+                {sso.verifiedDomains.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display name (optional)" style={{ ...input, flex: "1 1 180px" }} />
+            </div>
+            {type === "oidc" ? (
+              <>
+                <label style={lbl}>OIDC discovery URL</label>
+                <input value={discoveryUrl} onChange={(e) => setDiscoveryUrl(e.target.value)} placeholder="https://idp.example.com/.well-known/openid-configuration" style={{ ...input, width: "100%", boxSizing: "border-box" }} />
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                  <input value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="Client ID" style={{ ...input, flex: "1 1 200px" }} />
+                  <input value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="Client secret (write-only)" type="password" style={{ ...input, flex: "1 1 200px" }} />
+                </div>
+              </>
+            ) : (
+              <>
+                <label style={lbl}>IdP issuer / entity ID</label>
+                <input value={issuer} onChange={(e) => setIssuer(e.target.value)} placeholder="https://idp.example.com/saml/metadata" style={{ ...input, width: "100%", boxSizing: "border-box" }} />
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                  <input value={ssoUrl} onChange={(e) => setSsoUrl(e.target.value)} placeholder="IdP SSO URL" style={{ ...input, flex: "1 1 200px" }} />
+                  <input value={cert} onChange={(e) => setCert(e.target.value)} placeholder="Certificate fingerprint (SHA-256)" style={{ ...input, flex: "1 1 200px" }} />
+                </div>
+              </>
+            )}
+            <div style={{ marginTop: 12, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <button onClick={save} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Saving…" : "Save provider"}</button>
+              <span style={{ fontSize: 11.5, color: "var(--fg-5)" }}>Saving keeps the provider disabled until you enable it. Set domain access to request or auto-join for SSO users to be provisioned.</span>
+            </div>
+          </div>
+        )}
+        {msg && <p style={{ fontSize: 12.5, color: msg.kind === "ok" ? "var(--acc-deep)" : "var(--money)", margin: "12px 0 0" }}>{msg.text}</p>}
+      </div>
+    </>
   );
 }

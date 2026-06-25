@@ -779,3 +779,34 @@ create index if not exists v_org_join_req_org_idx on v_organization_join_request
 create index if not exists v_org_join_req_email_idx on v_organization_join_requests (email);
 -- One ACTIVE pending request per (org, email) — makes request creation idempotent + spam-safe.
 create unique index if not exists v_org_join_req_pending_uniq on v_organization_join_requests (organization_id, email) where status = 'pending';
+
+-- ── Organization SSO providers (SAML/OIDC, v1) ──
+-- Per-org, per-verified-domain SSO config. OIDC is the LIVE path (id_token validated with jose);
+-- SAML is a configuration SCAFFOLD (public metadata only — assertion validation not enabled yet).
+-- SSO authenticates a user into the ORGANIZATION layer only; it never grants workspace/project/
+-- billing/API access. The OIDC client secret is stored ENCRYPTED (AES-256-GCM, key derived from
+-- AUTH_SECRET) and never returned to the client or logged. Additive + idempotent; SSO is optional.
+create table if not exists v_organization_sso_providers (
+  id                      uuid primary key default gen_random_uuid(),
+  organization_id         uuid not null references v_organizations(id) on delete cascade,
+  type                    text not null,                 -- saml|oidc
+  status                  text not null default 'disabled', -- disabled|active|error
+  domain                  text not null,                 -- verified org domain this provider serves
+  display_name            text,
+  -- SAML (scaffold; public metadata only):
+  issuer                  text,
+  sso_url                 text,
+  certificate_fingerprint text,
+  metadata_url            text,
+  -- OIDC (live):
+  client_id               text,
+  client_secret_encrypted text,                          -- AES-256-GCM(AUTH_SECRET); never returned/logged
+  oidc_discovery_url      text,
+  created_at              timestamptz not null default now(),
+  updated_at              timestamptz not null default now()
+);
+create index if not exists v_org_sso_org_idx on v_organization_sso_providers (organization_id);
+-- Resolve an ACTIVE provider by domain at login time.
+create index if not exists v_org_sso_active_domain_idx on v_organization_sso_providers (domain) where status = 'active';
+-- One provider per (org, domain) in v1.
+create unique index if not exists v_org_sso_org_domain_uniq on v_organization_sso_providers (organization_id, domain);

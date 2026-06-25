@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getOrganizationContext, getDomainAccessForEmail } from "@/lib/v-organization";
+import { getSsoView } from "@/lib/v-sso";
 import { organizationActivity } from "@/lib/v-audit";
 import { OrgClient } from "./org-client";
 
@@ -15,5 +16,6 @@ export default async function OrganizationPage() {
   // No org of their own → they may be eligible to join one via a verified email domain.
   const domainAccess = ctx.organization ? [] : await getDomainAccessForEmail(email);
   const activity = ctx.organization ? await organizationActivity(email, ctx.organization.id, 12) : [];
-  return <OrgClient email={email.trim().toLowerCase()} ctx={ctx} activity={activity} domainAccess={domainAccess} />;
+  const sso = ctx.organization && ctx.canManage ? await getSsoView(email) : null;
+  return <OrgClient email={email.trim().toLowerCase()} ctx={ctx} activity={activity} domainAccess={domainAccess} sso={sso} />;
 }

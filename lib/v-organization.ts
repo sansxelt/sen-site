@@ -441,7 +441,7 @@ export async function removeOrganizationDomain(email: string, domainId: string):
 const SAFE_DEFAULT_ROLES = ["member", "viewer"] as const;
 
 // Safely parse the registrable email domain. Returns null for malformed input.
-function emailDomain(email: string): string | null {
+export function emailDomain(email: string): string | null {
   const e = norm(email);
   const at = e.lastIndexOf("@");
   if (at < 1) return null;
@@ -525,6 +525,36 @@ async function upsertOrgMember(orgId: string, email: string, role: DomainDefault
   } catch { return false; }
 }
 
+export type ProvOrg = { id: string; owner_user_id: string; domain_join_mode?: string | null; domain_default_role?: string | null };
+export type ProvisioningOutcome = { outcome: "active" | "pending" | "disabled" | "already" | "failed"; role: DomainDefaultRole; mode: JoinMode; createdRequest: boolean };
+
+// SINGLE source of truth for domain-provisioning decisions, shared by the join-request flow AND
+// SSO login. Enforces the safety invariants in ONE place: safe role only (member|viewer), and a
+// REVOKED member can never silently self-reinstate (reversing a deliberate revocation requires
+// explicit admin approval, so a revoked member is routed to a pending request). Does NOT log
+// events — each caller logs its own (join_request_* vs sso_*).
+export async function applyDomainProvisioning(uid: string, org: ProvOrg, invitedBy: string): Promise<ProvisioningOutcome> {
+  const s = getSupabaseAdminClient();
+  const mode = (["disabled", "request", "auto_member"].includes(org.domain_join_mode ?? "") ? org.domain_join_mode : "request") as JoinMode;
+  const role: DomainDefaultRole = org.domain_default_role === "viewer" ? "viewer" : "member";
+  if (org.owner_user_id === uid) return { outcome: "already", role, mode, createdRequest: false };
+  const { data: memRow } = await s.from("v_organization_members" as never).select("status").eq("organization_id", org.id).eq("email", uid).maybeSingle();
+  const memStatus = (memRow as unknown as { status: string } | null)?.status ?? null;
+  if (memStatus === "active") return { outcome: "already", role, mode, createdRequest: false };
+  if (mode === "disabled") return { outcome: "disabled", role, mode, createdRequest: false };
+  const wasRevoked = memStatus === "revoked";
+  if (mode === "auto_member" && !wasRevoked) {
+    if (await upsertOrgMember(org.id, uid, role, invitedBy)) return { outcome: "active", role, mode, createdRequest: false };
+    // upsert failed — fall through to a pending request rather than claiming access
+  }
+  // request mode, OR a revoked member — create an idempotent pending request that an admin approves.
+  // A duplicate-key error means a pending request already exists (idempotent success); any OTHER
+  // error is a real failure and must surface loudly (never report "pending" when nothing persisted).
+  const { error } = await s.from("v_organization_join_requests" as never).insert({ organization_id: org.id, email: uid, status: "pending", requested_role: role } as never);
+  if (error && !String(error.message || "").includes("duplicate")) return { outcome: "failed", role, mode, createdRequest: false };
+  return { outcome: "pending", role, mode, createdRequest: !error };
+}
+
 // User requests access to (or auto-joins) an org whose VERIFIED domain matches their email. The
 // org is validated against the caller's email domain server-side — a client cannot request access
 // to an org their domain doesn't match. Never grants more than a safe org role; never touches
@@ -541,33 +571,18 @@ export async function requestOrganizationAccess(email: string, orgId: string): P
     const { data: dmatch } = await s.from("v_organization_domains" as never).select("id").eq("organization_id", orgId).eq("domain", dom).eq("status", "verified").maybeSingle();
     if (!(dmatch as unknown as { id: string } | null)?.id) return { ok: false, error: "not_eligible" };
     const { data: orgRow } = await s.from("v_organizations" as never).select("id,owner_user_id,domain_join_mode,domain_default_role").eq("id", orgId).maybeSingle();
-    const org = orgRow as unknown as { id: string; owner_user_id: string; domain_join_mode?: string; domain_default_role?: string } | null;
+    const org = orgRow as unknown as ProvOrg | null;
     if (!org) return { ok: false, error: "not_found" };
-    const mode = (["disabled", "request", "auto_member"].includes(org.domain_join_mode ?? "") ? org.domain_join_mode : "request") as JoinMode;
-    if (mode === "disabled") return { ok: false, error: "join_disabled" };
-    // Look up membership at ANY status: an active member is already in; a REVOKED member must NOT
-    // be allowed to silently self-reinstate via auto-join — reversing a deliberate revocation
-    // requires explicit admin approval, so a revoked member is routed to a pending request.
-    const { data: memRow } = await s.from("v_organization_members" as never).select("status").eq("organization_id", orgId).eq("email", uid).maybeSingle();
-    const memStatus = (memRow as unknown as { status: string } | null)?.status ?? null;
-    if (org.owner_user_id === uid || memStatus === "active") return { ok: false, error: "already_member" };
-    const wasRevoked = memStatus === "revoked";
-    const role: DomainDefaultRole = org.domain_default_role === "viewer" ? "viewer" : "member";
-
-    if (mode === "auto_member" && !wasRevoked) {
-      if (!(await upsertOrgMember(orgId, uid, role, uid))) return { ok: false, error: "join_failed" };
-      await logEvent({ userId: uid, eventType: "organization_domain_user_auto_joined", actorType: "owner", source: "app", metadata: { organization_id: orgId, role, mode } });
-      return { ok: true, mode, joined: true };
+    const res = await applyDomainProvisioning(uid, org, uid);
+    if (res.outcome === "already") return { ok: false, error: "already_member" };
+    if (res.outcome === "disabled") return { ok: false, error: "join_disabled" };
+    if (res.outcome === "failed") return { ok: false, error: "request_failed" };
+    if (res.outcome === "active") {
+      await logEvent({ userId: uid, eventType: "organization_domain_user_auto_joined", actorType: "owner", source: "app", metadata: { organization_id: orgId, role: res.role, mode: res.mode } });
+      return { ok: true, mode: res.mode, joined: true };
     }
-    // request mode, OR a revoked member in auto_member mode — create an idempotent pending request
-    // (partial unique index on (org, email) where pending) that an admin must approve.
-    const { error } = await s.from("v_organization_join_requests" as never).insert({ organization_id: orgId, email: uid, status: "pending", requested_role: role } as never);
-    if (error) {
-      if (String(error.message || "").includes("duplicate")) return { ok: true, mode, pending: true }; // already pending
-      return { ok: false, error: "request_failed" };
-    }
-    await logEvent({ userId: uid, eventType: "organization_join_request_created", actorType: "owner", source: "app", metadata: { organization_id: orgId, role, status: "pending", mode } });
-    return { ok: true, mode, pending: true };
+    if (res.createdRequest) await logEvent({ userId: uid, eventType: "organization_join_request_created", actorType: "owner", source: "app", metadata: { organization_id: orgId, role: res.role, status: "pending", mode: res.mode } });
+    return { ok: true, mode: res.mode, pending: true };
   } catch { return { ok: false, error: "request_failed" }; }
 }
 
