@@ -10,7 +10,7 @@ import { requestOrganizationAccess, cancelOrganizationJoinRequest } from "@/lib/
 export const runtime = "nodejs";
 
 const status = (e: string) =>
-  e === "not_eligible" || e === "join_disabled" ? 403 : e === "not_found" ? 404 : e === "already_member" ? 409 : e === "no_domain" ? 400 : e === "unavailable" ? 503 : 500;
+  e === "not_eligible" || e === "join_disabled" || e === "domain_paused" ? 403 : e === "not_found" ? 404 : e === "already_member" ? 409 : e === "no_domain" ? 400 : e === "unavailable" ? 503 : 500;
 
 export async function POST(req: Request) {
   const session = await auth();

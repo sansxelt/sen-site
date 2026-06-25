@@ -8,7 +8,7 @@
 import crypto from "crypto";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { logEvent } from "./v-events";
-import { getPrimaryOrganization, canManageOrganization, applyDomainProvisioning, emailDomain, type ProvOrg, type DomainDefaultRole } from "./v-organization";
+import { getPrimaryOrganization, canManageOrganization, applyDomainProvisioning, emailDomain, domainTrustState, type ProvOrg, type DomainDefaultRole } from "./v-organization";
 
 const norm = (e: string) => e.trim().toLowerCase();
 const SESSION_COOKIE = "__Secure-authjs.session-token";
@@ -169,7 +169,7 @@ export async function resolveSsoForEmail(email: string): Promise<{ providerId: s
     const { data } = await s.from("v_organization_sso_providers" as never).select("id,type,organization_id,domain,status").eq("domain", dom).eq("status", "active").limit(1).maybeSingle();
     const p = data as unknown as { id: string; type: SsoType; organization_id: string; domain: string } | null;
     if (!p) return null;
-    if (!(await verifiedDomains(p.organization_id)).includes(dom)) return null; // domain must still be verified
+    if ((await domainTrustState(p.organization_id, dom)) !== "trusted") return null; // verified + not paused for re-verification
     return { providerId: p.id, type: p.type };
   } catch { return null; }
 }
@@ -200,6 +200,8 @@ async function oidcDiscovery(url: string): Promise<Discovery | null> {
 export async function startOidcLogin(providerId: string): Promise<Result<{ url: string; state: string; nonce: string }>> {
   const p = await getActiveOidcProvider(providerId);
   if (!p || !p.oidc_discovery_url || !p.client_id) return { ok: false, error: "provider_unavailable" };
+  if ((await domainTrustState(p.organization_id, p.domain)) !== "trusted") return { ok: false, error: "domain_paused" }; // re-verification pending
+
   const disc = await oidcDiscovery(p.oidc_discovery_url);
   if (!disc) return { ok: false, error: "discovery_failed" };
   const state = crypto.randomBytes(16).toString("hex");
@@ -237,7 +239,7 @@ export async function completeOidcCallback(providerId: string, code: string, exp
     if (payload.email_verified === false) return { ok: false, error: "email_unverified" };
     // The id_token email domain MUST equal this provider's domain (which is a verified org domain).
     if (emailDomain(tokenEmail) !== p.domain) return { ok: false, error: "domain_mismatch" };
-    if (!(await verifiedDomains(p.organization_id)).includes(p.domain)) return { ok: false, error: "domain_not_verified" };
+    if ((await domainTrustState(p.organization_id, p.domain)) !== "trusted") return { ok: false, error: "domain_not_verified" };
     return { ok: true, email: tokenEmail, organizationId: p.organization_id };
   } catch { return { ok: false, error: "validation_failed" }; }
 }

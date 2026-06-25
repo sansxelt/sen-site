@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type OrgRole = "owner" | "admin" | "billing_admin" | "member" | "viewer";
 type OrgMember = { id: string; email: string; role: OrgRole; status: "pending" | "active" | "revoked"; can_manage_billing: boolean };
-type OrgDomain = { id: string; domain: string; status: "unverified" | "verified" | "rejected"; verified_at: string | null };
+type OrgDomain = { id: string; domain: string; status: "unverified" | "verified" | "rejected"; verified_at: string | null; last_checked_at?: string | null; last_check_status?: string | null; requires_reverification?: boolean };
 type AuditEntry = { id: string; label: string; when: string; actor: string; context: string };
 type Org = { id: string; name: string; owner_user_id: string; created_at: string };
 type JoinMode = "disabled" | "request" | "auto_member";
@@ -167,6 +167,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
   const onVerified = (id: string) => setDomains((ds) => ds.map((d) => (d.id === id ? { ...d, status: "verified" } : d)));
   const onToken = (id: string, tok: { name: string; value: string }) => setTokens((t) => ({ ...t, [id]: tok }));
   const onRemoved = (id: string) => { setDomains((ds) => ds.filter((d) => d.id !== id)); setTokens((t) => { const c = { ...t }; delete c[id]; return c; }); };
+  const onHealth = (id: string, patch: Partial<OrgDomain>) => setDomains((ds) => ds.map((d) => (d.id === id ? { ...d, ...patch } : d)));
 
   // verified-domain provisioning settings
   const [joinMode, setJoinMode] = useState<JoinMode>(ctx.provisioning.joinMode);
@@ -258,7 +259,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
         {domains.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: domains.length ? 16 : 0 }}>
             {domains.map((d) => (
-              <DomainRow key={d.id} d={d} token={tokens[d.id]} canManage={ctx.canManage} onVerified={onVerified} onToken={onToken} onRemoved={onRemoved} />
+              <DomainRow key={d.id} d={d} token={tokens[d.id]} canManage={ctx.canManage} onVerified={onVerified} onToken={onToken} onRemoved={onRemoved} onHealth={onHealth} />
             ))}
           </div>
         )}
@@ -274,7 +275,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       {/* Verified domain access (provisioning) */}
       <div style={cardHead}>Verified domain access</div>
       <div className="card">
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>People who sign in with a verified company domain can request access to this organization. {joinMode === "auto_member" ? "Auto-join is on: " : "Admins approve requests before access is granted."}{joinMode === "auto_member" ? "anyone who signs in with a verified domain email can join as a member. Workspace and project access still require separate permissions." : ""} Joining never grants workspace, project, billing, or API access — those are managed separately.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>People who sign in with a verified company domain can request access to this organization. {joinMode === "auto_member" ? "Auto-join is on: " : "Admins approve requests before access is granted."}{joinMode === "auto_member" ? "anyone who signs in with a verified domain email can join as a member. Workspace and project access still require separate permissions." : ""} Joining never grants workspace, project, billing, or API access — those are managed separately. Domain-based access depends on verified domain ownership; if verification becomes stale, new joins are paused for that domain until it is re-checked.</p>
         {ctx.canManage ? (
           <>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
@@ -315,7 +316,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       </div>
 
       {/* Enterprise SSO */}
-      {ctx.canManage && sso && <SsoCard sso={sso} />}
+      {ctx.canManage && sso && <SsoCard sso={sso} pausedDomains={domains.filter((d) => d.requires_reverification).map((d) => d.domain)} />}
 
       {/* Organization activity */}
       {ctx.canManage && (
@@ -349,20 +350,30 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
   );
 }
 
-function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved }: {
+function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHealth }: {
   d: OrgDomain;
   token?: { name: string; value: string };
   canManage: boolean;
   onVerified: (id: string) => void;
   onToken: (id: string, tok: { name: string; value: string }) => void;
   onRemoved: (id: string) => void;
+  onHealth: (id: string, patch: Partial<OrgDomain>) => void;
 }) {
-  const [busy, setBusy] = useState<"" | "verify" | "regen" | "remove">("");
+  const [busy, setBusy] = useState<"" | "verify" | "regen" | "remove" | "recheck">("");
   const [msg, setMsg] = useState<{ kind: "ok" | "err" | "info"; text: string } | null>(null);
   const verified = d.status === "verified";
 
   async function call(action: string) {
-    return (await fetch("/api/v/org/domains", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, domainId: d.id }) }).then((r) => r.json()).catch(() => ({}))) as { ok?: boolean; verified?: boolean; reason?: string; error?: string; txtName?: string; txtValue?: string };
+    return (await fetch("/api/v/org/domains", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, domainId: d.id }) }).then((r) => r.json()).catch(() => ({}))) as { ok?: boolean; verified?: boolean; reason?: string; error?: string; txtName?: string; txtValue?: string; status?: string; requiresReverification?: boolean };
+  }
+  async function recheck() {
+    setBusy("recheck"); setMsg(null);
+    const j = await call("recheck");
+    setBusy("");
+    if (j.ok) {
+      onHealth(d.id, { last_check_status: j.status ?? null, requires_reverification: !!j.requiresReverification, last_checked_at: new Date().toISOString() });
+      setMsg(j.status === "ok" ? { kind: "ok", text: "Domain re-verified — the DNS TXT record is present." } : { kind: "err", text: "Vraelis could not confirm the DNS TXT record. Restore the record and re-check DNS to keep SSO and automatic provisioning active for new users." });
+    } else setMsg({ kind: "err", text: "Couldn't re-check DNS. Try again." });
   }
   async function verify() {
     setBusy("verify"); setMsg(null);
@@ -403,12 +414,28 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved }: {
           {token && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "6px 0 0" }}>Shown once — copy it now.</p>}
         </div>
       )}
-      {verified && <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "8px 0 0", lineHeight: 1.6 }}>This domain is verified. Future SSO and provisioning rules can use this domain.</p>}
+      {verified && (() => {
+        const reverif = d.requires_reverification === true;
+        const ls = d.last_check_status;
+        const healthLabel = reverif ? "Needs attention" : ls === "missing_txt" ? "TXT record missing" : ls === "dns_error" || ls === "timeout" ? "Could not check DNS" : ls === "mismatch" ? "Record mismatch" : "Healthy";
+        const healthBad = reverif || (!!ls && ls !== "ok");
+        return (
+          <div style={{ marginTop: 8 }}>
+            <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>{reverif ? "Verified — but Vraelis could not confirm the DNS TXT record on recent checks." : "Domain verified and recently checked. SSO and provisioning rules can use this domain."}</p>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 5, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <span className="pill" style={{ fontSize: 9.5, color: healthBad ? "var(--money)" : "var(--acc-deep)" }}>{healthLabel}</span>
+              {d.last_checked_at ? <span>Last checked {when(d.last_checked_at)}</span> : <span>Not checked yet</span>}
+            </div>
+            {reverif && <p style={{ fontSize: 11.5, color: "var(--money)", margin: "6px 0 0", lineHeight: 1.6 }}>SSO and automatic provisioning are paused for NEW users on this domain until it is re-checked. Existing members keep access.</p>}
+          </div>
+        );
+      })()}
 
       {canManage && (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
           {!verified && <button onClick={verify} disabled={!!busy} className="btn" style={{ padding: "6px 13px", fontSize: 12.5, opacity: busy ? 0.6 : 1 }}>{busy === "verify" ? "Checking DNS…" : "Verify DNS"}</button>}
           {!verified && <button onClick={regen} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5 }}>{busy === "regen" ? "…" : "Regenerate token"}</button>}
+          {verified && <button onClick={recheck} disabled={!!busy} className="btn" style={{ padding: "6px 13px", fontSize: 12.5, opacity: busy ? 0.6 : 1 }}>{busy === "recheck" ? "Re-checking…" : "Re-check DNS"}</button>}
           <button onClick={remove} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5, color: "var(--money)" }}>{busy === "remove" ? "…" : "Remove"}</button>
         </div>
       )}
@@ -418,7 +445,8 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved }: {
   );
 }
 
-function SsoCard({ sso }: { sso: SsoView }) {
+function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: string[] }) {
+  const paused = new Set(pausedDomains);
   const [type, setType] = useState<SsoType>("oidc");
   const [domain, setDomain] = useState(sso.verifiedDomains[0] ?? "");
   const [displayName, setDisplayName] = useState("");
@@ -464,6 +492,7 @@ function SsoCard({ sso }: { sso: SsoView }) {
                   <span style={{ fontWeight: 600, fontSize: 14 }}>{p.type.toUpperCase()} · {p.domain}</span>
                   <span className="pill" style={{ fontSize: 10, color: p.status === "active" ? "var(--acc-deep)" : "var(--fg-4)" }}>{p.status === "active" ? "Active" : p.status === "error" ? "Error" : "Disabled"}</span>
                 </div>
+                {paused.has(p.domain) && <p style={{ fontSize: 11.5, color: "var(--money)", margin: "8px 0 0", lineHeight: 1.6 }}>SSO for this domain is paused for new sign-ins until domain ownership is re-confirmed. Re-check DNS for this domain above to restore it.</p>}
                 {p.type === "oidc" ? (
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 6, wordBreak: "break-all", lineHeight: 1.7 }}>Redirect URI: {sso.redirectUriBase}/{p.id}/callback<br />Client ID: {p.client_id ?? "—"} · Secret: {p.hasSecret ? "stored ✓" : "missing"}</div>
                 ) : (

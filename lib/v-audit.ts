@@ -56,6 +56,11 @@ const AUDIT_LABELS: Record<string, string> = {
   organization_domain_verification_failed: "Domain verification failed",
   organization_domain_token_regenerated: "Domain token regenerated",
   organization_domain_removed: "Organization domain removed",
+  organization_domain_reverification_checked: "Domain re-verification checked",
+  organization_domain_reverification_failed: "Domain re-verification failed",
+  organization_domain_reverification_required: "Domain needs re-verification",
+  organization_domain_reverification_restored: "Domain re-verification restored",
+  organization_domain_reverification_cron_completed: "Domain re-verification sweep completed",
   organization_join_request_created: "Domain access requested",
   organization_join_request_approved: "Domain access approved",
   organization_join_request_rejected: "Domain access rejected",
@@ -75,10 +80,11 @@ const AUDIT_LABELS: Record<string, string> = {
 };
 const AUDIT_TYPES = Object.keys(AUDIT_LABELS);
 // Org-level governance events (filtered by metadata.organization_id) for the org activity view.
-const ORG_AUDIT_TYPES = ["organization_created", "organization_member_added", "organization_member_role_changed", "organization_member_revoked", "organization_domain_added", "organization_domain_verification_started", "organization_domain_verified", "organization_domain_verification_failed", "organization_domain_token_regenerated", "organization_domain_removed", "organization_join_request_created", "organization_join_request_approved", "organization_join_request_rejected", "organization_domain_user_auto_joined", "organization_provisioning_settings_updated", "organization_sso_provider_created", "organization_sso_provider_updated", "organization_sso_provider_enabled", "organization_sso_provider_disabled", "organization_sso_login_started", "organization_sso_login_succeeded", "organization_sso_login_failed", "organization_sso_user_provisioned", "organization_sso_test_completed", "workspace_linked_to_organization", "workspace_unlinked_from_organization"];
+const ORG_AUDIT_TYPES = ["organization_created", "organization_member_added", "organization_member_role_changed", "organization_member_revoked", "organization_domain_added", "organization_domain_verification_started", "organization_domain_verified", "organization_domain_verification_failed", "organization_domain_token_regenerated", "organization_domain_removed", "organization_domain_reverification_checked", "organization_domain_reverification_failed", "organization_domain_reverification_required", "organization_domain_reverification_restored", "organization_join_request_created", "organization_join_request_approved", "organization_join_request_rejected", "organization_domain_user_auto_joined", "organization_provisioning_settings_updated", "organization_sso_provider_created", "organization_sso_provider_updated", "organization_sso_provider_enabled", "organization_sso_provider_disabled", "organization_sso_login_started", "organization_sso_login_succeeded", "organization_sso_login_failed", "organization_sso_user_provisioned", "organization_sso_test_completed", "workspace_linked_to_organization", "workspace_unlinked_from_organization"];
 // "domain" is a safe bare hostname (acme.com) — not PII; "mode" is disabled|request|auto_member;
-// "provider_type" is saml|oidc. looksSensitive still blocks anything with @, Stripe ids, secrets, uuids.
-const SAFE_KEYS = ["role", "new_role", "old_role", "action", "status", "interval", "seat_count", "count", "delivery_status", "reason", "domain", "mode", "provider_type"];
+// "provider_type" is saml|oidc; "failure_count"/"batch_count" are small ints. looksSensitive still
+// blocks anything with @, Stripe ids, secrets, uuids.
+const SAFE_KEYS = ["role", "new_role", "old_role", "action", "status", "interval", "seat_count", "count", "delivery_status", "reason", "domain", "mode", "provider_type", "failure_count", "batch_count"];
 const looksSensitive = (v: string) => /@|cus_[A-Za-z0-9]|sub_[A-Za-z0-9]|si_[A-Za-z0-9]|price_|sk_|whsec_|^[0-9a-f]{8}-[0-9a-f]{4}-/.test(v) || v.length > 48;
 
 export type AuditEntry = { id: string; label: string; when: string; actor: string; context: string };

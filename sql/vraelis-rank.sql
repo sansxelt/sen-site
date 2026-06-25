@@ -810,3 +810,20 @@ create index if not exists v_org_sso_org_idx on v_organization_sso_providers (or
 create index if not exists v_org_sso_active_domain_idx on v_organization_sso_providers (domain) where status = 'active';
 -- One provider per (org, domain) in v1.
 create unique index if not exists v_org_sso_org_domain_uniq on v_organization_sso_providers (organization_id, domain);
+
+-- ── Periodic domain re-verification / health (v1) ──
+-- A verified domain can later lose its DNS TXT record. These additive fields track verification
+-- HEALTH over time so SSO + auto-provisioning trust decisions stay safe. A scheduled sweep (and a
+-- manual "Re-check DNS" button) re-resolve _vraelis-challenge.<domain>; after repeated failures the
+-- domain is flagged requires_reverification = true, which PAUSES new SSO logins + new joins for that
+-- domain (existing members/sessions are untouched) until it is re-checked successfully.
+alter table v_organization_domains add column if not exists last_checked_at           timestamptz;
+alter table v_organization_domains add column if not exists last_verified_at          timestamptz;
+alter table v_organization_domains add column if not exists last_check_status         text;    -- ok|missing_txt|mismatch|dns_error|timeout
+alter table v_organization_domains add column if not exists failed_check_count        integer not null default 0;
+alter table v_organization_domains add column if not exists requires_reverification   boolean not null default false;
+alter table v_organization_domains add column if not exists reverification_started_at timestamptz;
+-- Seed last_verified_at from the original verification time so existing domains aren't "stale".
+update v_organization_domains set last_verified_at = verified_at where last_verified_at is null and verified_at is not null;
+-- Find the stalest verified domains for the bounded cron sweep (nulls first).
+create index if not exists v_org_domains_recheck_idx on v_organization_domains (last_checked_at) where status = 'verified';

@@ -30,10 +30,10 @@ const ICONS = {
 };
 
 const AUDIENCE = [
-  { t: "Creators & studios", d: "Pick the thumbnail, cover, or title to ship before you post. Less guessing, faster calls.", i: ICONS.film },
-  { t: "Brands & agencies", d: "Evaluate ads and concepts before you spend, and hand clients a report that backs the decision.", i: ICONS.flag },
-  { t: "AI apps & tools", d: "Let your users evaluate generated outputs, and offer it as a premium feature.", i: ICONS.spark },
-  { t: "Developers", d: "Create evaluation runs by API and pull structured results straight into your product.", i: ICONS.layers },
+  { t: "Product & AI teams", d: "Evaluate model outputs and product directions with qualified human signal before you ship.", i: ICONS.spark },
+  { t: "Brands & agencies", d: "Evaluate ads and concepts before you spend, and hand clients an audit-ready report that backs the decision.", i: ICONS.flag },
+  { t: "Creators & studios", d: "Decide which creative direction to ship — key art, covers, hooks — before you post. Less guessing, faster calls.", i: ICONS.film },
+  { t: "Developers", d: "Create evaluation runs by API and pull structured Decision Packages straight into your product.", i: ICONS.layers },
 ];
 
 const STEPS = [
@@ -46,7 +46,7 @@ const STEPS = [
   { k: "07", t: "Export the Decision Package & track history", d: "Pull the structured Decision Package by API or JSON / CSV, fire a signed webhook, and keep a record of every decision.", i: ICONS.revenue },
 ];
 
-const TESTABLE = ["Generated creative", "Campaign concepts", "Product visuals", "Landing pages", "Brand assets", "UI concepts", "Content variations", "Thumbnails & covers"];
+const TESTABLE = ["AI model outputs", "Generated creative", "Campaign concepts", "Product concepts", "Landing pages", "Brand & client approvals", "UI directions", "Content variations"];
 
 // Decision workflows teams actually run — what's compared, and the decision you get back.
 const USE_CASES: { t: string; c: string; g: string }[] = [
@@ -55,11 +55,11 @@ const USE_CASES: { t: string; c: string; g: string }[] = [
   { t: "Landing page & copy", c: "Hero variants, headlines, and value props", g: "The clearest message — and the reasoning behind why." },
   { t: "Product concept validation", c: "Concepts, features, or directions", g: "Which direction people prefer, and the audience fit behind it." },
   { t: "Client creative approval", c: "The options you're choosing between for a client", g: "A client-ready decision report that backs your recommendation." },
-  { t: "Design & image selection", c: "Thumbnails, icons, covers, product shots", g: "The pick that wins attention — not the loudest opinion in the room." },
+  { t: "Enterprise creative governance", c: "Brand, key art, and design directions at scale", g: "Defensible, audit-ready decisions before work ships — across teams and clients." },
 ];
 
-const IS_THINGS = ["A human-signal layer for creative and AI decisions", "A way to compare candidates before you ship", "A decision-package generator for teams and clients"];
-const IS_NOT_THINGS = ["A generic poll or survey builder", "An embed traffic or ad network", "A raw analytics dashboard"];
+const IS_THINGS = ["Governed human-evaluation infrastructure for AI, creative & product teams", "A decision workflow that turns qualified human signal into a Decision Package", "An enterprise trust layer — roles, audit trail, SSO, and verified-domain governance"];
+const IS_NOT_THINGS = ["A voting or feedback widget", "Thumbnail or icon A/B testing", "A poll, survey, or analytics dashboard"];
 
 const REPORT_PARTS = [
   "The recommended output + full breakdown",
@@ -95,7 +95,7 @@ const WHAT_YOU_GET: [string, string][] = [
 const COST_OF_WRONG: [string, string][] = [
   ["The wrong ad creative", "burns ad spend before you learn it underperforms."],
   ["The wrong landing hero", "quietly lowers conversion on every visit."],
-  ["The wrong thumbnail or icon", "loses attention before anyone sees the work."],
+  ["The wrong creative direction", "loses attention before anyone sees the work."],
   ["The wrong AI output", "ships generated content people don't trust."],
   ["A creative call with no evidence", "turns client and team reviews into opinion fights."],
 ];
@@ -154,7 +154,7 @@ export default function RankLanding() {
               <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Report</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Complete</span></div>
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.05fr)", gap: 0 }} className="cols-stack">
                 <div style={{ padding: "clamp(18px,2.4vw,26px)", borderRight: "1px solid var(--line-1)" }}>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Which thumbnail converts better?</div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Which direction should we ship?</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
                     {[["A", false], ["B", true], ["C", false]].map(([l, win]) => (
                       <div key={l as string} style={{ position: "relative", aspectRatio: "4/3", borderRadius: 10, background: win ? "linear-gradient(140deg, var(--acc-soft), #fff)" : "var(--bg-2)", border: `1px solid ${win ? "var(--acc-line-2)" : "var(--line-2)"}`, display: "grid", placeItems: "center" }}>

@@ -33,7 +33,7 @@ export const ORG_ROLE_DESC: Record<OrgRole, string> = {
 
 export type Organization = { id: string; name: string; owner_user_id: string; created_at: string };
 export type OrgMember = { id: string; organization_id: string; user_id: string | null; email: string; role: OrgRole; status: "pending" | "active" | "revoked"; can_manage_billing: boolean; created_at: string };
-export type OrgDomain = { id: string; organization_id: string; domain: string; status: "unverified" | "verified" | "rejected"; verified_at: string | null; created_at: string };
+export type OrgDomain = { id: string; organization_id: string; domain: string; status: "unverified" | "verified" | "rejected"; verified_at: string | null; created_at: string; last_checked_at?: string | null; last_check_status?: string | null; failed_check_count?: number; requires_reverification?: boolean };
 export type LinkableWorkspace = { id: string; name: string; organization_id: string | null };
 export type JoinMode = "disabled" | "request" | "auto_member";
 export type DomainDefaultRole = "member" | "viewer";
@@ -94,8 +94,11 @@ async function listOrgMembers(orgId: string): Promise<OrgMember[]> {
 
 async function listOrgDomains(orgId: string): Promise<OrgDomain[]> {
   try {
-    const { data } = await getSupabaseAdminClient().from("v_organization_domains" as never).select("id,organization_id,domain,status,verified_at,created_at").eq("organization_id", orgId).order("created_at", { ascending: true });
-    return (data as unknown as OrgDomain[]) ?? [];
+    const s = getSupabaseAdminClient();
+    // Include health columns; fall back to the base columns pre-migration (columns absent).
+    let q = await s.from("v_organization_domains" as never).select("id,organization_id,domain,status,verified_at,created_at,last_checked_at,last_check_status,failed_check_count,requires_reverification").eq("organization_id", orgId).order("created_at", { ascending: true });
+    if (q.error) q = await s.from("v_organization_domains" as never).select("id,organization_id,domain,status,verified_at,created_at").eq("organization_id", orgId).order("created_at", { ascending: true });
+    return (q.data as unknown as OrgDomain[]) ?? [];
   } catch { return []; }
 }
 
@@ -361,6 +364,13 @@ export async function addOrganizationDomain(email: string, domainRaw: string): P
   } catch { return { ok: false, error: "add_failed" }; }
 }
 
+// Permission gate for acting on a specific domain: the caller must own/admin the org that owns it.
+// Returns { ok } or { error } — no row contents (used by the manual re-check route).
+export async function assertOrgDomainManager(email: string, domainId: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const r = await ownedOrgDomain(email, domainId);
+  return "error" in r ? { ok: false, error: r.error } : { ok: true };
+}
+
 // Look up the domain row scoped to the caller's org (never trusts a client org id).
 async function ownedOrgDomain(email: string, domainId: string): Promise<{ org: Organization; row: { id: string; domain: string; status: string; verification_token_hash: string | null } } | { error: string }> {
   const org = await getPrimaryOrganization(email);
@@ -468,17 +478,35 @@ async function pendingJoinRequests(orgId: string): Promise<OrgJoinRequest[]> {
   } catch { return []; }
 }
 
+// Verification TRUST for a (org, domain): "trusted" (verified + not flagged for re-verification),
+// "paused" (verified but failing DNS re-checks — new SSO/joins are blocked), or "unverified".
+// Pre-migration the requires_reverification column is absent → treated as trusted (never breaks
+// existing SSO/provisioning). This is the single gate all trust-sensitive paths consult.
+export async function domainTrustState(orgId: string, domain: string): Promise<"trusted" | "paused" | "unverified"> {
+  if (!isDatabaseConfigured()) return "unverified";
+  try {
+    const s = getSupabaseAdminClient();
+    let q = await s.from("v_organization_domains" as never).select("status,requires_reverification").eq("organization_id", orgId).eq("domain", domain).maybeSingle();
+    if (q.error) q = await s.from("v_organization_domains" as never).select("status").eq("organization_id", orgId).eq("domain", domain).maybeSingle();
+    const r = q.data as unknown as { status?: string; requires_reverification?: boolean } | null;
+    if (!r || r.status !== "verified") return "unverified";
+    return r.requires_reverification === true ? "paused" : "trusted";
+  } catch { return "unverified"; }
+}
+
 // Verified-domain orgs whose domain == the caller's email domain. Uses the authenticated email
 // only (callers pass session email; never client-supplied). Exact match in v1 (no subdomains).
+// PAUSED domains (failing re-verification) are excluded — new joins are blocked until re-checked.
 export async function getVerifiedDomainOrganizationsForEmail(email: string): Promise<{ id: string; name: string; owner_user_id: string; joinMode: JoinMode; defaultRole: DomainDefaultRole }[]> {
   if (!isDatabaseConfigured()) return [];
   const dom = emailDomain(email);
   if (!dom) return [];
   try {
     const s = getSupabaseAdminClient();
-    const { data: dms, error } = await s.from("v_organization_domains" as never).select("organization_id").eq("domain", dom).eq("status", "verified");
-    if (error) return [];
-    const orgIds = [...new Set(((dms as unknown as { organization_id: string }[]) ?? []).map((d) => d.organization_id))];
+    let dq = await s.from("v_organization_domains" as never).select("organization_id,requires_reverification").eq("domain", dom).eq("status", "verified");
+    if (dq.error) dq = await s.from("v_organization_domains" as never).select("organization_id").eq("domain", dom).eq("status", "verified"); // column absent pre-migration
+    if (dq.error) return [];
+    const orgIds = [...new Set(((dq.data as unknown as { organization_id: string; requires_reverification?: boolean }[]) ?? []).filter((d) => d.requires_reverification !== true).map((d) => d.organization_id))];
     if (!orgIds.length) return [];
     const { data: orgs } = await s.from("v_organizations" as never).select("id,name,owner_user_id,domain_join_mode,domain_default_role").in("id", orgIds);
     return ((orgs as unknown as { id: string; name: string; owner_user_id: string; domain_join_mode?: string; domain_default_role?: string }[]) ?? []).map((o) => ({
@@ -567,9 +595,11 @@ export async function requestOrganizationAccess(email: string, orgId: string): P
   if (!dom) return { ok: false, error: "no_domain" };
   try {
     const s = getSupabaseAdminClient();
-    // Re-validate eligibility: this org has a VERIFIED domain equal to the caller's email domain.
-    const { data: dmatch } = await s.from("v_organization_domains" as never).select("id").eq("organization_id", orgId).eq("domain", dom).eq("status", "verified").maybeSingle();
-    if (!(dmatch as unknown as { id: string } | null)?.id) return { ok: false, error: "not_eligible" };
+    // Re-validate eligibility: this org's matching domain must be VERIFIED and TRUSTED (not paused
+    // for failing re-verification). A paused domain blocks NEW joins until it is re-checked.
+    const trust = await domainTrustState(orgId, dom);
+    if (trust === "paused") return { ok: false, error: "domain_paused" };
+    if (trust !== "trusted") return { ok: false, error: "not_eligible" };
     const { data: orgRow } = await s.from("v_organizations" as never).select("id,owner_user_id,domain_join_mode,domain_default_role").eq("id", orgId).maybeSingle();
     const org = orgRow as unknown as ProvOrg | null;
     if (!org) return { ok: false, error: "not_found" };
