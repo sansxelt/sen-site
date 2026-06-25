@@ -151,8 +151,35 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Enterprise readiness */}
+      <section id="enterprise" className="section">
+        <div className="wrap" style={{ maxWidth: 880 }}>
+          <div className="sec-head" style={{ marginBottom: 28 }}>
+            <p className="eyebrow">Enterprise readiness</p>
+            <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Built for governed decision workflows.</h2>
+            <p>Decision infrastructure for teams that need accountability, not just an answer.</p>
+          </div>
+          <div className="tile-grid cols-2">
+            {[
+              ["Role-based workspace access", "Admin, Editor, Viewer, and client roles scope exactly what each person can see and do."],
+              ["Client-safe report sharing", "Share decision reports with clients by token — private controls, costs, and participant data never leak."],
+              ["Workspace activity log", "A read-only audit trail of member, project-access, billing, and ownership changes for accountability."],
+              ["Billing admin separation", "Delegate billing to an admin without handing over workspace ownership or data."],
+              ["Signed webhooks & API keys", "HMAC-signed deliveries and hashed, server-side keys for reliable, secure integration."],
+              ["Project-level access control", "Grant access per project, so collaborators and clients only see the decisions they should."],
+            ].map(([t, d]) => (
+              <div key={t} className="acard">
+                <h3 style={{ fontSize: "clamp(1.05rem, 1.6vw, 1.25rem)", marginBottom: 6 }}>{t}</h3>
+                <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0 }}>{d}</p>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "22px 0 0", lineHeight: 1.7, textAlign: "center" }}>SSO and enterprise provisioning are planned for larger organizations. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+        </div>
+      </section>
+
       {/* Embed (compact) */}
-      <section id="embed" className="section">
+      <section id="embed" className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "center" }} className="cols-stack">
             <div>

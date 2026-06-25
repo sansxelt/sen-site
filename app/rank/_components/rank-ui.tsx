@@ -28,6 +28,7 @@ const I = {
   vote: "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",
   folder: "M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
   shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4",
+  clock: "M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
 };
 
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
@@ -38,6 +39,7 @@ const APP_NAV: { group: string; items: { href: string; label: string; d: string 
     { href: "/app/team", label: "Team", d: I.user },
     { href: "/app/data", label: "Analytics", d: I.data },
     { href: "/app/data-quality", label: "Data quality", d: I.shield },
+    { href: "/app/audit", label: "Activity", d: I.clock },
   ] },
   { group: "Billing", items: [
     { href: "/app/credits", label: "Credits", d: I.coin },

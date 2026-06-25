@@ -37,11 +37,13 @@ const AUDIENCE = [
 ];
 
 const STEPS = [
-  { k: "01", t: "Submit candidates", d: "Drop in 2 to 8 options — images, ads, AI outputs, landing heroes, UI, or copy. Web, API, or embed.", i: ICONS.upload },
-  { k: "02", t: "Collect valid judgments", d: "Vraelis routes your evaluation to real people who pick what they prefer and say why.", i: ICONS.users },
-  { k: "03", t: "Filter low-quality responses", d: "Bots, rushers, and duplicate or spam responses are rejected automatically. Only valid human judgments count.", i: ICONS.flag },
-  { k: "04", t: "Get decision analytics", d: "The recommended output, preference margin, directional confidence, signal quality, reasoning signals, and an AI read on what to improve.", i: ICONS.report },
-  { k: "05", t: "Share, export, or use", d: "Ship it, share a read-only report link with a client, or export to JSON / CSV. AI apps pull the recommendation back in by API.", i: ICONS.revenue },
+  { k: "01", t: "Create an evaluation", d: "Drop in 2 to 8 candidates — images, ads, AI outputs, landing heroes, UI, or copy. Web, API, or embed.", i: ICONS.upload },
+  { k: "02", t: "Collect qualified human signal", d: "Vraelis routes your evaluation to real, screened people who pick what they prefer and say why.", i: ICONS.users },
+  { k: "03", t: "Filter low-quality responses", d: "Bots, rushers, and duplicate or spam responses are rejected automatically. Only valid human signal counts.", i: ICONS.flag },
+  { k: "04", t: "Review decision readiness", d: "The Decision Package reads back the recommendation, preference margin, confidence, signal quality — and whether the result is ready to act on.", i: ICONS.spark },
+  { k: "05", t: "Run a confirmation round if needed", d: "When a result is close or noisy, launch a follow-up round to confirm the call before you commit. Lineage is tracked end to end.", i: ICONS.layers },
+  { k: "06", t: "Share the client-ready report", d: "Ship it, or share a read-only decision report with a client — private controls stay hidden.", i: ICONS.report },
+  { k: "07", t: "Export the Decision Package & track history", d: "Pull the structured Decision Package by API or JSON / CSV, fire a signed webhook, and keep a record of every decision.", i: ICONS.revenue },
 ];
 
 const TESTABLE = ["Generated creative", "Campaign concepts", "Product visuals", "Landing pages", "Brand assets", "UI concepts", "Content variations", "Thumbnails & covers"];
@@ -247,9 +249,9 @@ export default function RankLanding() {
       <section id="how" className="section">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">How it works</p>
-            <h2 className="display">From candidates to a <span className="em">decision</span>.</h2>
-            <p>Five steps from submitting options to a recommendation you can act on.</p>
+            <p className="eyebrow">The decision workflow</p>
+            <h2 className="display">From candidates to a <span className="em">decision</span> you can defend.</h2>
+            <p>A full evaluation lifecycle — create, collect qualified signal, check readiness, confirm, share, and keep the record.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (

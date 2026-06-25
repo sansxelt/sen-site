@@ -88,7 +88,7 @@ export default async function BillingPage() {
 
       <div className="card" style={{ marginBottom: 18 }}>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Payment method</div>
-        <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", maxWidth: 540 }}>Keep a card on file for top-ups and plan renewals, and view your invoices. Cards are stored securely by Stripe — we never see your card number.</p>
+        <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", maxWidth: 540 }}>Keep a card on file for top-ups and plan renewals, and view your invoices. Payments are securely processed by Stripe — we never see your card number, and your billing overview stays here in Vraelis.</p>
         <PaymentMethodButton />
       </div>
 

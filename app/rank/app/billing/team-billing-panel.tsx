@@ -48,10 +48,15 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
         <>
           <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "12px 0 0", lineHeight: 1.6 }}>Interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong>{billing.periodEnd ? ` · Next renewal ${new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}` : ""} · {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}.</p>
           {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "8px 0 0" }}>You&apos;re over your seat limit. Existing members keep access.</p>}
-          {payIssue && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "8px 0 0" }}>Open the billing portal to update payment details.</p>}
+          {payIssue && (
+            <div style={{ border: "1px solid var(--money)", background: "color-mix(in srgb, var(--money) 7%, transparent)", borderRadius: "var(--r-sm)", padding: "11px 13px", margin: "12px 0 0" }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--money)" }}>Payment needs attention</div>
+              <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "4px 0 0", lineHeight: 1.6 }}>Your last team-seat charge didn&apos;t go through. Members keep access for now, but seats can be suspended if it stays unpaid. Update your payment method to keep your team active.</p>
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
-            <button onClick={() => open("portal")} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>Manage billing</button>
-            <button onClick={() => open("portal", { intent: "invoices" })} disabled={busy} className="btn btn--ghost">Open billing portal</button>
+            <button onClick={() => open("portal")} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{payIssue ? "Update payment method" : "Manage billing"}</button>
+            <button onClick={() => open("portal", { intent: "invoices" })} disabled={busy} className="btn btn--ghost">Change billing details</button>
           </div>
 
           {/* Native invoice list */}
@@ -82,7 +87,7 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing hasn&apos;t been set up by the workspace owner yet.</p>
       )}
       {err && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{err}</p>}
-      <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Taxes, receipts, and invoices are handled by Stripe and available in the billing portal.</p>
+      <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Payments are securely processed by Stripe. Your billing overview — plan, seats, renewal, and invoices — stays here in Vraelis. The secure portal is used only to update your card, taxes, or billing details.</p>
     </div>
   );
 }

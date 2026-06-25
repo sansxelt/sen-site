@@ -137,6 +137,7 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
           <h1 className="display">Team</h1>
           <p>Run evaluations with your team and share client-ready decision reports — without exposing private controls.</p>
         </div>
+        <a href="/app/audit" className="btn btn--ghost">Workspace activity →</a>
       </div>
 
       <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -144,6 +145,17 @@ export function TeamClient({ email, initial, billing, transfer }: { email: strin
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>{ctx.workspace?.name ?? "Your workspace"}</div>
           <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>{active.length} member{active.length === 1 ? "" : "s"} · You are {ROLE_LABEL[ctx.myRole]}</div>
         </div>
+      </div>
+
+      {/* Governance / enterprise readiness */}
+      <div className="card" style={{ marginBottom: 18, background: "var(--bg-2)" }}>
+        <div style={cardHead}>Built for governed decision workflows</div>
+        <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "8px 18px" }}>
+          {["Role-based workspace access", "Client-safe report sharing", "Workspace activity log", "Billing admin separation", "Secure, expiring invite links", "Project-level access control", "Signed webhooks & API keys", "Ownership transfer with audit"].map((g) => (
+            <li key={g} style={{ fontSize: 13, color: "var(--fg-2)", display: "flex", gap: 8, alignItems: "baseline" }}><span style={{ color: "var(--acc-deep)" }}>✓</span>{g}</li>
+          ))}
+        </ul>
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0", lineHeight: 1.6 }}>SSO and enterprise provisioning are planned for larger organizations. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
       </div>
 
       {/* Incoming ownership transfer (you are the target) */}
