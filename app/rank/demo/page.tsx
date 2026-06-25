@@ -110,9 +110,15 @@ export default function DemoReport() {
         ))}
       </div>
 
+      {/* What the demo represents */}
+      <div className="card" style={{ background: "var(--bg-2)", marginBottom: 30 }}>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>What the demo represents</div>
+        <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>This is a simplified example of a governed decision workflow. In production, teams use Vraelis to evaluate AI outputs, creative directions, product concepts, and client-facing decisions — with quality controls, readiness checks, confirmation rounds, audit events, organization governance, and shareable, client-safe Decision Packages. The result above is the output of that pipeline, not a poll.</p>
+      </div>
+
       {/* CTA */}
       <div className="card" style={{ textAlign: "center", borderColor: "var(--acc-line)", background: "var(--acc-soft)", padding: "clamp(24px, 4vw, 36px)" }}>
-        <div className="display" style={{ fontSize: "clamp(1.4rem, 2.6vw, 1.9rem)", marginBottom: 8 }}>Run this on your own creative.</div>
+        <div className="display" style={{ fontSize: "clamp(1.4rem, 2.6vw, 1.9rem)", marginBottom: 8 }}>Run this on your own decision.</div>
         <p style={{ fontSize: 14.5, color: "var(--fg-2)", maxWidth: 460, margin: "0 auto 20px", lineHeight: 1.55 }}>Submit your candidates, collect valid human judgments, and get a decision report like this one.</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
           <a href="/app/new" className="btn btn--lg">Start an evaluation →</a>

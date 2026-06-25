@@ -1,36 +1,25 @@
-"use client";
+// Server-side audit export controls. Each link hits GET /api/v/audit/export, which enforces
+// permission and returns ONLY sanitized AuditEntry rows (no secrets/tokens/ids/payloads), with a
+// formula-injection-safe CSV and an attachment content-disposition so the browser downloads it.
 
-// Owner/admin CSV export of the SAFE audit rows. Operates only on already-sanitized AuditEntry
-// fields (label / when / actor / context) — the same data rendered on the page — so it can never
-// export anything the audit view itself doesn't already show. No server round-trip, no new surface.
-type Entry = { label: string; when: string; actor: string; context: string };
+const linkStyle = { padding: "6px 13px", fontSize: 12.5 } as const;
 
-function csvCell(v: string) {
-  return `"${String(v ?? "").replace(/"/g, '""')}"`;
+function ExportRow({ scope, label }: { scope: "workspace" | "organization"; label: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+      <span style={{ fontSize: 13, color: "var(--fg-2)", minWidth: 110 }}>{label}</span>
+      <a href={`/api/v/audit/export?scope=${scope}&format=csv`} className="btn btn--ghost" style={linkStyle}>Export CSV</a>
+      <a href={`/api/v/audit/export?scope=${scope}&format=json`} className="btn btn--ghost" style={linkStyle}>Export JSON</a>
+    </div>
+  );
 }
 
-export function AuditExport({ workspace, organization }: { workspace: Entry[]; organization: Entry[] }) {
-  function download() {
-    const rows = [
-      ["scope", "event", "when", "actor", "context"],
-      ...workspace.map((e) => ["workspace", e.label, e.when, e.actor, e.context]),
-      ...organization.map((e) => ["organization", e.label, e.when, e.actor, e.context]),
-    ];
-    const csv = rows.map((r) => r.map(csvCell).join(",")).join("\r\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `vraelis-activity-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-  const total = workspace.length + organization.length;
+export function AuditExport({ showOrg }: { showOrg: boolean }) {
   return (
-    <button onClick={download} disabled={total === 0} className="btn btn--ghost" style={{ opacity: total === 0 ? 0.5 : 1 }} title={total === 0 ? "No activity to export yet" : `Export ${total} events`}>
-      Export CSV
-    </button>
+    <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <ExportRow scope="workspace" label="Workspace" />
+      {showOrg && <ExportRow scope="organization" label="Organization" />}
+      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: 0, lineHeight: 1.6 }}>Exports include sanitized governance activity only. Secrets, tokens, payment identifiers, and raw payloads are never included. Broader enterprise audit scheduling and retention controls are planned.</p>
+    </div>
   );
 }

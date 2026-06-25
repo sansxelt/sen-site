@@ -18,7 +18,7 @@ const PROTECTS: [string, string][] = [
 const CONTROLS: string[] = [
   "Organizations & workspaces", "Project-level access", "Client-safe report sharing", "Role-based access (admin / editor / viewer / client)",
   "Billing-admin separation", "Ownership-transfer controls", "Tokenized, expiring invites", "Verified organization domains",
-  "Domain-based provisioning (governed)", "OIDC single sign-on", "Periodic domain re-verification", "Read-only audit activity",
+  "Domain-based provisioning (governed)", "OIDC single sign-on", "Periodic domain re-verification", "Read-only audit activity", "Sanitized audit export (CSV / JSON)",
 ];
 
 const Section = ({ children, bg }: { children: React.ReactNode; bg?: boolean }) => (
@@ -77,7 +77,7 @@ export default function SecurityPage() {
           <p className="eyebrow">Auditability</p>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>A reviewable trail, without the secrets.</h2>
         </div>
-        <p className="lead-copy" style={{ marginBottom: 14 }}>Workspace and organization activity are recorded as a read-only audit trail. Owners and admins review recent governance events in-app at <a href="/app/audit" style={{ color: "var(--acc-deep)" }}>Activity</a>.</p>
+        <p className="lead-copy" style={{ marginBottom: 14 }}>Workspace and organization activity are recorded as a read-only audit trail. Owners and admins review recent governance events in-app at <a href="/app/audit" style={{ color: "var(--acc-deep)" }}>Activity</a>, and can <strong style={{ color: "var(--fg-1)" }}>export sanitized governance activity as CSV or JSON</strong>. Scheduled exports and retention controls are planned.</p>
         <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.8, margin: 0 }}>Vraelis records key governance events — organization changes, domain verification and re-verification, SSO provider changes, billing-admin changes, confirmation rounds, ownership transfers, and team-access updates. Audit events carry only safe fields: <strong style={{ color: "var(--fg-1)" }}>no secrets, no invite or DNS tokens, no token hashes, no Stripe identifiers, no API keys, no OIDC codes or SAML assertions, no certificate bodies, no full URLs, and no IP or device data.</strong></p>
       </Section>
 

@@ -5,7 +5,7 @@
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { getOrCreatePersonalWorkspace } from "./v-workspace";
-import { canViewOrganizationAudit } from "./v-organization";
+import { canViewOrganizationAudit, getPrimaryOrganization } from "./v-organization";
 
 const norm = (e: string) => e.trim().toLowerCase();
 
@@ -46,6 +46,7 @@ const AUDIT_LABELS: Record<string, string> = {
   webhook_endpoint_deleted: "Webhook endpoint deleted",
   webhook_endpoint_updated: "Webhook endpoint updated",
   webhook_secret_rotated: "Webhook secret rotated",
+  audit_export_created: "Audit export downloaded",
   organization_created: "Organization created",
   organization_member_added: "Organization member added",
   organization_member_role_changed: "Organization member role changed",
@@ -84,7 +85,7 @@ const ORG_AUDIT_TYPES = ["organization_created", "organization_member_added", "o
 // "domain" is a safe bare hostname (acme.com) — not PII; "mode" is disabled|request|auto_member;
 // "provider_type" is saml|oidc; "failure_count"/"batch_count" are small ints. looksSensitive still
 // blocks anything with @, Stripe ids, secrets, uuids.
-const SAFE_KEYS = ["role", "new_role", "old_role", "action", "status", "interval", "seat_count", "count", "delivery_status", "reason", "domain", "mode", "provider_type", "failure_count", "batch_count"];
+const SAFE_KEYS = ["role", "new_role", "old_role", "action", "status", "interval", "seat_count", "count", "delivery_status", "reason", "domain", "mode", "provider_type", "failure_count", "batch_count", "scope", "format", "row_count"];
 const looksSensitive = (v: string) => /@|cus_[A-Za-z0-9]|sub_[A-Za-z0-9]|si_[A-Za-z0-9]|price_|sk_|whsec_|^[0-9a-f]{8}-[0-9a-f]{4}-/.test(v) || v.length > 48;
 
 export type AuditEntry = { id: string; label: string; when: string; actor: string; context: string };
@@ -131,4 +132,25 @@ export async function organizationActivity(email: string, orgId: string, limit =
     const { data } = await s.from("v_events" as never).select("id,user_id,event_type,actor_type,metadata,created_at").eq("metadata->>organization_id", orgId).in("event_type", ORG_AUDIT_TYPES).order("created_at", { ascending: false }).limit(limit);
     return ((data as unknown as Row[]) ?? []).map((r) => toEntry(r, uid));
   } catch { return []; }
+}
+
+// ── Server-side audit export (Enterprise Audit Export v1) ─────────────────────
+// Returns the SAME already-sanitized AuditEntry rows the /app/audit view shows — never raw
+// metadata, emails, tokens, hashes, Stripe ids, or payloads. Permission is enforced here:
+// workspace scope is self-scoped (the caller's own workspace activity, like the page);
+// organization scope requires org owner/admin (canViewOrganizationAudit). No public/API-key access.
+export type AuditScope = "workspace" | "organization";
+export type AuditExportResult = { ok: true; entries: AuditEntry[] } | { ok: false; error: string };
+
+export async function exportableAudit(email: string, scope: AuditScope, limit = 500): Promise<AuditExportResult> {
+  if (!email || !isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const cap = Math.min(Math.max(1, Math.floor(limit) || 500), 2000);
+  if (scope === "workspace") return { ok: true, entries: await workspaceActivity(email, cap) };
+  if (scope === "organization") {
+    const org = await getPrimaryOrganization(email);
+    if (!org) return { ok: false, error: "no_organization" };
+    if (!(await canViewOrganizationAudit(email, org.id))) return { ok: false, error: "forbidden" };
+    return { ok: true, entries: await organizationActivity(email, org.id, cap) };
+  }
+  return { ok: false, error: "invalid_scope" };
 }

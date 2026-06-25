@@ -13,16 +13,6 @@ result.decision_package.decision.recommended_output  // "B"`;
 const EMBED = `<script async src="https://vraelis.com/embed.js"
         data-vraelis-test="YOUR_TEST_ID"></script>`;
 
-const CAPS: [string, string][] = [
-  ["Human evaluation API", "Send candidates, get a structured result — recommendation, quality filtering, and confidence — in one authenticated call. No evaluation pipeline to build."],
-  ["Decision Package v2", "A typed, portable result: recommended output, preference margin, directional confidence, signal quality, audience fit, source quality — plus decision readiness and a recommended next step, so you know whether the result is ready to act on."],
-  ["Sandbox mode", "Exercise the whole integration with sample data — 0 credits, 0 quota, never in your production analytics. Labeled mode: sandbox everywhere."],
-  ["Signed webhooks", "A signed test.completed fires the moment an evaluation fills — HMAC-verified, retried with backoff, idempotent by delivery id. No polling."],
-  ["JSON & CSV exports", "Pull qualified human signal into dashboards, training pipelines, or your product. Tiered JSON or a stable CSV breakdown."],
-  ["Source, audience & signal quality", "Privacy-safe channel quality, audience-fit screening, and automatic low-quality response filtering — built into every result."],
-  ["TypeScript SDK starter", "A typed client for create, fetch, export, and webhook verification, matching the Decision Package schema. Coming soon to npm."],
-  ["Public JSON Schema", "Decision Package v2 is backed by a public JSON Schema, so you can validate and type your integration directly."],
-];
 
 function Code({ children, label = "shell" }: { children: string; label?: string }) {
   return (
@@ -41,31 +31,53 @@ export default function DevelopersPage() {
         <div className="glow glow--soft glow--bleed" />
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
-          <p className="eyebrow" style={{ justifyContent: "center" }}>Developers</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 840, margin: "0 auto 16px" }}>The <span className="em">human evaluation API</span> for creative and AI outputs.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center" }}>Send candidates to Vraelis and receive a structured <strong style={{ color: "var(--fg-1)" }}>decision package</strong> built from qualified human signal — a recommendation, quality filtering, audience fit, and confidence your product can act on. Test the whole flow in sandbox before spending a credit.</p>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>Create sandbox evaluation → fetch Decision Package → receive signed webhook</p>
+          <p className="eyebrow" style={{ justifyContent: "center" }}>Developer platform</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 860, margin: "0 auto 16px" }}>Human evaluation <span className="em">infrastructure</span> for AI and creative decisions.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>Use Vraelis to submit candidates, collect qualified human signal, apply readiness and quality checks, and return an audit-ready <strong style={{ color: "var(--fg-1)" }}>Decision Package</strong> — through API, SDK, webhooks, or embedded collection surfaces. Governance, verified-domain access, and audit come with the platform.</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>submit candidates → qualified signal → readiness → Decision Package → audit / share / export</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/sandbox" className="btn btn--lg">Open sandbox console</a>
-            <a href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">View JSON Schema</a>
+            <a href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">Decision Package schema</a>
+            <a href="/security" className="btn btn--ghost btn--lg">Enterprise trust</a>
           </div>
           <p style={{ fontSize: 12.5, color: "var(--fg-5)", marginTop: 14 }}>Sign in to test the API — full SDK and curl examples live in the signed-in sandbox console.</p>
-          <p style={{ fontSize: 13, color: "var(--fg-3)", maxWidth: 660, margin: "20px auto 0", lineHeight: 1.6 }}>A <strong style={{ color: "var(--fg-1)" }}>human-evaluation layer for AI and creative decisions</strong> — submit candidates, collect qualified judgments, retrieve a decision package. Not a polling or survey widget, and not a traffic or ad network.</p>
         </div>
       </section>
 
-      {/* Capabilities */}
-      <section className="section">
+      {/* Platform flow */}
+      <section className="section" style={{ borderBottom: "1px solid var(--line-1)" }}>
         <div className="wrap">
-          <div className="sec-head"><p className="eyebrow">Platform</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Structured human signal, built for products.</h2></div>
-          <div className="tile-grid cols-3">
-            {CAPS.map(([t, d]) => (
-              <div key={t} className="acard" style={{ gap: 6 }}>
-                <div className="acard__t">{t}</div>
-                <div className="acard__d">{d}</div>
-              </div>
+          <div className="sec-head" style={{ marginBottom: 22 }}><p className="eyebrow">The platform</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>A governed evaluation pipeline — not a request/response toy.</h2><p>Every evaluation flows through the same governed pipeline, whatever surface you call it from.</p></div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            {["Submit candidates", "Collect qualified signal", "Filter low-quality responses", "Assess readiness", "Run confirmation rounds", "Receive Decision Package", "Audit / share / export"].map((s, i, a) => (
+              <span key={s} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <span className="chip" style={{ fontSize: 12.5 }}>{s}</span>
+                {i < a.length - 1 && <span style={{ color: "var(--fg-5)" }}>→</span>}
+              </span>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Infrastructure surfaces */}
+      <section className="section">
+        <div className="wrap">
+          <div className="sec-head" style={{ marginBottom: 24 }}><p className="eyebrow">Infrastructure surfaces</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Access layers over one platform.</h2><p>The API, SDK, webhooks, and embed are how you reach the platform — the output is always the Decision Package.</p></div>
+          <div className="tile-grid cols-3">
+            {[
+              ["REST API", "Create evaluations, fetch the Decision Package, export results. Per-key rate limits, stable error envelopes."],
+              ["TypeScript SDK", "A typed client for create / fetch / export / webhook verification, matching the schema. In the repo today."],
+              ["Signed webhooks", "An HMAC-signed test.completed fires the moment an evaluation fills — retried, idempotent, no polling."],
+              ["Sandbox", "Exercise the whole flow at 0 credits / 0 quota, isolated from production analytics."],
+              ["Embedded evaluation widget", "One collection surface among several — a way to gather signal in your site or app."],
+              ["Decision Package schema", "A public JSON Schema for typed integrations. The platform output, not a raw tally."],
+              ["Audit events", "Governance actions recorded as a safe, exportable trail — no secrets, tokens, or ids."],
+              ["Governed access", "Organizations, verified domains, OIDC SSO, and role-separated, client-safe sharing."],
+            ].map(([t, d]) => (
+              <div key={t} className="acard" style={{ gap: 6 }}><div className="acard__t">{t}</div><div className="acard__d">{d}</div></div>
+            ))}
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "18px 0 0", lineHeight: 1.6, textAlign: "center" }}>A human-evaluation layer for AI and creative decisions — not a polling or survey widget, and not a traffic or ad network. The embed is one collection surface; the product output is the Decision Package and the governed decision record.</p>
         </div>
       </section>
 

@@ -136,12 +136,12 @@ export default function RankLanding() {
         <div className="glow glow--bleed" />
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>A human evaluation layer for creative and AI outputs</p>
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Governed human evaluation for AI, creative &amp; product decisions</p>
           <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
-            Evaluate creative options <span className="em">before you ship</span>.
+            Make decisions you can <span className="em">defend</span> — before you ship.
           </h1>
-          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 660, margin: "0 auto 30px", lineHeight: 1.55 }}>
-            Vraelis turns human preference signals into structured decision analytics for creators, teams, agencies, and AI apps. Submit candidates, collect valid judgments, and get a report showing what to ship and why.
+          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 680, margin: "0 auto 30px", lineHeight: 1.55 }}>
+            Vraelis is decision infrastructure for teams: submit candidates, collect qualified human signal, check readiness, and get an audit-ready Decision Package — so you ship the right creative, AI, and product work with evidence behind the call.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/new" className="btn btn--lg">Start an evaluation <span aria-hidden>→</span></a>

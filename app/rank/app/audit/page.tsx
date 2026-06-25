@@ -67,15 +67,16 @@ export default async function AuditPage() {
           <h1 className="display">Activity</h1>
           <p>A read-only audit trail of governance actions across your workspace and organization — for accountability and defensibility.</p>
         </div>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <AuditExport workspace={events} organization={orgEvents} />
-          <a href="/security" className="btn btn--ghost">Trust overview →</a>
-        </div>
+        <a href="/security" className="btn btn--ghost">Trust overview →</a>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
         <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records key governance events such as organization changes, domain verification, SSO provider changes, billing-admin changes, confirmation rounds, ownership transfers, and team-access updates. Audit events never include participant identities, payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw evaluation data.</p>
       </div>
+
+      {/* Export */}
+      <div style={cardHead}>Audit export</div>
+      <AuditExport showOrg={!!(org && canOrgAudit)} />
 
       {/* Trust controls */}
       <div style={cardHead}>Trust controls</div>
@@ -100,7 +101,7 @@ export default async function AuditPage() {
         <>
           <div style={cardHead}>Organization activity — {org.name}</div>
           <EventList events={orgEvents} empty="Organization, domain, SSO, and provisioning changes will appear here." />
-          <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Account-level governance events. Org-wide and per-workspace activity can be exported above; broader enterprise audit export is planned.</p>
+          <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Account-level governance events. Organization and workspace activity can be exported as sanitized CSV or JSON above. Scheduled exports and retention controls are planned.</p>
         </>
       )}
       {org && !canOrgAudit && (
