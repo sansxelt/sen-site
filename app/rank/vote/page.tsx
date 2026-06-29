@@ -97,7 +97,7 @@ export default function VotePage() {
             <div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, marginBottom: 8 }}>How it works</div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                {["Evaluate real creative options from teams & creators", "Earn 1 credit per valid judgment (up to a daily cap)", "Low-quality, too-fast, or spam responses don't count", "Your honest judgment powers the decision reports teams rely on"].map((x) => (
+                {["Compare real options — AI outputs, copy, and creative — from teams", "Earn 1 credit per valid judgment (up to a daily cap)", "Low-quality, too-fast, or spam responses don't count", "Your honest judgment powers the Decision Packages teams rely on"].map((x) => (
                   <li key={x} style={{ display: "flex", gap: 8, fontSize: 13, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</li>
                 ))}
               </ul>
@@ -120,7 +120,7 @@ export default function VotePage() {
       {phase === "signin" && (
         <div className="card" style={{ textAlign: "center", padding: "clamp(28px, 4vw, 48px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 700, marginBottom: 8 }}>Sign in to evaluate &amp; earn</div>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>Evaluate real creative options and earn 1 credit per valid judgment. Spend them on your own evaluations.</p>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>Compare real options — AI outputs, copy, and creative — and earn 1 credit per valid judgment. Spend them on your own evaluations.</p>
           <button onClick={() => signIn("google", { callbackUrl: "/vote" })} className="btn btn--lg">Continue with Google</button>
         </div>
       )}
@@ -164,20 +164,25 @@ export default function VotePage() {
               ))}
             </div>
           )}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px,1fr))", gap: 12, marginBottom: 16, marginTop: 14 }}>
-            {options.map((o) => {
-              const sel = selected === o.id;
-              return (
-                <button key={o.id} onClick={() => setSelected(o.id)} style={{ position: "relative", border: `2px solid ${sel ? "var(--acc)" : "var(--line-2)"}`, borderRadius: "var(--r-sm)", overflow: "hidden", background: "var(--bg-1)", cursor: "pointer", padding: 0, boxShadow: sel ? "0 0 0 3px var(--acc-soft)" : "none", transform: sel ? "translateY(-2px)" : "none", transition: "border-color .15s ease, box-shadow .15s ease, transform .15s ease" }}>
-                  {o.asset_url
-                    ? <div style={{ aspectRatio: "1/1", backgroundImage: `url(${o.asset_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
-                    : <div style={{ aspectRatio: "1/1", display: "grid", placeItems: "center", padding: 14, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, color: "var(--fg-1)", textAlign: "center" }}>{o.label}</div>}
-                  <span style={{ position: "absolute", top: 8, left: 8, width: 24, height: 24, borderRadius: "50%", background: sel ? "var(--acc)" : "rgba(0,0,0,0.5)", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600 }}>{LETTERS[o.position]}</span>
-                  {sel && <span style={{ position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: "50%", background: "var(--acc)", color: "#fff", display: "grid", placeItems: "center", fontSize: 13 }}>✓</span>}
-                </button>
-              );
-            })}
-          </div>
+          {(() => {
+            const isText = options.every((o) => !o.asset_url);
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: isText ? "repeat(auto-fit, minmax(260px,1fr))" : "repeat(auto-fit, minmax(150px,1fr))", gap: 12, marginBottom: 16, marginTop: 14 }}>
+                {options.map((o) => {
+                  const sel = selected === o.id;
+                  return (
+                    <button key={o.id} onClick={() => setSelected(o.id)} style={{ position: "relative", textAlign: "left", border: `2px solid ${sel ? "var(--acc)" : "var(--line-2)"}`, borderRadius: "var(--r-sm)", overflow: "hidden", background: "var(--bg-1)", cursor: "pointer", padding: 0, boxShadow: sel ? "0 0 0 3px var(--acc-soft)" : "none", transform: sel ? "translateY(-2px)" : "none", transition: "border-color .15s ease, box-shadow .15s ease, transform .15s ease" }}>
+                      {o.asset_url
+                        ? <div style={{ aspectRatio: "1/1", backgroundImage: `url(${o.asset_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                        : <div style={{ padding: "34px 16px 16px", fontSize: 14.5, lineHeight: 1.55, color: "var(--fg-1)", fontFamily: "var(--font-sans)", whiteSpace: "pre-wrap", maxHeight: 260, overflowY: "auto" }}>{o.label}</div>}
+                      <span style={{ position: "absolute", top: 8, left: 8, width: 24, height: 24, borderRadius: "50%", background: sel ? "var(--acc)" : (o.asset_url ? "rgba(0,0,0,0.5)" : "var(--bg-2)"), color: o.asset_url || sel ? "#fff" : "var(--fg-3)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600, border: o.asset_url ? "none" : "1px solid var(--line-2)" }}>{LETTERS[o.position]}</span>
+                      {sel && <span style={{ position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: "50%", background: "var(--acc)", color: "#fff", display: "grid", placeItems: "center", fontSize: 13 }}>✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why did you pick it? (optional, helps the report)" rows={2} style={{ width: "100%", padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box", marginBottom: 12, resize: "vertical" }} />
           {err && <p style={{ color: "var(--err)", fontSize: 13, marginBottom: 10 }}>{err}</p>}
           {(() => {

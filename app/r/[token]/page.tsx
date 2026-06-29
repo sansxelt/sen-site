@@ -11,16 +11,16 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const data = await getSharedReport(token);
   // Unknown/disabled → generic card + generic copy (no report-specific preview).
   if (!data || (data.test.status !== "active" && data.test.status !== "complete")) {
-    return ogMeta({ title: "Report", description: "Get a structured decision report from real evaluators on which creative option wins.", path: `/r/${token}`, index: false });
+    return ogMeta({ title: "Decision record", description: "A structured Decision Package from quality-filtered human judgment — the recommended option, confidence, and signal quality.", path: `/r/${token}`, index: false });
   }
   const { test, report } = data;
-  let description = "Get a structured decision report from real evaluators on which creative option wins.";
+  let description = "A structured Decision Package from quality-filtered human judgment — the recommended option, confidence, and signal quality.";
   if (report && test.status === "complete") {
     const r = report.results;
     const win = r.winner_option_id ? r.ranked.find((x) => x.id === r.winner_option_id) : null;
     description = win
-      ? `Real people preferred Option ${OPTION_LETTERS[win.position]}, ${win.pct}%. See the full report.`
-      : "A clear, real-user verdict on which creative wins. See the full Vraelis report.";
+      ? `Recommended: Option ${OPTION_LETTERS[win.position]} (${win.pct}% preferred). See the full Decision Package.`
+      : "A structured decision from quality-filtered human judgment. See the full Vraelis Decision Package.";
   } else if (test.status === "active") {
     description = `Collecting judgments. ${test.votes_valid} of ${test.votes_target} in.`;
   }

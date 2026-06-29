@@ -21,17 +21,17 @@ const DEV_EVENT_LABEL: Record<string, string> = {
 };
 const shortDate = (s: string | null) => { if (!s) return "—"; try { return new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return "—"; } };
 
-const CURL = `# Create a test
+const CURL = `# Create an evaluation
 curl -X POST https://vraelis.com/api/v1/tests \\
   -H "X-Api-Key: YOUR_KEY" -H "Content-Type: application/json" \\
   -d '{
-    "title": "Which thumbnail?",
-    "category": "thumbnail",
-    "audience": "gamers",
+    "title": "Which response is more helpful, accurate, and safe?",
+    "category": "ai_image",
+    "audience": "general",
     "votes": 50,
     "options": [
-      { "image_url": "https://your-cdn.com/a.jpg" },
-      { "image_url": "https://your-cdn.com/b.jpg" }
+      { "text": "Response A — paste model output A here" },
+      { "text": "Response B — paste model output B here" }
     ]
   }'
 # -> { "id": "...", "status": "active", "credits_charged": 50 }

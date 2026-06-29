@@ -98,19 +98,24 @@ export function EmbedVote({ testId, title, options, screening = [] }: { testId: 
   return (
     <div ref={ref}>
       <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12 }}>{title}</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-        {options.map((o) => {
-          const sel = selected === o.id;
-          return (
-            <button key={o.id} onClick={() => setSelected(o.id)} style={{ position: "relative", border: `2px solid ${sel ? ACC : LINE}`, borderRadius: 12, overflow: "hidden", background: "#fff", cursor: "pointer", padding: 0, boxShadow: sel ? `0 0 0 3px ${ACC}22` : "none" }}>
-              {o.asset_url
-                ? <div style={{ aspectRatio: "1/1", backgroundImage: `url(${o.asset_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
-                : <div style={{ aspectRatio: "1/1", display: "grid", placeItems: "center", padding: 12, fontWeight: 700, fontSize: 17, textAlign: "center", color: "#0d1411" }}>{o.label}</div>}
-              <span style={{ position: "absolute", top: 6, left: 6, width: 22, height: 22, borderRadius: "50%", background: sel ? ACC : "rgba(0,0,0,.5)", color: "#fff", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700 }}>{LETTERS[o.position]}</span>
-            </button>
-          );
-        })}
-      </div>
+      {(() => {
+        const isText = options.every((o) => !o.asset_url);
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: isText ? "1fr" : "1fr 1fr", gap: 10, marginBottom: 12 }}>
+            {options.map((o) => {
+              const sel = selected === o.id;
+              return (
+                <button key={o.id} onClick={() => setSelected(o.id)} style={{ position: "relative", textAlign: "left", border: `2px solid ${sel ? ACC : LINE}`, borderRadius: 12, overflow: "hidden", background: "#fff", cursor: "pointer", padding: 0, boxShadow: sel ? `0 0 0 3px ${ACC}22` : "none" }}>
+                  {o.asset_url
+                    ? <div style={{ aspectRatio: "1/1", backgroundImage: `url(${o.asset_url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                    : <div style={{ padding: "30px 14px 14px", fontWeight: 400, fontSize: 14, lineHeight: 1.5, textAlign: "left", color: "#0d1411", whiteSpace: "pre-wrap", maxHeight: 200, overflowY: "auto" }}>{o.label}</div>}
+                  <span style={{ position: "absolute", top: 6, left: 6, width: 22, height: 22, borderRadius: "50%", background: sel ? ACC : (o.asset_url ? "rgba(0,0,0,.5)" : "#f1eee7"), color: o.asset_url || sel ? "#fff" : "#5b6b63", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700 }}>{LETTERS[o.position]}</span>
+                </button>
+              );
+            })}
+          </div>
+        );
+      })()}
       <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Why? (optional)" style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${LINE}`, fontSize: 13, boxSizing: "border-box", marginBottom: 10, outline: "none" }} />
       {err && <p style={{ color: "#d33", fontSize: 12, marginBottom: 8 }}>{err}</p>}
       <button onClick={submit} disabled={!selected || busy} style={{ width: "100%", padding: 12, borderRadius: 10, border: "none", background: !selected || busy ? "#9bcabb" : ACC, color: "#fff", fontWeight: 700, fontSize: 14, cursor: !selected || busy ? "default" : "pointer" }}>{busy ? "Saving…" : "Submit judgment"}</button>
