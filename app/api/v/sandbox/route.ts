@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   const options = (Array.isArray(body?.options) ? body.options : [])
     .slice(0, 6)
     .map((o: { text?: string; label?: string; image_url?: string }) => ({
-      text: typeof o?.text === "string" ? o.text.slice(0, 120) : typeof o?.label === "string" ? o.label.slice(0, 120) : undefined,
+      text: typeof o?.text === "string" ? o.text.slice(0, 600) : typeof o?.label === "string" ? o.label.slice(0, 600) : undefined,
       asset: typeof o?.image_url === "string" ? o.image_url : undefined,
     }))
     .filter((o: { text?: string; asset?: string }) => o.text || o.asset);

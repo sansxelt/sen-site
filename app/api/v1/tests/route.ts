@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     .slice(0, ent.maxOptions)
     .map((o: { image_url?: string; text?: string }) => ({
       asset: typeof o?.image_url === "string" ? o.image_url : undefined,
-      label: typeof o?.text === "string" ? o.text.slice(0, 120) : undefined,
+      label: typeof o?.text === "string" ? o.text.slice(0, 600) : undefined,
     }))
     .filter((o: { asset?: string; label?: string }) => o.asset || o.label);
 
