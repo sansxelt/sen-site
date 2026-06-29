@@ -67,7 +67,11 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         {justLaunched && test.status === "active" && (
           <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
             <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 4 }}>Your evaluation is collecting signal</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>Real people are evaluating now. Share or embed it below to collect qualified signal faster. We&apos;ll generate your decision record once enough valid judgments come in.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>It&apos;s running on our servers now — you can close this tab and come back anytime. Share the judgment link below to collect qualified signal faster; we&apos;ll generate your Decision Package once enough valid judgments come in.</p>
+            <div style={{ marginTop: 12, padding: "11px 13px", borderRadius: 10, background: "var(--bg-1)", border: "1px solid var(--acc-line)" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 }}>Share this with evaluators</div>
+              <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Publish the link below and send it to your audience. They compare the outputs and answer one short judgment task — low-quality, rushed, and gamed responses are filtered automatically, and you&apos;re only charged for judgments that pass.</p>
+            </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
               <a href="/app/new" className="btn btn--ghost" style={{ fontSize: 13 }}>Create another</a>
               <a href="/app" className="btn btn--ghost" style={{ fontSize: 13 }}>Dashboard</a>

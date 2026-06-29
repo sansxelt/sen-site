@@ -59,6 +59,28 @@ export default function DemoReport() {
       <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginBottom: 14, lineHeight: 1.55 }}>A sample pairwise preference judgment between two model responses to the same prompt. Vraelis collects human preferences and filters low-quality responses — too fast, spam, IP velocity, per-device caps, low reputation — before building the Decision Package. Below, <strong style={{ color: "var(--fg-2)" }}>209 qualified judgments</strong> are shown alongside <strong style={{ color: "var(--fg-2)" }}>31 filtered responses</strong> — only the clean signal is used to recommend a preferred output, score confidence, and assess readiness. <strong style={{ color: "var(--fg-2)" }}>All figures below are illustrative demo data, not real judgments.</strong></p>
       <p style={{ fontSize: 14.5, color: "var(--fg-1)", marginBottom: 24, lineHeight: 1.55, fontWeight: 600 }}>This is the kind of Decision Package Vraelis returns after an evaluation — quality-filtered human preference data, not a poll result.</p>
 
+      {/* Recommendation + why — the at-a-glance Decision Package summary */}
+      <div className="card card--acc" style={{ marginBottom: 22, display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.1fr)", gap: "clamp(16px, 3vw, 28px)", alignItems: "center" }}>
+        <div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 6 }}>Recommendation</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(1.4rem, 3vw, 1.9rem)", letterSpacing: "-0.02em", marginBottom: 8 }}>Response B preferred</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {[["Confidence", "High"], ["Readiness", "Strong"], ["Margin", "+22 pts"], ["Signal", "High"]].map(([k, v]) => (
+              <span key={k} style={{ fontSize: 11, padding: "4px 9px", borderRadius: 999, background: "var(--bg-1)", border: "1px solid var(--acc-line)", color: "var(--fg-2)" }}><span style={{ color: "var(--fg-4)" }}>{k}:</span> <strong style={{ color: "var(--fg-1)" }}>{v}</strong></span>
+            ))}
+          </div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", marginTop: 10 }}>209 qualified judgments · 31 filtered</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Why people preferred B</div>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 7 }}>
+            {["More accurate — A overstated the refund policy", "Clearer next step the user can act on", "Safer wording, with the right caveat", "Less overconfident about edge cases"].map((x) => (
+              <li key={x} style={{ display: "flex", gap: 9, fontSize: 13, color: "var(--fg-2)", lineHeight: 1.45 }}><span style={{ color: "var(--acc-deep)", flex: "none" }}>✓</span>{x}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
       {/* the candidates being evaluated */}
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>The responses being judged</div>
       <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>

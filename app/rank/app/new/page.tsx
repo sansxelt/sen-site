@@ -26,6 +26,13 @@ const WORKFLOWS: Workflow[] = [
   { name: "AI image output", desc: "Pick the strongest generation before you ship it.", title: "Which AI output is best?", category: "ai_image", context: "Which generated result looks the most polished and on-brand?", mode: "image", votes: 50 },
 ];
 
+// Sample model outputs so a new user can run a real eval without thinking up their own.
+// Fills the Response A / Response B text candidates for the "AI output evaluation" flow.
+const EXAMPLE_RESPONSES = [
+  "Yes, you can cancel anytime. Go to Settings and click Cancel — your plan ends immediately and you won't be charged again. Refunds are issued automatically for any unused time.",
+  "Yes — you can cancel anytime from Settings → Billing → Cancel plan. Your access continues until the end of the current billing period, and you won't be charged again after that. We don't auto-refund unused time, but reach out if your situation is unusual and we'll take a look.",
+];
+
 const MAX_FILE_MB = 15;
 
 function resize(file: File, max = 720): Promise<string> {
@@ -251,8 +258,11 @@ export default function NewTest() {
                     <textarea style={{ ...inputStyle, minHeight: 84, resize: "vertical", lineHeight: 1.5 }} value={t} maxLength={600} onChange={(e) => setTexts((arr) => arr.map((x, j) => (j === i ? e.target.value : x)))} placeholder={i === 0 ? "Paste model response A…" : i === 1 ? "Paste model response B…" : `Paste candidate ${optLetter(i)}…`} />
                   </div>
                 ))}
-                {texts.length < maxOptions && <button onClick={() => setTexts((a) => [...a, ""])} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>+ Add candidate</button>}
-                <div style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.5 }}>Candidates are concise text — model responses, prompts, or copy, up to 600 characters each. For longer artifacts, link to them or use the images / creative tab.</div>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                  {texts.length < maxOptions && <button onClick={() => setTexts((a) => [...a, ""])} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>+ Add candidate</button>}
+                  <button onClick={() => { setTexts([EXAMPLE_RESPONSES[0], EXAMPLE_RESPONSES[1]]); if (!title.trim()) setTitle("Which model response is more helpful, accurate, and safe?"); if (!context.trim()) setContext("Example: compare two support-agent responses for accuracy, clarity, and policy safety."); }} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>Use example AI responses</button>
+                </div>
+                <div style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.5 }}>Candidates are concise text — model responses, prompts, or copy, up to 600 characters each. New here? Tap <strong style={{ color: "var(--fg-3)" }}>Use example AI responses</strong> to try a real eval in seconds. For longer artifacts, link to them or use the images / creative tab.</div>
               </div>
             ) : (
               <>
