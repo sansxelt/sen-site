@@ -70,7 +70,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
             <OptionThumb o={winner} size={96} />
             <div style={{ minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Recommended output</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Recommendation</span>
                 <span className="pill" style={{ background: conf.bg, color: conf.fg, borderColor: "var(--acc-line)" }}>{intel.confidenceLabel} confidence</span>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
@@ -121,8 +121,8 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
         {followPlan && !viewerCanAct ? <p style={{ fontSize: 12, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.55 }}>The evaluation owner can run a confirmation round ({followPlan.actionLabel.toLowerCase()}) if more signal is needed.</p> : null}
       </div>
 
-      {/* ── Preference breakdown ── */}
-      <div style={head}>Preference breakdown</div>
+      {/* ── Candidate evaluation ── */}
+      <div style={head}>Candidate evaluation</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
         {ranked.map((row, i) => {
           const isWin = row.id === results.winner_option_id && !intel.inconclusive;
@@ -184,12 +184,12 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
         </div>
       )}
 
-      {/* ── Use this result ── */}
-      <div style={head}>Use this result</div>
+      {/* ── Next steps ── */}
+      <div style={head}>Next steps</div>
       <div className="card" style={{ marginBottom: 8, background: "var(--bg-2)" }}>
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
           {[
-            ["Choose what to ship", "from the recommended output."],
+            ["Choose what to ship", "based on this recommendation."],
             ["Judge how strong the call is", "from the preference margin and directional confidence."],
             ["Improve the weaker options", "using the reasoning signals."],
             ["Share or export it", "as a decision report for clients, teams, or apps — or pull it by API."],
@@ -202,9 +202,10 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
         </ul>
       </div>
 
-      {/* ── How to read this report ── */}
-      <div style={{ ...head, marginTop: 26 }}>How to read this report</div>
+      {/* ── How to read this decision record ── */}
+      <div style={{ ...head, marginTop: 26 }}>How to read this decision record</div>
       <div className="card" style={{ marginBottom: 8, background: "var(--bg-2)" }}>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.55 }}>This is a decision record — a structured business artifact capturing the recommendation, confidence, signal quality, and decision readiness derived from qualified human judgment, not a poll result.</p>
         <div style={{ display: "grid", gap: 11 }}>
           {REPORT_GLOSSARY.map((g) => (
             <div key={g.term} style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>

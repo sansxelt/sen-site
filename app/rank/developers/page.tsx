@@ -69,7 +69,7 @@ export default function DevelopersPage() {
               ["TypeScript SDK", "A typed client for create / fetch / export / webhook verification, matching the schema. In the repo today."],
               ["Signed webhooks", "An HMAC-signed test.completed fires the moment an evaluation fills — retried, idempotent, no polling."],
               ["Sandbox", "Exercise the whole flow at 0 credits / 0 quota, isolated from production analytics."],
-              ["Embedded evaluation widget", "One collection surface among several — a way to gather signal in your site or app."],
+              ["Embedded evaluation surface", "One collection surface among several — a way to gather signal in your site or app."],
               ["Decision Package schema", "A public JSON Schema for typed integrations. The platform output, not a raw tally."],
               ["Audit events", "Governance actions recorded as a safe, exportable trail — no secrets, tokens, or ids."],
               ["Governed access", "Organizations, verified domains, OIDC SSO, and role-separated, client-safe sharing."],
@@ -139,6 +139,16 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* Data warehouse and ML integrations (future) */}
+      <section className="section">
+        <div className="wrap" style={{ maxWidth: 760 }}>
+          <p className="eyebrow">Data warehouse &amp; ML platform integrations <span className="pill" style={{ marginLeft: 8, fontSize: 10.5 }}>future direction</span></p>
+          <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Route decisions into your analytics and ML stack.</h2>
+          <p className="lead-copy" style={{ marginBottom: 12 }}>Teams can route Decision Package outputs into internal analytics, ML evaluation, or data warehouse systems. Native integrations with data warehouses and ML platforms are planned after the core API and governance layer are stable.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.7 }}>Today, export to JSON or CSV, or consume the Decision Package via signed webhooks — enough to pipe decisions into your own warehouse or pipeline now. Databricks-style warehouse and ML workflows are a future integration direction, not live yet.</p>
+        </div>
+      </section>
+
       {/* SDK starter */}
       <section id="sdk" className="section">
         <div className="wrap" style={{ maxWidth: 760 }}>
@@ -195,7 +205,7 @@ export default function DevelopersPage() {
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "center" }} className="cols-stack">
             <div>
-              <p className="eyebrow">Embedded evaluation widget — one collection surface</p>
+              <p className="eyebrow">Embedded evaluation surface — one collection option</p>
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Collect signal anywhere. The output is the Decision Package.</h2>
               <p className="lead-copy" style={{ marginBottom: 14 }}>The embed is one way to collect qualified human signal — alongside the web console and the API. Whatever the channel, the platform output is the same governed Decision Package. Low-quality responses are filtered automatically.</p>
               <Code label="html">{EMBED}</Code>
@@ -220,8 +230,8 @@ export default function DevelopersPage() {
       <section className="section" style={{ borderBottom: "none" }}>
         <div className="wrap">
           <p className="eyebrow">Use cases</p>
-          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Make human evaluation a feature your users pay for.</h2>
-          <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>Add an &ldquo;evaluate with real people&rdquo; action to your app. Vraelis runs the routing, quality filtering, decision packages, webhooks, and exports — you offer it as a premium feature and get structured preference data back.</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Integrate human evaluation into your decision workflows.</h2>
+          <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>Submit candidate outputs from your app, model, or pipeline. Vraelis runs the routing, quality filtering, readiness, Decision Packages, webhooks, and exports — you get a structured, audit-ready decision record back, ready to store or route into your own systems.</p>
           <div className="cols-3" style={{ gap: 14, marginBottom: 28 }}>
             {[
               ["AI image tools", "Let users pick the best generation before download. Learn which styles win."],

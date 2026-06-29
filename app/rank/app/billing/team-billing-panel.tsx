@@ -87,7 +87,7 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing hasn&apos;t been set up by the workspace owner yet.</p>
       )}
       {err && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{err}</p>}
-      <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Payments are securely processed by Stripe. Your billing overview — plan, seats, renewal, and invoices — stays here in Vraelis. The secure portal is used only to update your card, taxes, or billing details.</p>
+      <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Payments are securely processed by Stripe. Your complete billing overview — plan, seats, renewal dates, and invoices — stays here in Vraelis. The secure billing portal is used only to update payment methods, tax settings, or billing address.</p>
     </div>
   );
 }

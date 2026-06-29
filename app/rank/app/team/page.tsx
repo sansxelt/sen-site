@@ -61,7 +61,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
             </div>
             {view.projects.length > 0 && (
               <>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Project access</div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Program access</div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>{view.projects.map((p) => <div key={p.project_id} className="card"><div style={{ fontWeight: 600, marginBottom: 6 }}>{p.project_name}</div>{p.members.map((mm) => <div key={mm.email} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--fg-2)", padding: "4px 0" }}><span>{mm.email}</span><span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>{mm.role}</span></div>)}</div>)}</div>
               </>
             )}

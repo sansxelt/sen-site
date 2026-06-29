@@ -8,6 +8,6 @@ export function ReportActions({ url }: { url: string }) {
     navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1600); }).catch(() => {});
   }
   return (
-    <button onClick={copy} className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13 }}>{copied ? "Link copied ✓" : "Copy report link"}</button>
+    <button onClick={copy} className="btn btn--ghost" style={{ padding: "8px 14px", fontSize: 13 }}>{copied ? "Copied ✓" : "Copy decision record link"}</button>
   );
 }

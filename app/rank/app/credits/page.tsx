@@ -104,7 +104,7 @@ export default function CreditsPage() {
             </div>
             <div style={{ marginTop: 16 }}>
               <button onClick={go} disabled={!valid} className="btn btn--lg" style={{ width: "100%", justifyContent: "center", opacity: valid ? 1 : 0.55 }}>Continue to checkout <span aria-hidden>→</span></button>
-              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis (Stripe). No credits? <a href="/vote" style={{ color: "var(--acc-deep)" }}>Evaluate to earn →</a></p>
+              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis. No credits? <a href="/vote" style={{ color: "var(--acc-deep)" }}>Evaluate to earn →</a></p>
             </div>
           </div>
         </div>

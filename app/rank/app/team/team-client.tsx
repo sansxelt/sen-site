@@ -197,11 +197,11 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
             {(billing.hasSubscription || billing.status) ? <span className="pill" style={{ fontSize: 10.5, color: billing.status === "past_due" || billing.status === "unpaid" ? "var(--money)" : "var(--acc-deep)" }}>{statusLabel(billing.status)}</span> : null}
           </div>
           {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0", lineHeight: 1.5 }}>You&apos;re over your seat limit. Add seats to invite more internal collaborators, or change roles to Client viewer. Existing members keep their access.</p>}
-          {(billing.status === "past_due" || billing.status === "unpaid") && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0", lineHeight: 1.5 }}>Open the billing portal to update payment details.</p>}
+          {(billing.status === "past_due" || billing.status === "unpaid") && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0", lineHeight: 1.5 }}>Use Manage team billing to update your payment method.</p>}
           <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Pending invites don&apos;t count until accepted. Team seats are for additional internal collaborators; client viewers are always free.</p>
 
           {billing.configured && billing.hasSubscription && (
-            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong> · {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}. Change your plan, interval, or payment method in the billing portal.</p>
+            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong> · {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}. Change your plan, billing interval, or payment method in Manage team billing.</p>
           )}
 
           {billing.configured && !billing.hasSubscription && (
@@ -227,7 +227,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
             ) : <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Team billing isn&apos;t configured yet — seat counts are informational. Client viewers are free.</span>}
           </div>
           {billing.periodEnd && billing.hasSubscription ? <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0" }}>Next renewal {new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p> : null}
-          <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Taxes, receipts, and invoices are handled by Stripe and available in the billing portal.</p>
+          <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Taxes and receipts are handled by Stripe. Your invoices are available in Manage team billing.</p>
         </div>
         );
       })()}
@@ -292,10 +292,10 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         </>
       )}
 
-      {/* Project access overview (owner/admin) */}
+      {/* Program access overview (owner/admin) */}
       {canManage && ctx.projectAccess.length > 0 && (
         <>
-          <div style={cardHead}>Project access</div>
+          <div style={cardHead}>Program access</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
             {ctx.projectAccess.map((p) => (
               <div key={p.project_id} className="card">

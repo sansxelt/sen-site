@@ -26,8 +26,8 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
       return (
         <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
           <a href="/app/team" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</a>
-          <div className="phead"><div><p className="eyebrow">Project access · Workspace admin</p><h1 className="display">{managed.name}</h1>{managed.description ? <p>{managed.description}</p> : null}</div></div>
-          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "0 0 4px", maxWidth: 620, lineHeight: 1.6 }}>You manage this project&apos;s access as a workspace admin. The project&apos;s analytics stay with its owner; you can invite clients and collaborators and manage their roles below.</p>
+          <div className="phead"><div><p className="eyebrow">Program access · Workspace admin</p><h1 className="display">{managed.name}</h1>{managed.description ? <p>{managed.description}</p> : null}</div></div>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "0 0 4px", maxWidth: 620, lineHeight: 1.6 }}>You manage this program&apos;s access as a workspace admin. The program&apos;s analytics stay with its owner; you can invite clients and collaborators and manage their roles below.</p>
           <ProjectAccess projectId={id} />
           <div style={{ marginTop: 22 }}><a href={`/app/shared/projects/${id}`} className="btn btn--ghost">Open client-safe view →</a></div>
         </div>
@@ -36,9 +36,9 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
     if (await getProjectAccessRole(email, id)) redirect(`/app/shared/projects/${id}`);
     return (
       <div className="wrap" style={{ maxWidth: 560, paddingTop: "clamp(28px, 5vw, 56px)", textAlign: "center" }}>
-        <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", marginBottom: 12 }}>Project not found</h1>
+        <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", marginBottom: 12 }}>Program not found</h1>
         <p className="lead-copy" style={{ margin: "0 auto 22px" }}>It may have been removed, or you don&apos;t have access to it.</p>
-        <a href="/app/projects" className="btn btn--ghost">Back to projects</a>
+        <a href="/app/projects" className="btn btn--ghost">Back to programs</a>
       </div>
     );
   }
@@ -48,21 +48,21 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
 
   return (
     <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <a href="/app/projects" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Projects</a>
+      <a href="/app/projects" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Programs</a>
       <div className="phead">
         <div style={{ minWidth: 0 }}>
-          <p className="eyebrow">Project</p>
+          <p className="eyebrow">Program</p>
           <h1 className="display">{project.name}</h1>
           {project.description ? <p>{project.description}</p> : null}
           <EditProjectForm id={project.id} name={project.name} description={project.description} />
         </div>
-        <a href="/app/new" className="btn">New evaluation <span aria-hidden>→</span></a>
+        <a href="/app/new" className="btn">New workflow <span aria-hidden>→</span></a>
       </div>
 
       <div className="tile-grid cols-3" style={{ marginBottom: 26, marginTop: 8 }}>
-        <div className="stat"><div className="stat__l">Evaluations</div><div className="stat__v tnum">{stats.evaluations}</div><div className="stat__s">in this project</div></div>
-        <div className="stat"><div className="stat__l">Completed</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">decision reports</div></div>
-        <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">collected</div></div>
+        <div className="stat"><div className="stat__l">Workflows</div><div className="stat__v tnum">{stats.evaluations}</div><div className="stat__s">in this program</div></div>
+        <div className="stat"><div className="stat__l">Decisions made</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">decision records</div></div>
+        <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">across workflows</div></div>
       </div>
 
       {pa.completed > 0 ? (
@@ -109,14 +109,14 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
         </div>
       ) : null}
 
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Evaluations</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Decision workflows</div>
       {stats.rows.length > 0 ? (
         <EvaluationList rows={stats.rows} projects={projOpts} showProject={false} />
       ) : (
         <div className="card" style={{ textAlign: "center", padding: "clamp(24px, 4vw, 40px)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>No evaluations in this project yet</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto 16px", maxWidth: 380 }}>Create an evaluation and assign it to this project, or move an existing one here from the dashboard.</p>
-          <a href="/app/new" className="btn">New evaluation →</a>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>No workflows in this program yet</div>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto 16px", maxWidth: 380 }}>Create a decision workflow and add it to this program, or move an existing one here from your dashboard.</p>
+          <a href="/app/new" className="btn">New workflow →</a>
         </div>
       )}
 

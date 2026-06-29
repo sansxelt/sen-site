@@ -8,9 +8,9 @@ type Member = { id: string; user_id: string | null; email: string; role: Role; s
 const ROLES: Role[] = ["editor", "viewer", "client_viewer"];
 const ROLE_LABEL: Record<Role, string> = { editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 const ROLE_DESC: Record<Role, string> = {
-  editor: "Collaborate on this project — view its evaluations and reports.",
-  viewer: "View this project's evaluations and reports (read-only).",
-  client_viewer: "Client-safe project reports only — no private internals.",
+  editor: "Collaborate on this program — manage workflows, view decision records and readiness.",
+  viewer: "View this program's workflows and decision records (read-only).",
+  client_viewer: "Decision records and readiness only — no proprietary details or team access.",
 };
 const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
 
@@ -58,9 +58,9 @@ export function ProjectAccess({ projectId }: { projectId: string }) {
 
   return (
     <div style={{ marginTop: 34 }}>
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Project access</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Program access &amp; governance</div>
       <div className="card">
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 14px" }}>Invite clients or collaborators to this project without giving them access to the full workspace.</p>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 14px" }}>Invite clients or collaborators to this program — they see decision records and readiness, but not your full workspace or pricing.</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="client@company.com" onKeyDown={(e) => { if (e.key === "Enter" && !busy) invite(); }} style={{ ...input, flex: "1 1 240px" }} />
           <select value={role} onChange={(e) => setRole(e.target.value as Role)} style={input as React.CSSProperties}>{ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
@@ -93,7 +93,7 @@ export function ProjectAccess({ projectId }: { projectId: string }) {
             ))}
           </div>
         )}
-        {activeM.length === 0 && pending.length === 0 && <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "16px 0 0" }}>No project-specific members yet.</p>}
+        {activeM.length === 0 && pending.length === 0 && <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "16px 0 0" }}>No program-specific members yet.</p>}
       </div>
     </div>
   );

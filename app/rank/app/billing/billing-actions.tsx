@@ -41,7 +41,7 @@ export function PaymentMethodButton() {
 
   return (
     <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-      <button onClick={open} disabled={busy} className="btn">{busy ? "Opening…" : "Add or update card"}</button>
+      <button onClick={open} disabled={busy} className="btn">{busy ? "Opening…" : "Update payment method"}</button>
       {msg && <span style={{ fontSize: 13, color: "var(--fg-3)" }}>{msg}</span>}
     </div>
   );

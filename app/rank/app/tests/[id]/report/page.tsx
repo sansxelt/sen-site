@@ -19,7 +19,7 @@ import { ShareControls } from "../share-controls";
 import { ExportControls } from "../export-controls";
 import { ReportBody, OptionThumb } from "../report-body";
 
-export const metadata: Metadata = { title: "Report" };
+export const metadata: Metadata = { title: "Decision record" };
 
 function Msg({ title, body }: { title: string; body?: string }) {
   return (
@@ -66,8 +66,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         {justLaunched && test.status === "active" && (
           <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 4 }}>Your evaluation is live</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>Real people are evaluating now. Share or embed it below to collect judgments faster. We&apos;ll generate your report once enough valid judgments come in.</p>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 4 }}>Your evaluation is collecting signal</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>Real people are evaluating now. Share or embed it below to collect qualified signal faster. We&apos;ll generate your decision record once enough valid judgments come in.</p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
               <a href="/app/new" className="btn btn--ghost" style={{ fontSize: 13 }}>Create another</a>
               <a href="/app" className="btn btn--ghost" style={{ fontSize: 13 }}>Dashboard</a>
@@ -125,7 +125,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   return (
     <div className="wrap" style={{ maxWidth: 860, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 90 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <p className="eyebrow" style={{ marginBottom: 0 }}>Evaluation result</p>
+        <p className="eyebrow" style={{ marginBottom: 0 }}>Decision record</p>
         <HealthBadge state={health} />
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8, marginTop: 8 }}>{test.title}</h1>
@@ -195,7 +195,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       </div>
 
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", lineHeight: 1.7 }}>
-        Credits were held in escrow while the evaluation ran. Low-quality responses were filtered, unused credits refunded, and this report is based only on valid human judgments. It is directional feedback, not a guarantee of sales, clicks, conversions, or revenue.
+        Credits were held in escrow while the evaluation ran. Low-quality responses were filtered, unused credits refunded, and this decision record is based only on valid human judgments. It is directional guidance from human evaluation, not a guarantee of sales, clicks, conversions, or revenue.
       </p>
     </div>
   );

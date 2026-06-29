@@ -48,23 +48,23 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
         <>
           {variant !== "projects" && (
             <div className="tile-grid cols-4" style={{ marginBottom: 22 }}>
-              <div className="stat"><div className="stat__l">Evaluations</div><div className="stat__v tnum">{t.evaluations.toLocaleString()}</div><div className="stat__s">{t.completed} completed, {t.active} active</div></div>
-              <div className="stat"><div className="stat__l">Completed</div><div className="stat__v tnum">{t.completed.toLocaleString()}</div><div className="stat__s">decision reports</div></div>
-              <div className="stat"><div className="stat__l">Active</div><div className="stat__v tnum">{t.active.toLocaleString()}</div><div className="stat__s">collecting</div></div>
-              <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{t.validJudgments.toLocaleString()}</div><div className="stat__s">across the workspace</div></div>
+              <div className="stat"><div className="stat__l">Decision workflows</div><div className="stat__v tnum">{t.evaluations.toLocaleString()}</div><div className="stat__s">{t.completed} decided, {t.active} collecting</div></div>
+              <div className="stat"><div className="stat__l">Decisions made</div><div className="stat__v tnum">{t.completed.toLocaleString()}</div><div className="stat__s">decision records</div></div>
+              <div className="stat"><div className="stat__l">Collecting signal</div><div className="stat__v tnum">{t.active.toLocaleString()}</div><div className="stat__s">active workflows</div></div>
+              <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{t.validJudgments.toLocaleString()}</div><div className="stat__s">verified judgments</div></div>
             </div>
           )}
-          <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginBottom: 14 }}>You are viewing analytics for projects shared with you in this workspace. Open a project for its full decision and signal-quality analytics.</p>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginBottom: 14 }}>You are viewing analytics for decision programs shared with you in this workspace. Open a program for its full decision and signal-quality analytics.</p>
           {summary.projects.length === 0 ? (
-            <div className="empty"><div className="empty__icon">📂</div><h3>This workspace has no projects yet</h3><p>Projects created in this workspace will appear here.</p></div>
+            <div className="empty"><div className="empty__icon">📂</div><h3>This workspace has no decision programs yet</h3><p>Decision programs created in this workspace will appear here.</p></div>
           ) : projectsWithWork.length === 0 ? (
-            <div className="empty"><div className="empty__icon">◷</div><h3>No completed evaluations yet</h3><p>Completed evaluations will appear here with decision quality and signal analytics.</p></div>
+            <div className="empty"><div className="empty__icon">◷</div><h3>No decisions made yet</h3><p>Completed decision workflows will appear here with decision quality and signal analytics.</p></div>
           ) : (
             <div className="tile-grid cols-3">
               {summary.projects.map((p) => (
                 <a key={p.id} href={`/app/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
                   <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
-                  <div className="acard__d">{p.evaluations} eval{p.evaluations === 1 ? "" : "s"} · {p.completed} completed · {p.validJudgments.toLocaleString()} valid</div>
+                  <div className="acard__d">{p.evaluations} workflow{p.evaluations === 1 ? "" : "s"} · {p.completed} decided · {p.validJudgments.toLocaleString()} qualified</div>
                   <div style={{ fontSize: 12, color: "var(--acc-deep)" }}>Open analytics →</div>
                 </a>
               ))}

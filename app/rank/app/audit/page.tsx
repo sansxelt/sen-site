@@ -77,6 +77,7 @@ export default async function AuditPage() {
       {/* Export */}
       <div style={cardHead}>Audit export</div>
       <AuditExport showOrg={!!(org && canOrgAudit)} />
+      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Export the governance trail as sanitized CSV or JSON for your own records. Organization-wide governance, verified domains, OIDC SSO, and scheduled exports with retention controls are part of the enterprise trust layer — <a href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise" style={{ color: "var(--acc-deep)" }}>talk to us about enterprise requirements →</a></p>
 
       {/* Trust controls */}
       <div style={cardHead}>Trust controls</div>

@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { sharedProjectView, ROLE_LABEL } from "@/lib/v-workspace";
 import { SectionHead, Dist, Bars, CONF_COLORS, SIGNAL_COLORS } from "../../../_workspace/analytics-ui";
 
-export const metadata: Metadata = { title: "Shared project" };
+export const metadata: Metadata = { title: "Shared program" };
 
 // A client-safe, read-only project view for project members / client viewers. Shows
 // the project's client-ready reports only — no billing, API, webhooks, collection
@@ -31,17 +31,17 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <a href="/app/team" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</a>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-        <p className="eyebrow" style={{ margin: 0 }}>Shared project</p>
+        <p className="eyebrow" style={{ margin: 0 }}>Shared program</p>
         <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[view.role]} · client-safe view</span>
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 8 }}>{view.project.name}</h1>
       {view.project.description ? <p className="lead-copy" style={{ marginBottom: 8 }}>{view.project.description}</p> : null}
-      <p style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 24 }}>{view.analytics ? "Read-only project analytics and client-ready reports." : "You have access to this project's client-ready reports."}</p>
+      <p style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 24 }}>{view.analytics ? "Program analytics and shared decision records." : "You have access to this program's decision records."}</p>
 
       {/* Read-only project analytics — editor/viewer/admin/owner only (not client viewers) */}
       {view.analytics && view.analytics.completed > 0 && (
         <>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Project analytics · read-only</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Program analytics · read-only</div>
           <div className="tile-grid cols-2" style={{ marginBottom: 16 }}>
             <div className="card">
               <SectionHead>Decision quality</SectionHead>
@@ -81,9 +81,9 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
         </>
       )}
 
-      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Reports</div>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Decision records</div>
       {completed.length === 0 && inProgress.length === 0 ? (
-        <div className="empty"><div className="empty__icon">◷</div><h3>Nothing to review yet</h3><p>No completed evaluations are ready to share yet.</p></div>
+        <div className="empty"><div className="empty__icon">◷</div><h3>No decision records yet</h3><p>Completed decision workflows will appear here as decision records are ready.</p></div>
       ) : (
         <>
           {completed.length > 0 && (
@@ -92,7 +92,7 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
                 <a key={e.test_id} href={`/app/shared/${e.test_id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
                     <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>{e.title}</div>
-                    <span style={{ fontSize: 12.5, color: "var(--acc-deep)" }}>View report →</span>
+                    <span style={{ fontSize: 12.5, color: "var(--acc-deep)" }}>View decision record →</span>
                   </div>
                   <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 10 }}>
                     {[["Recommended", e.recommended ?? "—"], ["Confidence", e.confidence ?? "—"], ["Margin", e.margin != null ? `${e.margin} pts` : "—"], ["Signal", e.signal ?? "—"]].map(([k, v]) => (

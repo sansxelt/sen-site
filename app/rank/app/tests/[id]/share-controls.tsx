@@ -26,8 +26,8 @@ export function ShareControls({ testId, enabled: e0, token: t0 }: { testId: stri
   return (
     <div className="card" style={{ marginBottom: 26 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Share report</span>
-        <span className="pill" style={enabled ? { background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" } : { color: "var(--fg-4)" }}>{enabled ? "Public link on" : "Private"}</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Decision record sharing</span>
+        <span className="pill" style={enabled ? { background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" } : { color: "var(--fg-4)" }}>{enabled ? "Shared" : "Private"}</span>
       </div>
       {enabled && url ? (
         <>
@@ -40,12 +40,12 @@ export function ShareControls({ testId, enabled: e0, token: t0 }: { testId: stri
             <button onClick={() => act("regenerate")} disabled={busy} className="btn btn--ghost" style={{ fontSize: 13 }}>Regenerate</button>
             <a href={url} target="_blank" rel="noopener" className="btn btn--ghost" style={{ fontSize: 13 }}>Open ↗</a>
           </div>
-          <p style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 12, fontFamily: "var(--font-mono)" }}>Anyone with this link can view the report (read-only). No account, billing, or private data is exposed.</p>
+          <p style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 12, fontFamily: "var(--font-mono)" }}>Anyone with this link can view the decision record (read-only). No account, billing, evaluator data, or internal metrics are exposed.</p>
         </>
       ) : (
         <>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 14 }}>Publish a read-only public link to share with clients or teammates. No Vraelis account needed to view.</p>
-          <button onClick={() => act("enable")} disabled={busy} className="btn">{busy ? "Enabling…" : "Enable public sharing"}</button>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 14 }}>Publish this decision record to share with clients or stakeholders. No Vraelis account required to view.</p>
+          <button onClick={() => act("enable")} disabled={busy} className="btn">{busy ? "Publishing…" : "Publish decision record"}</button>
         </>
       )}
     </div>

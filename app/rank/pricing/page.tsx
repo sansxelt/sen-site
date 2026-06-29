@@ -154,7 +154,7 @@ export default function PricingPage() {
             <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Organization governance, verified domains, OIDC single sign-on, audit activity, client-safe sharing, team roles, and billing-admin separation. SAML and SCIM support are planned for larger organizations. <a href="/security" style={{ color: "var(--acc-deep)" }}>See the trust overview →</a> or <a href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise" style={{ color: "var(--acc-deep)" }}>contact us</a> about enterprise requirements.</p>
           </div>
 
-          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Plans renew automatically. Cancel anytime, and your plan stays active until the period ends. Secure checkout on Vraelis, powered by Stripe.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Plans renew automatically. Cancel anytime, and your plan stays active until the period ends. Secure checkout on Vraelis. Payments processed by Stripe.</p>
         </div>
       </section>
     </div>

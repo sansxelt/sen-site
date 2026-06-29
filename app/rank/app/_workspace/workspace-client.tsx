@@ -28,12 +28,12 @@ export function NewProjectForm({ label = "New project", primary = false }: { lab
   if (!open) return <button onClick={() => setOpen(true)} className={primary ? "btn" : "btn btn--ghost"}>{label}</button>;
   return (
     <div className="card" style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 460 }}>
-      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>New project</div>
-      <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Project name, e.g. Summer campaign" maxLength={120} autoFocus />
-      <textarea style={{ ...inputStyle, resize: "vertical" }} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="What you're deciding here (optional)" rows={2} maxLength={600} />
+      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>New decision program</div>
+      <input style={inputStyle} value={name} onChange={(e) => setName(e.target.value)} placeholder="Program name, e.g. Summer campaign" maxLength={120} autoFocus />
+      <textarea style={{ ...inputStyle, resize: "vertical" }} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="What decision workflows this program covers (optional)" rows={2} maxLength={600} />
       {err && <p style={{ color: "var(--err)", fontSize: 13, margin: 0 }}>{err}</p>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={submit} disabled={!name.trim() || busy} className="btn" style={{ opacity: name.trim() && !busy ? 1 : 0.55 }}>{busy ? "Creating…" : "Create project"}</button>
+        <button onClick={submit} disabled={!name.trim() || busy} className="btn" style={{ opacity: name.trim() && !busy ? 1 : 0.55 }}>{busy ? "Creating…" : "Create program"}</button>
         <button onClick={() => setOpen(false)} className="btn btn--ghost">Cancel</button>
       </div>
     </div>
@@ -81,9 +81,9 @@ export function MoveToProject({ testId, projectId, projects }: { testId: string;
     setBusy(false);
   }
   return (
-    <select value={val} onChange={(e) => change(e.target.value)} disabled={busy} aria-label="Move to project"
+    <select value={val} onChange={(e) => change(e.target.value)} disabled={busy} aria-label="Move to program"
       style={{ fontSize: 12, padding: "5px 8px", borderRadius: 8, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-3)", maxWidth: 150, outline: "none" }}>
-      <option value="">No project</option>
+      <option value="">No program</option>
       {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
     </select>
   );

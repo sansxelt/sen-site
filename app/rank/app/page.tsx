@@ -17,11 +17,11 @@ const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing:
 
 function FirstRun({ bal }: { bal: number }) {
   const steps: [string, string][] = [
-    ["Submit your candidates", "2 to 8 options: images, AI outputs, copy, UI"],
-    ["Choose a judgment target", "1 credit = 1 valid human judgment"],
-    ["Launch the evaluation", "Real people weigh in, low-quality filtered"],
-    ["Review the decision report", "Recommended output, margin, confidence, reasons"],
-    ["Share, export, or use the API", "A decision you can act on anywhere"],
+    ["Define what you're deciding", "2 to 8 candidate options: images, AI outputs, copy, UI"],
+    ["Collect qualified signal", "1 credit = 1 valid human judgment"],
+    ["Gather human judgment", "Real evaluators weigh in, low-quality filtered"],
+    ["Review the decision record", "Recommended option, margin, confidence, reasons"],
+    ["Publish, export, or use the API", "A decision you can act on, share, or route anywhere"],
   ];
   return (
     <>
@@ -30,16 +30,16 @@ function FirstRun({ bal }: { bal: number }) {
         <div style={{ position: "relative" }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Welcome to your workspace</div>
           <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", marginBottom: 8 }}>You have {bal} starter credits.</h2>
-          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Create your first project or run an evaluation. Submit a few candidates — images, AI outputs, copy, landing heroes, UI — and real people tell you which to ship. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
+          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Create your first decision program or run a workflow. Submit a few candidates — images, AI outputs, copy, landing heroes, UI — and qualified evaluators tell you which to ship. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn">Create first evaluation →</a>
-            <a href="/app/projects" className="btn btn--ghost">New project</a>
-            <a href="/demo" className="btn btn--ghost">View a sample report</a>
+            <a href="/app/new" className="btn">Start first decision workflow →</a>
+            <a href="/app/projects" className="btn btn--ghost">New decision program</a>
+            <a href="/demo" className="btn btn--ghost">View a sample decision record</a>
           </div>
         </div>
       </div>
       <div className="card">
-        <div style={headLbl}>How an evaluation works</div>
+        <div style={headLbl}>How a decision workflow works</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {steps.map(([label, sub], i) => (
             <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -71,8 +71,8 @@ export default async function Dashboard() {
       <section className="section" style={{ borderBottom: "none" }}>
         <div className="wrap" style={{ maxWidth: 520, textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Workspace</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Your <span className="em">evaluations</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to run evaluations, organize them into projects, and see your decision reports.</p>
+          <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Your <span className="em">decisions</span>.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to run decision workflows, organize them into programs, and see your decision records.</p>
           <a href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Continue with Google</a>
         </div>
       </section>
@@ -120,18 +120,18 @@ export default async function Dashboard() {
 
       {/* quick actions */}
       <div className="tile-grid cols-4" style={{ marginBottom: 22 }}>
-        <QuickAction href="/app/new" title="New evaluation" sub="Submit candidates, get a decision" />
-        <QuickAction href="/app/projects" title="New project" sub="Group decisions by campaign" />
-        <QuickAction href="/demo" title="Demo report" sub="See a sample decision package" />
-        <QuickAction href="/app/data" title="Data & exports" sub="Aggregate results, JSON / CSV" />
+        <QuickAction href="/app/new" title="New decision workflow" sub="Submit candidates, get a decision record" />
+        <QuickAction href="/app/projects" title="New decision program" sub="Group related workflows by campaign or client" />
+        <QuickAction href="/demo" title="Sample decision package" sub="See a completed decision record" />
+        <QuickAction href="/app/data" title="Audit & exports" sub="Aggregate decision records, JSON / CSV" />
       </div>
 
       {/* stats */}
       <div className="tile-grid cols-4" style={{ marginBottom: 26 }}>
         <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><a href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</a></div></div>
-        <div className="stat"><div className="stat__l">Active</div><div className="stat__v tnum">{stats.active}</div><div className="stat__s">collecting judgments</div></div>
-        <div className="stat"><div className="stat__l">Completed</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">decision reports</div></div>
-        <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">collected for you</div></div>
+        <div className="stat"><div className="stat__l">Collecting signal</div><div className="stat__v tnum">{stats.active}</div><div className="stat__s">active workflows</div></div>
+        <div className="stat"><div className="stat__l">Decisions made</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">decision records</div></div>
+        <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">verified human judgments</div></div>
       </div>
 
       {isEmpty ? (
@@ -140,34 +140,34 @@ export default async function Dashboard() {
         <>
           {/* projects */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ ...headLbl, marginBottom: 0 }}>Projects ({projects.length})</div>
-            <a href="/app/projects" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All projects →</a>
+            <div style={{ ...headLbl, marginBottom: 0 }}>Decision programs ({projects.length})</div>
+            <a href="/app/projects" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All programs →</a>
           </div>
           {projects.length > 0 ? (
             <div className="tile-grid cols-3" style={{ marginBottom: 28 }}>
               {projects.slice(0, 6).map((p) => (
                 <a key={p.id} href={`/app/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 6 }}>
                   <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
-                  <div className="acard__d">{p.evaluation_count ?? 0} evaluation{(p.evaluation_count ?? 0) === 1 ? "" : "s"}</div>
+                  <div className="acard__d">{p.evaluation_count ?? 0} workflow{(p.evaluation_count ?? 0) === 1 ? "" : "s"}</div>
                 </a>
               ))}
             </div>
           ) : (
             <div className="card" style={{ marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", background: "var(--bg-2)" }}>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Group related evaluations into a project — a campaign, a redesign, a client.</div>
-              <NewProjectForm label="New project" />
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Group related workflows into a decision program — a campaign, a redesign, a client.</div>
+              <NewProjectForm label="New program" />
             </div>
           )}
 
-          {/* evaluations */}
-          <div style={headLbl}>Evaluations ({stats.total})</div>
+          {/* decision workflows */}
+          <div style={headLbl}>Decision workflows ({stats.total})</div>
           {evaluations.length > 0 ? (
             <EvaluationList rows={evaluations.slice(0, 14)} projects={projOpts} />
           ) : (
             <div className="card" style={{ textAlign: "center", padding: "clamp(24px, 4vw, 40px)" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>No evaluations yet</div>
-              <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto 16px", maxWidth: 360 }}>Run your first evaluation and the decision report shows up here.</p>
-              <a href="/app/new" className="btn">Create an evaluation →</a>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>No decision workflows yet</div>
+              <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto 16px", maxWidth: 360 }}>Start your first decision workflow and the decision record shows up here.</p>
+              <a href="/app/new" className="btn">Start a decision workflow →</a>
             </div>
           )}
         </>
