@@ -8,12 +8,12 @@ type Cycle = "monthly" | "yearly";
 // what you can do. Credits stay the unit (1 credit = 1 valid judgment); decisions
 // are what you're buying.
 const PLANS = [
-  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 valid judgments", blurb: "Try one small evaluation.", perks: ["Compare up to 4 candidates", "Sample decision report"] },
-  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 valid judgments / mo", blurb: "For small creative decisions.", perks: ["3 evaluations / mo", "Recommendation + reasoning report"] },
-  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 valid judgments / mo", blurb: "For ongoing creative testing.", perks: ["10 evaluations / mo", "Audience targeting", "Shareable decision reports"] },
-  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 valid judgments / mo", blurb: "For teams and client work.", perks: ["30 evaluations / mo", "Client-ready reports", "Exports + webhooks"], featured: true },
-  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 valid judgments / mo", blurb: "For apps and high-volume teams.", perks: ["100 evaluations / mo", "Public API + embed", "Developer analytics + webhooks"] },
-  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom valid judgments", blurb: "For governed evaluation programs.", perks: ["Unlimited evaluations", "Organization governance + audit activity", "OIDC SSO + verified domains", "Client-safe sharing + billing admins"] },
+  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 valid judgments", blurb: "Test one small evaluation run.", perks: ["Compare up to 4 candidates", "Sample Decision Package"] },
+  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 valid judgments / mo", blurb: "For testing AI outputs and early iterations.", perks: ["3 evaluations / mo", "Recommendation + reasoning signals"] },
+  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 valid judgments / mo", blurb: "For model and prompt comparison.", perks: ["10 evaluations / mo", "Audience screening", "Shareable Decision Packages"] },
+  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 valid judgments / mo", blurb: "For agent QA and team eval workflows.", perks: ["30 evaluations / mo", "Structured Decision Packages", "Exports + webhooks"], featured: true },
+  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 valid judgments / mo", blurb: "Embed human eval into AI pipelines via API.", perks: ["100 evaluations / mo", "REST API + webhooks for eval loops", "Signal-quality metrics + analytics"] },
+  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom valid judgments", blurb: "For governed AI evaluation at org scale.", perks: ["Unlimited evaluations", "Organization governance + audit export", "OIDC SSO + verified domains", "Client-safe sharing + billing admins"] },
 ] as { key: string; name: string; price: Record<Cycle, number>; credits: string; blurb: string; perks: string[]; featured?: boolean }[];
 
 // Display-only: round to the nearest whole dollar (the live Stripe price may carry
@@ -24,10 +24,10 @@ const fmtAmount = (n: number) => Math.round(n).toLocaleString();
 const ORDER: Record<string, number> = { free: 0, starter: 1, creator: 2, pro: 3, scale: 4, enterprise: 5 };
 
 const CREDIT_RULES: [string, string][] = [
-  ["1 credit = 1 valid judgment", "The unit you spend. What you buy is the decision."],
+  ["1 credit = 1 valid judgment", "The unit you spend. What you buy is qualified human signal."],
+  ["Rejected responses: not charged", "Responses filtered for speed, spam, velocity, or low reputation never cost a credit."],
   ["Held when you launch", "Credits are escrowed, not spent up front."],
-  ["Low-quality filtered", "Too-fast, duplicate, and spam responses are rejected."],
-  ["Unused credits refunded", "If an evaluation doesn't fill, the rest comes back."],
+  ["Unused credits refunded", "If a run doesn't fill, the remaining credits return to your account."],
 ];
 
 type TeamPricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
@@ -66,8 +66,8 @@ export default function PricingPage() {
         <div className="glow glow--soft glow--bleed" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Pay for <span className="em">decisions</span>, not raw counts.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Credits are the unit — <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment</strong> — but plans are sized by what you can decide: how many evaluations, how strong the reports, and whether you can share, export, or use the API. Top up anytime.</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Pay for <span className="em">qualified signal</span>, not raw counts.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Credits are the unit — <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment</strong> — and you&apos;re never charged for responses we filter out. Plans are sized for your workflow: how many evaluation runs, whether you need the API and webhooks, and what governance your team requires. Top up anytime.</p>
           <div className="seg">
             {(["monthly", "yearly"] as Cycle[]).map((c) => (
               <button key={c} onClick={() => setCycle(c)} className={cycle === c ? "on" : ""}>{c === "monthly" ? "Monthly" : "Yearly"}</button>
@@ -111,7 +111,7 @@ export default function PricingPage() {
           <div style={{ marginTop: "clamp(36px, 5vw, 56px)" }}>
             <div className="sec-head sec-head--center" style={{ marginBottom: 24 }}>
               <p className="eyebrow">How credits work</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)" }}>Pay for valid human judgments, not noise.</h2>
+              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)" }}>Only valid responses cost credits. Rejected ones don&apos;t.</h2>
             </div>
             <div className="tile-grid cols-4">
               {CREDIT_RULES.map(([t, d]) => (
@@ -150,8 +150,8 @@ export default function PricingPage() {
           </div>
 
           <div className="card" style={{ marginTop: 18, textAlign: "center" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Enterprise: governed decisions across the org</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Organization governance, verified domains, OIDC single sign-on, audit activity, client-safe sharing, team roles, and billing-admin separation. SAML and SCIM support are planned for larger organizations. <a href="/security" style={{ color: "var(--acc-deep)" }}>See the trust overview →</a> or <a href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise" style={{ color: "var(--acc-deep)" }}>contact us</a> about enterprise requirements.</p>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Enterprise: govern AI evaluation across the org</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Organization governance, verified domains, OIDC single sign-on, audit export, role-based workspace access, client-safe sharing, and billing-admin separation. SAML configuration is in preview and SCIM is on the roadmap. <a href="/security" style={{ color: "var(--acc-deep)" }}>See the trust overview →</a> or <a href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise" style={{ color: "var(--acc-deep)" }}>contact us</a> about enterprise requirements.</p>
           </div>
 
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Plans renew automatically. Cancel anytime, and your plan stays active until the period ends. Secure checkout on Vraelis. Payments processed by Stripe.</p>

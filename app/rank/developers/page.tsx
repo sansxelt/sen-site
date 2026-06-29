@@ -116,14 +116,45 @@ export default function DevelopersPage() {
         </div>
       </section>
 
+      {/* First integration — action-oriented numbered flow */}
+      <section className="section" style={{ background: "var(--bg-2)" }}>
+        <div className="wrap" style={{ maxWidth: 760 }}>
+          <p className="eyebrow">First integration</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>From zero to a Decision Package in a few steps.</h2>
+          <p className="lead-copy" style={{ marginBottom: 22 }}>Start in sandbox at 0 credits, then move to production. No contract and no sales call — just an API key and an evaluation run.</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {[
+              ["Create a sandbox evaluation", "Call the create endpoint with mode: sandbox to exercise the full flow at 0 credits and 0 quota."],
+              ["Submit candidate outputs", "Send 2–8 candidates as text, images, or both, with your prompt and judgment criteria."],
+              ["Receive the Decision Package", "When the run fills, fetch the typed Decision Package: preferred output, preference margin, confidence, signal quality, valid-vs-filtered counts, and readiness."],
+              ["Listen for the completion webhook", "Register an endpoint and get an HMAC-signed callback the instant a run completes — no polling. Verify it with the SDK helper."],
+              ["Move to production credits", "Switch off sandbox, pick a plan with API access, and scale with the same calls."],
+            ].map(([title, desc], i) => (
+              <div key={title} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 16, alignItems: "start" }}>
+                <div style={{ display: "grid", placeItems: "center", width: 30, height: 30, borderRadius: "50%", background: "var(--acc)", color: "#fff", fontWeight: 700, fontSize: 13, flex: "none" }}>{i + 1}</div>
+                <div>
+                  <h3 style={{ fontSize: 14.5, fontWeight: 700, marginBottom: 4, color: "var(--fg-1)" }}>{title}</h3>
+                  <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.6, margin: 0 }}>{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.6 }}>SDK methods: <code style={{ fontFamily: "var(--font-code, monospace)" }}>evaluations.create / get / exportJson / exportCsv</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>webhooks.verifySignature</code>. Full SDK and curl examples live in the signed-in sandbox console.</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
+            <a href="/app/api-keys" className="btn">Get an API key</a>
+            <a href="/app/sandbox" className="btn btn--ghost">Open sandbox console</a>
+          </div>
+        </div>
+      </section>
+
       {/* Webhooks + Exports (prose, no code dump) */}
-      <section id="webhooks" className="section" style={{ background: "var(--bg-2)" }}>
+      <section id="webhooks" className="section">
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: "clamp(24px, 4vw, 48px)", alignItems: "start" }} className="cols-stack">
             <div>
               <p className="eyebrow">Signed webhooks</p>
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Know the moment a result is ready.</h2>
-              <p className="lead-copy" style={{ marginBottom: 12 }}>A signed evaluation-completed webhook delivers a compact Decision Package the instant an evaluation fills. Each delivery is HMAC-SHA256 signed (timestamp + body), retried with backoff on transient failures, and idempotent by delivery id. Verify it with the SDK helper or your own HMAC check.</p>
+              <p className="lead-copy" style={{ marginBottom: 12 }}>A signed completion webhook (event <code style={{ fontFamily: "var(--font-code, monospace)" }}>test.completed</code>) delivers a compact Decision Package the instant an evaluation fills. Each delivery is HMAC-SHA256 signed (timestamp + body), retried with backoff on transient failures, and idempotent by delivery id. Verify it with the SDK helper or your own HMAC check.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <a href="/app/api-keys#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Add an endpoint →</a>
                 <a href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Send a test event →</a>
