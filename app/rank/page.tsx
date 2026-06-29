@@ -151,10 +151,10 @@ export default function RankLanding() {
           {/* Product preview — the verdict, right up front */}
           <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 860, margin: "clamp(34px, 4vw, 52px) auto 0" }}>
             <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
-              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Report</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Complete</span></div>
+              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Decision Record</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Strong recommendation</span></div>
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.05fr)", gap: 0 }} className="cols-stack">
                 <div style={{ padding: "clamp(18px,2.4vw,26px)", borderRight: "1px solid var(--line-1)" }}>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Which direction should we ship?</div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Decision: launch direction</div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
                     {[["A", false], ["B", true], ["C", false]].map(([l, win]) => (
                       <div key={l as string} style={{ position: "relative", aspectRatio: "4/3", borderRadius: 10, background: win ? "linear-gradient(140deg, var(--acc-soft), #fff)" : "var(--bg-2)", border: `1px solid ${win ? "var(--acc-line-2)" : "var(--line-2)"}`, display: "grid", placeItems: "center" }}>
@@ -164,22 +164,29 @@ export default function RankLanding() {
                     ))}
                   </div>
                   <div style={{ marginTop: 16, padding: 13, borderRadius: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
-                    <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5 }}>Vraelis analysis</div>
-                    <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, margin: 0 }}>B won on clarity and contrast. People found A too busy.</p>
+                    <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 5 }}>Decision evidence</div>
+                    <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, margin: 0 }}>Direction B showed the strongest clarity, trust, and readiness signal. Direction A created visual friction.</p>
                   </div>
                 </div>
                 <div style={{ padding: "clamp(18px,2.4vw,26px)" }}>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 4 }}>Recommendation</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                    <div>
-                      <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Recommended</div>
-                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>Option B, 61%</div>
-                    </div>
-                    <span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>high confidence</span>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, color: "var(--fg-1)", letterSpacing: "-0.02em" }}>Ship Direction B</div>
+                    <span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>High confidence</span>
                   </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0, marginBottom: 16, border: "1px solid var(--line-1)", borderRadius: 12, overflow: "hidden" }}>
+                    {[["Readiness", "Strong recommendation"], ["Signal quality", "High"], ["Next step", "Move B to production, or run a confirmation round"]].map(([k, v], i) => (
+                      <div key={k} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "9px 13px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", background: i === 0 ? "var(--acc-soft)" : "var(--bg-1)" }}>
+                        <span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)", flex: "none" }}>{k}</span>
+                        <span style={{ fontSize: 12, color: "var(--fg-1)", fontWeight: 600, textAlign: "right", lineHeight: 1.4 }}>{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 8 }}>Supporting signal</div>
                   <Verdict rows={[["A", 39, false], ["B", 61, true], ["C", 22, false]]} />
-                  <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)" }}>
-                    <span>122 valid, 14 filtered</span>
-                    <span style={{ color: "var(--acc-deep)" }}>Shareable report ↗</span>
+                  <div style={{ marginTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", gap: 10 }}>
+                    <span>122 qualified judgments · 14 low-quality filtered</span>
+                    <span style={{ color: "var(--acc-deep)", whiteSpace: "nowrap" }}>Decision Package ↗</span>
                   </div>
                 </div>
               </div>
@@ -275,9 +282,9 @@ export default function RankLanding() {
         <div className="wrap">
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: "clamp(28px, 4vw, 60px)", alignItems: "center" }} className="cols-stack">
             <div>
-              <p className="eyebrow">The report</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Decision analytics, <span className="em">not raw counts</span>.</h2>
-              <p className="lead-copy" style={{ marginBottom: 22 }}>Every evaluation returns a clean report: the recommended output, how confident, and why people chose it.</p>
+              <p className="eyebrow">The decision record</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>A decision you can defend, <span className="em">not raw counts</span>.</h2>
+              <p className="lead-copy" style={{ marginBottom: 22 }}>Every evaluation returns an audit-ready Decision Package: the recommendation, how ready it is to act on, the evidence behind it, and what to do next.</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
                 {REPORT_PARTS.map((x) => (
                   <li key={x} style={{ display: "flex", gap: 11, fontSize: 14.5, color: "var(--fg-2)", alignItems: "flex-start" }}>
@@ -286,30 +293,31 @@ export default function RankLanding() {
                 ))}
               </ul>
               <div style={{ display: "flex", gap: 12, marginTop: 26, flexWrap: "wrap" }}>
-                <a href="/app/new" className="btn">Start an evaluation</a>
+                <a href="/app/new" className="btn">Start a decision</a>
                 <a href="/pricing" style={{ alignSelf: "center", fontSize: 14, fontWeight: 500, color: "var(--acc-deep)", textDecoration: "none" }}>See what&apos;s included →</a>
               </div>
             </div>
             <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
-              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Report</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Complete</span></div>
+              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Decision Package</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Strong recommendation</span></div>
               <div style={{ padding: "clamp(18px,2.4vw,26px)" }}>
                 <div className="card card--acc" style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16, boxShadow: "none", padding: 16 }}>
                   <div style={{ width: 52, height: 52, borderRadius: 12, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22 }}>B</div>
                   <div>
-                    <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Recommended</div>
-                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21, color: "var(--fg-1)" }}>Option B, 61%</div>
+                    <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)" }}>Recommendation</div>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 21, color: "var(--fg-1)" }}>Ship Direction B</div>
                   </div>
-                  <span className="pill" style={{ marginLeft: "auto", background: "var(--bg-1)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>+22 margin</span>
+                  <span className="pill" style={{ marginLeft: "auto", background: "var(--bg-1)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>High confidence</span>
                 </div>
-                <Verdict rows={[["A", 39, false], ["B", 61, true], ["C", 22, false]]} />
-                <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  {[["Valid judgments", "122"], ["Filtered", "14"], ["Confidence", "High"], ["Reasons", "37"]].map(([l, v]) => (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 18 }}>
+                  {[["Readiness", "Strong"], ["Signal quality", "High"], ["Qualified judgments", "122"], ["Next step", "Ship or confirm"]].map(([l, v]) => (
                     <div key={l} style={{ padding: "10px 12px", borderRadius: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
                       <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>{l}</div>
-                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginTop: 2 }}>{v}</div>
+                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", marginTop: 2 }}>{v}</div>
                     </div>
                   ))}
                 </div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 8 }}>Supporting signal</div>
+                <Verdict rows={[["A", 39, false], ["B", 61, true], ["C", 22, false]]} />
               </div>
             </div>
           </div>
