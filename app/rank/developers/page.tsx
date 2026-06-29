@@ -1,8 +1,8 @@
 import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
-  title: "Developers",
-  description: "The human-evaluation API for creative and AI outputs. Create sandbox evaluations, retrieve a structured Decision Package v2, export JSON/CSV, and receive signed webhooks. Backed by a public JSON Schema and a TypeScript SDK starter.",
+  title: "Developers — API-native human signal for AI evaluation",
+  description: "The human-evaluation API for AI teams. Submit candidate model outputs, collect quality-filtered human judgment, and retrieve a structured Decision Package v2 — through API, SDK, signed webhooks, or JSON/CSV export. Sandbox before you spend. Backed by a public JSON Schema.",
   path: "/developers",
 });
 
@@ -32,9 +32,9 @@ export default function DevelopersPage() {
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Developer platform</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 860, margin: "0 auto 16px" }}>Human evaluation <span className="em">infrastructure</span> for AI and creative decisions.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>Use Vraelis to submit candidates, collect qualified human signal, apply readiness and quality checks, and return an audit-ready <strong style={{ color: "var(--fg-1)" }}>Decision Package</strong> — through API, SDK, webhooks, or embedded collection surfaces. Governance, verified-domain access, and audit come with the platform.</p>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>submit candidates → qualified signal → readiness → Decision Package → audit / share / export</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 880, margin: "0 auto 16px" }}>API-native human signal for <span className="em">AI evaluation workflows</span>.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>Submit candidate model outputs, define the judgment, collect <strong style={{ color: "var(--fg-1)" }}>quality-filtered human judgment</strong>, and return a typed <strong style={{ color: "var(--fg-1)" }}>Decision Package</strong> — through API, SDK, signed webhooks, or JSON/CSV export. Built to live inside an eval pipeline, not a browser tab.</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>submit candidates → define judgment → collect filtered signal → Decision Package → webhook / export</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/sandbox" className="btn btn--lg">Open sandbox console</a>
             <a href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">Decision Package schema</a>
@@ -47,9 +47,9 @@ export default function DevelopersPage() {
       {/* Platform flow */}
       <section className="section" style={{ borderBottom: "1px solid var(--line-1)" }}>
         <div className="wrap">
-          <div className="sec-head" style={{ marginBottom: 22 }}><p className="eyebrow">The platform</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>A governed evaluation pipeline — not a request/response toy.</h2><p>Every evaluation flows through the same governed pipeline, whatever surface you call it from.</p></div>
+          <div className="sec-head" style={{ marginBottom: 22 }}><p className="eyebrow">The platform</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>An eval pipeline, not a request/response toy.</h2><p>Every evaluation flows through the same governed pipeline — submit, define the judgment, collect, filter, decide — whatever surface you call it from.</p></div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-            {["Submit candidates", "Collect qualified signal", "Filter low-quality responses", "Assess readiness", "Run confirmation rounds", "Receive Decision Package", "Audit / share / export"].map((s, i, a) => (
+            {["Submit candidates", "Define judgment", "Collect qualified signal", "Filter low-quality responses", "Assess readiness", "Receive Decision Package", "Webhook / export"].map((s, i, a) => (
               <span key={s} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <span className="chip" style={{ fontSize: 12.5 }}>{s}</span>
                 {i < a.length - 1 && <span style={{ color: "var(--fg-5)" }}>→</span>}
@@ -65,11 +65,11 @@ export default function DevelopersPage() {
           <div className="sec-head" style={{ marginBottom: 24 }}><p className="eyebrow">Infrastructure surfaces</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Access layers over one platform.</h2><p>The API, SDK, webhooks, and embed are how you reach the platform — the output is always the Decision Package.</p></div>
           <div className="tile-grid cols-3">
             {[
-              ["REST API", "Create evaluations, fetch the Decision Package, export results. Per-key rate limits, stable error envelopes."],
+              ["REST API", "Submit candidates, fetch the Decision Package, export results. Per-key rate limits, stable error envelopes."],
               ["TypeScript SDK", "A typed client for create / fetch / export / webhook verification, matching the schema. In the repo today."],
-              ["Signed webhooks", "An HMAC-signed test.completed fires the moment an evaluation fills — retried, idempotent, no polling."],
-              ["Sandbox", "Exercise the whole flow at 0 credits / 0 quota, isolated from production analytics."],
-              ["Embedded evaluation surface", "One collection surface among several — a way to gather signal in your site or app."],
+              ["Signed webhooks", "An HMAC-signed completion webhook fires the moment an evaluation fills — retried, idempotent, no polling."],
+              ["Sandbox", "Exercise the whole flow at 0 credits / 0 quota, isolated from production — before you spend."],
+              ["Embedded evaluation surface", "One way to collect signal among several. The product output is always the Decision Package."],
               ["Decision Package schema", "A public JSON Schema for typed integrations. The platform output, not a raw tally."],
               ["Audit events", "Governance actions recorded as a safe, exportable trail — no secrets, tokens, or ids."],
               ["Governed access", "Organizations, verified domains, OIDC SSO, and role-separated, client-safe sharing."],
@@ -123,7 +123,7 @@ export default function DevelopersPage() {
             <div>
               <p className="eyebrow">Signed webhooks</p>
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Know the moment a result is ready.</h2>
-              <p className="lead-copy" style={{ marginBottom: 12 }}>A signed <code style={{ fontFamily: "var(--font-code, monospace)" }}>test.completed</code> webhook delivers a compact Decision Package the instant an evaluation fills. Each delivery is HMAC-SHA256 signed (timestamp + body), retried with backoff on transient failures, and idempotent by delivery id. Verify it with the SDK helper or your own HMAC check.</p>
+              <p className="lead-copy" style={{ marginBottom: 12 }}>A signed evaluation-completed webhook delivers a compact Decision Package the instant an evaluation fills. Each delivery is HMAC-SHA256 signed (timestamp + body), retried with backoff on transient failures, and idempotent by delivery id. Verify it with the SDK helper or your own HMAC check.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <a href="/app/api-keys#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Add an endpoint →</a>
                 <a href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Send a test event →</a>
@@ -139,8 +139,32 @@ export default function DevelopersPage() {
         </div>
       </section>
 
-      {/* Data warehouse and ML integrations (future) */}
+      {/* Quality controls — the moat, only what the code does */}
       <section className="section">
+        <div className="wrap" style={{ maxWidth: 880 }}>
+          <div className="sec-head" style={{ marginBottom: 22 }}>
+            <p className="eyebrow">Quality controls</p>
+            <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>You get signal, not raw responses.</h2>
+            <p>The reason human-eval data is painful isn&apos;t collecting it — it&apos;s trusting it. Vraelis rejects low-quality and gamed responses automatically, on every judgment, before they ever reach your Decision Package.</p>
+          </div>
+          <div className="tile-grid cols-3">
+            {[
+              ["Time-on-task floor", "Responses faster than a real consideration are rejected."],
+              ["Gibberish & spam filtering", "Low-effort and nonsense reasoning is dropped automatically."],
+              ["IP velocity limits", "Cross-evaluation vote-stuffing from one source is capped."],
+              ["Per-device caps", "Embedded collection enforces a per-device daily limit."],
+              ["Reputation gating", "Evaluators whose responses are mostly rejected get gated out."],
+              ["Pre-judgment screening", "Qualify who judges with screening questions before they answer."],
+            ].map(([t, d]) => (
+              <div key={t} className="acard" style={{ gap: 6 }}><div className="acard__t">{t}</div><div className="acard__d">{d}</div></div>
+            ))}
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "18px 0 0", lineHeight: 1.6, textAlign: "center" }}>Every run reports valid-vs-filtered counts and filter reasons, so you can audit signal quality programmatically. Rejected responses are recorded for transparency but never count toward your result — and you&apos;re never charged for them.</p>
+        </div>
+      </section>
+
+      {/* Data warehouse and ML integrations (future) */}
+      <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap" style={{ maxWidth: 760 }}>
           <p className="eyebrow">Data warehouse &amp; ML platform integrations <span className="pill" style={{ marginLeft: 8, fontSize: 10.5 }}>future direction</span></p>
           <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Route decisions into your analytics and ML stack.</h2>
@@ -234,9 +258,9 @@ export default function DevelopersPage() {
           <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>Submit candidate outputs from your app, model, or pipeline. Vraelis runs the routing, quality filtering, readiness, Decision Packages, webhooks, and exports — you get a structured, audit-ready decision record back, ready to store or route into your own systems.</p>
           <div className="cols-3" style={{ gap: 14, marginBottom: 28 }}>
             {[
-              ["AI image tools", "Let users pick the best generation before download. Learn which styles win."],
-              ["Copy & content apps", "Test headline, hook, or caption variants with real readers."],
-              ["Design & brand platforms", "Validate logos, palettes, and layouts with an audience, in-product."],
+              ["Model & agent evaluation", "Compare responses from your model, prompt, or agent — pairwise preference, quality-filtered."],
+              ["RLHF & preference data", "Collect human preference judgments on response pairs, exportable into your training pipeline."],
+              ["Generative product apps", "Let users pick the best generation in-product, and route the signal back through the API."],
             ].map(([t, d]) => (
               <div key={t} className="card"><h3 style={{ fontSize: 16, marginBottom: 6 }}>{t}</h3><p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{d}</p></div>
             ))}

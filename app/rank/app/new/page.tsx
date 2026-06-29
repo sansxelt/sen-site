@@ -16,6 +16,7 @@ const AUDIENCES: [string, string][] = [
 // Real evaluation types — each prefills the title/question, category, a suggested
 // judgment target, and a hover helper. Compact on purpose.
 const TEMPLATES: { name: string; title: string; category: string; context: string; votes: number; helper: string }[] = [
+  { name: "AI output evaluation", title: "Which model response is more helpful, accurate, and safe?", category: "ai_image", context: "Compare model responses, prompts, or agent outputs. Which is more helpful, accurate, and safe?", votes: 100, helper: "Pairwise human preference on model outputs — quality-filtered judgments, returned as a Decision Package." },
   { name: "Ad creative", title: "Which ad creative should we ship?", category: "ad", context: "Which grabs attention and makes you want to click?", votes: 100, helper: "2–4 creatives, ~100 judgments before you spend on ads." },
   { name: "Landing hero", title: "Which landing hero should ship?", category: "landing", context: "Which hero best explains the product at a glance?", votes: 100, helper: "Compare 2–3 hero concepts before a redesign." },
   { name: "AI image output", title: "Which AI output is best?", category: "ai_image", context: "Which generated result looks the most polished and on-brand?", votes: 50, helper: "Pick the strongest generation before you ship it." },
