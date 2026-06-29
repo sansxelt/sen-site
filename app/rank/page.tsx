@@ -3,8 +3,8 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = {
   ...ogMeta({
-    title: "Evaluate creative options before you ship",
-    description: "Vraelis is a human evaluation layer for creative and AI-generated outputs. Turn human preference signals into structured decision analytics.",
+    title: "Human judgment for AI, without babysitting the quality",
+    description: "Vraelis is the human-signal layer for AI — submit model outputs, collect quality-filtered human judgment, and get a structured Decision Package via API. Preference and eval signal for teams training, evaluating, and shipping AI.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
@@ -30,86 +30,85 @@ const ICONS = {
 };
 
 const AUDIENCE = [
-  { t: "Product & AI teams", d: "Evaluate model outputs and product directions with qualified human signal before you ship.", i: ICONS.spark },
-  { t: "Brands & agencies", d: "Evaluate ads and concepts before you spend, and hand clients an audit-ready report that backs the decision.", i: ICONS.flag },
-  { t: "Creators & studios", d: "Decide which creative direction to ship — key art, covers, hooks — before you post. Less guessing, faster calls.", i: ICONS.film },
-  { t: "Developers", d: "Create evaluation runs by API and pull structured Decision Packages straight into your product.", i: ICONS.layers },
+  { t: "AI labs & model teams", d: "Human preference and eval signal for model comparison, RLHF, and reward modeling — quality-filtered, via API.", i: ICONS.spark },
+  { t: "AI product builders", d: "Add human evaluation of your model's outputs to your pipeline, without standing up your own labeling op.", i: ICONS.layers },
+  { t: "Safety & eval teams", d: "Human judgment on what automated evals can't score — helpfulness, accuracy, harm — with an audit trail.", i: ICONS.flag },
+  { t: "Research & product teams", d: "Preference and acceptance signal on creative, product, and content decisions — same engine, same Decision Package.", i: ICONS.film },
 ];
 
 const STEPS = [
-  { k: "01", t: "Create an evaluation", d: "Drop in 2 to 8 candidates — images, ads, AI outputs, landing heroes, UI, or copy. Web, API, or embed.", i: ICONS.upload },
-  { k: "02", t: "Collect qualified human signal", d: "Vraelis routes your evaluation to real, screened people who pick what they prefer and say why.", i: ICONS.users },
-  { k: "03", t: "Filter low-quality responses", d: "Bots, rushers, and duplicate or spam responses are rejected automatically. Only valid human signal counts.", i: ICONS.flag },
-  { k: "04", t: "Review decision readiness", d: "The Decision Package reads back the recommendation, preference margin, confidence, signal quality — and whether the result is ready to act on.", i: ICONS.spark },
-  { k: "05", t: "Run a confirmation round if needed", d: "When a result is close or noisy, launch a follow-up round to confirm the call before you commit. Lineage is tracked end to end.", i: ICONS.layers },
-  { k: "06", t: "Share the client-ready report", d: "Ship it, or share a read-only decision report with a client — private controls stay hidden.", i: ICONS.report },
-  { k: "07", t: "Export the Decision Package & track history", d: "Pull the structured Decision Package by API or JSON / CSV, fire a signed webhook, and keep a record of every decision.", i: ICONS.revenue },
+  { k: "01", t: "Submit candidates", d: "Model outputs, prompts, completions, or any artifact — 2 to 8 at a time. Via API, SDK, or the console.", i: ICONS.upload },
+  { k: "02", t: "Define the judgment", d: "Pairwise preference, a rubric, or open reasoning. Add screening to qualify who judges before they answer.", i: ICONS.layers },
+  { k: "03", t: "Collect qualified human signal", d: "Vraelis routes your evaluation to real people who judge and say why — the signal your automated metrics can't give you.", i: ICONS.users },
+  { k: "04", t: "Filter low-quality responses", d: "Rushed, duplicate, gamed, and low-reputation responses are rejected automatically. Only qualified judgments count — and you're never charged for the rest.", i: ICONS.flag },
+  { k: "05", t: "Review signal & readiness", d: "The Decision Package reads back the recommendation, preference margin, confidence, signal quality — and whether the result is ready to act on.", i: ICONS.spark },
+  { k: "06", t: "Run a confirmation round if needed", d: "When a result is close or noisy, launch a follow-up round to confirm the call before you commit. Lineage tracked end to end.", i: ICONS.report },
+  { k: "07", t: "Receive the Decision Package", d: "Pull the structured Decision Package by API or JSON / CSV, fire a signed webhook, and keep an audit record of every run.", i: ICONS.revenue },
 ];
 
-const TESTABLE = ["AI model outputs", "Generated creative", "Campaign concepts", "Product concepts", "Landing pages", "Brand & client approvals", "UI directions", "Content variations"];
+const TESTABLE = ["Model output preference", "RLHF / reward signal", "Prompt & completion quality", "Safety & harm judgment", "Generated creative", "Product concepts", "Landing & copy", "Content variations"];
 
-// Decision workflows teams actually run — what's compared, and the decision you get back.
+// Evaluation workflows AI and product teams actually run — what's compared, and the signal you get back.
 const USE_CASES: { t: string; c: string; g: string }[] = [
-  { t: "AI output evaluation", c: "Competing generations from your model or pipeline", g: "The output to ship, with confidence and a signal-quality read." },
-  { t: "Ad creative decisions", c: "2–8 ad concepts, before you spend on media", g: "The creative most likely to land, backed by qualified human signal." },
-  { t: "Landing page & copy", c: "Hero variants, headlines, and value props", g: "The clearest message — and the reasoning behind why." },
-  { t: "Product concept validation", c: "Concepts, features, or directions", g: "Which direction people prefer, and the audience fit behind it." },
-  { t: "Client creative approval", c: "The options you're choosing between for a client", g: "A client-ready decision report that backs your recommendation." },
-  { t: "Enterprise creative governance", c: "Brand, key art, and design directions at scale", g: "Defensible, audit-ready decisions before work ships — across teams and clients." },
+  { t: "Model output evaluation", c: "Competing responses from your model or pipeline", g: "Which output people prefer, with confidence and a signal-quality read — as preference data." },
+  { t: "RLHF & reward signal", c: "Response pairs for preference labeling", g: "Quality-filtered human preference judgments, exportable into your training pipeline." },
+  { t: "Safety & helpfulness review", c: "Outputs your automated evals can't score", g: "Human judgment on helpfulness, accuracy, and harm — with an audit trail." },
+  { t: "Prompt & system comparison", c: "Outputs from two prompts, models, or versions", g: "Which variant produces better responses, backed by qualified human signal." },
+  { t: "Creative & product research", c: "Concepts, directions, or candidates", g: "Which direction people prefer, and the audience fit behind it." },
+  { t: "Client & stakeholder approval", c: "The options you're choosing between", g: "A client-ready decision record that backs your recommendation." },
 ];
 
-const IS_THINGS = ["Governed human-evaluation infrastructure for AI, creative & product teams", "A decision workflow that turns qualified human signal into a Decision Package", "An enterprise trust layer — roles, audit trail, SSO, and verified-domain governance"];
-const IS_NOT_THINGS = ["A voting or feedback widget", "Thumbnail or icon A/B testing", "A poll, survey, or analytics dashboard"];
+const IS_THINGS = ["A human-signal layer for AI — quality-filtered judgment via API", "Structured preference and eval data, returned as a typed Decision Package", "An automated quality gate that rejects rushed, duplicate, and gamed responses"];
+const IS_NOT_THINGS = ["A cheap survey, poll, or microtask panel", "A voting or feedback widget", "Unfiltered crowdsourced responses you have to clean yourself"];
 
 const REPORT_PARTS = [
-  "The recommended output + full breakdown",
+  "The preferred output + full breakdown",
   "Preference margin and directional confidence",
-  "Reasoning signals: why people chose",
-  "AI analysis: why it won, what to fix",
-  "Valid-vs-filtered response quality",
-  "A shareable, client-ready report link",
+  "Reasoning signals: why people judged it",
+  "Signal-quality read: how clean the data is",
+  "Valid-vs-filtered response counts",
+  "A structured, exportable Decision Package",
 ];
 
 const SUPPORTS: [string, string][] = [
-  ["Real human signal", "Quality-filtered people, not bots."],
-  ["Quality filtering", "Too-fast, duplicate & spam responses rejected."],
-  ["Decision reports", "Send a read-only result to clients."],
-  ["Embeddable runs", "Collect judgments on any site in one line."],
-  ["Human evaluation API", "Send candidates, get a structured result."],
-  ["Webhooks", "Get notified the moment an evaluation completes."],
+  ["Quality-filtered signal", "Rushed, duplicate & gamed responses rejected automatically."],
+  ["Pay only for valid", "Filtered responses don't count and aren't charged."],
+  ["Human evaluation API", "Submit candidates, get a structured Decision Package."],
+  ["Audience screening", "Qualify who judges before they answer."],
+  ["Signed webhooks", "Get notified the moment an evaluation completes."],
   ["Schema-versioned exports", "Pull structured results as JSON or CSV."],
-  ["On-site checkout", "Cards and wallets. Never leave Vraelis."],
+  ["Sandbox", "Exercise the whole flow at 0 credits / 0 quota."],
+  ["Reputation gating", "Evaluators who get mostly rejected are gated out."],
 ];
 
-// The value proposition — what an evaluation gives you, and what the wrong call costs.
+// The value proposition — what an evaluation gives you, and what noisy signal costs.
 const WHAT_YOU_GET: [string, string][] = [
-  ["Recommended output", "the option to ship"],
-  ["Preference margin", "how clear the win was"],
+  ["Preferred output", "the response people judged best"],
+  ["Preference margin", "how clear the result was"],
   ["Directional confidence", "how strong the signal is"],
-  ["Signal quality", "whether the data is clean"],
-  ["Reasoning signals", "why people preferred it"],
-  ["What to improve", "how to fix the weaker options"],
-  ["A shareable decision report", "for teams, clients, and stakeholders"],
-  ["Structured export + API result", "for apps and workflows"],
+  ["Signal quality", "how clean the human data is"],
+  ["Reasoning signals", "why people judged the way they did"],
+  ["Valid vs. filtered", "what passed quality, and what didn't"],
+  ["Structured Decision Package", "typed, schema-backed, exportable"],
+  ["API + webhook + export", "for eval pipelines and internal tools"],
 ];
 const COST_OF_WRONG: [string, string][] = [
-  ["The wrong ad creative", "burns ad spend before you learn it underperforms."],
-  ["The wrong landing hero", "quietly lowers conversion on every visit."],
-  ["The wrong creative direction", "loses attention before anyone sees the work."],
-  ["The wrong AI output", "ships generated content people don't trust."],
-  ["A creative call with no evidence", "turns client and team reviews into opinion fights."],
+  ["Noisy eval data", "ships a model change that humans actually rate worse."],
+  ["Unfiltered crowdsourced responses", "bury real signal under rushed and gamed answers."],
+  ["Running your own panel", "costs eng time to recruit, screen, and police quality."],
+  ["Automated metrics alone", "miss helpfulness, tone, and harm that only people catch."],
+  ["A model call with no human signal", "turns 'is this better?' into a guess."],
 ];
 
 const API_RESPONSE = `{
-  "id": "test_9f2a3c",
+  "id": "eval_9f2a3c",
   "status": "complete",
   "votes_valid": 122,
   "votes_filtered": 14,
   "winner": { "option": "B", "pct": 61 },
   "ranked": [
     { "option": "B", "pct": 61 },
-    { "option": "A", "pct": 39 },
-    { "option": "C", "pct": 22 }
+    { "option": "A", "pct": 39 }
   ]
 }`;
 
@@ -136,16 +135,16 @@ export default function RankLanding() {
         <div className="glow glow--bleed" />
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Governed human evaluation for AI, creative &amp; product decisions</p>
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>The human-signal layer for AI</p>
           <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
-            Make decisions you can <span className="em">defend</span> — before you ship.
+            Human judgment for AI, without <span className="em">babysitting the quality</span>.
           </h1>
-          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 680, margin: "0 auto 30px", lineHeight: 1.55 }}>
-            Vraelis is decision infrastructure for teams: submit candidates, collect qualified human signal, check readiness, and get an audit-ready Decision Package — so you ship the right creative, AI, and product work with evidence behind the call.
+          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 700, margin: "0 auto 30px", lineHeight: 1.55 }}>
+            Submit model outputs, prompts, or candidates. Vraelis collects judgments from real people, filters low-quality and gamed responses automatically, and returns a structured Decision Package — through API, webhook, or export. The eval signal your automated metrics can&apos;t give you, without running your own panel.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start an evaluation <span aria-hidden>→</span></a>
-            <a href="/demo" className="btn btn--ghost btn--lg">View demo report</a>
+            <a href="/app/new" className="btn btn--lg">Get started <span aria-hidden>→</span></a>
+            <a href="/demo" className="btn btn--ghost btn--lg">See a sample Decision Package</a>
           </div>
 
           {/* Product preview — the verdict, right up front */}
@@ -200,8 +199,8 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Why Vraelis</p>
-            <h2 className="display">You&apos;re not paying for raw counts. You&apos;re paying to <span className="em">avoid shipping the wrong thing</span>.</h2>
-            <p>Every evaluation is a decision you make <strong style={{ color: "var(--fg-1)" }}>before the expensive part</strong> — the ad spend, the launch, the post, the client review. Credits are the unit; the decision is the product.</p>
+            <h2 className="display">You&apos;re not paying for raw responses. You&apos;re paying for <span className="em">signal you can trust</span>.</h2>
+            <p>The hard part of human evals isn&apos;t collecting responses — it&apos;s trusting them. Vraelis filters the noise automatically, so what you get back is qualified human judgment, not raw responses you have to clean. Credits are the unit; trustworthy signal is the product.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.02fr) minmax(0,0.98fr)", gap: 16, alignItems: "stretch" }} className="cols-stack">
             <div className="card">
@@ -222,12 +221,12 @@ export default function RankLanding() {
                   <li key={t} style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>{t}</strong> {d}</li>
                 ))}
               </ul>
-              <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 16, marginBottom: 0, fontWeight: 600 }}>Replace subjective creative debates with a recommendation backed by human signal.</p>
+              <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 16, marginBottom: 0, fontWeight: 600 }}>Replace noisy, hand-cleaned eval data with qualified human judgment, on demand.</p>
             </div>
           </div>
           <div className="card card--acc" style={{ textAlign: "center", marginTop: 16, padding: "clamp(22px, 3vw, 30px)" }}>
-            <div className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Vraelis is cheaper than shipping the <span className="em">wrong creative</span>.</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}>Vraelis does not guarantee sales, clicks, conversions, or revenue. It helps you make a better-informed decision before you ship.</p>
+            <div className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Stop <span className="em">babysitting the quality</span> of your eval data.</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}>Vraelis filters low-quality and gamed responses automatically and returns directional human signal. It is human judgment to inform your decisions — not a guarantee of model performance, sales, or outcomes.</p>
           </div>
         </div>
       </section>
@@ -237,8 +236,8 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it's for</p>
-            <h2 className="display">Know what to ship <span className="em">before you launch</span>.</h2>
-            <p>Vraelis measures human preference and turns it into a decision — a decision-intelligence layer for teams evaluating creative options and AI outputs, not a survey builder, polling tool, or ad network. You make the right call before you spend on the wrong option.</p>
+            <h2 className="display">Built for the teams <span className="em">shipping AI</span>.</h2>
+            <p>Vraelis turns attention into qualified human signal — a human-evaluation layer for teams training, evaluating, and shipping AI, not a survey builder, polling tool, or microtask panel. Get the judgment your automated metrics can&apos;t give you, without running your own panel.</p>
           </div>
           <div className="tile-grid cols-4">
             {AUDIENCE.map((a) => (
@@ -256,9 +255,9 @@ export default function RankLanding() {
       <section id="how" className="section">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">The decision workflow</p>
-            <h2 className="display">From candidates to a <span className="em">decision</span> you can defend.</h2>
-            <p>A full evaluation lifecycle — create, collect qualified signal, check readiness, confirm, share, and keep the record.</p>
+            <p className="eyebrow">The evaluation workflow</p>
+            <h2 className="display">From candidates to <span className="em">trustworthy signal</span>.</h2>
+            <p>A full evaluation lifecycle — submit, define the judgment, collect qualified signal, filter the noise, check readiness, and receive the Decision Package.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s) => (
@@ -328,9 +327,9 @@ export default function RankLanding() {
       <section className="section">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">Decisions Vraelis is built for</p>
-            <h2 className="display">A decision workflow, <span className="em">not a poll</span>.</h2>
-            <p>Submit the candidates, collect qualified human signal, get a decision package, and hand your team or client the call — with the reasoning behind it.</p>
+            <p className="eyebrow">What teams evaluate</p>
+            <h2 className="display">An evaluation layer, <span className="em">not a poll</span>.</h2>
+            <p>Submit the candidates, collect qualified human judgment, get a Decision Package, and route the signal into your pipeline, your team, or your client — with the reasoning behind it.</p>
           </div>
           <div className="tile-grid cols-3" style={{ marginBottom: 22 }}>
             {USE_CASES.map((u) => (
@@ -365,9 +364,9 @@ export default function RankLanding() {
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">For AI apps</p>
-            <h2 className="display">Add human evaluation to your AI app.</h2>
-            <p>Create evaluation runs by API, collect human signal, receive webhooks, and pull structured results into your product.</p>
+            <p className="eyebrow">For AI teams &amp; pipelines</p>
+            <h2 className="display">Wire human evaluation into your stack.</h2>
+            <p>Create evaluation runs by API, collect quality-filtered human signal, receive signed webhooks, and pull the structured Decision Package straight into your eval pipeline or product.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: 18, alignItems: "stretch", marginBottom: 16 }} className="cols-stack">
             {/* left — the loop, on cream */}
@@ -433,8 +432,8 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">What's live today</p>
-            <h2 className="display">Everything you need, <span className="em">already live</span>.</h2>
-            <p>From candidates to a decision report. Plus a human evaluation API, webhooks, schema-versioned exports, and developer analytics.</p>
+            <h2 className="display">The quality controls are the <span className="em">product</span>.</h2>
+            <p>From candidates to a Decision Package — plus a human evaluation API, signed webhooks, schema-versioned exports, and the automatic quality filtering that makes the signal worth trusting.</p>
           </div>
           <div className="tile-grid cols-4">
             {SUPPORTS.map(([t, d]) => (
@@ -451,11 +450,11 @@ export default function RankLanding() {
       <section className="section cta-band" style={{ borderBottom: "none" }}>
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
-          <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Stop guessing. <span className="em">Evaluate with real people</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Run your first evaluation free with 25 credits. One credit = one valid human judgment.</p>
+          <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Human signal for AI, <span className="em">without the cleanup</span>.</h2>
+          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Start free with 25 credits. One credit = one valid human judgment — and you&apos;re never charged for the responses we filter out.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start an evaluation free <span aria-hidden>→</span></a>
-            <a href="/demo" className="btn btn--ghost btn--lg">View demo report</a>
+            <a href="/app/new" className="btn btn--lg">Start free <span aria-hidden>→</span></a>
+            <a href="/demo" className="btn btn--ghost btn--lg">See a sample Decision Package</a>
             <a href="/developers" className="btn btn--ghost btn--lg">Developers</a>
           </div>
         </div>
