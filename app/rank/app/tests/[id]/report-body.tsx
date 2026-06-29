@@ -74,8 +74,8 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
                 <span className="pill" style={{ background: conf.bg, color: conf.fg, borderColor: "var(--acc-line)" }}>{intel.confidenceLabel} confidence</span>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.5rem, 3vw, 2.1rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>Option {OPTION_LETTERS[winner.position]}</span>
-                <span className="bignum" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)" }}>{winnerRow.pct}%</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.5rem, 3vw, 2.1rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>{winner.label && !winner.asset_url ? winner.label.slice(0, 48) : `Option ${OPTION_LETTERS[winner.position]}`}</span>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>{winnerRow.pct}% preferred · {intel.marginPts == null ? "—" : `+${intel.marginPts} pts`} margin</span>
               </div>
               <p style={{ fontSize: 14, color: "var(--fg-2)", marginTop: 6, marginBottom: 0 }}>{intel.decisionSummary}</p>
             </div>
@@ -132,7 +132,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
               <OptionThumb o={optById[row.id]} size={44} />
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, gap: 8 }}>
-                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600 }}>Option {OPTION_LETTERS[row.position]}{isWin ? " (recommended)" : ""}</span>
+                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{optById[row.id]?.label && !optById[row.id]?.asset_url ? `${OPTION_LETTERS[row.position]}: ${optById[row.id]!.label!.slice(0, 60)}` : `Option ${OPTION_LETTERS[row.position]}`}{isWin ? " (recommended)" : ""}</span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", whiteSpace: "nowrap" }}>{rankNote(i)}, {row.votes} judgment{row.votes === 1 ? "" : "s"}</span>
                 </div>
                 <div style={{ height: 8, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden" }}>
