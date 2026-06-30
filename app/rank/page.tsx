@@ -459,12 +459,17 @@ export default function RankLanding() {
               ["Can this plug into my eval pipeline?", "Yes — a REST API to create runs, signed webhooks on completion (no polling), and the typed Decision Package as JSON or CSV. Built to route preference and eval signal into RLHF, reward modeling, or your own scoring."],
               ["Is this lab-scale RLHF?", "Vraelis is built for quality-filtered human preference and eval signal via API, at the scale of your plan. Very large or highly custom human-data pipelines may need an enterprise setup — talk to us and we'll be straight about what fits."],
               ["Are you SOC 2 / SAML / SCIM?", "No SOC 2 today, and we won't claim it. OIDC SSO is live for verified domains; SAML configuration is in preview and SCIM is on the roadmap. Ask us and we'll be direct about timing and what's supported now."],
-            ].map(([q, a]) => (
-              <div key={q} className="card">
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 12, lineHeight: 1.4 }}>{q}</div>
-                <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>{a}</p>
-              </div>
-            ))}
+            ].map(([q, a], i, arr) => {
+              // Odd count (7) leaves the last card orphaned in a 2-col grid — span it across
+              // both columns and center it so the section ends balanced.
+              const lastOdd = i === arr.length - 1 && arr.length % 2 === 1;
+              return (
+                <div key={q} className="card" style={lastOdd ? { gridColumn: "1 / -1", maxWidth: 560, marginInline: "auto", width: "100%" } : undefined}>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 12, lineHeight: 1.4 }}>{q}</div>
+                  <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>{a}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
