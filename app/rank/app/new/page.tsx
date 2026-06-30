@@ -92,7 +92,10 @@ export default function NewTest() {
   useEffect(() => {
     fetch("/api/v/launch-context").then((r) => r.json()).then((j) => {
       setCtx(j);
-      if (j.maxVotes) setVotes((v) => Math.min(v, j.maxVotes));
+      // Cap the target by BOTH the plan max AND the user's balance, so a Free user with
+      // 25 credits doesn't land on an unlaunchable 100. Server floor is MIN_VOTES (10).
+      const cap = j.signedIn && (j.balance ?? 0) > 0 ? Math.min(j.maxVotes ?? 100, j.balance) : (j.maxVotes ?? 100);
+      setVotes((v) => Math.max(10, Math.min(v, cap)));
     }).catch(() => {});
     fetch("/api/v/projects").then((r) => r.json()).then((j) => setProjects(j.projects || [])).catch(() => {});
     try {
@@ -105,6 +108,10 @@ export default function NewTest() {
   const maxOptions = ctx.maxOptions ?? 8;
   const maxVotes = ctx.maxVotes ?? 100;
   const balance = ctx.balance ?? 0;
+  // The target ceiling respects the user's balance too: a signed-in user with credits can't
+  // be asked for more judgments than they can pay for. Floored at MIN_VOTES (10) so the
+  // slider is always usable. Signed-out (pre-context) falls back to the plan max.
+  const effectiveMax = Math.max(10, ctx.signedIn && balance > 0 ? Math.min(maxVotes, balance) : maxVotes);
   const activeCap = ctx.activeTestsPerMonth ?? 1;
   const activeUsed = ctx.activeTests ?? 0;
   const planName = ctx.plan ? ctx.plan.charAt(0).toUpperCase() + ctx.plan.slice(1) : "Free";
@@ -299,21 +306,27 @@ export default function NewTest() {
           <section>
             <Step n={3} title="Set signal target" hint="How many qualified human judgments to collect." />
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-              {([["Quick signal check", 50], ["Balanced evaluation", 150], ["High-confidence evaluation", 500]] as [string, number][]).map(([label, v]) => {
-                const target = Math.min(v, maxVotes);
-                return <button key={label} type="button" onClick={() => setVotes(target)} className="chip" style={{ cursor: "pointer", ...(votes === target ? { borderColor: "var(--acc)", color: "var(--acc-deep)" } : {}) }}>{label}</button>;
-              })}
+              {(() => {
+                // Presets are capped by effectiveMax (plan AND balance). A low-balance user
+                // gets a "Starter check" at their ceiling so the free 25 credits are usable.
+                const raw: [string, number][] = [["Starter check", Math.min(25, effectiveMax)], ["Quick signal check", 50], ["Balanced evaluation", 150], ["High-confidence evaluation", 500]];
+                const seen = new Set<number>();
+                const presets = raw.map(([label, v]) => [label, Math.min(v, effectiveMax)] as [string, number]).filter(([, t]) => t >= 10 && !seen.has(t) && (seen.add(t), true));
+                return presets.map(([label, target]) => (
+                  <button key={label} type="button" onClick={() => setVotes(target)} className="chip" style={{ cursor: "pointer", ...(votes === target ? { borderColor: "var(--acc)", color: "var(--acc-deep)" } : {}) }}>{label} <span style={{ color: "var(--fg-5)" }}>({target})</span></button>
+                ));
+              })()}
             </div>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
               <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>{votes} <span style={{ fontSize: 14, color: "var(--fg-4)", fontWeight: 500 }}>qualified judgments</span></span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>= {votes} credits</span>
             </div>
-            <input type="range" min={10} max={maxVotes} step={10} value={Math.min(votes, maxVotes)} onChange={(e) => setVotes(parseInt(e.target.value, 10))} style={{ width: "100%", accentColor: "var(--acc-deep)" }} />
+            <input type="range" min={10} max={effectiveMax} step={Math.min(10, effectiveMax)} value={Math.min(votes, effectiveMax)} onChange={(e) => setVotes(parseInt(e.target.value, 10))} style={{ width: "100%", accentColor: "var(--acc-deep)" }} />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 qualified judgment = 1 credit</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>Plan max {maxVotes.toLocaleString()}. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</a></span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{ctx.signedIn && balance < maxVotes ? <>Your balance {balance.toLocaleString()}. <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Add credits</a></> : <>Plan max {maxVotes.toLocaleString()}. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</a></>}</span>
             </div>
-            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 8, lineHeight: 1.5 }}>Higher targets improve confidence and readiness — a quick check (~50) for a gut read, balanced (~150) for most evaluations, high-confidence (500+) before a big call. Vraelis tells you whether the signal is <strong style={{ color: "var(--fg-3)" }}>ready to act on</strong>, not just which candidate is leading. You&apos;re only charged for judgments that pass quality filtering.</p>
+            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 8, lineHeight: 1.5 }}>Higher targets improve confidence and readiness — a starter check (10–25) is directional only (good for a first run, not high-confidence), ~50 for a gut read, ~150 for most evaluations, 500+ before a big call. Vraelis tells you whether the signal is <strong style={{ color: "var(--fg-3)" }}>ready to act on</strong>, not just which candidate is leading. You&apos;re only charged for judgments that pass quality filtering, and unused credits are refunded.</p>
           </section>
         </div>
 
