@@ -3,6 +3,9 @@ import { OPTION_LETTERS, type VOption, type VReport } from "@/lib/v-db";
 import { evaluationIntelligence, intelligenceDisclaimer } from "@/lib/v-intelligence";
 import { decisionReadiness, followupForReadiness, REPORT_GLOSSARY } from "@/lib/v-readiness";
 
+// Bounds-safe option letter (A..Z): never render "Option undefined" for position >= 26.
+const optLetter = (pos: number) => OPTION_LETTERS[pos] ?? "?";
+
 const READY_TONE: Record<string, { bg: string; fg: string }> = {
   good: { bg: "var(--acc-soft)", fg: "var(--acc-deep)" },
   warn: { bg: "var(--bg-1)", fg: "var(--money)" },
@@ -74,7 +77,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
                 <span className="pill" style={{ background: conf.bg, color: conf.fg, borderColor: "var(--acc-line)" }}>{intel.confidenceLabel} confidence</span>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.5rem, 3vw, 2.1rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>{winner.label && !winner.asset_url ? winner.label.slice(0, 48) : `Option ${OPTION_LETTERS[winner.position]}`}</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.5rem, 3vw, 2.1rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>{winner.label && !winner.asset_url ? winner.label.slice(0, 48) : `Option ${optLetter(winner.position)}`}</span>
                 <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>{winnerRow.pct}% preferred · {intel.marginPts == null ? "—" : `+${intel.marginPts} pts`} margin</span>
               </div>
               <p style={{ fontSize: 14, color: "var(--fg-2)", marginTop: 6, marginBottom: 0 }}>{intel.decisionSummary}</p>
@@ -132,7 +135,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
               <OptionThumb o={optById[row.id]} size={44} />
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, gap: 8 }}>
-                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{optById[row.id]?.label && !optById[row.id]?.asset_url ? `${OPTION_LETTERS[row.position]}: ${optById[row.id]!.label!.slice(0, 60)}` : `Option ${OPTION_LETTERS[row.position]}`}{isWin ? " (recommended)" : ""}</span>
+                  <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{(() => { const o = optById[row.id]; return o?.label && !o.asset_url ? `${optLetter(row.position)}: ${o.label.slice(0, 60)}` : `Option ${optLetter(row.position)}`; })()}{isWin ? " (recommended)" : ""}</span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", whiteSpace: "nowrap" }}>{rankNote(i)}, {row.votes} judgment{row.votes === 1 ? "" : "s"}</span>
                 </div>
                 <div style={{ height: 8, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden" }}>
@@ -191,7 +194,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
             <div key={row.id} className="card" style={{ padding: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
                 <OptionThumb o={optById[row.id]} size={28} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--fg-1)" }}>Option {OPTION_LETTERS[row.position]}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--fg-1)" }}>Option {optLetter(row.position)}</span>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)" }}>{commentsByOption[row.id].length} note{commentsByOption[row.id].length === 1 ? "" : "s"}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>

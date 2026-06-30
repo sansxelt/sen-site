@@ -74,7 +74,7 @@ export default function DemoReport() {
         <div>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Why people preferred B</div>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 7 }}>
-            {["More accurate — A overstated the refund policy", "Clearer next step the user can act on", "Safer wording, with the right caveat", "Less overconfident about edge cases"].map((x) => (
+            {["More accurate — A stated an unsupported claim as fact", "Flagged its uncertainty instead of guessing", "Safer wording, with the caveat a real user needs", "Less overconfident on the key detail"].map((x) => (
               <li key={x} style={{ display: "flex", gap: 9, fontSize: 13, color: "var(--fg-2)", lineHeight: 1.45 }}><span style={{ color: "var(--acc-deep)", flex: "none" }}>✓</span>{x}</li>
             ))}
           </ul>

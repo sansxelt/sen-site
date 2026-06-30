@@ -48,7 +48,12 @@ export function evaluationIntelligence(r: IntelInput, votesTarget = 0): Intellig
   const letter = (pos: number) => OPTION_LETTERS[pos] ?? "?";
   // A recommendation requires a flagged winner AND a real lead over the runner-up.
   const hasWinner = !!r.winner_option_id && !!top && (!runner || top.votes > runner.votes);
-  const marginPts = !hasWinner ? null : runner ? Math.max(0, (top!.pct ?? 0) - (runner.pct ?? 0)) : (top!.pct ?? 0);
+  // Margin from raw votes (not pre-rounded pcts): a 100-vs-99 win must not round to a 0pt
+  // margin. Falls back to pct only if vote counts are unavailable.
+  const marginPts = !hasWinner ? null
+    : !runner ? (top!.pct ?? 0)
+    : total > 0 ? Math.max(0, Math.round(((top!.votes - runner.votes) / total) * 100))
+    : Math.max(0, (top!.pct ?? 0) - (runner.pct ?? 0));
 
   // Signal quality — purely about sample size and how much was filtered.
   let signalLabel: SignalLabel;

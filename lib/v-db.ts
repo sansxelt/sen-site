@@ -316,13 +316,18 @@ export async function recordVote(args: {
   const res = await recordJudgment({ testId: args.testId, voterId: args.voterId, optionId: args.optionId, reason: args.reason, timeSpentMs: args.timeSpentMs });
   if (res !== "ok") return { status: res };
   await tagJudgmentSource(args.testId, args.voterId, src);
-  await logEvent({ testId: args.testId, eventType: "vote_recorded", actorType: "voter", metadata: {} });
+  // Respect the caller's quality verdict even on this pre-migration fallback: a vote the
+  // quality gate already flagged as "rejected" must NOT earn a reward (and is a filtered
+  // event), otherwise filtered votes get paid for. The v_record_vote RPC handles this on
+  // the live DB; this keeps the fallback honest.
+  const rejected = args.status === "rejected";
+  await logEvent({ testId: args.testId, eventType: rejected ? "vote_filtered" : "vote_recorded", actorType: "voter", metadata: rejected && args.rejectReason ? { reject_reason: args.rejectReason } : {} });
   let earned = false;
-  if ((await rewardsToday(args.voterId)) < args.rewardCap) {
+  if (!rejected && (await rewardsToday(args.voterId)) < args.rewardCap) {
     await grant(args.voterId, 1, "reward", { refType: "vote", refId: args.testId, extRef: `reward:${args.testId}` });
     earned = true;
   }
-  return { status: "ok", earned, voteStatus: "valid" };
+  return { status: "ok", earned, voteStatus: rejected ? "rejected" : "valid" };
 }
 
 export async function getReport(testId: string): Promise<VReport | null> {

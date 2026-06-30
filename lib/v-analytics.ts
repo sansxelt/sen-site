@@ -323,8 +323,10 @@ export async function judgePoolStats(testId: string): Promise<JudgePool> {
       const total = r.valid + r.rejected;
       if (total >= REP_ESTABLISHED) { established += 1; if (r.rejected / total < REP_CLEAN_MAX) cleanRecord += 1; }
     }
-    // cleanPct is share of ESTABLISHED judges with a clean record (only meaningful when some are established)
-    const cleanPct = established > 0 ? Math.round((cleanRecord / established) * 100) : null;
+    // cleanPct = share of ESTABLISHED judges with a clean record. Only reported when the
+    // established sample is big enough to be meaningful (>=3) — 1-2 established judges make
+    // a "0%" or "100%" that's pure noise, so we show "—" (null) instead.
+    const cleanPct = established >= 3 ? Math.round((cleanRecord / established) * 100) : null;
     return { uniqueJudges: ids.length, established, cleanRecord, cleanPct };
   } catch { return empty; }
 }

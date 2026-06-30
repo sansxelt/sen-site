@@ -70,7 +70,10 @@ export async function ensureSignupGrant(userId: string): Promise<void> {
     .eq("user_id", norm(userId))
     .eq("reason", "signup");
   if ((count ?? 0) > 0) return;
-  await grant(userId, SIGNUP_FREE_CREDITS, "signup", { bucket: "purchased" });
+  // ext_ref makes this atomic against a race: if two concurrent calls both pass the count
+  // check, the second grant() hits the ext_ref unique constraint and no-ops (23505). The
+  // count check above is just a fast path; the unique index is the real guard.
+  await grant(userId, SIGNUP_FREE_CREDITS, "signup", { bucket: "purchased", extRef: `signup:${norm(userId)}` });
 }
 
 // Escrow `amount` credits for a test launch. Returns false if insufficient.

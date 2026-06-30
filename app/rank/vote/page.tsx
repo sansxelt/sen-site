@@ -22,6 +22,7 @@ export default function VotePage() {
   const [ctx, setCtx] = useState<Ctx>({ signedIn: false, rewardCap: 30 });
   const [showIntro, setShowIntro] = useState(false);
   const startRef = useRef(0);
+  const submittingRef = useRef(false);
 
   useEffect(() => { try { if (!localStorage.getItem("vraelis_vote_intro")) setShowIntro(true); } catch { /* ignore */ } }, []);
   useEffect(() => { fetch("/api/v/vote-context").then((r) => r.json()).then(setCtx).catch(() => {}); }, []);
@@ -41,7 +42,10 @@ export default function VotePage() {
   useEffect(() => { fetchNext(); }, [fetchNext]);
 
   async function submit() {
-    if (!test || !selected || busy) return;
+    // Synchronous guard: React's setBusy is async, so two fast clicks can both pass a
+    // `busy` state check before it commits. A ref flips immediately and blocks the double.
+    if (!test || !selected || busy || submittingRef.current) return;
+    submittingRef.current = true;
     setBusy(true); setErr("");
     try {
       const r = await fetch("/api/v/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId: test.id, optionId: selected, reason, timeSpentMs: Date.now() - startRef.current, screeningAnswers: answers }) });
@@ -58,7 +62,7 @@ export default function VotePage() {
       }
     } catch {
       setErr("Network error. Try again.");
-    } finally { setBusy(false); }
+    } finally { setBusy(false); submittingRef.current = false; }
   }
 
   const cap = ctx.rewardCap ?? 30;
