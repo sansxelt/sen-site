@@ -334,7 +334,10 @@ export default function NewTest() {
         <div className="sticky-side" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Evaluation run summary</div>
-            {[["Workflow", WORKFLOWS[workflow].name], ["Signal target", `${votes}`], ["Credits required", `${votes}`], ["Your balance", balance.toLocaleString()], ["Balance after", Math.max(0, balance - votes).toLocaleString()], ["Runs this month", `${activeUsed} / ${activeCap}`]].map(([k, v]) => (
+            {([["Workflow", WORKFLOWS[workflow].name], ["Signal target", `${votes}`], ["Credits required", `${votes}`], ["Your balance", balance.toLocaleString()], ["Balance after", Math.max(0, balance - votes).toLocaleString()],
+              // The run-quota row is only meaningful when the quota can actually bite. On Free,
+              // credits cap usage first, so showing "Runs this month" is just noise.
+              ...(ctx.plan && ctx.plan !== "free" ? [["Runs this month", `${activeUsed} / ${activeCap}`]] : [])] as [string, string][]).map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13.5 }}><span style={{ color: "var(--fg-4)" }}>{k}</span><span style={{ color: "var(--fg-1)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>{v}</span></div>
             ))}
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>

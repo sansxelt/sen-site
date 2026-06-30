@@ -15,7 +15,10 @@ export type Entitlements = {
 };
 
 const TABLE: Record<Plan, Omit<Entitlements, "plan">> = {
-  free:       { monthlyCredits: 0,      activeTestsPerMonth: 1,     maxOptions: 4, maxVotes: 100,  targeting: false, api: false, discord: false },
+  // Free: credits are the real limiter, not the run quota. With 25 starter credits and the
+  // MIN_VOTES=10 floor, a Free user can afford at most ~2 runs, so a cap of 3 means credits
+  // (never the quota) gate usage — the point of starter credits is to let people try it.
+  free:       { monthlyCredits: 0,      activeTestsPerMonth: 3,     maxOptions: 4, maxVotes: 100,  targeting: false, api: false, discord: false },
   starter:    { monthlyCredits: 150,    activeTestsPerMonth: 3,     maxOptions: 5, maxVotes: 300,  targeting: false, api: false, discord: false },
   creator:    { monthlyCredits: 500,    activeTestsPerMonth: 10,    maxOptions: 6, maxVotes: 500,  targeting: true,  api: false, discord: false },
   pro:        { monthlyCredits: 2000,   activeTestsPerMonth: 30,    maxOptions: 8, maxVotes: 1000, targeting: true,  api: false, discord: true  },
