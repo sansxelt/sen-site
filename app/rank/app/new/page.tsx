@@ -126,7 +126,7 @@ export default function NewTest() {
     !title.trim() ? { t: "Add an evaluation name", tone: "warn" }
     : optionCount < 2 ? { t: `Add ${2 - optionCount} more candidate${2 - optionCount === 1 ? "" : "s"}`, tone: "warn" }
     : overVotes ? { t: `Over your plan's ${maxVotes}-judgment cap`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
-    : atTestCap ? { t: `Plan limit: ${activeCap} active run${activeCap === 1 ? "" : "s"}/mo`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
+    : atTestCap ? { t: `You've used your ${activeCap} run${activeCap === 1 ? "" : "s"} this month`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
     : lowCredits ? { t: `Need ${votes - balance} more credits`, tone: "bad", cta: { label: "Buy credits", href: "/app/credits" } }
     : { t: "Ready to launch", tone: "ok" };
   const toneColor = status.tone === "ok" ? "var(--acc-deep)" : status.tone === "warn" ? "var(--money)" : "var(--err)";
@@ -169,7 +169,7 @@ export default function NewTest() {
       if (res.status === 401) { signIn("google", { callbackUrl: "/app/new" }); return; }
       const j = await res.json().catch(() => ({}));
       if (res.status === 402) { setError(`Not enough credits. This evaluation needs ${j.needed}. Earn credits by giving feedback in other evaluations, or top up.`); return; }
-      if (res.status === 403 && j.error === "plan_limit") { setError(`You've hit your plan's ${j.limit} active evaluation${j.limit === 1 ? "" : "s"} this month. Upgrade for more.`); return; }
+      if (res.status === 403 && j.error === "plan_limit") { setError(`You've used your plan's ${j.limit} run${j.limit === 1 ? "" : "s"} this month (completed runs count too). Upgrade to run more.`); return; }
       if (res.status === 413) { setError("One of your images is too large. Try smaller or fewer images."); return; }
       if (!res.ok) { setError("Couldn't launch the evaluation. Try again."); return; }
       window.location.href = `/app/tests/${j.id}/report?launched=1`;
@@ -334,13 +334,14 @@ export default function NewTest() {
         <div className="sticky-side" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Evaluation run summary</div>
-            {[["Workflow", WORKFLOWS[workflow].name], ["Signal target", `${votes}`], ["Credits required", `${votes}`], ["Your balance", balance.toLocaleString()], ["Balance after", Math.max(0, balance - votes).toLocaleString()], ["Active", `${activeUsed} / ${activeCap}`]].map(([k, v]) => (
+            {[["Workflow", WORKFLOWS[workflow].name], ["Signal target", `${votes}`], ["Credits required", `${votes}`], ["Your balance", balance.toLocaleString()], ["Balance after", Math.max(0, balance - votes).toLocaleString()], ["Runs this month", `${activeUsed} / ${activeCap}`]].map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", fontSize: 13.5 }}><span style={{ color: "var(--fg-4)" }}>{k}</span><span style={{ color: "var(--fg-1)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>{v}</span></div>
             ))}
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: toneColor }}>{status.tone === "ok" ? "✓ " : "• "}{status.t}</span>
               {status.cta && <a href={status.cta.href} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>{status.cta.label}</a>}
             </div>
+            {atTestCap && <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: 0, lineHeight: 1.5 }}>This is a monthly run limit — it resets at the start of next month. Completed and closed runs still count, so finishing your current run won&apos;t free up a slot. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</a> to run more now.</p>}
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 12 }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Output: Decision Package</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

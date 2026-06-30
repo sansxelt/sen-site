@@ -448,9 +448,11 @@ export async function countActiveTestsThisMonth(userId: string): Promise<number>
   if (!userId || !isDatabaseConfigured()) return 0;
   const s = getSupabaseAdminClient();
   const since = new Date(); since.setUTCDate(1); since.setUTCHours(0, 0, 0, 0);
-  // Only launched tests consume the monthly quota — abandoned drafts don't.
-  const { count } = await s.from("v_tests" as never).select("*", { count: "exact", head: true }).eq("user_id", norm(userId)).neq("status", "draft").gte("created_at", since.toISOString());
-  return count ?? 0;
+  // Only launched tests consume the monthly quota — abandoned drafts don't, and sandbox
+  // tests don't (matching the v_launch_test RPC, which excludes is_sandbox). We select the
+  // column and filter in JS so a pre-migration DB without is_sandbox still works.
+  const { data } = await s.from("v_tests" as never).select("is_sandbox").eq("user_id", norm(userId)).neq("status", "draft").gte("created_at", since.toISOString());
+  return ((data as unknown as { is_sandbox?: boolean }[]) ?? []).filter((t) => !t.is_sandbox).length;
 }
 
 // Record a subscription-invoice payment, deduped by Stripe invoice id via the
