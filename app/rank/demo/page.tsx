@@ -95,7 +95,7 @@ export default function DemoReport() {
         ))}
       </div>
 
-      <ReportBody results={results} options={options} votesTarget={250} />
+      <ReportBody results={results} options={options} votesTarget={250} judgePool={{ uniqueJudges: 209, established: 96, cleanRecord: 90, cleanPct: 94 }} />
 
       {/* This is more than a result */}
       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" }}>This is more than a result</div>

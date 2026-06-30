@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
 import { getProject } from "@/lib/v-projects";
-import { testFilterReasons, testSourceQuality } from "@/lib/v-analytics";
+import { testFilterReasons, testSourceQuality, judgePoolStats } from "@/lib/v-analytics";
 import { evaluationIntelligence, evaluationHealth } from "@/lib/v-intelligence";
 import { decisionReadiness, followupForReadiness } from "@/lib/v-readiness";
 import { followupLineage } from "@/lib/v-followup";
@@ -118,6 +118,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // None of this is rendered on the public /r report.
   const filterReasons = (r.filtered ?? 0) > 0 ? await testFilterReasons(id) : [];
   const sources = await testSourceQuality(id);
+  const judgePool = await judgePoolStats(id);
   const intel = evaluationIntelligence(r, test.votes_target);
   const health = evaluationHealth("complete", intel);
   const noisySource = sources.find((sq) => sq.total >= 10 && sq.filterRate >= 25);
@@ -139,7 +140,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
 
       <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
 
-      <ReportBody results={r} options={options} votesTarget={test.votes_target} complete viewerCanAct audienceFit={screen.fit} screeningEnabled={screen.enabled} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
+      <ReportBody results={r} options={options} votesTarget={test.votes_target} complete viewerCanAct audienceFit={screen.fit} screeningEnabled={screen.enabled} judgePool={judgePool} analysisSlot={<AnalysisPanel testId={id} initial={r.analysis ?? null} />} />
 
       <FollowupPanel testId={test.id} plan={followPlan} defaultTarget={followTarget} balance={bal} />
       {lineage.children.length > 0 ? (

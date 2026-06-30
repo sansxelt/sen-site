@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { getSharedReport, OPTION_LETTERS } from "@/lib/v-db";
+import { judgePoolStats } from "@/lib/v-analytics";
 import { ogMeta } from "@/lib/og-meta";
 import { ReportBody, OptionThumb } from "@/app/rank/app/tests/[id]/report-body";
 import { AnalysisPanel } from "@/app/rank/app/tests/[id]/analysis-panel";
@@ -110,15 +111,17 @@ export default async function PublicReport({ params }: { params: Promise<{ token
 
   // Complete with report
   if (!report) return <Unavailable />; // unreachable (handled above) — satisfies the type checker
+  const judgePool = await judgePoolStats(test.id);
   return (
     <Frame>
-      <p className="eyebrow">Evaluation result</p>
+      <p className="eyebrow">Decision record</p>
       <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.5rem)", marginBottom: 8 }}>{test.title}</h1>
-      <p style={{ fontSize: 14, color: "var(--fg-4)", marginBottom: 22 }}>A read-only decision report from real people, powered by Vraelis.</p>
+      <p style={{ fontSize: 14, color: "var(--fg-4)", marginBottom: 22 }}>A read-only Decision Package from quality-filtered human judgment, powered by Vraelis.</p>
       <ReportBody
         results={report.results}
         options={options}
         votesTarget={test.votes_target}
+        judgePool={judgePool}
         analysisSlot={report.results.analysis ? <AnalysisPanel testId="" initial={report.results.analysis} readOnly /> : null}
       />
     </Frame>

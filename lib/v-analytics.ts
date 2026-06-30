@@ -296,6 +296,39 @@ export async function testSourceQuality(testId: string): Promise<SourceRow[]> {
   } catch { return []; }
 }
 
+// Judge-pool provenance for one evaluation. Pure derivation over v_judgments
+// (who judged) + v_voter_rep (their track record). No invented metrics: we report
+// only unique-judge count and how many came from judges with a clean prior record.
+// "Clean record" = an established judge (>= REP_MIN_VOTES) whose rejection rate is
+// below the gating threshold. We do NOT claim agreement/reliability we don't measure.
+export type JudgePool = { uniqueJudges: number; established: number; cleanRecord: number; cleanPct: number | null };
+const REP_ESTABLISHED = 12;     // mirrors v-quality REP_MIN_VOTES
+const REP_CLEAN_MAX = 0.6;      // below the low-reputation gate
+
+export async function judgePoolStats(testId: string): Promise<JudgePool> {
+  const empty: JudgePool = { uniqueJudges: 0, established: 0, cleanRecord: 0, cleanPct: null };
+  if (!testId || !isDatabaseConfigured()) return empty;
+  try {
+    const s = getSupabaseAdminClient();
+    const { data: jrows, error } = await s.from("v_judgments" as never).select("voter_id").eq("test_id", testId).eq("status", "valid").limit(10000);
+    if (error) return empty;
+    const ids = [...new Set(((jrows as unknown as { voter_id: string | null }[]) ?? []).map((r) => r.voter_id).filter((v): v is string => !!v))];
+    if (!ids.length) return empty;
+    const { data: reps } = await s.from("v_voter_rep" as never).select("voter_id,valid,rejected").in("voter_id", ids).limit(10000);
+    const repById: Record<string, { valid: number; rejected: number }> = Object.fromEntries(((reps as unknown as { voter_id: string; valid: number; rejected: number }[]) ?? []).map((r) => [r.voter_id, { valid: r.valid, rejected: r.rejected }]));
+    let established = 0, cleanRecord = 0;
+    for (const id of ids) {
+      const r = repById[id];
+      if (!r) continue;
+      const total = r.valid + r.rejected;
+      if (total >= REP_ESTABLISHED) { established += 1; if (r.rejected / total < REP_CLEAN_MAX) cleanRecord += 1; }
+    }
+    // cleanPct is share of ESTABLISHED judges with a clean record (only meaningful when some are established)
+    const cleanPct = established > 0 ? Math.round((cleanRecord / established) * 100) : null;
+    return { uniqueJudges: ids.length, established, cleanRecord, cleanPct };
+  } catch { return empty; }
+}
+
 // Source quality across one owned project's evaluations.
 export async function projectSourceQuality(userId: string, projectId: string): Promise<SourceRow[]> {
   if (!userId || !projectId || !isDatabaseConfigured()) return [];

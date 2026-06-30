@@ -41,7 +41,7 @@ const CONF_TONE: Record<string, { bg: string; fg: string }> = {
 // margin, signal quality, action), preference breakdown, optional AI analysis
 // slot, and reasoning signals. Pure render from results + options; used by both
 // the owner report and the public /r/<token> report.
-export function ReportBody({ results, options, analysisSlot, votesTarget = 0, complete = true, audienceFit, screeningEnabled, viewerCanAct = false }: { results: VReport["results"]; options: VOption[]; analysisSlot?: ReactNode; votesTarget?: number; complete?: boolean; audienceFit?: string | null; screeningEnabled?: boolean; viewerCanAct?: boolean }) {
+export function ReportBody({ results, options, analysisSlot, votesTarget = 0, complete = true, audienceFit, screeningEnabled, viewerCanAct = false, judgePool }: { results: VReport["results"]; options: VOption[]; analysisSlot?: ReactNode; votesTarget?: number; complete?: boolean; audienceFit?: string | null; screeningEnabled?: boolean; viewerCanAct?: boolean; judgePool?: { uniqueJudges: number; established: number; cleanRecord: number; cleanPct: number | null } }) {
   const optById: Record<string, VOption> = Object.fromEntries(options.map((o) => [o.id, o]));
   const total = results.total;
   const filtered = results.filtered ?? 0;
@@ -160,6 +160,26 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
         </div>
         <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginTop: 12, marginBottom: 0 }}>Low-quality, too-fast, or duplicate responses are filtered automatically. <strong style={{ color: "var(--fg-1)" }}>Only valid human judgments count</strong>. Raw participant, IP, and device data is never shown.</p>
       </div>
+
+      {/* ── Judge pool (provenance) ── */}
+      {judgePool && judgePool.uniqueJudges > 0 ? (
+        <>
+          <div style={head}>Judge pool</div>
+          <div className="card" style={{ marginBottom: 26 }}>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: "0 0 14px", lineHeight: 1.5 }}>This decision came from <strong style={{ color: "var(--fg-1)" }}>{judgePool.uniqueJudges.toLocaleString()} unique judge{judgePool.uniqueJudges === 1 ? "" : "s"}</strong> — real people, each judging once. Quality filtering and reputation gating run on every response.</p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Metric l="Unique judges" v={judgePool.uniqueJudges.toLocaleString()} accent />
+              <Metric l="Established judges" v={judgePool.established.toLocaleString()} />
+              <Metric l="Clean track record" v={judgePool.cleanPct == null ? "—" : `${judgePool.cleanPct}%`} />
+            </div>
+            <p style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.6, marginTop: 12, marginBottom: 0 }}>
+              {judgePool.cleanPct == null
+                ? "“Established” judges have a track record of 12+ prior judgments; this run had too few to report a clean-record rate yet. Reputation gating still removes judges whose responses are mostly rejected."
+                : <>Of judges with a track record (12+ prior judgments), <strong style={{ color: "var(--fg-3)" }}>{judgePool.cleanPct}%</strong> have a clean record — their responses are rarely filtered. We report who judged and how filtered the signal is; we don&apos;t claim inter-judge agreement or reliability scores, which we don&apos;t measure.</>}
+            </p>
+          </div>
+        </>
+      ) : null}
 
       {/* ── Reasoning signals ── */}
       <div style={head}>Reasoning signals</div>
