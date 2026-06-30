@@ -3,7 +3,7 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = {
   ...ogMeta({
-    title: "Human judgment for AI, without babysitting the quality",
+    title: "Human judgment for AI, without the cleanup",
     description: "Vraelis is the human-signal layer for AI — submit model outputs, collect quality-filtered human judgment, and get a structured Decision Package via API. Preference and eval signal for teams training, evaluating, and shipping AI.",
     path: "/",
   }),
@@ -137,7 +137,7 @@ export default function RankLanding() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
           <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>The human-signal layer for AI</p>
           <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
-            Human judgment for AI, without <span className="em">babysitting the quality</span>.
+            Human judgment for AI, <span className="em">without the cleanup</span>.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 700, margin: "0 auto 30px", lineHeight: 1.55 }}>
             Submit model outputs, prompts, or candidates. Vraelis collects judgments from real people, filters low-quality and gamed responses automatically, and returns a structured Decision Package — through API, webhook, or export. The eval signal your automated metrics can&apos;t give you, without running your own panel.
