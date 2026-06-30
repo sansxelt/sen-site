@@ -331,6 +331,61 @@ export async function judgePoolStats(testId: string): Promise<JudgePool> {
   } catch { return empty; }
 }
 
+// Fill monitor for the cold-pool experiment. Tells a REAL cold fill (many distinct
+// people) from a FARMED one (few IPs/devices cycling). Pure derivation over v_judgments
+// (ip_hash, device_hash, created_at are real live columns). No schema change.
+// Verdict thresholds are deliberately conservative; this is a signal, not a verdict.
+export type FillStats = {
+  valid: number; filtered: number;
+  uniqueIPs: number; uniqueDevices: number; uniqueVoters: number;
+  votesPerIP: number | null;       // valid / uniqueIPs — ~1 healthy; high = concentrated
+  topIPShare: number | null;       // % of valid votes from the single busiest IP
+  timeToValid: { n: number; ms: number | null }[]; // ms from first valid vote to the Nth (25/50/100)
+  diversity: "healthy" | "concentrated" | "likely-farmed" | "insufficient";
+};
+
+export async function fillStats(testId: string): Promise<FillStats> {
+  const empty: FillStats = { valid: 0, filtered: 0, uniqueIPs: 0, uniqueDevices: 0, uniqueVoters: 0, votesPerIP: null, topIPShare: null, timeToValid: [{ n: 25, ms: null }, { n: 50, ms: null }, { n: 100, ms: null }], diversity: "insufficient" };
+  if (!testId || !isDatabaseConfigured()) return empty;
+  try {
+    const s = getSupabaseAdminClient();
+    const { data, error } = await s.from("v_judgments" as never)
+      .select("voter_id,status,ip_hash,device_hash,created_at")
+      .eq("test_id", testId).order("created_at", { ascending: true }).limit(20000);
+    if (error) return empty;
+    const rows = (data as unknown as { voter_id: string | null; status: string; ip_hash: string | null; device_hash: string | null; created_at: string }[]) ?? [];
+    const valids = rows.filter((r) => r.status === "valid");
+    const filtered = rows.length - valids.length;
+    if (!valids.length) return { ...empty, filtered };
+
+    const ipCount: Record<string, number> = {};
+    const devices = new Set<string>();
+    const voters = new Set<string>();
+    for (const r of valids) {
+      if (r.ip_hash) ipCount[r.ip_hash] = (ipCount[r.ip_hash] ?? 0) + 1;
+      if (r.device_hash) devices.add(r.device_hash);
+      if (r.voter_id) voters.add(r.voter_id);
+    }
+    const uniqueIPs = Object.keys(ipCount).length;
+    const topIP = Object.values(ipCount).reduce((m, c) => Math.max(m, c), 0);
+    const votesPerIP = uniqueIPs ? Math.round((valids.length / uniqueIPs) * 100) / 100 : null;
+    const topIPShare = uniqueIPs ? Math.round((topIP / valids.length) * 100) : null;
+
+    // time-to-N from the first valid vote
+    const t0 = new Date(valids[0].created_at).getTime();
+    const timeToValid = [25, 50, 100].map((n) => ({ n, ms: valids.length >= n ? new Date(valids[n - 1].created_at).getTime() - t0 : null }));
+
+    // Honest diversity verdict: needs enough votes to judge; flags concentration.
+    let diversity: FillStats["diversity"];
+    if (valids.length < 20 || uniqueIPs === 0) diversity = "insufficient";
+    else if ((topIPShare ?? 0) >= 40 || (votesPerIP ?? 0) >= 4) diversity = "likely-farmed";
+    else if ((topIPShare ?? 0) >= 20 || (votesPerIP ?? 0) >= 2) diversity = "concentrated";
+    else diversity = "healthy";
+
+    return { valid: valids.length, filtered, uniqueIPs, uniqueDevices: devices.size, uniqueVoters: voters.size, votesPerIP, topIPShare, timeToValid, diversity };
+  } catch { return empty; }
+}
+
 // Source quality across one owned project's evaluations.
 export async function projectSourceQuality(userId: string, projectId: string): Promise<SourceRow[]> {
   if (!userId || !projectId || !isDatabaseConfigured()) return [];

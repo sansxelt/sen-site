@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
 import { getProject } from "@/lib/v-projects";
-import { testFilterReasons, testSourceQuality, judgePoolStats } from "@/lib/v-analytics";
+import { testFilterReasons, testSourceQuality, judgePoolStats, fillStats } from "@/lib/v-analytics";
 import { evaluationIntelligence, evaluationHealth } from "@/lib/v-intelligence";
 import { decisionReadiness, followupForReadiness } from "@/lib/v-readiness";
 import { followupLineage } from "@/lib/v-followup";
@@ -62,6 +62,14 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // ── In progress (collecting votes) ──
   if (!report || test.status !== "complete") {
     const pct = Math.min(100, Math.round((test.votes_valid / Math.max(1, test.votes_target)) * 100));
+    const fill = await fillStats(id); // owner-only fill monitor (real-vs-farmed diagnostic)
+    const fillTone: Record<string, { fg: string; label: string; hint: string }> = {
+      healthy: { fg: "var(--acc-deep)", label: "Healthy spread", hint: "Votes are spread across many distinct sources — consistent with real demand." },
+      concentrated: { fg: "var(--money)", label: "Concentrated", hint: "A large share comes from few sources. Could be a small real audience — or early farming. Watch it." },
+      "likely-farmed": { fg: "var(--err)", label: "Likely farmed", hint: "Most votes trace to very few IPs/devices. This fill is probably NOT real cold-pool demand." },
+      insufficient: { fg: "var(--fg-4)", label: "Too early", hint: "Not enough valid votes yet to judge source diversity." },
+    };
+    const ft = fillTone[fill.diversity] ?? fillTone.insufficient;
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         {justLaunched && test.status === "active" && (
@@ -87,6 +95,31 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         <div style={{ height: 10, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden", marginBottom: 24 }}>
           <div className="pulse" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
         </div>
+
+        {/* Fill monitor — owner-only diagnostic: is this fill REAL demand or a few sources cycling? */}
+        {fill.valid > 0 && (
+          <div className="card" style={{ marginBottom: 24, background: "var(--bg-2)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Fill monitor</span>
+              <span className="pill" style={{ color: ft.fg, borderColor: "var(--line-2)" }}>{ft.label}</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+              {([["Valid", `${fill.valid}`], ["Filtered", `${fill.filtered}`], ["Unique IPs", `${fill.uniqueIPs}`], ["Unique devices", `${fill.uniqueDevices}`], ["Votes / IP", fill.votesPerIP == null ? "—" : `${fill.votesPerIP}`], ["Top IP share", fill.topIPShare == null ? "—" : `${fill.topIPShare}%`]] as [string, string][]).map(([l, v]) => (
+                <div key={l} style={{ padding: "8px 11px", borderRadius: 9, background: "var(--bg-1)", border: "1px solid var(--line-1)", minWidth: 84 }}>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--fg-4)" }}>{l}</div>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", marginTop: 1 }}>{v}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", marginBottom: 10 }}>
+              {fill.timeToValid.map((t) => (
+                <span key={t.n}>→ {t.n} valid: <strong style={{ color: "var(--fg-2)" }}>{t.ms == null ? "—" : t.ms < 60000 ? `${Math.round(t.ms / 1000)}s` : `${Math.round(t.ms / 60000)}m`}</strong></span>
+              ))}
+            </div>
+            <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: 0, lineHeight: 1.55 }}><strong style={{ color: ft.fg }}>{ft.label}.</strong> {ft.hint} A real cold-pool fill spreads across many distinct IPs/devices; few sources cycling = farming. (Visible only to you, the owner.)</p>
+          </div>
+        )}
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(84px, 1fr))", gap: 10, marginBottom: 24, maxWidth: 460 }}>
           {options.map((o, i) => (
             <div key={o.id} style={{ position: "relative" }}>
