@@ -321,7 +321,7 @@ export default function NewTest() {
               <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>{votes} <span style={{ fontSize: 14, color: "var(--fg-4)", fontWeight: 500 }}>qualified judgments</span></span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>= {votes} credits</span>
             </div>
-            <input type="range" min={10} max={effectiveMax} step={Math.min(10, effectiveMax)} value={Math.min(votes, effectiveMax)} onChange={(e) => setVotes(parseInt(e.target.value, 10))} style={{ width: "100%", accentColor: "var(--acc-deep)" }} />
+            <input type="range" min={10} max={effectiveMax} step={1} value={Math.min(votes, effectiveMax)} onChange={(e) => setVotes(parseInt(e.target.value, 10))} style={{ width: "100%", accentColor: "var(--acc-deep)" }} />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 qualified judgment = 1 credit</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{ctx.signedIn && balance < maxVotes ? <>Your balance {balance.toLocaleString()}. <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Add credits</a></> : <>Plan max {maxVotes.toLocaleString()}. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</a></>}</span>
