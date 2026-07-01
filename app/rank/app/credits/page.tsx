@@ -23,9 +23,10 @@ export default function CreditsPage() {
   const [paid, setPaid] = useState(false);
   const [MAX, setMAX] = useState(DEFAULT_MAX);
   const [elevated, setElevated] = useState(false);
+  const [plan, setPlan] = useState<string>("free");
 
   useEffect(() => {
-    const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setBal(j.balance); if (typeof j.topupMax === "number") setMAX(j.topupMax); setElevated(!!j.elevatedTopup); } }).catch(() => {});
+    const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setBal(j.balance); if (typeof j.topupMax === "number") setMAX(j.topupMax); setElevated(!!j.elevatedTopup); if (j.plan) setPlan(j.plan); } }).catch(() => {});
     load();
     const sid = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("session_id") : null;
     if (sid) {
@@ -53,6 +54,13 @@ export default function CreditsPage() {
           <p>$1 = 10 credits. 1 credit = 1 valid judgment. Credits never expire.</p>
         </div>
       </div>
+
+      {plan !== "free" && (
+        <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)", textTransform: "capitalize" }}>{plan}</strong> plan — your monthly credits refresh automatically. Top up here only if you want extra beyond your plan.</div>
+          <a href="/app/plans" style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>Manage plan →</a>
+        </div>
+      )}
 
       {paid && (
         <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
