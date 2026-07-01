@@ -62,6 +62,9 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
       followup_recommended: !!follow,
       followup_type: follow?.type ?? null,
       action_recommendation: intel?.action ?? null,
+      // Signal convergence — did the leading share beat chance with confidence?
+      signal_convergence: intel?.convergence.state ?? null,
+      converged: intel ? intel.convergence.state === "converged" : null,
       valid_judgments: valid,
       filtered_responses: filtered,
       qualified_judgments: screen.enabled ? screen.qualified : null,
@@ -87,6 +90,16 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
       preference_margin: intel?.marginPts ?? null,
       directional_confidence: intel?.confidenceLabel ?? "None",
       signal_quality: intel?.signalLabel ?? null,
+      // Signal convergence — the "did it converge or split" measure, with the
+      // conservative (95% lower-bound) share and the chance line it's measured against.
+      signal_convergence: intel ? {
+        state: intel.convergence.state,
+        winner_share: intel.convergence.winnerSharePct,
+        confident_lower_bound: intel.convergence.lowerBoundPct,
+        chance_baseline: intel.convergence.chancePct,
+        clears_chance_by: intel.convergence.clearsChanceByPts,
+        summary: intel.convergence.label,
+      } : null,
       evaluation_health: health,
       readiness_label: readiness.label,
       readiness_reason: readiness.reason,
@@ -139,6 +152,8 @@ export const SAMPLE_DECISION_PACKAGE = {
   preference_margin: 24,
   directional_confidence: "Strong",
   signal_quality: "Clean signal",
+  signal_convergence: "converged",
+  converged: true,
   evaluation_health: "Ready to decide",
   readiness_label: "Strong recommendation",
   recommended_next_step: "Ship Option B, or use it as the client-approved direction.",

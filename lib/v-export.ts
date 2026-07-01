@@ -37,6 +37,8 @@ export type ExportData = {
     preference_margin: number | null;
     directional_confidence: string;
     signal_quality: string;
+    signal_convergence: string;
+    converged: boolean;
     action_recommendation: string;
   } | null;
   exported_at: string;
@@ -89,6 +91,8 @@ export async function buildExport(testId: string): Promise<{ ownerId: string; st
       preference_margin: intel.marginPts,
       directional_confidence: intel.confidenceLabel,
       signal_quality: intel.signalLabel,
+      signal_convergence: intel.convergence.state,
+      converged: intel.convergence.state === "converged",
       action_recommendation: intel.action,
     } : null,
     exported_at: new Date().toISOString(),

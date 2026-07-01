@@ -148,6 +148,55 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
         })}
       </div>
 
+      {/* ── Signal convergence ── */}
+      {(() => {
+        const c = intel.convergence;
+        const TONE: Record<string, { bg: string; fg: string; word: string }> = {
+          converged: { bg: "var(--acc-soft)", fg: "var(--acc-deep)", word: "Converged" },
+          leaning: { bg: "var(--bg-1)", fg: "var(--acc-deep)", word: "Leaning" },
+          split: { bg: "var(--bg-1)", fg: "var(--money)", word: "Split" },
+          insufficient: { bg: "var(--bg-1)", fg: "var(--fg-4)", word: "Not enough signal" },
+        };
+        const t = TONE[c.state] ?? TONE.insufficient;
+        const showBar = c.winnerSharePct != null && c.chancePct != null;
+        return (
+          <>
+            <div style={head}>Signal convergence</div>
+            <div className="card" style={{ marginBottom: 26 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+                <span className="pill" style={{ background: t.bg, color: t.fg, borderColor: "var(--acc-line)", fontSize: 12, fontWeight: 700 }}>{t.word}</span>
+                <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, flex: "1 1 260px" }}>{c.label}</span>
+              </div>
+              {showBar ? (
+                <div style={{ marginTop: 4, marginBottom: 12 }}>
+                  {/* leading share bar with a marked chance line and the confident lower bound */}
+                  <div style={{ position: "relative", height: 30, borderRadius: 8, background: "var(--bg-2)", overflow: "hidden", border: "1px solid var(--line-2)" }}>
+                    {/* confident lower bound (conservative) fill */}
+                    {c.lowerBoundPct != null ? (
+                      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${c.lowerBoundPct}%`, background: c.state === "split" ? "var(--line-3)" : "linear-gradient(90deg, var(--acc), var(--acc-deep))", opacity: c.state === "split" ? 0.6 : 1 }} />
+                    ) : null}
+                    {/* observed share marker */}
+                    <div title={`Observed leading share: ${c.winnerSharePct}%`} style={{ position: "absolute", left: `calc(${c.winnerSharePct}% - 1px)`, top: 0, bottom: 0, width: 2, background: "var(--fg-1)", opacity: 0.5 }} />
+                    {/* chance line (1/options) */}
+                    <div title={`Even-split baseline: ${c.chancePct}%`} style={{ position: "absolute", left: `calc(${c.chancePct}% - 1px)`, top: -2, bottom: -2, width: 2, background: "var(--money)" }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-5)" }}>
+                    <span>0%</span><span style={{ color: "var(--money)" }}>even split {c.chancePct}%</span><span>100%</span>
+                  </div>
+                </div>
+              ) : null}
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <Metric l="Leading share" v={c.winnerSharePct == null ? "—" : `${c.winnerSharePct}%`} accent={c.state === "converged"} />
+                <Metric l="Confident floor" v={c.lowerBoundPct == null ? "—" : `${c.lowerBoundPct}%`} />
+                <Metric l="Even-split line" v={c.chancePct == null ? "—" : `${c.chancePct}%`} />
+                <Metric l="Clears chance by" v={c.clearsChanceByPts == null ? "—" : `${c.clearsChanceByPts > 0 ? "+" : ""}${c.clearsChanceByPts} pts`} />
+              </div>
+              <p style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.6, marginTop: 12, marginBottom: 0 }}>Convergence checks whether the leading share is distinguishable from an even split, using a conservative (95%) estimate that accounts for sample size — so a small or noisy result can&apos;t read as decisive. It measures signal strength, not whether any individual response is &quot;right&quot;.</p>
+            </div>
+          </>
+        );
+      })()}
+
       {/* ── Signal quality ── */}
       <div style={head}>Signal quality</div>
       <div className="card" style={{ marginBottom: 26, background: "var(--bg-2)" }}>

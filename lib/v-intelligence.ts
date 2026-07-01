@@ -17,6 +17,69 @@ export type IntelInput = {
 export type ConfidenceLabel = "Strong" | "Moderate" | "Tentative" | "None";
 export type SignalLabel = "Clean signal" | "Limited signal" | "Needs more judgments";
 
+// Convergence — the "signal engine" measure. Not "who got the most votes", but
+// whether the leading option's share is distinguishable from chance given the
+// sample. Chance = 1/optionCount (a 2-way coin-flip is 50%, a 4-way is 25%).
+// We take the winner's Wilson 95% score-interval LOWER bound and ask how far it
+// clears the chance line. Wilson punishes small samples, so a lucky 7/8 can't
+// mint "converged". This is honest statistics on judgments already collected —
+// never a claim any single judge is "correct".
+export type ConvergenceState = "converged" | "leaning" | "split" | "insufficient";
+
+export type Convergence = {
+  state: ConvergenceState;
+  winnerSharePct: number | null;   // observed leading share (0-100)
+  lowerBoundPct: number | null;    // conservative 95% lower bound on that share
+  chancePct: number | null;        // 1/optionCount as a percent
+  clearsChanceByPts: number | null;// lowerBound - chance, in points (can be negative)
+  label: string;                   // buyer-facing one-liner (signal-engine language)
+};
+
+// Wilson score interval lower bound for a binomial proportion (z=1.96 → 95%).
+export function wilsonLowerBound(successes: number, n: number, z = 1.96): number {
+  if (n <= 0) return 0;
+  const p = successes / n;
+  const z2 = z * z;
+  const denom = 1 + z2 / n;
+  const center = p + z2 / (2 * n);
+  const half = z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n);
+  return Math.max(0, (center - half) / denom);
+}
+
+const CONVERGE_MIN_N = 15;       // below this we won't call convergence honestly
+const CONVERGE_CLEAR_PTS = 15;   // lower bound must clear chance by this to "converge"
+
+// Pure derivation: given the winner's vote count, the valid total, and how many
+// options were on the table, classify how converged the decision signal is.
+export function convergence(winnerVotes: number, total: number, optionCount: number): Convergence {
+  if (total < 1 || optionCount < 2) {
+    return { state: "insufficient", winnerSharePct: null, lowerBoundPct: null, chancePct: null, clearsChanceByPts: null, label: "Not enough signal yet to tell whether the result converged." };
+  }
+  const chance = 1 / optionCount;
+  const lb = wilsonLowerBound(winnerVotes, total);
+  const clearPts = Math.round((lb - chance) * 100);
+  const winnerSharePct = Math.round((winnerVotes / total) * 100);
+  const chancePct = Math.round(chance * 100);
+  const lowerBoundPct = Math.round(lb * 100);
+
+  let state: ConvergenceState;
+  let label: string;
+  if (total < CONVERGE_MIN_N) {
+    state = "insufficient";
+    label = `Too few responses (${total}) to tell converged from split — collect more for a firm read.`;
+  } else if (lb <= chance) {
+    state = "split";
+    label = `The signal is split — the lead can't be told apart from an even distribution at this sample. Treat it as too close to call.`;
+  } else if (clearPts >= CONVERGE_CLEAR_PTS) {
+    state = "converged";
+    label = `The signal converged — attentive responses clustered on one option well beyond an even split.`;
+  } else {
+    state = "leaning";
+    label = `The signal leans one way but hasn't fully converged — a confirmation round would firm it up.`;
+  }
+  return { state, winnerSharePct, lowerBoundPct, chancePct, clearsChanceByPts: clearPts, label };
+}
+
 export type Intelligence = {
   inconclusive: boolean;
   recommendedOption: string | null;   // letter, e.g. "B"
@@ -27,6 +90,7 @@ export type Intelligence = {
   marginPts: number | null;            // lead over runner-up, in percentage points
   confidenceLabel: ConfidenceLabel;    // directional only — never a statistical claim
   signalLabel: SignalLabel;
+  convergence: Convergence;            // did the signal converge or split (vs chance)?
   decisionSummary: string;
   marginText: string;
   signalText: string;
@@ -70,6 +134,12 @@ export function evaluationIntelligence(r: IntelInput, votesTarget = 0): Intellig
     else confidenceLabel = "Tentative";
   }
 
+  // Convergence — did the leading share beat chance (1/optionCount) with
+  // confidence? Derived from the same ranked splits, no new data. optionCount is
+  // the number of options on the table; the winner is the top-ranked one.
+  const optionCount = ranked.length;
+  const conv = convergence(top?.votes ?? 0, total, optionCount);
+
   let decisionSummary: string;
   let marginText: string;
   let action: string;
@@ -100,7 +170,7 @@ export function evaluationIntelligence(r: IntelInput, votesTarget = 0): Intellig
     recommendedOption: hasWinner ? letter(top!.position) : null,
     recommendedLabel: hasWinner ? (top!.label ?? null) : null,
     totalValid: total, filtered, filteredRate,
-    marginPts, confidenceLabel, signalLabel,
+    marginPts, confidenceLabel, signalLabel, convergence: conv,
     decisionSummary, marginText, signalText, action,
   };
 }
@@ -115,6 +185,9 @@ export function evaluationHealth(status: string, intel: Intelligence): HealthSta
   if (intel.totalValid > 0 && intel.filteredRate >= 40) return "Low-quality traffic";
   if (intel.totalValid > 0 && intel.filteredRate >= 25) return "Noisy signal";
   if (intel.inconclusive) return "Too close to call";
+  // A split signal is a coin-flip even if one option nominally leads — the signal
+  // engine calls that out rather than rubber-stamping the nominal winner.
+  if (intel.convergence.state === "split") return "Too close to call";
   if (intel.signalLabel !== "Clean signal") return "Needs more judgments";
   if (intel.confidenceLabel === "Strong" || intel.confidenceLabel === "Moderate") return "Ready to decide";
   return "Needs more judgments";
