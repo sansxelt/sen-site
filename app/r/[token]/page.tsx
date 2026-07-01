@@ -96,14 +96,25 @@ export default async function PublicReport({ params }: { params: Promise<{ token
         <div style={{ height: 10, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden", marginBottom: 24 }}>
           <div className="pulse" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(84px, 1fr))", gap: 10, marginBottom: 20, maxWidth: 460 }}>
-          {options.map((o, i) => (
-            <div key={o.id} style={{ position: "relative" }}>
-              <OptionThumb o={o} size={84} />
-              <span style={{ position: "absolute", top: 6, left: 6, width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.55)", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11 }}>{OPTION_LETTERS[i]}</span>
-            </div>
-          ))}
-        </div>
+        {options.every((o) => !o.asset_url) ? (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, marginBottom: 20 }}>
+            {options.map((o, i) => (
+              <div key={o.id} className="card" style={{ background: "var(--bg-2)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 7 }}>Response {OPTION_LETTERS[i] ?? "?"}</div>
+                <p style={{ fontSize: 14, color: "var(--fg-1)", lineHeight: 1.55, margin: 0, whiteSpace: "pre-wrap" }}>{o.label}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(84px, 1fr))", gap: 10, marginBottom: 20, maxWidth: 460 }}>
+            {options.map((o, i) => (
+              <div key={o.id} style={{ position: "relative" }}>
+                <OptionThumb o={o} size={84} />
+                <span style={{ position: "absolute", top: 6, left: 6, width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.55)", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11 }}>{OPTION_LETTERS[i] ?? "?"}</span>
+              </div>
+            ))}
+          </div>
+        )}
         <p style={{ fontSize: 13.5, color: "var(--fg-3)" }}>This test is still gathering real responses. Check back soon for the full report.</p>
       </Frame>
     );

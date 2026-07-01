@@ -120,8 +120,8 @@ export default async function Dashboard() {
 
       {/* quick actions */}
       <div className="tile-grid cols-4" style={{ marginBottom: 22 }}>
-        <QuickAction href="/app/new" title="New decision workflow" sub="Submit candidates, get a decision record" />
-        <QuickAction href="/app/projects" title="New decision program" sub="Group related workflows by campaign or client" />
+        <QuickAction href="/app/projects" title="Decision programs" sub="Group related workflows by campaign or client" />
+        <QuickAction href="/vote" title="Evaluate & earn" sub="Judge others' outputs, earn credits" />
         <QuickAction href="/demo" title="Sample decision package" sub="See a completed decision record" />
         <QuickAction href="/app/data" title="Audit & exports" sub="Aggregate decision records, JSON / CSV" />
       </div>

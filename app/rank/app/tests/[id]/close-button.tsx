@@ -19,8 +19,8 @@ export function CloseButton({ testId }: { testId: string }) {
   }
   return (
     <div>
-      <button onClick={close} disabled={busy} className="btn">
-        {busy ? "Closing…" : "Close & see results now"}
+      <button onClick={close} disabled={busy} className="btn btn--ghost">
+        {busy ? "Closing…" : "End collection early"}
       </button>
       {err && <p style={{ color: "#d33", fontSize: 12, marginTop: 8 }}>{err}</p>}
     </div>

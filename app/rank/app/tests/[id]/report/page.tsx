@@ -74,24 +74,21 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         {justLaunched && test.status === "active" && (
           <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", boxShadow: "none" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 4 }}>Your evaluation is collecting signal</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>It&apos;s running on our servers now — you can close this tab and come back anytime. Share the judgment link below to collect qualified signal faster; we&apos;ll generate your Decision Package once enough valid judgments come in.</p>
+            <div style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--acc-deep)", marginBottom: 6 }}>Your evaluation is collecting signal</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: "0 0 8px" }}>This run is live on our servers. You can close this tab and come back anytime.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: 0 }}>Share the evaluator link to collect judgments faster. Once enough valid responses come in, Vraelis will generate your Decision Package.</p>
             <div style={{ marginTop: 12, padding: "11px 13px", borderRadius: 10, background: "var(--bg-1)", border: "1px solid var(--acc-line)" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 }}>Share this with evaluators</div>
-              <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Publish the link below and send it to your audience. They compare the outputs and answer one short judgment task — low-quality, rushed, and gamed responses are filtered automatically, and you&apos;re only charged for judgments that pass.</p>
-            </div>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-              <a href="/app/new" className="btn btn--ghost" style={{ fontSize: 13 }}>Create another</a>
-              <a href="/app" className="btn btn--ghost" style={{ fontSize: 13 }}>Dashboard</a>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 }}>Share with evaluators</div>
+              <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Publish the link below and send it to your audience. Evaluators compare the outputs and answer one short judgment task. Low-quality responses are filtered automatically.</p>
             </div>
           </div>
         )}
         <p className="eyebrow">Collecting judgments</p>
-        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.3rem)", marginBottom: 8 }}>{test.title}</h1>
+        <h1 className="display" style={{ fontSize: "clamp(1.4rem, 2.4vw, 1.9rem)", marginBottom: 8, lineHeight: 1.2 }}>{test.title}</h1>
         {lineageHeader}
         {projectLine}
         {audienceLine}
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} / {test.votes_target} valid judgments</p>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.votes_valid} of {test.votes_target} qualified judgments collected</p>
         <div style={{ height: 10, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden", marginBottom: 24 }}>
           <div className="pulse" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
         </div>
@@ -120,24 +117,40 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(84px, 1fr))", gap: 10, marginBottom: 24, maxWidth: 460 }}>
-          {options.map((o, i) => (
-            <div key={o.id} style={{ position: "relative" }}>
-              <OptionThumb o={o} size={84} />
-              <span style={{ position: "absolute", top: 6, left: 6, width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.55)", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11 }}>{OPTION_LETTERS[i]}</span>
-            </div>
-          ))}
-        </div>
+        {options.every((o) => !o.asset_url) ? (
+          // Text candidates → wide, readable cards (judges compare text, not thumbnails).
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12, marginBottom: 24 }}>
+            {options.map((o, i) => (
+              <div key={o.id} className="card" style={{ background: "var(--bg-2)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 7 }}>Response {OPTION_LETTERS[i] ?? "?"}</div>
+                <p style={{ fontSize: 14, color: "var(--fg-1)", lineHeight: 1.55, margin: 0, whiteSpace: "pre-wrap" }}>{o.label}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(84px, 1fr))", gap: 10, marginBottom: 24, maxWidth: 460 }}>
+            {options.map((o, i) => (
+              <div key={o.id} style={{ position: "relative" }}>
+                <OptionThumb o={o} size={84} />
+                <span style={{ position: "absolute", top: 6, left: 6, width: 20, height: 20, borderRadius: "50%", background: "rgba(0,0,0,0.55)", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11 }}>{OPTION_LETTERS[i] ?? "?"}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {test.status === "active" && (
           <>
-            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <CloseButton testId={test.id} />
-              <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Unfilled credits are refunded when it closes.</span>
-            </div>
-            <EmbedSnippet testId={test.id} />
+            {/* 1. Share the evaluator link — the primary action after launch */}
             <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
+            {/* 2. Audience screening · 3. Collection links */}
             <div style={{ marginTop: 22 }}><ScreeningManager testId={test.id} /></div>
             <CollectionLinks testId={test.id} />
+            {/* 4. End collection early — secondary, de-emphasised */}
+            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 22 }}>
+              <CloseButton testId={test.id} />
+              <span style={{ fontSize: 12.5, color: "var(--fg-5)" }}>Results may be weak if you close before enough qualified judgments are collected. Unfilled credits are refunded.</span>
+            </div>
+            {/* 5. Embed code — developer-facing, lowest priority */}
+            <EmbedSnippet testId={test.id} />
           </>
         )}
       </div>
@@ -227,8 +240,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <ExportControls testId={test.id} />
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 22 }}>
-        <a href="/app/new" className="btn">Run another evaluation <span aria-hidden>→</span></a>
         <a href="/app" className="btn btn--ghost">Dashboard</a>
+        <a href="/app/new" className="btn btn--ghost">Create similar evaluation</a>
         {bal < 50 && <a href="/app/credits" className="btn btn--ghost">Buy credits</a>}
       </div>
 
