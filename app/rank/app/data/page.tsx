@@ -7,7 +7,7 @@ import { cookies } from "next/headers";
 import { decisionAnalytics } from "@/lib/v-analytics";
 import { listProjects } from "@/lib/v-projects";
 import { getWorkspaceContext, resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
-import { SectionHead, Bars, Spark, Dist, CONF_COLORS, SIGNAL_COLORS } from "../_workspace/analytics-ui";
+import { SectionHead, Bars, TrendChart, Dist, CONF_COLORS, SIGNAL_COLORS } from "../_workspace/analytics-ui";
 import { SharedWithYou } from "../_workspace/shared-with-you";
 import { WorkspaceMemberView } from "../_workspace/workspace-member-view";
 
@@ -116,8 +116,8 @@ export default async function DataPage() {
 
       {/* trends */}
       <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
-        <div className="card"><SectionHead>Evaluations created</SectionHead><Spark data={a.trends.createdDaily} caption={`${a.trends.created30} in last 30 days · ${a.trends.created7} in last 7`} /></div>
-        <div className="card"><SectionHead>Credits used</SectionHead><Spark data={a.credits.usedDaily} caption="Last 30 days" /></div>
+        <div className="card"><SectionHead>Evaluations created</SectionHead><TrendChart data={a.trends.createdDaily} label="Evaluations created" /></div>
+        <div className="card"><SectionHead>Credits used</SectionHead><TrendChart data={a.credits.usedDaily} label="Credits used" tone="money" caption="credits spent" /></div>
       </div>
 
       {/* category intelligence */}
