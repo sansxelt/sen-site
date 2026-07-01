@@ -131,7 +131,7 @@ export default async function Dashboard() {
         <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><a href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</a></div></div>
         <div className="stat"><div className="stat__l">Collecting signal</div><div className="stat__v tnum">{stats.active}</div><div className="stat__s">active workflows</div></div>
         <div className="stat"><div className="stat__l">Decisions made</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">decision records</div></div>
-        <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">verified human judgments</div></div>
+        <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">quality-filtered human signal</div></div>
       </div>
 
       {isEmpty ? (

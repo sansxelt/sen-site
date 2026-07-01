@@ -51,7 +51,7 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
               <div className="stat"><div className="stat__l">Decision workflows</div><div className="stat__v tnum">{t.evaluations.toLocaleString()}</div><div className="stat__s">{t.completed} decided, {t.active} collecting</div></div>
               <div className="stat"><div className="stat__l">Decisions made</div><div className="stat__v tnum">{t.completed.toLocaleString()}</div><div className="stat__s">decision records</div></div>
               <div className="stat"><div className="stat__l">Collecting signal</div><div className="stat__v tnum">{t.active.toLocaleString()}</div><div className="stat__s">active workflows</div></div>
-              <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{t.validJudgments.toLocaleString()}</div><div className="stat__s">verified judgments</div></div>
+              <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{t.validJudgments.toLocaleString()}</div><div className="stat__s">quality-filtered human signal</div></div>
             </div>
           )}
           <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginBottom: 14 }}>You are viewing analytics for decision programs shared with you in this workspace. Open a program for its full decision and signal-quality analytics.</p>
