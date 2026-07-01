@@ -59,7 +59,15 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
   const ranked = [...results.ranked].sort((a, b) => b.votes - a.votes);
   const commentsByOption: Record<string, string[]> = {};
   for (const c of results.comments) (commentsByOption[c.option_id] ||= []).push(c.reason);
-  const rankNote = (i: number) => (i === 0 ? "Most preferred" : i === ranked.length - 1 ? "Least preferred" : "Mid-pack");
+  // Only claim a preference rank when there's real signal to back it. With no
+  // judgments (or everything tied), "Most/Least preferred" is a fabricated claim —
+  // show the honest state instead. A row with 0 votes is never "preferred".
+  const allTied = ranked.length > 1 && ranked[0].votes === ranked[ranked.length - 1].votes;
+  const rankNote = (i: number, votes: number) => {
+    if (total === 0 || votes === 0) return "No judgments yet";
+    if (allTied) return "Tied so far";
+    return i === 0 ? "Most preferred" : i === ranked.length - 1 ? "Least preferred" : "Mid-pack";
+  };
 
   return (
     <>
@@ -136,7 +144,7 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, gap: 8 }}>
                   <span style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{(() => { const o = optById[row.id]; return o?.label && !o.asset_url ? `${optLetter(row.position)}: ${o.label.slice(0, 60)}` : `Option ${optLetter(row.position)}`; })()}{isWin ? " (recommended)" : ""}</span>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", whiteSpace: "nowrap" }}>{rankNote(i)}, {row.votes} judgment{row.votes === 1 ? "" : "s"}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", whiteSpace: "nowrap" }}>{rankNote(i, row.votes)}{row.votes > 0 ? `, ${row.votes} judgment${row.votes === 1 ? "" : "s"}` : ""}</span>
                 </div>
                 <div style={{ height: 8, borderRadius: 999, background: "var(--bg-2)", overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${Math.round((row.votes / max) * 100)}%`, background: isWin ? "linear-gradient(90deg, var(--acc), var(--acc-deep))" : "var(--line-3)" }} />
