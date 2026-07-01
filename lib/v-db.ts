@@ -88,9 +88,17 @@ export async function deleteTest(testId: string): Promise<void> {
   await s.from("v_tests" as never).delete().eq("id", testId); // options cascade
 }
 
-export async function setTestActive(testId: string, creditsHeld: number): Promise<void> {
+// Flip a just-created draft to active. Returns whether a row was actually
+// flipped, so the launch fallback can roll back a hold whose test never became
+// active (otherwise the escrow is stranded with no active test to refund it).
+// Scoped to status='draft' so it can't resurrect a completed/canceled test.
+export async function setTestActive(testId: string, creditsHeld: number): Promise<boolean> {
   const s = getSupabaseAdminClient();
-  await s.from("v_tests" as never).update({ status: "active", credits_held: creditsHeld } as never).eq("id", testId);
+  const { data, error } = await s.from("v_tests" as never)
+    .update({ status: "active", credits_held: creditsHeld } as never)
+    .eq("id", testId).eq("status", "draft").select("id");
+  if (error) { console.error("setTestActive:", error.message); return false; }
+  return !!data && (data as unknown[]).length > 0;
 }
 
 export async function getTestWithOptions(testId: string): Promise<{ test: VTest; options: VOption[] } | null> {
@@ -172,11 +180,32 @@ export async function completeTest(testId: string): Promise<void> {
   const { data: claimed } = await s.from("v_tests" as never)
     .update({ status: "complete", completed_at: new Date().toISOString() } as never)
     .eq("id", testId).eq("status", "active").select("id");
-  if (!claimed || (claimed as unknown[]).length === 0) return; // already completed elsewhere
+  const freshFlip = !!claimed && (claimed as unknown[]).length > 0;
+  // If we did NOT win the flip, the row is either already complete or gone. A
+  // prior completion could have flipped active→complete and then FAILED before
+  // the refund (e.g. a transient re-read error below), permanently stranding the
+  // unfilled escrow. So don't blindly return: if the row is already complete,
+  // fall through and re-run the tally+refund tail. That tail is idempotent — the
+  // v_reports upsert dedupes on test_id and refund() dedupes on ext_ref=refund:id
+  // — so re-entry can't double-refund or double-report; it only backfills a
+  // refund that a crashed prior run never wrote. Truly-missing/still-active → return.
+  if (!freshFlip) {
+    const { data: cur } = await s.from("v_tests" as never).select("status").eq("id", testId).maybeSingle();
+    const st = (cur as unknown as { status?: string } | null)?.status;
+    if (st !== "complete") return; // missing, or still active elsewhere — nothing to do
+  }
 
-  const data = await getTestWithOptions(testId);
-  if (!data) return;
-  const { test, options } = data;
+  // Re-read the test + options. A transient DB error here (statement timeout,
+  // pooler blip) must NOT be treated as "no test" — that would silently skip the
+  // refund forever (the flip already committed). Throw so the caller (final vote /
+  // close / retry) re-invokes and re-enters the idempotent tail; only a genuinely
+  // absent row returns quietly.
+  const { data: trow, error: tErr } = await s.from("v_tests" as never).select("*").eq("id", testId).maybeSingle();
+  if (tErr) throw new Error(`completeTest reread failed for ${testId}: ${tErr.message}`);
+  if (!trow) return; // row genuinely gone (cascade delete) — nothing to refund
+  const test = trow as unknown as VTest;
+  const { data: opts } = await s.from("v_test_options" as never).select("*").eq("test_id", testId).order("position");
+  const options = (opts as unknown as VOption[]) ?? [];
   const { data: judg } = await s.from("v_judgments" as never).select("option_id,reason").eq("test_id", testId).eq("status", "valid");
   const judgments = (judg as unknown as { option_id: string; reason: string | null }[]) ?? [];
   const total = judgments.length;
@@ -209,7 +238,9 @@ export async function completeTest(testId: string): Promise<void> {
   const unfilled = Math.max(0, test.votes_target - total);
   if (unfilled > 0) await refund(test.user_id, testId, unfilled);
 
-  await logEvent({
+  // Only emit the completion event on the FRESH flip — an idempotent re-entry
+  // (backfilling a stranded refund) must not log a second test_completed event.
+  if (freshFlip) await logEvent({
     userId: test.user_id, testId, eventType: "test_completed", actorType: "system", source: "system",
     metadata: {
       category: test.category, audience: test.audience, votes_valid: total, votes_filtered: filtered,
@@ -267,7 +298,11 @@ export async function launchTest(args: {
   if (!id) return { status: "err" };
   const ok = await hold(args.userId, id, args.votesTarget);
   if (!ok) { await deleteTest(id); return { status: "insufficient_credits", needed: args.votesTarget }; }
-  await setTestActive(id, args.votesTarget);
+  // If activation fails, the credits are already held but no active test exists to
+  // ever refund them (completeTest only runs for active→complete). Roll back: refund
+  // the hold (idempotent via ext_ref=refund:id) and delete the orphan draft.
+  const activated = await setTestActive(id, args.votesTarget);
+  if (!activated) { await refund(args.userId, id, args.votesTarget); await deleteTest(id); return { status: "err" }; }
   await logLaunch(id);
   return { status: "ok", id };
 }

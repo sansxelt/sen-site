@@ -15,7 +15,7 @@ function norm(email: string): string {
   return email.trim().toLowerCase();
 }
 
-type LedgerRow = { delta: number; bucket: string | null; expires_at: string | null; ext_ref: string | null };
+type LedgerRow = { delta: number; bucket: string | null; expires_at: string | null; ext_ref: string | null; reason?: string | null; ref_type?: string | null; ref_id?: string | null };
 
 // All ledger rows for a user that are not yet expired.
 async function liveRows(userId: string): Promise<LedgerRow[]> {
@@ -23,7 +23,7 @@ async function liveRows(userId: string): Promise<LedgerRow[]> {
   const s = getSupabaseAdminClient();
   const { data } = await s
     .from("v_credit_ledger" as never)
-    .select("delta, bucket, expires_at, ext_ref")
+    .select("delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id")
     .eq("user_id", norm(userId));
   const rows = (data as unknown as LedgerRow[]) ?? [];
   const now = Date.now();
@@ -97,13 +97,41 @@ export async function hold(userId: string, testId: string, amount: number): Prom
 
 export async function refund(userId: string, testId: string, amount: number): Promise<void> {
   if (amount <= 0) return;
-  // Refund into the monthly bucket (with its expiry) when one is active, so
-  // unfilled monthly credits stay this-cycle and can't be laundered into
-  // permanent credits; otherwise refund as purchased.
-  const exp = latestMonthlyExpiry(await liveRows(userId));
-  // extRef makes the refund idempotent per test (ledger unique index), so a
-  // completion race can't refund the unfilled escrow twice.
-  await grant(userId, amount, "refund", { bucket: exp ? "monthly" : "purchased", expiresAt: exp, refType: "test", refId: testId, extRef: `refund:${testId}` });
+  const s = getSupabaseAdminClient();
+
+  // Compatibility guard: older refunds used a single ext_ref `refund:<testId>`.
+  // This function now writes split keys (`:p`/`:m`), which would NOT collide with a
+  // pre-existing legacy row — so a test already refunded before this deploy could be
+  // refunded twice. If the legacy row exists, this refund already happened; no-op.
+  const { count: legacy } = await s.from("v_credit_ledger" as never)
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", norm(userId)).eq("reason", "refund").eq("ext_ref", `refund:${testId}`);
+  if ((legacy ?? 0) > 0) return;
+
+  // Refund each escrowed credit back to the SAME bucket it was held from, so we
+  // never mint permanent credit out of monthly credit. A monthly-sourced hold that
+  // already expired with its cycle is simply gone — refunding it as purchased would
+  // resurrect expired value as never-expiring credit (the laundering we prevent).
+  const rows = await liveRows(userId);
+  const held = rows.filter((r) => r.reason === "hold" && r.ref_type === "test" && r.ref_id === testId);
+  // hold deltas are negative; live purchased hold magnitude = -sum(purchased holds).
+  const purchasedHeld = -held.filter((r) => r.bucket === "purchased").reduce((sum, r) => sum + r.delta, 0);
+  const exp = latestMonthlyExpiry(rows);
+
+  const toPurchased = Math.min(amount, Math.max(0, purchasedHeld));
+  const remainder = amount - toPurchased; // the monthly-sourced portion
+
+  // extRef (split :p/:m) keeps each leg idempotent per test, so a completion race
+  // can't refund twice.
+  if (toPurchased > 0) {
+    await grant(userId, toPurchased, "refund", { bucket: "purchased", refType: "test", refId: testId, extRef: `refund:${testId}:p` });
+  }
+  // Only refund the monthly remainder if a live monthly bucket still exists to hold
+  // it (with that bucket's expiry). If the cycle already ended, the held monthly
+  // credit expired — drop it rather than converting it to permanent credit.
+  if (remainder > 0 && exp) {
+    await grant(userId, remainder, "refund", { bucket: "monthly", expiresAt: exp, refType: "test", refId: testId, extRef: `refund:${testId}:m` });
+  }
 }
 
 function latestMonthlyExpiry(rows: LedgerRow[]): string | null {
@@ -127,12 +155,19 @@ export async function grantMonthly(userId: string, credits: number, expiresAt: s
 // the rows from a specific invoice grant — so calling this right AFTER a fresh
 // monthly grant clears only the PRIOR tier (mid-cycle plan change) and never the
 // credits just granted. With no exception it clears all monthly (early/hard cancel).
-export async function expireMonthly(userId: string, exceptExtRef?: string): Promise<void> {
+//
+// `clawbackRef` makes the -net debit idempotent (ledger ext_ref unique index):
+// Stripe is at-least-once and Vercel runs webhooks concurrently, so a redelivered
+// or raced cancel/invoice event could otherwise read the same `net` twice and
+// double-debit (spilling past the monthly bucket into paid purchased credits).
+// Callers pass a key that is STABLE across redeliveries of the same termination
+// (e.g. cancel:<subscription_id>) so the second delivery hits 23505 and no-ops.
+export async function expireMonthly(userId: string, exceptExtRef?: string, clawbackRef?: string): Promise<void> {
   const rows = await liveRows(userId);
   const net = rows
     .filter((r) => r.bucket === "monthly" && (!exceptExtRef || r.ext_ref !== exceptExtRef))
     .reduce((s, r) => s + r.delta, 0);
-  if (net > 0) await grant(userId, -net, "monthly_reset", { bucket: "monthly" });
+  if (net > 0) await grant(userId, -net, "monthly_reset", { bucket: "monthly", extRef: clawbackRef });
 }
 
 // Count credits earned via vote-to-earn today (UTC) — used to cap farming.

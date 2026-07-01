@@ -69,7 +69,7 @@ export async function handleRankInvoicePaid(invoice: Stripe.Invoice): Promise<bo
     // Idempotent per invoice id (ledger ext_ref): a replay/race returns false.
     const granted = await grantMonthly(userId, credits, periodEnd, inv.id ?? undefined);
     if (granted) {
-      await expireMonthly(userId, inv.id ?? undefined); // clear the PRIOR tier, keep this grant
+      await expireMonthly(userId, inv.id ?? undefined, inv.id ? `expire:${inv.id}` : undefined); // clear PRIOR tier, keep this grant; idempotent per invoice
       await recordInvoiceGrant(userId, plan, credits, inv.id ?? `inv_${userId}_${periodEnd}`);
     }
   }
@@ -111,5 +111,7 @@ export async function handleRankSubChange(event: Stripe.Event, subscription: Str
   // user can't keep spending the old allotment. (cancel_at_period_end is "active"
   // here, so this only fires on real terminations — credits paid for the current
   // period stay available until they expire.)
-  if (canceled) await expireMonthly(userId);
+  // subscription.id is stable across the deleted / updated→canceled redeliveries
+  // for the same termination, so the clawback debits exactly once (23505 on replay).
+  if (canceled) await expireMonthly(userId, undefined, `cancel:${subscription.id}`);
 }
