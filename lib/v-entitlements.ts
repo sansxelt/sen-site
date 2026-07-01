@@ -48,6 +48,31 @@ export function apiAccessAllowed(plan: string | null | undefined, email: string)
   return allow.includes((email || "").trim().toLowerCase());
 }
 
+// ── One-time credit top-up limits ──────────────────────────────────────────────
+// $999,999.99 is the hard ceiling for a SINGLE Stripe charge (99,999,999 cents).
+// So this is the max any one top-up checkout can be, for everyone.
+export const TOPUP_MIN_DOLLARS = 5;
+export const STRIPE_MAX_SINGLE_CHARGE_DOLLARS = 999_999;
+
+// An account is "elevated" if it's on Scale (or in the VRAELIS_ELEVATED_TOPUP
+// allowlist — the admin-grant path: sales approves, ops adds the email). Elevated
+// accounts still can't exceed the Stripe single-charge ceiling in ONE payment, but
+// they're offered a contact-for-invoice path for amounts above it (invoicing/
+// multi-charge is a future build — see topupOverCeilingSupported).
+export function isElevatedTopup(plan: string | null | undefined, email: string): boolean {
+  if (entitlements(plan).plan === "scale" || entitlements(plan).plan === "enterprise") return true;
+  const allow = (process.env.VRAELIS_ELEVATED_TOPUP || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
+  return allow.includes((email || "").trim().toLowerCase());
+}
+
+// The max a SINGLE top-up checkout may charge for this account, in dollars.
+// Everyone is capped at the Stripe single-charge ceiling; the elevated flag doesn't
+// raise the per-charge max (Stripe won't allow it) — it unlocks the over-ceiling
+// contact path in the UI instead.
+export function topupMaxDollars(): number {
+  return STRIPE_MAX_SINGLE_CHARGE_DOLLARS;
+}
+
 // Admin access (vote review). VRAELIS_ADMIN = comma-separated emails.
 export function isAdmin(email: string | null | undefined): boolean {
   if (!email) return false;

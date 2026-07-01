@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 
 const RECOMMENDED = [9, 39, 99, 299, 999];
-const MIN = 5, MAX = 99999, RATE = 10;
+// $999,999 is the hard ceiling for a single Stripe charge; it's the default max.
+const MIN = 5, DEFAULT_MAX = 999999, RATE = 10;
 
 const RULES: [string, string][] = [
   ["1 credit = 1 valid judgment", "You only pay for real human signal."],
@@ -20,9 +21,11 @@ export default function CreditsPage() {
   const [custom, setCustom] = useState("");
   const [bal, setBal] = useState<number | null>(null);
   const [paid, setPaid] = useState(false);
+  const [MAX, setMAX] = useState(DEFAULT_MAX);
+  const [elevated, setElevated] = useState(false);
 
   useEffect(() => {
-    const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) setBal(j.balance); }).catch(() => {});
+    const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setBal(j.balance); if (typeof j.topupMax === "number") setMAX(j.topupMax); setElevated(!!j.elevatedTopup); } }).catch(() => {});
     load();
     const sid = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("session_id") : null;
     if (sid) {
@@ -77,11 +80,14 @@ export default function CreditsPage() {
             <span className="lbl">Or a custom amount</span>
             <div style={{ position: "relative", maxWidth: 440 }}>
               <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--fg-4)" }}>$</span>
-              <input type="text" inputMode="numeric" value={custom} onChange={(e) => setCustom(e.target.value.replace(/[^0-9]/g, "").slice(0, 5))} placeholder="0"
+              <input type="text" inputMode="numeric" value={custom} onChange={(e) => setCustom(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))} placeholder="0"
                 style={{ width: "100%", boxSizing: "border-box", padding: "16px 16px 16px 36px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 24, outline: "none" }} />
             </div>
             {!valid && usingCustom && <span style={{ color: "var(--err)", fontSize: 12.5 }}>Enter an amount between ${MIN} and ${MAX.toLocaleString()}.</span>}
-            <span className="hint">Min ${MIN}, max ${MAX.toLocaleString()}.</span>
+            <span className="hint">Min ${MIN}, max ${MAX.toLocaleString()} per top-up.</span>
+            {elevated && (
+              <p style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 8, lineHeight: 1.55 }}>Need more than ${MAX.toLocaleString()} in one go? A single payment tops out here, but we can invoice you for larger volumes (including unlimited credit for enterprise programs). <a href="mailto:hello@vraelis.com?subject=Vraelis%20large%20credit%20purchase" style={{ color: "var(--acc-deep)" }}>Contact us for an invoice →</a></p>
+            )}
           </div>
         </div>
 

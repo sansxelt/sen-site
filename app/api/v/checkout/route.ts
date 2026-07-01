@@ -8,11 +8,15 @@ import { auth } from "@/auth";
 import { ensureProfile } from "@/lib/v-db";
 import { logEvent } from "@/lib/v-events";
 import { getStripe, isStripeConfigured, APP_URL } from "@/lib/stripe";
+import { TOPUP_MIN_DOLLARS, topupMaxDollars } from "@/lib/v-entitlements";
 
 export const runtime = "nodejs";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || APP_URL;
-const MIN = 5, MAX = 99999, CREDITS_PER_DOLLAR = 10;
+const MIN = TOPUP_MIN_DOLLARS, CREDITS_PER_DOLLAR = 10;
+// $999,999 — the hard ceiling for a single Stripe charge. Above this needs invoicing
+// (a future build); elevated accounts get a contact path, not an oversized checkout.
+const MAX = topupMaxDollars();
 
 export async function POST(req: Request) {
   const session = await auth();
