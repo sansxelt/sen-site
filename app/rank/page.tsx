@@ -3,8 +3,8 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = {
   ...ogMeta({
-    title: "Human judgment for AI, without the cleanup",
-    description: "Vraelis is the human-signal layer for AI — submit model outputs, collect quality-filtered human judgment, and get a structured Decision Package via API. Preference and eval signal for teams training, evaluating, and shipping AI.",
+    title: "Test your AI app's output on real people",
+    description: "Vraelis is a feedback network for AI apps. Submit the content your app generates, get quality-filtered feedback from real people on what works, and ship the version that wins. Pay only for responses that pass quality checks.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
@@ -30,10 +30,10 @@ const ICONS = {
 };
 
 const AUDIENCE = [
-  { t: "AI labs & model teams", d: "Human preference and eval signal for model comparison, RLHF, and reward modeling — quality-filtered, via API.", i: ICONS.spark },
-  { t: "AI product builders", d: "Add human evaluation of your model's outputs to your pipeline, without standing up your own labeling op.", i: ICONS.layers },
+  { t: "AI app builders", d: "Test the content your app generates on real people, learn what your users will actually prefer, and ship with evidence instead of a guess.", i: ICONS.layers },
+  { t: "Product & creative teams", d: "Get real-person feedback on concepts, landing copy, and creative before you commit to a direction.", i: ICONS.film },
+  { t: "AI labs & model teams", d: "Quality-filtered human preference and eval signal for model comparison and RLHF, via the same API.", i: ICONS.spark },
   { t: "Safety & eval teams", d: "Human judgment on what automated evals can't score — helpfulness, accuracy, harm — with an audit trail.", i: ICONS.flag },
-  { t: "Research & product teams", d: "Preference and acceptance signal on creative, product, and content decisions — same engine, same Decision Package.", i: ICONS.film },
 ];
 
 const STEPS = [
@@ -58,8 +58,8 @@ const USE_CASES: { t: string; c: string; g: string }[] = [
   { t: "Client & stakeholder approval", c: "The options you're choosing between", g: "A client-ready decision record that backs your recommendation." },
 ];
 
-const IS_THINGS = ["A human-signal layer for AI — quality-filtered judgment via API", "Structured preference and eval data, returned as a typed Decision Package", "An automated quality gate that rejects rushed, duplicate, and gamed responses"];
-const IS_NOT_THINGS = ["A cheap survey, poll, or microtask panel", "A voting or feedback widget", "Unfiltered crowdsourced responses you have to clean yourself"];
+const IS_THINGS = ["A feedback network for AI apps — real-person feedback on what you generate, quality-filtered, via API", "Structured results returned as a typed Decision Package", "An automated quality gate that rejects rushed, duplicate, and gamed responses"];
+const IS_NOT_THINGS = ["A cheap survey, poll, or microtask panel", "A raw vote count you have to interpret yourself", "Unfiltered crowdsourced responses you have to clean yourself"];
 
 const REPORT_PARTS = [
   "The preferred output + full breakdown",
@@ -135,15 +135,15 @@ export default function RankLanding() {
         <div className="glow glow--bleed" />
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>The human-signal layer for AI</p>
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Feedback network for AI apps</p>
           <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
-            Human judgment for AI, <span className="em">without the cleanup</span>.
+            Test your AI app&apos;s output on <span className="em">real people</span>.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 700, margin: "0 auto 30px", lineHeight: 1.55 }}>
-            Submit model outputs, prompts, or candidates. Vraelis collects judgments from real people, filters low-quality and gamed responses automatically, and returns a structured Decision Package — through API, webhook, or export. The eval signal your automated metrics can&apos;t give you, without running your own panel.
+            Submit the content your app generates — responses, images, copy. Vraelis gets you feedback from real people on what works, filters rushed and gamed responses automatically, and returns a structured Decision Package through API, webhook, or export. You pay only for responses that pass quality checks.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start an evaluation run <span aria-hidden>→</span></a>
+            <a href="/app/new" className="btn btn--lg">Test your AI content <span aria-hidden>→</span></a>
             <a href="/demo" className="btn btn--ghost btn--lg">See a sample Decision Package</a>
           </div>
 
@@ -242,7 +242,7 @@ export default function RankLanding() {
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it's for</p>
             <h2 className="display">Built for the teams <span className="em">shipping AI</span>.</h2>
-            <p>Vraelis is the human-signal layer for AI — collect preference and eval data, support reward modeling, compare prompts and models, or gather safety judgment. Not a survey builder, polling tool, or crowdsourced panel. Real people judge, automated gates filter the noise, and you get structured signal you can trust and route into your pipeline.</p>
+            <p>Vraelis is a feedback network for AI apps — test the content your app generates on real people, learn what your users will prefer, and ship with evidence. The same engine gives model and safety teams quality-filtered preference and eval signal via API. Not a survey builder, polling tool, or crowdsourced panel: real people give feedback, automated gates filter the noise, and you get structured signal you can trust.</p>
           </div>
           <div className="tile-grid cols-4">
             {AUDIENCE.map((a) => (

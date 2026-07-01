@@ -88,7 +88,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
       </div>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16 }}>
         <a href={signedIn ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{signedIn ? "Dashboard" : "Sign in"}</a>
-        <a href="/app/new" className="btn">Start an evaluation</a>
+        <a href="/app/new" className="btn">Test your AI content</a>
         <button aria-label="Menu" onClick={() => setOpen((v) => !v)} className="vra-nav-burger" style={{ display: "none", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 11, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", color: "var(--fg-1)" }}>
           <span aria-hidden>{open ? "✕" : "☰"}</span>
         </button>
@@ -127,7 +127,7 @@ function Footer() {
             </a>
           </div>
         </div>
-        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/vote", "Evaluate & Earn"], ["/app/new", "Start an evaluation"]]} />
+        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/vote", "Evaluate & Earn"], ["/app/new", "Test your AI content"]]} />
         <Col title="Developers" links={[["/developers", "Developers"], ["/app/api-keys", "API keys"], ["/app/api-keys", "Webhooks"], ["/app/data", "Data exports"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/app/account", "Account"], ["/app/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/security", "Security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/data-rights", "Data rights"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
@@ -150,7 +150,7 @@ function AppTopbar({ email }: { email: string | null }) {
           small left nudge so the wordmark sits centered over the sidebar column */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New evaluation</a>
+        <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</a>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(email || "?").slice(0, 1).toUpperCase()}</span>
           <span style={{ fontSize: 13, color: "var(--fg-3)" }} aria-hidden>▾</span>

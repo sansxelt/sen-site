@@ -18,7 +18,7 @@ const AUDIENCES: [string, string][] = [
 // and a one-line description. "AI output evaluation" is the primary/default workflow.
 type Workflow = { name: string; desc: string; title: string; category: string; context: string; mode: "text" | "image"; votes: number };
 const WORKFLOWS: Workflow[] = [
-  { name: "AI output evaluation", desc: "Compare model responses for helpfulness, accuracy, and safety.", title: "Which model response is more helpful, accurate, and safe?", category: "ai_image", context: "Example: compare two support-agent responses for accuracy, clarity, and policy safety.", mode: "text", votes: 100 },
+  { name: "Test AI-generated content", desc: "Get real-person feedback on which of your app's generated responses wins.", title: "Which version will people prefer?", category: "ai_image", context: "Example: compare two support-agent responses for helpfulness, accuracy, and clarity.", mode: "text", votes: 100 },
   { name: "Prompt / agent review", desc: "Evaluate whether an agent response follows instructions and completes the task.", title: "Which response better follows the instructions and completes the task?", category: "ai_image", context: "Example: did the agent answer the question, stay on policy, and finish the task?", mode: "text", votes: 100 },
   { name: "Messaging / copy evaluation", desc: "Compare positioning, headlines, or product copy before shipping.", title: "Which version is clearest and most compelling?", category: "hook", context: "Example: which headline explains the product most clearly to a first-time visitor?", mode: "text", votes: 80 },
   { name: "Product concept validation", desc: "Test which product direction is clearest, most useful, or most trusted.", title: "Which product direction is clearest and most useful?", category: "other", context: "Example: which concept do people understand fastest and trust most?", mode: "text", votes: 100 },
@@ -161,7 +161,7 @@ export default function NewTest() {
   async function submit() {
     setError("");
     const options = isText ? texts.map((t) => t.trim()).filter(Boolean).map((t) => ({ label: t })) : assets.map((a) => ({ asset: a.url, path: a.path ?? undefined }));
-    if (!title.trim()) return setError("Add an evaluation name or question.");
+    if (!title.trim()) return setError("Add what you want feedback on.");
     if (options.length < 2) return setError(isText ? "Add at least 2 candidate outputs." : "Add at least 2 candidate images.");
     setBusy(true);
     try {
@@ -183,9 +183,9 @@ export default function NewTest() {
     <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 100 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">New evaluation run</p>
-          <h1 className="display">Configure an AI evaluation workflow</h1>
-          <p>Submit model outputs, prompts, creative candidates, or product directions. Vraelis collects quality-filtered human judgment and returns a structured Decision Package.</p>
+          <p className="eyebrow">New test</p>
+          <h1 className="display">Test your AI content with real people</h1>
+          <p>Submit the versions your app generated — responses, images, copy, or product directions — and get real-person feedback on which one wins. You&apos;ll learn what works, why, and whether the result is ready to act on.</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <div className="stat" style={{ padding: "12px 18px" }}><div className="stat__l">Plan</div><div className="stat__v" style={{ fontSize: 18 }}>{planName}</div></div>
@@ -222,9 +222,9 @@ export default function NewTest() {
         <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
           {/* Step 1 — the brief */}
           <section>
-            <Step n={1} title="Define the evaluation brief" hint="What you want judged, and the criteria judges should apply." />
+            <Step n={1} title="What are you testing?" hint="What you want feedback on, and the criteria people should apply." />
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div><span style={lab}>Evaluation name / question</span><input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Which model response is more helpful, accurate, and safe?" /></div>
+              <div><span style={lab}>What do you want feedback on?</span><input style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Which version will people prefer?" /></div>
               <div className="cols-2" style={{ display: "grid", gap: 14 }}>
                 <div><span style={lab}>Type</span><select style={inputStyle} value={category} onChange={(e) => setCategory(e.target.value)}>{CATEGORIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
                 <div><span style={lab}>Audience</span><select style={inputStyle} value={audience} onChange={(e) => setAudience(e.target.value)}>{AUDIENCES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
@@ -244,7 +244,7 @@ export default function NewTest() {
 
           {/* Step 2 — candidate outputs */}
           <section>
-            <Step n={2} title="Add candidate outputs" hint={`2–${maxOptions} candidates. Judges compare these side by side.`} />
+            <Step n={2} title="Add your AI-generated content" hint={`2–${maxOptions} versions. People compare these side by side.`} />
             {/* candidate-type segmented control — text first */}
             <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid var(--line-2)", marginBottom: 14 }}>
               {([["text", "Text outputs"], ["image", "Images / creative"]] as ["text" | "image", string][]).map(([m, label]) => (
@@ -267,7 +267,7 @@ export default function NewTest() {
                 ))}
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
                   {texts.length < maxOptions && <button onClick={() => setTexts((a) => [...a, ""])} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>+ Add candidate</button>}
-                  <button onClick={() => { setTexts([EXAMPLE_RESPONSES[0], EXAMPLE_RESPONSES[1]]); if (!title.trim()) setTitle("Which model response is more helpful, accurate, and safe?"); if (!context.trim()) setContext("Example: compare two support-agent responses for accuracy, clarity, and policy safety."); }} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>Use example AI responses</button>
+                  <button onClick={() => { setTexts([EXAMPLE_RESPONSES[0], EXAMPLE_RESPONSES[1]]); if (!title.trim()) setTitle("Which version will people prefer?"); if (!context.trim()) setContext("Example: compare two support-agent responses for helpfulness, accuracy, and clarity."); }} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>Use example AI responses</button>
                 </div>
                 <div style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.5 }}>Candidates are concise text — model responses, prompts, or copy, up to 600 characters each. New here? Tap <strong style={{ color: "var(--fg-3)" }}>Use example AI responses</strong> to try a real eval in seconds. For longer artifacts, link to them or use the images / creative tab.</div>
               </div>
@@ -304,7 +304,7 @@ export default function NewTest() {
 
           {/* Step 3 — signal target */}
           <section>
-            <Step n={3} title="Set signal target" hint="How many qualified human judgments to collect." />
+            <Step n={3} title="Choose how much feedback to collect" hint="How many qualified responses to collect." />
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
               {(() => {
                 // Presets are capped by effectiveMax (plan AND balance). A low-balance user
@@ -318,7 +318,7 @@ export default function NewTest() {
               })()}
             </div>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>{votes} <span style={{ fontSize: 14, color: "var(--fg-4)", fontWeight: 500 }}>qualified judgments</span></span>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700 }}>{votes} <span style={{ fontSize: 14, color: "var(--fg-4)", fontWeight: 500 }}>qualified responses</span></span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-4)" }}>= {votes} credits</span>
             </div>
             <input type="range" min={10} max={effectiveMax} step={1} value={Math.min(votes, effectiveMax)} onChange={(e) => setVotes(parseInt(e.target.value, 10))} style={{ width: "100%", accentColor: "var(--acc-deep)" }} />
@@ -333,7 +333,7 @@ export default function NewTest() {
         {/* ── sticky launch summary (desktop) ── */}
         <div className="sticky-side" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Evaluation run summary</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Your test summary</div>
             {([["Workflow", WORKFLOWS[workflow].name], ["Signal target", `${votes}`], ["Credits required", `${votes}`], ["Your balance", balance.toLocaleString()], ["Balance after", Math.max(0, balance - votes).toLocaleString()],
               // The run-quota row is only meaningful when the quota can actually bite. On Free,
               // credits cap usage first, so showing "Runs this month" is just noise.
@@ -355,14 +355,14 @@ export default function NewTest() {
             </div>
             {error && <p style={{ color: "var(--err)", fontSize: 13 }}>{error}</p>}
             <button onClick={submit} disabled={busy || uploading > 0 || !ready} className="btn btn--lg" style={{ justifyContent: "center", opacity: busy || uploading > 0 || !ready ? 0.55 : 1 }}>
-              {busy ? "Launching…" : uploading > 0 ? "Uploading…" : <>Launch evaluation run, {votes} credits</>}
+              {busy ? "Launching…" : uploading > 0 ? "Uploading…" : <>Launch test, {votes} credits</>}
             </button>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", lineHeight: 1.6 }}>
               Credits held in escrow → real people judge → low-quality filtered → unused credits refunded → Decision Package generated.
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7, padding: "0 4px" }}>
-            {["Low-quality and gamed responses are filtered. Only qualified judgments count.", "You're only charged for judgments that pass quality filtering.", "Collect more signal anytime by sharing or embedding the run."].map((x) => (
+            {["Low-quality and gamed responses are filtered. Only qualified responses count.", "You're only charged for responses that pass quality filtering.", "Collect more feedback anytime by sharing or embedding the test."].map((x) => (
               <div key={x} style={{ display: "flex", gap: 8, fontSize: 12, color: "var(--fg-4)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</div>
             ))}
           </div>
