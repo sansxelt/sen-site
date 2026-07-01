@@ -10,13 +10,15 @@ import { apiError, requestId } from "./_lib";
 const RATE_LIMIT = 120; // requests
 const RATE_WINDOW = 60; // seconds
 
-// Coarse endpoint group from the path — never the full (possibly id-bearing) URL.
-function endpointGroup(url: string): string {
+// Coarse endpoint group from the path + method — never the full (possibly
+// id-bearing) URL, so the id/prefix never lands in v_events.
+function endpointGroup(url: string, method = "GET"): string {
   try {
     const p = new URL(url).pathname;
     if (p.includes("/export")) return "tests.export";
-    if (/\/api\/v1\/tests\/[^/]+$/.test(p)) return "tests.get";
-    if (p.endsWith("/api/v1/tests")) return "tests.create";
+    if (p.includes("/api/v1/keys/") && p.endsWith("/usage")) return "keys.usage";
+    if (/\/api\/v1\/tests\/[^/]+$/.test(p)) return method === "PATCH" ? "tests.patch" : "tests.get";
+    if (p.endsWith("/api/v1/tests")) return method === "POST" ? "tests.create" : "tests.list";
     if (p.includes("/api/v1/credits")) return "credits";
     return "other";
   } catch { return "other"; }
@@ -51,6 +53,7 @@ export async function apiAuth(req: Request, scope?: string): Promise<ApiAuth> {
   }
 
   // API usage analytics — coarse group + method + public key prefix only.
-  await logEvent({ userId: v.userId, eventType: "api_request_made", actorType: "api", source: "api", route: endpointGroup(req.url), metadata: { method: req.method, endpoint: endpointGroup(req.url), prefix: v.prefix } });
+  const group = endpointGroup(req.url, req.method);
+  await logEvent({ userId: v.userId, eventType: "api_request_made", actorType: "api", source: "api", route: group, metadata: { method: req.method, endpoint: group, prefix: v.prefix } });
   return { ok: true, userId: v.userId, scopes: v.scopes, prefix: v.prefix };
 }

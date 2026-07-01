@@ -117,6 +117,52 @@ export async function listUserTests(userId: string): Promise<VTest[]> {
   return (data as unknown as VTest[]) ?? [];
 }
 
+// Paginated + filterable owner-scoped list for the public API. Data-only: the
+// query is pinned to .eq(user_id) so a key can only ever see its own owner's rows
+// (no client-supplied id is trusted). No business/money/report logic.
+export async function listUserTestsPaged(
+  userId: string,
+  opts: { limit?: number; offset?: number; status?: string; after?: string; before?: string } = {},
+): Promise<VTest[]> {
+  if (!userId || !isDatabaseConfigured()) return [];
+  const limit = Math.max(1, Math.min(50, opts.limit ?? 25));
+  const offset = Math.max(0, opts.offset ?? 0);
+  const s = getSupabaseAdminClient();
+  let q = s.from("v_tests" as never).select("*").eq("user_id", norm(userId));
+  if (opts.status) q = q.eq("status", opts.status);
+  if (opts.after) q = q.gte("created_at", opts.after);
+  if (opts.before) q = q.lte("created_at", opts.before);
+  const { data } = await q.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+  return (data as unknown as VTest[]) ?? [];
+}
+
+// Narrow, data-only metadata edit for the public API. Touches ONLY title/context,
+// never credits/status/counters/owner. Ownership + editable-status are enforced IN
+// THE QUERY (.eq user_id + .in status[draft,active]) so it cannot mutate a foreign,
+// completed, or canceled row even if the caller's pre-read went stale. No money.
+export async function updateTestMeta(
+  userId: string,
+  testId: string,
+  patch: { title?: string; context?: string },
+): Promise<{ ok: true; test: VTest } | { ok: false }> {
+  if (!userId || !testId || !isDatabaseConfigured()) return { ok: false };
+  const upd: Record<string, unknown> = {};
+  if (patch.title !== undefined) upd.title = patch.title;
+  if (patch.context !== undefined) upd.context = patch.context;
+  if (Object.keys(upd).length === 0) return { ok: false };
+  const s = getSupabaseAdminClient();
+  const { data, error } = await s.from("v_tests" as never)
+    .update(upd as never)
+    .eq("id", testId)
+    .eq("user_id", norm(userId))          // tenant scope — cannot touch another owner's row
+    .in("status", ["draft", "active"])    // status guard — completed/canceled rows are frozen
+    .select("*");
+  if (error) { console.error("updateTestMeta:", error.message); return { ok: false }; }
+  const rows = (data as unknown as VTest[]) ?? [];
+  if (rows.length === 0) return { ok: false };
+  return { ok: true, test: rows[0] };
+}
+
 // Next active test this voter hasn't judged and doesn't own.
 export async function nextTestForVoter(voterId: string): Promise<{ test: VTest; options: VOption[] } | null> {
   if (!voterId || !isDatabaseConfigured()) return null;

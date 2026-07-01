@@ -3,13 +3,66 @@
 
 import { apiAuth } from "../_auth";
 import { apiError } from "../_lib";
-import { getPlan, launchTest } from "@/lib/v-db";
+import { getPlan, launchTest, listUserTestsPaged, getReport } from "@/lib/v-db";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
 import { assignTestToProject } from "@/lib/v-projects";
 import { createSandboxEvaluation } from "@/lib/v-sandbox";
+import { evaluationIntelligence } from "@/lib/v-intelligence";
+import { decisionReadiness } from "@/lib/v-readiness";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+
+const STATUSES = new Set(["draft", "active", "complete", "canceled"]);
+// ISO-8601 date param → ISO string, or undefined if absent/invalid.
+function isoParam(v: string | null): string | undefined {
+  if (!v) return undefined;
+  const t = Date.parse(v);
+  return Number.isNaN(t) ? undefined : new Date(t).toISOString();
+}
+
+// GET /api/v1/tests — list THIS key owner's evaluations (SUMMARY only).
+// Auth: API key with tests:read. Owner-scoped in the lib fn (never trusts a
+// client id), paginated (limit/offset), optional status + created_after/before.
+export async function GET(req: Request) {
+  const a = await apiAuth(req, "tests:read");
+  if (!a.ok) return a.response;
+
+  const url = new URL(req.url);
+  const limit = Math.max(1, Math.min(50, parseInt(url.searchParams.get("limit") || "", 10) || 25));
+  const offset = Math.max(0, parseInt(url.searchParams.get("offset") || "", 10) || 0);
+  const statusRaw = url.searchParams.get("status");
+  if (statusRaw && !STATUSES.has(statusRaw)) return apiError("validation_error", "status must be one of draft, active, complete, canceled.", 400);
+  const after = url.searchParams.get("created_after");
+  const before = url.searchParams.get("created_before");
+  if (after && !isoParam(after)) return apiError("validation_error", "created_after must be an ISO-8601 date.", 400);
+  if (before && !isoParam(before)) return apiError("validation_error", "created_before must be an ISO-8601 date.", 400);
+
+  const tests = await listUserTestsPaged(a.userId, {
+    limit, offset,
+    status: statusRaw && STATUSES.has(statusRaw) ? statusRaw : undefined,
+    after: isoParam(after), before: isoParam(before),
+  });
+
+  const items = await Promise.all(tests.map(async (t) => {
+    const base = {
+      id: t.id, title: t.title, status: t.status, created_at: t.created_at,
+      target_judgments: t.votes_target, valid_count: t.votes_valid, is_sandbox: !!t.is_sandbox,
+      readiness: null as string | null, signal_convergence: null as string | null, filtered_count: null as number | null,
+    };
+    if (t.status !== "complete") return base;
+    // Readiness/convergence are only meaningful once a report exists. Pure
+    // derivation over already-collected aggregate results — no PII, no new stats.
+    const rep = await getReport(t.id);
+    const r = rep?.results ?? null;
+    if (!r) return base;
+    const intel = evaluationIntelligence(r, t.votes_target);
+    const readiness = decisionReadiness({ complete: true, intel, valid: t.votes_valid, target: t.votes_target });
+    return { ...base, filtered_count: typeof r.filtered === "number" ? r.filtered : null, readiness: readiness.label, signal_convergence: intel.convergence.state };
+  }));
+
+  return Response.json({ items, page: { limit, offset, count: items.length, has_more: items.length === limit } });
+}
 
 const CATS = new Set(["thumbnail", "ad", "logo", "game_icon", "app_icon", "ui", "product_image", "landing", "ai_image", "brand_name", "hook", "other"]);
 const AUDS = new Set(["general", "gamers", "creators", "designers", "gen_z", "shoppers", "entrepreneurs"]);
