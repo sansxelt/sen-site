@@ -70,10 +70,15 @@ export default function VotePage() {
   const capReached = ctx.signedIn && earned >= cap;
 
   return (
-    <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <p className="eyebrow">Evaluate &amp; earn</p>
-      <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.2vw, 2.3rem)", marginBottom: 10 }}>Help evaluate <span className="em">creative options</span>.</h1>
-      <p style={{ fontSize: 15, color: "var(--fg-3)", marginBottom: 20, maxWidth: 520, lineHeight: 1.55 }}>Evaluate real creative options and earn a credit for every valid judgment. Spend them on your own evaluations.</p>
+    <div style={{ position: "relative", width: "100%", maxWidth: 640, margin: "0 auto", padding: "clamp(28px, 4vw, 56px) clamp(16px, 4vw, 24px) 96px", boxSizing: "border-box" }}>
+      {/* Soft ambient glow behind the stage — warm accent wash, tuned for the cream surface. */}
+      <div aria-hidden style={{ position: "absolute", top: "clamp(40px, 8vw, 120px)", left: "50%", transform: "translateX(-50%)", width: "min(560px, 90%)", height: 380, borderRadius: "50%", background: "radial-gradient(closest-side, var(--acc), transparent 72%)", opacity: 0.1, filter: "blur(52px)", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "relative", zIndex: 1 }}>
+      <div style={{ textAlign: "center", marginBottom: 26 }}>
+        <p className="eyebrow">Evaluate &amp; earn</p>
+        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.2vw, 2.3rem)", margin: "6px 0 10px" }}>Help evaluate <span className="em">creative options</span>.</h1>
+        <p style={{ fontSize: 15, color: "var(--fg-3)", margin: "0 auto", maxWidth: 460, lineHeight: 1.55 }}>Evaluate real creative options and earn a credit for every valid judgment. Spend them on your own evaluations.</p>
+      </div>
 
       {ctx.signedIn && (
         <div className="card" style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap", marginBottom: 18, padding: "14px 18px" }}>
@@ -149,7 +154,14 @@ export default function VotePage() {
       )}
 
       {phase === "vote" && test && (
-        <div>
+        <div style={{ position: "relative", background: "var(--bg-2)", border: "1px solid var(--acc-line)", borderRadius: 16, padding: "clamp(20px, 3vw, 30px)", boxShadow: "0 1px 0 rgba(255,255,255,0.6) inset, 0 22px 50px -26px rgba(20,30,28,0.28), 0 0 40px -10px var(--acc-soft)" }}>
+          {/* "You're the judge" framing + earn micro-touch — makes the stage feel considered. */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 14 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--acc-deep)" }}>
+              <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--acc-deep)", boxShadow: "0 0 8px var(--acc)" }} />You&apos;re the judge
+            </span>
+            {ctx.signedIn && <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-4)", letterSpacing: "0.04em" }}>+1 credit / valid call</span>}
+          </div>
           <div style={{ marginBottom: 4, fontSize: 16, color: "var(--fg-1)", fontWeight: 700, fontFamily: "var(--font-display)" }}>{test.title}</div>
           {test.context && <div style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>{test.context}</div>}
           {screening.length > 0 && (
@@ -168,6 +180,12 @@ export default function VotePage() {
               ))}
             </div>
           )}
+          {/* A-vs-B cue — a light touch that frames the options as a matchup to weigh. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0 4px", fontSize: 12 }}>
+            <span style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, var(--line-2))" }} />
+            <span style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.06em", color: "var(--fg-4)" }}>which is stronger?</span>
+            <span style={{ flex: 1, height: 1, background: "linear-gradient(90deg, var(--line-2), transparent)" }} />
+          </div>
           {(() => {
             const isText = options.every((o) => !o.asset_url);
             return (
@@ -197,6 +215,7 @@ export default function VotePage() {
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, lineHeight: 1.6 }}>Only valid human judgments count. Very fast, duplicate, or spammy responses may be filtered. Helpful reasons improve the decision report.</p>
         </div>
       )}
+      </div>
     </div>
   );
 }
