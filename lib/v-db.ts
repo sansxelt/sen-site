@@ -174,32 +174,47 @@ export async function recordJudgment(args: {
 export async function completeTest(testId: string): Promise<void> {
   if (!testId || !isDatabaseConfigured()) return;
   const s = getSupabaseAdminClient();
-  // Single-winner gate: atomically flip active → complete. Only the caller that
-  // actually flips it runs the tally + refund, so a vote/close race (or two
-  // concurrent final votes) can't double-refund.
-  const { data: claimed } = await s.from("v_tests" as never)
-    .update({ status: "complete", completed_at: new Date().toISOString() } as never)
-    .eq("id", testId).eq("status", "active").select("id");
-  const freshFlip = !!claimed && (claimed as unknown[]).length > 0;
-  // If we did NOT win the flip, the row is either already complete or gone. A
-  // prior completion could have flipped active→complete and then FAILED before
-  // the refund (e.g. a transient re-read error below), permanently stranding the
-  // unfilled escrow. So don't blindly return: if the row is already complete,
-  // fall through and re-run the tally+refund tail. That tail is idempotent — the
-  // v_reports upsert dedupes on test_id and refund() dedupes on ext_ref=refund:id
-  // — so re-entry can't double-refund or double-report; it only backfills a
-  // refund that a crashed prior run never wrote. Truly-missing/still-active → return.
-  if (!freshFlip) {
-    const { data: cur } = await s.from("v_tests" as never).select("status").eq("id", testId).maybeSingle();
-    const st = (cur as unknown as { status?: string } | null)?.status;
-    if (st !== "complete") return; // missing, or still active elsewhere — nothing to do
+
+  // Atomic close authority: v_complete_test takes a per-test advisory lock and, IN
+  // THE SAME TRANSACTION, flips active→complete (if still active) and COUNTs valid +
+  // rejected judgments. Because a concurrent v_record_vote holds the SAME lock across
+  // its insert+recount+commit (and re-checks status under the lock), the total below
+  // can't miss a slot a late vote is filling and can't include a vote that closed out
+  // — so `unfilled` is exact, closing the last completion-snapshot over-refund race.
+  // Idempotent: re-callable on an already-complete test (flipped=false, accurate
+  // total) so a stranded refund is backfilled. Falls back to the JS flip+count path
+  // when the RPC isn't applied yet (42883).
+  let freshFlip = false;
+  let total: number | null = null;
+  let filtered = 0;
+  const { data: rpc, error: rpcErr } = await s.rpc("v_complete_test" as never, { p_test: testId } as never);
+  if (!rpcErr && rpc) {
+    const r = rpc as unknown as { found: boolean; flipped?: boolean; status?: string; total_valid?: number; total_filtered?: number };
+    if (!r.found) return; // row genuinely gone — nothing to refund
+    if (!r.flipped && r.status !== "complete") return; // still active elsewhere — nothing to do
+    freshFlip = !!r.flipped;
+    total = r.total_valid ?? 0;
+    filtered = r.total_filtered ?? 0;
+  } else if (rpcErr && (rpcErr as { code?: string }).code !== "42883") {
+    // A real DB error (timeout, pooler blip) must NOT silently skip the refund — throw
+    // so the caller (final vote / close / retry) re-enters this idempotent tail.
+    throw new Error(`completeTest v_complete_test failed for ${testId}: ${(rpcErr as { message?: string }).message}`);
+  } else {
+    // ── 42883 fallback: pre-migration JS flip + count (today's exact behavior). ──
+    const { data: claimed } = await s.from("v_tests" as never)
+      .update({ status: "complete", completed_at: new Date().toISOString() } as never)
+      .eq("id", testId).eq("status", "active").select("id");
+    freshFlip = !!claimed && (claimed as unknown[]).length > 0;
+    if (!freshFlip) {
+      const { data: cur } = await s.from("v_tests" as never).select("status").eq("id", testId).maybeSingle();
+      if ((cur as unknown as { status?: string } | null)?.status !== "complete") return; // missing / still active
+    }
   }
 
-  // Re-read the test + options. A transient DB error here (statement timeout,
-  // pooler blip) must NOT be treated as "no test" — that would silently skip the
-  // refund forever (the flip already committed). Throw so the caller (final vote /
-  // close / retry) re-invokes and re-enters the idempotent tail; only a genuinely
-  // absent row returns quietly.
+  // Re-read the test + options for the report. A transient DB error here must NOT be
+  // treated as "no test" — that would silently skip the refund (the flip already
+  // committed). Throw so the caller retries and re-enters the idempotent tail; a
+  // genuinely absent row returns quietly.
   const { data: trow, error: tErr } = await s.from("v_tests" as never).select("*").eq("id", testId).maybeSingle();
   if (tErr) throw new Error(`completeTest reread failed for ${testId}: ${tErr.message}`);
   if (!trow) return; // row genuinely gone (cascade delete) — nothing to refund
@@ -208,9 +223,13 @@ export async function completeTest(testId: string): Promise<void> {
   const options = (opts as unknown as VOption[]) ?? [];
   const { data: judg } = await s.from("v_judgments" as never).select("option_id,reason").eq("test_id", testId).eq("status", "valid");
   const judgments = (judg as unknown as { option_id: string; reason: string | null }[]) ?? [];
-  const total = judgments.length;
-  const { count: filteredCount } = await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).eq("test_id", testId).eq("status", "rejected");
-  const filtered = filteredCount ?? 0;
+  // RPC path: `total`/`filtered` are the locked, authoritative counts — do NOT
+  // recompute from this (unlocked) read. Fallback path: derive them here as before.
+  if (total === null) {
+    total = judgments.length;
+    const { count: filteredCount } = await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).eq("test_id", testId).eq("status", "rejected");
+    filtered = filteredCount ?? 0;
+  }
   const tally: Record<string, number> = {};
   for (const o of options) tally[o.id] = 0;
   for (const j of judgments) tally[j.option_id] = (tally[j.option_id] || 0) + 1;

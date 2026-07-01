@@ -1,39 +1,50 @@
 -- ─────────────────────────────────────────────────────────────────────────────
--- FOLLOW-UP (not yet shipped): per-test advisory lock to close the late-vote
--- completion-snapshot over-refund race (money-race audit finding #5, medium).
+-- MONEY-RACE FIX #5: close the late-vote / completion-snapshot over-refund race.
 --
--- THE BUG: completeTest() flips active→complete under the v_tests row lock, then
--- COUNTs valid judgments in a SEPARATE query to compute unfilled = target - count.
--- v_record_vote reads v_tests with a PLAIN select (no per-test lock; the only
--- advisory lock there is per-VOTER, for rewards). So a valid vote can commit its
--- judgment AFTER the closer's COUNT but was already in-flight — the closer snapshots
--- one short, refunds 1 extra credit to the buyer for a slot that actually filled,
--- and the platform funds that late voter's reward. Bounded (0–2 votes racing the
--- exact close instant), never a stranded-escrow class bug.
+-- SUPERSEDES the earlier draft of this file (a standalone v_lock_test + a separate
+-- JS COUNT). That draft was a NO-OP: Supabase-PostgREST runs every .from()/.rpc()
+-- as its own autocommit transaction, and pg_advisory_xact_lock() is TRANSACTION-
+-- scoped, so a lock taken in a standalone v_lock_test() releases the instant that
+-- function returns — the JS COUNT that followed held no lock. The tally COUNT must
+-- be CO-TRANSACTIONAL with the lock, so it has to live inside ONE rpc. That is what
+-- v_complete_test does below.
 --
--- WHY SEPARATE: this touches the HOT vote path (v_record_vote runs on every vote),
--- so it must be applied + confirmed present in prod BEFORE the completeTest JS lock
--- call ships, and rolled out on its own so a vote-path regression is isolated.
+-- THE BUG: completeTest flips active→complete, then COUNTs valid judgments in a
+-- SEPARATE query to compute unfilled = target - count. A valid vote already in
+-- flight can commit AFTER that count, so the closer snapshots one short, refunds an
+-- extra credit for a slot that actually filled, and the platform funds that late
+-- voter's reward. Bounded (0–2 votes racing the exact close instant).
 --
--- ROLLOUT ORDER:
---   1. Apply this migration in Supabase (adds the lock to v_record_vote + v_lock_test).
---   2. Confirm both exist (no 42883) in prod.
---   3. THEN ship the JS change in completeTest that calls v_lock_test(testId)
---      immediately before its valid-judgment snapshot.
+-- THE FIX (two parts, both idempotent / safe to re-run):
+--   1. v_record_vote takes the per-test advisory lock right after its status guard,
+--      AND re-checks status='active' UNDER the lock before inserting. So a vote that
+--      was in flight when the test closed is rejected instead of filling a closed
+--      slot (this is the "strict" closure — makes the count exact in BOTH orderings).
+--   2. v_complete_test takes the SAME lock and, in one transaction, flips + COUNTs,
+--      returning the accurate totals for the refund. Because a racing vote holds the
+--      same lock across its insert+recount+commit, the closer's count can neither
+--      miss a committed vote nor see a half-committed one.
+--
+-- DEADLOCK-FREE: lock acquisition order is always test → reward (v_record_vote);
+-- v_complete_test takes test only; v_launch_test takes user only. The three keyspaces
+-- are disjoint (hashtext(user) vs 'test:'||id vs 'reward:'||voter) and no path ever
+-- takes reward-then-test, so there is no cycle.
+--
+-- PERF: the vote hot path pays ONE extra advisory lock, uncontended except at the
+-- exact close instant of the same test; the counts under the lock are indexed
+-- (v_judg_test_idx, v_judg_status_idx). No throughput cliff in normal voting.
+--
+-- ROLLOUT ORDER (the JS change must ship LAST):
+--   1. Apply BOTH functions below in Supabase (any order — both are safe standalone;
+--      until the JS ships, completeTest keeps using its current path).
+--   2. Confirm both exist in prod (a call returns without a 42883 "function does not
+--      exist" error).
+--   3. Ship the completeTest JS change (already prepared) that calls v_complete_test.
 -- ─────────────────────────────────────────────────────────────────────────────
 
--- 1) Tiny locking helper the closer (completeTest) calls before its COUNT snapshot.
-create or replace function v_lock_test(p_test uuid) returns void language plpgsql as $$
-begin
-  perform pg_advisory_xact_lock(hashtext('test:' || p_test::text)::bigint);
-end;
-$$;
-
--- 2) Add the SAME per-test advisory lock inside v_record_vote, right after the
---    status guard and BEFORE the judgment INSERT, so a vote holds the lock across
---    its insert + votes_valid recount + commit. This is the full v2 function from
---    sql/vraelis-rank.sql:274 with ONE added `perform pg_advisory_xact_lock(...)`
---    line (marked below). Everything else is unchanged — amounts/semantics identical.
+-- ── 1) v_record_vote v3 — identical to sql/vraelis-rank.sql:274-324 except for the
+--       per-test advisory lock + an under-lock status re-check. No amount/semantic
+--       change to counting, rewards, or dedup. Signature unchanged (drop matches v2).
 drop function if exists v_record_vote(uuid, text, uuid, text, int, int, text, text, text, text);
 create or replace function v_record_vote(
   p_test uuid, p_voter text, p_option uuid, p_reason text, p_time_spent int, p_reward_cap int,
@@ -51,10 +62,20 @@ begin
     return jsonb_build_object('status','invalid');
   end if;
 
-  -- ▼▼▼ THE ONLY ADDED LINE: serialize this vote's insert+recount+commit against a
-  -- concurrent completeTest() COUNT snapshot, so the closer can't refund a slot this
-  -- vote is filling. Same per-test key v_lock_test uses.
+  -- ▼▼▼ ADDED vs v2. Serialize this vote's insert + votes_valid recount + commit
+  -- against v_complete_test's locked count, using the same per-test key. Taken AFTER
+  -- the cheap guard (votes to closed tests never contend) and BEFORE the INSERT.
   perform pg_advisory_xact_lock(hashtext('test:' || p_test::text)::bigint);
+
+  -- Re-check UNDER the lock. If this vote's guard passed while the test was active
+  -- but a close committed while we waited for the lock, the test is now 'complete'
+  -- (or full) — reject instead of filling an already-closed slot. This makes the
+  -- closer's count exact in BOTH lock orderings (no over-fill, no over-reward, and
+  -- the closer's refund of the genuinely-unfilled slots stands correct).
+  select status, votes_valid, votes_target into v_tstatus, v_valid_cur, v_target from v_tests where id = p_test;
+  if v_tstatus <> 'active' or v_valid_cur >= v_target then
+    return jsonb_build_object('status','invalid');
+  end if;
   -- ▲▲▲
 
   select count(*) into v_opt_ok from v_test_options where id = p_option and test_id = p_test;
@@ -94,8 +115,53 @@ begin
   return jsonb_build_object('status','ok','vote_status',v_vote_status,'earned',v_earned,'votes_valid',v_valid,'should_complete', v_valid >= v_target);
 end; $$;
 
--- After applying: verify with a concurrency test on staging (drive to target-1, fire
--- N concurrent votes + a close, assert unfilled == max(0, target - true_valid_count)
--- exactly, no buyer over-refund, reward count == valid votes). Then ship the
--- completeTest JS change that calls: await s.rpc('v_lock_test', { p_test: testId })
--- immediately before the line-~206 valid-judgment snapshot.
+
+-- ── 2) v_complete_test — the atomic close authority. ONE tx holds the per-test
+--       advisory lock across the flip + both counts. Idempotent: safe to re-call on
+--       an already-complete test (flipped=false, but still returns the accurate
+--       totals so a stranded refund from a crashed prior run is backfilled with the
+--       right number). Does NOT change credit/reward amounts — it only makes the
+--       total used for `unfilled` accurate under concurrency.
+create or replace function v_complete_test(p_test uuid) returns jsonb language plpgsql as $$
+declare
+  v_status text; v_target int; v_user text;
+  v_flipped boolean := false;
+  v_valid int; v_filtered int;
+begin
+  perform pg_advisory_xact_lock(hashtext('test:' || p_test::text)::bigint);
+
+  select status, votes_target, user_id into v_status, v_target, v_user
+    from v_tests where id = p_test;
+  if not found then
+    return jsonb_build_object('found', false);
+  end if;
+
+  if v_status = 'active' then
+    update v_tests set status = 'complete', completed_at = now()
+      where id = p_test and status = 'active';
+    v_flipped := true;
+    v_status := 'complete';
+  end if;
+
+  -- Counts taken UNDER the lock, so a racing vote is either fully counted (it
+  -- committed before us and released the lock) or fully excluded (it is blocked on
+  -- the lock and, on resuming, re-checks status='complete' and rejects itself).
+  select count(*) into v_valid    from v_judgments where test_id = p_test and status = 'valid';
+  select count(*) into v_filtered from v_judgments where test_id = p_test and status = 'rejected';
+
+  return jsonb_build_object(
+    'found', true,
+    'flipped', v_flipped,
+    'status', v_status,
+    'total_valid', v_valid,
+    'total_filtered', v_filtered,
+    'votes_target', v_target,
+    'user_id', v_user
+  );
+end; $$;
+
+-- Verify after applying (staging): drive a test to target-1 valid, then fire N
+-- concurrent valid votes together with a close. Assert: exactly one completion,
+-- votes_valid never exceeds target, unfilled == max(0, target - true_valid_count)
+-- exactly, buyer refunded for exactly the unfilled slots, each valid voter rewarded
+-- once, no reward for a vote rejected by the under-lock re-check.
