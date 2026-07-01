@@ -265,8 +265,11 @@ export default function RankLanding() {
             <p>A full evaluation lifecycle — submit, define the judgment, collect qualified signal, filter the noise, check readiness, and receive the Decision Package.</p>
           </div>
           <div className="tile-grid cols-2">
-            {STEPS.map((s) => (
-              <div key={s.k} className="acard" style={{ flexDirection: "row", gap: 18, alignItems: "flex-start" }}>
+            {STEPS.map((s, i) => {
+              // Odd count (7) leaves the last card orphaned in a 2-col grid — span + center it.
+              const lastOdd = i === STEPS.length - 1 && STEPS.length % 2 === 1;
+              return (
+              <div key={s.k} className="acard" style={{ flexDirection: "row", gap: 18, alignItems: "flex-start", ...(lastOdd ? { gridColumn: "1 / -1", maxWidth: 620, marginInline: "auto", width: "100%" } : {}) }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, flex: "none" }}>
                   <div className="acard__icon" style={{ width: 42, height: 42 }}><Icon d={s.i} size={20} /></div>
                   <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)" }}>{s.k}</span>
@@ -276,7 +279,8 @@ export default function RankLanding() {
                   <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.55 }}>{s.d}</p>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -353,7 +357,7 @@ export default function RankLanding() {
               </div>
             ))}
           </div>
-          <div className="chips">
+          <div className="chips" style={{ justifyContent: "center" }}>
             {TESTABLE.map((t) => <span key={t} className="chip">{t}</span>)}
           </div>
 
