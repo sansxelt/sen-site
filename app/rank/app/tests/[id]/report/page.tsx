@@ -63,6 +63,34 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   if (!report || test.status !== "complete") {
     const pct = Math.min(100, Math.round((test.votes_valid / Math.max(1, test.votes_target)) * 100));
     const fill = await fillStats(id); // owner-only fill monitor (real-vs-farmed diagnostic)
+    // Owner-only: recent filtered-response reasons (aggregate counts, no PII).
+    const fillFilterReasons = fill.filtered > 0 ? await testFilterReasons(id) : [];
+
+    // Pace: derive velocity + ETA from timestamps only (no PII). Elapsed since
+    // launch; fill velocity over the active valid-vote window; ETA to target at
+    // that rate. All best-effort — shown only when there's enough to be honest.
+    const launchMs = new Date(test.created_at).getTime();
+    const sinceLaunchMs = Math.max(0, Date.now() - launchMs);
+    const remaining = Math.max(0, test.votes_target - fill.valid);
+    let velocityPerHr: number | null = null;
+    let etaMs: number | null = null;
+    if (fill.firstValidAt && fill.lastValidAt && fill.valid >= 5) {
+      const spanMs = new Date(fill.lastValidAt).getTime() - new Date(fill.firstValidAt).getTime();
+      // votes accrued across the span = valid - 1 (intervals between the first and last).
+      if (spanMs > 0) {
+        velocityPerHr = Math.round(((fill.valid - 1) / (spanMs / 3_600_000)) * 10) / 10;
+        if (velocityPerHr > 0 && remaining > 0) etaMs = (remaining / velocityPerHr) * 3_600_000;
+      }
+    }
+    const fmtDur = (ms: number | null): string => {
+      if (ms == null || !isFinite(ms)) return "—";
+      const m = ms / 60000;
+      if (m < 1) return "<1m";
+      if (m < 60) return `${Math.round(m)}m`;
+      const h = m / 60;
+      if (h < 48) return `${Math.round(h)}h`;
+      return `${Math.round(h / 24)}d`;
+    };
     const fillTone: Record<string, { fg: string; label: string; hint: string }> = {
       healthy: { fg: "var(--acc-deep)", label: "Healthy spread", hint: "Votes are spread across many distinct sources — consistent with real demand." },
       concentrated: { fg: "var(--money)", label: "Concentrated", hint: "A large share comes from few sources. Could be a small real audience — or early farming. Watch it." },
@@ -108,11 +136,28 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
                 </div>
               ))}
             </div>
+            {/* Pace: fill %, elapsed, velocity, ETA — the "is it filling or stalling?" read. */}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+              {([["Fill", `${pct}% of ${test.votes_target}`], ["Running", fmtDur(sinceLaunchMs)], ["Velocity", velocityPerHr == null ? "—" : `${velocityPerHr}/hr`], ["ETA to target", remaining === 0 ? "target hit" : fmtDur(etaMs)]] as [string, string][]).map(([l, v]) => (
+                <div key={l} style={{ padding: "8px 11px", borderRadius: 9, background: "var(--bg-1)", border: "1px solid var(--line-1)", minWidth: 96 }}>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--fg-4)" }}>{l}</div>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", marginTop: 1 }}>{v}</div>
+                </div>
+              ))}
+            </div>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", marginBottom: 10 }}>
               {fill.timeToValid.map((t) => (
                 <span key={t.n}>→ {t.n} valid: <strong style={{ color: "var(--fg-2)" }}>{t.ms == null ? "—" : t.ms < 60000 ? `${Math.round(t.ms / 1000)}s` : `${Math.round(t.ms / 60000)}m`}</strong></span>
               ))}
             </div>
+            {/* Recent vote errors (filtered-response reasons, aggregate counts only). */}
+            {fillFilterReasons.length > 0 && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                {fillFilterReasons.slice(0, 5).map((x) => (
+                  <span key={x.label} className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)" }}>{x.label}: <strong style={{ color: "var(--money)" }}>{x.count}</strong></span>
+                ))}
+              </div>
+            )}
             <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: 0, lineHeight: 1.55 }}><strong style={{ color: ft.fg }}>{ft.label}.</strong> {ft.hint} A real cold-pool fill spreads across many distinct IPs/devices; few sources cycling = farming. (Visible only to you, the owner.)</p>
           </div>
         )}

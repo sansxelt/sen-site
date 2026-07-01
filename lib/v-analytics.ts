@@ -342,10 +342,14 @@ export type FillStats = {
   topIPShare: number | null;       // % of valid votes from the single busiest IP
   timeToValid: { n: number; ms: number | null }[]; // ms from first valid vote to the Nth (25/50/100)
   diversity: "healthy" | "concentrated" | "likely-farmed" | "insufficient";
+  // Pace primitives (timestamps only — no PII) for the owner fill monitor to derive
+  // velocity + ETA. ISO of the first/last VALID vote; null when there are none.
+  firstValidAt: string | null;
+  lastValidAt: string | null;
 };
 
 export async function fillStats(testId: string): Promise<FillStats> {
-  const empty: FillStats = { valid: 0, filtered: 0, uniqueIPs: 0, uniqueDevices: 0, uniqueVoters: 0, votesPerIP: null, topIPShare: null, timeToValid: [{ n: 25, ms: null }, { n: 50, ms: null }, { n: 100, ms: null }], diversity: "insufficient" };
+  const empty: FillStats = { valid: 0, filtered: 0, uniqueIPs: 0, uniqueDevices: 0, uniqueVoters: 0, votesPerIP: null, topIPShare: null, timeToValid: [{ n: 25, ms: null }, { n: 50, ms: null }, { n: 100, ms: null }], diversity: "insufficient", firstValidAt: null, lastValidAt: null };
   if (!testId || !isDatabaseConfigured()) return empty;
   try {
     const s = getSupabaseAdminClient();
@@ -382,7 +386,7 @@ export async function fillStats(testId: string): Promise<FillStats> {
     else if ((topIPShare ?? 0) >= 20 || (votesPerIP ?? 0) >= 2) diversity = "concentrated";
     else diversity = "healthy";
 
-    return { valid: valids.length, filtered, uniqueIPs, uniqueDevices: devices.size, uniqueVoters: voters.size, votesPerIP, topIPShare, timeToValid, diversity };
+    return { valid: valids.length, filtered, uniqueIPs, uniqueDevices: devices.size, uniqueVoters: voters.size, votesPerIP, topIPShare, timeToValid, diversity, firstValidAt: valids[0].created_at, lastValidAt: valids[valids.length - 1].created_at };
   } catch { return empty; }
 }
 
