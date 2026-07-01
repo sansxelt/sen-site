@@ -36,7 +36,6 @@ const I = {
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Workspace", items: [
     { href: "/app", label: "Dashboard", d: I.grid },
-    { href: "/app/new", label: "New evaluation", d: I.plus },
     { href: "/app/projects", label: "Projects", d: I.folder },
     { href: "/app/team", label: "Team", d: I.user },
     { href: "/app/organization", label: "Organization", d: I.building },
