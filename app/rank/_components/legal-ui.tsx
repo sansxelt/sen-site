@@ -28,8 +28,8 @@ export function Ul({ items }: { items: ReactNode[] }) {
 
 export function LegalShell({ eyebrow, title, updated, intro, children }: { eyebrow: string; title: string; updated?: string; intro?: ReactNode; children: ReactNode }) {
   return (
-    <section className="section" style={{ borderBottom: "none" }}>
-      <div className="wrap" style={{ maxWidth: 760, paddingTop: "clamp(28px, 4vw, 52px)" }}>
+    <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)" }}>
+      <div className="wrap" style={{ maxWidth: 760, paddingTop: 0 }}>
         <p className="eyebrow">{eyebrow}</p>
         <h1 className="display" style={{ fontSize: "clamp(2rem, 3.4vw, 2.8rem)", marginBottom: updated ? 8 : 14 }}>{title}</h1>
         {updated && <p style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 22 }}>{updated}</p>}

@@ -60,12 +60,16 @@ export default function EnterprisePage() {
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>The decision, and everything around it.</h2>
         </div>
         <div className="tile-grid cols-2">
-          {PROTECTS.map(([t, d]) => (
-            <div key={t} className="acard">
-              <h3 style={{ fontSize: "clamp(1.05rem, 1.6vw, 1.25rem)", marginBottom: 6 }}>{t}</h3>
-              <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0 }}>{d}</p>
-            </div>
-          ))}
+          {PROTECTS.map(([t, d], i, arr) => {
+            // Odd count leaves the last card orphaned in a 2-col grid; span + center it.
+            const lastOdd = i === arr.length - 1 && arr.length % 2 === 1;
+            return (
+              <div key={t} className="acard" style={lastOdd ? { gridColumn: "1 / -1", maxWidth: 460, marginInline: "auto", width: "100%" } : undefined}>
+                <h3 style={{ fontSize: "clamp(1.05rem, 1.6vw, 1.25rem)", marginBottom: 6 }}>{t}</h3>
+                <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0 }}>{d}</p>
+              </div>
+            );
+          })}
         </div>
       </Section>
 
@@ -153,14 +157,13 @@ export default function EnterprisePage() {
               <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="mailto:hello@vraelis.com?subject=Vraelis%20plan">Talk to us</a>
             </div>
           ))}
-          <div className="price price--hot">
-            <div className="price__name">Enterprise</div>
-            <div className="price__amt">Custom</div>
-            <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>Governed AI evaluation at org scale</div>
-            <div style={{ fontSize: 13, color: "var(--fg-3)" }}>For organizations that need governance, SSO, and audit across many teams.</div>
-            <ul className="price__feat">{ENTERPRISE_PERKS.map((x) => <li key={x}>{x}</li>)}</ul>
-            <a className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise">Contact sales</a>
+        </div>
+        <div className="card" style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", background: "var(--bg-1)", borderRadius: "var(--r-xl)" }}>
+          <div style={{ maxWidth: 640 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Enterprise: governed AI evaluation at org scale</div>
+            <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>For organizations that need governance, SSO, and audit across many teams. {ENTERPRISE_PERKS.join(", ")}.</p>
           </div>
+          <a className="btn btn--lg" style={{ flex: "none" }} href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise">Contact sales</a>
         </div>
       </Section>
 
