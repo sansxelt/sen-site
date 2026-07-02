@@ -251,7 +251,7 @@ export default function DevelopersPage() {
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "22px 0 0", lineHeight: 1.7, textAlign: "center" }}>SSO-ready organizations with verified domains and audited provisioning. OIDC single sign-on is available for verified organization domains today; SAML configuration is in preview and SCIM is on the roadmap. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "22px 0 0", lineHeight: 1.7, textAlign: "center" }}>SSO-ready organizations with verified domains and audited provisioning. OIDC single sign-on is available for verified organization domains today; SAML configuration is in preview and SCIM is on the roadmap. <a href="mailto:hello@vraelis.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
         </div>
       </section>
 

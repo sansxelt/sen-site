@@ -155,7 +155,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
             <li key={g} style={{ fontSize: 13, color: "var(--fg-2)", display: "flex", gap: 8, alignItems: "baseline" }}><span style={{ color: "var(--acc-deep)" }}>✓</span>{g}</li>
           ))}
         </ul>
-        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0", lineHeight: 1.6 }}>SSO and enterprise provisioning are planned for larger organizations. <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0", lineHeight: 1.6 }}>SSO and enterprise provisioning are planned for larger organizations. <a href="mailto:hello@vraelis.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
       </div>
 
       {/* Organization (account layer) */}

@@ -102,7 +102,7 @@ export default function SecurityPage() {
             </div>
           ))}
         </div>
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.7 }}>We describe what Vraelis actually does. We do not claim formal certifications. If your organization needs specific compliance attestations, <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20security%20%26%20compliance" style={{ color: "var(--acc-deep)" }}>contact us</a> to discuss requirements.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.7 }}>We describe what Vraelis actually does. We do not claim formal certifications. If your organization needs specific compliance attestations, <a href="mailto:hello@vraelis.com?subject=Vraelis%20security%20%26%20compliance" style={{ color: "var(--acc-deep)" }}>contact us</a> to discuss requirements.</p>
       </Section>
 
       {/* SSO & provisioning honesty */}
@@ -146,7 +146,7 @@ export default function SecurityPage() {
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/new" className="btn btn--lg">Start an evaluation</a>
             <a href="/developers" className="btn btn--ghost btn--lg">View developer platform</a>
-            <a href="mailto:nishanth.d1021@gmail.com?subject=Vraelis%20enterprise%20SSO" className="btn btn--ghost btn--lg">Contact us about enterprise SSO</a>
+            <a href="mailto:hello@vraelis.com?subject=Vraelis%20enterprise%20SSO" className="btn btn--ghost btn--lg">Contact us about enterprise SSO</a>
           </div>
         </div>
       </section>
