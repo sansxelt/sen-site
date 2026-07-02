@@ -3,8 +3,8 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = {
   ...ogMeta({
-    title: "Test your AI app's output on real people",
-    description: "Vraelis is a feedback network for AI apps. Submit the content your app generates, get quality-filtered feedback from real people on what works, and ship the version that wins. Pay only for responses that pass quality checks.",
+    title: "Know which AI output to ship — before you ship it",
+    description: "Vraelis is human QA for AI output. Send the versions your app generates, get quality-filtered judgments from real people on which one wins — and ship the version your users will trust. You pay only for responses that pass quality checks.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
@@ -58,7 +58,7 @@ const USE_CASES: { t: string; c: string; g: string }[] = [
   { t: "Client & stakeholder approval", c: "The options you're choosing between", g: "A client-ready decision record that backs your recommendation." },
 ];
 
-const IS_THINGS = ["A feedback network for AI apps — real-person feedback on what you generate, quality-filtered, via API", "Structured results returned as a typed Decision Package", "An automated quality gate that rejects rushed, duplicate, and gamed responses"];
+const IS_THINGS = ["Human QA for AI output — real-person judgment on what you generate, quality-filtered, via API", "Structured results returned as a typed Decision Package", "An automated quality gate that rejects rushed, duplicate, and gamed responses"];
 const IS_NOT_THINGS = ["A cheap survey, poll, or microtask panel", "A raw vote count you have to interpret yourself", "Unfiltered crowdsourced responses you have to clean yourself"];
 
 const REPORT_PARTS = [
@@ -135,9 +135,9 @@ export default function RankLanding() {
         <div className="glow glow--bleed" />
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Feedback network for AI apps</p>
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Human QA for AI output</p>
           <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
-            Test your AI app&apos;s output on <span className="em">real people</span>.
+            Know which AI output to ship — <span className="em">before you ship it</span>.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 700, margin: "0 auto 30px", lineHeight: 1.55 }}>
             Submit the content your app generates — responses, images, copy. Vraelis gets you feedback from real people on what works, filters rushed and gamed responses automatically, and returns a structured Decision Package through API, webhook, or export. You pay only for responses that pass quality checks.
@@ -242,7 +242,7 @@ export default function RankLanding() {
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it's for</p>
             <h2 className="display">Built for the teams <span className="em">shipping AI</span>.</h2>
-            <p>Vraelis is a feedback network for AI apps — test the content your app generates on real people, learn what your users will prefer, and ship with evidence. The same engine gives model and safety teams quality-filtered preference and eval signal via API. Not a survey builder, polling tool, or crowdsourced panel: real people give feedback, automated gates filter the noise, and you get structured signal you can trust.</p>
+            <p>Vraelis is human QA for AI output — test the content your app generates on real people, learn what your users will prefer, and ship with evidence. The same engine gives model and safety teams quality-filtered preference and eval signal via API. Not a survey builder, polling tool, or crowdsourced panel: real people give feedback, automated gates filter the noise, and you get structured signal you can trust.</p>
           </div>
           <div className="tile-grid cols-4">
             {AUDIENCE.map((a) => (
