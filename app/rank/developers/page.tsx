@@ -1,14 +1,15 @@
 import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
-  title: "Developers: the human QA API for AI output",
-  description: "The human QA API for AI teams. Submit candidate model outputs, collect quality-filtered human judgment, and retrieve a structured Decision Package v2, through API, SDK, signed webhooks, or JSON/CSV export. Sandbox before you spend. Backed by a public JSON Schema.",
+  title: "Developers: the AI output check API",
+  description: "The AI output check API for AI teams. POST your output to /api/v1/check and get per-criterion scores, the recommended version, and line-level flags with fixes. Validate on real people through the same platform, with signed webhooks and JSON/CSV export. Sandbox before you spend.",
   path: "/developers",
 });
 
 // One small, honest preview: exact SDK/curl flows live in the signed-in console.
-const PREVIEW = `const result = await vraelis.evaluations.get(id)
-result.decision_package.decision.recommended_output  // "B"`;
+const PREVIEW = `const check = await vraelis.checks.create({ outputType, candidates })
+check.recommended.label       // "B"
+check.flags[0].fix            // "add a caveat before the claim"`;
 
 const EMBED = `<script async src="https://vraelis.com/embed.js"
         data-vraelis-test="YOUR_TEST_ID"></script>`;
@@ -32,9 +33,9 @@ export default function DevelopersPage() {
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Developer platform</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 880, margin: "0 auto 16px" }}>The human QA API for <span className="em">AI output</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>Submit candidate model outputs, define the judgment, collect <strong style={{ color: "var(--fg-1)" }}>quality-filtered human judgment</strong>, and return a typed <strong style={{ color: "var(--fg-1)" }}>Decision Package</strong>, through API, SDK, signed webhooks, or JSON/CSV export. Built to live inside an eval pipeline, not a browser tab.</p>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>submit candidates → define judgment → collect filtered signal → Decision Package → webhook / export</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 880, margin: "0 auto 16px" }}>The AI output <span className="em">check API</span>.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>POST the output your app generates and get a structured check back in one call: <strong style={{ color: "var(--fg-1)" }}>per-criterion scores</strong>, the version to ship, and <strong style={{ color: "var(--fg-1)" }}>line-level flags with fixes</strong>. Wire it into CI or your product. Validate on real people through the same platform when the call matters.</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>POST /api/v1/check → scores + recommendation + flags → apply fixes → (optional) validate on real people</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/sandbox" className="btn btn--lg">Open sandbox console</a>
             <a href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">Decision Package schema</a>
@@ -47,9 +48,9 @@ export default function DevelopersPage() {
       {/* Platform flow */}
       <section className="section" style={{ borderBottom: "1px solid var(--line-1)" }}>
         <div className="wrap">
-          <div className="sec-head" style={{ marginBottom: 22 }}><p className="eyebrow">The platform</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>An eval pipeline, not a request/response toy.</h2><p>Every evaluation flows through the same governed pipeline (submit, define the judgment, collect, filter, decide), whatever surface you call it from.</p></div>
+          <div className="sec-head" style={{ marginBottom: 22 }}><p className="eyebrow">The platform</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>One call to check. A human-eval pipeline behind it.</h2><p>The check returns instantly from one API call. When you want to be sure, the same platform routes the output to real people and returns a governed Decision Package.</p></div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-            {["Submit candidates", "Define judgment", "Collect qualified signal", "Filter low-quality responses", "Assess readiness", "Receive Decision Package", "Webhook / export"].map((s, i, a) => (
+            {["POST output", "Instant AI check", "Scores + flags + fixes", "Apply fixes", "Validate on real people (optional)", "Signed webhook", "Export"].map((s, i, a) => (
               <span key={s} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                 <span className="chip" style={{ fontSize: 12.5 }}>{s}</span>
                 {i < a.length - 1 && <span style={{ color: "var(--fg-5)" }}>→</span>}
@@ -62,10 +63,10 @@ export default function DevelopersPage() {
       {/* Infrastructure surfaces */}
       <section className="section">
         <div className="wrap">
-          <div className="sec-head" style={{ marginBottom: 24 }}><p className="eyebrow">Infrastructure surfaces</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Access layers over one platform.</h2><p>The API, SDK, webhooks, and embed are how you reach the platform; the output is always the Decision Package.</p></div>
+          <div className="sec-head" style={{ marginBottom: 24 }}><p className="eyebrow">Infrastructure surfaces</p><h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Access layers over one platform.</h2><p>The API, SDK, webhooks, and embed are how you reach the platform. The primary output is the check; human validation returns a Decision Package.</p></div>
           <div className="tile-grid cols-3">
             {[
-              ["REST API", "Submit candidates, fetch the Decision Package, export results. Per-key rate limits, stable error envelopes."],
+              ["Check API", "POST output to /api/v1/check for an instant result. Create human validation runs, fetch, and export. Per-key rate limits, stable error envelopes."],
               ["TypeScript SDK", "A typed client for create / fetch / export / webhook verification, matching the schema. In the repo today."],
               ["Signed webhooks", "An HMAC-signed completion webhook fires the moment an evaluation fills: retried, idempotent, no polling."],
               ["Sandbox", "Exercise the whole flow at 0 credits / 0 quota, isolated from production, before you spend."],
@@ -77,7 +78,7 @@ export default function DevelopersPage() {
               <div key={t} className="acard" style={{ gap: 6 }}><div className="acard__t">{t}</div><div className="acard__d">{d}</div></div>
             ))}
           </div>
-          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "18px 0 0", lineHeight: 1.6, textAlign: "center" }}>Human QA for AI output. Not a polling or survey widget, and not a traffic or ad network. The embed is one collection surface; the product output is the Decision Package and the governed decision record.</p>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "18px 0 0", lineHeight: 1.6, textAlign: "center" }}>The AI output check, calibrated on real people. Not a polling or survey widget, and not a traffic or ad network. The primary output is the check; human validation returns a governed Decision Package.</p>
         </div>
       </section>
 
@@ -285,13 +286,13 @@ export default function DevelopersPage() {
       <section className="section" style={{ borderBottom: "none" }}>
         <div className="wrap">
           <p className="eyebrow">Use cases</p>
-          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Integrate human evaluation into your decision workflows.</h2>
-          <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>Submit candidate outputs from your app, model, or pipeline. Vraelis runs the routing, quality filtering, readiness, Decision Packages, webhooks, and exports; you get a structured, audit-ready decision record back, ready to store or route into your own systems.</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Integrate the check into your build and ship loop.</h2>
+          <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>POST the output your app, model, or pipeline generates. Vraelis returns scores, the version to ship, and line-level fixes; run it in CI, in-product, or on a review step, and validate on real people whenever a call is worth confirming.</p>
           <div className="cols-3" style={{ gap: 14, marginBottom: 28 }}>
             {[
-              ["Model & agent evaluation", "Compare responses from your model, prompt, or agent: pairwise preference, quality-filtered."],
-              ["RLHF & preference data", "Collect human preference judgments on response pairs, exportable into your training pipeline."],
-              ["Generative product apps", "Let users pick the best generation in-product, and route the signal back through the API."],
+              ["Check in CI", "POST generated output to /api/v1/check and fail the build on a high-severity flag."],
+              ["In-product checks", "Score and fix output before your app shows it to a user, in one call."],
+              ["Validate the check", "Route the same output to real people and track how often they agree over time."],
             ].map(([t, d]) => (
               <div key={t} className="card"><h3 style={{ fontSize: 16, marginBottom: 6 }}>{t}</h3><p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{d}</p></div>
             ))}

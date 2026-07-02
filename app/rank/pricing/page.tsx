@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FREE_REPORT_URL } from "@/lib/links";
 
-// Pricing leads with the outcome (a report), not a tier ladder. Credits stay the
-// backend unit (1 credit = 1 valid judgment). Recurring plans + enterprise
-// governance live at /enterprise.
+// Pricing leads with the outcome (a check), not a tier ladder. Credits stay the
+// backend unit: 1 credit = 1 AI check, or 1 valid human judgment when you validate.
+// Recurring plans + enterprise governance live at /enterprise.
 
 const CREDIT_RULES: [string, string][] = [
-  ["1 credit = 1 valid judgment", "The unit you spend. What you buy is qualified human signal."],
-  ["Rejected responses: not charged", "Responses filtered for speed, spam, velocity, or low reputation never cost a credit."],
-  ["Held when you launch", "Credits are escrowed, not spent up front."],
-  ["Unused credits refunded", "If a run doesn't fill, the remaining credits return to your account."],
+  ["1 credit = 1 check", "The unit you spend. One credit runs one AI check. Validating on real people spends 1 credit per valid judgment."],
+  ["Filtered responses: not charged", "On human validation, responses filtered for speed, spam, velocity, or low reputation never cost a credit."],
+  ["Validation is escrowed", "Credits for a human validation are held when you launch it, not spent up front."],
+  ["Unused credits refunded", "If a validation run doesn't fill, the remaining credits return to your account."],
 ];
 
 type TeamPricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
@@ -37,8 +36,8 @@ export default function PricingPage() {
         <div className="glow glow--soft glow--bleed" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Simple pricing. <span className="em">Start with a free report</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Send us 2 to 3 versions of what your app generates. Real people judge which one to ship, and you get a clear report on the winner, and why. Your <strong style={{ color: "var(--fg-1)" }}>first report is free</strong>, then <strong style={{ color: "var(--fg-1)" }}>$99 per report</strong>. Under the hood the unit is credits: <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment</strong>, and you&apos;re never charged for the responses we filter out.</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Simple pricing. <span className="em">Start with free credits</span>.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>New accounts start with <strong style={{ color: "var(--fg-1)" }}>free credits</strong>, so your first checks are on us. After that it&apos;s <strong style={{ color: "var(--fg-1)" }}>1 credit per check</strong>, and <strong style={{ color: "var(--fg-1)" }}>$1 buys 10 credits</strong> that never expire. Want humans to weigh in? A validation spends 1 credit per valid judgment, and you&apos;re never charged for the responses we filter out.</p>
         </div>
       </section>
 
@@ -47,29 +46,29 @@ export default function PricingPage() {
           <div className="tile-grid cols-2">
             {/* Free report */}
             <div className="price">
-              <div className="price__name">Free report</div>
+              <div className="price__name">Free to start</div>
               <div className="price__amt">$0</div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>Your first QA report</div>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See exactly what you get before you pay a cent.</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>Free signup credits</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Run real checks before you pay a cent.</div>
               <ul className="price__feat">
-                <li>2 to 3 versions judged by real people</li>
-                <li>Recommendation + why people judged that way</li>
-                <li>Quality-filtered: the noise removed, not charged</li>
+                <li>Instant checks on your AI output</li>
+                <li>Scores, the version to ship, and line-level fixes</li>
+                <li>Validate on real people when you want to</li>
               </ul>
-              <a className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href={FREE_REPORT_URL}>Get a free QA report</a>
+              <a className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/checks/new">Check your AI output</a>
             </div>
-            {/* $99 report */}
+            {/* pay as you go */}
             <div className="price price--hot">
-              <div className="price__name">QA report</div>
-              <div className="price__amt">$99<small>/report</small></div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>After your free first one</div>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>A full report per decision, whenever you&apos;re shipping something new.</div>
+              <div className="price__name">Pay as you go</div>
+              <div className="price__amt">$1<small>/10 credits</small></div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>1 credit per check</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Top up whenever. Credits never expire, and human validation is there when the call matters.</div>
               <ul className="price__feat">
-                <li>Everything in the free report</li>
-                <li>Full structured Decision Package</li>
-                <li>Export the result as JSON or CSV</li>
+                <li>1 credit per AI check</li>
+                <li>Human validation: 1 credit per valid judgment</li>
+                <li>Structured results by API, export as JSON or CSV</li>
               </ul>
-              <a className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href={FREE_REPORT_URL}>Start with a free report</a>
+              <a className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/checks/new">Check your AI output</a>
             </div>
           </div>
 
@@ -103,7 +102,7 @@ export default function PricingPage() {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
               <div style={{ maxWidth: 560 }}>
                 <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Working with a team?</div>
-                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team seats are for internal collaborators: Admins, Editors, and Viewers who run evaluations and read analytics with you. <strong style={{ color: "var(--fg-1)" }}>Client viewers are free</strong>: invite clients to read client-safe decision reports without a paid seat.</p>
+                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team seats are for internal collaborators: Admins, Editors, and Viewers who run checks and read analytics with you. <strong style={{ color: "var(--fg-1)" }}>Client viewers are free</strong>: invite clients to read client-safe decision reports without a paid seat.</p>
               </div>
               {team?.monthly && (
                 <div style={{ textAlign: "right", minWidth: 180 }}>
@@ -117,7 +116,7 @@ export default function PricingPage() {
 
           {/* plans + enterprise moved to /enterprise */}
           <div className="card" style={{ marginTop: 18, textAlign: "center" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Running evaluations at scale, or governing them across an org?</div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Running checks at scale, or governing them across an org?</div>
             <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Recurring plans with monthly credits and API access, plus organization governance, verified domains, OIDC single sign-on, and audit export, live on the <a href="/enterprise" style={{ color: "var(--acc-deep)" }}>Enterprise &amp; security</a> page.</p>
           </div>
 

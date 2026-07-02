@@ -2,15 +2,15 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
   title: "How it works",
-  description: "Human QA for AI output. Submit the versions your app generates, real people judge which one wins, and you get a clear decision report.",
+  description: "How the AI output check works: paste your output, get per-criterion scores, the version to ship, and the exact lines to fix. Calibrated on real people.",
   path: "/how-it-works",
 });
 
 const STEPS: [string, string, string][] = [
-  ["1", "Submit candidates", "Upload your options or create an evaluation by API. Choose how many valid judgments you want."],
-  ["2", "Collect human signal", "Real people choose, rank, or explain their preference. Low-quality responses are filtered out."],
-  ["3", "Get the decision report", "See the recommended output, preference breakdown, reasoning, and directional confidence."],
-  ["4", "Use the result", "Share the report, export structured data, or receive a webhook."],
+  ["1", "Paste your output", "One or more versions of what your app generates, in the app or by API. Pick the output type so the rubric fits."],
+  ["2", "Get the instant check", "Per-criterion scores, the version to ship, and line-level flags on the exact spans that read as dismissive, risky, or off."],
+  ["3", "Apply the fixes", "Each flag comes with a concrete suggested rewrite. Ship the version that scores best, already fixed."],
+  ["4", "Validate on real people", "Optional. Route the same output to human evaluation to confirm the call, and we track how often people agree with the check."],
 ];
 
 export default function HowItWorks() {
@@ -21,7 +21,7 @@ export default function HowItWorks() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(20px, 3vw, 32px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>How it works</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.4vw, 3.4rem)", marginBottom: 14 }}>How Vraelis works</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Submit candidates, collect valid judgments, and get a decision report.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Paste your output, get an instant check with the lines to fix, and ship the version to ship. Validate on real people whenever you want to be sure.</p>
         </div>
       </section>
 
@@ -44,10 +44,10 @@ export default function HowItWorks() {
       <section className="section cta-band" style={{ borderBottom: "none" }}>
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 640, textAlign: "center" }}>
-          <h2 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)", marginBottom: 16 }}>Ready to evaluate?</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>Run your first evaluation free with 25 credits.</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)", marginBottom: 16 }}>Ready to check your output?</h2>
+          <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>New accounts start with free credits, so your first checks are on us.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start a test</a>
+            <a href="/app/checks/new" className="btn btn--lg">Check your AI output</a>
             <a href="/pricing" className="btn btn--ghost btn--lg">View pricing</a>
             <a href="/developers" className="btn btn--ghost btn--lg">Developers</a>
           </div>

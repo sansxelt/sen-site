@@ -6,12 +6,12 @@ import { PLAN_CATALOG } from "@/lib/v-plans";
 // page hosts the governance/SSO/audit content and the recurring plan ladder.
 export const metadata = ogMeta({
   title: "Enterprise & security",
-  description: "Govern human QA across your organization: roles and workspaces, verified domains, OIDC single sign-on, audit-ready decision records, and sanitized exports. Honest about what's live: no SOC 2, SAML in preview, SCIM planned.",
+  description: "Govern AI output checks across your organization: roles and workspaces, verified domains, OIDC single sign-on, audit-ready decision records, and sanitized exports. Honest about what's live: no SOC 2, SAML in preview, SCIM planned.",
   path: "/enterprise",
 });
 
 const PROTECTS: [string, string][] = [
-  ["Decision workflows", "Every evaluation runs through a governed pipeline (qualified signal, readiness, confirmation rounds, and a Decision Package), not an open comment box."],
+  ["Check workflows", "Checks and human validations run through a governed pipeline with an audit trail, not an open comment box."],
   ["Organization access", "Organizations sit above workspaces with roles, admins, and membership governance, so access maps to who should have it."],
   ["Client-safe reports", "Share a read-only decision report by token; private controls, costs, internals, and participant data never travel with it."],
   ["SSO & domain-based access", "OIDC single sign-on and verified-domain provisioning bind access to identities your organization already controls."],
@@ -29,7 +29,7 @@ const CONTROLS: string[] = [
 // Recurring plans, moved here from /pricing. Rendered informationally (prices from
 // the catalog); the front door is the free QA report, so these are for teams that
 // want standing API access and monthly credits.
-const ENTERPRISE_PERKS = ["Unlimited evaluations", "Organization governance + audit export", "OIDC SSO + verified domains", "Client-safe sharing + billing admins"];
+const ENTERPRISE_PERKS = ["Unlimited checks", "Organization governance + audit export", "OIDC SSO + verified domains", "Client-safe sharing + billing admins"];
 
 const Section = ({ children, bg }: { children: React.ReactNode; bg?: boolean }) => (
   <section className="section" style={bg ? { background: "var(--bg-2)" } : undefined}>
@@ -44,10 +44,10 @@ export default function EnterprisePage() {
       <section className="section" style={{ borderBottom: "1px solid var(--line-1)" }}>
         <div className="wrap" style={{ maxWidth: 820, textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Enterprise &amp; security</p>
-          <h1 className="display" style={{ fontSize: "clamp(2rem, 4.4vw, 3rem)", marginBottom: 16 }}>Govern human QA across your organization.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 26px", maxWidth: 680 }}>Vraelis is human QA for AI output. Enterprise teams collect qualified human signal, govern who has access, verify organization domains, and produce audit-ready decision records before they ship. It&apos;s decision infrastructure, not a voting widget.</p>
+          <h1 className="display" style={{ fontSize: "clamp(2rem, 4.4vw, 3rem)", marginBottom: 16 }}>Govern AI output checks across your organization.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 26px", maxWidth: 680 }}>Vraelis is automated QA for AI output, calibrated on real people. Enterprise teams check what their apps generate, govern who has access, verify organization domains, and keep audit-ready records of every check and validation. It&apos;s decision infrastructure, not a voting widget.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start an evaluation</a>
+            <a href="/app/checks/new" className="btn btn--lg">Check your AI output</a>
             <a href="/developers" className="btn btn--ghost btn--lg">View developer platform</a>
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function EnterprisePage() {
         <div className="sec-head" style={{ marginBottom: 24 }}>
           <p className="eyebrow">Plans</p>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Recurring plans for standing access.</h2>
-          <p>The front door is the free QA report. These recurring plans are for teams that want monthly credits and standing API access. Some tiers are still rolling out, so talk to us and we&apos;ll set you up.</p>
+          <p>The front door is the free check. These recurring plans are for teams that want monthly credits and standing API access. Some tiers are still rolling out, so talk to us and we&apos;ll set you up.</p>
         </div>
         <div className="tile-grid cols-4">
           {PLAN_CATALOG.map((p) => (
@@ -160,7 +160,7 @@ export default function EnterprisePage() {
         </div>
         <div className="card" style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", background: "var(--bg-1)", borderRadius: "var(--r-xl)" }}>
           <div style={{ maxWidth: 640 }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Enterprise: governed AI evaluation at org scale</div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Enterprise: governed AI output checks at org scale</div>
             <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>For organizations that need governance, SSO, and audit across many teams. {ENTERPRISE_PERKS.join(", ")}.</p>
           </div>
           <a className="btn btn--lg" style={{ flex: "none" }} href="/contact">Contact sales</a>
@@ -185,7 +185,7 @@ export default function EnterprisePage() {
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 18 }}>Defensible decisions, before you ship.</h2>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start an evaluation</a>
+            <a href="/app/checks/new" className="btn btn--lg">Check your AI output</a>
             <a href="/developers" className="btn btn--ghost btn--lg">View developer platform</a>
             <a href="/contact" className="btn btn--ghost btn--lg">Contact us about enterprise SSO</a>
           </div>
