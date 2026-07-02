@@ -1,56 +1,53 @@
 // Evaluation Intelligence — a PURE derivation over an existing report's results.
-// It invents no statistics and hallucinates no reasons: every output is computed
-// from the counts, margins, and comments already collected. Used by both the
-// report UI (owner + public) and the JSON export, so they always agree.
+// It invents no statistics and hallucinates no reasons. The headline confidence is
+// a real POSTERIOR probability (Beta-binomial for 2 options, Dirichlet Monte Carlo
+// for k options) that the recommended option is genuinely the most-preferred, and
+// the Strong/Moderate/Tentative label is DERIVED from that probability so it can
+// never overstate it. Reputation weighting can shift which option is recommended,
+// but precision is driven by the Kish effective sample size (n_eff ≤ raw N), so
+// weighting can never inflate confidence. Used by both the report UI and the JSON
+// export, so they always agree.
 
 import { OPTION_LETTERS } from "./v-db";
+import {
+  betaBinom, dirichletTopProbs, observedAgreement, recommendedSampleSize,
+  confidenceLabelFromProb, wilsonLowerBound, type ConfidenceLabel,
+} from "./v-stats";
 
-type RankedRow = { id: string; position: number; label: string | null; votes: number; pct: number };
+export { wilsonLowerBound } from "./v-stats";
+export type { ConfidenceLabel } from "./v-stats";
+
+// `weighted` is the reputation-weighted count (present on new reports); falls back
+// to raw `votes` for older reports and unweighted callers.
+type RankedRow = { id: string; position: number; label: string | null; votes: number; pct: number; weighted?: number };
 export type IntelInput = {
   total?: number;
   filtered?: number;
+  effective_n?: number;              // Kish effective sample size (<= total)
   winner_option_id?: string | null;
   ranked?: RankedRow[];
   comments?: { option_id: string; reason: string }[];
 };
 
-export type ConfidenceLabel = "Strong" | "Moderate" | "Tentative" | "None";
 export type SignalLabel = "Clean signal" | "Limited signal" | "Needs more judgments";
 
-// Convergence — the "signal engine" measure. Not "who got the most votes", but
-// whether the leading option's share is distinguishable from chance given the
-// sample. Chance = 1/optionCount (a 2-way coin-flip is 50%, a 4-way is 25%).
-// We take the winner's Wilson 95% score-interval LOWER bound and ask how far it
-// clears the chance line. Wilson punishes small samples, so a lucky 7/8 can't
-// mint "converged". This is honest statistics on judgments already collected —
-// never a claim any single judge is "correct".
+// Convergence — the secondary "signal engine" measure. Not "who got the most
+// votes", but whether the leading option's share is distinguishable from chance
+// (1/optionCount) given the sample, via the Wilson 95% lower bound. Honest
+// statistics on judgments already collected; never a claim any judge is "correct".
 export type ConvergenceState = "converged" | "leaning" | "split" | "insufficient";
-
 export type Convergence = {
   state: ConvergenceState;
-  winnerSharePct: number | null;   // observed leading share (0-100)
-  lowerBoundPct: number | null;    // conservative 95% lower bound on that share
-  chancePct: number | null;        // 1/optionCount as a percent
-  clearsChanceByPts: number | null;// lowerBound - chance, in points (can be negative)
-  label: string;                   // buyer-facing one-liner (signal-engine language)
+  winnerSharePct: number | null;
+  lowerBoundPct: number | null;
+  chancePct: number | null;
+  clearsChanceByPts: number | null;
+  label: string;
 };
 
-// Wilson score interval lower bound for a binomial proportion (z=1.96 → 95%).
-export function wilsonLowerBound(successes: number, n: number, z = 1.96): number {
-  if (n <= 0) return 0;
-  const p = successes / n;
-  const z2 = z * z;
-  const denom = 1 + z2 / n;
-  const center = p + z2 / (2 * n);
-  const half = z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n);
-  return Math.max(0, (center - half) / denom);
-}
+const CONVERGE_MIN_N = 15;
+const CONVERGE_CLEAR_PTS = 15;
 
-const CONVERGE_MIN_N = 15;       // below this we won't call convergence honestly
-const CONVERGE_CLEAR_PTS = 15;   // lower bound must clear chance by this to "converge"
-
-// Pure derivation: given the winner's vote count, the valid total, and how many
-// options were on the table, classify how converged the decision signal is.
 export function convergence(winnerVotes: number, total: number, optionCount: number): Convergence {
   if (total < 1 || optionCount < 2) {
     return { state: "insufficient", winnerSharePct: null, lowerBoundPct: null, chancePct: null, clearsChanceByPts: null, label: "Not enough signal yet to tell whether the result converged." };
@@ -66,39 +63,47 @@ export function convergence(winnerVotes: number, total: number, optionCount: num
   let label: string;
   if (total < CONVERGE_MIN_N) {
     state = "insufficient";
-    label = `Too few responses (${total}) to tell converged from split — collect more for a firm read.`;
+    label = `Too few responses (${total}) to tell converged from split. Collect more for a firm read.`;
   } else if (lb <= chance) {
     state = "split";
-    label = `The signal is split — the lead can't be told apart from an even distribution at this sample. Treat it as too close to call.`;
+    label = `The signal is split: the lead can't be told apart from an even distribution at this sample. Treat it as too close to call.`;
   } else if (clearPts >= CONVERGE_CLEAR_PTS) {
     state = "converged";
-    label = `The signal converged — attentive responses clustered on one option well beyond an even split.`;
+    label = `The signal converged: attentive responses clustered on one option well beyond an even split.`;
   } else {
     state = "leaning";
-    label = `The signal leans one way but hasn't fully converged — a confirmation round would firm it up.`;
+    label = `The signal leans one way but hasn't fully converged. A confirmation round would firm it up.`;
   }
   return { state, winnerSharePct, lowerBoundPct, chancePct, clearsChanceByPts: clearPts, label };
 }
 
 export type Intelligence = {
   inconclusive: boolean;
-  recommendedOption: string | null;   // letter, e.g. "B"
+  recommendedOption: string | null;
   recommendedLabel: string | null;
   totalValid: number;
   filtered: number;
-  filteredRate: number;                // percent (0-100)
-  marginPts: number | null;            // lead over runner-up, in percentage points
-  confidenceLabel: ConfidenceLabel;    // directional only — never a statistical claim
+  filteredRate: number;
+  marginPts: number | null;            // raw lead over runner-up, in points (display)
+  confidenceLabel: ConfidenceLabel;    // DERIVED from winProbability
   signalLabel: SignalLabel;
-  convergence: Convergence;            // did the signal converge or split (vs chance)?
+  convergence: Convergence;
   decisionSummary: string;
   marginText: string;
   signalText: string;
-  action: string;                      // what to ship / what to improve
+  action: string;
+  // ── real statistics ──
+  winProbability: number | null;       // posterior P(recommended option is truly #1), 0-1
+  winProbabilityPct: number | null;
+  winnerShareCI: [number, number] | null;   // 95% credible interval on winner's share (pct)
+  marginCI: [number, number] | null;        // 95% CI on winner's margin over best rival (pct)
+  effectiveN: number;                  // Kish effective sample size (<= totalValid)
+  consensus: number;                   // P(two random raters agree) = sum of squared shares, 0-1
+  consensusPct: number;
+  recommendedAdditional: number;       // more judgments to reach a confident call (fixed-N power)
 };
 
 const DISCLAIMER = "Directional, based on valid judgments collected. Not a guarantee of sales, clicks, conversions, or revenue.";
-
 export function intelligenceDisclaimer(): string { return DISCLAIMER; }
 
 export function evaluationIntelligence(r: IntelInput, votesTarget = 0): Intelligence {
@@ -106,63 +111,97 @@ export function evaluationIntelligence(r: IntelInput, votesTarget = 0): Intellig
   const filtered = r.filtered ?? 0;
   const denom = total + filtered;
   const filteredRate = denom ? Math.round((filtered / denom) * 100) : 0;
-  const ranked = [...(r.ranked ?? [])].sort((a, b) => b.votes - a.votes);
+
+  // Rank by weighted count when present (weighting can shift the recommendation);
+  // fall back to raw votes. Raw votes/pct are kept for display.
+  const rows = [...(r.ranked ?? [])];
+  const wv = (row: RankedRow) => (row.weighted != null ? row.weighted : row.votes);
+  const ranked = rows.sort((a, b) => wv(b) - wv(a) || b.votes - a.votes);
   const top = ranked[0];
   const runner = ranked[1];
   const letter = (pos: number) => OPTION_LETTERS[pos] ?? "?";
-  // A recommendation requires a flagged winner AND a real lead over the runner-up.
-  const hasWinner = !!r.winner_option_id && !!top && (!runner || top.votes > runner.votes);
-  // Margin from raw votes (not pre-rounded pcts): a 100-vs-99 win must not round to a 0pt
-  // margin. Falls back to pct only if vote counts are unavailable.
-  const marginPts = !hasWinner ? null
-    : !runner ? (top!.pct ?? 0)
-    : total > 0 ? Math.max(0, Math.round(((top!.votes - runner.votes) / total) * 100))
-    : Math.max(0, (top!.pct ?? 0) - (runner.pct ?? 0));
+  const hasWinner = !!r.winner_option_id && !!top && (!runner || wv(top) > wv(runner));
 
-  // Signal quality — purely about sample size and how much was filtered.
+  // Effective sample size (Kish, <= total). Falls back to raw total for old reports.
+  const effN = r.effective_n != null ? r.effective_n : total;
+  const effRounded = Math.round(effN);
+  const wsum = ranked.reduce((s, row) => s + wv(row), 0);
+  const shareOf = (row?: RankedRow) => (row && wsum > 0 ? wv(row) / wsum : 0);
+  const consensus = wsum > 0 ? observedAgreement(ranked.map((row) => wv(row) / wsum)) : 0;
+
+  // Raw margin (display): lead over runner-up in points, from raw votes.
+  const marginPts = !hasWinner ? null
+    : total > 0 ? Math.max(0, Math.round(((top!.votes - (runner?.votes ?? 0)) / total) * 100))
+    : (top!.pct ?? 0);
+
+  // ── Real posterior confidence ──
+  let winProbability: number | null = null;
+  let winnerShareCI: [number, number] | null = null;
+  let marginCI: [number, number] | null = null;
+  let recommendedAdditional = 0;
+  if (hasWinner && total >= 1 && effN >= 1) {
+    const k = ranked.length;
+    const pWin = shareOf(top);
+    if (k <= 2) {
+      const x = pWin * effN;                       // effective winner "successes"
+      const bb = betaBinom(x, effN);
+      winProbability = bb.probAboveHalf;           // P(winner's true share > 0.5)
+      winnerShareCI = [Math.round(bb.lo * 100), Math.round(bb.hi * 100)];
+      marginCI = [Math.round((2 * bb.lo - 1) * 100), Math.round((2 * bb.hi - 1) * 100)];
+    } else {
+      const seed = ranked.reduce((s, row, i) => (Math.imul(s, 31) + ((row.votes | 0) * (i + 3))) >>> 0, (total + k) >>> 0);
+      const eff = ranked.map((row) => shareOf(row) * effN);
+      const dir = dirichletTopProbs(eff, { draws: 10000, seed });
+      winProbability = dir.pWinnerIsTop;           // P(winner has the max true share)
+      winnerShareCI = [Math.round(dir.winnerShareCI[0] * 100), Math.round(dir.winnerShareCI[1] * 100)];
+      marginCI = [Math.round(dir.topTwoMarginCI[0] * 100), Math.round(dir.topTwoMarginCI[1] * 100)];
+    }
+    const need = recommendedSampleSize(pWin, 0.10);
+    recommendedAdditional = Math.max(0, Math.ceil(need - effN));
+  }
+  const winProbabilityPct = winProbability != null ? Math.round(winProbability * 100) : null;
+  const confidenceLabel = confidenceLabelFromProb(winProbability);
+
+  // Signal quality — from the EFFECTIVE sample size and how much was filtered.
   let signalLabel: SignalLabel;
   let signalText: string;
-  if (total === 0) { signalLabel = "Needs more judgments"; signalText = "No valid judgments have been collected yet."; }
-  else if (total < 15) { signalLabel = "Limited signal"; signalText = `Only ${total} valid judgment${total === 1 ? "" : "s"} so far${votesTarget ? ` of ${votesTarget} targeted` : ""}. Collect more for a firmer read.`; }
-  else { signalLabel = "Clean signal"; signalText = `${total} valid judgments collected, ${filteredRate}% filtered for quality.`; }
-
-  // Directional confidence — a label, never a statistical guarantee.
-  let confidenceLabel: ConfidenceLabel = "None";
-  if (hasWinner && marginPts != null) {
-    if (marginPts >= 20 && total >= 30) confidenceLabel = "Strong";
-    else if (marginPts >= 10 && total >= 15) confidenceLabel = "Moderate";
-    else confidenceLabel = "Tentative";
+  if (total === 0) {
+    signalLabel = "Needs more judgments"; signalText = "No valid judgments have been collected yet.";
+  } else if (effN < 15) {
+    signalLabel = "Limited signal";
+    signalText = `Effective sample of ${effRounded} judgment${effRounded === 1 ? "" : "s"}${effRounded < total ? ` (from ${total} valid, reputation-weighted)` : ""}${votesTarget ? ` of ${votesTarget} targeted` : ""}. Collect more for a firmer read.`;
+  } else {
+    signalLabel = "Clean signal";
+    signalText = `${total} valid judgments${effRounded < total ? ` (effective ${effRounded} after weighting)` : ""}, ${filteredRate}% filtered for quality.`;
   }
 
-  // Convergence — did the leading share beat chance (1/optionCount) with
-  // confidence? Derived from the same ranked splits, no new data. optionCount is
-  // the number of options on the table; the winner is the top-ranked one.
   const optionCount = ranked.length;
   const conv = convergence(top?.votes ?? 0, total, optionCount);
 
   let decisionSummary: string;
   let marginText: string;
   let action: string;
+  const moreText = recommendedAdditional > 0 ? ` about ${recommendedAdditional} more judgments` : " a short confirmation round";
 
   if (total === 0) {
     decisionSummary = "No clear recommendation yet. Collect valid judgments to generate a result.";
     marginText = "No judgments collected yet.";
-    action = "Collect valid judgments — there is no recommendation yet.";
+    action = "Collect valid judgments. There is no recommendation yet.";
   } else if (!hasWinner) {
     decisionSummary = "No clear recommendation yet. The top options are too close to call.";
     marginText = "No option led by a clear margin.";
     action = "Collect more judgments to break the tie, or iterate the closest options.";
   } else {
     const L = letter(top!.position);
-    decisionSummary = `Option ${L} is the recommended output, preferred by ${top!.pct}% of valid judgments.`;
-    if ((marginPts ?? 0) >= 20) marginText = `Option ${L} led by ${marginPts} percentage points across ${total} valid judgments — a clear margin.`;
+    decisionSummary = `Option ${L} is the recommended output: a ${winProbabilityPct}% probability it's the true preference, from ${effRounded} effective judgment${effRounded === 1 ? "" : "s"}.`;
+    if ((marginPts ?? 0) >= 20) marginText = `Option ${L} led by ${marginPts} percentage points across ${total} valid judgments, a clear margin.`;
     else if ((marginPts ?? 0) >= 10) marginText = `Option ${L} led by ${marginPts} percentage points across ${total} valid judgments.`;
-    else marginText = `Option ${L} led by only ${marginPts} percentage point${marginPts === 1 ? "" : "s"}. The result is close — treat it as directional, not definitive.`;
+    else marginText = `Option ${L} led by only ${marginPts} percentage point${marginPts === 1 ? "" : "s"}. The result is close: treat it as directional, not definitive.`;
 
-    if (total < 15) action = `Option ${L} is ahead, but the sample is small. Collect more judgments before committing budget.`;
+    if (effN < 15) action = `Option ${L} is ahead, but the effective sample is small. Collect${moreText} before committing budget.`;
     else if (confidenceLabel === "Strong") action = `Ship Option ${L}.`;
-    else if (confidenceLabel === "Moderate") action = `Option ${L} is ahead. A short confirmation round will firm it up before a big spend.`;
-    else action = `Option ${L} leads narrowly. Collect more judgments, or iterate the runner-up, before deciding.`;
+    else if (confidenceLabel === "Moderate") action = `Option ${L} is ahead (${winProbabilityPct}% probability it's the true preference). A confirmation round of${moreText} firms it up before a big spend.`;
+    else action = `Option ${L} leads narrowly (${winProbabilityPct}% probability it's the true preference). Collect${moreText}, or retest the top two, before deciding.`;
   }
 
   return {
@@ -172,12 +211,14 @@ export function evaluationIntelligence(r: IntelInput, votesTarget = 0): Intellig
     totalValid: total, filtered, filteredRate,
     marginPts, confidenceLabel, signalLabel, convergence: conv,
     decisionSummary, marginText, signalText, action,
+    winProbability, winProbabilityPct, winnerShareCI, marginCI,
+    effectiveN: effRounded, consensus, consensusPct: Math.round(consensus * 100), recommendedAdditional,
   };
 }
 
 // Evaluation health — a single trustworthiness state derived from the same real
-// metrics (no new statistics). Order matters: data-quality problems first, then
-// decisiveness, then sufficiency, then readiness. Active evaluations are "Collecting".
+// metrics. Order matters: data-quality problems first, then decisiveness, then
+// sufficiency, then readiness. Active evaluations are "Collecting".
 export type HealthState = "Collecting" | "Ready to decide" | "Needs more judgments" | "Noisy signal" | "Too close to call" | "Low-quality traffic";
 
 export function evaluationHealth(status: string, intel: Intelligence): HealthState {
@@ -185,15 +226,12 @@ export function evaluationHealth(status: string, intel: Intelligence): HealthSta
   if (intel.totalValid > 0 && intel.filteredRate >= 40) return "Low-quality traffic";
   if (intel.totalValid > 0 && intel.filteredRate >= 25) return "Noisy signal";
   if (intel.inconclusive) return "Too close to call";
-  // A split signal is a coin-flip even if one option nominally leads — the signal
-  // engine calls that out rather than rubber-stamping the nominal winner.
   if (intel.convergence.state === "split") return "Too close to call";
   if (intel.signalLabel !== "Clean signal") return "Needs more judgments";
   if (intel.confidenceLabel === "Strong" || intel.confidenceLabel === "Moderate") return "Ready to decide";
   return "Needs more judgments";
 }
 
-// Tone for the health badge (maps to the app's accent/money/err palette).
 export function healthTone(h: HealthState): "good" | "warn" | "bad" | "neutral" {
   if (h === "Ready to decide") return "good";
   if (h === "Low-quality traffic") return "bad";

@@ -13,7 +13,7 @@ import { testSourceQuality } from "./v-analytics";
 import { screeningStats } from "./v-screening";
 import { collectionLinkSummaries } from "./v-collection-links";
 
-export const DECISION_PACKAGE_VERSION = "v2";
+export const DECISION_PACKAGE_VERSION = "v3";
 export type PackageScope = "summary" | "standard" | "scale" | "webhook";
 const SITE = "https://vraelis.com";
 
@@ -55,6 +55,9 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
       winner_label: winnerRow ? optById[winnerRow.id]?.label ?? null : null,
       preference_margin: intel?.marginPts ?? null,
       directional_confidence: intel?.confidenceLabel ?? "None",
+      win_probability: intel?.winProbability ?? null,
+      win_probability_pct: intel?.winProbabilityPct ?? null,
+      effective_sample_size: intel?.effectiveN ?? null,
       signal_quality: intel?.signalLabel ?? null,
       evaluation_health: health,
       readiness_label: readiness.label,
@@ -89,6 +92,17 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
       winner_label: winnerRow ? optById[winnerRow.id]?.label ?? null : null,
       preference_margin: intel?.marginPts ?? null,
       directional_confidence: intel?.confidenceLabel ?? "None",
+      // Real posterior statistics (Decision Package v3). The confidence label above
+      // is DERIVED from win_probability; the interval + effective sample size make
+      // the honesty auditable. Reputation weighting can shift the recommendation but
+      // never inflates confidence (precision uses the Kish effective sample size).
+      win_probability: intel?.winProbability ?? null,
+      win_probability_pct: intel?.winProbabilityPct ?? null,
+      win_probability_ci: intel?.winnerShareCI ?? null,
+      top_two_margin_ci: intel?.marginCI ?? null,
+      effective_sample_size: intel?.effectiveN ?? null,
+      consensus: intel?.consensus ?? null,
+      recommended_additional_judgments: intel?.recommendedAdditional ?? null,
       signal_quality: intel?.signalLabel ?? null,
       // Signal convergence — the "did it converge or split" measure, with the
       // conservative (95% lower-bound) share and the chance line it's measured against.

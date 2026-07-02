@@ -5,6 +5,7 @@ import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { refund, hold, grant, rewardsToday } from "./v-credits";
 import { logEvent } from "./v-events";
 import type { ReportAnalysis } from "./v-ai";
+import { kishEffectiveN, reputationWeight } from "./v-stats";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 
@@ -276,27 +277,52 @@ export async function completeTest(testId: string): Promise<void> {
   const test = trow as unknown as VTest;
   const { data: opts } = await s.from("v_test_options" as never).select("*").eq("test_id", testId).order("position");
   const options = (opts as unknown as VOption[]) ?? [];
-  const { data: judg } = await s.from("v_judgments" as never).select("option_id,reason").eq("test_id", testId).eq("status", "valid");
-  const judgments = (judg as unknown as { option_id: string; reason: string | null }[]) ?? [];
-  // RPC path: `total`/`filtered` are the locked, authoritative counts — do NOT
+  const { data: judg } = await s.from("v_judgments" as never).select("voter_id,option_id,reason").eq("test_id", testId).eq("status", "valid");
+  const judgments = (judg as unknown as { voter_id: string; option_id: string; reason: string | null }[]) ?? [];
+  // RPC path: `total`/`filtered` are the locked, authoritative counts. Do NOT
   // recompute from this (unlocked) read. Fallback path: derive them here as before.
   if (total === null) {
     total = judgments.length;
     const { count: filteredCount } = await s.from("v_judgments" as never).select("*", { count: "exact", head: true }).eq("test_id", testId).eq("status", "rejected");
     filtered = filteredCount ?? 0;
   }
-  const tally: Record<string, number> = {};
-  for (const o of options) tally[o.id] = 0;
-  for (const j of judgments) tally[j.option_id] = (tally[j.option_id] || 0) + 1;
+
+  // Reputation-weighted aggregation. Weight each valid judgment by the voter's
+  // shrunk, bounded reliability (weighting nudges, never swings); the Kish
+  // effective sample size (<= raw total) keeps weighting from inflating confidence.
+  // Degrades to raw counts when reputation data is absent (all weights = 1).
+  const voterIds = [...new Set(judgments.map((j) => j.voter_id))].filter(Boolean);
+  const repByVoter: Record<string, { valid: number; rejected: number }> = {};
+  if (voterIds.length) {
+    const { data: reps } = await s.from("v_voter_rep" as never).select("voter_id,valid,rejected").in("voter_id", voterIds);
+    for (const rp of (reps as unknown as { voter_id: string; valid: number; rejected: number }[]) ?? []) repByVoter[rp.voter_id] = { valid: rp.valid, rejected: rp.rejected };
+  }
+  let relSum = 0, relN = 0;
+  for (const id of voterIds) { const rp = repByVoter[id]; const seen = rp ? rp.valid + rp.rejected : 0; if (seen > 0) { relSum += rp!.valid / seen; relN++; } }
+  const poolMean = relN > 0 ? relSum / relN : 0.9;
+
+  const rawTally: Record<string, number> = {};
+  const wTally: Record<string, number> = {};
+  for (const o of options) { rawTally[o.id] = 0; wTally[o.id] = 0; }
+  const weights: number[] = [];
+  for (const j of judgments) {
+    const rp = repByVoter[j.voter_id];
+    const w = reputationWeight(rp?.valid ?? 0, rp?.rejected ?? 0, poolMean);
+    weights.push(w);
+    rawTally[j.option_id] = (rawTally[j.option_id] || 0) + 1;
+    wTally[j.option_id] = (wTally[j.option_id] || 0) + w;
+  }
+  const effectiveN = Math.round(kishEffectiveN(weights));
   const ranked = options
-    .map((o) => ({ id: o.id, position: o.position, label: o.label, votes: tally[o.id] || 0, pct: total ? Math.round(((tally[o.id] || 0) / total) * 100) : 0 }))
-    .sort((a, b) => b.votes - a.votes);
+    .map((o) => ({ id: o.id, position: o.position, label: o.label, votes: rawTally[o.id] || 0, pct: total ? Math.round(((rawTally[o.id] || 0) / total) * 100) : 0, weighted: Math.round((wTally[o.id] || 0) * 100) / 100 }))
+    .sort((a, b) => b.weighted - a.weighted || b.votes - a.votes);
   const comments = judgments.filter((j) => j.reason && j.reason.trim()).map((j) => ({ option_id: j.option_id, reason: j.reason as string })).slice(0, 40);
 
-  // Only call a winner with real signal AND a clear lead — never fabricate an
-  // "Option A — 0%" on an empty close, never silently break a tie.
+  // Winner by weighted count (reputation weighting can shift the recommendation).
+  // Never fabricate an "Option A, 0%" on an empty close; never silently break a tie.
+  // The refund below stays on the RAW valid `total` — money is never weighted.
   const top = ranked[0], runnerUp = ranked[1];
-  const decisive = total >= 1 && top && (!runnerUp || top.votes > runnerUp.votes);
+  const decisive = total >= 1 && top && (!runnerUp || top.weighted > runnerUp.weighted);
   let winnerId: string | null = null;
   let recommendation: string;
   if (total === 0) {
@@ -305,9 +331,9 @@ export async function completeTest(testId: string): Promise<void> {
     recommendation = `It's a tie at the top (${top.pct}%). Collect more judgments to break it.`;
   } else {
     winnerId = top.id;
-    recommendation = `Option ${LETTERS[top.position] ?? "?"} won with ${top.pct}% of ${total} judgment${total === 1 ? "" : "s"} — go with it.`;
+    recommendation = `Option ${LETTERS[top.position] ?? "?"} won with ${top.pct}% of ${total} judgment${total === 1 ? "" : "s"}. Go with it.`;
   }
-  const results = { total, filtered, ranked, winner_option_id: winnerId, comments, recommendation };
+  const results = { total, filtered, ranked, winner_option_id: winnerId, comments, recommendation, effective_n: effectiveN };
   await s.from("v_reports" as never).upsert({ test_id: testId, winner_option_id: winnerId, results } as never, { onConflict: "test_id" } as never);
   const unfilled = Math.max(0, test.votes_target - total);
   if (unfilled > 0) await refund(test.user_id, testId, unfilled);
