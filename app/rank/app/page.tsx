@@ -108,6 +108,16 @@ export default async function Dashboard() {
         </div>
       </div>
 
+      {/* Primary action: the AI Output Check (product pivot). Always visible so the
+          checker is reachable straight from the dashboard, empty state or not. */}
+      <a href="/app/checks/new" className="card card--acc" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18 }}>
+        <div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>Check AI output</div>
+          <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2, maxWidth: 520 }}>Paste one or more versions of an AI-generated output and get an instant assessment: per-criterion scores, the version to ship, and the exact lines to fix. 1 credit.</div>
+        </div>
+        <span style={{ fontSize: 13.5, color: "var(--acc-deep)", whiteSpace: "nowrap", fontWeight: 600 }}>Run a check →</span>
+      </a>
+
       {domainAccess.length > 0 && (
         <a href="/app/organization" className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18, background: "var(--bg-2)" }}>
           <div>
