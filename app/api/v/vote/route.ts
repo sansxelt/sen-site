@@ -3,7 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { ensureProfile, recordVote } from "@/lib/v-db";
+import { ensureProfile, recordVote, communityPoolEnabled } from "@/lib/v-db";
 import { assessVote, hashToken, ipFromHeaders } from "@/lib/v-quality";
 import { deriveSource } from "@/lib/v-sources";
 import { screeningQuestionsForTest, evaluateQualification, recordScreeningOutcome } from "@/lib/v-screening";
@@ -17,6 +17,11 @@ export async function POST(req: Request) {
   const email = session?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   await ensureProfile(email, session.user?.name ?? undefined);
+
+  // TRUST GUARD (#5): signed-in "vote to earn" only serves the opt-in community
+  // pool, which is off by default. Refusing here stops anyone farming credits by
+  // voting on (and viewing) another tenant's real content via a guessed test id.
+  if (!communityPoolEnabled()) return NextResponse.json({ error: "pool_disabled" }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const testId = String(body?.testId || "");

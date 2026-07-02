@@ -9,6 +9,7 @@ import { assignTestToProject } from "@/lib/v-projects";
 import { createSandboxEvaluation } from "@/lib/v-sandbox";
 import { evaluationIntelligence } from "@/lib/v-intelligence";
 import { decisionReadiness } from "@/lib/v-readiness";
+import { scanFields, piiMessage } from "@/lib/v-content-policy";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -107,6 +108,11 @@ export async function POST(req: Request) {
   if (opts.some((o: { asset?: string }) => o.asset && o.asset.length > MAX_ASSET_CHARS)) {
     return apiError("validation_error", "An image option exceeds the size limit. Use a public image URL.", 413);
   }
+
+  // TRUST GUARD (#6): text candidates are shown to real evaluators — block
+  // obvious PII (email / phone / SSN / card) before it reaches a person.
+  const pii = scanFields([title, ...opts.map((o: { label?: string }) => o.label)]);
+  if (pii.length) return apiError("validation_error", piiMessage(pii), 422);
 
   // Atomic: quota + balance + create + hold + activate in one transaction.
   const r = await launchTest({ userId, title, category, audience, votesTarget: votes, options: opts, activeLimit: ent.activeTestsPerMonth, maxOptions: ent.maxOptions });

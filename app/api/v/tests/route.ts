@@ -8,6 +8,7 @@ import { ensureSignupGrant } from "@/lib/v-credits";
 import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
 import { assignTestToProject } from "@/lib/v-projects";
 import { setTargetAudience } from "@/lib/v-screening";
+import { scanFields, piiMessage } from "@/lib/v-content-policy";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -50,6 +51,11 @@ export async function POST(req: Request) {
   if (opts.some((o: { asset?: string }) => o.asset && o.asset.length > MAX_ASSET_CHARS)) {
     return NextResponse.json({ error: "image_too_large" }, { status: 413 });
   }
+
+  // TRUST GUARD (#6): candidate content is shown to real evaluators — block
+  // obvious PII (email / phone / SSN / card) before it reaches a person.
+  const pii = scanFields([title, context, ...opts.map((o: { label?: string }) => o.label)]);
+  if (pii.length) return NextResponse.json({ error: "pii_detected", message: piiMessage(pii), categories: pii }, { status: 422 });
 
   // Atomic: quota + balance + create + hold + activate in one transaction.
   const r = await launchTest({ userId: email, title, context, category, audience, votesTarget, options: opts, activeLimit: ent.activeTestsPerMonth, maxOptions: ent.maxOptions });

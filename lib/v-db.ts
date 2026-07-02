@@ -163,11 +163,20 @@ export async function updateTestMeta(
   return { ok: true, test: rows[0] };
 }
 
-// Next active test this voter hasn't judged and doesn't own.
+// TRUST GUARD (#5): the cross-tenant "vote to earn" pool is OFF by default. Real
+// customer content must never be surfaced to unrelated people farming credits —
+// paid/real runs are fulfilled only via managed collection links (/embed/vote).
+// Re-enabling requires BOTH this env switch AND opting a run in (visibility='pool'),
+// so customer runs stay private even if the pool is ever turned on.
+export function communityPoolEnabled(): boolean {
+  return process.env.VRAELIS_COMMUNITY_POOL === "on";
+}
+
+// Next active COMMUNITY-POOL test this voter hasn't judged and doesn't own.
 export async function nextTestForVoter(voterId: string): Promise<{ test: VTest; options: VOption[] } | null> {
-  if (!voterId || !isDatabaseConfigured()) return null;
+  if (!voterId || !isDatabaseConfigured() || !communityPoolEnabled()) return null;
   const s = getSupabaseAdminClient();
-  const { data: tests } = await s.from("v_tests" as never).select("*").eq("status", "active").neq("user_id", norm(voterId)).order("created_at", { ascending: true }).limit(25);
+  const { data: tests } = await s.from("v_tests" as never).select("*").eq("status", "active").eq("visibility", "pool").neq("user_id", norm(voterId)).order("created_at", { ascending: true }).limit(25);
   const list = (tests as unknown as VTest[]) ?? [];
   // Fetch this voter's judged test ids once (avoids an N+1 count per candidate).
   const { data: judged } = await s.from("v_judgments" as never).select("test_id").eq("voter_id", norm(voterId));

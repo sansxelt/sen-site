@@ -171,6 +171,7 @@ export default function NewTest() {
       if (res.status === 402) { setError(`Not enough credits. This evaluation needs ${j.needed}. Earn credits by giving feedback in other evaluations, or top up.`); return; }
       if (res.status === 403 && j.error === "plan_limit") { setError(`You've used your plan's ${j.limit} run${j.limit === 1 ? "" : "s"} this month (completed runs count too). Upgrade to run more.`); return; }
       if (res.status === 413) { setError("One of your images is too large. Try smaller or fewer images."); return; }
+      if (res.status === 422 && j.error === "pii_detected") { setError(j.message || "Remove personal data (names, emails, phone numbers) from your candidates before submitting."); return; }
       if (!res.ok) { setError("Couldn't launch the evaluation. Try again."); return; }
       window.location.href = `/app/tests/${j.id}/report?launched=1`;
     } catch { setError("Network error. Try again."); }
@@ -353,6 +354,9 @@ export default function NewTest() {
                 ))}
               </div>
             </div>
+            <p style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.55, margin: 0 }}>
+              Real people read what you submit. Don’t include personal data — names, emails, phone numbers, or anything that identifies your users.
+            </p>
             {error && <p style={{ color: "var(--err)", fontSize: 13 }}>{error}</p>}
             <button onClick={submit} disabled={busy || uploading > 0 || !ready} className="btn btn--lg" style={{ justifyContent: "center", opacity: busy || uploading > 0 || !ready ? 0.55 : 1 }}>
               {busy ? "Launching…" : uploading > 0 ? "Uploading…" : <>Launch test, {votes} credits</>}
