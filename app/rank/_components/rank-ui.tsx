@@ -1,6 +1,6 @@
 "use client";
 
-// Vraelis chrome — public nav/footer for marketing pages, and a real sidebar
+// Vraelis chrome: public nav/footer for marketing pages, and a real sidebar
 // shell for the app so the product feels like one connected SaaS surface.
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
@@ -117,7 +117,7 @@ function Footer() {
       <div className="wrap foot-grid" style={{ padding: "clamp(44px, 5vw, 68px) var(--gutter)" }}>
         <div>
           <Brand href="/" />
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 260, marginTop: 14 }}>A human evaluation layer for creative and AI outputs.</p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 260, marginTop: 14 }}>Human QA for AI output.</p>
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
             <a href="https://instagram.com/usevraelis" target="_blank" rel="noreferrer" aria-label="Vraelis on Instagram" style={{ width: 34, height: 34, borderRadius: 9, border: "1px solid var(--line-2)", background: "var(--bg-1)", display: "grid", placeItems: "center", color: "var(--fg-3)", textDecoration: "none" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="2" width="20" height="20" rx="5.5" /><circle cx="12" cy="12" r="4.2" /><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" /></svg>
@@ -130,7 +130,7 @@ function Footer() {
         <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/vote", "Evaluate & Earn"], ["/app/new", "Test your AI content"]]} />
         <Col title="Developers" links={[["/developers", "Developers"], ["/app/api-keys", "API keys"], ["/app/api-keys", "Webhooks"], ["/app/data", "Data exports"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/app/account", "Account"], ["/app/billing", "Billing"], ["/signin", "Sign in"]]} />
-        <Col title="Legal" links={[["/security", "Security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/data-rights", "Data rights"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
+        <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/data-rights", "Data rights"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
         <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© 2026 Vraelis. All rights reserved.</span>
@@ -145,7 +145,7 @@ function AppTopbar({ email }: { email: string | null }) {
   const pathname = usePathname() || "";
   useEffect(() => { setMenu(false); }, [pathname]);
   // The layout's email can be stale-null when this shell was first rendered from a public
-  // (static) page and kept across client navigation — self-resolve so the signed-in account
+  // (static) page and kept across client navigation; self-resolve so the signed-in account
   // is always identifiable (never "?" / "your account" for a real session).
   const [who, setWho] = useState<string | null>(email);
   useEffect(() => { if (email) setWho(email); }, [email]);

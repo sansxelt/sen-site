@@ -71,7 +71,7 @@ export default async function AuditPage() {
           <h1 className="display">Activity</h1>
           <p>A read-only trail of everything that happens in your workspace — evaluations, credits, billing, team access, and governance.</p>
         </div>
-        <a href="/security" className="btn btn--ghost">Trust overview →</a>
+        <a href="/enterprise" className="btn btn--ghost">Trust overview →</a>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>

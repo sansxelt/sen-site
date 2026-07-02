@@ -85,21 +85,21 @@ const vraelisMetadata: Metadata = {
     template: "%s | Vraelis",
   },
   description:
-    "Vraelis is a human evaluation layer for creative and AI-generated outputs. Turn human preference signals into structured decision analytics for creators, teams, agencies, and AI apps.",
+    "Human QA for AI output. Send the versions your app generates, real people judge which one wins, and you get a clear report on what to ship, and why. You pay only for responses that pass quality checks.",
   alternates: { canonical: "https://vraelis.com" },
   icons: { icon: "/vraelis/mark.jpg" },
   openGraph: {
     type: "website",
     url: "https://vraelis.com",
     siteName: "Vraelis",
-    title: "Evaluate creative options before you ship",
-    description: "A human evaluation layer for creative and AI outputs. Submit candidates, collect valid judgments, and get a decision report.",
+    title: "Human QA for AI output",
+    description: "Real people judge which version of your AI output to ship, and tell you why. You pay only for responses that pass quality checks.",
     images: [{ url: "/og", width: 1200, height: 630, alt: "Vraelis" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Evaluate creative options before you ship",
-    description: "A human evaluation layer for creative and AI outputs. Submit candidates, collect valid judgments, and get a decision report.",
+    title: "Human QA for AI output",
+    description: "Real people judge which version of your AI output to ship, and tell you why. You pay only for responses that pass quality checks.",
     images: ["/og"],
   },
   robots: { index: true, follow: true },
@@ -134,7 +134,7 @@ export default async function RootLayout({
               pages AND the shared /signin, /account flows) so the whole
               brand renders light + green. tokens before styles. */}
           {/* The brand's display/body faces (Bricolage Grotesque + Hanken
-              Grotesk) — load them so styles.css's --font-display/--font-sans
+              Grotesk): load them so styles.css's --font-display/--font-sans
               actually render instead of falling back to a system sans. */}
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

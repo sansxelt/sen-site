@@ -1,16 +1,16 @@
-import { PLAN_CATALOG } from "@/lib/v-plans";
 import { ogMeta } from "@/lib/og-meta";
+import { FREE_REPORT_URL } from "@/lib/links";
 
 export const metadata = {
   ...ogMeta({
-    title: "Know which AI output to ship — before you ship it",
-    description: "Vraelis is human QA for AI output. Send the versions your app generates, get quality-filtered judgments from real people on which one wins — and ship the version your users will trust. You pay only for responses that pass quality checks.",
+    title: "Human QA for AI output",
+    description: "Human QA for AI output. Send the versions your app generates, real people judge which one wins, and you get a clear report on what to ship, and why. You pay only for responses that pass quality checks.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
 };
 
-// Minimal line icons — geometric, single-stroke, on-brand.
+// Minimal line icons: geometric, single-stroke, on-brand.
 function Icon({ d, size = 18 }: { d: string; size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -30,35 +30,32 @@ const ICONS = {
 };
 
 const AUDIENCE = [
-  { t: "AI app builders", d: "Test the content your app generates on real people, learn what your users will actually prefer, and ship with evidence instead of a guess.", i: ICONS.layers },
-  { t: "Product & creative teams", d: "Get real-person feedback on concepts, landing copy, and creative before you commit to a direction.", i: ICONS.film },
-  { t: "AI labs & model teams", d: "Quality-filtered human preference and eval signal for model comparison and RLHF, via the same API.", i: ICONS.spark },
-  { t: "Safety & eval teams", d: "Human judgment on what automated evals can't score — helpfulness, accuracy, harm — with an audit trail.", i: ICONS.flag },
+  { t: "AI app builders shipping user-facing output", d: "Test the responses, messages, and content your app puts in front of users on real people, then ship the version they'll trust, backed by evidence instead of a guess.", i: ICONS.layers },
 ];
 
 const STEPS = [
-  { k: "01", t: "Submit candidates", d: "Model outputs, prompts, completions, or any artifact — 2 to 8 at a time. Via API, SDK, or the console.", i: ICONS.upload },
+  { k: "01", t: "Submit candidates", d: "Model outputs, prompts, completions, or any artifact, 2 to 8 at a time. Via API, SDK, or the console.", i: ICONS.upload },
   { k: "02", t: "Define the judgment", d: "Pairwise preference, a rubric, or open reasoning. Add screening to qualify who judges before they answer.", i: ICONS.layers },
-  { k: "03", t: "Collect qualified human signal", d: "Vraelis routes your evaluation to real people who judge and say why — the signal your automated metrics can't give you.", i: ICONS.users },
-  { k: "04", t: "Filter low-quality responses", d: "Rushed, duplicate, gamed, and low-reputation responses are rejected automatically. Only qualified judgments count — and you're never charged for the rest.", i: ICONS.flag },
-  { k: "05", t: "Review signal & readiness", d: "The Decision Package reads back the recommendation, preference margin, confidence, signal quality — and whether the result is ready to act on.", i: ICONS.spark },
+  { k: "03", t: "Collect qualified human signal", d: "Vraelis routes your evaluation to real people who judge and say why: the signal your automated metrics can't give you.", i: ICONS.users },
+  { k: "04", t: "Filter low-quality responses", d: "Rushed, duplicate, gamed, and low-reputation responses are rejected automatically. Only qualified judgments count, and you're never charged for the rest.", i: ICONS.flag },
+  { k: "05", t: "Review signal & readiness", d: "The Decision Package reads back the recommendation, preference margin, confidence, signal quality, and whether the result is ready to act on.", i: ICONS.spark },
   { k: "06", t: "Run a confirmation round if needed", d: "When a result is close or noisy, launch a follow-up round to confirm the call before you commit. Lineage tracked end to end.", i: ICONS.report },
   { k: "07", t: "Receive the Decision Package", d: "Pull the structured Decision Package by API or JSON / CSV, fire a signed webhook, and keep an audit record of every run.", i: ICONS.revenue },
 ];
 
 const TESTABLE = ["Model output preference", "RLHF / reward signal", "Prompt & completion quality", "Safety & harm judgment", "Generated creative", "Product concepts", "Landing & copy", "Content variations"];
 
-// Evaluation workflows AI and product teams actually run — what's compared, and the signal you get back.
+// Evaluation workflows AI and product teams actually run: what's compared, and the signal you get back.
 const USE_CASES: { t: string; c: string; g: string }[] = [
-  { t: "Model output evaluation", c: "Competing responses from your model or pipeline", g: "Which output people prefer, with confidence and a signal-quality read — as preference data." },
+  { t: "Model output evaluation", c: "Competing responses from your model or pipeline", g: "Which output people prefer, with confidence and a signal-quality read, as preference data." },
   { t: "RLHF & reward signal", c: "Response pairs for preference labeling", g: "Quality-filtered human preference judgments, exportable into your training pipeline." },
-  { t: "Safety & helpfulness review", c: "Outputs your automated evals can't score", g: "Human judgment on helpfulness, accuracy, and harm — with an audit trail." },
+  { t: "Safety & helpfulness review", c: "Outputs your automated evals can't score", g: "Human judgment on helpfulness, accuracy, and harm, with an audit trail." },
   { t: "Prompt & system comparison", c: "Outputs from two prompts, models, or versions", g: "Which variant produces better responses, backed by qualified human signal." },
   { t: "Creative & product research", c: "Concepts, directions, or candidates", g: "Which direction people prefer, and the audience fit behind it." },
   { t: "Client & stakeholder approval", c: "The options you're choosing between", g: "A client-ready decision record that backs your recommendation." },
 ];
 
-const IS_THINGS = ["Human QA for AI output — real-person judgment on what you generate, quality-filtered, via API", "Structured results returned as a typed Decision Package", "An automated quality gate that rejects rushed, duplicate, and gamed responses"];
+const IS_THINGS = ["Human QA for AI output: real-person judgment on what you generate, quality-filtered, via API", "Structured results returned as a typed Decision Package", "An automated quality gate that rejects rushed, duplicate, and gamed responses"];
 const IS_NOT_THINGS = ["A cheap survey, poll, or microtask panel", "A raw vote count you have to interpret yourself", "Unfiltered crowdsourced responses you have to clean yourself"];
 
 const REPORT_PARTS = [
@@ -81,7 +78,7 @@ const SUPPORTS: [string, string][] = [
   ["Reputation gating", "Evaluators who get mostly rejected are gated out."],
 ];
 
-// The value proposition — what an evaluation gives you, and what noisy signal costs.
+// The value proposition: what an evaluation gives you, and what noisy signal costs.
 const WHAT_YOU_GET: [string, string][] = [
   ["Preferred output", "the response people judged best"],
   ["Preference margin", "how clear the result was"],
@@ -112,7 +109,7 @@ const API_RESPONSE = `{
   ]
 }`;
 
-// the signature device — a verdict bar
+// the signature device: a verdict bar
 function Verdict({ rows }: { rows: [string, number, boolean][] }) {
   return (
     <div className="verdict">
@@ -137,27 +134,27 @@ export default function RankLanding() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
           <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Human QA for AI output</p>
           <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
-            Know which AI output to ship — <span className="em">before you ship it</span>.
+            Test your AI app&apos;s output on <span className="em">real people</span>.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 700, margin: "0 auto 30px", lineHeight: 1.55 }}>
-            Submit the content your app generates — responses, images, copy. Vraelis gets you feedback from real people on what works, filters rushed and gamed responses automatically, and returns a structured Decision Package through API, webhook, or export. You pay only for responses that pass quality checks.
+            Know which version to ship, before your users see it. Submit the content your app generates (responses, images, copy), and real people judge which one wins. Vraelis filters rushed and gamed responses automatically and returns a structured Decision Package by API, webhook, or export. You pay only for responses that pass quality checks.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Test your AI content <span aria-hidden>→</span></a>
-            <a href="/demo" className="btn btn--ghost btn--lg">See a sample Decision Package</a>
+            <a href={FREE_REPORT_URL} className="btn btn--lg">Get a free QA report <span aria-hidden>→</span></a>
+            <a href="/r/sample" className="btn btn--ghost btn--lg">See a real report</a>
           </div>
 
-          {/* Product preview — the verdict, right up front */}
+          {/* Product preview: the verdict, right up front */}
           <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 860, margin: "clamp(34px, 4vw, 52px) auto 0" }}>
             <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
               <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Evaluation run</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Complete</span></div>
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1.05fr)", gap: 0 }} className="cols-stack">
-                {/* LEFT: the run — prompt, candidate responses, judgment criteria */}
+                {/* LEFT: the run, prompt, candidate responses, judgment criteria */}
                 <div style={{ padding: "clamp(18px,2.4vw,26px)", borderRight: "1px solid var(--line-1)" }}>
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Prompt</div>
                   <div style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.55, marginBottom: 14, padding: 11, background: "var(--bg-2)", borderRadius: 10, border: "1px solid var(--line-1)" }}>Which response is more helpful, accurate, and safe?</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-                    {[["A", "Direct answer — but states one claim as fact without a caveat.", false], ["B", "Answers, flags its uncertainty, and adds a safety note.", true]].map(([l, d, win]) => (
+                    {[["A", "Direct answer, but states one claim as fact without a caveat.", false], ["B", "Answers, flags its uncertainty, and adds a safety note.", true]].map(([l, d, win]) => (
                       <div key={l as string}>
                         <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.07em", textTransform: "uppercase", color: win ? "var(--acc-deep)" : "var(--fg-4)", marginBottom: 6 }}>Response {l}</div>
                         <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.5, padding: 10, background: "var(--bg-2)", borderRadius: 8, border: `1px solid ${win ? "var(--acc-line)" : "var(--line-2)"}`, minHeight: 60 }}>{d}</div>
@@ -205,7 +202,7 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">Why Vraelis</p>
             <h2 className="display">You&apos;re not paying for raw responses. You&apos;re paying for <span className="em">signal you can trust</span>.</h2>
-            <p>The hard part of human evals isn&apos;t collecting responses — it&apos;s trusting them. Vraelis filters the noise automatically, so what you get back is qualified human judgment, not raw responses you have to clean. Credits are the unit; trustworthy signal is the product.</p>
+            <p>The hard part of human evals isn&apos;t collecting responses; it&apos;s trusting them. Vraelis filters the noise automatically, so what you get back is qualified human judgment, not raw responses you have to clean. Credits are the unit; trustworthy signal is the product.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.02fr) minmax(0,0.98fr)", gap: 16, alignItems: "stretch" }} className="cols-stack">
             <div className="card">
@@ -214,7 +211,7 @@ export default function RankLanding() {
                 {WHAT_YOU_GET.map(([t, d]) => (
                   <li key={t} style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
                     <span style={{ width: 18, height: 18, flex: "none", marginTop: 2, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", color: "var(--acc-deep)", display: "grid", placeItems: "center", fontSize: 11 }}>✓</span>
-                    <span style={{ fontSize: 14.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>{t}</strong> — {d}</span>
+                    <span style={{ fontSize: 14.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>{t}</strong>: {d}</span>
                   </li>
                 ))}
               </ul>
@@ -231,7 +228,7 @@ export default function RankLanding() {
           </div>
           <div className="card card--acc" style={{ textAlign: "center", marginTop: 16, padding: "clamp(22px, 3vw, 30px)" }}>
             <div className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Trust the signal, <span className="em">not the volume</span>.</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}>Vraelis filters rushed, gamed, and low-reputation responses automatically — you pay only for qualified judgments. The Decision Package tells you what passed quality, why people judged the way they did, and whether the signal is strong enough to act on. It informs your decisions — not a guarantee of model performance, sales, or outcomes.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}>Vraelis filters rushed, gamed, and low-reputation responses automatically, so you pay only for qualified judgments. The Decision Package tells you what passed quality, why people judged the way they did, and whether the signal is strong enough to act on. It informs your decisions; it is not a guarantee of model performance, sales, or outcomes.</p>
           </div>
         </div>
       </section>
@@ -241,10 +238,10 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it's for</p>
-            <h2 className="display">Built for the teams <span className="em">shipping AI</span>.</h2>
-            <p>Vraelis is human QA for AI output — test the content your app generates on real people, learn what your users will prefer, and ship with evidence. The same engine gives model and safety teams quality-filtered preference and eval signal via API. Not a survey builder, polling tool, or crowdsourced panel: real people give feedback, automated gates filter the noise, and you get structured signal you can trust.</p>
+            <h2 className="display">Built for teams shipping <span className="em">user-facing AI</span>.</h2>
+            <p>Vraelis is human QA for AI output. Test the content your app generates on real people, learn which version your users will trust, and ship with evidence. Not a survey builder, polling tool, or crowdsourced panel: real people judge, automated gates filter the noise, and you get structured signal you can act on.</p>
           </div>
-          <div className="tile-grid cols-4">
+          <div className="tile-grid cols-1" style={{ maxWidth: 520, margin: "0 auto" }}>
             {AUDIENCE.map((a) => (
               <div key={a.t} className="acard">
                 <div className="acard__icon"><Icon d={a.i} /></div>
@@ -262,11 +259,11 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">The evaluation workflow</p>
             <h2 className="display">From candidates to <span className="em">trustworthy signal</span>.</h2>
-            <p>A full evaluation lifecycle — submit, define the judgment, collect qualified signal, filter the noise, check readiness, and receive the Decision Package.</p>
+            <p>A full evaluation lifecycle: submit, define the judgment, collect qualified signal, filter the noise, check readiness, and receive the Decision Package.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s, i) => {
-              // Odd count (7) leaves the last card orphaned in a 2-col grid — span + center it.
+              // Odd count (7) leaves the last card orphaned in a 2-col grid; span + center it.
               const lastOdd = i === STEPS.length - 1 && STEPS.length % 2 === 1;
               return (
               <div key={s.k} className="acard" style={{ flexDirection: "row", gap: 18, alignItems: "flex-start", ...(lastOdd ? { gridColumn: "1 / -1", maxWidth: 620, marginInline: "auto", width: "100%" } : {}) }}>
@@ -292,7 +289,7 @@ export default function RankLanding() {
             <div>
               <p className="eyebrow">The Decision Package</p>
               <h2 className="display" style={{ fontSize: "clamp(1.85rem, 3.3vw, 2.7rem)", marginBottom: 16 }}>Structured eval output, <span className="em">not a vote count</span>.</h2>
-              <p className="lead-copy" style={{ marginBottom: 22 }}>Every run returns a typed Decision Package: the preferred output and confidence, signal-quality metrics, the valid-vs-filtered breakdown, and audit-ready data — delivered by API, webhook, or export, ready for your pipeline.</p>
+              <p className="lead-copy" style={{ marginBottom: 22 }}>Every run returns a typed Decision Package: the preferred output and confidence, signal-quality metrics, the valid-vs-filtered breakdown, and audit-ready data, delivered by API, webhook, or export, ready for your pipeline.</p>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
                 {REPORT_PARTS.map((x) => (
                   <li key={x} style={{ display: "flex", gap: 11, fontSize: 14.5, color: "var(--fg-2)", alignItems: "flex-start" }}>
@@ -345,8 +342,8 @@ export default function RankLanding() {
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">What teams evaluate</p>
-            <h2 className="display">An evaluation layer, <span className="em">not a poll</span>.</h2>
-            <p>Submit the candidates, collect qualified human judgment, get a Decision Package, and route the signal into your pipeline, your team, or your client — with the reasoning behind it.</p>
+            <h2 className="display">Human QA, <span className="em">not a poll</span>.</h2>
+            <p>Submit the candidates, collect qualified human judgment, get a Decision Package, and route the signal into your pipeline, your team, or your client, with the reasoning behind it.</p>
           </div>
           <div className="tile-grid cols-3" style={{ marginBottom: 22 }}>
             {USE_CASES.map((u) => (
@@ -361,7 +358,7 @@ export default function RankLanding() {
             {TESTABLE.map((t) => <span key={t} className="chip">{t}</span>)}
           </div>
 
-          {/* What Vraelis is / is not — own the category, not defensive */}
+          {/* What Vraelis is / is not: own the category, not defensive */}
           <div className="card" style={{ marginTop: 26, background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
             <div className="cols-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(18px, 3vw, 36px)" }}>
               <div>
@@ -370,14 +367,14 @@ export default function RankLanding() {
               </div>
               <div>
                 <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Vraelis is not</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{IS_NOT_THINGS.map((x) => <div key={x} style={{ display: "flex", gap: 9, fontSize: 13.5, color: "var(--fg-4)" }}><span style={{ color: "var(--fg-5)" }}>—</span>{x}</div>)}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>{IS_NOT_THINGS.map((x) => <div key={x} style={{ display: "flex", gap: 9, fontSize: 13.5, color: "var(--fg-4)" }}><span style={{ color: "var(--fg-5)" }}>✕</span>{x}</div>)}</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── For AI apps — the external loop ── */}
+      {/* ── For AI apps: the external loop ── */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head">
@@ -386,7 +383,7 @@ export default function RankLanding() {
             <p>Create evaluation runs by API, collect quality-filtered human signal, receive signed webhooks, and pull the structured Decision Package straight into your eval pipeline or product.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: 18, alignItems: "stretch", marginBottom: 16 }} className="cols-stack">
-            {/* left — the loop, on cream */}
+            {/* left: the loop, on cream */}
             <div className="card" style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 20 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>The external loop</div>
               <div style={{ display: "grid", gap: 14 }}>
@@ -402,7 +399,7 @@ export default function RankLanding() {
                 <a href="/developers#embed" className="btn btn--ghost">Embed in your site</a>
               </div>
             </div>
-            {/* right — a real API response */}
+            {/* right: a real API response */}
             <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
               <div className="win__bar" style={{ background: "#1C2733", borderBottom: "1px solid rgba(255,255,255,0.06)" }}><span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "#94A1B2" }}>POST /api/v1/tests</span><span className="pill" style={{ marginLeft: "auto", background: "rgba(97,197,84,0.12)", color: "#8CE0B4", borderColor: "rgba(97,197,84,0.3)" }}>200 OK</span></div>
               <pre className="codeblock" style={{ borderRadius: 0, border: "none", boxShadow: "none", height: "100%" }}>{API_RESPONSE}</pre>
@@ -420,13 +417,13 @@ export default function RankLanding() {
         </div>
       </section>
 
-      {/* ── Why the signal is cleaner — the real quality gates ── */}
+      {/* ── Why the signal is cleaner: the real quality gates ── */}
       <section className="section">
         <div className="wrap">
           <div className="sec-head">
             <p className="eyebrow">Why the signal is cleaner</p>
             <h2 className="display">Real quality gates, <span className="em">not good faith</span>.</h2>
-            <p>Vraelis runs automatic filters on every response. Rejected responses don&apos;t count toward your Decision Package — and you&apos;re never charged for them.</p>
+            <p>Vraelis runs automatic filters on every response. Rejected responses don&apos;t count toward your Decision Package, and you&apos;re never charged for them.</p>
           </div>
           <div className="tile-grid cols-3">
             {[
@@ -435,7 +432,7 @@ export default function RankLanding() {
               ["IP velocity limits", "Too many responses from one source in a short window are capped to stop vote-stuffing."],
               ["Per-device daily caps", "Embedded collection enforces a per-device daily limit on responses."],
               ["Reputation gating", "Evaluators whose responses are mostly rejected over time get gated out."],
-              ["Pre-judgment screening", "Add screening questions to qualify who judges — disqualified participants never create a judgment."],
+              ["Pre-judgment screening", "Add screening questions to qualify who judges; disqualified participants never create a judgment."],
             ].map(([t, d]) => (
               <div key={t} className="acard" style={{ gap: 6 }}>
                 <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>{t}</div>
@@ -447,24 +444,24 @@ export default function RankLanding() {
         </div>
       </section>
 
-      {/* ── Buyer objections — honest answers ── */}
+      {/* ── Buyer objections: honest answers ── */}
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">For AI teams — honest answers</p>
+            <p className="eyebrow">For AI teams: honest answers</p>
             <h2 className="display">Questions we hear from <span className="em">builders</span>.</h2>
           </div>
           <div className="tile-grid cols-2">
             {[
-              ["Why not just ask ChatGPT / an LLM to judge it?", "LLM-as-judge is useful, but it can't tell you what real people prefer — and judging your model's output with another model is circular: it carries its own training and self-preference bias, and it agrees with itself more than humans do. When the question is \"which will land with actual users\" — helpfulness, tone, trust, harm — you need human judgment. Vraelis gives you that as quality-filtered, structured data, alongside (not instead of) your automated evals."],
-              ["Why not just use a cheap survey or panel?", "Panels ship you raw responses — you pay for volume, then hand-clean noise out of rushed and gamed answers. Vraelis filters automatically (time-on-task, IP velocity, reputation, screening) and you pay only for judgments that pass. A survey gives you responses; Vraelis gives you signal."],
-              ["Who actually judges? Are they vetted experts?", "Real people completing evaluation tasks — not verified experts or a vetted specialist panel. Screening questions let you qualify who judges before they answer, and reputation gating removes evaluators who consistently produce rejected responses. For preference and eval data, that's real human preference, not expert opinion."],
+              ["Why not just ask ChatGPT / an LLM to judge it?", "LLM-as-judge is useful, but it can't tell you what real people prefer, and judging your model's output with another model is circular: it carries its own training and self-preference bias, and it agrees with itself more than humans do. When the question is \"which will land with actual users\" (helpfulness, tone, trust, harm), you need human judgment. Vraelis gives you that as quality-filtered, structured data, alongside (not instead of) your automated evals."],
+              ["Why not just use a cheap survey or panel?", "Panels ship you raw responses: you pay for volume, then hand-clean noise out of rushed and gamed answers. Vraelis filters automatically (time-on-task, IP velocity, reputation, screening) and you pay only for judgments that pass. A survey gives you responses; Vraelis gives you signal."],
+              ["Who actually judges? Are they vetted experts?", "Real people completing evaluation tasks, not verified experts or a vetted specialist panel. Screening questions let you qualify who judges before they answer, and reputation gating removes evaluators who consistently produce rejected responses. For preference and eval data, that's real human preference, not expert opinion."],
               ["What happens to the responses you reject?", "Rejected responses are recorded for transparency but don't count toward your result, and you're not charged for them. You see valid-vs-filtered counts and filter reasons in every report and in the API response."],
-              ["Can this plug into my eval pipeline?", "Yes — a REST API to create runs, signed webhooks on completion (no polling), and the typed Decision Package as JSON or CSV. Built to route preference and eval signal into RLHF, reward modeling, or your own scoring."],
-              ["Is this lab-scale RLHF?", "Vraelis is built for quality-filtered human preference and eval signal via API, at the scale of your plan. Very large or highly custom human-data pipelines may need an enterprise setup — talk to us and we'll be straight about what fits."],
+              ["Can this plug into my eval pipeline?", "Yes: a REST API to create runs, signed webhooks on completion (no polling), and the typed Decision Package as JSON or CSV. Built to route preference and eval signal into RLHF, reward modeling, or your own scoring."],
+              ["Is this lab-scale RLHF?", "Vraelis is built for quality-filtered human preference and eval signal via API, at the scale of your plan. Very large or highly custom human-data pipelines may need an enterprise setup; talk to us and we'll be straight about what fits."],
               ["Are you SOC 2 / SAML / SCIM?", "No SOC 2 today, and we won't claim it. OIDC SSO is live for verified domains; SAML configuration is in preview and SCIM is on the roadmap. Ask us and we'll be direct about timing and what's supported now."],
             ].map(([q, a], i, arr) => {
-              // Odd count (7) leaves the last card orphaned in a 2-col grid — span it across
+              // Odd count (7) leaves the last card orphaned in a 2-col grid; span it across
               // both columns and center it so the section ends balanced.
               const lastOdd = i === arr.length - 1 && arr.length % 2 === 1;
               return (
@@ -484,20 +481,14 @@ export default function RankLanding() {
           <div className="phead" style={{ marginBottom: "clamp(22px, 3vw, 34px)", alignItems: "flex-end" }}>
             <div className="sec-head" style={{ margin: 0, maxWidth: 560 }}>
               <p className="eyebrow">Pricing</p>
-              <h2 className="display">Plans include monthly credits. Top up anytime.</h2>
+              <h2 className="display">Start with a free report.</h2>
             </div>
-            <a href="/pricing" className="btn btn--ghost">View full pricing →</a>
+            <a href="/pricing" className="btn btn--ghost">See pricing →</a>
           </div>
-          <div className="tile-grid cols-3">
-            {PLAN_CATALOG.slice(0, 3).map((p, i) => (
-              <div key={p.plan} className={`price${i === 1 ? " price--hot" : ""}`}>
-                <div className="price__name">{p.name}</div>
-                <div className="price__amt">${p.price.monthly}<small>/mo</small></div>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 13, color: "var(--acc-deep)", fontWeight: 600 }}>{p.monthlyCredits.toLocaleString()} credits / mo</div>
-                <p style={{ fontSize: 13.5, color: "var(--fg-3)" }}>{p.blurb}</p>
-                <a href="/pricing" className={i === 1 ? "btn" : "btn btn--ghost"} style={{ marginTop: "auto", justifyContent: "center" }}>Choose {p.name}</a>
-              </div>
-            ))}
+          <div className="card card--acc" style={{ textAlign: "center", padding: "clamp(24px, 4vw, 40px)" }}>
+            <div className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Your first QA report is <span className="em">free</span>.</div>
+            <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 560, margin: "0 auto 20px", lineHeight: 1.6 }}>Send us 2 to 8 versions of what your app generates. Real people judge which one to ship, and you get a clear report on the winner and why, quality-filtered, with the noise removed. $99 per report after your first.</p>
+            <a href={FREE_REPORT_URL} className="btn btn--lg">Get a free QA report <span aria-hidden>→</span></a>
           </div>
         </div>
       </section>
@@ -508,7 +499,7 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">What's live today</p>
             <h2 className="display">The quality controls are the <span className="em">product</span>.</h2>
-            <p>From candidates to a Decision Package — plus a human evaluation API, signed webhooks, schema-versioned exports, and the automatic quality filtering that makes the signal worth trusting.</p>
+            <p>From candidates to a Decision Package, plus a human evaluation API, signed webhooks, schema-versioned exports, and the automatic quality filtering that makes the signal worth trusting.</p>
           </div>
           <div className="tile-grid cols-4">
             {SUPPORTS.map(([t, d]) => (
@@ -526,10 +517,10 @@ export default function RankLanding() {
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Human signal for AI, <span className="em">without the cleanup</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Start free with 25 credits. One credit = one valid human judgment — and you&apos;re never charged for the responses we filter out.</p>
+          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Get your first QA report free. Real people judge which version to ship, and you&apos;re never charged for the responses we filter out.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn btn--lg">Start free <span aria-hidden>→</span></a>
-            <a href="/demo" className="btn btn--ghost btn--lg">See a sample Decision Package</a>
+            <a href={FREE_REPORT_URL} className="btn btn--lg">Get a free QA report <span aria-hidden>→</span></a>
+            <a href="/r/sample" className="btn btn--ghost btn--lg">See a real report</a>
             <a href="/developers" className="btn btn--ghost btn--lg">Developers</a>
           </div>
         </div>

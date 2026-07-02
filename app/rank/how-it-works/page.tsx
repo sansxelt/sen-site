@@ -2,7 +2,7 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
   title: "How it works",
-  description: "Submit candidates, collect valid judgments, and get a decision report.",
+  description: "Human QA for AI output. Submit the versions your app generates, real people judge which one wins, and you get a clear decision report.",
   path: "/how-it-works",
 });
 

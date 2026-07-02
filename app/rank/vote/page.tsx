@@ -51,12 +51,12 @@ export default function VotePage() {
       const r = await fetch("/api/v/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ testId: test.id, optionId: selected, reason, timeSpentMs: Date.now() - startRef.current, screeningAnswers: answers }) });
       if (r.status === 401) { setPhase("signin"); return; }
       const j = await r.json().catch(() => ({}));
-      if (j.disqualified) { fetchNext(); return; } // didn't match the target audience — move on
+      if (j.disqualified) { fetchNext(); return; } // didn't match the target audience; move on
       if (r.ok) {
         if (j.earned) setCtx((c) => ({ ...c, earnedToday: (c.earnedToday ?? 0) + 1, balance: (c.balance ?? 0) + 1 }));
         fetchNext();
       } else if (r.status === 409 || r.status === 400) {
-        fetchNext(); // already voted / test just filled or closed — move on
+        fetchNext(); // already voted / test just filled or closed; move on
       } else {
         setErr("Couldn't save your judgment. Try again.");
       }
@@ -71,7 +71,7 @@ export default function VotePage() {
 
   return (
     <div style={{ position: "relative", width: "100%", maxWidth: 640, margin: "0 auto", padding: "clamp(28px, 4vw, 56px) clamp(16px, 4vw, 24px) 96px", boxSizing: "border-box" }}>
-      {/* Soft ambient glow behind the stage — warm accent wash, tuned for the cream surface. */}
+      {/* Soft ambient glow behind the stage: warm accent wash, tuned for the cream surface. */}
       <div aria-hidden style={{ position: "absolute", top: "clamp(40px, 8vw, 120px)", left: "50%", transform: "translateX(-50%)", width: "min(560px, 90%)", height: 380, borderRadius: "50%", background: "radial-gradient(closest-side, var(--acc), transparent 72%)", opacity: 0.1, filter: "blur(52px)", pointerEvents: "none", zIndex: 0 }} />
       <div style={{ position: "relative", zIndex: 1 }}>
       <div style={{ textAlign: "center", marginBottom: 26 }}>
@@ -106,7 +106,7 @@ export default function VotePage() {
             <div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, marginBottom: 8 }}>How it works</div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-                {["Compare real options — AI outputs, copy, and creative — from teams", "Earn 1 credit per valid judgment (up to a daily cap)", "Low-quality, too-fast, or spam responses don't count", "Your honest judgment powers the Decision Packages teams rely on"].map((x) => (
+                {["Compare real options (AI outputs, copy, and creative) from teams", "Earn 1 credit per valid judgment (up to a daily cap)", "Low-quality, too-fast, or spam responses don't count", "Your honest judgment powers the Decision Packages teams rely on"].map((x) => (
                   <li key={x} style={{ display: "flex", gap: 8, fontSize: 13, color: "var(--fg-2)" }}><span style={{ color: "var(--acc)" }}>✓</span>{x}</li>
                 ))}
               </ul>
@@ -129,7 +129,7 @@ export default function VotePage() {
       {phase === "signin" && (
         <div className="card" style={{ textAlign: "center", padding: "clamp(28px, 4vw, 48px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 700, marginBottom: 8 }}>Sign in to evaluate &amp; earn</div>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>Compare real options — AI outputs, copy, and creative — and earn 1 credit per valid judgment. Spend them on your own evaluations.</p>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>Compare real options (AI outputs, copy, and creative) and earn 1 credit per valid judgment. Spend them on your own evaluations.</p>
           <button onClick={() => signIn("google", { callbackUrl: "/vote" })} className="btn btn--lg">Continue with Google</button>
         </div>
       )}
@@ -155,7 +155,7 @@ export default function VotePage() {
 
       {phase === "vote" && test && (
         <div style={{ position: "relative", background: "var(--bg-2)", border: "1px solid var(--acc-line)", borderRadius: 16, padding: "clamp(20px, 3vw, 30px)", boxShadow: "0 1px 0 rgba(255,255,255,0.6) inset, 0 22px 50px -26px rgba(20,30,28,0.28), 0 0 40px -10px var(--acc-soft)" }}>
-          {/* "You're the judge" framing + earn micro-touch — makes the stage feel considered. */}
+          {/* "You're the judge" framing + earn micro-touch: makes the stage feel considered. */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 14 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--acc-deep)" }}>
               <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--acc-deep)", boxShadow: "0 0 8px var(--acc)" }} />You&apos;re the judge
@@ -180,7 +180,7 @@ export default function VotePage() {
               ))}
             </div>
           )}
-          {/* A-vs-B cue — a light touch that frames the options as a matchup to weigh. */}
+          {/* A-vs-B cue: a light touch that frames the options as a matchup to weigh. */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0 4px", fontSize: 12 }}>
             <span style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, var(--line-2))" }} />
             <span style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.06em", color: "var(--fg-4)" }}>which is stronger?</span>
