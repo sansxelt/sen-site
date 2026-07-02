@@ -5,6 +5,7 @@ import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
 import { reportAccessRole, canViewSharedProject, ROLE_LABEL } from "@/lib/v-workspace";
 import { ReportBody, OptionThumb } from "@/app/rank/app/tests/[id]/report-body";
 import { AnalysisPanel } from "@/app/rank/app/tests/[id]/analysis-panel";
+import { ThemesPanel } from "@/app/rank/app/tests/[id]/themes-panel";
 
 export const metadata: Metadata = { title: "Shared decision record" };
 
@@ -81,6 +82,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
             options={options}
             votesTarget={test.votes_target}
             analysisSlot={report.results.analysis ? <AnalysisPanel testId="" initial={report.results.analysis} readOnly /> : null}
+            themesSlot={report.results.themes ? <ThemesPanel testId="" initial={report.results.themes} readOnly /> : null}
           />
         </>
       ) : (

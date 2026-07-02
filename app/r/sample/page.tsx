@@ -101,7 +101,7 @@ export default function SampleReport() {
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0" }}>Themes are summarized from evaluators&apos; own reasons; quotes are representative, lightly trimmed.</p>
+          <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0" }}>Themes summarized by AI from real human reasoning. Quotes are verbatim from real judgments. The recommendation and every number come from the human judgments, not the summary.</p>
         </div>
 
         {/* what to change */}

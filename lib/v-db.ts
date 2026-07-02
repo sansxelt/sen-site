@@ -6,6 +6,7 @@ import { refund, hold, grant, rewardsToday } from "./v-credits";
 import { logEvent } from "./v-events";
 import type { ReportAnalysis } from "./v-ai";
 import { kishEffectiveN, reputationWeight } from "./v-stats";
+import type { ReportTheme } from "./v-themes";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 
@@ -30,6 +31,7 @@ export type VReport = {
     comments: { option_id: string; reason: string }[];
     recommendation: string;
     analysis?: ReportAnalysis | null;
+    themes?: ReportTheme[] | null;
   };
 };
 
@@ -535,6 +537,36 @@ export async function ensureReportAnalysis(testId: string): Promise<VReport | nu
   // forever and permanently hiding the paid analysis.
   if (!analysis) return rep;
   const newResults = { ...rep.results, analysis };
+  const s = getSupabaseAdminClient();
+  await s.from("v_reports" as never).update({ results: newResults } as never).eq("test_id", testId);
+  return { ...rep, results: newResults };
+}
+
+// Lazily generate + cache the AI theme summary for a completed report (Workstream
+// D). Mirrors ensureReportAnalysis and is fail-soft: only a RAN result is cached
+// (an empty array is a valid "no grounded themes" and is cached; a null "couldn't
+// run" is not, so a later view retries). Summarization only — never touches the
+// decision, the recommendation, or any number.
+export async function ensureReportThemes(testId: string): Promise<VReport | null> {
+  const rep = await getReport(testId);
+  if (!rep) return null;
+  if ("themes" in rep.results) return rep; // already attempted (cached, incl. empty)
+  const data = await getTestWithOptions(testId);
+  if (!data) return rep;
+  const { test, options } = data;
+  const letterFor = (id: string) => { const o = options.find((x) => x.id === id); return o ? LETTERS[o.position] : "?"; };
+  let themes: ReportTheme[] | null = null;
+  try {
+    const { extractThemes } = await import("./v-themes");
+    themes = await extractThemes({
+      title: test.title,
+      category: test.category,
+      options: rep.results.ranked.map((r) => ({ letter: LETTERS[r.position], isWinner: r.id === rep.results.winner_option_id })),
+      comments: rep.results.comments.map((c) => ({ letter: letterFor(c.option_id), reason: c.reason })),
+    });
+  } catch { /* fail-soft */ }
+  if (themes === null) return rep; // couldn't run (no key / too few / error) — do not cache
+  const newResults = { ...rep.results, themes };
   const s = getSupabaseAdminClient();
   await s.from("v_reports" as never).update({ results: newResults } as never).eq("test_id", testId);
   return { ...rep, results: newResults };

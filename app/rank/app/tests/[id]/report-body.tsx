@@ -44,7 +44,7 @@ const CONF_TONE: Record<string, { bg: string; fg: string }> = {
 // margin, signal quality, action), preference breakdown, optional AI analysis
 // slot, and reasoning signals. Pure render from results + options; used by both
 // the owner report and the public /r/<token> report.
-export function ReportBody({ results, options, analysisSlot, votesTarget = 0, complete = true, audienceFit, screeningEnabled, viewerCanAct = false, judgePool }: { results: VReport["results"]; options: VOption[]; analysisSlot?: ReactNode; votesTarget?: number; complete?: boolean; audienceFit?: string | null; screeningEnabled?: boolean; viewerCanAct?: boolean; judgePool?: { uniqueJudges: number; established: number; cleanRecord: number; cleanPct: number | null } }) {
+export function ReportBody({ results, options, analysisSlot, themesSlot, votesTarget = 0, complete = true, audienceFit, screeningEnabled, viewerCanAct = false, judgePool }: { results: VReport["results"]; options: VOption[]; analysisSlot?: ReactNode; themesSlot?: ReactNode; votesTarget?: number; complete?: boolean; audienceFit?: string | null; screeningEnabled?: boolean; viewerCanAct?: boolean; judgePool?: { uniqueJudges: number; established: number; cleanRecord: number; cleanPct: number | null } }) {
   const optById: Record<string, VOption> = Object.fromEntries(options.map((o) => [o.id, o]));
   const total = results.total;
   const filtered = results.filtered ?? 0;
@@ -245,6 +245,8 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
           </div>
         </>
       ) : null}
+
+      {themesSlot}
 
       {/* ── Reasoning signals ── */}
       <div style={head}>Reasoning signals</div>

@@ -129,6 +129,9 @@ export async function buildDecisionPackage(testId: string, scope: PackageScope =
     counts: { valid_judgments: valid, filtered_responses: filtered, total_responses: responses, filter_rate: responses ? Math.round((filtered / responses) * 100) : 0 },
     options: ranked.map((row, i) => ({ option_id: row.id, option: OPTION_LETTERS[row.position], label: optById[row.id]?.label ?? row.label, count: row.votes, share: row.pct, rank: i + 1 })),
     report_meta: { public_report_enabled: !!test.share_enabled, public_report_url: test.share_enabled && test.share_token ? `${SITE}/r/${test.share_token}` : null, export_generated_at: new Date().toISOString() },
+    // Additive (Workstream D): AI-summarized themes from real reasons, if generated.
+    // Summarization only — never affects the decision or any number above.
+    themes: r?.themes ?? null,
   };
   if (scope === "summary") return pkg;
 

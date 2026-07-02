@@ -5,6 +5,7 @@ import { judgePoolStats } from "@/lib/v-analytics";
 import { ogMeta } from "@/lib/og-meta";
 import { ReportBody, OptionThumb } from "@/app/rank/app/tests/[id]/report-body";
 import { AnalysisPanel } from "@/app/rank/app/tests/[id]/analysis-panel";
+import { ThemesPanel } from "@/app/rank/app/tests/[id]/themes-panel";
 
 // Report-specific preview (title + verdict), static OG image, noindex (tokened).
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
@@ -134,6 +135,7 @@ export default async function PublicReport({ params }: { params: Promise<{ token
         votesTarget={test.votes_target}
         judgePool={judgePool}
         analysisSlot={report.results.analysis ? <AnalysisPanel testId="" initial={report.results.analysis} readOnly /> : null}
+        themesSlot={report.results.themes ? <ThemesPanel testId="" initial={report.results.themes} readOnly /> : null}
       />
     </Frame>
   );
