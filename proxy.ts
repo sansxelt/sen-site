@@ -10,6 +10,7 @@ const CLEAN_EXACT: Record<string, string> = {
   "/": "/rank",
   "/how-it-works": "/rank/how-it-works",
   "/pricing": "/rank/pricing",
+  "/free-report": "/rank/free-report",
   "/developers": "/rank/developers",
   "/privacy": "/rank/privacy",
   "/terms": "/rank/terms",

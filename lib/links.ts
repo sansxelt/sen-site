@@ -7,5 +7,7 @@
 // and who the user's audience is. Not a mailto (a mailto has no structured
 // capture and forces the person into their email client, which kills conversion).
 //
-// The live intake form (Tally). One edit here applies site-wide.
-export const FREE_REPORT_URL = "https://tally.so/r/pbMQk1";
+// The free-report CTA target: our branded on-site page (/free-report) that embeds
+// the Tally intake form, so people stay on vraelis.com. Tally still hosts the form
+// and handles submissions. One edit here applies to all CTAs site-wide.
+export const FREE_REPORT_URL = "/free-report";
