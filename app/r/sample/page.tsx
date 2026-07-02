@@ -50,12 +50,13 @@ export default function SampleReport() {
         </div>
 
         {/* recommendation */}
-        <div className="card card--acc" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
+        <div className="card card--acc" style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 18 }}>
           <div style={{ width: 52, height: 52, borderRadius: 13, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 22 }}>B</div>
           <div>
             <div style={{ ...kicker, color: "var(--acc-deep)" }}>Recommendation</div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, color: "var(--fg-1)" }}>Ship Version B</div>
             <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>Preferred by 63% of qualified judgments · directional confidence: strong</div>
+            <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>99% chance</strong> this is genuinely the preferred version, based on the 118 judgments collected (95% range: 54% to 71% preference). A decision aid, not a guarantee.</div>
           </div>
         </div>
 

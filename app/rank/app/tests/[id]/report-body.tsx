@@ -86,9 +86,14 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.5rem, 3vw, 2.1rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>{winner.label && !winner.asset_url ? winner.label.slice(0, 48) : `Option ${optLetter(winner.position)}`}</span>
-                <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>{winnerRow.pct}% preferred · {intel.marginPts == null ? "—" : `+${intel.marginPts} pts`} margin</span>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>{winnerRow.pct}% preferred · {intel.marginPts == null ? "n/a" : `+${intel.marginPts} pts`} margin</span>
               </div>
               <p style={{ fontSize: 14, color: "var(--fg-2)", marginTop: 6, marginBottom: 0 }}>{intel.decisionSummary}</p>
+              {intel.winProbabilityPct != null && (
+                <p style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 8, marginBottom: 0, lineHeight: 1.55 }}>
+                  <strong style={{ color: "var(--fg-1)" }}>{intel.winProbabilityPct}% chance</strong> this is genuinely the preferred version, based on the judgments collected{intel.winnerShareCI ? ` (95% range: ${intel.winnerShareCI[0]}% to ${intel.winnerShareCI[1]}% preference)` : ""}. A decision aid, not a guarantee.
+                </p>
+              )}
             </div>
           </div>
         ) : (
@@ -100,8 +105,8 @@ export function ReportBody({ results, options, analysisSlot, votesTarget = 0, co
 
         <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "14px 0 14px" }}>{intel.marginText}</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Metric l="Preference margin" v={intel.marginPts == null ? "—" : `${intel.marginPts} pts`} accent={!intel.inconclusive} />
-          <Metric l="Directional confidence" v={intel.confidenceLabel === "None" ? "—" : intel.confidenceLabel} />
+          <Metric l="Preference margin" v={intel.marginPts == null ? "n/a" : `${intel.marginPts} pts`} accent={!intel.inconclusive} />
+          <Metric l="Confidence" v={intel.confidenceLabel === "None" ? "n/a" : intel.winProbabilityPct != null ? `${intel.confidenceLabel} · ${intel.winProbabilityPct}%` : intel.confidenceLabel} />
           <Metric l="Valid judgments" v={intel.totalValid.toLocaleString()} />
           <Metric l="Signal quality" v={intel.signalLabel} />
         </div>

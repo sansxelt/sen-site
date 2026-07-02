@@ -159,7 +159,10 @@ export function evaluationIntelligence(r: IntelInput, votesTarget = 0): Intellig
     const need = recommendedSampleSize(pWin, 0.10);
     recommendedAdditional = Math.max(0, Math.ceil(need - effN));
   }
-  const winProbabilityPct = winProbability != null ? Math.round(winProbability * 100) : null;
+  // Cap the displayed percentage at 99: no human-judged result is ever a 100%
+  // certainty, and showing "100%" would read as a guarantee. The raw
+  // winProbability float stays exact for the Decision Package.
+  const winProbabilityPct = winProbability != null ? Math.min(99, Math.round(winProbability * 100)) : null;
   const confidenceLabel = confidenceLabelFromProb(winProbability);
 
   // Signal quality — from the EFFECTIVE sample size and how much was filtered.
