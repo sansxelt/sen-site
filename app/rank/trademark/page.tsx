@@ -9,7 +9,7 @@ export const metadata = ogMeta({
 
 export default function TrademarkPage() {
   return (
-    <LegalShell eyebrow="Legal" title="Trademark" intro="Vraelis is the brand name of our creative testing product. These guidelines explain how the name and logo may be used.">
+    <LegalShell eyebrow="Legal" title="Trademark" intro="Vraelis is the brand name of our human QA product for AI output. These guidelines explain how the name and logo may be used.">
       <H>Using the Vraelis name</H>
       <Ul items={[
         "Vraelis is our brand name. We may show it as Vraelis™ to indicate that we claim the mark.",

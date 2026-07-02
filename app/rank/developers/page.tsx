@@ -125,7 +125,7 @@ export default function DevelopersPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {[
               ["Create a sandbox evaluation", "Call the create endpoint with mode: sandbox to exercise the full flow at 0 credits and 0 quota."],
-              ["Submit candidate outputs", "Send 2 to 8 candidates as text, images, or both, with your prompt and judgment criteria."],
+              ["Submit candidate outputs", "Send 2 to 3 candidates as text, images, or both, with your prompt and judgment criteria."],
               ["Receive the Decision Package", "When the run fills, fetch the typed Decision Package: preferred output, preference margin, confidence, signal quality, valid-vs-filtered counts, and readiness."],
               ["Listen for the completion webhook", "Register an endpoint and get an HMAC-signed callback the instant a run completes, no polling. Verify it with the SDK helper."],
               ["Move to production credits", "Switch off sandbox, pick a plan with API access, and scale with the same calls."],
@@ -251,7 +251,7 @@ export default function DevelopersPage() {
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "22px 0 0", lineHeight: 1.7, textAlign: "center" }}>SSO-ready organizations with verified domains and audited provisioning. OIDC single sign-on is available for verified organization domains today; SAML configuration is in preview and SCIM is on the roadmap. <a href="mailto:hello@vraelis.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "22px 0 0", lineHeight: 1.7, textAlign: "center" }}>SSO-ready organizations with verified domains and audited provisioning. OIDC single sign-on is available for verified organization domains today; SAML configuration is in preview and SCIM is on the roadmap. <a href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
         </div>
       </section>
 

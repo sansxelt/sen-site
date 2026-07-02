@@ -17,7 +17,7 @@ const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing:
 
 function FirstRun({ bal }: { bal: number }) {
   const steps: [string, string][] = [
-    ["Define what you're deciding", "2 to 8 candidate options: images, AI outputs, copy, UI"],
+    ["Define what you're deciding", "2 to 3 candidate options: images, AI outputs, copy, UI"],
     ["Collect qualified signal", "1 credit = 1 valid human judgment"],
     ["Gather human judgment", "Real evaluators weigh in, low-quality filtered"],
     ["Review the decision record", "Recommended option, margin, confidence, reasons"],

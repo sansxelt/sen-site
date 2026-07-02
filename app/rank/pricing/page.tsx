@@ -38,7 +38,7 @@ export default function PricingPage() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Simple pricing. <span className="em">Start with a free report</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Send us 2 to 8 versions of what your app generates. Real people judge which one to ship, and you get a clear report on the winner, and why. Your <strong style={{ color: "var(--fg-1)" }}>first report is free</strong>, then <strong style={{ color: "var(--fg-1)" }}>$99 per report</strong>. Under the hood the unit is credits: <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment</strong>, and you&apos;re never charged for the responses we filter out.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Send us 2 to 3 versions of what your app generates. Real people judge which one to ship, and you get a clear report on the winner, and why. Your <strong style={{ color: "var(--fg-1)" }}>first report is free</strong>, then <strong style={{ color: "var(--fg-1)" }}>$99 per report</strong>. Under the hood the unit is credits: <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment</strong>, and you&apos;re never charged for the responses we filter out.</p>
         </div>
       </section>
 
@@ -52,7 +52,7 @@ export default function PricingPage() {
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>Your first QA report</div>
               <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See exactly what you get before you pay a cent.</div>
               <ul className="price__feat">
-                <li>2 to 8 versions judged by real people</li>
+                <li>2 to 3 versions judged by real people</li>
                 <li>Recommendation + why people judged that way</li>
                 <li>Quality-filtered: the noise removed, not charged</li>
               </ul>

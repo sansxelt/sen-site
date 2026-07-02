@@ -344,7 +344,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       <div style={cardHead}>Enterprise readiness</div>
       <div className="card" style={{ background: "var(--bg-2)" }}>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>OIDC SSO is available · SCIM is not enabled yet</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only — workspace and project access stay separate. <a href="mailto:hello@vraelis.com?subject=Vraelis%20enterprise%20SSO" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only — workspace and project access stay separate. <a href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
       </div>
     </>
   );

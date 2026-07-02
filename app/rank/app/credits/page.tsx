@@ -94,7 +94,7 @@ export default function CreditsPage() {
             {!valid && usingCustom && <span style={{ color: "var(--err)", fontSize: 12.5 }}>Enter an amount between ${MIN} and ${MAX.toLocaleString()}.</span>}
             <span className="hint">Min ${MIN}, max ${MAX.toLocaleString()} per top-up.</span>
             {elevated && (
-              <p style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 8, lineHeight: 1.55 }}>Need more than ${MAX.toLocaleString()} in one go? A single payment tops out here, but we can invoice you for larger volumes (including unlimited credit for enterprise programs). <a href="mailto:hello@vraelis.com?subject=Vraelis%20large%20credit%20purchase" style={{ color: "var(--acc-deep)" }}>Contact us for an invoice →</a></p>
+              <p style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 8, lineHeight: 1.55 }}>Need more than ${MAX.toLocaleString()} in one go? A single payment tops out here, but we can invoice you for larger volumes (including unlimited credit for enterprise programs). <a href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for an invoice →</a></p>
             )}
           </div>
         </div>

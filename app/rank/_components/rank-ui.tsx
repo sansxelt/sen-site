@@ -142,7 +142,7 @@ function Footer() {
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
         <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© 2026 Vraelis. All rights reserved.</span>
-        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Questions? <a href="mailto:hello@vraelis.com" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>hello@vraelis.com</a></span>
+        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Questions? <a href="/contact" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Contact us</a></span>
       </div>
     </footer>
   );

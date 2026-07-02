@@ -34,7 +34,7 @@ const AUDIENCE = [
 ];
 
 const STEPS = [
-  { k: "01", t: "Submit candidates", d: "Model outputs, prompts, completions, or any artifact, 2 to 8 at a time. Via API, SDK, or the console.", i: ICONS.upload },
+  { k: "01", t: "Submit candidates", d: "Model outputs, prompts, completions, or any artifact, 2 to 3 at a time. Via API, SDK, or the console.", i: ICONS.upload },
   { k: "02", t: "Define the judgment", d: "Pairwise preference, a rubric, or open reasoning. Add screening to qualify who judges before they answer.", i: ICONS.layers },
   { k: "03", t: "Collect qualified human signal", d: "Vraelis routes your evaluation to real people who judge and say why: the signal your automated metrics can't give you.", i: ICONS.users },
   { k: "04", t: "Filter low-quality responses", d: "Rushed, duplicate, gamed, and low-reputation responses are rejected automatically. Only qualified judgments count, and you're never charged for the rest.", i: ICONS.flag },
@@ -487,7 +487,7 @@ export default function RankLanding() {
           </div>
           <div className="card card--acc" style={{ textAlign: "center", padding: "clamp(24px, 4vw, 40px)" }}>
             <div className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Your first QA report is <span className="em">free</span>.</div>
-            <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 560, margin: "0 auto 20px", lineHeight: 1.6 }}>Send us 2 to 8 versions of what your app generates. Real people judge which one to ship, and you get a clear report on the winner and why, quality-filtered, with the noise removed. $99 per report after your first.</p>
+            <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 560, margin: "0 auto 20px", lineHeight: 1.6 }}>Send us 2 to 3 versions of what your app generates. Real people judge which one to ship, and you get a clear report on the winner and why, quality-filtered, with the noise removed. $99 per report after your first.</p>
             <a href={FREE_REPORT_URL} className="btn btn--lg">Get a free QA report <span aria-hidden>→</span></a>
           </div>
         </div>

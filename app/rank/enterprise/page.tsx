@@ -116,7 +116,7 @@ export default function EnterprisePage() {
             </div>
           ))}
         </div>
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.7 }}>We describe what Vraelis actually does. We do not claim formal certifications. If your organization needs specific compliance attestations, <a href="mailto:hello@vraelis.com?subject=Vraelis%20security%20%26%20compliance" style={{ color: "var(--acc-deep)" }}>contact us</a> to discuss requirements.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.7 }}>We describe what Vraelis actually does. We do not claim formal certifications. If your organization needs specific compliance attestations, <a href="/contact" style={{ color: "var(--acc-deep)" }}>contact us</a> to discuss requirements.</p>
       </Section>
 
       {/* SSO & provisioning honesty */}
@@ -154,7 +154,7 @@ export default function EnterprisePage() {
               <div className="price__amt">${p.price.monthly}<small>/mo</small></div>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.monthlyCredits.toLocaleString()} credits / mo</div>
               <div style={{ fontSize: 13, color: "var(--fg-3)" }}>{p.blurb}</div>
-              <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="mailto:hello@vraelis.com?subject=Vraelis%20plan">Talk to us</a>
+              <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/contact">Talk to us</a>
             </div>
           ))}
         </div>
@@ -163,7 +163,7 @@ export default function EnterprisePage() {
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Enterprise: governed AI evaluation at org scale</div>
             <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>For organizations that need governance, SSO, and audit across many teams. {ENTERPRISE_PERKS.join(", ")}.</p>
           </div>
-          <a className="btn btn--lg" style={{ flex: "none" }} href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise">Contact sales</a>
+          <a className="btn btn--lg" style={{ flex: "none" }} href="/contact">Contact sales</a>
         </div>
       </Section>
 
@@ -187,7 +187,7 @@ export default function EnterprisePage() {
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <a href="/app/new" className="btn btn--lg">Start an evaluation</a>
             <a href="/developers" className="btn btn--ghost btn--lg">View developer platform</a>
-            <a href="mailto:hello@vraelis.com?subject=Vraelis%20enterprise%20SSO" className="btn btn--ghost btn--lg">Contact us about enterprise SSO</a>
+            <a href="/contact" className="btn btn--ghost btn--lg">Contact us about enterprise SSO</a>
           </div>
         </div>
       </section>

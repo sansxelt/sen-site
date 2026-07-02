@@ -104,7 +104,7 @@ export default function PlansPage() {
                 {p.perks.map((perk) => <li key={perk}>{perk}</li>)}
               </ul>
               {isCurrent ? <button className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center", opacity: 0.6 }} disabled>Your plan</button>
-                : isEnterprise ? <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="mailto:hello@vraelis.com?subject=Vraelis%20Enterprise">Contact sales</a>
+                : isEnterprise ? <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/contact">Contact sales</a>
                 : isFree ? <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/app">Get started free</a>
                 : !available ? <button className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center", opacity: 0.6 }} disabled>Coming soon</button>
                 : <a className={p.featured ? "btn" : "btn btn--ghost"} style={{ marginTop: "auto", justifyContent: "center" }} href={`/app/checkout?plan=${p.key}&cycle=${cycle}`}>{lower ? "Switch" : "Upgrade"} to {p.name}</a>}

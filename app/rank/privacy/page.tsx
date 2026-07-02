@@ -16,7 +16,7 @@ export default function PrivacyPage() {
       <H>Data we collect</H>
       <Ul items={[
         "Account details: your name, email, and which sign-in provider you used (email, Google, or GitHub).",
-        "Tests you create: titles, categories, settings, and the creative options you upload or link.",
+        "Tests you create: titles, categories, settings, and the candidate outputs you upload or link.",
         "Evaluation data: the judgments, rankings, and comments collected on your evaluations, and the report results generated from them.",
         "Public report settings, including whether sharing is on and the share token for a public link.",
         "API key metadata: a key's name, prefix, scopes, created date, and last-used time. The full key is shown once at creation and stored only as a hash.",

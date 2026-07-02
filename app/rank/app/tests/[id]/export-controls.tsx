@@ -42,7 +42,7 @@ export function ExportControls({ testId }: { testId: string }) {
           : <a href="/app/plans" className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>See plans</a>}
       </Row>
       <Row name="Enterprise dataset" plan="Enterprise" desc="Account-level and governed cohort exports, under data terms.">
-        <a href="mailto:sales@vraelis.com?subject=Vraelis%20Enterprise%20data%20export" className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Contact sales</a>
+        <a href="/contact" className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Contact sales</a>
       </Row>
 
       <div style={{ marginTop: 14 }}>
