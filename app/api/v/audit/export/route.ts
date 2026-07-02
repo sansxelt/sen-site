@@ -48,13 +48,13 @@ export async function GET(req: Request) {
   const filename = `vraelis-audit-${scope}-${stamp}.${format}`;
 
   if (format === "json") {
-    return new NextResponse(JSON.stringify({ scope, generated_at: new Date().toISOString(), count: rows.length, entries: rows.map((e) => ({ timestamp: e.when, event: e.label, actor: e.actor, scope, context: e.context })) }, null, 2), {
+    return new NextResponse(JSON.stringify({ scope, generated_at: new Date().toISOString(), count: rows.length, entries: rows.map((e) => ({ timestamp: e.when, event: e.label, category: e.category, subject: e.subject ?? null, actor: e.actor, scope, context: e.context })) }, null, 2), {
       status: 200,
       headers: { "content-type": "application/json; charset=utf-8", "content-disposition": `attachment; filename="${filename}"`, "cache-control": "no-store" },
     });
   }
-  const header = ["scope", "event", "timestamp", "actor", "context"];
-  const lines = [header.map(csvCell).join(","), ...rows.map((e) => [scope, e.label, e.when, e.actor, e.context].map(csvCell).join(","))];
+  const header = ["scope", "event", "category", "subject", "timestamp", "actor", "context"];
+  const lines = [header.map(csvCell).join(","), ...rows.map((e) => [scope, e.label, e.category, e.subject ?? "", e.when, e.actor, e.context].map(csvCell).join(","))];
   return new NextResponse(lines.join("\r\n"), {
     status: 200,
     headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="${filename}"`, "cache-control": "no-store" },

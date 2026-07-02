@@ -26,9 +26,13 @@ function EventList({ events, empty }: { events: AuditEntry[]; empty: string }) {
       {events.map((e, i) => (
         <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>{e.label}</div>
-            <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 2, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>
+              {e.label}
+              {e.subject ? <span style={{ color: "var(--fg-3)", fontWeight: 400 }}> — “{e.subject}”</span> : null}
+            </div>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 3, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <span className="pill" style={{ fontSize: 9.5, color: e.actor === "System" ? "var(--fg-4)" : "var(--acc-deep)" }}>{e.actor}</span>
+              <span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)" }}>{e.category}</span>
               {e.context ? <span>{e.context}</span> : null}
             </div>
           </div>
@@ -54,7 +58,7 @@ export default async function AuditPage() {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Faudit");
-  const events = await workspaceActivity(email, 60);
+  const events = await workspaceActivity(email, 100);
   const org = await getPrimaryOrganization(email);
   const canOrgAudit = org ? await canViewOrganizationAudit(email, org.id) : false;
   const orgEvents = org && canOrgAudit ? await organizationActivity(email, org.id, 60) : [];
@@ -65,13 +69,13 @@ export default async function AuditPage() {
         <div>
           <p className="eyebrow">Trust &amp; governance</p>
           <h1 className="display">Activity</h1>
-          <p>A read-only audit trail of governance actions across your workspace and organization — for accountability and defensibility.</p>
+          <p>A read-only trail of everything that happens in your workspace — evaluations, credits, billing, team access, and governance.</p>
         </div>
         <a href="/security" className="btn btn--ghost">Trust overview →</a>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
-        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records key governance events such as organization changes, domain verification, SSO provider changes, billing-admin changes, confirmation rounds, ownership transfers, and team-access updates. Audit events never include participant identities, payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw evaluation data.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your evaluation runs, credit top-ups, exports, billing changes, team access, and governance events — organization changes, domain verification, SSO, ownership transfers. Activity never includes participant identities, payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw evaluation data.</p>
       </div>
 
       {/* Export */}
@@ -95,7 +99,7 @@ export default async function AuditPage() {
 
       {/* Workspace activity */}
       <div style={cardHead}>Workspace activity</div>
-      <EventList events={events} empty="Invites, role changes, billing actions, ownership transfers, and confirmation rounds will appear here as your team works." />
+      <EventList events={events} empty="Evaluation launches and completions, credit top-ups, exports, billing actions, invites, and role changes will appear here as you work." />
 
       {/* Organization activity */}
       {org && canOrgAudit && (

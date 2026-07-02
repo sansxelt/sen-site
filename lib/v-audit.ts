@@ -9,8 +9,26 @@ import { canViewOrganizationAudit, getPrimaryOrganization } from "./v-organizati
 
 const norm = (e: string) => e.trim().toLowerCase();
 
-// Governance-relevant event types -> human labels. Anything not here is omitted.
+// Activity-relevant event types -> human labels. Anything not here is omitted.
+// Covers evaluations, credits, billing, exports, and governance — but NOT high-volume
+// machine noise (api_request_made) or internal/admin events.
 const AUDIT_LABELS: Record<string, string> = {
+  test_launched: "Evaluation launched",
+  test_completed: "Evaluation completed",
+  sandbox_evaluation_created: "Sandbox evaluation created",
+  evaluation_assigned_to_project: "Evaluation added to project",
+  export_downloaded: "Results exported",
+  collection_link_created: "Collection link created",
+  screening_question_created: "Screening question added",
+  screening_question_updated: "Screening question updated",
+  checkout_started: "Credit top-up started",
+  webhook_test_sent: "Test webhook sent",
+  project_updated: "Project updated",
+  project_added_to_workspace: "Project added to workspace",
+  project_member_activated: "Project access activated",
+  project_invite_resent: "Project invite re-sent",
+  invite_expired: "Invite expired",
+  team_seat_limit_reached: "Seat limit reached",
   workspace_created: "Workspace created",
   workspace_member_invited: "Member invited",
   workspace_member_role_changed: "Member role changed",
@@ -82,24 +100,56 @@ const AUDIT_LABELS: Record<string, string> = {
 const AUDIT_TYPES = Object.keys(AUDIT_LABELS);
 // Org-level governance events (filtered by metadata.organization_id) for the org activity view.
 const ORG_AUDIT_TYPES = ["organization_created", "organization_member_added", "organization_member_role_changed", "organization_member_revoked", "organization_domain_added", "organization_domain_verification_started", "organization_domain_verified", "organization_domain_verification_failed", "organization_domain_token_regenerated", "organization_domain_removed", "organization_domain_reverification_checked", "organization_domain_reverification_failed", "organization_domain_reverification_required", "organization_domain_reverification_restored", "organization_join_request_created", "organization_join_request_approved", "organization_join_request_rejected", "organization_domain_user_auto_joined", "organization_provisioning_settings_updated", "organization_sso_provider_created", "organization_sso_provider_updated", "organization_sso_provider_enabled", "organization_sso_provider_disabled", "organization_sso_login_started", "organization_sso_login_succeeded", "organization_sso_login_failed", "organization_sso_user_provisioned", "organization_sso_test_completed", "workspace_linked_to_organization", "workspace_unlinked_from_organization"];
-// "domain" is a safe bare hostname (acme.com) — not PII; "mode" is disabled|request|auto_member;
-// "provider_type" is saml|oidc; "failure_count"/"batch_count" are small ints. looksSensitive still
-// blocks anything with @, Stripe ids, secrets, uuids.
-const SAFE_KEYS = ["role", "new_role", "old_role", "action", "status", "interval", "seat_count", "count", "delivery_status", "reason", "domain", "mode", "provider_type", "failure_count", "batch_count", "scope", "format", "row_count"];
+// Whitelisted metadata keys, ordered by display usefulness (context shows the first 4 present).
+// All are safe scalars — hostnames, roles, counts, modes; never emails/tokens/ids. looksSensitive
+// still blocks anything with @, Stripe ids, secrets, uuids.
+const SAFE_KEYS = ["result_status", "winner", "votes_valid", "votes_filtered", "votes_target", "option_count", "credits", "amount", "kind", "role", "new_role", "old_role", "status", "interval", "seat_count", "format", "tier", "export_scope", "domain", "mode", "provider_type", "reason", "action", "count", "delivery_status", "failure_count", "batch_count", "scope", "row_count", "category", "audience"];
+// Friendly display names for keys whose raw snake_case reads poorly in the UI.
+const KEY_LABEL: Record<string, string> = {
+  result_status: "Result", winner: "Winner", votes_valid: "Valid", votes_filtered: "Filtered", votes_target: "Target",
+  option_count: "Candidates", credits: "Credits", amount: "Amount", kind: "Type", new_role: "New role", old_role: "Previous role",
+  seat_count: "Seats", export_scope: "Scope", provider_type: "Provider", delivery_status: "Delivery",
+  failure_count: "Failures", batch_count: "Checked", row_count: "Rows",
+};
 const looksSensitive = (v: string) => /@|cus_[A-Za-z0-9]|sub_[A-Za-z0-9]|si_[A-Za-z0-9]|price_|sk_|whsec_|^[0-9a-f]{8}-[0-9a-f]{4}-/.test(v) || v.length > 48;
 
-export type AuditEntry = { id: string; label: string; when: string; actor: string; context: string };
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+function keyLabel(k: string) { return KEY_LABEL[k] ?? cap(k.replace(/_/g, " ")); }
+function valueLabel(k: string, v: unknown) {
+  if (k === "amount" && typeof v === "number") return `$${v}`;
+  return typeof v === "string" ? v.replace(/_/g, " ") : String(v);
+}
 
-type Row = { id: string; user_id: string | null; event_type: string; actor_type: string; metadata: Record<string, unknown> | null; created_at: string };
+// Coarse category for the feed chip — derived from the event type, never from metadata.
+function categoryFor(t: string): string {
+  if (/^(test_|sandbox_|evaluation_|confirmation_|followup_|export_downloaded|collection_link|screening_)/.test(t)) return "Evaluation";
+  if (t === "checkout_started") return "Credits";
+  if (/^(team_|workspace_billing)/.test(t)) return "Billing";
+  if (/^(organization_|workspace_linked|workspace_unlinked)/.test(t)) return "Organization";
+  if (/^(api_key|webhook_)/.test(t)) return "Developer";
+  if (/^(workspace_member|workspace_invite|invite_|project_member|project_invite|workspace_ownership)/.test(t)) return "Team";
+  if (t === "audit_export_created") return "Governance";
+  return "Workspace";
+}
 
-function toEntry(r: Row, uid: string): AuditEntry {
+export type AuditEntry = { id: string; label: string; when: string; actor: string; context: string; category: string; subject?: string };
+
+type Row = { id: string; user_id: string | null; test_id?: string | null; event_type: string; actor_type: string; metadata: Record<string, unknown> | null; created_at: string };
+
+function toEntry(r: Row, uid: string, titles?: Map<string, string>): AuditEntry {
   const md = (r.metadata ?? {}) as Record<string, unknown>;
   const context = SAFE_KEYS
     .filter((k) => md[k] != null && typeof md[k] !== "object" && !looksSensitive(String(md[k])))
-    .map((k) => `${k.replace(/_/g, " ")}: ${md[k]}`)
+    .slice(0, 4)
+    .map((k) => `${keyLabel(k)}: ${valueLabel(k, md[k])}`)
     .join(" · ");
   const actor = r.user_id === uid ? "You" : r.actor_type === "system" ? "System" : r.actor_type === "api" ? "API" : r.actor_type === "webhook" ? "Webhook" : "Team";
-  return { id: r.id, label: AUDIT_LABELS[r.event_type] ?? r.event_type, when: r.created_at, actor, context };
+  const title = r.test_id && titles ? titles.get(r.test_id) : undefined;
+  return {
+    id: r.id, label: AUDIT_LABELS[r.event_type] ?? r.event_type, when: r.created_at, actor, context,
+    category: categoryFor(r.event_type),
+    ...(title ? { subject: title.length > 60 ? title.slice(0, 57) + "…" : title } : {}),
+  };
 }
 
 export async function workspaceActivity(email: string, limit = 40): Promise<AuditEntry[]> {
@@ -108,7 +158,7 @@ export async function workspaceActivity(email: string, limit = 40): Promise<Audi
     const s = getSupabaseAdminClient();
     const uid = norm(email);
     const ws = await getOrCreatePersonalWorkspace(email);
-    const cols = "id,user_id,event_type,actor_type,metadata,created_at";
+    const cols = "id,user_id,test_id,event_type,actor_type,metadata,created_at";
     const [mine, sys] = await Promise.all([
       s.from("v_events" as never).select(cols).eq("user_id", uid).in("event_type", AUDIT_TYPES).order("created_at", { ascending: false }).limit(limit),
       ws ? s.from("v_events" as never).select(cols).eq("metadata->>workspace_id", ws.id).in("event_type", AUDIT_TYPES).order("created_at", { ascending: false }).limit(limit) : Promise.resolve({ data: [] as Row[] }),
@@ -116,7 +166,15 @@ export async function workspaceActivity(email: string, limit = 40): Promise<Audi
     const byId = new Map<string, Row>();
     for (const r of [...((mine.data as unknown as Row[]) ?? []), ...(((sys as { data?: Row[] }).data) ?? [])]) byId.set(r.id, r);
     const rows = [...byId.values()].sort((a, b) => (a.created_at < b.created_at ? 1 : -1)).slice(0, limit);
-    return rows.map((r) => toEntry(r, uid));
+    // Enrich evaluation events with the evaluation's title — but ONLY the caller's own tests
+    // (user_id = uid), so a stray event can never surface someone else's content.
+    const testIds = [...new Set(rows.map((r) => r.test_id).filter((t): t is string => !!t))];
+    const titles = new Map<string, string>();
+    if (testIds.length) {
+      const { data: ts } = await s.from("v_tests" as never).select("id,title").in("id", testIds).eq("user_id", uid);
+      for (const t of (ts as unknown as { id: string; title: string }[]) ?? []) titles.set(t.id, t.title);
+    }
+    return rows.map((r) => toEntry(r, uid, titles));
   } catch { return []; }
 }
 

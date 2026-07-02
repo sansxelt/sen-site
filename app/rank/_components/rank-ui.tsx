@@ -144,6 +144,15 @@ function AppTopbar({ email }: { email: string | null }) {
   const [menu, setMenu] = useState(false);
   const pathname = usePathname() || "";
   useEffect(() => { setMenu(false); }, [pathname]);
+  // The layout's email can be stale-null when this shell was first rendered from a public
+  // (static) page and kept across client navigation — self-resolve so the signed-in account
+  // is always identifiable (never "?" / "your account" for a real session).
+  const [who, setWho] = useState<string | null>(email);
+  useEffect(() => { if (email) setWho(email); }, [email]);
+  useEffect(() => {
+    if (who) return;
+    fetch("/api/auth/session").then((r) => (r.ok ? r.json() : null)).then((j) => { const e = j?.user?.email; if (e) setWho(e); }).catch(() => {});
+  }, [who]);
   return (
     <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
       {/* in-app logo returns to the public home (sidebar's "Back to site" does too);
@@ -152,14 +161,14 @@ function AppTopbar({ email }: { email: string | null }) {
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</a>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
-          <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(email || "?").slice(0, 1).toUpperCase()}</span>
+          <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(who || "?").slice(0, 1).toUpperCase()}</span>
           <span style={{ fontSize: 13, color: "var(--fg-3)" }} aria-hidden>▾</span>
         </button>
         {menu && (
           <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 220, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
-              <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{email || "your account"}</div>
+              <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
             </div>
             <a href="/app/account" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Account</a>
             <a href="/app/billing" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</a>
