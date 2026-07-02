@@ -70,6 +70,7 @@ function Brand({ href }: { href: string }) {
 function PublicNav({ signedIn }: { signedIn: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [authed, setAuthed] = useState(signedIn);
   const pathname = usePathname() || "";
 
   useEffect(() => {
@@ -78,16 +79,23 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
     return () => window.removeEventListener("scroll", o);
   }, []);
   useEffect(() => { setOpen(false); }, [pathname]);
+  // Marketing pages can be served statically, so the server-passed signedIn may be
+  // stale (false) for a logged-in visitor. Resolve it on the client so the logo and
+  // nav route signed-in users to their dashboard, not the marketing home.
+  useEffect(() => {
+    if (authed) return;
+    fetch("/api/auth/session").then((r) => r.json()).then((s) => { if (s?.user?.email) setAuthed(true); }).catch(() => {});
+  }, [authed]);
 
   const link = { fontSize: 14, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500 } as const;
   return (
     <nav style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`, transition: "border-color .25s ease, background .25s ease" }}>
-      <Brand href={signedIn ? "/app" : "/"} />
+      <Brand href={authed ? "/app" : "/"} />
       <div className="vra-nav-links" style={{ display: "flex", gap: 28, alignItems: "center", marginLeft: 22 }}>
         {PUBLIC_LINKS.map((l) => <a key={l.href} href={l.href} style={{ ...link, color: pathname === l.href ? "var(--fg-1)" : "var(--fg-2)" }}>{l.label}</a>)}
       </div>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16 }}>
-        <a href={signedIn ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{signedIn ? "Dashboard" : "Sign in"}</a>
+        <a href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{authed ? "Dashboard" : "Sign in"}</a>
         <a href="/app/new" className="btn">Test your AI content</a>
         <button aria-label="Menu" onClick={() => setOpen((v) => !v)} className="vra-nav-burger" style={{ display: "none", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 11, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", color: "var(--fg-1)" }}>
           <span aria-hidden>{open ? "✕" : "☰"}</span>
@@ -96,7 +104,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
       {open && (
         <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "var(--bg-1)", borderBottom: "1px solid var(--line-2)", boxShadow: "var(--shadow-md)", padding: "10px var(--gutter) 18px", display: "flex", flexDirection: "column", gap: 2 }}>
           {PUBLIC_LINKS.map((l) => <a key={l.href} href={l.href} style={{ ...link, padding: "12px 4px", borderBottom: "1px solid var(--line-1)" }}>{l.label}</a>)}
-          <a href={signedIn ? "/app" : "/signin?callbackUrl=%2Fapp"} style={{ ...link, padding: "12px 4px" }}>{signedIn ? "Dashboard" : "Sign in"}</a>
+          <a href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} style={{ ...link, padding: "12px 4px" }}>{authed ? "Dashboard" : "Sign in"}</a>
         </div>
       )}
     </nav>
