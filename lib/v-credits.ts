@@ -134,6 +134,65 @@ export async function refund(userId: string, testId: string, amount: number): Pr
   }
 }
 
+// Spend `amount` credits for a single AI check (default 1) — the AI Output Check
+// money path. Monthly bucket first (tagged with its expiry), then purchased. This is
+// the pre-migration JS FALLBACK for the atomic v_spend_credit RPC (see v-checks.ts):
+// check-then-write, so it is only app-level race-guarded. Idempotent per check via
+// the split ext_ref keys. Returns false if the balance is insufficient.
+export async function spend(userId: string, checkId: string, amount = 1): Promise<boolean> {
+  if (amount <= 0) return true;
+  const rows = await liveRows(userId);
+  const bal = rows.reduce((s, r) => s + r.delta, 0);
+  if (bal < amount) return false;
+
+  const monthlyNet = rows.filter((r) => r.bucket === "monthly").reduce((s, r) => s + r.delta, 0);
+  const monthlyExpiry = latestMonthlyExpiry(rows);
+  const fromMonthly = Math.max(0, Math.min(amount, monthlyNet));
+  const fromPurchased = amount - fromMonthly;
+
+  if (fromMonthly > 0) await grant(userId, -fromMonthly, "check", { bucket: "monthly", expiresAt: monthlyExpiry, refType: "check", refId: checkId, extRef: `check:${checkId}:m` });
+  if (fromPurchased > 0) await grant(userId, -fromPurchased, "check", { bucket: "purchased", refType: "check", refId: checkId, extRef: `check:${checkId}:p` });
+  return true;
+}
+
+// Refund a check's charge — used on any post-charge failure, so the customer is never
+// charged for a check they didn't get. Reads THIS check's debit rows authoritatively
+// (surfacing read errors and retrying once, unlike liveRows which returns [] on a blip
+// and would make a failed read look like "nothing was charged"), then reverses each
+// debited leg to the SAME bucket, re-using the debit's OWN expiry for the monthly leg
+// (a since-expired monthly credit is refunded already-expired and correctly drops out,
+// never laundered into permanent credit). Idempotent per check via ext_ref. Returns
+// true if the reversal is known to have landed (or nothing was charged).
+export async function refundCheck(userId: string, checkId: string): Promise<boolean> {
+  if (!isDatabaseConfigured()) return false;
+  const s = getSupabaseAdminClient();
+  const uid = norm(userId);
+
+  let charged: LedgerRow[] | null = null;
+  for (let attempt = 0; attempt < 2 && charged === null; attempt++) {
+    const { data, error } = await s
+      .from("v_credit_ledger" as never)
+      .select("delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id")
+      .eq("user_id", uid).eq("reason", "check").eq("ref_type", "check").eq("ref_id", checkId);
+    if (error) { console.error(`refundCheck read failed (attempt ${attempt + 1}) for check ${checkId}:`, error.message); continue; }
+    charged = (data as unknown as LedgerRow[]) ?? [];
+  }
+  if (charged === null) { console.error(`REFUND UNRESOLVED for check ${checkId}: ledger read failed; manual reconciliation may be needed`); return false; }
+  if (charged.length === 0) return true; // RPC rolled back / never committed — nothing to reverse
+
+  const monthly = charged.filter((r) => r.bucket === "monthly");
+  const purchased = charged.filter((r) => r.bucket === "purchased");
+  const monthlyAmt = -monthly.reduce((sum, r) => sum + r.delta, 0);     // debits are negative
+  const purchasedAmt = -purchased.reduce((sum, r) => sum + r.delta, 0);
+  const monthlyExp = monthly.map((r) => r.expires_at).filter(Boolean).sort().pop() ?? null;
+
+  let ok = true;
+  if (purchasedAmt > 0) ok = (await grant(uid, purchasedAmt, "refund", { bucket: "purchased", refType: "check", refId: checkId, extRef: `refundcheck:${checkId}:p` })) && ok;
+  if (monthlyAmt > 0) ok = (await grant(uid, monthlyAmt, "refund", { bucket: "monthly", expiresAt: monthlyExp, refType: "check", refId: checkId, extRef: `refundcheck:${checkId}:m` })) && ok;
+  if (!ok) console.error(`REFUND INCOMPLETE for check ${checkId}: a refund grant did not land; manual reconciliation may be needed`);
+  return ok;
+}
+
 function latestMonthlyExpiry(rows: LedgerRow[]): string | null {
   return rows
     .filter((r) => r.bucket === "monthly" && r.delta > 0 && r.expires_at)

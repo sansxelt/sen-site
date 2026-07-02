@@ -15,6 +15,7 @@ const RATE_WINDOW = 60; // seconds
 function endpointGroup(url: string, method = "GET"): string {
   try {
     const p = new URL(url).pathname;
+    if (p.endsWith("/api/v1/check")) return "check";
     if (p.includes("/export")) return "tests.export";
     if (p.includes("/api/v1/keys/") && p.endsWith("/usage")) return "keys.usage";
     if (/\/api\/v1\/tests\/[^/]+$/.test(p)) return method === "PATCH" ? "tests.patch" : "tests.get";
