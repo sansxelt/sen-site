@@ -1,12 +1,12 @@
 import { ogMeta } from "@/lib/og-meta";
 import { FREE_REPORT_URL } from "@/lib/links";
 
-// Public, static sample QA report, linked from the home "See a real report" CTA.
-// It mirrors the real /r/[token] report structure with illustrative data, and says
-// so plainly. No real evaluation, no real people, no live numbers.
+// Public, static sample human-validation report, linked from the home "See a real
+// report" CTA. It mirrors the real /r/[token] report structure with illustrative
+// data, and says so plainly. No real evaluation, no real people, no live numbers.
 export const metadata = ogMeta({
-  title: "Sample QA report",
-  description: "A sample Vraelis QA report with real structure and illustrative data. See how human QA reads back: the recommendation, why people judged that way, what to change, and an honest method note.",
+  title: "Sample validation report",
+  description: "A sample human validation report with real structure and illustrative data. See how real people read back your AI output: the recommendation, why they judged that way, what to change, and an honest method note.",
   path: "/r/sample",
 });
 
@@ -43,7 +43,7 @@ export default function SampleReport() {
         </div>
 
         {/* header */}
-        <p className="eyebrow">QA report</p>
+        <p className="eyebrow">Human validation</p>
         <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", margin: "6px 0 10px" }}>Which onboarding message should we ship?</h1>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap", ...kicker, marginBottom: 24 }}>
           <span>Complete</span><span>·</span><span>118 qualified judgments</span><span>·</span><span>12 filtered for quality</span>
@@ -126,10 +126,10 @@ export default function SampleReport() {
 
         {/* CTA */}
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginBottom: 12 }}>Want one of these on your own output?</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginBottom: 12 }}>Want this on your own output?</div>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href={FREE_REPORT_URL} className="btn btn--lg">Get a free QA report <span aria-hidden>→</span></a>
-            <a href="/how-it-works" className="btn btn--ghost btn--lg">How it works</a>
+            <a href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></a>
+            <a href={FREE_REPORT_URL} className="btn btn--ghost btn--lg">Validate on real people</a>
           </div>
         </div>
       </div>

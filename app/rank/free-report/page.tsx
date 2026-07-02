@@ -8,8 +8,8 @@ import { TallyEmbed } from "./tally-embed";
 // pointerEvents:none keeps the form fully clickable through the overlap. Copy + one
 // embed only; no backend.
 export const metadata = ogMeta({
-  title: "Get a free QA report",
-  description: "Get a free human QA report on your AI output: real people judge which version to ship, and why. Human QA for AI output.",
+  title: "Validate your AI output on real people",
+  description: "Put the output your app generates in front of real people. They judge which version to ship, and why, so you can trust the call. This is the human validation behind the AI check.",
   path: "/free-report",
 });
 
@@ -20,9 +20,9 @@ export default function FreeReportPage() {
       <div className="grid-faint" />
       <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(24px, 3.5vw, 48px)", paddingBottom: "clamp(40px, 6vw, 80px)", maxWidth: 720 }}>
         <div style={{ position: "relative", zIndex: 2, textAlign: "center", pointerEvents: "none" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Human QA for AI output</p>
-          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(1.9rem, 3.8vw, 2.7rem)", margin: "8px auto 10px", maxWidth: 560 }}>Get a <span className="em">free</span> QA report.</h1>
-          <p className="rise" data-d="3" style={{ fontSize: 14.5, color: "var(--fg-3)", maxWidth: 520, margin: "0 auto", lineHeight: 1.55 }}>Send a few versions of what your app generates. Real people judge which one to ship, and why.</p>
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Human validation</p>
+          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(1.9rem, 3.8vw, 2.7rem)", margin: "8px auto 10px", maxWidth: 560 }}>Validate your output on <span className="em">real people</span>.</h1>
+          <p className="rise" data-d="3" style={{ fontSize: 14.5, color: "var(--fg-3)", maxWidth: 520, margin: "0 auto", lineHeight: 1.55 }}>Send a few versions of what your app generates. Real people judge which one to ship, and why. Use it to confirm an AI check, or on its own when the call really matters.</p>
         </div>
         <div className="rise" data-d="4" style={{ position: "relative", zIndex: 1, marginTop: "clamp(-72px, -8vw, -40px)" }}>
           <TallyEmbed />

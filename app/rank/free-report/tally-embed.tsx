@@ -26,7 +26,7 @@ export function TallyEmbed() {
         loading="lazy"
         width="100%"
         height={500}
-        title="Get a free QA report"
+        title="Validate your AI output on real people"
         style={{ border: 0, background: "transparent" }}
       />
       <Script
