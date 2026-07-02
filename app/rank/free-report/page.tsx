@@ -1,9 +1,10 @@
 import { ogMeta } from "@/lib/og-meta";
 import { TallyEmbed } from "./tally-embed";
 
-// Branded on-site intake page: site nav + footer wrap the embedded Tally form. Our
-// heading overlaps the form's transparent top space (which is otherwise empty), so
-// the context sits in that white space instead of leaving a gap or a doubled title.
+// Branded on-site intake page: site nav + footer wrap the embedded Tally form, with
+// the site's ambient glow + grid so it doesn't read as a bare form. Our heading
+// overlaps the form's transparent top space (which is otherwise empty), so the
+// context fills that white space instead of leaving a gap or a doubled title.
 // pointerEvents:none keeps the form fully clickable through the overlap. Copy + one
 // embed only; no backend.
 export const metadata = ogMeta({
@@ -15,13 +16,15 @@ export const metadata = ogMeta({
 export default function FreeReportPage() {
   return (
     <section style={{ position: "relative" }}>
-      <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(20px, 3vw, 40px)", paddingBottom: "clamp(40px, 6vw, 80px)", maxWidth: 720 }}>
+      <div className="glow glow--soft glow--bleed" />
+      <div className="grid-faint" />
+      <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(24px, 3.5vw, 48px)", paddingBottom: "clamp(40px, 6vw, 80px)", maxWidth: 720 }}>
         <div style={{ position: "relative", zIndex: 2, textAlign: "center", pointerEvents: "none" }}>
-          <p className="eyebrow" style={{ justifyContent: "center" }}>Human QA for AI output</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3.4vw, 2.4rem)", margin: "6px auto 8px", maxWidth: 560 }}>Get a free QA report.</h1>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 520, margin: "0 auto", lineHeight: 1.55 }}>Send a few versions of what your app generates. Real people judge which one to ship, and why.</p>
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Human QA for AI output</p>
+          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(1.9rem, 3.8vw, 2.7rem)", margin: "8px auto 10px", maxWidth: 560 }}>Get a <span className="em">free</span> QA report.</h1>
+          <p className="rise" data-d="3" style={{ fontSize: 14.5, color: "var(--fg-3)", maxWidth: 520, margin: "0 auto", lineHeight: 1.55 }}>Send a few versions of what your app generates. Real people judge which one to ship, and why.</p>
         </div>
-        <div style={{ position: "relative", zIndex: 1, marginTop: "clamp(-72px, -8vw, -40px)" }}>
+        <div className="rise" data-d="4" style={{ position: "relative", zIndex: 1, marginTop: "clamp(-72px, -8vw, -40px)" }}>
           <TallyEmbed />
         </div>
         <p style={{ fontSize: 12, color: "var(--fg-5)", textAlign: "center", marginTop: 12, lineHeight: 1.6 }}>

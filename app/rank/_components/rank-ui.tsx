@@ -10,7 +10,7 @@ const PUBLIC_LINKS = [
   { href: "/how-it-works", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
   { href: "/developers", label: "Developers" },
-  { href: "/security", label: "Security" },
+  { href: "/enterprise", label: "Enterprise" },
   { href: "/vote", label: "Evaluate & Earn" },
 ];
 
