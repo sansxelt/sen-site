@@ -7,8 +7,13 @@ import { apiError, requestId } from "./_lib";
 
 // Per-key rate limit for the public API. Fail-open (the limiter allows if the DB
 // RPC isn't present), so normal low-volume use is never blocked.
-const RATE_LIMIT = 120; // requests
-const RATE_WINDOW = 60; // seconds
+const RATE_LIMIT = 120;     // authenticated requests per key
+// Coarse per-IP bound in FRONT of the key work (fail-open). Set well above the per-key cap
+// so several keys behind one corporate NAT egress IP aren't throttled before their own
+// limits; it exists only to blunt a single-IP flood of bogus keys (~20 req/s), not to pace
+// legitimate use (the per-key limit does that).
+const IP_RATE_LIMIT = 1200;
+const RATE_WINDOW = 60;     // seconds
 
 // Coarse endpoint group from the path + method — never the full (possibly
 // id-bearing) URL, so the id/prefix never lands in v_events.
@@ -33,6 +38,15 @@ export type ApiAuth = { ok: true; userId: string; scopes: string[]; prefix: stri
 // tests:write, tests:read, credits:read, so none are locked out).
 export async function apiAuth(req: Request, scope?: string): Promise<ApiAuth> {
   const rid = requestId();
+
+  // Coarse per-IP throttle BEFORE any key work. An invalid key returns before the per-key
+  // limiter (which is keyed on a VALID key), so without this a flood of bogus keys would each
+  // run an unmetered hash + key lookup. Fail-open, same as the per-key limiter.
+  const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || req.headers.get("x-real-ip")?.trim() || "unknown";
+  if (!(await allow(`v1ip:${ip}`, IP_RATE_LIMIT, RATE_WINDOW))) {
+    return { ok: false, response: apiError("rate_limited", "Rate limit exceeded. Slow down and retry.", 429, rid, { "Retry-After": String(RATE_WINDOW), "X-RateLimit-Limit": String(IP_RATE_LIMIT) }) };
+  }
+
   const key = req.headers.get("x-api-key") || (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
   if (!key) return { ok: false, response: apiError("unauthorized", "Missing API key. Send it as X-Api-Key or Authorization: Bearer.", 401, rid) };
 

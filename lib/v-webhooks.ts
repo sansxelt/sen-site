@@ -3,10 +3,9 @@
 // email/user_id, API keys, billing, or raw ip/device data. Owner-scoped CRUD.
 
 import crypto from "crypto";
-import dns from "dns/promises";
 import net from "net";
-import { fetch as undiciFetch, Agent } from "undici";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
+import { isPrivateIp, safeFetch } from "./safe-fetch";
 import { getTestWithOptions, getReport, OPTION_LETTERS, type VTest } from "./v-db";
 import { logEvent } from "./v-events";
 import { buildDecisionPackage, SAMPLE_DECISION_PACKAGE } from "./v-decision-package";
@@ -34,32 +33,9 @@ function isRetriable(res: { status: number | null; error: string | null }): bool
   return true; // timeout, delivery_failed, 5xx, 429
 }
 
-// True if an IP literal is private/reserved/loopback/link-local (incl. cloud
-// metadata 169.254.169.254). Covers IPv4 ranges + IPv6 (loopback, ULA, link-local,
-// and IPv4-mapped forms). Unknown → treated as unsafe.
-export function isPrivateIp(ip: string): boolean {
-  let addr = ip.trim().toLowerCase();
-  if (addr.startsWith("::ffff:") && net.isIP(addr.slice(7)) === 4) addr = addr.slice(7); // IPv4-mapped
-  const fam = net.isIP(addr);
-  if (fam === 4) {
-    const p = addr.split(".").map(Number);
-    if (p.some((n) => Number.isNaN(n) || n > 255)) return true;
-    return (
-      p[0] === 0 || p[0] === 10 || p[0] === 127 ||
-      (p[0] === 100 && p[1] >= 64 && p[1] <= 127) ||   // CGN 100.64/10
-      (p[0] === 169 && p[1] === 254) ||                // link-local / metadata
-      (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
-      (p[0] === 192 && p[1] === 0 && p[2] === 0) ||    // 192.0.0.0/24
-      (p[0] === 192 && p[1] === 168) ||
-      (p[0] === 198 && (p[1] === 18 || p[1] === 19)) || // 198.18.0.0/15 benchmarking
-      p[0] >= 224                                      // multicast/reserved/broadcast
-    );
-  }
-  if (fam === 6) {
-    return addr === "::1" || addr === "::" || addr.startsWith("fc") || addr.startsWith("fd") || addr.startsWith("fe8") || addr.startsWith("fe9") || addr.startsWith("fea") || addr.startsWith("feb");
-  }
-  return true;
-}
+// isPrivateIp + safeFetch now live in lib/safe-fetch.ts (shared with the SSO OIDC fetches).
+// Re-export isPrivateIp so any external importer of this module keeps working.
+export { isPrivateIp };
 
 // SSRF guard (create-time, string only — first line of defense). https only,
 // port 443 only, no localhost/internal, no private IP literals. The real defense
@@ -74,28 +50,6 @@ export function webhookUrlError(url: string): string | null {
   if (host.includes(":")) return "Use a public hostname, not an IPv6 literal.";
   if (net.isIP(host) === 4 && isPrivateIp(host)) return "Private/reserved IPs are not allowed.";
   return null;
-}
-
-// Resolve the hostname, reject if ANY resolved address is private/reserved, then
-// pin the connection to the validated IP (no re-resolution → defeats DNS
-// rebinding). Throws "blocked" on any unsafe destination. https + port 443 only.
-async function safeFetch(url: string, init: RequestInit): Promise<{ status: number }> {
-  const u = new URL(url);
-  if (u.protocol !== "https:" || (u.port && u.port !== "443")) throw new Error("blocked");
-  let addrs: { address: string; family: number }[];
-  try { addrs = await dns.lookup(u.hostname, { all: true }); } catch { throw new Error("blocked"); }
-  if (!addrs.length || addrs.some((a) => isPrivateIp(a.address))) throw new Error("blocked");
-  // Pin undici to the validated address set so it can't re-resolve to a private
-  // IP between validation and connect (defeats rebinding). undici's connect.lookup
-  // expects the dns.lookup({all:true}) array form. Use undici's own fetch so the
-  // Agent dispatcher is version-matched (global fetch rejects a foreign Agent).
-  const validated = addrs.map((a) => ({ address: a.address, family: a.family }));
-  const agent = new Agent({ connect: { lookup: (_h: string, _o: unknown, cb: (e: Error | null, a: { address: string; family: number }[]) => void) => cb(null, validated) } as never });
-  try {
-    return (await undiciFetch(url, { ...init, dispatcher: agent } as never)) as unknown as { status: number };
-  } finally {
-    agent.close().catch(() => {});
-  }
 }
 
 function sign(secret: string, timestamp: string, body: string): string {

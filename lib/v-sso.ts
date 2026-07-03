@@ -9,6 +9,7 @@ import crypto from "crypto";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { logEvent } from "./v-events";
 import { getPrimaryOrganization, canManageOrganization, applyDomainProvisioning, emailDomain, domainTrustState, type ProvOrg, type DomainDefaultRole } from "./v-organization";
+import { safeFetch, unsafeHttpsUrlReason } from "./safe-fetch";
 
 const norm = (e: string) => e.trim().toLowerCase();
 const SESSION_COOKIE = "__Secure-authjs.session-token";
@@ -105,7 +106,7 @@ export async function upsertSsoProvider(email: string, input: SsoInput): Promise
   if (input.type !== "saml" && input.type !== "oidc") return { ok: false, error: "invalid_type" };
   const domain = norm(input.domain || "");
   if (!(await verifiedDomains(org.id)).includes(domain)) return { ok: false, error: "domain_not_verified" };
-  if (input.type === "oidc" && !/^https:\/\/[^\s]+$/.test(input.oidcDiscoveryUrl || "")) return { ok: false, error: "invalid_discovery_url" };
+  if (input.type === "oidc" && unsafeHttpsUrlReason(input.oidcDiscoveryUrl || "")) return { ok: false, error: "invalid_discovery_url" };
   try {
     const s = getSupabaseAdminClient();
     const { data: existing } = await s.from("v_organization_sso_providers" as never).select("id,client_secret_encrypted").eq("organization_id", org.id).eq("domain", domain).maybeSingle();
@@ -188,10 +189,14 @@ async function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 type Discovery = { authorization_endpoint: string; token_endpoint: string; jwks_uri: string; issuer: string };
 async function oidcDiscovery(url: string): Promise<Discovery | null> {
   try {
-    const r = await withTimeout(fetch(url, { headers: { accept: "application/json" } }), 6000);
+    const r = await withTimeout(safeFetch(url, { headers: { accept: "application/json" }, redirect: "manual" }), 6000);
     if (!r.ok) return null;
     const j = (await r.json()) as Discovery;
     if (!j.authorization_endpoint || !j.token_endpoint || !j.jwks_uri || !j.issuer) return null;
+    // Validate the endpoints the IdP just handed us BEFORE we ever fetch/POST to them. safeFetch
+    // re-checks at call time, but rejecting here also stops the browser being redirected to an
+    // unsafe authorization_endpoint.
+    if (unsafeHttpsUrlReason(j.authorization_endpoint) || unsafeHttpsUrlReason(j.token_endpoint) || unsafeHttpsUrlReason(j.jwks_uri)) return null;
     return j;
   } catch { return null; }
 }
@@ -222,15 +227,22 @@ export async function completeOidcCallback(providerId: string, code: string, exp
   if (!disc) return { ok: false, error: "discovery_failed" };
   const redirectUri = `https://vraelis.com/api/v/sso/oidc/${p.id}/callback`;
   try {
-    const tr = await withTimeout(fetch(disc.token_endpoint, {
+    const tr = await withTimeout(safeFetch(disc.token_endpoint, {
       method: "POST", headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
       body: new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: redirectUri, client_id: p.client_id, client_secret: secret }).toString(),
+      redirect: "manual",
     }), 8000);
     if (!tr.ok) return { ok: false, error: "token_exchange_failed" };
     const tok = (await tr.json()) as { id_token?: string };
     if (!tok.id_token) return { ok: false, error: "no_id_token" };
-    const { jwtVerify, createRemoteJWKSet } = await import("jose");
-    const JWKS = createRemoteJWKSet(new URL(disc.jwks_uri));
+    // Fetch the JWKS ourselves through the SSRF-safe fetcher and verify against a LOCAL key set,
+    // so jose can never be pointed at an internal jwks_uri.
+    const jr = await withTimeout(safeFetch(disc.jwks_uri, { headers: { accept: "application/json" }, redirect: "manual" }), 6000);
+    if (!jr.ok) return { ok: false, error: "jwks_failed" };
+    const jwks = (await jr.json()) as { keys?: unknown[] };
+    if (!jwks || !Array.isArray(jwks.keys) || jwks.keys.length === 0) return { ok: false, error: "jwks_failed" };
+    const { jwtVerify, createLocalJWKSet } = await import("jose");
+    const JWKS = createLocalJWKSet(jwks as never);
     // Explicit asymmetric-only allowlist (defense-in-depth against alg confusion / alg:none).
     const { payload } = await jwtVerify(tok.id_token, JWKS, { issuer: disc.issuer, audience: p.client_id, algorithms: ["RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512"] });
     if (expectedNonce && payload.nonce !== expectedNonce) return { ok: false, error: "nonce_mismatch" };

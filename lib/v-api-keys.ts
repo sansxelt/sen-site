@@ -30,10 +30,15 @@ export async function verifyApiKey(key: string): Promise<{ userId: string; scope
   const s = getSupabaseAdminClient();
   // prefix is the public, non-secret identifier (already shown in the UI) — used
   // to attribute API usage per key. NEVER selects key_hash.
-  const { data } = await s.from("v_api_keys" as never).select("user_id,scopes,id,prefix").eq("key_hash", hash(key)).maybeSingle();
-  const r = data as unknown as { user_id: string; scopes: string[]; id: string; prefix: string } | null;
+  const { data } = await s.from("v_api_keys" as never).select("user_id,scopes,id,prefix,last_used").eq("key_hash", hash(key)).maybeSingle();
+  const r = data as unknown as { user_id: string; scopes: string[]; id: string; prefix: string; last_used: string | null } | null;
   if (!r) return null;
-  await s.from("v_api_keys" as never).update({ last_used: new Date().toISOString() } as never).eq("id", r.id);
+  // Throttle the last_used write to ~once/min per key: a burst on one key otherwise hammers
+  // this single row with an UPDATE per request (lock contention). Best-effort; never blocks auth.
+  const lastMs = r.last_used ? new Date(r.last_used).getTime() : 0;
+  if (Date.now() - lastMs > 60_000) {
+    await s.from("v_api_keys" as never).update({ last_used: new Date().toISOString() } as never).eq("id", r.id);
+  }
   return { userId: r.user_id, scopes: r.scopes ?? [], prefix: r.prefix };
 }
 
@@ -41,8 +46,9 @@ export async function listApiKeys(userId: string): Promise<ApiKeyRow[]> {
   if (!userId || !isDatabaseConfigured()) return [];
   const s = getSupabaseAdminClient();
   // Never select key_hash. Try with name; fall back if the column isn't there yet.
-  let { data, error } = await s.from("v_api_keys" as never).select("id,prefix,scopes,last_used,created_at,name").eq("user_id", norm(userId)).order("created_at", { ascending: false });
-  if (error) ({ data } = await s.from("v_api_keys" as never).select("id,prefix,scopes,last_used,created_at").eq("user_id", norm(userId)).order("created_at", { ascending: false }));
+  const first = await s.from("v_api_keys" as never).select("id,prefix,scopes,last_used,created_at,name").eq("user_id", norm(userId)).order("created_at", { ascending: false });
+  let data = first.data;
+  if (first.error) ({ data } = await s.from("v_api_keys" as never).select("id,prefix,scopes,last_used,created_at").eq("user_id", norm(userId)).order("created_at", { ascending: false }));
   return (data as unknown as ApiKeyRow[]) ?? [];
 }
 
