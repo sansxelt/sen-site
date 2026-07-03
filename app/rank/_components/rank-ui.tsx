@@ -83,8 +83,8 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   }, []);
   useEffect(() => { setOpen(false); }, [pathname]);
   // Marketing pages can be served statically, so the server-passed signedIn may be
-  // stale (false) for a logged-in visitor. Resolve it on the client so the logo and
-  // nav route signed-in users to their dashboard, not the marketing home.
+  // stale (false) for a logged-in visitor. Resolve it on the client so the "Dashboard"
+  // nav link routes signed-in users to their dashboard. (The logo always goes home.)
   useEffect(() => {
     if (authed) return;
     fetch("/api/auth/session").then((r) => r.json()).then((s) => { if (s?.user?.email) setAuthed(true); }).catch(() => {});
@@ -93,7 +93,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   const link = { fontSize: 14, color: "var(--fg-2)", textDecoration: "none", whiteSpace: "nowrap", fontWeight: 500 } as const;
   return (
     <nav style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`, transition: "border-color .25s ease, background .25s ease" }}>
-      <Brand href={authed ? "/app" : "/"} />
+      <Brand href="/" />
       <div className="vra-nav-links" style={{ display: "flex", gap: 28, alignItems: "center", marginLeft: 22 }}>
         {PUBLIC_LINKS.map((l) => <Link key={l.href} href={l.href} style={{ ...link, color: pathname === l.href ? "var(--fg-1)" : "var(--fg-2)" }}>{l.label}</Link>)}
       </div>
