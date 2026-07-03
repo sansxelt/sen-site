@@ -252,15 +252,24 @@ function AppSidebar() {
   );
 }
 
-// Text reveal: eyebrows, display headings, and lead copy fade + rise in on mount. Since
-// page content remounts on each client-side navigation, this replays per page (no page
-// wrapper needed). Scoped to those text classes; excludes the hero's own .rise so it
-// never double-animates. Reduced-motion disables it. Defined once (the shell persists).
-const TEXT_ANIM_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"
+// Shell UI CSS, injected once (the shell persists across client navigations):
+//  1. Text reveal — eyebrows, display headings, and lead copy fade + rise in on mount.
+//     Replays per page because page content remounts on client nav. Excludes the hero's
+//     own .rise so nothing double-animates.
+//  2. Instant tactile feedback — buttons press (scale) and clickable cards lift on hover,
+//     with fast transitions, so every click feels registered immediately (perceived
+//     speed), not "did it work? click again". Pairs with the client-side nav + prefetch.
+// Reduced-motion disables all of it.
+const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"
   + ".rank-root .eyebrow:not(.rise),.rank-root .display:not(.rise),.rank-root .lead-copy:not(.rise){animation:vraTextIn 560ms cubic-bezier(0.22,1,0.36,1) both}"
   + ".rank-root .display:not(.rise){animation-delay:60ms}"
   + ".rank-root .lead-copy:not(.rise){animation-delay:120ms}"
-  + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}}";
+  + ".rank-root .btn{transition:transform 110ms ease,background 140ms ease,border-color 140ms ease,color 140ms ease,opacity 140ms ease,box-shadow 140ms ease}"
+  + ".rank-root .btn:active{transform:scale(0.97)}"
+  + ".rank-root a.card,.rank-root a.acard,.rank-root a.price{transition:transform 150ms cubic-bezier(0.22,1,0.36,1),border-color 150ms ease,box-shadow 150ms ease}"
+  + ".rank-root a.card:hover,.rank-root a.acard:hover{transform:translateY(-1px);border-color:var(--acc-line)}"
+  + ".rank-root a.card:active,.rank-root a.acard:active{transform:translateY(0) scale(0.995)}"
+  + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 
 export function RankShell({ signedIn = false, email = null, children }: { signedIn?: boolean; email?: string | null; children: ReactNode }) {
   const pathname = usePathname() || "";
@@ -269,7 +278,7 @@ export function RankShell({ signedIn = false, email = null, children }: { signed
   if (inApp) {
     return (
       <div className="rank-root">
-        <style dangerouslySetInnerHTML={{ __html: TEXT_ANIM_CSS }} />
+        <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
         <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} /></div>
         <div className="app-shell">
           <AppSidebar />
@@ -281,7 +290,7 @@ export function RankShell({ signedIn = false, email = null, children }: { signed
 
   return (
     <div className="rank-root">
-      <style dangerouslySetInnerHTML={{ __html: TEXT_ANIM_CSS }} />
+      <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
       <div style={{ position: "sticky", top: 0, zIndex: 50 }}><PublicNav signedIn={signedIn} /></div>
       {children}
       <Footer />
