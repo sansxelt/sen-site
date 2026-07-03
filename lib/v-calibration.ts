@@ -21,6 +21,7 @@ import { entitlements, MIN_VOTES } from "./v-entitlements";
 import { evaluationIntelligence } from "./v-intelligence";
 import { betaBinom } from "./v-stats";
 import { getCheck } from "./v-checks";
+import { scanFields, type PiiCategory } from "./v-content-policy";
 import { logEvent } from "./v-events";
 
 const norm = (e: string) => e.trim().toLowerCase();
@@ -45,6 +46,7 @@ export type ValidateResult =
   | { status: "not_found" }
   | { status: "not_comparable" }             // < 2 candidates or no definite AI pick
   | { status: "too_many_versions"; max: number } // more versions than the plan can run as a human test
+  | { status: "pii_detected"; categories: PiiCategory[] } // candidate text carries end-user PII; can't show it to reviewers
   | { status: "insufficient_credits"; needed?: number }
   | { status: "plan_limit"; limit?: number }
   | { status: "in_progress" }                // a concurrent claim is mid-launch; retry
@@ -82,6 +84,13 @@ export async function validateCheckWithHumans(userId: string, checkId: string, r
   // can run as a human test, rather than launch a truncated validation.
   const ent = entitlements(await getPlan(uid));
   if (cands.length > ent.maxOptions) return { status: "too_many_versions", max: ent.maxOptions };
+
+  // PII guard. The AI-check path deliberately does NOT scan candidate text (it only goes to
+  // the model). A human validation, though, shows that same text to real evaluators, so scan
+  // it here and refuse when it carries an end-user's structured PII (email/phone/SSN/card) —
+  // otherwise this bridge is exactly the leak the evaluator's skip assumed could not happen.
+  const pii = scanFields([check.title, ...cands.map((c) => c.text)]);
+  if (pii.length) return { status: "pii_detected", categories: pii };
 
   const s = getSupabaseAdminClient();
 

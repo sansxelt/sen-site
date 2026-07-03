@@ -57,7 +57,12 @@ export function CalibrationPanel({ checkId, calibration, canValidate, tooManyVer
       if (res.status === 403) { setErr("This would exceed your plan's active-evaluation limit this month."); setBusy(false); return; }
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        setErr(j?.error === "not_comparable" ? "Validation needs at least two versions and a clear pick." : "Could not start the validation. Try again."); setBusy(false); return;
+        const msg = j?.error === "pii_detected"
+          ? (j.message || "This output looks like it contains personal data. Remove or redact it before validating on real people.")
+          : j?.error === "not_comparable" ? "Validation needs at least two versions and a clear pick."
+          : j?.error === "too_many_versions" ? `Human validation shows every version to real people, and your plan supports up to ${j.max} at a time.`
+          : "Could not start the validation. Try again.";
+        setErr(msg); setBusy(false); return;
       }
       const j = await res.json();
       if (j?.testId) { setStartedTestId(j.testId); router.refresh(); }

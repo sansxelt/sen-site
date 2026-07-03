@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { validateCheckWithHumans } from "@/lib/v-calibration";
+import { piiMessage } from "@/lib/v-content-policy";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -25,6 +26,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     case "not_found": return NextResponse.json({ error: "not_found" }, { status: 404 });
     case "not_comparable": return NextResponse.json({ error: "not_comparable" }, { status: 400 });
     case "too_many_versions": return NextResponse.json({ error: "too_many_versions", max: r.max }, { status: 422 });
+    case "pii_detected": return NextResponse.json({ error: "pii_detected", message: piiMessage(r.categories), categories: r.categories }, { status: 422 });
     case "insufficient_credits": return NextResponse.json({ error: "insufficient_credits", needed: r.needed }, { status: 402 });
     case "plan_limit": return NextResponse.json({ error: "plan_limit", limit: r.limit }, { status: 403 });
     case "in_progress": return NextResponse.json({ error: "in_progress" }, { status: 409 });
