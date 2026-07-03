@@ -37,8 +37,8 @@ export default function PricingPage() {
         <div className="glow glow--soft glow--bleed" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Simple pricing. <span className="em">Start with free credits</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>New accounts start with <strong style={{ color: "var(--fg-1)" }}>free credits</strong>, so your first checks are on us. After that it&apos;s <strong style={{ color: "var(--fg-1)" }}>1 credit per check</strong>, and <strong style={{ color: "var(--fg-1)" }}>$1 buys 10 credits</strong> that never expire. Want humans to weigh in? A validation spends 1 credit per valid judgment, and you&apos;re never charged for the responses we filter out.</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>The quality gate, <span className="em">priced by the check</span>.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Vraelis is the quality gate for your AI output: check it in CI before it ships, and validate against real humans when the call matters. New accounts start with <strong style={{ color: "var(--fg-1)" }}>free credits</strong>, so your first checks are on us. After that it&apos;s <strong style={{ color: "var(--fg-1)" }}>1 credit per check</strong>, and <strong style={{ color: "var(--fg-1)" }}>$1 buys 10 credits</strong> that never expire. Human validation spends 1 credit per valid judgment, and you&apos;re never charged for the responses we filter out.</p>
         </div>
       </section>
 

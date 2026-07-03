@@ -23,6 +23,7 @@ const norm = (e: string) => e.trim().toLowerCase();
 export const CHECK_CREDITS = 1;      // 1 credit per check (pivot decision)
 export const MAX_CANDIDATES = 8;     // matches the evaluator + product spec (2 to 8 versions)
 export const MAX_TEXT_CHARS = 8000;  // per candidate, to bound token cost
+export const MAX_BATCH = 10;         // outputs per batch API request; each is its own 1-credit check
 const STUCK_MS = 120_000;            // a 'running' check older than this had its bg eval killed → fail + refund
 
 export type CheckStatus = "running" | "complete" | "failed";
@@ -149,6 +150,45 @@ export async function runCheck(userId: string, input: RunCheckInput): Promise<Ru
   if (final !== "complete") return { status: "unavailable" };
   const check = await getCheck(userId, started.checkId);
   return check && check.status === "complete" && check.result ? { status: "ok", check } : { status: "unavailable" };
+}
+
+// Run several independent checks for ONE user in a single request (the batch API path),
+// with bounded concurrency and original order preserved. Each item goes through runCheck,
+// so batch introduces NO new money logic. With the atomic v_spend_credit RPC (its per-user
+// advisory lock serializes the concurrent per-item charges) a batch can never overdraw:
+// excess items cleanly return insufficient_credits. The lock-free JS spend() fallback is
+// reached only when the RPC is unapplied — which, per the migration that creates the RPC
+// and the v_checks table together, also means the table is absent, so each racy charge's
+// insertRunningCheck fails and is refunded before any eval runs. The only window where
+// concurrent fallback charges could overdraw is a hand-split migration (table present, RPC
+// dropped), which the shipped migrations do not produce. One item failing (invalid, no
+// credits, eval error) refunds itself and never affects the others.
+//
+// Concurrency is capped so a batch never fans out more than `concurrency` LLM calls at
+// once (gentler on the model's rate limit); with MAX_BATCH=10 and the evaluator's 40s
+// cap, the whole batch finishes well inside the route's maxDuration.
+export async function runChecks(userId: string, inputs: RunCheckInput[], concurrency = 6): Promise<RunCheckResult[]> {
+  const results = new Array<RunCheckResult>(inputs.length);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      const i = next++;
+      if (i >= inputs.length) return;
+      try {
+        results[i] = await runCheck(userId, inputs[i]);
+      } catch (e) {
+        // runCheck is fail-soft and self-refunds on its own failure paths; this only
+        // catches an UNEXPECTED throw (e.g. a DB write rejecting) so one bad item can't
+        // reject the whole batch. A throw between charge and refund leaves a 'running' row
+        // that the API route's reconcileStuckChecks() sweep refunds on a later call.
+        console.error("runChecks item failed:", e);
+        results[i] = { status: "unavailable" };
+      }
+    }
+  };
+  const lanes = Math.max(1, Math.min(concurrency, inputs.length));
+  await Promise.all(Array.from({ length: lanes }, () => worker()));
+  return results;
 }
 
 // Atomic per-check charge. Prefers the v_spend_credit RPC; falls back to the JS spend()

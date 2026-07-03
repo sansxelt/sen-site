@@ -15,6 +15,68 @@ check.flags[0].fix            // "add a caveat before the claim"`;
 const EMBED = `<script async src="https://vraelis.com/embed.js"
         data-vraelis-test="YOUR_TEST_ID"></script>`;
 
+// CI/CD quality-gate snippets. Written to match the real /api/v1/check contract:
+// send a `threshold`, branch on `passed`. Kept backtick-free inside (string concat, not
+// template literals) so they sit safely inside these template-literal consts.
+const GATE_YML = `# .github/workflows/ai-quality-gate.yml
+name: AI output quality gate
+on: [pull_request]
+jobs:
+  vraelis-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/check-output.mjs
+        env:
+          VRAELIS_API_KEY: \${{ secrets.VRAELIS_API_KEY }}`;
+
+const GATE_NODE = `// scripts/check-output.mjs -- block the deploy when output is below the bar
+const res = await fetch("https://vraelis.com/api/v1/check", {
+  method: "POST",
+  headers: { "content-type": "application/json", "x-api-key": process.env.VRAELIS_API_KEY },
+  body: JSON.stringify({
+    output_type: "support_reply",
+    candidates: [generatedReply],                    // the output you're about to ship
+    threshold: { overall: 75, criteria: { accuracy: 80 } },
+  }),
+});
+const out = await res.json();
+if (!res.ok) { console.error("check error:", out.error && out.error.message); process.exit(1); }
+if (!out.passed) {
+  console.error("Blocked: version " + out.gate.evaluated.label + " is below the bar.");
+  out.gate.criteria.filter(c => !c.passed)
+    .forEach(c => console.error("  " + c.label + ": " + c.score + " < " + c.min));
+  out.flags.filter(f => f.severity === "high")
+    .forEach(f => console.error("  fix: " + f.fix));
+  process.exit(1);
+}
+console.log("passed the quality gate");`;
+
+const GATE_PY = `# check_output.py -- fail CI when generated output is below the bar
+import os, sys, requests
+
+r = requests.post(
+    "https://vraelis.com/api/v1/check",
+    headers={"x-api-key": os.environ["VRAELIS_API_KEY"]},
+    json={
+        "output_type": "marketing_copy",
+        "candidates": [generated_copy],
+        "threshold": {"overall": 75},
+    },
+)
+data = r.json()
+if not r.ok:
+    print("check error:", data.get("error", {}).get("message")); sys.exit(1)
+if not data["passed"]:
+    print("Blocked by the Vraelis quality gate:")
+    for c in data["gate"]["criteria"]:
+        if not c["passed"]:
+            print("  " + c["label"] + ": " + str(c["score"]) + " < " + str(c["min"]))
+    sys.exit(1)
+print("passed")`;
+
 
 function Code({ children, label = "shell" }: { children: string; label?: string }) {
   return (
@@ -33,16 +95,42 @@ export default function DevelopersPage() {
         <div className="glow glow--soft glow--bleed" />
         <div className="grid-faint" />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(28px, 4vw, 44px)", textAlign: "center" }}>
-          <p className="eyebrow" style={{ justifyContent: "center" }}>Developer platform</p>
-          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 880, margin: "0 auto 16px" }}>The AI output <span className="em">check API</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>POST the output your app generates and get a structured check back in one call: <strong style={{ color: "var(--fg-1)" }}>per-criterion scores</strong>, the version to ship, and <strong style={{ color: "var(--fg-1)" }}>line-level flags with fixes</strong>. Wire it into CI or your product. Validate on real people through the same platform when the call matters.</p>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>POST /api/v1/check → scores + recommendation + flags → apply fixes → (optional) validate on real people</p>
+          <p className="eyebrow" style={{ justifyContent: "center" }}>Quality gate for AI output</p>
+          <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 880, margin: "0 auto 16px" }}>The <span className="em">quality gate</span> for your AI output.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>POST the output your app generates and get a structured check back in one call: <strong style={{ color: "var(--fg-1)" }}>per-criterion scores</strong>, the version to ship, and <strong style={{ color: "var(--fg-1)" }}>line-level flags with fixes</strong>. Set a <strong style={{ color: "var(--fg-1)" }}>threshold</strong> and it returns <code style={{ fontFamily: "var(--font-code, monospace)" }}>passed: true|false</code>, so you can catch bad output in CI before it ships. Calibrated against real humans, the part an observability tool structurally can&apos;t give you.</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>POST /api/v1/check + threshold → passed + scores + flags → block the deploy or apply fixes → (optional) validate on real people</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/app/sandbox" className="btn btn--lg">Open sandbox console</Link>
             <Link href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">Decision Package schema</Link>
             <Link href="/enterprise" className="btn btn--ghost btn--lg">Enterprise &amp; security</Link>
           </div>
           <p style={{ fontSize: 12.5, color: "var(--fg-5)", marginTop: 14 }}>Sign in to test the API: full SDK and curl examples live in the signed-in sandbox console.</p>
+        </div>
+      </section>
+
+      {/* CI/CD quality gate — the reposition, up front with copy-paste snippets */}
+      <section id="quality-gate" className="section" style={{ borderBottom: "1px solid var(--line-1)" }}>
+        <div className="wrap" style={{ maxWidth: 820 }}>
+          <div className="sec-head" style={{ marginBottom: 20 }}>
+            <p className="eyebrow">CI/CD quality gate</p>
+            <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>Fail the build when the AI output is bad.</h2>
+            <p>Send a <code style={{ fontFamily: "var(--font-code, monospace)" }}>threshold</code> and the check returns <code style={{ fontFamily: "var(--font-code, monospace)" }}>passed: true|false</code> alongside the scores and flags. Wire it into a GitHub Action or a pre-deploy step and block the release when generated output scores below your bar. One call, no dashboard to watch.</p>
+          </div>
+          <div style={{ display: "grid", gap: 18 }}>
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>1 · GitHub Action</div>
+              <Code label="yaml">{GATE_YML}</Code>
+            </div>
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>2 · Node pre-deploy script</div>
+              <Code label="node">{GATE_NODE}</Code>
+            </div>
+            <div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>or · Python pre-deploy script</div>
+              <Code label="python">{GATE_PY}</Code>
+            </div>
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "16px 0 0", lineHeight: 1.7 }}>Gate a whole release at once: POST <code style={{ fontFamily: "var(--font-code, monospace)" }}>{"{ items: [ ... ] }"}</code> with up to 10 outputs and get a <code style={{ fontFamily: "var(--font-code, monospace)" }}>passed</code> per item plus a batch-level verdict. It&apos;s 1 credit per output, and you&apos;re never charged for a check that fails to run. For a hard gate, require <code style={{ fontFamily: "var(--font-code, monospace)" }}>passed !== false</code> and <code style={{ fontFamily: "var(--font-code, monospace)" }}>ok_count === count</code>.</p>
         </div>
       </section>
 
@@ -291,9 +379,9 @@ export default function DevelopersPage() {
           <p className="lead-copy" style={{ maxWidth: 640, marginBottom: 26 }}>POST the output your app, model, or pipeline generates. Vraelis returns scores, the version to ship, and line-level fixes; run it in CI, in-product, or on a review step, and validate on real people whenever a call is worth confirming.</p>
           <div className="cols-3" style={{ gap: 14, marginBottom: 28 }}>
             {[
-              ["Check in CI", "POST generated output to /api/v1/check and fail the build on a high-severity flag."],
+              ["Gate in CI", "POST generated output with a threshold and fail the build when passed is false. Catch a regression before it ships."],
               ["In-product checks", "Score and fix output before your app shows it to a user, in one call."],
-              ["Validate the check", "Route the same output to real people and track how often they agree over time."],
+              ["Validate the gate", "Route the same output to real people and track how often they agree with the check over time."],
             ].map(([t, d]) => (
               <div key={t} className="card"><h3 style={{ fontSize: 16, marginBottom: 6 }}>{t}</h3><p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{d}</p></div>
             ))}
