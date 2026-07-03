@@ -19,6 +19,7 @@ import { ThemesPanel } from "../themes-panel";
 import { ShareControls } from "../share-controls";
 import { ExportControls } from "../export-controls";
 import { ReportBody, OptionThumb } from "../report-body";
+import Link from "next/link";
 
 export const metadata: Metadata = { title: "Decision record" };
 
@@ -28,7 +29,7 @@ function Msg({ title, body }: { title: string; body?: string }) {
       <div className="wrap" style={{ maxWidth: 520, textAlign: "center" }}>
         <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)", marginBottom: 12 }}>{title}</h1>
         {body && <p className="lead-copy" style={{ margin: "0 auto 24px" }}>{body}</p>}
-        <a href="/app" className="btn btn--ghost">Back to dashboard</a>
+        <Link href="/app" className="btn btn--ghost">Back to dashboard</Link>
       </div>
     </section>
   );
@@ -49,7 +50,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // Owner-only context — never shown on the public /r/<token> report.
   const project = test.project_id ? await getProject(email, test.project_id) : null;
   const projectLine = project ? (
-    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <a href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</a> <span style={{ color: "var(--fg-5)" }}>·</span> <a href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Share this project with a client →</a></p>
+    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <Link href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</Link> <span style={{ color: "var(--fg-5)" }}>·</span> <Link href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Share this project with a client →</Link></p>
   ) : null;
   // Owner-only audience profile + screening stats (never on the public /r report).
   const screen = await screeningStats(id);
@@ -57,7 +58,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // Follow-up lineage — shown on BOTH the collecting and completed report views.
   const lineage = await followupLineage(id, email);
   const lineageHeader = lineage.parent ? (
-    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}><span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", marginRight: 8 }}>Confirmation round</span>Follow-up of <a href={`/app/tests/${lineage.parent.id}/report`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{lineage.parent.title}</a></p>
+    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}><span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", marginRight: 8 }}>Confirmation round</span>Follow-up of <Link href={`/app/tests/${lineage.parent.id}/report`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{lineage.parent.title}</Link></p>
   ) : null;
 
   // ── In progress (collecting votes) ──
@@ -240,10 +241,10 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Confirmation rounds</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {lineage.children.map((c) => (
-              <a key={c.id} href={`/app/tests/${c.id}/report`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13.5, color: "var(--fg-1)", textDecoration: "none" }}>
+              <Link key={c.id} href={`/app/tests/${c.id}/report`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13.5, color: "var(--fg-1)", textDecoration: "none" }}>
                 <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)", marginRight: 8 }}>{c.type ?? "follow-up"}</span>{c.title}</span>
                 <span style={{ fontSize: 12, color: "var(--acc-deep)" }}>{c.status === "complete" ? "Report →" : "View →"}</span>
-              </a>
+              </Link>
             ))}
           </div>
         </div>
@@ -286,9 +287,9 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       <ExportControls testId={test.id} />
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 22 }}>
-        <a href="/app" className="btn btn--ghost">Dashboard</a>
-        <a href="/app/new" className="btn btn--ghost">Create similar evaluation</a>
-        {bal < 50 && <a href="/app/credits" className="btn btn--ghost">Buy credits</a>}
+        <Link href="/app" className="btn btn--ghost">Dashboard</Link>
+        <Link href="/app/new" className="btn btn--ghost">Create similar evaluation</Link>
+        {bal < 50 && <Link href="/app/credits" className="btn btn--ghost">Buy credits</Link>}
       </div>
 
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", lineHeight: 1.7 }}>

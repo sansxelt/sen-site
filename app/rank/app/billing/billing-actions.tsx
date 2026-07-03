@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 export function BillingActions({ canceling, hasSub }: { canceling: boolean; hasSub: boolean }) {
@@ -16,7 +17,7 @@ export function BillingActions({ canceling, hasSub }: { canceling: boolean; hasS
 
   return (
     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-      <a href="/app/plans" className="btn">Change plan</a>
+      <Link href="/app/plans" className="btn">Change plan</Link>
       {hasSub && (canceling
         ? <button onClick={() => setCancel(true)} disabled={busy} className="btn btn--ghost">{busy ? "…" : "Resume subscription"}</button>
         : <button onClick={() => setCancel(false)} disabled={busy} className="btn btn--ghost">{busy ? "…" : "Cancel subscription"}</button>)}

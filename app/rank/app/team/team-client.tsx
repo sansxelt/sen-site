@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Role = "owner" | "admin" | "editor" | "viewer" | "client_viewer";
@@ -137,7 +138,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <h1 className="display">Team</h1>
           <p>Run evaluations with your team and share client-ready decision reports — without exposing private controls.</p>
         </div>
-        <a href="/app/audit" className="btn btn--ghost">Workspace activity →</a>
+        <Link href="/app/audit" className="btn btn--ghost">Workspace activity →</Link>
       </div>
 
       <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -155,7 +156,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
             <li key={g} style={{ fontSize: 13, color: "var(--fg-2)", display: "flex", gap: 8, alignItems: "baseline" }}><span style={{ color: "var(--acc-deep)" }}>✓</span>{g}</li>
           ))}
         </ul>
-        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0", lineHeight: 1.6 }}>SSO and enterprise provisioning are planned for larger organizations. <a href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0", lineHeight: 1.6 }}>SSO and enterprise provisioning are planned for larger organizations. <Link href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</Link></p>
       </div>
 
       {/* Organization (account layer) */}
@@ -164,7 +165,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>Organization</div>
           <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "3px 0 0", lineHeight: 1.6 }}>{orgLink ? <>This workspace is part of <strong style={{ color: "var(--fg-2)" }}>{orgLink.name}</strong>.</> : "Govern multiple workspaces, domains, and billing admins from one account layer."}</p>
         </div>
-        <a href="/app/organization" className="btn btn--ghost">{orgLink ? "Open organization →" : "Set up organization →"}</a>
+        <Link href="/app/organization" className="btn btn--ghost">{orgLink ? "Open organization →" : "Set up organization →"}</Link>
       </div>
 
       {/* Incoming ownership transfer (you are the target) */}
@@ -301,7 +302,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
               <div key={p.project_id} className="card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>{p.project_name}</div>
-                  <a href={`/app/projects/${p.project_id}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Manage project access →</a>
+                  <Link href={`/app/projects/${p.project_id}`} style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Manage project access →</Link>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {p.members.map((m, i) => (
@@ -323,13 +324,13 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <div style={cardHead}>Projects shared with you</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>
             {ctx.sharedProjects.map((p) => (
-              <a key={p.project_id} href={`/app/shared/projects/${p.project_id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <Link key={p.project_id} href={`/app/shared/projects/${p.project_id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <div>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>{p.name}</div>
                   <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2 }}>{p.workspace_name} · {p.evaluations.length} report{p.evaluations.length === 1 ? "" : "s"} · project access</div>
                 </div>
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}><RolePill role={p.role} /><span style={{ fontSize: 12.5, color: "var(--acc-deep)" }}>Open →</span></span>
-              </a>
+              </Link>
             ))}
           </div>
         </>
@@ -351,10 +352,10 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {w.evaluations.map((e, i) => (
-                      <a key={e.test_id} href={`/app/shared/${e.test_id}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "9px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", textDecoration: "none", color: "var(--fg-1)" }}>
+                      <Link key={e.test_id} href={`/app/shared/${e.test_id}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "9px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", textDecoration: "none", color: "var(--fg-1)" }}>
                         <span style={{ fontSize: 13.5 }}>{e.title}</span>
                         <span style={{ fontSize: 11.5, color: "var(--acc-deep)" }}>{e.status === "complete" ? "View report →" : e.status}</span>
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 )}

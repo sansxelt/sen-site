@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Cycle = "monthly" | "yearly";
 
@@ -59,7 +60,7 @@ export default function PlansPage() {
         <div>
           <p className="eyebrow">Plans</p>
           <h1 className="display">Pick a plan</h1>
-          <p>Each plan gives you valid human signal, a recommendation with reasoning, and exportable decision reports. Credits refresh monthly — <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>top up anytime →</a></p>
+          <p>Each plan gives you valid human signal, a recommendation with reasoning, and exportable decision reports. Credits refresh monthly — <Link href="/app/credits" style={{ color: "var(--acc-deep)" }}>top up anytime →</Link></p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <div className="seg">
@@ -104,10 +105,10 @@ export default function PlansPage() {
                 {p.perks.map((perk) => <li key={perk}>{perk}</li>)}
               </ul>
               {isCurrent ? <button className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center", opacity: 0.6 }} disabled>Your plan</button>
-                : isEnterprise ? <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/contact">Contact sales</a>
-                : isFree ? <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/app">Get started free</a>
+                : isEnterprise ? <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/contact">Contact sales</Link>
+                : isFree ? <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/app">Get started free</Link>
                 : !available ? <button className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center", opacity: 0.6 }} disabled>Coming soon</button>
-                : <a className={p.featured ? "btn" : "btn btn--ghost"} style={{ marginTop: "auto", justifyContent: "center" }} href={`/app/checkout?plan=${p.key}&cycle=${cycle}`}>{lower ? "Switch" : "Upgrade"} to {p.name}</a>}
+                : <Link className={p.featured ? "btn" : "btn btn--ghost"} style={{ marginTop: "auto", justifyContent: "center" }} href={`/app/checkout?plan=${p.key}&cycle=${cycle}`}>{lower ? "Switch" : "Upgrade"} to {p.name}</Link>}
             </div>
           );
         })}

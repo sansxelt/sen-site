@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 import { PLAN_CATALOG } from "@/lib/v-plans";
 
@@ -47,8 +48,8 @@ export default function EnterprisePage() {
           <h1 className="display" style={{ fontSize: "clamp(2rem, 4.4vw, 3rem)", marginBottom: 16 }}>Govern AI output checks across your organization.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 26px", maxWidth: 680 }}>Vraelis is automated QA for AI output, calibrated on real people. Enterprise teams check what their apps generate, govern who has access, verify organization domains, and keep audit-ready records of every check and validation. It&apos;s decision infrastructure, not a voting widget.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/checks/new" className="btn btn--lg">Check your AI output</a>
-            <a href="/developers" className="btn btn--ghost btn--lg">View developer platform</a>
+            <Link href="/app/checks/new" className="btn btn--lg">Check your AI output</Link>
+            <Link href="/developers" className="btn btn--ghost btn--lg">View developer platform</Link>
           </div>
         </div>
       </section>
@@ -91,7 +92,7 @@ export default function EnterprisePage() {
           <p className="eyebrow">Auditability</p>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)" }}>A reviewable trail, without the secrets.</h2>
         </div>
-        <p className="lead-copy" style={{ marginBottom: 14 }}>Workspace and organization activity are recorded as a read-only audit trail. Owners and admins review recent governance events in-app at <a href="/app/audit" style={{ color: "var(--acc-deep)" }}>Activity</a>, and can <strong style={{ color: "var(--fg-1)" }}>export sanitized governance activity as CSV or JSON</strong>. Scheduled exports and retention controls are planned.</p>
+        <p className="lead-copy" style={{ marginBottom: 14 }}>Workspace and organization activity are recorded as a read-only audit trail. Owners and admins review recent governance events in-app at <Link href="/app/audit" style={{ color: "var(--acc-deep)" }}>Activity</Link>, and can <strong style={{ color: "var(--fg-1)" }}>export sanitized governance activity as CSV or JSON</strong>. Scheduled exports and retention controls are planned.</p>
         <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.8, margin: 0 }}>Vraelis records key governance events: organization changes, domain verification and re-verification, SSO provider changes, billing-admin changes, confirmation rounds, ownership transfers, and team-access updates. Audit events carry only safe fields: <strong style={{ color: "var(--fg-1)" }}>no secrets, no invite or DNS tokens, no token hashes, no Stripe identifiers, no API keys, no OIDC codes or SAML assertions, no certificate bodies, no full URLs, and no IP or device data.</strong></p>
       </Section>
 
@@ -116,7 +117,7 @@ export default function EnterprisePage() {
             </div>
           ))}
         </div>
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.7 }}>We describe what Vraelis actually does. We do not claim formal certifications. If your organization needs specific compliance attestations, <a href="/contact" style={{ color: "var(--acc-deep)" }}>contact us</a> to discuss requirements.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.7 }}>We describe what Vraelis actually does. We do not claim formal certifications. If your organization needs specific compliance attestations, <Link href="/contact" style={{ color: "var(--acc-deep)" }}>contact us</Link> to discuss requirements.</p>
       </Section>
 
       {/* SSO & provisioning honesty */}
@@ -154,7 +155,7 @@ export default function EnterprisePage() {
               <div className="price__amt">${p.price.monthly}<small>/mo</small></div>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>{p.monthlyCredits.toLocaleString()} credits / mo</div>
               <div style={{ fontSize: 13, color: "var(--fg-3)" }}>{p.blurb}</div>
-              <a className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/contact">Talk to us</a>
+              <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/contact">Talk to us</Link>
             </div>
           ))}
         </div>
@@ -163,7 +164,7 @@ export default function EnterprisePage() {
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Enterprise: governed AI output checks at org scale</div>
             <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>For organizations that need governance, SSO, and audit across many teams. {ENTERPRISE_PERKS.join(", ")}.</p>
           </div>
-          <a className="btn btn--lg" style={{ flex: "none" }} href="/contact">Contact sales</a>
+          <Link className="btn btn--lg" style={{ flex: "none" }} href="/contact">Contact sales</Link>
         </div>
       </Section>
 
@@ -185,9 +186,9 @@ export default function EnterprisePage() {
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 18 }}>Defensible decisions, before you ship.</h2>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/checks/new" className="btn btn--lg">Check your AI output</a>
-            <a href="/developers" className="btn btn--ghost btn--lg">View developer platform</a>
-            <a href="/contact" className="btn btn--ghost btn--lg">Contact us about enterprise SSO</a>
+            <Link href="/app/checks/new" className="btn btn--lg">Check your AI output</Link>
+            <Link href="/developers" className="btn btn--ghost btn--lg">View developer platform</Link>
+            <Link href="/contact" className="btn btn--ghost btn--lg">Contact us about enterprise SSO</Link>
           </div>
         </div>
       </section>

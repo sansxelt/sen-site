@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 
 type Opt = { id: string; position: number; asset_url: string | null; label: string | null };
 type Test = { id: string; title: string; context: string | null; category: string };
@@ -139,8 +140,8 @@ export default function VotePage() {
           <div style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 700, marginBottom: 8 }}>You&apos;re all caught up</div>
           <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 380, margin: "0 auto 20px" }}>No evaluations need your judgment right now. Check back soon, or start your own.</p>
           <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn">Create an evaluation</a>
-            <a href="/app" className="btn btn--ghost">Dashboard</a>
+            <Link href="/app/new" className="btn">Create an evaluation</Link>
+            <Link href="/app" className="btn btn--ghost">Dashboard</Link>
           </div>
         </div>
       )}

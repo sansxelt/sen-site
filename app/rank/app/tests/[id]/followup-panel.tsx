@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type Plan = { type: string; actionLabel: string; reason: string; creates: string } | null;
 
@@ -39,7 +40,7 @@ export function FollowupPanel({ testId, plan, defaultTarget, balance }: { testId
       <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.55 }}>{plan.creates}</p>
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Launching…" : `${plan.actionLabel} — ~${defaultTarget} judgments`}</button>
-        {lowCredits ? <a href="/app/credits" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Top up credits</a> : null}
+        {lowCredits ? <Link href="/app/credits" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Top up credits</Link> : null}
         <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)" }}>≈ {defaultTarget} credits · balance {balance.toLocaleString()}</span>
       </div>
       {err && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{err}</p>}

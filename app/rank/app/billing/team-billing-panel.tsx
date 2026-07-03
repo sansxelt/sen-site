@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Billing = { configured: boolean; used: number; limit: number | null; overLimit: boolean; status: string | null; periodEnd: string | null; hasSubscription: boolean; interval: "monthly" | "yearly" | null; billingOwnerIsCurrentOwner: boolean };
@@ -81,7 +82,7 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
         </>
       ) : canManage ? (
         <div style={{ marginTop: 14 }}>
-          <a href="/app/team" className="btn">Set up team seats →</a>
+          <Link href="/app/team" className="btn">Set up team seats →</Link>
         </div>
       ) : (
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing hasn&apos;t been set up by the workspace owner yet.</p>

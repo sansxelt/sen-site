@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 import { H, P, Ul, LegalShell } from "../_components/legal-ui";
 
@@ -11,7 +12,7 @@ export default function DataRightsPage() {
   return (
     <LegalShell eyebrow="Privacy" title="Data rights" intro="Manage your data on Vraelis. Signed-in users can submit requests from account settings; you can also email privacy@vraelis.com.">
       <H>Submit a request</H>
-      <P>From <a href="/app/account" style={{ color: "var(--acc-deep)" }}>account settings</a>, signed-in users can submit a request to:</P>
+      <P>From <Link href="/app/account" style={{ color: "var(--acc-deep)" }}>account settings</Link>, signed-in users can submit a request to:</P>
       <Ul items={[
         "Export the account data we hold about you.",
         "Correct your account information.",
@@ -34,7 +35,7 @@ export default function DataRightsPage() {
         "Public report links may be disabled while a deletion request is processed.",
         "Raw participant, IP, and device data is never shown in reports or exports.",
       ]} />
-      <P>This is an honest description of our process, not a claim of automated regulatory compliance. See the <a href="/privacy" style={{ color: "var(--acc-deep)" }}>Privacy</a> page for what we collect and why.</P>
+      <P>This is an honest description of our process, not a claim of automated regulatory compliance. See the <Link href="/privacy" style={{ color: "var(--acc-deep)" }}>Privacy</Link> page for what we collect and why.</P>
     </LegalShell>
   );
 }

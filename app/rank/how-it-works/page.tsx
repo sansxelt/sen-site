@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
@@ -47,9 +48,9 @@ export default function HowItWorks() {
           <h2 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)", marginBottom: 16 }}>Ready to check your output?</h2>
           <p className="lead-copy" style={{ margin: "0 auto 26px", textAlign: "center" }}>New accounts start with free credits, so your first checks are on us.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/checks/new" className="btn btn--lg">Check your AI output</a>
-            <a href="/pricing" className="btn btn--ghost btn--lg">View pricing</a>
-            <a href="/developers" className="btn btn--ghost btn--lg">Developers</a>
+            <Link href="/app/checks/new" className="btn btn--lg">Check your AI output</Link>
+            <Link href="/pricing" className="btn btn--ghost btn--lg">View pricing</Link>
+            <Link href="/developers" className="btn btn--ghost btn--lg">Developers</Link>
           </div>
         </div>
       </section>

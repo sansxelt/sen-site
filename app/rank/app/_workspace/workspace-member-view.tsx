@@ -2,6 +2,7 @@
 // the switcher. Non-client roles see aggregate tiles + a project list linking to the
 // per-project shared analytics; client viewers see client-safe reports only. No
 // private controls (billing/API/webhooks/collection-links/screening) are rendered.
+import Link from "next/link";
 import type { SelectedWorkspace, WorkspaceSummary } from "@/lib/v-workspace";
 
 const ROLE_LABEL: Record<string, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
@@ -24,7 +25,7 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 22, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>Workspace: {selected.name}</strong> · Role: {ROLE_LABEL[selected.role]} · {clientSafe ? "Client-safe access" : "Read-only"}</div>
-        <a href="/app/team" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Team →</a>
+        <Link href="/app/team" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Team →</Link>
       </div>
 
       {clientSafe ? (
@@ -35,11 +36,11 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
           ) : (
             <div className="tile-grid cols-3">
               {summary.projects.map((p) => (
-                <a key={p.id} href={`/app/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
+                <Link key={p.id} href={`/app/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
                   <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
                   <div className="acard__d">{p.completed} report{p.completed === 1 ? "" : "s"} · client-safe</div>
                   <div style={{ fontSize: 12, color: "var(--acc-deep)" }}>View reports →</div>
-                </a>
+                </Link>
               ))}
             </div>
           )}
@@ -62,11 +63,11 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
           ) : (
             <div className="tile-grid cols-3">
               {summary.projects.map((p) => (
-                <a key={p.id} href={`/app/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
+                <Link key={p.id} href={`/app/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
                   <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
                   <div className="acard__d">{p.evaluations} workflow{p.evaluations === 1 ? "" : "s"} · {p.completed} decided · {p.validJudgments.toLocaleString()} qualified</div>
                   <div style={{ fontSize: 12, color: "var(--acc-deep)" }}>Open analytics →</div>
-                </a>
+                </Link>
               ))}
             </div>
           )}

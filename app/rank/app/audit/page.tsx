@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { workspaceActivity, organizationActivity, type AuditEntry } from "@/lib/v-audit";
@@ -71,7 +72,7 @@ export default async function AuditPage() {
           <h1 className="display">Activity</h1>
           <p>A read-only trail of everything that happens in your workspace — evaluations, credits, billing, team access, and governance.</p>
         </div>
-        <a href="/enterprise" className="btn btn--ghost">Trust overview →</a>
+        <Link href="/enterprise" className="btn btn--ghost">Trust overview →</Link>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
@@ -81,19 +82,19 @@ export default async function AuditPage() {
       {/* Export */}
       <div style={cardHead}>Audit export</div>
       <AuditExport showOrg={!!(org && canOrgAudit)} />
-      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Export the governance trail as sanitized CSV or JSON for your own records. Organization-wide governance, verified domains, OIDC SSO, and scheduled exports with retention controls are part of the enterprise trust layer — <a href="/contact" style={{ color: "var(--acc-deep)" }}>talk to us about enterprise requirements →</a></p>
+      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Export the governance trail as sanitized CSV or JSON for your own records. Organization-wide governance, verified domains, OIDC SSO, and scheduled exports with retention controls are part of the enterprise trust layer — <Link href="/contact" style={{ color: "var(--acc-deep)" }}>talk to us about enterprise requirements →</Link></p>
 
       {/* Trust controls */}
       <div style={cardHead}>Trust controls</div>
       <div className="tile-grid cols-2" style={{ gap: 10 }}>
         {TRUST_CONTROLS.map(([t, d, href]) => (
-          <a key={t + d} href={href} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "13px 16px" }}>
+          <Link key={t + d} href={href} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "13px 16px" }}>
             <div>
               <div style={{ fontWeight: 600, fontSize: 14 }}>{t}</div>
               <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 1 }}>{d}</div>
             </div>
             <span style={{ color: "var(--acc-deep)", fontSize: 13 }}>→</span>
-          </a>
+          </Link>
         ))}
       </div>
 

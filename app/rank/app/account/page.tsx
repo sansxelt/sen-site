@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan, getSubscription } from "@/lib/v-db";
@@ -34,10 +35,10 @@ export default async function AccountPage() {
   const renews = sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
 
   const linkCard = (href: string, title: string, desc: string) => (
-    <a href={href} className="acard" style={{ textDecoration: "none", gap: 6 }}>
+    <Link href={href} className="acard" style={{ textDecoration: "none", gap: 6 }}>
       <div className="acard__t" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>{title}<span style={{ color: "var(--acc-deep)" }} aria-hidden>→</span></div>
       <div className="acard__d">{desc}</div>
-    </a>
+    </Link>
   );
 
   return (
@@ -94,7 +95,7 @@ export default async function AccountPage() {
 
       {/* data & privacy requests */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Data &amp; privacy</div>
-      <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: -4, marginBottom: 14, maxWidth: 620, lineHeight: 1.55 }}>Submit a request to export, correct, or delete your data. Requests are reviewed manually, and some records may be retained where required. See <a href="/data-rights" style={{ color: "var(--acc-deep)" }}>Data rights</a>.</p>
+      <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: -4, marginBottom: 14, maxWidth: 620, lineHeight: 1.55 }}>Submit a request to export, correct, or delete your data. Requests are reviewed manually, and some records may be retained where required. See <Link href="/data-rights" style={{ color: "var(--acc-deep)" }}>Data rights</Link>.</p>
       <div style={{ marginBottom: 26 }}>
         <AccountRequests />
       </div>

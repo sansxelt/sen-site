@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan } from "@/lib/v-db";
@@ -32,9 +33,9 @@ function FirstRun({ bal }: { bal: number }) {
           <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", marginBottom: 8 }}>You have {bal} starter credits.</h2>
           <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Create your first decision program or run a workflow. Submit a few candidates — images, AI outputs, copy, landing heroes, UI — and qualified evaluators tell you which to ship. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <a href="/app/new" className="btn">Start first decision workflow →</a>
-            <a href="/app/projects" className="btn btn--ghost">New decision program</a>
-            <a href="/demo" className="btn btn--ghost">View a sample decision record</a>
+            <Link href="/app/new" className="btn">Start first decision workflow →</Link>
+            <Link href="/app/projects" className="btn btn--ghost">New decision program</Link>
+            <Link href="/demo" className="btn btn--ghost">View a sample decision record</Link>
           </div>
         </div>
       </div>
@@ -55,10 +56,10 @@ function FirstRun({ bal }: { bal: number }) {
 
 function QuickAction({ href, title, sub }: { href: string; title: string; sub: string }) {
   return (
-    <a href={href} className="acard" style={{ textDecoration: "none", gap: 4 }}>
+    <Link href={href} className="acard" style={{ textDecoration: "none", gap: 4 }}>
       <div className="acard__t" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>{title}<span style={{ color: "var(--acc-deep)" }} aria-hidden>→</span></div>
       <div className="acard__d">{sub}</div>
-    </a>
+    </Link>
   );
 }
 
@@ -73,7 +74,7 @@ export default async function Dashboard() {
           <p className="eyebrow" style={{ justifyContent: "center" }}>Workspace</p>
           <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Your <span className="em">decisions</span>.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to run decision workflows, organize them into programs, and see your decision records.</p>
-          <a href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Continue with Google</a>
+          <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Continue with Google</Link>
         </div>
       </section>
     );
@@ -104,28 +105,28 @@ export default async function Dashboard() {
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
           <span className="badge-now">{planName} plan</span>
-          {isAdmin(email) && <a href="/app/admin" style={{ fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" }}>Admin</a>}
+          {isAdmin(email) && <Link href="/app/admin" style={{ fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none" }}>Admin</Link>}
         </div>
       </div>
 
       {/* Primary action: the AI Output Check (product pivot). Always visible so the
           checker is reachable straight from the dashboard, empty state or not. */}
-      <a href="/app/checks/new" className="card card--acc" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18 }}>
+      <Link href="/app/checks/new" className="card card--acc" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18 }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>Check AI output</div>
           <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2, maxWidth: 520 }}>Paste one or more versions of an AI-generated output and get an instant assessment: per-criterion scores, the version to ship, and the exact lines to fix. 1 credit.</div>
         </div>
         <span style={{ fontSize: 13.5, color: "var(--acc-deep)", whiteSpace: "nowrap", fontWeight: 600 }}>Run a check →</span>
-      </a>
+      </Link>
 
       {domainAccess.length > 0 && (
-        <a href="/app/organization" className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18, background: "var(--bg-2)" }}>
+        <Link href="/app/organization" className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18, background: "var(--bg-2)" }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: 14.5 }}>You may belong to {domainAccess[0].name}</div>
             <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>Your email domain matches a verified organization domain. {domainAccess[0].requestStatus === "pending" ? "Your access request is pending admin approval." : "Request access to join this organization."}</div>
           </div>
           <span style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>{domainAccess[0].requestStatus === "pending" ? "View →" : "Request access →"}</span>
-        </a>
+        </Link>
       )}
 
       {/* quick actions */}
@@ -138,7 +139,7 @@ export default async function Dashboard() {
 
       {/* stats */}
       <div className="tile-grid cols-4" style={{ marginBottom: 26 }}>
-        <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><a href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</a></div></div>
+        <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</Link></div></div>
         <div className="stat"><div className="stat__l">Collecting signal</div><div className="stat__v tnum">{stats.active}</div><div className="stat__s">active workflows</div></div>
         <div className="stat"><div className="stat__l">Decisions made</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">decision records</div></div>
         <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">quality-filtered human signal</div></div>
@@ -151,15 +152,15 @@ export default async function Dashboard() {
           {/* projects */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ ...headLbl, marginBottom: 0 }}>Decision programs ({projects.length})</div>
-            <a href="/app/projects" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All programs →</a>
+            <Link href="/app/projects" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All programs →</Link>
           </div>
           {projects.length > 0 ? (
             <div className="tile-grid cols-3" style={{ marginBottom: 28 }}>
               {projects.slice(0, 6).map((p) => (
-                <a key={p.id} href={`/app/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 6 }}>
+                <Link key={p.id} href={`/app/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 6 }}>
                   <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
                   <div className="acard__d">{p.evaluation_count ?? 0} workflow{(p.evaluation_count ?? 0) === 1 ? "" : "s"}</div>
-                </a>
+                </Link>
               ))}
             </div>
           ) : (
@@ -177,7 +178,7 @@ export default async function Dashboard() {
             <div className="card" style={{ textAlign: "center", padding: "clamp(24px, 4vw, 40px)" }}>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>No decision workflows yet</div>
               <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto 16px", maxWidth: 360 }}>Start your first decision workflow and the decision record shows up here.</p>
-              <a href="/app/new" className="btn">Start a decision workflow →</a>
+              <Link href="/app/new" className="btn">Start a decision workflow →</Link>
             </div>
           )}
         </>

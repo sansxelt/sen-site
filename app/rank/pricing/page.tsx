@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Pricing leads with the outcome (a check), not a tier ladder. Credits stay the
@@ -55,7 +56,7 @@ export default function PricingPage() {
                 <li>Scores, the version to ship, and line-level fixes</li>
                 <li>Validate on real people when you want to</li>
               </ul>
-              <a className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/checks/new">Check your AI output</a>
+              <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/checks/new">Check your AI output</Link>
             </div>
             {/* pay as you go */}
             <div className="price price--hot">
@@ -68,7 +69,7 @@ export default function PricingPage() {
                 <li>Human validation: 1 credit per valid judgment</li>
                 <li>Structured results by API, export as JSON or CSV</li>
               </ul>
-              <a className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/checks/new">Check your AI output</a>
+              <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/checks/new">Check your AI output</Link>
             </div>
           </div>
 
@@ -94,7 +95,7 @@ export default function PricingPage() {
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Prefer to run it yourself?</div>
               <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Buy credits and launch runs from your own console. Custom top-ups from $5 to $999,999. Every $1 adds 10 credits, and they never expire. Larger volumes are available by invoice.</p>
             </div>
-            <a className="btn btn--lg" href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</a>
+            <Link className="btn btn--lg" href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</Link>
           </div>
 
           {/* team seats */}
@@ -117,7 +118,7 @@ export default function PricingPage() {
           {/* plans + enterprise moved to /enterprise */}
           <div className="card" style={{ marginTop: 18, textAlign: "center" }}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Running checks at scale, or governing them across an org?</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Recurring plans with monthly credits and API access, plus organization governance, verified domains, OIDC single sign-on, and audit export, live on the <a href="/enterprise" style={{ color: "var(--acc-deep)" }}>Enterprise &amp; security</a> page.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Recurring plans with monthly credits and API access, plus organization governance, verified domains, OIDC single sign-on, and audit export, live on the <Link href="/enterprise" style={{ color: "var(--acc-deep)" }}>Enterprise &amp; security</Link> page.</p>
           </div>
 
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Secure checkout on Vraelis. Payments processed by Stripe. Recurring plans renew automatically and can be cancelled anytime; manage them from your workspace.</p>

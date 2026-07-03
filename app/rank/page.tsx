@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = {
@@ -142,8 +143,8 @@ export default function RankLanding() {
             Paste what your app generates and get an instant check: per-criterion scores, the version to ship, and the exact lines to fix. Calibrated on real human judgment, so the scores track what people actually think, not just what a model guesses.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></a>
-            <a href="/how-it-works" className="btn btn--ghost btn--lg">How it works</a>
+            <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
+            <Link href="/how-it-works" className="btn btn--ghost btn--lg">How it works</Link>
           </div>
 
           {/* Product preview: the instant AI check, calibrated on real people */}
@@ -167,7 +168,7 @@ export default function RankLanding() {
                   </div>
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Flagged line</div>
                   <div style={{ fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.5, paddingLeft: 10, borderLeft: "2px solid var(--err)" }}>
-                    <span style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--err)" }}>Overpromise</span> in A: &ldquo;states one claim as fact&rdquo;
+                    <span style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--err)" }}>Overpromise </span> in A: &ldquo;states one claim as fact&rdquo;
                     <div style={{ color: "var(--fg-4)", marginTop: 3 }}>Fix: add a caveat before the claim.</div>
                   </div>
                 </div>
@@ -301,8 +302,8 @@ export default function RankLanding() {
                 ))}
               </ul>
               <div style={{ display: "flex", gap: 12, marginTop: 26, flexWrap: "wrap" }}>
-                <a href="/app/checks/new" className="btn">Check your AI output</a>
-                <a href="/pricing" style={{ alignSelf: "center", fontSize: 14, fontWeight: 500, color: "var(--acc-deep)", textDecoration: "none" }}>See what&apos;s included →</a>
+                <Link href="/app/checks/new" className="btn">Check your AI output</Link>
+                <Link href="/pricing" style={{ alignSelf: "center", fontSize: 14, fontWeight: 500, color: "var(--acc-deep)", textDecoration: "none" }}>See what&apos;s included →</Link>
               </div>
             </div>
             <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
@@ -398,8 +399,8 @@ export default function RankLanding() {
                 ))}
               </div>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <a href="/developers" className="btn">See the API</a>
-                <a href="/developers#embed" className="btn btn--ghost">Embed in your site</a>
+                <Link href="/developers" className="btn">See the API</Link>
+                <Link href="/developers#embed" className="btn btn--ghost">Embed in your site</Link>
               </div>
             </div>
             {/* right: a real API response */}
@@ -486,12 +487,12 @@ export default function RankLanding() {
               <p className="eyebrow">Pricing</p>
               <h2 className="display">Start with free credits.</h2>
             </div>
-            <a href="/pricing" className="btn btn--ghost">See pricing →</a>
+            <Link href="/pricing" className="btn btn--ghost">See pricing →</Link>
           </div>
           <div className="card card--acc" style={{ textAlign: "center", padding: "clamp(24px, 4vw, 40px)" }}>
             <div className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Your first checks are <span className="em">free</span>.</div>
             <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 560, margin: "0 auto 20px", lineHeight: 1.6 }}>New accounts start with free credits, so you can check your output before you pay a thing. Paste what your app generates and get scores, the version to ship, and the exact lines to fix. 1 credit per check after that.</p>
-            <a href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></a>
+            <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
           </div>
         </div>
       </section>
@@ -522,9 +523,9 @@ export default function RankLanding() {
           <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Check your AI output <span className="em">before you ship it</span>.</h2>
           <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Paste what your app generates and get an instant check: the scores, the version to ship, and the exact lines to fix. Calibrated on real people, and free to try.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></a>
-            <a href="/r/sample" className="btn btn--ghost btn--lg">See a real report</a>
-            <a href="/developers" className="btn btn--ghost btn--lg">Developers</a>
+            <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
+            <Link href="/r/sample" className="btn btn--ghost btn--lg">See a real report</Link>
+            <Link href="/developers" className="btn btn--ghost btn--lg">Developers</Link>
           </div>
         </div>
       </section>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 import { H, P, Ul, LegalShell } from "../_components/legal-ui";
 
@@ -77,7 +78,7 @@ export default function PrivacyPage() {
         "Rights that may apply: to know or access the personal information we hold, to request deletion, to request correction, to opt out where applicable, to limit the use of sensitive information where applicable, and to not be discriminated against for exercising these rights.",
       ]} />
       <P>Vraelis does not sell personal information or share it for cross-context behavioral advertising.</P>
-      <P>If California privacy rights apply to you, you can submit a request from your <a href="/app/account" style={{ color: "var(--acc-deep)" }}>account settings</a> or contact us at <a href="mailto:privacy@vraelis.com" style={{ color: "var(--acc-deep)" }}>privacy@vraelis.com</a> to request access, deletion, correction, or other available rights. Requests are reviewed manually.</P>
+      <P>If California privacy rights apply to you, you can submit a request from your <Link href="/app/account" style={{ color: "var(--acc-deep)" }}>account settings</Link> or contact us at <a href="mailto:privacy@vraelis.com" style={{ color: "var(--acc-deep)" }}>privacy@vraelis.com</a> to request access, deletion, correction, or other available rights. Requests are reviewed manually.</P>
 
       <H>EU, EEA, and UK privacy rights</H>
       <P>If you are in the EU, EEA, or UK, this section describes your privacy rights. It is a plain explanation of how we handle your data and how to reach us, not a claim of full regulatory compliance.</P>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 const RECOMMENDED = [9, 39, 99, 299, 999];
 // $999,999 is the hard ceiling for a single Stripe charge; it's the default max.
@@ -58,7 +59,7 @@ export default function CreditsPage() {
       {plan !== "free" && (
         <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)", textTransform: "capitalize" }}>{plan}</strong> plan — your monthly credits refresh automatically. Top up here only if you want extra beyond your plan.</div>
-          <a href="/app/plans" style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>Manage plan →</a>
+          <Link href="/app/plans" style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>Manage plan →</Link>
         </div>
       )}
 
@@ -94,7 +95,7 @@ export default function CreditsPage() {
             {!valid && usingCustom && <span style={{ color: "var(--err)", fontSize: 12.5 }}>Enter an amount between ${MIN} and ${MAX.toLocaleString()}.</span>}
             <span className="hint">Min ${MIN}, max ${MAX.toLocaleString()} per top-up.</span>
             {elevated && (
-              <p style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 8, lineHeight: 1.55 }}>Need more than ${MAX.toLocaleString()} in one go? A single payment tops out here, but we can invoice you for larger volumes (including unlimited credit for enterprise programs). <a href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for an invoice →</a></p>
+              <p style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 8, lineHeight: 1.55 }}>Need more than ${MAX.toLocaleString()} in one go? A single payment tops out here, but we can invoice you for larger volumes (including unlimited credit for enterprise programs). <Link href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for an invoice →</Link></p>
             )}
           </div>
         </div>
@@ -107,7 +108,7 @@ export default function CreditsPage() {
               <div style={{ ...bigNum, color: "var(--fg-1)" }}>{bal !== null ? bal.toLocaleString() : "—"}</div>
               <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 6 }}>credits available</div>
             </div>
-            <a href="/app/billing" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none", fontWeight: 500, marginTop: 16 }}>View credit activity →</a>
+            <Link href="/app/billing" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none", fontWeight: 500, marginTop: 16 }}>View credit activity →</Link>
           </div>
 
           <div className="card" style={{ minHeight: 214, borderColor: "var(--acc-line)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -118,7 +119,7 @@ export default function CreditsPage() {
             </div>
             <div style={{ marginTop: 16 }}>
               <button onClick={go} disabled={!valid} className="btn btn--lg" style={{ width: "100%", justifyContent: "center", opacity: valid ? 1 : 0.55 }}>Continue to checkout <span aria-hidden>→</span></button>
-              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis. No credits? <a href="/vote" style={{ color: "var(--acc-deep)" }}>Evaluate to earn →</a></p>
+              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis. No credits? <Link href="/vote" style={{ color: "var(--acc-deep)" }}>Evaluate to earn →</Link></p>
             </div>
           </div>
         </div>

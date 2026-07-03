@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { VOption, VReport } from "@/lib/v-db";
 import { ogMeta } from "@/lib/og-meta";
 import { ReportBody } from "@/app/rank/app/tests/[id]/report-body";
@@ -166,10 +167,10 @@ export default function DemoReport() {
         <div className="display" style={{ fontSize: "clamp(1.4rem, 2.6vw, 1.9rem)", marginBottom: 8 }}>Start your first evaluation run.</div>
         <p style={{ fontSize: 14.5, color: "var(--fg-2)", maxWidth: 460, margin: "0 auto 20px", lineHeight: 1.55 }}>Get 25 free judgments on signup. No card required.</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/app/new" className="btn btn--lg">Start an evaluation run →</a>
-          <a href="/pricing" className="btn btn--ghost btn--lg">View pricing</a>
+          <Link href="/app/new" className="btn btn--lg">Start an evaluation run →</Link>
+          <Link href="/pricing" className="btn btn--ghost btn--lg">View pricing</Link>
         </div>
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", marginTop: 16, marginBottom: 0 }}>Building an AI product? Read the <a href="/developers" style={{ color: "var(--acc-deep)" }}>API docs</a>.</p>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", marginTop: 16, marginBottom: 0 }}>Building an AI product? Read the <Link href="/developers" style={{ color: "var(--acc-deep)" }}>API docs</Link>.</p>
       </div>
     </div>
   );

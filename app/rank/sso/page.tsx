@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 const ERRORS: Record<string, string> = {
   sso_unavailable: "SSO isn't available for that link. Try entering your work email below.",
@@ -46,7 +47,7 @@ export default function SsoPage() {
         <button onClick={go} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Checking…" : "Continue"}</button>
       </div>
       {msg && <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "14px 0 0", lineHeight: 1.6 }}>{msg}</p>}
-      <p style={{ fontSize: 12.5, color: "var(--fg-5)", margin: "26px 0 0", lineHeight: 1.6 }}>SSO authenticates you into your organization. Workspace and project permissions are managed separately. <a href="/signin" style={{ color: "var(--acc-deep)" }}>Use a different sign-in method →</a></p>
+      <p style={{ fontSize: 12.5, color: "var(--fg-5)", margin: "26px 0 0", lineHeight: 1.6 }}>SSO authenticates you into your organization. Workspace and project permissions are managed separately. <Link href="/signin" style={{ color: "var(--acc-deep)" }}>Use a different sign-in method →</Link></p>
     </div>
   );
 }

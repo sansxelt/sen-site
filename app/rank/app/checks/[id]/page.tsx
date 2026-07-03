@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getCheck, reconcileStuckChecks } from "@/lib/v-checks";
@@ -17,7 +18,7 @@ const OUTPUT_LABELS: Record<string, string> = {
 };
 
 function BackLink() {
-  return <a href="/app/checks" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Your checks</a>;
+  return <Link href="/app/checks" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Your checks</Link>;
 }
 
 // Owner-scoped AI Check report. getCheck is scoped to the signed-in user. A check runs
@@ -38,7 +39,7 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
           <div className="empty__icon">∅</div>
           <h3>Check not found</h3>
           <p>This check doesn&apos;t exist, or it belongs to another account.</p>
-          <a href="/app/checks/new" className="btn">Run a new check</a>
+          <Link href="/app/checks/new" className="btn">Run a new check</Link>
         </div>
       </div>
     );
@@ -57,7 +58,7 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
           <span className="pulse" aria-hidden style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--money)", flex: "none", marginTop: 4 }} />
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", marginBottom: 4 }}>Working on it.</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>A check usually takes about 10 to 30 seconds. You can leave this page and come back, it will be waiting in <a href="/app/checks" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>your checks</a>.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>A check usually takes about 10 to 30 seconds. You can leave this page and come back, it will be waiting in <Link href="/app/checks" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>your checks</Link>.</p>
           </div>
         </div>
         <AutoRefresh />
@@ -75,7 +76,7 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
         <div className="card" style={{ padding: "clamp(18px, 2.6vw, 26px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", marginBottom: 4 }}>This check didn&apos;t complete.</div>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 16px" }}>The evaluator was busy or timed out, and <strong style={{ color: "var(--fg-1)" }}>you were not charged</strong>. Try running it again.</p>
-          <a href="/app/checks/new" className="btn">Run a new check</a>
+          <Link href="/app/checks/new" className="btn">Run a new check</Link>
         </div>
       </div>
     );

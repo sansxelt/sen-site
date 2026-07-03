@@ -3,6 +3,7 @@
 // Vraelis chrome: public nav/footer for marketing pages, and a real sidebar
 // shell for the app so the product feels like one connected SaaS surface.
 import { useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
@@ -65,7 +66,7 @@ export function SignOutButton({ className = "btn btn--ghost", label = "Sign out"
 
 function Brand({ href }: { href: string }) {
   return (
-    <a href={href} style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</a>
+    <Link href={href} style={{ display: "inline-flex", alignItems: "center", textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "-0.035em", lineHeight: 1 }}>Vraelis</Link>
   );
 }
 
@@ -94,19 +95,19 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
     <nav style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, padding: "15px var(--gutter)", background: scrolled ? "rgba(250,248,244,0.82)" : "transparent", backdropFilter: scrolled ? "blur(14px)" : "none", WebkitBackdropFilter: scrolled ? "blur(14px)" : "none", borderBottom: `1px solid ${scrolled ? "var(--line-1)" : "transparent"}`, transition: "border-color .25s ease, background .25s ease" }}>
       <Brand href={authed ? "/app" : "/"} />
       <div className="vra-nav-links" style={{ display: "flex", gap: 28, alignItems: "center", marginLeft: 22 }}>
-        {PUBLIC_LINKS.map((l) => <a key={l.href} href={l.href} style={{ ...link, color: pathname === l.href ? "var(--fg-1)" : "var(--fg-2)" }}>{l.label}</a>)}
+        {PUBLIC_LINKS.map((l) => <Link key={l.href} href={l.href} style={{ ...link, color: pathname === l.href ? "var(--fg-1)" : "var(--fg-2)" }}>{l.label}</Link>)}
       </div>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16 }}>
-        <a href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{authed ? "Dashboard" : "Sign in"}</a>
-        <a href="/app/new" className="btn">Test your AI content</a>
+        <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{authed ? "Dashboard" : "Sign in"}</Link>
+        <Link href="/app/new" className="btn">Test your AI content</Link>
         <button aria-label="Menu" onClick={() => setOpen((v) => !v)} className="vra-nav-burger" style={{ display: "none", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 11, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", color: "var(--fg-1)" }}>
           <span aria-hidden>{open ? "✕" : "☰"}</span>
         </button>
       </div>
       {open && (
         <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "var(--bg-1)", borderBottom: "1px solid var(--line-2)", boxShadow: "var(--shadow-md)", padding: "10px var(--gutter) 18px", display: "flex", flexDirection: "column", gap: 2 }}>
-          {PUBLIC_LINKS.map((l) => <a key={l.href} href={l.href} style={{ ...link, padding: "12px 4px", borderBottom: "1px solid var(--line-1)" }}>{l.label}</a>)}
-          <a href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} style={{ ...link, padding: "12px 4px" }}>{authed ? "Dashboard" : "Sign in"}</a>
+          {PUBLIC_LINKS.map((l) => <Link key={l.href} href={l.href} style={{ ...link, padding: "12px 4px", borderBottom: "1px solid var(--line-1)" }}>{l.label}</Link>)}
+          <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} style={{ ...link, padding: "12px 4px" }}>{authed ? "Dashboard" : "Sign in"}</Link>
         </div>
       )}
     </nav>
@@ -119,7 +120,7 @@ function Footer() {
   const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 } as const;
   const Col = ({ title, links }: { title: string; links: [string, string][] }) => (
     <div style={col}><div style={head}>{title}</div>
-      {links.map(([href, label]) => <a key={href} href={href} style={a}>{label}</a>)}
+      {links.map(([href, label]) => <Link key={href} href={href} style={a}>{label}</Link>)}
     </div>
   );
   return (
@@ -150,7 +151,7 @@ function Footer() {
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
         <span style={{ fontSize: 13, color: "var(--fg-4)" }}>© 2026 Vraelis. All rights reserved.</span>
-        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Questions? <a href="/contact" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Contact us</a></span>
+        <span style={{ fontSize: 13, color: "var(--fg-4)" }}>Questions? <Link href="/contact" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Contact us</Link></span>
       </div>
     </footer>
   );
@@ -175,7 +176,7 @@ function AppTopbar({ email }: { email: string | null }) {
           small left nudge so the wordmark sits centered over the sidebar column */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        <a href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</a>
+        <Link href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</Link>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(who || "?").slice(0, 1).toUpperCase()}</span>
           <span style={{ fontSize: 13, color: "var(--fg-3)" }} aria-hidden>▾</span>
@@ -186,8 +187,8 @@ function AppTopbar({ email }: { email: string | null }) {
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
               <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
             </div>
-            <a href="/app/account" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Account</a>
-            <a href="/app/billing" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</a>
+            <Link href="/app/account" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Account</Link>
+            <Link href="/app/billing" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</Link>
             <button onClick={() => signOut({ callbackUrl: "/" })} style={{ width: "100%", textAlign: "left", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--err)", background: "transparent", border: "none", cursor: "pointer" }}>Sign out</button>
           </div>
         )}
@@ -237,14 +238,14 @@ function AppSidebar() {
         <div key={g.group}>
           <div className="app-side__group">{g.group}</div>
           {g.items.map((it) => (
-            <a key={it.href} href={it.href} className={`slink${active(it.href) ? " on" : ""}`}>
+            <Link key={it.href} href={it.href} className={`slink${active(it.href) ? " on" : ""}`}>
               <span className="slink__i"><Ic d={it.d} /></span>{it.label}
-            </a>
+            </Link>
           ))}
         </div>
       ))}
       <div className="app-side__foot" style={{ marginTop: "auto", position: "sticky", bottom: 0, background: "var(--bg-0)", paddingTop: 12, paddingBottom: 4, borderTop: "1px solid var(--line-1)" }}>
-        <a href="/" className="slink" style={{ color: "var(--fg-3)" }}><span className="slink__i"><Ic d="M19 12H5M11 18l-6-6 6-6" /></span>Back to site</a>
+        <Link href="/" className="slink" style={{ color: "var(--fg-3)" }}><span className="slink__i"><Ic d="M19 12H5M11 18l-6-6 6-6" /></span>Back to site</Link>
         <button onClick={() => signOut({ callbackUrl: "/" })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 14, fontWeight: 500 }}><span className="slink__i"><Ic d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></span>Sign out</button>
       </div>
     </aside>

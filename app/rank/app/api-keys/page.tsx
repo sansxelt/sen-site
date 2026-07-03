@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { WebhooksSection } from "./webhooks-section";
 
@@ -100,7 +101,7 @@ export default function ApiKeysPage() {
             <input value={keyName} onChange={(e) => setKeyName(e.target.value)} placeholder="Name it, e.g. Production or Zapier" maxLength={40} onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ flex: 1, minWidth: 220, padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" }} />
             <button onClick={create} disabled={busy} className="btn" style={{ opacity: busy ? 0.6 : 1 }}>{busy ? "Creating…" : "Create key"}</button>
           </div>
-          <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation. Keep keys server-side only, and rotate or revoke a key if it&apos;s ever exposed. <a href="/developers" style={{ color: "var(--acc-deep)" }}>Developer docs →</a></span>
+          <span className="hint">Name your keys so you can tell them apart. The full key is shown once at creation. Keep keys server-side only, and rotate or revoke a key if it&apos;s ever exposed. <Link href="/developers" style={{ color: "var(--acc-deep)" }}>Developer docs →</Link></span>
         </div>
       </div>
 
@@ -109,7 +110,7 @@ export default function ApiKeysPage() {
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Preference data exports</div>
           <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed results as JSON or CSV. Winner, breakdown, quality, comments, and AI analysis.</p>
         </div>
-        <a href="/app/sandbox" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Test exports →</a>
+        <Link href="/app/sandbox" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Test exports →</Link>
       </div>
 
       {/* Test your integration — opens the in-app sandbox console */}
@@ -118,20 +119,20 @@ export default function ApiKeysPage() {
           <div style={{ flex: "1 1 320px", minWidth: 0 }}>
             <div style={cardHead}>Test your integration</div>
             <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Use the sandbox console to create a sandbox evaluation, preview a Decision Package, test exports, and send a signed webhook event — with sample data, 0 credits, 0 quota, and nothing in your production analytics.</p>
-            <a href="/app/sandbox" className="btn">Open sandbox console →</a>
+            <Link href="/app/sandbox" className="btn">Open sandbox console →</Link>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
-          <a href="/developers" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Developer overview</a>
+          <Link href="/developers" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Developer overview</Link>
           <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>JSON Schema</a>
-          <a href="/developers#sdk" className="btn btn--ghost" style={{ fontSize: 12.5 }}>SDK starter</a>
-          <a href="/developers#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Webhook signing</a>
+          <Link href="/developers#sdk" className="btn btn--ghost" style={{ fontSize: 12.5 }}>SDK starter</Link>
+          <Link href="/developers#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Webhook signing</Link>
         </div>
       </div>
 
       {err && (
         <div className="card" style={{ marginBottom: 20, borderColor: "var(--line-2)" }}>
-          <p style={{ fontSize: 14, color: "var(--fg-2)", margin: 0 }}>{err} {err.includes("Scale") && <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>See plans →</a>}</p>
+          <p style={{ fontSize: 14, color: "var(--fg-2)", margin: 0 }}>{err} {err.includes("Scale") && <Link href="/app/plans" style={{ color: "var(--acc-deep)" }}>See plans →</Link>}</p>
         </div>
       )}
 
@@ -240,7 +241,7 @@ export default function ApiKeysPage() {
 
       {u && u.signedIn && !u.hasApiAccess && (
         <div className="card" style={{ marginTop: 8, marginBottom: 24, background: "var(--bg-2)" }}>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>The public API, webhooks, and usage analytics are part of the <b style={{ color: "var(--fg-1)" }}>Scale</b> plan. <a href="/app/plans" style={{ color: "var(--acc-deep)" }}>See plans →</a></p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>The public API, webhooks, and usage analytics are part of the <b style={{ color: "var(--fg-1)" }}>Scale</b> plan. <Link href="/app/plans" style={{ color: "var(--acc-deep)" }}>See plans →</Link></p>
         </div>
       )}
 

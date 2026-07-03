@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type OrgRole = "owner" | "admin" | "billing_admin" | "member" | "viewer";
 type OrgMember = { id: string; email: string; role: OrgRole; status: "pending" | "active" | "revoked"; can_manage_billing: boolean };
@@ -42,7 +43,7 @@ export function OrgClient({ email, ctx, activity, domainAccess = [], sso = null 
           <h1 className="display">Organization</h1>
           <p>Organizations let larger teams govern multiple workspaces, domains, members, billing admins, and audit trails from one account.</p>
         </div>
-        {org ? <a href="/app/audit" className="btn btn--ghost">Activity →</a> : null}
+        {org ? <Link href="/app/audit" className="btn btn--ghost">Activity →</Link> : null}
       </div>
       {org ? <OrgView email={email} ctx={ctx} activity={activity} sso={sso} /> : domainAccess.length ? <JoinCard options={domainAccess} /> : <CreateOrg />}
     </div>
@@ -335,7 +336,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
                 ))}
               </div>
             )}
-            <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Organization-wide audit export is planned. This shows account-level governance events; per-workspace activity stays in each workspace&apos;s <a href="/app/audit" style={{ color: "var(--acc-deep)" }}>Activity</a> log.</p>
+            <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Organization-wide audit export is planned. This shows account-level governance events; per-workspace activity stays in each workspace&apos;s <Link href="/app/audit" style={{ color: "var(--acc-deep)" }}>Activity</Link> log.</p>
           </div>
         </>
       )}
@@ -344,7 +345,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       <div style={cardHead}>Enterprise readiness</div>
       <div className="card" style={{ background: "var(--bg-2)" }}>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>OIDC SSO is available · SCIM is not enabled yet</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only — workspace and project access stay separate. <a href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only — workspace and project access stay separate. <Link href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</Link></p>
       </div>
     </>
   );

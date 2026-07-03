@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { listChecks, reconcileStuckChecks, type VCheckSummary } from "@/lib/v-checks";
@@ -27,7 +28,7 @@ function Row({ c }: { c: VCheckSummary }) {
   const st = statusStyle(c.status);
   const running = c.status === "running";
   return (
-    <a href={`/app/checks/${c.id}`} className="card" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", padding: "14px 16px" }}>
+    <Link href={`/app/checks/${c.id}`} className="card" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none", color: "inherit", padding: "14px 16px" }}>
       <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: st.color, flex: "none", ...(running ? { animation: "none" } : {}) }} className={running ? "pulse" : undefined} />
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -40,7 +41,7 @@ function Row({ c }: { c: VCheckSummary }) {
       </div>
       <span className="pill" style={{ fontSize: 10.5, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
       <span aria-hidden style={{ color: "var(--fg-4)", flex: "none" }}>→</span>
-    </a>
+    </Link>
   );
 }
 
@@ -63,7 +64,7 @@ export default async function ChecksListPage() {
           <p className="eyebrow">AI output checks</p>
           <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 0" }}>Your checks</h1>
         </div>
-        <a href="/app/checks/new" className="btn">New check <span aria-hidden>→</span></a>
+        <Link href="/app/checks/new" className="btn">New check <span aria-hidden>→</span></Link>
       </div>
 
       {checks.length === 0 ? (
@@ -71,7 +72,7 @@ export default async function ChecksListPage() {
           <div className="empty__icon">✓</div>
           <h3>No checks yet</h3>
           <p>Run your first AI output check to see it here.</p>
-          <a href="/app/checks/new" className="btn">Check your AI output</a>
+          <Link href="/app/checks/new" className="btn">Check your AI output</Link>
         </div>
       ) : (
         <div style={{ display: "grid", gap: 10 }}>

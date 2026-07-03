@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getTestWithOptions, getReport, OPTION_LETTERS } from "@/lib/v-db";
@@ -25,14 +26,14 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
   if (!role) {
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}>
-        <div className="empty"><div className="empty__icon">🔒</div><h3>No access to this decision record</h3><p>This decision record hasn&apos;t been shared with you, or your access was changed. Ask the workspace owner to invite you.</p><a href="/app/team" className="btn">Back to Team</a></div>
+        <div className="empty"><div className="empty__icon">🔒</div><h3>No access to this decision record</h3><p>This decision record hasn&apos;t been shared with you, or your access was changed. Ask the workspace owner to invite you.</p><Link href="/app/team" className="btn">Back to Team</Link></div>
       </div>
     );
   }
 
   const data = await getTestWithOptions(testId);
   if (!data) {
-    return <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}><div className="empty"><div className="empty__icon">∅</div><h3>Decision record not found</h3><a href="/app/team" className="btn">Back to Team</a></div></div>;
+    return <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}><div className="empty"><div className="empty__icon">∅</div><h3>Decision record not found</h3><Link href="/app/team" className="btn">Back to Team</Link></div></div>;
   }
   const { test, options } = data;
   const report = test.status === "complete" ? await getReport(testId) : null;
@@ -43,7 +44,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
 
   return (
     <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <a href={back.href} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← {back.label}</a>
+      <Link href={back.href} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← {back.label}</Link>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <p className="eyebrow" style={{ margin: 0 }}>Shared decision record</p>
         <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[role]} · client-safe view</span>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
@@ -37,9 +38,9 @@ export default function DevelopersPage() {
           <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>POST the output your app generates and get a structured check back in one call: <strong style={{ color: "var(--fg-1)" }}>per-criterion scores</strong>, the version to ship, and <strong style={{ color: "var(--fg-1)" }}>line-level flags with fixes</strong>. Wire it into CI or your product. Validate on real people through the same platform when the call matters.</p>
           <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>POST /api/v1/check → scores + recommendation + flags → apply fixes → (optional) validate on real people</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/sandbox" className="btn btn--lg">Open sandbox console</a>
-            <a href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">Decision Package schema</a>
-            <a href="/enterprise" className="btn btn--ghost btn--lg">Enterprise &amp; security</a>
+            <Link href="/app/sandbox" className="btn btn--lg">Open sandbox console</Link>
+            <Link href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">Decision Package schema</Link>
+            <Link href="/enterprise" className="btn btn--ghost btn--lg">Enterprise &amp; security</Link>
           </div>
           <p style={{ fontSize: 12.5, color: "var(--fg-5)", marginTop: 14 }}>Sign in to test the API: full SDK and curl examples live in the signed-in sandbox console.</p>
         </div>
@@ -91,8 +92,8 @@ export default function DevelopersPage() {
               <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>A structured result your product can use.</h2>
               <p className="lead-copy" style={{ marginBottom: 14 }}>Every evaluation returns a typed <code style={{ fontFamily: "var(--font-code, monospace)" }}>decision_package</code>: the recommended output, preference margin, directional confidence, signal quality, evaluation health, audience fit, and source quality, plus the next action. It&apos;s <strong style={{ color: "var(--fg-1)" }}>backed by a public JSON Schema</strong> for typed integrations.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Decision Package v2 JSON Schema →</a>
-                <a href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Preview one in the console →</a>
+                <Link href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Decision Package v2 JSON Schema →</Link>
+                <Link href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Preview one in the console →</Link>
               </div>
             </div>
             <div>
@@ -111,8 +112,8 @@ export default function DevelopersPage() {
           <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>Test the full flow before spending credits.</h2>
           <p className="lead-copy" style={{ marginBottom: 16 }}>Create a sandbox evaluation to exercise create → decision package → export → signed webhook end-to-end. Sandbox evaluations <strong style={{ color: "var(--fg-1)" }}>charge 0 credits, use 0 quota</strong>, and never appear in your production analytics; they&apos;re clearly separated from real evaluations and labeled <code style={{ fontFamily: "var(--font-code, monospace)" }}>mode: sandbox</code>. Production uses real qualified human signal.</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <a href="/app/sandbox" className="btn">Open sandbox console</a>
-            <a href="/app/api-keys" className="btn btn--ghost">Create API key</a>
+            <Link href="/app/sandbox" className="btn">Open sandbox console</Link>
+            <Link href="/app/api-keys" className="btn btn--ghost">Create API key</Link>
           </div>
         </div>
       </section>
@@ -142,8 +143,8 @@ export default function DevelopersPage() {
           </div>
           <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.6 }}>SDK methods: <code style={{ fontFamily: "var(--font-code, monospace)" }}>evaluations.create / get / exportJson / exportCsv</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>webhooks.verifySignature</code>. Full SDK and curl examples live in the signed-in sandbox console.</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
-            <a href="/app/api-keys" className="btn">Get an API key</a>
-            <a href="/app/sandbox" className="btn btn--ghost">Open sandbox console</a>
+            <Link href="/app/api-keys" className="btn">Get an API key</Link>
+            <Link href="/app/sandbox" className="btn btn--ghost">Open sandbox console</Link>
           </div>
         </div>
       </section>
@@ -157,15 +158,15 @@ export default function DevelopersPage() {
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Know the moment a result is ready.</h2>
               <p className="lead-copy" style={{ marginBottom: 12 }}>A signed completion webhook (event <code style={{ fontFamily: "var(--font-code, monospace)" }}>test.completed</code>) delivers a compact Decision Package the instant an evaluation fills. Each delivery is HMAC-SHA256 signed (timestamp + body), retried with backoff on transient failures, and idempotent by delivery id. Verify it with the SDK helper or your own HMAC check.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <a href="/app/api-keys#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Add an endpoint →</a>
-                <a href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Send a test event →</a>
+                <Link href="/app/api-keys#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Add an endpoint →</Link>
+                <Link href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Send a test event →</Link>
               </div>
             </div>
             <div>
               <p className="eyebrow">Exports</p>
               <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)", marginBottom: 12 }}>Pull results into your stack.</h2>
               <p className="lead-copy" style={{ marginBottom: 12 }}>Export any completed evaluation as <strong style={{ color: "var(--fg-1)" }}>tiered JSON</strong> (summary, standard, or scale; each carrying the decision package) or a stable <strong style={{ color: "var(--fg-1)" }}>CSV</strong> breakdown. Owner or API-key auth. Exports never include account email, participant identities, or raw IP/device data.</p>
-              <a href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Test exports in the console →</a>
+              <Link href="/app/sandbox" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Test exports in the console →</Link>
             </div>
           </div>
         </div>
@@ -213,8 +214,8 @@ export default function DevelopersPage() {
           <p className="lead-copy" style={{ marginBottom: 14 }}>Create sandbox evaluations, fetch typed Decision Packages, export results, and verify webhooks, with TypeScript types that match the JSON Schema. The SDK starter is <strong style={{ color: "var(--fg-1)" }}>available in the repository</strong> today and <strong style={{ color: "var(--fg-1)" }}>not on npm yet</strong>.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 16, lineHeight: 1.6 }}>Methods: <code style={{ fontFamily: "var(--font-code, monospace)" }}>evaluations.create / get / exportJson / exportCsv</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>credits.get</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>webhooks.verifySignature</code>. Coming soon: <code style={{ fontFamily: "var(--font-code, monospace)" }}>npm install @vraelis/sdk</code>. Full SDK and curl examples live in the signed-in sandbox console.</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <a href="/app/sandbox" className="btn">Open sandbox console</a>
-            <a href="/schemas/decision-package-v2.json" className="btn btn--ghost">JSON Schema</a>
+            <Link href="/app/sandbox" className="btn">Open sandbox console</Link>
+            <Link href="/schemas/decision-package-v2.json" className="btn btn--ghost">JSON Schema</Link>
           </div>
         </div>
       </section>
@@ -252,7 +253,7 @@ export default function DevelopersPage() {
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "22px 0 0", lineHeight: 1.7, textAlign: "center" }}>SSO-ready organizations with verified domains and audited provisioning. OIDC single sign-on is available for verified organization domains today; SAML configuration is in preview and SCIM is on the roadmap. <a href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</a></p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "22px 0 0", lineHeight: 1.7, textAlign: "center" }}>SSO-ready organizations with verified domains and audited provisioning. OIDC single sign-on is available for verified organization domains today; SAML configuration is in preview and SCIM is on the roadmap. <Link href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</Link></p>
         </div>
       </section>
 
@@ -298,8 +299,8 @@ export default function DevelopersPage() {
             ))}
           </div>
           <div style={{ textAlign: "center", display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/sandbox" className="btn btn--lg">Open sandbox console →</a>
-            <a href="/app/api-keys" className="btn btn--ghost btn--lg">Create an API key</a>
+            <Link href="/app/sandbox" className="btn btn--lg">Open sandbox console →</Link>
+            <Link href="/app/api-keys" className="btn btn--ghost btn--lg">Create an API key</Link>
           </div>
         </div>
       </section>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 import { H, P, Ul, LegalShell } from "../_components/legal-ui";
 
@@ -54,7 +55,7 @@ export default function TermsPage() {
       ]} />
 
       <H>Account deletion</H>
-      <P>You can request account deletion from your <a href="/app/account" style={{ color: "var(--acc-deep)" }}>account settings</a> (a confirm-gated request) or by emailing <a href="mailto:privacy@vraelis.com" style={{ color: "var(--acc-deep)" }}>privacy@vraelis.com</a>. Requests are reviewed manually, so deletion is not instant. Some records may be retained where required for billing, fraud prevention, security, or legal reasons.</P>
+      <P>You can request account deletion from your <Link href="/app/account" style={{ color: "var(--acc-deep)" }}>account settings</Link> (a confirm-gated request) or by emailing <a href="mailto:privacy@vraelis.com" style={{ color: "var(--acc-deep)" }}>privacy@vraelis.com</a>. Requests are reviewed manually, so deletion is not instant. Some records may be retained where required for billing, fraud prevention, security, or legal reasons.</P>
 
       <H>Availability and changes</H>
       <P>The service may change over time. Features may be added, removed, or updated, and we do not guarantee uninterrupted availability. We may update these terms and will keep this page current.</P>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 import { FREE_REPORT_URL } from "@/lib/links";
 
@@ -38,7 +39,7 @@ export default function SampleReport() {
       <div className="wrap" style={{ maxWidth: 760, paddingTop: "clamp(28px, 4vw, 52px)", paddingBottom: 72 }}>
         {/* top bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 22 }}>
-          <a href="/" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--fg-1)", textDecoration: "none", letterSpacing: "-0.01em" }}>Vraelis</a>
+          <Link href="/" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--fg-1)", textDecoration: "none", letterSpacing: "-0.01em" }}>Vraelis</Link>
           <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>Sample report · illustrative data</span>
         </div>
 
@@ -128,7 +129,7 @@ export default function SampleReport() {
         <div style={{ textAlign: "center" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginBottom: 12 }}>Want this on your own output?</div>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <a href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></a>
+            <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
             <a href={FREE_REPORT_URL} className="btn btn--ghost btn--lg">Validate on real people</a>
           </div>
         </div>
