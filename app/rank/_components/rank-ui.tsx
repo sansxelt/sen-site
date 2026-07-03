@@ -252,6 +252,16 @@ function AppSidebar() {
   );
 }
 
+// Text reveal: eyebrows, display headings, and lead copy fade + rise in on mount. Since
+// page content remounts on each client-side navigation, this replays per page (no page
+// wrapper needed). Scoped to those text classes; excludes the hero's own .rise so it
+// never double-animates. Reduced-motion disables it. Defined once (the shell persists).
+const TEXT_ANIM_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"
+  + ".rank-root .eyebrow:not(.rise),.rank-root .display:not(.rise),.rank-root .lead-copy:not(.rise){animation:vraTextIn 560ms cubic-bezier(0.22,1,0.36,1) both}"
+  + ".rank-root .display:not(.rise){animation-delay:60ms}"
+  + ".rank-root .lead-copy:not(.rise){animation-delay:120ms}"
+  + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}}";
+
 export function RankShell({ signedIn = false, email = null, children }: { signedIn?: boolean; email?: string | null; children: ReactNode }) {
   const pathname = usePathname() || "";
   const inApp = pathname.startsWith("/app");
@@ -259,6 +269,7 @@ export function RankShell({ signedIn = false, email = null, children }: { signed
   if (inApp) {
     return (
       <div className="rank-root">
+        <style dangerouslySetInnerHTML={{ __html: TEXT_ANIM_CSS }} />
         <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} /></div>
         <div className="app-shell">
           <AppSidebar />
@@ -270,6 +281,7 @@ export function RankShell({ signedIn = false, email = null, children }: { signed
 
   return (
     <div className="rank-root">
+      <style dangerouslySetInnerHTML={{ __html: TEXT_ANIM_CSS }} />
       <div style={{ position: "sticky", top: 0, zIndex: 50 }}><PublicNav signedIn={signedIn} /></div>
       {children}
       <Footer />

@@ -89,29 +89,30 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* top-ups */}
-          <div className="card" style={{ marginTop: 22, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, flexWrap: "wrap", background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
-            <div style={{ maxWidth: 520 }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Prefer to run it yourself?</div>
-              <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Buy credits and launch runs from your own console. Custom top-ups from $5 to $999,999. Every $1 adds 10 credits, and they never expire. Larger volumes are available by invoice.</p>
-            </div>
-            <Link className="btn btn--lg" href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</Link>
-          </div>
-
-          {/* team seats */}
-          <div className="card" style={{ marginTop: 18, background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20, flexWrap: "wrap" }}>
-              <div style={{ maxWidth: 560 }}>
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 4 }}>Working with a team?</div>
-                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team seats are for internal collaborators: Admins, Editors, and Viewers who run checks and read analytics with you. <strong style={{ color: "var(--fg-1)" }}>Client viewers are free</strong>: invite clients to read client-safe decision reports without a paid seat.</p>
+          {/* top-ups + team, side by side so the section reads balanced, not a stack of
+              sparse full-width cards. Equal-height (grid), CTA/price anchored to the base. */}
+          <div className="tile-grid cols-2" style={{ marginTop: 22 }}>
+            <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14, background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>Prefer to run it yourself?</div>
+                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Buy credits and launch runs from your own console. Custom top-ups from $5 to $999,999. Every $1 adds 10 credits, and they never expire. Larger volumes by invoice.</p>
               </div>
-              {team?.monthly && (
-                <div style={{ textAlign: "right", minWidth: 180 }}>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600 }}>{seatMoney(team.monthly)}/seat/month</div>
-                  {team.yearly && <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-3)", marginTop: 4 }}>or {seatMoney(team.yearly)}/seat/year</div>}
-                  <div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 6 }}>Manage seats in your workspace</div>
-                </div>
-              )}
+              <Link className="btn" style={{ marginTop: "auto", alignSelf: "flex-start" }} href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</Link>
+            </div>
+            <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14, background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
+              <div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>Working with a team?</div>
+                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team seats are for internal collaborators who run checks and read analytics with you. <strong style={{ color: "var(--fg-1)" }}>Client viewers are free</strong>: invite clients to read client-safe reports without a paid seat.</p>
+              </div>
+              <div style={{ marginTop: "auto" }}>
+                {team?.monthly ? (
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5 }}>
+                    <span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>{seatMoney(team.monthly)}/seat/month</span>
+                    {team.yearly && <span style={{ color: "var(--fg-3)" }}> · or {seatMoney(team.yearly)}/seat/year</span>}
+                  </div>
+                ) : null}
+                <div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: team?.monthly ? 6 : 0 }}>Manage seats in your workspace.</div>
+              </div>
             </div>
           </div>
 
