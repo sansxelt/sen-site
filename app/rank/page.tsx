@@ -150,7 +150,7 @@ export default function RankLanding() {
           {/* Product preview: the instant AI check, calibrated on real people */}
           <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 860, margin: "clamp(34px, 4vw, 52px) auto 0" }}>
             <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
-              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>AI output check</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Instant</span></div>
+              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>AI output check</span><span style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>illustrative example</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Instant</span></div>
               <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,1fr)", gap: 0 }} className="cols-stack">
                 {/* LEFT: the instant AI check — scores, the pick, a flagged line + fix */}
                 <div style={{ padding: "clamp(18px,2.4vw,26px)", borderRight: "1px solid var(--line-1)" }}>
@@ -181,14 +181,6 @@ export default function RankLanding() {
                       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", letterSpacing: "-0.01em" }}>Response B preferred</div>
                       <span className="pill" style={{ marginTop: 4, background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>High confidence</span>
                     </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginBottom: 14 }}>
-                    {[["Signal quality", "High"], ["Readiness", "Strong"], ["Filtered", "14 low-qual"], ["Delivery", "API + webhook"]].map(([l, v]) => (
-                      <div key={l} style={{ padding: "9px 11px", borderRadius: 10, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
-                        <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 3 }}>{l}</div>
-                        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13.5, color: "var(--fg-1)" }}>{v}</div>
-                      </div>
-                    ))}
                   </div>
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 7 }}>Preference breakdown</div>
                   <Verdict rows={[["A", 39, false], ["B", 61, true]]} />
