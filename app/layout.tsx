@@ -126,10 +126,14 @@ export default async function RootLayout({
       <html
         lang="en"
         data-theme="light"
-        style={{ colorScheme: "light" }}
+        // Paint the warm-paper floor (--bg-0) inline so the canvas is cream from the
+        // first frame. The Vraelis palette is set by external stylesheets loaded below
+        // (and a legacy dark tokens.css loads first), so without this the bare canvas
+        // flashes dark on every navigation (the site uses <a href> full reloads).
+        style={{ colorScheme: "light", background: "#FAF8F4" }}
         className={`${GeistSans.variable} ${GeistMono.variable} h-full`}
       >
-        <body className="min-h-full">
+        <body className="min-h-full" style={{ background: "#FAF8F4" }}>
           {/* Vraelis stylesheets load for every vraelis request (marketing
               pages AND the shared /signin, /account flows) so the whole
               brand renders light + green. tokens before styles. */}
