@@ -936,3 +936,14 @@ create unique index if not exists v_calibration_check_uidx on v_calibration (che
 create unique index if not exists v_calibration_test_uidx on v_calibration (test_id) where test_id is not null;
 -- Resolve sweep: find still-pending rows quickly.
 create index if not exists v_calibration_pending_idx on v_calibration (status) where status = 'pending';
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- AI Output Check — async lifecycle (UX). A check becomes a running -> complete/failed
+-- job so the UI never blocks on a spinner: create the row running, route to the list,
+-- fill in the result when the background eval finishes. A running row has no result yet.
+-- Additive + idempotent. Also in sql/ai-check-async.sql for a clean paste.
+-- ══════════════════════════════════════════════════════════════════════════════
+alter table v_checks add column if not exists status text not null default 'complete'; -- running|complete|failed
+alter table v_checks add column if not exists error text;                              -- failure reason, when status='failed'
+alter table v_checks alter column result drop not null;                                -- running checks have no result yet
+create index if not exists v_checks_status_idx on v_checks (user_id, status, created_at desc);

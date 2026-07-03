@@ -156,41 +156,55 @@ export async function spend(userId: string, checkId: string, amount = 1): Promis
 }
 
 // Refund a check's charge — used on any post-charge failure, so the customer is never
-// charged for a check they didn't get. Reads THIS check's debit rows authoritatively
-// (surfacing read errors and retrying once, unlike liveRows which returns [] on a blip
-// and would make a failed read look like "nothing was charged"), then reverses each
-// debited leg to the SAME bucket, re-using the debit's OWN expiry for the monthly leg
-// (a since-expired monthly credit is refunded already-expired and correctly drops out,
-// never laundered into permanent credit). Idempotent per check via ext_ref. Returns
-// true if the reversal is known to have landed (or nothing was charged).
+// charged for a check they didn't get. Correctness rests on the ledger NET, not on the
+// grant booleans: grant() returns false both on a real error AND on a 23505 duplicate
+// (already refunded), so a caller that gated on the boolean would treat an
+// already-refunded check as a failure and (with the finishCheck gating) re-sweep it
+// forever. Instead we read every row for this check, and if the net is already >= 0 the
+// charge is reversed — idempotent SUCCESS regardless of who wrote the refund. Reverses
+// each debited leg to its own bucket, re-using the debit's OWN expiry for the monthly
+// leg (a since-expired monthly credit is refunded already-expired and drops out, never
+// laundered into permanent credit). Idempotent per check via ext_ref. Returns true only
+// when the charge is CONFIRMED fully reversed (or nothing was charged); false on a read
+// failure or an incomplete reversal, so the caller can leave the check for a later retry.
 export async function refundCheck(userId: string, checkId: string): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
   const s = getSupabaseAdminClient();
   const uid = norm(userId);
 
-  let charged: LedgerRow[] | null = null;
-  for (let attempt = 0; attempt < 2 && charged === null; attempt++) {
-    const { data, error } = await s
-      .from("v_credit_ledger" as never)
-      .select("delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id")
-      .eq("user_id", uid).eq("reason", "check").eq("ref_type", "check").eq("ref_id", checkId);
-    if (error) { console.error(`refundCheck read failed (attempt ${attempt + 1}) for check ${checkId}:`, error.message); continue; }
-    charged = (data as unknown as LedgerRow[]) ?? [];
-  }
-  if (charged === null) { console.error(`REFUND UNRESOLVED for check ${checkId}: ledger read failed; manual reconciliation may be needed`); return false; }
-  if (charged.length === 0) return true; // RPC rolled back / never committed — nothing to reverse
+  // Read all ledger rows for this check (negative 'check' debits + positive 'refund'
+  // legs), retrying once. Surfacing errors (unlike liveRows, which returns [] on a blip)
+  // so a failed read is never mistaken for "nothing charged".
+  const readRows = async (): Promise<LedgerRow[] | null> => {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const { data, error } = await s.from("v_credit_ledger" as never)
+        .select("delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id")
+        .eq("user_id", uid).eq("ref_type", "check").eq("ref_id", checkId);
+      if (error) { console.error(`refundCheck read failed (attempt ${attempt + 1}) for check ${checkId}:`, error.message); continue; }
+      return (data as unknown as LedgerRow[]) ?? [];
+    }
+    return null;
+  };
 
-  const monthly = charged.filter((r) => r.bucket === "monthly");
-  const purchased = charged.filter((r) => r.bucket === "purchased");
+  const rows = await readRows();
+  if (rows === null) { console.error(`REFUND UNRESOLVED for check ${checkId}: ledger read failed; manual reconciliation may be needed`); return false; }
+  // Net >= 0 ⇒ the charge is already fully reversed (or never committed): idempotent success.
+  if (rows.reduce((sum, r) => sum + r.delta, 0) >= 0) return true;
+
+  const debits = rows.filter((r) => r.reason === "check");
+  const monthly = debits.filter((r) => r.bucket === "monthly");
+  const purchased = debits.filter((r) => r.bucket === "purchased");
   const monthlyAmt = -monthly.reduce((sum, r) => sum + r.delta, 0);     // debits are negative
   const purchasedAmt = -purchased.reduce((sum, r) => sum + r.delta, 0);
   const monthlyExp = monthly.map((r) => r.expires_at).filter(Boolean).sort().pop() ?? null;
+  if (purchasedAmt > 0) await grant(uid, purchasedAmt, "refund", { bucket: "purchased", refType: "check", refId: checkId, extRef: `refundcheck:${checkId}:p` });
+  if (monthlyAmt > 0) await grant(uid, monthlyAmt, "refund", { bucket: "monthly", expiresAt: monthlyExp, refType: "check", refId: checkId, extRef: `refundcheck:${checkId}:m` });
 
-  let ok = true;
-  if (purchasedAmt > 0) ok = (await grant(uid, purchasedAmt, "refund", { bucket: "purchased", refType: "check", refId: checkId, extRef: `refundcheck:${checkId}:p` })) && ok;
-  if (monthlyAmt > 0) ok = (await grant(uid, monthlyAmt, "refund", { bucket: "monthly", expiresAt: monthlyExp, refType: "check", refId: checkId, extRef: `refundcheck:${checkId}:m` })) && ok;
-  if (!ok) console.error(`REFUND INCOMPLETE for check ${checkId}: a refund grant did not land; manual reconciliation may be needed`);
-  return ok;
+  // Confirm from the ledger (grant booleans can't tell a 23505-duplicate from a failure).
+  const after = await readRows();
+  const settled = after !== null && after.reduce((sum, r) => sum + r.delta, 0) >= 0;
+  if (!settled) console.error(`REFUND INCOMPLETE for check ${checkId}: charge not fully reversed; manual reconciliation may be needed`);
+  return settled;
 }
 
 function latestMonthlyExpiry(rows: LedgerRow[]): string | null {

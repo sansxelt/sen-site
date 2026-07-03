@@ -19,6 +19,7 @@ function Ic({ d }: { d: string }) {
 }
 const I = {
   grid: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
+  check: "M20 6 9 17l-5-5",
   plus: "M12 5v14M5 12h14",
   data: "M3 3v18h18M7 14l3-3 3 3 5-6",
   coin: "M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
@@ -36,6 +37,7 @@ const I = {
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Workspace", items: [
     { href: "/app", label: "Dashboard", d: I.grid },
+    { href: "/app/checks", label: "Checks", d: I.check },
     { href: "/app/projects", label: "Projects", d: I.folder },
     { href: "/app/team", label: "Team", d: I.user },
     { href: "/app/organization", label: "Organization", d: I.building },

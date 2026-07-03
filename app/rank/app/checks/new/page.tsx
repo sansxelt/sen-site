@@ -62,8 +62,10 @@ export default function NewCheckPage() {
         return;
       }
       const j = await res.json();
-      if (j?.id) router.push(`/app/checks/${j.id}`);
-      else { setErr("Could not open the report. Try again."); setBusy(false); }
+      // The check now runs in the background; land on the activity list where it shows
+      // as "running" and flips to complete on its own.
+      if (j?.id) router.push("/app/checks");
+      else { setErr("Could not start the check. Try again."); setBusy(false); }
     } catch {
       setErr("Network error. Try again.");
       setBusy(false);
@@ -147,7 +149,7 @@ export default function NewCheckPage() {
 
       <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || filled.length < 1} style={{ opacity: busy || filled.length < 1 ? 0.6 : 1 }}>
-          {busy ? "Checking…" : "Run check"} {!busy ? <span aria-hidden>→</span> : null}
+          {busy ? "Starting…" : "Run check"} {!busy ? <span aria-hidden>→</span> : null}
         </button>
         <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>1 credit · you&apos;re not charged if it fails</span>
       </div>

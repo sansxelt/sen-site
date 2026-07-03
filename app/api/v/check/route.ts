@@ -1,15 +1,17 @@
-// POST /api/v/check — run an AI Output Check from the signed-in app (the in-app form).
-// Session-authenticated (any signed-in user with credits — NOT Scale-gated like the
-// public API). Charges 1 credit on success; returns { id } so the form can navigate to
-// the report at /app/checks/<id>. Shares the same runCheck() core as /api/v1/check.
+// POST /api/v/check — start an AI Output Check from the signed-in app (the in-app form).
+// ASYNC: validate + charge + create a RUNNING row fast, respond { id } immediately so the
+// UI can route to the activity list, then run the eval AFTER the response (next/server
+// after()) and finalize the row to complete/failed. Session-authenticated; any signed-in
+// user with credits (NOT Scale-gated like the public API). Charges 1 credit; refunded on
+// failure.
 
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { auth } from "@/auth";
-import { runCheck, CHECK_CREDITS } from "@/lib/v-checks";
+import { startCheck, finishCheck, CHECK_CREDITS } from "@/lib/v-checks";
 import { OUTPUT_TYPES } from "@/lib/v-evaluator";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 60; // after() runs the eval within this budget (40s client timeout)
 
 function toCandidate(c: unknown): { text: string } {
   if (typeof c === "string") return { text: c };
@@ -29,7 +31,7 @@ export async function POST(req: Request) {
   }
   const candidates = (Array.isArray(body?.candidates) ? body.candidates : []).map(toCandidate);
 
-  const r = await runCheck(email, {
+  const started = await startCheck(email, {
     outputType: outputType || "other",
     title: typeof body?.title === "string" ? body.title : undefined,
     audience: typeof body?.audience === "string" ? body.audience : undefined,
@@ -38,8 +40,14 @@ export async function POST(req: Request) {
     source: "app",
   });
 
-  if (r.status === "invalid") return NextResponse.json({ error: r.message }, { status: 400 });
-  if (r.status === "insufficient_credits") return NextResponse.json({ error: "insufficient_credits", needed: CHECK_CREDITS }, { status: 402 });
-  if (r.status === "unavailable") return NextResponse.json({ error: "evaluator_unavailable" }, { status: 503 });
-  return NextResponse.json({ id: r.check.id });
+  if (started.status === "invalid") return NextResponse.json({ error: started.message }, { status: 400 });
+  if (started.status === "insufficient_credits") return NextResponse.json({ error: "insufficient_credits", needed: CHECK_CREDITS }, { status: 402 });
+  if (started.status !== "ok") return NextResponse.json({ error: "evaluator_unavailable" }, { status: 503 });
+
+  // Respond now; run the eval after the response is sent. If this invocation is killed
+  // before it finishes, reconcileStuckChecks fails + refunds the row on a later view.
+  const { checkId, evalInput } = started;
+  after(async () => { await finishCheck(email, checkId, evalInput); });
+
+  return NextResponse.json({ id: checkId, status: "running" });
 }

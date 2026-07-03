@@ -43,6 +43,7 @@ export async function POST(req: Request) {
 
   const c = r.check;
   const res = c.result;
+  if (!res) return apiError("internal_error", "The check did not complete and you were not charged. Try again shortly.", 503);
   return Response.json({
     id: c.id,
     output_type: c.output_type,

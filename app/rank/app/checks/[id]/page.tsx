@@ -1,23 +1,35 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getCheck } from "@/lib/v-checks";
+import { getCheck, reconcileStuckChecks } from "@/lib/v-checks";
 import { getPlan } from "@/lib/v-db";
 import { entitlements } from "@/lib/v-entitlements";
 import { getCalibrationForCheck, resolveCalibrationForTest, calibrationSummary } from "@/lib/v-calibration";
 import { CheckReport } from "./check-report";
 import { CalibrationPanel } from "./calibration-panel";
+import { AutoRefresh } from "../auto-refresh";
 
 export const metadata: Metadata = { title: "AI output check" };
 
-// Owner-scoped AI Check report. getCheck is scoped to the signed-in user, so a check
-// is only ever visible to the account that ran it.
+const OUTPUT_LABELS: Record<string, string> = {
+  support_reply: "Support reply", onboarding: "Onboarding", marketing_copy: "Marketing copy",
+  agent_action: "Agent action", other: "Output",
+};
+
+function BackLink() {
+  return <a href="/app/checks" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Your checks</a>;
+}
+
+// Owner-scoped AI Check report. getCheck is scoped to the signed-in user. A check runs
+// asynchronously, so this page renders running / failed / complete states; while running,
+// AutoRefresh polls until the background eval finalizes it.
 export default async function CheckReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
   const email = session?.user?.email;
   if (!email) redirect(`/signin?callbackUrl=%2Fapp%2Fchecks%2F${id}`);
 
+  await reconcileStuckChecks(email); // fail + refund this check if its background eval was killed
   const check = await getCheck(email, id);
   if (!check) {
     return (
@@ -32,14 +44,50 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
     );
   }
 
+  const heading = check.title || `${OUTPUT_LABELS[check.output_type] ?? "Output"} check`;
+
+  // ── RUNNING: working state, poll until it finalizes ──
+  if (check.status === "running") {
+    return (
+      <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+        <BackLink />
+        <p className="eyebrow">AI output check</p>
+        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 18px" }}>{heading}</h1>
+        <div className="card" style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "clamp(18px, 2.6vw, 26px)" }}>
+          <span className="pulse" aria-hidden style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--money)", flex: "none", marginTop: 4 }} />
+          <div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", marginBottom: 4 }}>Working on it.</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>A check usually takes about 10 to 30 seconds. You can leave this page and come back, it will be waiting in <a href="/app/checks" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>your checks</a>.</p>
+          </div>
+        </div>
+        <AutoRefresh />
+      </div>
+    );
+  }
+
+  // ── FAILED (or complete-without-result, defensively): not charged, offer a retry ──
+  if (check.status === "failed" || !check.result) {
+    return (
+      <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+        <BackLink />
+        <p className="eyebrow">AI output check</p>
+        <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 18px" }}>{heading}</h1>
+        <div className="card" style={{ padding: "clamp(18px, 2.6vw, 26px)" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", marginBottom: 4 }}>This check didn&apos;t complete.</div>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 16px" }}>The evaluator was busy or timed out, and <strong style={{ color: "var(--fg-1)" }}>you were not charged</strong>. Try running it again.</p>
+          <a href="/app/checks/new" className="btn">Run a new check</a>
+        </div>
+      </div>
+    );
+  }
+
+  // ── COMPLETE: the full report + calibration ──
   // Calibration (owner only): resolve a completed validation lazily, then build the panel.
   let cal = await getCalibrationForCheck(email, id);
   if (cal?.status === "pending" && cal.test_id) { await resolveCalibrationForTest(cal.test_id); cal = await getCalibrationForCheck(email, id); }
   const summary = await calibrationSummary();
-  const nCands = check.result?.candidates?.length ?? 0;
-  const comparable = nCands >= 2 && !!check.result?.recommendedLabel;
-  // Only look up the plan when the validate button might show (no validation yet + comparable),
-  // and gate on maxOptions so we never offer a validation the launch would silently truncate.
+  const nCands = check.result.candidates?.length ?? 0;
+  const comparable = nCands >= 2 && !!check.result.recommendedLabel;
   let canValidate = false, tooManyVersions = false, maxOptions = 0;
   if (!cal && comparable) {
     maxOptions = entitlements(await getPlan(email)).maxOptions;
@@ -60,7 +108,7 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
 
   return (
     <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <a href="/app/checks/new" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← New check</a>
+      <BackLink />
       <CheckReport result={check.result} title={check.title} createdAt={check.created_at} calibrationSlot={calibrationSlot} />
     </div>
   );
