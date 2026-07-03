@@ -144,7 +144,7 @@ export default function RankLanding() {
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
-            <Link href="/how-it-works" className="btn btn--ghost btn--lg">How it works</Link>
+            <Link href="/r/check" className="btn btn--ghost btn--lg">See a sample check</Link>
           </div>
 
           {/* Product preview: the instant AI check, calibrated on real people */}
