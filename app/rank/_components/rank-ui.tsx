@@ -268,6 +268,10 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   + ".rank-root a.card,.rank-root a.acard,.rank-root a.price{transition:transform 150ms cubic-bezier(0.22,1,0.36,1),border-color 150ms ease,box-shadow 150ms ease}"
   + ".rank-root a.card:hover,.rank-root a.acard:hover{transform:translateY(-1px);border-color:var(--acc-line)}"
   + ".rank-root a.card:active,.rank-root a.acard:active{transform:translateY(0) scale(0.995)}"
+  // Tighten the top of every app page. Pages set paddingTop inline on their .wrap
+  // (clamp up to 40px), which felt like dead space under the topbar; override it once
+  // here (a stylesheet !important beats the inline value) so all /app pages match.
+  + ".rank-root .app-main>.wrap{padding-top:clamp(12px,1.6vw,20px)!important}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 
 export function RankShell({ signedIn = false, email = null, children }: { signedIn?: boolean; email?: string | null; children: ReactNode }) {
