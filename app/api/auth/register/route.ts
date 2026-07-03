@@ -7,7 +7,7 @@ import {
   signSignupClaim,
 } from "../../../../lib/signup-claim-cookie";
 import { isDatabaseConfigured } from "../../../../lib/supabase-admin";
-import { getUserCredentialByEmail } from "../../../../lib/user-credentials";
+import { getUserCredentialByEmail, getUserCredentialByCanonical } from "../../../../lib/user-credentials";
 
 type RegisterPayload = {
   email?:    string;
@@ -72,6 +72,18 @@ export async function POST(request: Request) {
   if (existingCredential) {
     return NextResponse.json(
       { error: "That email already has a Vraelis account. Sign in instead." },
+      { status: 409 },
+    );
+  }
+
+  // Block an alias of an inbox that already has an account (Gmail +tag / dots resolve to the
+  // same mailbox), so free signup credits can't be farmed across aliases. Login is unaffected
+  // (it stays keyed on the real address). The DB unique index is the authoritative guard; this
+  // is the friendly fast-path message.
+  const existingCanonical = await getUserCredentialByCanonical(email);
+  if (existingCanonical) {
+    return NextResponse.json(
+      { error: "That email, or an alias of it, already has a Vraelis account. Sign in instead." },
       { status: 409 },
     );
   }

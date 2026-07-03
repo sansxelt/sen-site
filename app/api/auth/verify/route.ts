@@ -9,7 +9,7 @@ import {
 import { APP_URL } from "../../../../lib/stripe";
 import { getSupabaseAdminClient } from "../../../../lib/supabase-admin";
 import { syncUserProfileIdentity } from "../../../../lib/user-profile";
-import { getUserCredentialByEmail } from "../../../../lib/user-credentials";
+import { getUserCredentialByEmail, getUserCredentialByCanonical, canonicalizeEmail } from "../../../../lib/user-credentials";
 import { trackServer } from "../../../../lib/analytics";
 
 /**
@@ -62,6 +62,15 @@ export async function GET(request: Request) {
     return NextResponse.redirect(autoSigninRedirect(pending.email));
   }
 
+  // An alias of an inbox that already has an account (verified under a different alias). Same
+  // person, so don't mint a second account (and a second signup grant): clean up the pending
+  // row and send them to sign in with their existing account.
+  const canonicalOwner = await getUserCredentialByCanonical(pending.email);
+  if (canonicalOwner) {
+    await deletePendingSignup(pending.email);
+    return NextResponse.redirect(`${APP_URL}/signin`);
+  }
+
   // Happy path, promote pending → real user.  Insert the credential row
   // directly (password is already hashed in the pending row, so we don't
   // call createUserCredential which would double-hash).
@@ -72,12 +81,21 @@ export async function GET(request: Request) {
     const { error } = await supabase
       .from("user_credentials" as never)
       .insert({
-        email:         pending.email,
-        password_hash: pending.password_hash,
-        updated_at:    now,
+        email:          pending.email,
+        canonical_email: canonicalizeEmail(pending.email),
+        password_hash:  pending.password_hash,
+        updated_at:     now,
       } as never);
 
-    if (error) throw error;
+    if (error) {
+      // A unique violation means a concurrent verification (exact dupe or a canonical alias)
+      // won the race and created the account. Not a user-facing error: send them to sign in.
+      if ((error as { code?: string }).code === "23505") {
+        await deletePendingSignup(pending.email);
+        return NextResponse.redirect(`${APP_URL}/signin`);
+      }
+      throw error;
+    }
 
     await syncUserProfileIdentity({
       email: pending.email,
