@@ -106,7 +106,7 @@ function FlagRow({ f }: { f: LineFlag }) {
   );
 }
 
-export function CheckReport({ result, title, createdAt }: { result: EvalResult; title?: string | null; createdAt?: string | null }) {
+export function CheckReport({ result, title, createdAt, calibrationSlot }: { result: EvalResult; title?: string | null; createdAt?: string | null; calibrationSlot?: ReactNode }) {
   const multi = result.candidates.length > 1;
   const winner = result.recommendedIndex != null ? result.candidates.find((c) => c.index === result.recommendedIndex) ?? null : null;
   const typeLabel = OUTPUT_LABELS[result.outputType] ?? "Output";
@@ -162,6 +162,9 @@ export function CheckReport({ result, title, createdAt }: { result: EvalResult; 
           <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>No specific problem spans were flagged.</p>
         </div>
       )}
+
+      {/* calibration: validate on real people + the rolling agreement rate (owner only) */}
+      {calibrationSlot}
 
       {/* honest method note */}
       <div style={{ ...box, background: "var(--bg-2)", padding: "clamp(16px, 2.4vw, 22px)" }}>
