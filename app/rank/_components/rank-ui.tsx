@@ -133,9 +133,15 @@ function Footer() {
             <a href="https://facebook.com/vraelis" target="_blank" rel="noreferrer" aria-label="Vraelis on Facebook" style={{ width: 34, height: 34, borderRadius: 9, border: "1px solid var(--line-2)", background: "var(--bg-1)", display: "grid", placeItems: "center", color: "var(--fg-3)", textDecoration: "none" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12Z" /></svg>
             </a>
+            <a href="https://www.youtube.com/@usevraelis" target="_blank" rel="noreferrer" aria-label="Vraelis on YouTube" style={{ width: 34, height: 34, borderRadius: 9, border: "1px solid var(--line-2)", background: "var(--bg-1)", display: "grid", placeItems: "center", color: "var(--fg-3)", textDecoration: "none" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M23 12s0-3.2-.4-4.7a2.5 2.5 0 0 0-1.77-1.77C19.14 5.13 12 5.13 12 5.13s-7.14 0-8.83.4A2.5 2.5 0 0 0 1.4 7.3C1 8.8 1 12 1 12s0 3.2.4 4.7a2.5 2.5 0 0 0 1.77 1.77c1.69.4 8.83.4 8.83.4s7.14 0 8.83-.4a2.5 2.5 0 0 0 1.77-1.77c.4-1.5.4-4.7.4-4.7ZM9.75 15.5v-7l6 3.5-6 3.5Z" /></svg>
+            </a>
+            <a href="https://x.com/vraelis" target="_blank" rel="noreferrer" aria-label="Vraelis on X" style={{ width: 34, height: 34, borderRadius: 9, border: "1px solid var(--line-2)", background: "var(--bg-1)", display: "grid", placeItems: "center", color: "var(--fg-3)", textDecoration: "none" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M18.9 2H22l-7.5 8.57L23 22h-6.9l-5.4-7.06L4.5 22H1.4l8-9.17L1 2h7.06l4.9 6.48L18.9 2Zm-1.2 18h1.7L7.2 3.9H5.4L17.7 20Z" /></svg>
+            </a>
           </div>
         </div>
-        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/vote", "Evaluate & Earn"], ["/app/new", "Test your AI content"]]} />
+        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/app/checks/new", "Check your AI output"], ["/vote", "Evaluate & Earn"]]} />
         <Col title="Developers" links={[["/developers", "Developers"], ["/app/api-keys", "API keys"], ["/app/api-keys", "Webhooks"], ["/app/data", "Data exports"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/app/account", "Account"], ["/app/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/data-rights", "Data rights"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
