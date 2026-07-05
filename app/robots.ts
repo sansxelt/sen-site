@@ -2,7 +2,7 @@
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/account/"] },
-    sitemap: "https://www.vraelis.com/sitemap.xml",
+    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/app/", "/account/", "/auth/"] },
+    sitemap: "https://vraelis.com/sitemap.xml",
   };
 }

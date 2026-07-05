@@ -91,11 +91,16 @@ export function VraelisSignIn({
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<Status | null>(null);
   const [busy, setBusy] = useState<AuthMode | OauthProvider | null>(null);
+  const [agreed, setAgreed] = useState(false);
 
   const emailBusy = busy === "signup" || busy === "signin";
+  // Clickwrap: creating an account (email OR OAuth) requires agreeing to Terms + Privacy.
+  const needsConsent = mode === "signup" && !agreed;
+  const CONSENT_MSG = "Please agree to the Terms and Privacy Policy to continue.";
 
   async function handleOAuth(provider: OauthProvider) {
     setStatus(null);
+    if (mode === "signup" && !agreed) { setStatus({ tone: "error", message: CONSENT_MSG }); return; }
     setBusy(provider);
     try {
       await signIn(provider, { redirectTo: safeRedirect });
@@ -109,6 +114,7 @@ export function VraelisSignIn({
   async function handleEmailAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus(null);
+    if (mode === "signup" && !agreed) { setStatus({ tone: "error", message: CONSENT_MSG }); return; }
     setBusy(mode);
     try {
       if (mode === "signup") {
@@ -169,6 +175,14 @@ export function VraelisSignIn({
           ))}
         </div>
 
+        {/* Clickwrap consent — gates every signup method (email + OAuth). */}
+        {mode === "signup" && (
+          <label style={{ display: "flex", gap: 9, alignItems: "flex-start", marginBottom: 16, fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, cursor: "pointer" }}>
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} style={{ marginTop: 2, width: 15, height: 15, flex: "none", accentColor: "var(--acc-deep)", cursor: "pointer" }} />
+            <span>I agree to the <Link href="/terms" target="_blank" style={{ color: "var(--acc-deep)" }}>Terms</Link> and <Link href="/privacy" target="_blank" style={{ color: "var(--acc-deep)" }}>Privacy Policy</Link>.</span>
+          </label>
+        )}
+
         {/* OAuth */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {oauthProviders.map((opt) => {
@@ -179,12 +193,13 @@ export function VraelisSignIn({
                 key={opt.provider}
                 type="button"
                 onClick={() => void handleOAuth(opt.provider)}
-                disabled={providerBusy}
+                disabled={providerBusy || needsConsent}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 10, width: "100%",
                   borderRadius: "var(--r-sm)", border: `1px solid ${primary ? "var(--line-3)" : "var(--line-2)"}`,
                   background: "var(--bg-1)", padding: "12px 14px", fontSize: 14.5, fontWeight: 600, color: "var(--fg-1)",
-                  cursor: providerBusy ? "wait" : "pointer", boxShadow: primary ? "var(--shadow-sm)" : "none",
+                  cursor: providerBusy ? "wait" : needsConsent ? "not-allowed" : "pointer", boxShadow: primary ? "var(--shadow-sm)" : "none",
+                  opacity: needsConsent ? 0.55 : 1,
                 }}
               >
                 {opt.provider === "google" ? <GoogleIcon /> : <GitHubIcon />}
@@ -204,11 +219,11 @@ export function VraelisSignIn({
         {/* email/password */}
         <form onSubmit={handleEmailAuth} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {mode === "signup" && (
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" disabled={emailBusy} required minLength={1} style={inputStyle} />
+            <input type="text" aria-label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" disabled={emailBusy} required minLength={1} style={inputStyle} />
           )}
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" disabled={emailBusy} required style={inputStyle} />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" disabled={emailBusy} required minLength={8} style={inputStyle} />
-          <button type="submit" className="btn" disabled={emailBusy} style={{ width: "100%", justifyContent: "center", marginTop: 2, opacity: emailBusy ? 0.7 : 1 }}>
+          <input type="email" aria-label="Email address" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" disabled={emailBusy} required style={inputStyle} />
+          <input type="password" aria-label="Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" disabled={emailBusy} required minLength={8} style={inputStyle} />
+          <button type="submit" className="btn" disabled={emailBusy || needsConsent} style={{ width: "100%", justifyContent: "center", marginTop: 2, opacity: (emailBusy || needsConsent) ? 0.7 : 1 }}>
             {busy === "signup" ? "Creating account…" : busy === "signin" ? "Signing in…" : mode === "signup" ? "Create account" : "Sign in"}
           </button>
           {mode === "signup" && <p style={{ fontSize: 12, color: "var(--fg-4)", textAlign: "center", margin: "2px 0 0", lineHeight: 1.5 }}>We&apos;ll email you a verification link to confirm your address before your first sign-in.</p>}

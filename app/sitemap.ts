@@ -1,68 +1,36 @@
-﻿import type { MetadataRoute } from "next";
-import { ARTICLES, TOPICS } from "../lib/learn-content";
-import { listPublishedPieces } from "../lib/learn-db";
+import type { MetadataRoute } from "next";
 
-const BASE = "https://www.vraelis.com";
+// Canonical host is the apex, matching lib/og-meta.ts (previously this used www, which
+// conflicted with the canonical tags). Lists the live Vraelis marketing + public surfaces
+// only; the app (/app/*), auth callbacks, and the API are intentionally excluded from
+// indexing (robots also disallows /api and /account).
+const BASE = "https://vraelis.com";
 
-// Sitemap covers marketing surfaces, every Learn topic page, and
-// every published article from both sources (hardcoded ARTICLES +
-// DB-backed learn_pieces). Without this Google has no way to
-// discover the content pages.
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+type Entry = MetadataRoute.Sitemap[number];
+type Freq = NonNullable<Entry["changeFrequency"]>;
+
+export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
+  const page = (path: string, priority: number, changeFrequency: Freq = "monthly"): Entry => ({
+    url: `${BASE}${path}`,
+    lastModified: now,
+    changeFrequency,
+    priority,
+  });
 
-  const marketing: MetadataRoute.Sitemap = [
-    { url: BASE, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: `${BASE}/home`, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: `${BASE}/pricing`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${BASE}/product`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE}/download`, lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE}/contact`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${BASE}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${BASE}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${BASE}/signin`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
+  return [
+    page("/", 1, "weekly"),
+    page("/pricing", 0.9, "weekly"),
+    page("/how-it-works", 0.8),
+    page("/developers", 0.8),
+    page("/enterprise", 0.7),
+    page("/r/check", 0.7),      // public sample AI check
+    page("/r/sample", 0.5),     // public sample human-validation report
+    page("/contact", 0.5),
+    page("/signin", 0.4, "yearly"),
+    page("/privacy", 0.3, "yearly"),
+    page("/terms", 0.3, "yearly"),
+    page("/data-rights", 0.3, "yearly"),
+    page("/trademark", 0.3, "yearly"),
   ];
-
-  const learnHubs: MetadataRoute.Sitemap = [
-    { url: `${BASE}/learn`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
-    { url: `${BASE}/learn/all`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
-    ...TOPICS.map((t) => ({
-      url: `${BASE}/learn/topics/${t.key}`,
-      lastModified: now,
-      changeFrequency: "weekly" as const,
-      priority: 0.7,
-    })),
-    ...TOPICS.flatMap((t) =>
-      t.subtopics.map((s) => ({
-        url: `${BASE}/learn/topics/${t.key}/${s.key}`,
-        lastModified: now,
-        changeFrequency: "weekly" as const,
-        priority: 0.6,
-      })),
-    ),
-  ];
-
-  const hardcodedArticles: MetadataRoute.Sitemap = ARTICLES.map((a) => ({
-    url: `${BASE}/learn/${a.slug}`,
-    lastModified: new Date(a.publishedAt),
-    changeFrequency: "monthly" as const,
-    priority: 0.8,
-  }));
-
-  // DB pieces, fail-open: if Supabase is unreachable the rest of
-  // the sitemap still serves so we never 500 the route.
-  let dbArticles: MetadataRoute.Sitemap = [];
-  try {
-    const pieces = await listPublishedPieces({ limit: 500 });
-    dbArticles = pieces.map((p) => ({
-      url: `${BASE}/learn/p/${p.slug}`,
-      lastModified: p.published_at ? new Date(p.published_at) : now,
-      changeFrequency: "monthly" as const,
-      priority: 0.8,
-    }));
-  } catch (err) {
-    console.warn("sitemap: listPublishedPieces failed", err);
-  }
-
-  return [...marketing, ...learnHubs, ...hardcodedArticles, ...dbArticles];
 }
