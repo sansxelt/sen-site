@@ -110,6 +110,39 @@ export function PlanPrice({ plan, cycle }: { plan: string; cycle: "monthly" | "y
   );
 }
 
+// PayPal option for PLAN subscriptions. Redirect flow (not the SDK buttons): create the
+// subscription server-side, then send the user to PayPal to approve. Hidden unless configured.
+function PaypalSubscribe({ plan, cycle }: { plan: string; cycle: "monthly" | "yearly" }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  if (!PAYPAL_CLIENT_ID) return null;
+
+  async function go() {
+    setBusy(true); setMsg("");
+    try {
+      const r = await fetch("/api/v/paypal/create-subscription", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ plan, cycle }) });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.approveUrl) { window.location.href = j.approveUrl as string; return; }
+      setMsg(j.error === "plan_unavailable" ? "PayPal isn't set up for this plan yet. Pay by card below." : "Couldn't start PayPal. Pay by card below.");
+      setBusy(false);
+    } catch { setMsg("Couldn't reach PayPal. Pay by card below."); setBusy(false); }
+  }
+
+  return (
+    <div style={{ marginBottom: 4 }}>
+      <button type="button" onClick={go} disabled={busy} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "#ffc439", color: "#0a0a0a", border: "none", borderRadius: 8, padding: "13px 16px", fontSize: 15, fontWeight: 700, cursor: busy ? "wait" : "pointer" }}>
+        {busy ? "Redirecting to PayPal…" : "Subscribe with PayPal"}
+      </button>
+      {msg && <p style={{ fontSize: 13, color: "var(--err)", marginTop: 8 }}>{msg}</p>}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0 6px" }}>
+        <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
+        <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.04em" }}>or pay by card / wallet</span>
+        <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
+      </div>
+    </div>
+  );
+}
+
 export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?: string; cycle?: string }) {
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
@@ -146,8 +179,9 @@ export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?
     // No overflow:hidden / fixed height here — Stripe sets the iframe height
     // dynamically, and clipping it cuts off the bottom of the checkout.
     <div className="checkout-pay" style={{ minHeight: 200 }}>
-      {/* PayPal for credit top-ups only (one-time). Renders above Stripe; hidden unless configured. */}
+      {/* PayPal above Stripe; hidden unless configured. Credits = SDK buttons, plans = redirect. */}
       {!plan && typeof amount === "number" && amount > 0 ? <PaypalCredits amount={amount} /> : null}
+      {plan ? <PaypalSubscribe plan={plan} cycle={cycle === "yearly" ? "yearly" : "monthly"} /> : null}
       {!ready && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="skel" style={{ height: 46 }} />

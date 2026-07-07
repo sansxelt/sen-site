@@ -15,6 +15,7 @@
 
 import type { PricingPlanKey } from "./pricing";
 import { getPricingPlan } from "./pricing";
+import { PLAN_CATALOG } from "./v-plans";
 
 const PAYPAL_API = {
   live:    "https://api-m.paypal.com",
@@ -235,6 +236,38 @@ export async function createPaypalSubscription(args: {
 
 export async function getPaypalSubscription(id: string): Promise<PaypalSubscription> {
   return await paypalFetch<PaypalSubscription>(`/v1/billing/subscriptions/${id}`);
+}
+
+// ── Vraelis Rank plans (starter/creator/pro/scale) ────────────────────────
+// PayPal billing plans are provisioned once (setupVraelisPaypalPlans, admin route) and
+// their ids stored in env as PAYPAL_PLAN_<PLAN>_<CYCLE>, mirroring the Stripe price env.
+
+// Provision a PayPal product + monthly/yearly billing plan for every Vraelis tier. Returns
+// the ids to paste into env. Idempotent-ish: re-running creates NEW plans, so run once.
+export async function setupVraelisPaypalPlans(): Promise<Record<string, { monthly: string; yearly: string }>> {
+  const out: Record<string, { monthly: string; yearly: string }> = {};
+  for (const p of PLAN_CATALOG) {
+    const product = await createProduct(`Vraelis ${p.name}`, p.blurb);
+    const monthly = await createPlan({ productId: product.id, name: `Vraelis ${p.name} (monthly)`, description: p.blurb, priceUsd: p.price.monthly, cycle: "monthly" });
+    const yearly = await createPlan({ productId: product.id, name: `Vraelis ${p.name} (yearly)`, description: p.blurb, priceUsd: p.price.yearly, cycle: "yearly" });
+    out[p.plan] = { monthly: monthly.id, yearly: yearly.id };
+  }
+  return out;
+}
+
+export function vraelisPaypalPlanId(plan: string, cycle: string): string | null {
+  return process.env[`PAYPAL_PLAN_${plan.toUpperCase()}_${cycle.toUpperCase()}`] || null;
+}
+
+// Reverse: a PayPal plan id -> which Vraelis plan/cycle it is (for the webhook).
+export function vraelisPlanFromPaypalPlanId(planId: string | null | undefined): { plan: string; cycle: "monthly" | "yearly" } | null {
+  if (!planId) return null;
+  for (const p of PLAN_CATALOG) {
+    for (const cycle of ["monthly", "yearly"] as const) {
+      if (process.env[`PAYPAL_PLAN_${p.plan.toUpperCase()}_${cycle.toUpperCase()}`] === planId) return { plan: p.plan, cycle };
+    }
+  }
+  return null;
 }
 
 // ── One-time orders (used for addons) ────────────────────────────────────

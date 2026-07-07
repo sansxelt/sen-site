@@ -34,12 +34,14 @@ export default function PlansPage() {
     const loadMe = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setSignedIn(true); setPlan(j.plan || "free"); } }).catch(() => {});
     loadMe();
     fetch("/api/v/plans").then((r) => r.json()).then((j) => setPrices(j.plans || {})).catch(() => {});
-    const sid = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("session_id") : null;
-    if (sid) {
+    // Stripe returns with session_id; PayPal subscriptions return with paypal_sub=1. Both
+    // activate via webhook, so poll the plan until it flips active.
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    if (params && (params.get("session_id") || params.get("paypal_sub"))) {
       setSubscribed(true);
       window.history.replaceState({}, "", "/app/plans");
       let tries = 0;
-      const iv = setInterval(() => { tries += 1; loadMe(); if (tries >= 6) clearInterval(iv); }, 2000);
+      const iv = setInterval(() => { tries += 1; loadMe(); if (tries >= 8) clearInterval(iv); }, 2000);
       return () => clearInterval(iv);
     }
   }, []);
