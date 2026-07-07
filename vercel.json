@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/cron/webhook-retries", "schedule": "0 8 * * *" },
-    { "path": "/api/cron/reverify-domains", "schedule": "0 6 * * *" }
+    { "path": "/api/cron/reverify-domains", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/lifecycle", "schedule": "0 15 * * *" }
   ]
 }

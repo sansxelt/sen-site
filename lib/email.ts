@@ -344,6 +344,38 @@ export async function sendWelcomeEmail(email: string, name?: string) {
   }
 }
 
+// Activation nudge: sent once by the lifecycle cron (lib/v-lifecycle.ts) to accounts that
+// signed up but haven't run their first check. One job: get them to run a check.
+function checkActivationHtml(): string {
+  const run = "https://vraelis.com/app/checks/new";
+  const sample = "https://vraelis.com/r/check";
+  return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
+    <div style="max-width:520px;margin:0 auto;padding:32px 24px">
+      <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
+      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You've got free credits waiting.</h1>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You signed up but haven't run a check yet. It takes about 20 seconds: paste something your AI generated (a support reply, an onboarding message, an agent response) and Vraelis returns per-criterion scores and the exact lines to fix before your users ever see them.</p>
+      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run your first check</a>
+      <p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Want to see one first? Here's a sample check: <a href="${sample}" style="color:#0d5c46">vraelis.com/r/check</a></p>
+      <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you created a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
+    </div></body></html>`;
+}
+
+export async function sendCheckActivationEmail(email: string) {
+  const resend = getResend();
+  if (!resend) return;
+
+  try {
+    await resend.emails.send({
+      from:    fromAccount,
+      to:      email,
+      subject: "Run your first check on Vraelis (about 20 seconds)",
+      html:    checkActivationHtml(),
+    });
+  } catch (error) {
+    console.error("sendCheckActivationEmail failed:", error);
+  }
+}
+
 export async function sendEarlyAccessEmail(email: string, name: string) {
   const resend = getResend();
   if (!resend) return;
