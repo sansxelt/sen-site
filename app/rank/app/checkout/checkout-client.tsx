@@ -1,10 +1,90 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "");
+const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "";
+
+// Minimal typing for the PayPal JS SDK button we render for credit top-ups.
+type PaypalButtons = (config: {
+  style?: Record<string, unknown>;
+  createOrder: () => Promise<string>;
+  onApprove: (data: { orderID: string }) => Promise<void>;
+  onError?: (err: unknown) => void;
+}) => { render: (el: HTMLElement) => void };
+// window.paypal is already globally typed (old integration); narrow it at the use site.
+const paypalSdk = (): { Buttons: PaypalButtons } | null =>
+  (window as unknown as { paypal?: { Buttons?: PaypalButtons } | null }).paypal?.Buttons
+    ? ((window as unknown as { paypal: { Buttons: PaypalButtons } }).paypal)
+    : null;
+
+// PayPal option for CREDIT top-ups only (one-time). Hidden entirely unless
+// NEXT_PUBLIC_PAYPAL_CLIENT_ID is set, so it's inert until PayPal is configured.
+// create-order + capture-order grant credits through the same idempotent ledger as Stripe.
+function PaypalCredits({ amount }: { amount: number }) {
+  const box = useRef<HTMLDivElement>(null);
+  const rendered = useRef(false);
+  const [phase, setPhase] = useState<"load" | "ready" | "paying" | "error">("load");
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (!PAYPAL_CLIENT_ID || rendered.current) return;
+    let cancelled = false;
+
+    const mount = () => {
+      const pp = paypalSdk();
+      if (cancelled || rendered.current || !pp || !box.current) return;
+      rendered.current = true;
+      setPhase("ready");
+      pp.Buttons({
+        style: { layout: "horizontal", color: "gold", shape: "rect", height: 46, tagline: false },
+        createOrder: async () => {
+          const r = await fetch("/api/v/paypal/create-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amountDollars: amount }) });
+          const j = await r.json().catch(() => ({}));
+          if (!r.ok || !j.orderId) throw new Error(j.error || "create_failed");
+          return j.orderId as string;
+        },
+        onApprove: async (data) => {
+          setPhase("paying"); setMsg("");
+          const r = await fetch("/api/v/paypal/capture-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: data.orderID }) });
+          const j = await r.json().catch(() => ({}));
+          if (r.ok && j.status === "credited") { window.location.href = "/app/credits?paypal=1"; return; }
+          setPhase("error"); setMsg(j.message || "Payment went through but we couldn't add the credits. Email help@vraelis.com and we'll fix it fast.");
+        },
+        onError: () => { setPhase("error"); setMsg("PayPal ran into a problem. Try again, or pay by card below."); },
+      }).render(box.current);
+    };
+
+    if (window.paypal) { mount(); return; }
+    const existing = document.getElementById("paypal-sdk") as HTMLScriptElement | null;
+    if (existing) { existing.addEventListener("load", mount); return () => existing.removeEventListener("load", mount); }
+    const s = document.createElement("script");
+    s.id = "paypal-sdk";
+    s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(PAYPAL_CLIENT_ID)}&currency=USD&intent=capture&disable-funding=card,credit,paylater`;
+    s.onload = mount;
+    s.onerror = () => { if (!cancelled) { setPhase("error"); setMsg("Couldn't load PayPal. Pay by card below."); } };
+    document.body.appendChild(s);
+    return () => { cancelled = true; };
+  }, [amount]);
+
+  if (!PAYPAL_CLIENT_ID) return null;
+
+  return (
+    <div style={{ marginBottom: 4 }}>
+      <div ref={box} style={{ minHeight: phase === "load" ? 0 : undefined }} />
+      {phase === "load" && <div className="skel" style={{ height: 46 }} />}
+      {phase === "paying" && <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 8, fontFamily: "var(--font-code)" }}>Confirming your PayPal payment…</p>}
+      {msg && <p style={{ fontSize: 13, color: "var(--err)", marginTop: 8 }}>{msg}</p>}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0 6px" }}>
+        <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
+        <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.04em" }}>or pay by card / wallet</span>
+        <span style={{ flex: 1, height: 1, background: "var(--line-1)" }} />
+      </div>
+    </div>
+  );
+}
 
 // Shows the live (rounded) plan price + which billing cycle the user picked, so
 // the order is unambiguous before they pay. Same source + rounding as /pricing;
@@ -66,6 +146,8 @@ export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?
     // No overflow:hidden / fixed height here — Stripe sets the iframe height
     // dynamically, and clipping it cuts off the bottom of the checkout.
     <div className="checkout-pay" style={{ minHeight: 200 }}>
+      {/* PayPal for credit top-ups only (one-time). Renders above Stripe; hidden unless configured. */}
+      {!plan && typeof amount === "number" && amount > 0 ? <PaypalCredits amount={amount} /> : null}
       {!ready && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="skel" style={{ height: 46 }} />
