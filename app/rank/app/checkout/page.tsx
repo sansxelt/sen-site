@@ -61,7 +61,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const backHref = plan ? "/app/plans" : "/app/credits";
   const included: string[] = plan
     ? PLAN_VALUE[plan.plan] ?? [`${plan.monthlyCredits.toLocaleString()} valid judgments every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
-    : ["1 credit = 1 valid human judgment", "Credits are held when you launch an evaluation", "Low-quality responses are filtered out", "Unused credits are refunded", "Credits never expire"];
+    : ["1 credit = 1 AI check", "Validate on real people: 1 credit per valid judgment", "Failed checks are refunded automatically", "Filtered human responses are never charged", "Credits never expire"];
 
   return (
     <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)", paddingBottom: "clamp(56px, 7vw, 96px)" }}>
