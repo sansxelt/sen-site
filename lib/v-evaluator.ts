@@ -70,6 +70,16 @@ export const RUBRICS: Record<OutputType, Criterion[]> = {
   ],
 };
 
+// Displayed scores are rounded to no finer than each criterion's MEASURED run-to-run spread
+// (from the 20-input x5 stability set), so a report never shows precision the number lacks: a
+// criterion that swings 40 points must not render as a 2-digit integer. Scores are indicative
+// only, the gate never uses them. Anything not listed measured <= 5 points of spread.
+const CRITERION_BAND: Record<string, number> = { reversibility: 20, reassurance: 20, tone: 10, completeness: 10 };
+export function bandScore(criterion: string, score: number): number {
+  const b = CRITERION_BAND[criterion] ?? 5;
+  return Math.min(100, Math.max(0, Math.round(score / b) * b));
+}
+
 export type CriterionScore = { criterion: string; label: string; score: number; note: string };
 export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string };
 export type LineFlag = { candidateIndex: number; candidateLabel: string; span: string; issue: FlagIssue; severity: FlagSeverity; why: string; fix: string };
@@ -130,6 +140,7 @@ const EvalSchema = z.object({
     span: z.string(),                                 // EXACT problem text, copied verbatim
     issue: z.string(),                                // dismissive|overpromise|confusing|risky|inaccurate|tone|other
     severity: z.string(),                             // low|medium|high (DISCARDED — severity is computed)
+    stylistic: z.boolean(),                           // forced binary: purely style/voice (LOW) vs affects fact/commitment (MEDIUM)
     why: z.string(),
     fix: z.string(),                                  // concrete rewrite of just that span
   })),
@@ -181,12 +192,13 @@ function findAbsoluteClaims(prepared: PreparedCandidate[]): { label: string; cla
   return out;
 }
 
-// Severity for an OPEN-ENDED flag (a non-absolute problem the model surfaced). The model's own
-// severity guess is DISCARDED (it flapped run-to-run: medium x8 / high x2 on the same line). A
-// matter of voice is LOW, every other flagged problem is MEDIUM. HIGH is reserved for unbacked
-// absolutes and is produced by the verdict pass, never here, so it can't depend on a flappy label.
-function deriveSeverity(issue: FlagIssue): FlagSeverity {
-  return issue === "tone" ? "low" : "medium";
+// Severity for an OPEN-ENDED flag (a non-absolute problem the model surfaced). Driven by a
+// FORCED BINARY the model answers per span (stylistic yes/no), not the open-ended issue label
+// (which flapped, causing 2/35 severity drift). Same shape as the absolute verdict: a forced
+// binary on a named span is far steadier than an open-ended category. Purely stylistic -> LOW;
+// anything touching fact or a commitment -> MEDIUM. HIGH is only ever the unbacked-absolute pass.
+function deriveSeverity(stylistic: boolean): FlagSeverity {
+  return stylistic ? "low" : "medium";
 }
 
 // Pure, exported so the honesty enforcement is independently testable without a key:
@@ -251,7 +263,7 @@ export function finalizeEvaluation(
     if (!why || !fix) continue;
     if (overlaps(p.label, span)) continue;                 // same span as a HIGH absolute -> skip
     const issue = (ISSUES as string[]).includes((f.issue || "").trim().toLowerCase()) ? ((f.issue || "").trim().toLowerCase() as FlagIssue) : "other";
-    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity: deriveSeverity(issue), why: why.slice(0, 300), fix: fix.slice(0, 400) });
+    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity: deriveSeverity(f.stylistic === true), why: why.slice(0, 300), fix: fix.slice(0, 400) });
   }
 
   // Recommended version is COMPUTED from the scores, never the model's word. An exact
@@ -309,9 +321,9 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     (multi ? `There are ${prepared.length} versions to compare:\n\n${candidatesBlock}\n\n` : `One version to review:\n\n${candidatesBlock}\n\n`) +
     `Return:\n` +
     `- candidates: for EACH version, its label (e.g. "A"), a one-line summary, and a score for EVERY criterion above (exact key) with a one-line note.\n` +
-    `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), why (one line), and fix (a concrete rewrite of just that span).\n` +
+    `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), stylistic (true ONLY if the problem is purely a matter of style, voice, or phrasing that does NOT affect factual accuracy or a commitment made to the user; false if it touches a fact, a claim, or a promise), why (one line), and fix (a concrete rewrite of just that span).\n` +
     (absClaims.length
-      ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (copied verbatim), backed (true ONLY if the surrounding copy substantiates it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), why (one line), fix (a concrete rewrite). Judge honestly and independently: "works with every major tool: Slack, Gmail, and Notion" is backed; "we never sell your data" is a policy statement and is backed; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
+      ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (the SHORTEST exact phrase that carries the absolute claim, copied verbatim, NOT the whole sentence), backed (true ONLY if the surrounding copy substantiates it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), why (one line), fix (a concrete rewrite). Judge honestly and independently: "works with every major tool: Slack, Gmail, and Notion" is backed; "we never sell your data" is a policy statement and is backed; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
       : "") +
     (multi
       ? `- recommendation: one plain sentence naming which version to ship and why.\n\n`
