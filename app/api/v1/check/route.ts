@@ -107,7 +107,8 @@ async function handleSingle(userId: string, body: Record<string, unknown>): Prom
   const res = r.check.result;
   if (!res) return apiError("internal_error", "The check did not complete and you were not charged. Try again shortly.", 503);
 
-  const gate = threshold ? evaluateGate(res, threshold) : null;
+  // Always gate on HIGH flags (the reproducible signal); the optional threshold adds score bars.
+  const gate = evaluateGate(res, threshold);
   const out = renderCheck(r.check, res, gate);
 
   // Opt-in public share link: `share: true` enables the read-only /r/c/<token> report and
@@ -177,7 +178,6 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
   const results = new Array<Record<string, unknown>>(parsed.length);
   let creditsCharged = 0;
   let okCount = 0;
-  let anyGate = false;
   let allGatePassed = true;
 
   runnable.forEach((x, k) => {
@@ -185,7 +185,7 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
     results[x.i] = m.body;
     creditsCharged += m.charged;
     if (m.ok) okCount++;
-    if (m.gatePassed !== null) { anyGate = true; if (!m.gatePassed) allGatePassed = false; }
+    if (m.gatePassed === false) allGatePassed = false;
   });
   parsed.forEach((p, i) => {
     if (!p.ok) results[i] = { index: i, ok: false, error: { code: "validation_error", message: p.error } };
@@ -196,10 +196,9 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
     count: parsed.length,
     ok_count: okCount,
     credits_charged: creditsCharged,
-    // Quality-gate verdict across the items that ran WITH a threshold (null if none gated).
-    // Operational failures show up per item + in ok_count; for a hard gate require
-    // passed !== false AND ok_count === count.
-    passed: anyGate ? allGatePassed : null,
+    // The batch passes only if EVERY item ran AND none has a HIGH flag (or fails a score bar).
+    // A HIGH flag on any output, or any item that failed to run, blocks the whole release.
+    passed: allGatePassed && okCount === parsed.length,
     results,
     note: "This is an AI assessment, not a human judgment or a guarantee.",
   });
@@ -211,6 +210,6 @@ function mapBatchResult(index: number, rr: RunCheckResult, threshold: ThresholdS
   if (rr.status !== "ok" || !rr.check.result) return { body: { index, ok: false, error: { code: "internal_error", message: "The check did not complete and you were not charged." } }, charged: 0, ok: false, gatePassed: null };
 
   const res = rr.check.result;
-  const gate = threshold ? evaluateGate(res, threshold) : null;
-  return { body: { index, ok: true, ...renderCheck(rr.check, res, gate) }, charged: rr.check.credits_charged, ok: true, gatePassed: gate ? gate.passed : null };
+  const gate = evaluateGate(res, threshold);
+  return { body: { index, ok: true, ...renderCheck(rr.check, res, gate) }, charged: rr.check.credits_charged, ok: true, gatePassed: gate.passed };
 }

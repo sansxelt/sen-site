@@ -97,6 +97,11 @@ export type PreparedCandidate = { index: number; label: string; text: string; no
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const MAX_CANDIDATES = LETTERS.length; // matches the product spec (2 to 8 versions)
+// PINNED judge model. A score only means something if the judge is fixed, so this is a
+// deliberate version pin, not a floating default: if Anthropic ships a model update, bumping
+// this is a tested change (re-run the stability harness), never a silent shift under every
+// customer's gate. If a dated snapshot of this model is published, pin to that exact string.
+// The env override is for staging comparisons only.
 const MODEL = process.env.VRAELIS_EVAL_MODEL || "claude-sonnet-4-6";
 const API_KEY = process.env.VRAELIS_LLM_API_KEY || process.env.ANTHROPIC_API_KEY;
 
@@ -240,7 +245,7 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
       : published
         ? `- recommendation: one plain sentence naming the single highest-impact change to make now. This content is already live, so do NOT frame it as ready or not ready to ship.\n\n`
         : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n\n`) +
-    `Severity calibration: HIGH means the line is verifiably false, cannot be backed up, or creates a real safety or legal risk. An absolute or universal claim the product cannot literally deliver ("automate ANY app", "works with EVERY tool", "NEVER fails", "GUARANTEED", "INSTANT", "unlimited") is HIGH when nothing on the page backs it. MEDIUM means a clear, objective problem that is not merely stylistic. A matter of taste, voice, or phrasing preference is LOW at most, never MEDIUM or HIGH. Do not substitute your stylistic preference for the writer's.` +
+    `Severity calibration: HIGH means the line is verifiably false, cannot be backed up, or creates a real safety or legal risk. An absolute or universal claim the product cannot literally deliver (a promise that it works with EVERY tool, handles ANY input, NEVER fails, is GUARANTEED, INSTANT, or unlimited) is HIGH when nothing on the page backs it. MEDIUM means a clear, objective problem that is not merely stylistic. A matter of taste, voice, or phrasing preference is LOW at most, never MEDIUM or HIGH. Do not substitute your stylistic preference for the writer's.` +
     (outputType === "marketing_copy" ? ` Marketing copy is allowed to be bold, aspirational, and confident: a strong, punchy hero line is fine, but an unbackable absolute claim in it is still HIGH.` : "") +
     `\n\n` +
     `Rules: copy every span verbatim from the version text, and do not invent or paraphrase spans. Only flag real problems, not rewrites you would merely prefer. Score honestly against the criteria. Write plainly and do not use em dashes.`;
@@ -254,6 +259,9 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     const res = await client.messages.parse({
       model: MODEL,
       max_tokens: 2600,
+      temperature: 0,   // a rubric that means anything must be applied as identically as the
+                        // model allows; temp 0 collapses most run-to-run variance (it is NOT a
+                        // determinism guarantee: batching + float nondeterminism still exist).
       messages: [{ role: "user", content: PROMPT }],
       output_config: { format: zodOutputFormat(EvalSchema) },
     });

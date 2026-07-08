@@ -14,9 +14,11 @@ import type { EvalResult, CandidateEval } from "./v-evaluator";
 export type ThresholdSpec = { overall?: number; criteria?: Record<string, number> };
 
 export type GateCriterion = { criterion: string; label: string; score: number | null; min: number; passed: boolean };
+export type GateHighFlag = { span: string; issue: string };
 export type Gate = {
   passed: boolean;
   evaluated: { index: number; label: string } | null;
+  high_flags: GateHighFlag[];   // the specific, nameable defects that fail the gate
   overall: { score: number; min: number; passed: boolean } | null;
   criteria: GateCriterion[];
   failures: number;
@@ -78,23 +80,31 @@ function gatedCandidate(result: EvalResult): CandidateEval | null {
   return [...result.candidates].sort((a, b) => b.overall - a.overall || a.index - b.index)[0];
 }
 
-// Evaluate the gate. FAIL-CLOSED: a criterion bound that can't be satisfied (e.g. a
-// criterion key not in this output type's rubric -> score null) counts as a failure, so
-// the gate never silently ignores a bar the caller asked it to enforce. The full per-bar
-// breakdown is returned so a CI step can log exactly why it blocked.
-export function evaluateGate(result: EvalResult, spec: ThresholdSpec): Gate {
+// Evaluate the gate. The PRIMARY signal is HIGH-severity flags: the gate FAILS on any HIGH
+// flag on the judged version, because a HIGH flag is a specific, nameable defect (a false or
+// unbackable claim) and the stability data shows it reproduces far better than the overall
+// score does. An optional score threshold (spec) adds bars on TOP; it is never the sole
+// reason a build passes. FAIL-CLOSED: a criterion bound that can't be satisfied (a criterion
+// key not in this output type's rubric -> score null) counts as a failure. The full
+// breakdown is returned so a CI step can log exactly which line blocked it.
+export function evaluateGate(result: EvalResult, spec: ThresholdSpec | null): Gate {
   const c = gatedCandidate(result);
+  const high: GateHighFlag[] = (c ? result.flags.filter((f) => f.candidateLabel === c.label) : result.flags)
+    .filter((f) => f.severity === "high")
+    .map((f) => ({ span: f.span, issue: f.issue }));
+
   if (!c) {
-    return { passed: false, evaluated: null, overall: spec.overall != null ? { score: 0, min: spec.overall, passed: false } : null, criteria: [], failures: 1 };
+    return { passed: false, evaluated: null, high_flags: high, overall: spec?.overall != null ? { score: 0, min: spec.overall, passed: false } : null, criteria: [], failures: 1 + high.length };
   }
 
-  const overall = spec.overall != null ? { score: c.overall, min: spec.overall, passed: c.overall >= spec.overall } : null;
-  const criteria: GateCriterion[] = Object.entries(spec.criteria ?? {}).map(([key, min]) => {
+  const overall = spec?.overall != null ? { score: c.overall, min: spec.overall, passed: c.overall >= spec.overall } : null;
+  const criteria: GateCriterion[] = Object.entries(spec?.criteria ?? {}).map(([key, min]) => {
     const sc = c.scores.find((s) => s.criterion === key);
     const score = sc ? sc.score : null;
     return { criterion: key, label: sc?.label ?? key, score, min, passed: score != null && score >= min };
   });
 
-  const failures = (overall && !overall.passed ? 1 : 0) + criteria.filter((x) => !x.passed).length;
-  return { passed: failures === 0, evaluated: { index: c.index, label: c.label }, overall, criteria, failures };
+  const scoreFailures = (overall && !overall.passed ? 1 : 0) + criteria.filter((x) => !x.passed).length;
+  const failures = high.length + scoreFailures;
+  return { passed: failures === 0, evaluated: { index: c.index, label: c.label }, high_flags: high, overall, criteria, failures };
 }
