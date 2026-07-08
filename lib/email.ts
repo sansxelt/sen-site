@@ -16,7 +16,7 @@ function getResend() {
  * Gmail's Send-mail-as aliases so replies look visually consistent with
  * what they'd see going the other way.
  */
-const fromAccount = "Vraelis AI <hello@vraelis.com>";
+const fromAccount = "Vraelis <hello@vraelis.com>";
 
 /**
  * Automated system sender, billing events today, newsletters in Phase 2.
@@ -24,7 +24,7 @@ const fromAccount = "Vraelis AI <hello@vraelis.com>";
  * automated mail and a narrower "Billing" label would be wrong for
  * newsletters / product updates.
  */
-const fromBilling = "Vraelis AI <noreply@vraelis.com>";
+const fromBilling = "Vraelis <noreply@vraelis.com>";
 
 /**
  * Sender/reply-to policy:
@@ -209,16 +209,16 @@ export function welcomeHtml(name?: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Welcome to Vraelis</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">Your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up and ready. Vraelis is a layered response engine, start with a simple prompt and let the output grow into something you can actually use: a plan, a deliverable, a product shape.</p>
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">What to try first:</strong></p>
+    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up, with free credits to start. Vraelis is a quality gate for the output your AI ships. Paste something it generated (a support reply, onboarding copy, an agent response) and get per-criterion scores, the version to ship, and the exact lines to fix before your users ever see them.</p>
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Try it in about 20 seconds:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Ask something complex, a question that would normally need research + structure.</li>
-      <li>Drop in messy input, a screenshot, rough notes, or a link.</li>
-      <li>Push the same thread forward instead of starting over. Keep refining what already works.</li>
+      <li>Paste one or two versions of a real AI output.</li>
+      <li>Get scores, the version to ship, and line-level flags with fixes.</li>
+      <li>When the call matters, validate the same output on real people.</li>
     </ul>
-    <a href="https://vraelis.com/app" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
+    <a href="https://vraelis.com/app/checks/new" class="vrl-btn" style="${BTN_STYLE}">Run your first check</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://vraelis.com/how-it-works" class="vrl-btn" style="${BTN_LIGHT}">Tour the product</a>
+    <a href="https://vraelis.com/how-it-works" class="vrl-btn" style="${BTN_LIGHT}">How it works</a>
     <div style="${NOTE_STYLE}">
       <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email, the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
     </div>

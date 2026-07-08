@@ -18,11 +18,11 @@ const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing:
 
 function FirstRun({ bal }: { bal: number }) {
   const steps: [string, string][] = [
-    ["Define what you're deciding", "2 to 3 candidate options: images, AI outputs, copy, UI"],
-    ["Collect qualified signal", "1 credit = 1 valid human judgment"],
-    ["Gather human judgment", "Real evaluators weigh in, low-quality filtered"],
-    ["Review the decision record", "Recommended option, margin, confidence, reasons"],
-    ["Publish, export, or use the API", "A decision you can act on, share, or route anywhere"],
+    ["Paste your AI output", "One or more versions of a support reply, onboarding message, or agent response"],
+    ["Add context (optional)", "Who it's for and what good looks like, so the check knows your bar"],
+    ["Get the check back", "Per-criterion scores, the version to ship, and line-level flags"],
+    ["Apply the fixes", "Each flag quotes the exact span with a concrete fix"],
+    ["Validate on real people", "Optional: send the same output to real people when the call matters"],
   ];
   return (
     <>
@@ -30,17 +30,16 @@ function FirstRun({ bal }: { bal: number }) {
         <div className="glow glow--soft" style={{ opacity: 0.7 }} />
         <div style={{ position: "relative" }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Welcome to your workspace</div>
-          <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", marginBottom: 8 }}>You have {bal} starter credits.</h2>
-          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Create your first decision program or run a workflow. Submit a few candidates — images, AI outputs, copy, landing heroes, UI — and qualified evaluators tell you which to ship. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 valid human judgment.</strong></p>
+          <h2 className="display" style={{ fontSize: "clamp(1.5rem, 3vw, 2.1rem)", marginBottom: 8 }}>You have {bal} free credits.</h2>
+          <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Run your first check. Paste something your AI generated (a support reply, onboarding copy, an agent response) and get per-criterion scores, the version to ship, and the exact lines to fix. <strong style={{ color: "var(--fg-1)" }}>1 credit = 1 AI check.</strong></p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Link href="/app/new" className="btn">Start first decision workflow →</Link>
-            <Link href="/app/projects" className="btn btn--ghost">New decision program</Link>
-            <Link href="/demo" className="btn btn--ghost">View a sample decision record</Link>
+            <Link href="/app/checks/new" className="btn">Run your first check →</Link>
+            <Link href="/r/check" className="btn btn--ghost">See a sample check</Link>
           </div>
         </div>
       </div>
       <div className="card">
-        <div style={headLbl}>How a decision workflow works</div>
+        <div style={headLbl}>How a check works</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {steps.map(([label, sub], i) => (
             <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
