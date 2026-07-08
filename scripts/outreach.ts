@@ -10,6 +10,8 @@
  * the target's real copy, produced by POST /api/v1/check. That is what makes it not-spam.
  *
  * Run:  pnpm outreach            (needs VRAELIS_API_KEY in .env.local or the shell)
+ * Debug: OUTREACH_EXTRACT_URL=https://example.com pnpm outreach
+ *        prints exactly what the checker would see for one URL (no check, no cost, no key)
  * Env:
  *   VRAELIS_API_KEY   (required)  a Scale-plan API key with the tests:write scope
  *   VRAELIS_BASE_URL  (optional)  default https://vraelis.com
@@ -40,8 +42,6 @@ const MAX_CHECKS = Math.max(1, Number(process.env.OUTREACH_MAX_CHECKS) || 30); /
 const KEEP_CAP = Math.max(1, Number(process.env.OUTREACH_KEEP_CAP) || 10);
 const UA = "VraelisOutreachBot/1.0 (+https://vraelis.com; research; contact hello@vraelis.com)";
 const AI_RE = /\b(ai|a\.i\.|llm|gpt|genai|agent|agentic|copilot|chatbot|prompt|neural|ml|machine learning)\b/i;
-
-if (!API_KEY) { console.error("Missing VRAELIS_API_KEY (set it in .env.local or the shell)."); process.exit(1); }
 
 // ── tiny global rate limiter: at most 1 external request/sec ─────────────────────
 let lastReq = 0;
@@ -91,7 +91,7 @@ async function mayFetch(url: string): Promise<boolean> {
   } catch { return false; }
 }
 
-// ── HTML → marketing copy + social handles (dependency-light) ────────────────────
+// ── HTML → marketing copy (dependency-light) ─────────────────────────────────────
 function decode(s: string): string {
   return s
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
@@ -99,8 +99,53 @@ function decode(s: string): string {
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
 }
 function firstMatch(html: string, re: RegExp): string { const m = html.match(re); return m ? decode(m[1]).trim() : ""; }
+const normLine = (s: string) => s.toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
 
-function extractCopy(html: string): { copy: string; handles: string[] } {
+// Names of demo / mockup / code surfaces. Targets BEM element suffixes (__task, __log) and
+// code-token prefixes (tk-) seen in agent-demo widgets, NOT bare "stage" or "hero" which
+// often wrap the real headline too.
+const DEMO_RE = /demo|example|examples|playground|prompt|terminal|snippet|sandbox|repl|console|widget|mockup|__task|__log|log-row|tk-/i;
+
+// Remove the WHOLE subtree of any element whose class/id names it a demo surface. Depth-
+// counts the matching close tag so nested <div>s inside the widget can't leave the example
+// prompt behind (a plain non-greedy regex mispairs on the first inner </div>).
+function stripDemoSubtrees(html: string): string {
+  const open = /<([a-z][a-z0-9]*)\b([^>]*)>/gi;
+  let s = html;
+  for (let guard = 0; guard < 1000; guard++) {
+    open.lastIndex = 0;
+    let m: RegExpExecArray | null = null, hit: { start: number; tag: string; after: number } | null = null;
+    while ((m = open.exec(s))) {
+      if (m[0].endsWith("/>")) continue;
+      const clsId = (m[2].match(/\b(?:class|id)\s*=\s*["']([^"']*)["']/gi) || []).join(" ");
+      if (DEMO_RE.test(clsId)) { hit = { start: m.index, tag: m[1], after: open.lastIndex }; break; }
+    }
+    if (!hit) break;
+    const close = new RegExp(`</?${hit.tag}\\b[^>]*>`, "gi");
+    close.lastIndex = hit.after;
+    let depth = 1, end = -1, c: RegExpExecArray | null = null;
+    while ((c = close.exec(s))) {
+      if (c[0].endsWith("/>")) continue;
+      if (c[0][1] === "/") { if (--depth === 0) { end = close.lastIndex; break; } } else depth++;
+    }
+    if (end === -1) break; // unbalanced; stop rather than loop
+    s = s.slice(0, hit.start) + " " + s.slice(end);
+  }
+  return s;
+}
+
+// Drop demo/example/placeholder chrome BEFORE reading copy, so an example prompt inside a
+// demo widget ("Open Stripe and export this week's payouts") is never mistaken for marketing
+// copy. Removes code/pre/kbd/button/inputs and any element named demo/example/prompt/etc.
+function stripNonCopy(html: string): string {
+  let b = html.replace(/<head[\s\S]*?<\/head>/i, "");
+  b = b.replace(/<(script|style|noscript|svg|nav|footer|header|code|pre|kbd|samp|button|input|textarea|select|form|output)\b[\s\S]*?<\/\1>/gi, " ");
+  return stripDemoSubtrees(b);
+}
+
+type Extracted = { copy: string; handles: string[]; dropped: string[] };
+
+function extractCopy(html: string): Extracted {
   // social handles for a best-effort founder DM target
   const handles = [...html.matchAll(/(?:twitter\.com|x\.com)\/([A-Za-z0-9_]{2,15})(?:[/"'?]|$)/g)]
     .map((m) => m[1])
@@ -111,26 +156,41 @@ function extractCopy(html: string): { copy: string; handles: string[] } {
   const ogDesc = firstMatch(html, /<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i)
     || firstMatch(html, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
 
-  // strip head + non-content chrome so we grab the hero, not the nav/footer
-  const body = html
-    .replace(/<head[\s\S]*?<\/head>/i, "")
-    .replace(/<(script|style|noscript|svg|nav|footer|header)[\s\S]*?<\/\1>/gi, " ");
+  const body = stripNonCopy(html);
   const strip = (s: string) => decode(s.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
   const h1 = strip(body.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || "");
   const h2 = strip(body.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i)?.[1] || "");
-  const ps = [...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => strip(m[1])).filter((t) => t.length > 40).slice(0, 2);
+  const ps = [...body.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map((m) => strip(m[1])).filter((t) => t.length > 40).slice(0, 4);
 
-  const seen = new Set<string>();
-  const copy = [ogTitle, h1, ogDesc, h2, ...ps]
-    .map((s) => s.trim()).filter(Boolean)
-    .filter((s) => { const k = s.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
-    .join("\n\n").slice(0, 1500);
+  const candidates = [ogTitle, h1, ogDesc, h2, ...ps].map((s) => s.trim()).filter(Boolean);
 
-  return { copy, handles: [...new Set(handles)] };
+  // Dedupe: drop exact (normalized) repeats, substrings, AND near-duplicates, so the
+  // <title> / <h1> / og:description (three phrasings of the same hero line) don't read to
+  // the checker as "the opening repeats". Near-duplicate = a line whose significant
+  // (non-stopword) tokens are mostly present in a longer kept line.
+  const STOP = new Set("a an the of to and or for in on at is are be with into from this that it its as your you our we my i".split(" "));
+  const sigTokens = (n: string) => n.split(" ").filter((w) => w.length >= 2 && !STOP.has(w));
+  const nearDup = (aSig: string[], bNorm: string) => {
+    if (aSig.length < 2) return false;
+    const bSet = new Set(bNorm.split(" "));
+    return aSig.filter((w) => bSet.has(w)).length / aSig.length >= 0.5;
+  };
+  const entries = candidates.map((raw, i) => ({ raw, i, n: normLine(raw) })).filter((e) => e.n.length > 0);
+  const keep = new Set<number>();
+  const keptNorms: string[] = [];
+  for (const e of [...entries].sort((a, b) => b.n.length - a.n.length)) { // longest first
+    const eSig = sigTokens(e.n);
+    if (keptNorms.some((kn) => kn.includes(e.n) || nearDup(eSig, kn))) continue; // dup / substring / near-dup
+    keep.add(e.i); keptNorms.push(e.n);
+  }
+  const kept = entries.filter((e) => keep.has(e.i)).sort((a, b) => a.i - b.i).map((e) => e.raw);
+  const dropped = entries.filter((e) => !keep.has(e.i)).map((e) => e.raw);
+
+  return { copy: kept.join("\n\n").slice(0, 1500), handles: [...new Set(handles)], dropped };
 }
 
 // ── launch sources ───────────────────────────────────────────────────────────────
-type Launch = { company: string; url: string; hnAuthor?: string };
+type Launch = { company: string; url: string; source: string; hnUser?: string };
 
 function companyFromTitle(title: string): string {
   return title.replace(/^show hn:\s*/i, "").replace(/\s*[-–|:].*$/, "").trim().slice(0, 80) || title.slice(0, 80);
@@ -138,14 +198,13 @@ function companyFromTitle(title: string): string {
 
 async function fromHackerNews(): Promise<Launch[]> {
   const since = Math.floor(Date.now() / 1000) - 24 * 3600;
-  // Show HN stories from the last 24h via the Algolia HN API (JSON, no scraping).
   const raw = await getText(`https://hn.algolia.com/api/v1/search_by_date?tags=show_hn&numericFilters=created_at_i>${since}&hitsPerPage=100`);
   if (!raw) return [];
   let hits: { title?: string; url?: string; author?: string }[] = [];
   try { hits = JSON.parse(raw).hits || []; } catch { return []; }
   return hits
     .filter((h) => h.url && h.title && AI_RE.test(h.title))
-    .map((h) => ({ company: companyFromTitle(h.title!), url: h.url!, hnAuthor: h.author }));
+    .map((h) => ({ company: companyFromTitle(h.title!), url: h.url!, source: "Show HN", hnUser: h.author }));
 }
 
 async function fromProductHunt(): Promise<Launch[]> {
@@ -163,8 +222,20 @@ async function fromProductHunt(): Promise<Launch[]> {
     return edges
       .map((e: { node?: { name?: string; website?: string; tagline?: string } }) => e.node)
       .filter((n: { name?: string; website?: string; tagline?: string }) => n?.website && n?.name && AI_RE.test(`${n.name} ${n.tagline || ""}`))
-      .map((n: { name: string; website: string }) => ({ company: n.name.slice(0, 80), url: n.website }));
+      .map((n: { name: string; website: string }) => ({ company: n.name.slice(0, 80), url: n.website, source: "Product Hunt" }));
   } catch (e) { console.log("  Product Hunt: fetch failed, skipping.", e); return []; }
+}
+
+// HN submitter is a real person with a real inbox (company X accounts have closed DMs).
+// Pull an email from their profile's `about` field if they left one public.
+async function hnUserEmail(username: string): Promise<string> {
+  const raw = await getText(`https://hacker-news.firebaseio.com/v0/user/${encodeURIComponent(username)}.json`, 6000);
+  if (!raw) return "";
+  try {
+    const about = decode(String(JSON.parse(raw)?.about || ""));
+    const m = about.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+    return m ? m[0] : "";
+  } catch { return ""; }
 }
 
 // ── the check (our own API) ──────────────────────────────────────────────────────
@@ -176,7 +247,9 @@ async function runCheck(company: string, copy: string): Promise<CheckResp | null
     const res = await fetch(`${BASE}/api/v1/check`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": API_KEY },
-      body: JSON.stringify({ output_type: "marketing_copy", candidates: [copy], title: `Outreach: ${company}`, share: true }),
+      // title is rendered on the PUBLIC shared report the target opens, so it must be the
+      // company name alone, never an internal "Outreach:" label.
+      body: JSON.stringify({ output_type: "marketing_copy", candidates: [copy], title: company, share: true }),
     });
     if (!res.ok) { const b = await res.text().catch(() => ""); console.log(`  check failed ${res.status}: ${b.slice(0, 120)}`); return null; }
     return (await res.json()) as CheckResp;
@@ -184,26 +257,41 @@ async function runCheck(company: string, copy: string): Promise<CheckResp | null
 }
 
 // ── DM draft (no em dashes; lowercase prose, verbatim quotes) ─────────────────────
-// The landing page is only the demo; the real ask is their product's OWN output. The DM
-// leads with the specific flag (proof it's not a template) and closes on that ask.
-function sentence(s: string): string { const t = s.trim().replace(/—/g, ", "); return /[.!?]$/.test(t) ? t : `${t}.`; }
-
-function draftDm(company: string, flag: Flag, reportUrl: string): string {
+function reasonPhrase(why: string): string {
+  return why.trim().replace(/[.;]\s*$/, "").replace(/^([A-Z])(?![A-Z])/, (m) => m.toLowerCase());
+}
+function draftDm(company: string, source: string, flag: Flag, reportUrl: string): string {
   return [
-    `hey, saw you launched ${company}. i built a checker that flags lines in AI-generated copy that read risky before users see them.`,
+    `hey, i saw ${company} on ${source}. i built a checker that flags lines in AI-generated copy that read risky before users see them.`,
     ``,
-    `only text of yours i could reach was your landing page, so i ran that. it flagged "${flag.span}". ${sentence(flag.why)} suggested rewrite: "${flag.fix}"`,
+    `the only text of yours i could reach was your landing page, so i ran that. it flagged "${flag.span}" as ${reasonPhrase(flag.why)}. suggested rewrite: "${flag.fix}"`,
     ``,
-    `full report: ${reportUrl}`,
+    `full report, no signup: ${reportUrl}`,
     ``,
-    `that's just the demo though. the real use is your product's own output, the stuff it generates for users mid-task. send me a sample and i'll run it free. i'm testing whether the flags hold up on real output, so if it's wrong, tell me, that's more useful than if it's right.`,
+    `that's just the demo. the real use is your product's own output, the text your users actually read. send me one and i'll run it free. i'm testing whether the flags hold up on real output, so if it's wrong, tell me, that's more useful than if it's right.`,
+    ``,
+    `nishanth`,
+    `vraelis.com`,
   ].join("\n").replace(/—/g, ", ");
 }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────────
 function csvCell(v: string): string { return `"${String(v ?? "").replace(/"/g, '""')}"`; }
 
+// ── debug: print exactly what the checker would see for one URL (no check, no cost) ──
+async function extractOnly(url: string) {
+  console.log(`Extract-only (no check, no cost): ${url}\n`);
+  const html = await getText(url);
+  if (!html) { console.log("could not fetch the page."); return; }
+  const { copy, handles, dropped } = extractCopy(html);
+  console.log(`=== DROPPED as near-duplicate / substring (${dropped.length}) ===`);
+  dropped.forEach((d) => console.log(`  - ${d}`));
+  console.log(`\n=== EXTRACTED COPY the checker would see ===\n${copy}`);
+  console.log(`\n=== social handles: ${handles.join(", ") || "(none)"}`);
+}
+
 async function main() {
+  if (!API_KEY) { console.error("Missing VRAELIS_API_KEY (set it in .env.local or the shell)."); process.exit(1); }
   console.log(`Outreach prep. base=${BASE}  max checks=${MAX_CHECKS}  keep cap=${KEEP_CAP}`);
   console.log("Finding launches (last 24h)...");
   const raw = [...(await fromHackerNews()), ...(await fromProductHunt())];
@@ -226,7 +314,8 @@ async function main() {
     if (!(await mayFetch(l.url))) { console.log(`- ${l.company}: robots.txt disallows, skipping.`); continue; }
     const html = await getText(l.url);
     if (!html) { console.log(`- ${l.company}: could not fetch page.`); continue; }
-    const { copy, handles } = extractCopy(html);
+    const { copy, handles, dropped } = extractCopy(html);
+    if (dropped.length) console.log(`  ${l.company}: dropped ${dropped.length} near-duplicate line(s) before checking.`);
     if (copy.length < 60) { console.log(`- ${l.company}: no usable marketing copy.`); continue; }
 
     const check = await runCheck(l.company, copy);
@@ -235,17 +324,19 @@ async function main() {
     creditsSpent += check.credits_charged || 0;
 
     // Keep ONLY HIGH on marketing copy: a HIGH flag is a verifiable/unbackable claim (the
-    // thing worth a stranger's DM). MEDIUM on marketing is voice/taste noise, and a flag that
-    // fires on everyone means nothing. Expect ~1 in 20 to survive, which is the point.
+    // thing worth a stranger's DM). MEDIUM here is voice/taste, and a flag that fires on
+    // everyone means nothing. Expect ~1 in 20 to survive, which is the point.
     const hot = (check.flags || []).filter((f) => f.severity === "high");
     if (!hot.length) { console.log(`- ${l.company}: no HIGH flag, dropped.`); continue; }
     if (!check.report_url) { console.log(`- ${l.company}: flagged but no share link returned, skipping.`); continue; }
 
     const flag = hot[0];
-    const founder = handles[0] ? `@${handles[0]}` : (l.hnAuthor ? `hn:${l.hnAuthor}` : "");
+    const founder = handles[0] ? `@${handles[0]}` : "";
+    const hnUser = l.hnUser || "";
+    const hnEmail = hnUser ? await hnUserEmail(hnUser) : "";
     rows.push([
-      l.company, l.url, founder, flag.span, flag.severity, flag.fix, check.report_url,
-      draftDm(l.company, flag, check.report_url),
+      l.company, l.url, founder, hnUser, hnEmail, flag.span, flag.severity, flag.fix, check.report_url,
+      draftDm(l.company, l.source, flag, check.report_url),
     ]);
     kept++;
     console.log(`+ ${l.company}: kept (${flag.severity} ${flag.issue}). ${kept}/${KEEP_CAP}`);
@@ -253,7 +344,7 @@ async function main() {
 
   const day = new Date().toISOString().slice(0, 10);
   const file = `outreach-${day}.csv`;
-  const header = ["company", "url", "founder_handle", "flagged_line", "severity", "suggested_fix", "report_url", "drafted_dm"];
+  const header = ["company", "url", "founder_handle", "hn_user", "hn_email", "flagged_line", "severity", "suggested_fix", "report_url", "drafted_dm"];
   const csv = [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
   writeFileSync(file, csv);
 
@@ -263,4 +354,7 @@ async function main() {
   console.log("Nothing was sent. Open the CSV, read each drafted_dm, and hand-send the good ones.");
 }
 
-main().catch((e) => { console.error("outreach failed:", e); process.exit(1); });
+const entry = process.env.OUTREACH_EXTRACT_URL
+  ? extractOnly(process.env.OUTREACH_EXTRACT_URL)
+  : main();
+entry.catch((e) => { console.error("outreach failed:", e); process.exit(1); });
