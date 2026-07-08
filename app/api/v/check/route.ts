@@ -8,6 +8,7 @@
 import { NextResponse, after } from "next/server";
 import { auth } from "@/auth";
 import { startCheck, finishCheck, CHECK_CREDITS } from "@/lib/v-checks";
+import { ensureSignupGrant } from "@/lib/v-credits";
 import { OUTPUT_TYPES } from "@/lib/v-evaluator";
 
 export const runtime = "nodejs";
@@ -23,6 +24,11 @@ export async function POST(req: Request) {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+
+  // A brand-new signup can land straight on the check form (the free-check entry flow)
+  // without first hitting /api/v/me, so grant the one-time free credits here too. Idempotent
+  // and one-per-account (see ensureSignupGrant), so this is a no-op for existing users.
+  await ensureSignupGrant(email);
 
   const body = await req.json().catch(() => ({}));
   const outputType = String(body?.output_type ?? body?.outputType ?? "").trim();

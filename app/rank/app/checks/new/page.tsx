@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { takeFreeCheckDraft } from "@/lib/free-check-draft";
 
 // In-app AI Output Check form. Any signed-in user with credits can run one; it costs
 // 1 credit and opens the report at /app/checks/<id>. Posts to /api/v/check (session).
@@ -28,6 +29,28 @@ export default function NewCheckPage() {
   const [candidates, setCandidates] = useState<string[]>(["", ""]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [prefilled, setPrefilled] = useState(false);
+
+  // Free-check handoff: a visitor who pasted their output on /r/check and signed up lands
+  // here with ?draft=1. Consume the stashed draft once and fill the form so their first
+  // action is a single "Run check" click. Best-effort; absent/stale drafts are ignored.
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get("draft") !== "1") return;
+      const d = takeFreeCheckDraft();
+      if (!d) return;
+      // Consuming a one-time client-only value (localStorage) on mount and syncing it into
+      // form state is a legitimate external-system read; the react-compiler rule is
+      // conservative here, and doing it in a lazy initializer would double-consume under
+      // Strict Mode / SSR hydration.
+      /* eslint-disable react-hooks/set-state-in-effect */
+      if (OUTPUT_TYPES.some(([k]) => k === d.outputType)) setOutputType(d.outputType);
+      if (d.candidates.length) setCandidates(d.candidates);
+      if (d.title) setTitle(d.title);
+      setPrefilled(true);
+      /* eslint-enable react-hooks/set-state-in-effect */
+    } catch { /* no storage / bad draft — fall through to the empty form */ }
+  }, []);
 
   function setCandidate(i: number, v: string) { setCandidates((c) => c.map((x, j) => (j === i ? v : x))); }
   function addCandidate() { setCandidates((c) => (c.length >= MAX_CANDIDATES ? c : [...c, ""])); }
@@ -81,6 +104,14 @@ export default function NewCheckPage() {
       <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, marginBottom: 26, maxWidth: 560 }}>
         Paste one or more versions of an AI-generated output. You get an instant assessment: per-criterion scores, a recommended version, and the exact lines to fix. Costs 1 credit.
       </p>
+
+      {prefilled ? (
+        <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", padding: "12px 16px" }}>
+          <p style={{ margin: 0, fontSize: 13.5, color: "var(--acc-deep)", lineHeight: 1.55 }}>
+            Your output is loaded below. Hit <strong>Run check</strong> to see your results, your first checks are on us.
+          </p>
+        </div>
+      ) : null}
 
       {/* output type */}
       <div style={{ marginBottom: 22 }}>

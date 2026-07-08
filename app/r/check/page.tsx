@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 import { CheckReport } from "@/app/rank/app/checks/[id]/check-report";
+import { FreeCheckEntry } from "./free-check-entry";
 import type { EvalResult } from "@/lib/v-evaluator";
 
 // Public, static sample AI-check report, shareable without signing in. It renders the
@@ -130,8 +131,16 @@ export default function SampleCheck() {
           <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>Sample check · illustrative data</span>
         </div>
 
+        <FreeCheckEntry />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 0 18px" }}>
+          <div style={{ height: 1, flex: 1, background: "var(--line-1)" }} />
+          <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Or see a sample first</span>
+          <div style={{ height: 1, flex: 1, background: "var(--line-1)" }} />
+        </div>
+
         <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6, margin: "0 0 20px" }}>
-          This is a sample check on an example support reply, to show exactly what you get back. On your own output it takes about 20 seconds.
+          A sample check on an example support reply, to show exactly what you get back on your own output.
         </p>
 
         <CheckReport result={SAMPLE} title="Support reply: customer was double-charged" calibrationSlot={<CalibrationTeaser />} />
