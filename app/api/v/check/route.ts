@@ -36,6 +36,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_output_type" }, { status: 400 });
   }
   const candidates = (Array.isArray(body?.candidates) ? body.candidates : []).map(toCandidate);
+  const context = body?.context === "published" ? "published" : undefined; // default: pre-ship review
 
   const started = await startCheck(email, {
     outputType: outputType || "other",
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
     goal: typeof body?.goal === "string" ? body.goal : undefined,
     candidates,
     source: "app",
+    context,
   });
 
   if (started.status === "invalid") return NextResponse.json({ error: started.message }, { status: 400 });

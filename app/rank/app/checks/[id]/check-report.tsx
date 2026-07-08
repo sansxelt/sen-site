@@ -137,7 +137,7 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
         </div>
       ) : (
         <div className="card" style={{ marginBottom: 18 }}>
-          <div style={{ ...kicker, color: "var(--acc-deep)", marginBottom: 4 }}>{multi ? "Too close to call" : "Review"}</div>
+          <div style={{ ...kicker, color: "var(--acc-deep)", marginBottom: 4 }}>{multi ? "Too close to call" : result.context === "published" ? "Highest-impact change" : "Review"}</div>
           <div style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55 }}>{result.recommendation || (multi ? "The versions scored evenly. Use the flags below to break the tie." : "See the score and flags below.")}</div>
         </div>
       )}

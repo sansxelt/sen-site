@@ -248,8 +248,9 @@ async function runCheck(company: string, copy: string): Promise<CheckResp | null
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": API_KEY },
       // title is rendered on the PUBLIC shared report the target opens, so it must be the
-      // company name alone, never an internal "Outreach:" label.
-      body: JSON.stringify({ output_type: "marketing_copy", candidates: [copy], title: company, share: true }),
+      // company name alone, never an internal "Outreach:" label. context: published, because
+      // every page we scrape is already live (a landing page can't be "not ready to ship").
+      body: JSON.stringify({ output_type: "marketing_copy", candidates: [copy], title: company, share: true, context: "published" }),
     });
     if (!res.ok) { const b = await res.text().catch(() => ""); console.log(`  check failed ${res.status}: ${b.slice(0, 120)}`); return null; }
     return (await res.json()) as CheckResp;
@@ -264,7 +265,7 @@ function draftDm(company: string, source: string, flag: Flag, reportUrl: string)
   return [
     `hey, i saw ${company} on ${source}. i built a checker that flags lines in AI-generated copy that read risky before users see them.`,
     ``,
-    `the only text of yours i could reach was your landing page, so i ran that. it flagged "${flag.span}" as ${reasonPhrase(flag.why)}. suggested rewrite: "${flag.fix}"`,
+    `the only text of yours i could reach was your landing page, so i ran that. it flagged "${flag.span}". ${reasonPhrase(flag.why)}. suggested rewrite: "${flag.fix.trim().replace(/\.\s*$/, "")}".`,
     ``,
     `full report, no signup: ${reportUrl}`,
     ``,
@@ -354,7 +355,28 @@ async function main() {
   console.log("Nothing was sent. Open the CSV, read each drafted_dm, and hand-send the good ones.");
 }
 
-const entry = process.env.OUTREACH_EXTRACT_URL
-  ? extractOnly(process.env.OUTREACH_EXTRACT_URL)
+// debug: run ONE url through the real check (spends 1 credit) and print every flag, so you
+// can confirm which survive the HIGH filter. Company defaults to the host label.
+async function checkOne(url: string) {
+  if (!API_KEY) { console.error("Missing VRAELIS_API_KEY (set it in .env.local or the shell)."); process.exit(1); }
+  const company = (() => { try { return new URL(url).hostname.replace(/^www\./, "").split(".")[0]; } catch { return "the product"; } })();
+  console.log(`Check-one (spends 1 credit): ${url}  company="${company}"\n`);
+  const html = await getText(url);
+  if (!html) { console.log("could not fetch the page."); return; }
+  const { copy, dropped } = extractCopy(html);
+  console.log(`dropped ${dropped.length} near-duplicate line(s).`);
+  console.log(`\n=== extracted copy the checker saw ===\n${copy}\n`);
+  const check = await runCheck(company, copy);
+  if (!check) { console.log("check failed."); return; }
+  console.log(`credits charged: ${check.credits_charged}   report: ${check.report_url}`);
+  console.log(`\n=== ALL flags returned ===`);
+  (check.flags || []).forEach((f) => console.log(`  [${f.severity}] ${f.issue}: "${f.span}"`));
+  const high = (check.flags || []).filter((f) => f.severity === "high");
+  console.log(`\n=== ${high.length} HIGH flag(s) survive the filter ===`);
+  high.forEach((f) => console.log(`  "${f.span}"  ->  ${f.fix}`));
+}
+
+const entry = process.env.OUTREACH_EXTRACT_URL ? extractOnly(process.env.OUTREACH_EXTRACT_URL)
+  : process.env.OUTREACH_CHECK_URL ? checkOne(process.env.OUTREACH_CHECK_URL)
   : main();
 entry.catch((e) => { console.error("outreach failed:", e); process.exit(1); });

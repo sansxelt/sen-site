@@ -73,6 +73,11 @@ export const RUBRICS: Record<OutputType, Criterion[]> = {
 export type CriterionScore = { criterion: string; label: string; score: number; note: string };
 export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string };
 export type LineFlag = { candidateIndex: number; candidateLabel: string; span: string; issue: FlagIssue; severity: FlagSeverity; why: string; fix: string };
+
+// Is the output about to ship, or already live? A published landing page cannot be "not
+// ready to ship", so the verdict framing (and the report kicker) shift for "published".
+export type CheckContext = "pre_ship" | "published";
+
 export type EvalResult = {
   outputType: OutputType;
   model: string;
@@ -83,10 +88,11 @@ export type EvalResult = {
   recommendation: string;
   candidates: CandidateEval[];
   flags: LineFlag[];
+  context?: CheckContext;           // rides the stored result jsonb; drives report framing
 };
 
 export type EvalCandidate = { label?: string; text: string };
-export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[] };
+export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext };
 export type PreparedCandidate = { index: number; label: string; text: string; normText: string };
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -220,8 +226,9 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
   const typeLabel = outputType.replace(/_/g, " ");
   const multi = prepared.length > 1;
 
+  const published = input.context === "published";
   const PROMPT =
-    `You are an evaluation engine reviewing AI-generated ${typeLabel} for the team about to ship it. Give an honest, specific assessment. You are an AI assessment, not a human judgment and not a guarantee.\n\n` +
+    `You are an evaluation engine reviewing AI-generated ${typeLabel} ${published ? "that is already published and live in production" : "for the team about to ship it"}. Give an honest, specific assessment. You are an AI assessment, not a human judgment and not a guarantee.\n\n` +
     (ctx ? `${ctx}\n\n` : "") +
     `Score each version on these criteria, 0 to 100 (higher is better). Use the exact criterion key:\n${criteriaBlock}\n\n` +
     (multi ? `There are ${prepared.length} versions to compare:\n\n${candidatesBlock}\n\n` : `One version to review:\n\n${candidatesBlock}\n\n`) +
@@ -230,9 +237,11 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), why (one line), and fix (a concrete rewrite of just that span).\n` +
     (multi
       ? `- recommendation: one plain sentence naming which version to ship and why.\n\n`
-      : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n\n`) +
-    `Severity calibration: HIGH means the line is verifiably false, cannot be backed up, or creates a real safety or legal risk. MEDIUM means a clear, objective problem that is not merely stylistic. A matter of taste, voice, or phrasing preference is LOW at most, never MEDIUM or HIGH. Do not substitute your stylistic preference for the writer's.` +
-    (outputType === "marketing_copy" ? ` Marketing copy is allowed to be bold, aspirational, and confident: a strong, punchy hero line is not a problem unless it makes a specific claim that is false or cannot be backed up.` : "") +
+      : published
+        ? `- recommendation: one plain sentence naming the single highest-impact change to make now. This content is already live, so do NOT frame it as ready or not ready to ship.\n\n`
+        : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n\n`) +
+    `Severity calibration: HIGH means the line is verifiably false, cannot be backed up, or creates a real safety or legal risk. An absolute or universal claim the product cannot literally deliver ("automate ANY app", "works with EVERY tool", "NEVER fails", "GUARANTEED", "INSTANT", "unlimited") is HIGH when nothing on the page backs it. MEDIUM means a clear, objective problem that is not merely stylistic. A matter of taste, voice, or phrasing preference is LOW at most, never MEDIUM or HIGH. Do not substitute your stylistic preference for the writer's.` +
+    (outputType === "marketing_copy" ? ` Marketing copy is allowed to be bold, aspirational, and confident: a strong, punchy hero line is fine, but an unbackable absolute claim in it is still HIGH.` : "") +
     `\n\n` +
     `Rules: copy every span verbatim from the version text, and do not invent or paraphrase spans. Only flag real problems, not rewrites you would merely prefer. Score honestly against the criteria. Write plainly and do not use em dashes.`;
 
@@ -250,7 +259,9 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     });
     const raw = res.parsed_output ?? null;
     if (!raw) return null;
-    return finalizeEvaluation(outputType, prepared, raw, MODEL);
+    const result = finalizeEvaluation(outputType, prepared, raw, MODEL);
+    result.context = published ? "published" : "pre_ship";
+    return result;
   } catch (e) {
     console.error("evaluateOutput failed:", e);
     return null; // transient failure: caller renders nothing / can retry

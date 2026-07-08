@@ -14,7 +14,7 @@
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { balance, spend, refundCheck } from "./v-credits";
-import { evaluateOutput, evaluatorConfigured, OUTPUT_TYPES, type EvalInput, type EvalResult, type OutputType } from "./v-evaluator";
+import { evaluateOutput, evaluatorConfigured, OUTPUT_TYPES, type EvalInput, type EvalResult, type OutputType, type CheckContext } from "./v-evaluator";
 import { logEvent } from "./v-events";
 import { randomBytes, randomUUID } from "crypto";
 
@@ -57,6 +57,7 @@ export type RunCheckInput = {
   goal?: string;
   candidates: { label?: string; text?: string }[];
   source: "app" | "api";
+  context?: CheckContext;   // "pre_ship" (default) | "published"
 };
 
 export type StartResult =
@@ -115,7 +116,7 @@ export async function startCheck(userId: string, input: RunCheckInput): Promise<
   }
 
   await logEvent({ userId: uid, eventType: "check_started", actorType: input.source === "api" ? "api" : "owner", source: input.source, metadata: { check_id: checkId, output_type: outputType, candidate_count: candidates.length, source: input.source } });
-  return { status: "ok", checkId, evalInput: { outputType, audience, goal, candidates } };
+  return { status: "ok", checkId, evalInput: { outputType, audience, goal, candidates, context: input.context } };
 }
 
 // Evaluate a running check and finalize it. Fail-soft; the sole finalizer in the normal

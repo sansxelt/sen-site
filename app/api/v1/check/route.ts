@@ -16,7 +16,7 @@
 import { apiAuth } from "../_auth";
 import { apiError } from "../_lib";
 import { runCheck, runChecks, reconcileStuckChecks, setCheckShare, CHECK_CREDITS, MAX_BATCH, type RunCheckInput, type RunCheckResult, type VCheck } from "@/lib/v-checks";
-import { OUTPUT_TYPES, type EvalResult } from "@/lib/v-evaluator";
+import { OUTPUT_TYPES, type EvalResult, type CheckContext } from "@/lib/v-evaluator";
 import { parseThreshold, evaluateGate, type ThresholdSpec, type Gate } from "@/lib/v-gate";
 
 export const runtime = "nodejs";
@@ -36,6 +36,9 @@ function validOutputType(v: unknown): string | null {
 }
 
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
+// "published" flips the verdict away from a ship/no-ship decision (a live page can't be
+// "not ready to ship"). Anything else (incl. absent) is the default pre-ship review.
+const validContext = (v: unknown): CheckContext | undefined => (v === "published" || v === "pre_ship" ? v : undefined);
 const THRESHOLD_HELP = "threshold must be a number (overall) or an object { overall?, criteria? } with numeric 0-100 values.";
 
 // Shape a completed check into the public response body, optionally with a gate verdict.
@@ -95,6 +98,7 @@ async function handleSingle(userId: string, body: Record<string, unknown>): Prom
     goal: str(body.goal),
     candidates,
     source: "api",
+    context: validContext(body.context),
   });
 
   if (r.status === "invalid") return apiError("validation_error", r.message, 400);
@@ -135,6 +139,7 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
   if (defThreshold === "invalid") return apiError("validation_error", THRESHOLD_HELP, 400);
   const defAudience = str(body.audience);
   const defGoal = str(body.goal);
+  const defContext = validContext(body.context);
 
   const parsed: ParsedItem[] = items.map((raw) => {
     const it = (raw && typeof raw === "object") ? (raw as Record<string, unknown>) : {};
@@ -152,6 +157,7 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
         // default (startCheck drops "" anyway), matching an item that omits the field.
         audience: str(it.audience) || defAudience,
         goal: str(it.goal) || defGoal,
+        context: validContext(it.context) ?? defContext,
         candidates,
         source: "api",
       },

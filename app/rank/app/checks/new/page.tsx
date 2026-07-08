@@ -30,6 +30,7 @@ export default function NewCheckPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [prefilled, setPrefilled] = useState(false);
+  const [published, setPublished] = useState(false);
 
   // Free-check handoff: a visitor who pasted their output on /r/check and signed up lands
   // here with ?draft=1. Consume the stashed draft once and fill the form so their first
@@ -71,6 +72,7 @@ export default function NewCheckPage() {
           title: title.trim() || undefined,
           audience: audience.trim() || undefined,
           goal: goal.trim() || undefined,
+          context: published ? "published" : undefined,
           candidates: filled.map((text) => ({ text })),
         }),
       });
@@ -145,6 +147,10 @@ export default function NewCheckPage() {
           <label style={lab} htmlFor="ck-goal">What &ldquo;good&rdquo; means here <span style={{ textTransform: "none", color: "var(--fg-5)" }}>(optional)</span></label>
           <input id="ck-goal" style={inputStyle} value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. resolve the issue without overpromising a refund" maxLength={400} />
         </div>
+        <label htmlFor="ck-published" style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+          <input id="ck-published" type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} style={{ marginTop: 3, accentColor: "var(--acc)", width: 16, height: 16, flex: "none" }} />
+          <span style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5 }}>This is already published (live). Get the single highest-impact change instead of a ship / no-ship verdict.</span>
+        </label>
       </div>
 
       {/* candidates */}
