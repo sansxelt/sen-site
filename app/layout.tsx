@@ -94,13 +94,13 @@ const vraelisMetadata: Metadata = {
     siteName: "Vraelis",
     title: "QA for AI output",
     description: "Catch your AI's bad output before your users do. An instant check with scores, the version to ship, and the exact lines to fix, calibrated on real human judgment.",
-    images: [{ url: "/og", width: 1200, height: 630, alt: "Vraelis" }],
+    images: [{ url: "/og?v=2", width: 1200, height: 630, alt: "Vraelis" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "QA for AI output",
     description: "Catch your AI's bad output before your users do. An instant check with scores, the version to ship, and the exact lines to fix, calibrated on real human judgment.",
-    images: ["/og"],
+    images: ["/og?v=2"],
   },
   robots: { index: true, follow: true },
 };
