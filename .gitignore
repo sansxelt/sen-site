@@ -55,5 +55,6 @@ VRAELIS-updater.key.pub
 .vercel
 .env*.local
 
-# Outreach prep output (target data + drafted DMs) — never commit
+# Outreach prep output (target data + drafted DMs) and the seen-domain ledger — never commit
 outreach-*.csv
+outreach-seen.txt

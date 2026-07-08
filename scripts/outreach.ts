@@ -16,8 +16,20 @@
  *   VRAELIS_API_KEY   (required)  a Scale-plan API key with the tests:write scope
  *   VRAELIS_BASE_URL  (optional)  default https://vraelis.com
  *   PRODUCTHUNT_TOKEN (optional)  a PH developer token; without it, PH is skipped
- *   OUTREACH_MAX_CHECKS (optional) cost ceiling, default 30 checks = up to 30 credits
- *   OUTREACH_KEEP_CAP   (optional) stop after this many kept targets, default 10
+ *   OUTREACH_MAX_CHECKS (optional) cost ceiling, default 40 checks = up to 40 credits
+ *   OUTREACH_KEEP_CAP   (optional) stop after this many kept targets, default 25
+ *   OUTREACH_QUALIFY_MIN (optional) min net text-generation signal to qualify, default 1
+ *
+ * Sources: Show HN + Product Hunt (token) + BetaList are live. YC directory and There's An
+ * AI For That are NOT wired (YC is JS/Algolia with rotating keys; TAAFT sits behind a
+ * Cloudflare challenge) -- add them only when there's a stable feed to hit.
+ *
+ * Qualification: the checker only helps products whose OUTPUT is prose a human reads. Each
+ * target's copy is scored for text-generation signal and anything below the bar is skipped
+ * BEFORE a credit is spent. The CSV is sorted best-fit first.
+ *
+ * Seen ledger (outreach-seen.txt): every domain we check or qualify-skip is recorded and
+ * never processed again on a later run. A duplicate cold email is worse than no email.
  */
 
 import { writeFileSync, existsSync, readFileSync } from "node:fs";
@@ -38,10 +50,24 @@ loadEnv();
 const API_KEY = process.env.VRAELIS_API_KEY || "";
 const BASE = (process.env.VRAELIS_BASE_URL || "https://vraelis.com").replace(/\/$/, "");
 const PH_TOKEN = process.env.PRODUCTHUNT_TOKEN || "";
-const MAX_CHECKS = Math.max(1, Number(process.env.OUTREACH_MAX_CHECKS) || 30); // cost ceiling
-const KEEP_CAP = Math.max(1, Number(process.env.OUTREACH_KEEP_CAP) || 10);
+const MAX_CHECKS = Math.max(1, Number(process.env.OUTREACH_MAX_CHECKS) || 40); // cost ceiling
+const KEEP_CAP = Math.max(1, Number(process.env.OUTREACH_KEEP_CAP) || 25);
+const QUALIFY_MIN = (process.env.OUTREACH_QUALIFY_MIN != null && process.env.OUTREACH_QUALIFY_MIN !== "")
+  ? Number(process.env.OUTREACH_QUALIFY_MIN) : 1; // min net text-generation signal to qualify
 const UA = "VraelisOutreachBot/1.0 (+https://vraelis.com; research; contact hello@vraelis.com)";
 const AI_RE = /\b(ai|a\.i\.|llm|gpt|genai|agent|agentic|copilot|chatbot|prompt|neural|ml|machine learning)\b/i;
+
+// ── qualification: does this product generate text a human reads? ──────────────────
+// The checker only helps products whose OUTPUT is prose a person reads (support replies,
+// chat, drafted emails, generated copy). A device-automation, robotics, or image tool can
+// have flawless copy and still be a non-fit. fitScore = (text-generation signals) minus
+// (non-text signals) in the scraped copy; higher = better fit. Anything below QUALIFY_MIN is
+// skipped BEFORE a credit is spent, and the CSV is sorted best-fit first.
+const TEXT_SIGNAL = /\b(writ(?:e|es|ing|ten)|generat(?:e|es|ing|ion|ive)|draft(?:s|ing|ed)?|repl(?:y|ies|ied)|emails?|messages?|messaging|copywriting|copy|content|chat(?:bot|s)?|conversations?|conversational|respon(?:d|se|ses|ds)|summar(?:y|ies|ize|ise|ization)|captions?|comments?|paraphrase|rewrite|rephrase|compose|answers?|answering|support|tickets?|blogs?|articles?|posts?|newsletters?|descriptions?|documentation|transcri(?:be|pt|ption)|translat(?:e|ion|es)|proofread|essays?|scripts?|prose|prompts?)\b/gi;
+const NONTEXT_SIGNAL = /\b(images?|photos?|videos?|avatars?|3d|renders?|rendering|robot(?:ic|ics)?|hardware|devices?|drones?|sensors?|firmware|voice call|phone call|dialer|taps?|swipes?|spreadsheets?|crawl(?:er|ing)?|scrap(?:e|er|ing))\b/gi;
+function fitScore(copy: string): number {
+  return (copy.match(TEXT_SIGNAL) || []).length - (copy.match(NONTEXT_SIGNAL) || []).length;
+}
 
 // ── tiny global rate limiter: at most 1 external request/sec ─────────────────────
 let lastReq = 0;
@@ -226,6 +252,36 @@ async function fromProductHunt(): Promise<Launch[]> {
   } catch (e) { console.log("  Product Hunt: fetch failed, skipping.", e); return []; }
 }
 
+// BetaList: the homepage lists new startups as /startups/<slug>. Each startup page carries an
+// og:title / og:description (name + tagline, for the AI filter) and a /startups/<slug>/visit
+// link that 301s to the product's real URL. Best-effort: any markup change degrades to zero
+// rows, never throws. Costs ~1 request per startup page + 1 per visit-redirect (paced 1/sec).
+async function resolveLocation(url: string): Promise<string> {
+  return paced(async () => {
+    try { const res = await fetch(url, { headers: { "user-agent": UA }, redirect: "manual" }); return res.headers.get("location") || ""; }
+    catch { return ""; }
+  });
+}
+async function fromBetaList(limit = 15): Promise<Launch[]> {
+  const home = await getText("https://betalist.com/");
+  if (!home) { console.log("  BetaList: could not fetch, skipping."); return []; }
+  const slugs = [...new Set([...home.matchAll(/href="(\/startups\/[a-z0-9-]+)"/gi)].map((m) => m[1]))].slice(0, limit);
+  if (!slugs.length) { console.log("  BetaList: no startups found (markup may have changed), skipping."); return []; }
+  const out: Launch[] = [];
+  for (const slug of slugs) {
+    const page = await getText(`https://betalist.com${slug}`);
+    if (!page) continue;
+    const name = firstMatch(page, /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i).replace(/\s*[-–|:].*$/, "").trim();
+    const tagline = firstMatch(page, /<meta[^>]+(?:property|name)=["']og:description["'][^>]+content=["']([^"']+)["']/i);
+    if (!name || !AI_RE.test(`${name} ${tagline}`)) continue;
+    const loc = await resolveLocation(`https://betalist.com${slug}/visit`);
+    const url = loc.replace(/([?&])ref=betalist(&|$)/i, "$1").replace(/[?&]$/, "");
+    if (/^https?:\/\//i.test(url)) out.push({ company: name.slice(0, 80), url, source: "BetaList" });
+  }
+  console.log(`  BetaList: ${out.length} AI launch(es).`);
+  return out;
+}
+
 // HN submitter is a real person with a real inbox (company X accounts have closed DMs).
 // Pull an email from their profile's `about` field if they left one public.
 async function hnUserEmail(username: string): Promise<string> {
@@ -287,6 +343,36 @@ function draftDm(company: string, source: string, flag: Flag, reportUrl: string)
   ].join("\n").replace(/—/g, ", ");
 }
 
+// For a QUALIFIED target whose landing page comes back CLEAN: no invented flag, a different,
+// honest ask. We still ran their real page; we just have nothing to fault, so we say so.
+function draftNoFlag(company: string, source: string, reportUrl: string): string {
+  return [
+    `hey, i saw ${company} on ${source}. i built a checker that flags lines in AI-generated copy that read risky before users see them.`,
+    ``,
+    `i ran your landing page through it and it came back clean, which is rarer than you'd think, so this isn't a "you have a problem" message.`,
+    ``,
+    `report, no signup: ${reportUrl}`,
+    ``,
+    `the real use is your product's own output, the text your users actually read. that's where the risky lines hide, not the landing page. send me a sample and i'll run it free. i'm testing whether the flags hold up on real output, so if it's wrong, tell me.`,
+    ``,
+    `nishanth`,
+    `vraelis.com`,
+  ].join("\n").replace(/—/g, ", ");
+}
+
+// ── seen ledger: a persisted list so we never process the same domain twice across runs. A
+// duplicate cold email is worse than no email, so once a domain is checked (or qualify-skipped)
+// it is recorded and skipped on every later run. Delete a line to re-open that domain.
+const SEEN_FILE = "outreach-seen.txt";
+function loadSeen(): Set<string> {
+  try { return new Set(readFileSync(SEEN_FILE, "utf8").split("\n").map((s) => s.trim().toLowerCase()).filter(Boolean)); }
+  catch { return new Set(); }
+}
+function saveSeen(seen: Set<string>) {
+  try { writeFileSync(SEEN_FILE, [...seen].sort().join("\n") + "\n"); } catch { /* best effort */ }
+}
+function hostOf(url: string): string { try { return new URL(url).hostname.replace(/^www\./, "").toLowerCase(); } catch { return ""; } }
+
 // ── CSV ──────────────────────────────────────────────────────────────────────────
 function csvCell(v: string): string { return `"${String(v ?? "").replace(/"/g, '""')}"`; }
 
@@ -302,26 +388,36 @@ async function extractOnly(url: string) {
   console.log(`\n=== social handles: ${handles.join(", ") || "(none)"}`);
 }
 
+type Kept = { l: Launch; fit: number; founder: string; hnUser: string; hnEmail: string; flag: Flag | null; reportUrl: string };
+
 async function main() {
   if (!API_KEY) { console.error("Missing VRAELIS_API_KEY (set it in .env.local or the shell)."); process.exit(1); }
-  console.log(`Outreach prep. base=${BASE}  max checks=${MAX_CHECKS}  keep cap=${KEEP_CAP}`);
+  console.log(`Outreach prep. base=${BASE}  max checks=${MAX_CHECKS}  keep cap=${KEEP_CAP}  qualify fit>=${QUALIFY_MIN}`);
+  const seen = loadSeen();
+  console.log(`Seen ledger: ${seen.size} domain(s) already processed (will be skipped).`);
   console.log("Finding launches (last 24h)...");
-  const raw = [...(await fromHackerNews()), ...(await fromProductHunt())];
+  const raw = [...(await fromHackerNews()), ...(await fromProductHunt()), ...(await fromBetaList())];
+  console.log("  YC directory + There's An AI For That: not wired (YC is JS/Algolia with rotating keys; TAAFT is behind a Cloudflare challenge). Add when there's a stable feed.");
 
-  // dedup by hostname (same product on HN + PH)
+  // dedup by hostname (same product across sources) and drop domains already in the ledger
   const byHost = new Map<string, Launch>();
+  let skippedSeen = 0;
   for (const l of raw) {
-    try { const host = new URL(l.url).hostname.replace(/^www\./, ""); if (!byHost.has(host)) byHost.set(host, l); } catch { /* skip bad url */ }
+    const host = hostOf(l.url);
+    if (!host) continue;
+    if (seen.has(host)) { skippedSeen++; continue; }
+    if (!byHost.has(host)) byHost.set(host, l);
   }
   const launches = [...byHost.values()];
-  console.log(`  ${launches.length} AI launches found (deduped).`);
+  console.log(`  ${raw.length} raw -> ${launches.length} new & deduped (${skippedSeen} skipped as already-seen).`);
 
-  const rows: string[][] = [];
-  let checksRun = 0, creditsSpent = 0, kept = 0;
+  const kept: Kept[] = [];
+  let checksRun = 0, creditsSpent = 0, cleanKept = 0;
 
   for (const l of launches) {
-    if (kept >= KEEP_CAP) { console.log(`Reached keep cap (${KEEP_CAP}).`); break; }
+    if (kept.length >= KEEP_CAP) { console.log(`Reached keep cap (${KEEP_CAP}).`); break; }
     if (checksRun >= MAX_CHECKS) { console.log(`Reached check ceiling (${MAX_CHECKS}).`); break; }
+    const host = hostOf(l.url);
 
     if (!(await mayFetch(l.url))) { console.log(`- ${l.company}: robots.txt disallows, skipping.`); continue; }
     const html = await getText(l.url);
@@ -330,40 +426,50 @@ async function main() {
     if (dropped.length) console.log(`  ${l.company}: dropped ${dropped.length} near-duplicate line(s) before checking.`);
     if (copy.length < 60) { console.log(`- ${l.company}: no usable marketing copy.`); continue; }
 
+    // QUALIFY before spending a credit: does this product generate text a human reads? A
+    // low-fit product (device automation, image tool) is skipped and recorded as seen.
+    const fit = fitScore(copy);
+    if (fit < QUALIFY_MIN) { console.log(`- ${l.company}: fit ${fit} < ${QUALIFY_MIN} (not a text-generating product), skipped pre-check.`); seen.add(host); continue; }
+
     const check = await runCheck(l.company, copy);
     checksRun++;
+    seen.add(host); // record every checked domain: never re-contact, never re-spend on it
     if (!check) continue;
     creditsSpent += check.credits_charged || 0;
+    if (!check.report_url) { console.log(`- ${l.company}: no share link returned, skipping.`); continue; }
 
-    // Keep ONLY HIGH on marketing copy: a HIGH flag is a verifiable/unbackable claim (the
-    // thing worth a stranger's DM). MEDIUM here is voice/taste, and a flag that fires on
-    // everyone means nothing. Expect ~1 in 20 to survive, which is the point.
-    const hot = highFlags(check.flags || []);
-    if (!hot.length) { console.log(`- ${l.company}: no HIGH flag, dropped.`); continue; }
-    if (!check.report_url) { console.log(`- ${l.company}: flagged but no share link returned, skipping.`); continue; }
-
-    const flag = hot[0];
+    // A HIGH flag is a verifiable/unbackable claim -> the DM quotes it (draftDm). A qualified
+    // target with a CLEAN page is still worth an honest, no-flag note (draftNoFlag): we ran
+    // their real page and have nothing to fault, which is itself the opener.
+    const flag = highFlags(check.flags || [])[0] || null;
     const founder = handles[0] ? `@${handles[0]}` : "";
     const hnUser = l.hnUser || "";
     const hnEmail = hnUser ? await hnUserEmail(hnUser) : "";
-    rows.push([
-      l.company, l.url, founder, hnUser, hnEmail, flag.span, flag.severity, flag.fix, check.report_url,
-      draftDm(l.company, l.source, flag, check.report_url),
-    ]);
-    kept++;
-    console.log(`+ ${l.company}: kept (${flag.severity} ${flag.issue}). ${kept}/${KEEP_CAP}`);
+    kept.push({ l, fit, founder, hnUser, hnEmail, flag, reportUrl: check.report_url });
+    if (!flag) cleanKept++;
+    console.log(`+ ${l.company}: kept [fit ${fit}] ${flag ? `(${flag.severity} ${flag.issue})` : "(clean page -> no-flag draft)"}. ${kept.length}/${KEEP_CAP}`);
   }
+
+  // sort by fit (best-fit first); within equal fit, a flagged target outranks a clean one
+  kept.sort((a, b) => b.fit - a.fit || Number(!!b.flag) - Number(!!a.flag));
 
   const day = new Date().toISOString().slice(0, 10);
   const file = `outreach-${day}.csv`;
-  const header = ["company", "url", "founder_handle", "hn_user", "hn_email", "flagged_line", "severity", "suggested_fix", "report_url", "drafted_dm"];
+  const header = ["company", "url", "channel", "fit", "founder_handle", "hn_user", "hn_email", "flagged_line", "severity", "suggested_fix", "report_url", "drafted_dm", "drafted_no_flag"];
+  const rows = kept.map((r) => [
+    r.l.company, r.l.url, r.l.source, String(r.fit), r.founder, r.hnUser, r.hnEmail,
+    r.flag ? r.flag.span : "", r.flag ? r.flag.severity : "", r.flag ? r.flag.fix : "", r.reportUrl,
+    r.flag ? draftDm(r.l.company, r.l.source, r.flag, r.reportUrl) : "",
+    r.flag ? "" : draftNoFlag(r.l.company, r.l.source, r.reportUrl),
+  ]);
   const csv = [header, ...rows].map((r) => r.map(csvCell).join(",")).join("\n") + "\n";
   writeFileSync(file, csv);
+  saveSeen(seen);
 
   console.log("");
-  console.log(`Done. Wrote ${rows.length} rows to ${file}`);
-  console.log(`Checks run: ${checksRun}  |  Credits spent: ${creditsSpent}  |  Kept: ${kept}`);
-  console.log("Nothing was sent. Open the CSV, read each drafted_dm, and hand-send the good ones.");
+  console.log(`Done. Wrote ${rows.length} rows to ${file} (sorted best-fit first).`);
+  console.log(`Checks run: ${checksRun}  |  Credits spent: ${creditsSpent}  |  Kept: ${kept.length} (${kept.length - cleanKept} flagged, ${cleanKept} clean)  |  Seen ledger now ${seen.size}.`);
+  console.log("Nothing was sent. Open the CSV, read the drafted_dm / drafted_no_flag column, and hand-send the good ones.");
 }
 
 // debug: run ONE url through the real check (spends 1 credit) and print every flag, so you
@@ -387,7 +493,39 @@ async function checkOne(url: string) {
   high.forEach((f) => console.log(`  "${f.span}"  ->  ${f.fix}`));
 }
 
-const entry = process.env.OUTREACH_EXTRACT_URL ? extractOnly(process.env.OUTREACH_EXTRACT_URL)
+// debug: verify the no-cost machinery (qualification fit + BetaList source + seen ledger)
+// WITHOUT spending a credit. OUTREACH_SELFTEST=1 pnpm outreach
+async function selfTest() {
+  console.log("Self-test (no checks, no cost).\n");
+  const cases: [string, string, boolean][] = [
+    ["device/automation (mobilerun)", "Give AI a phone. Plug your AI into a real phone. Network, SIM, API, device, all from code. Provision real Android and iOS devices on demand. Reads the screen. Taps, swipes, types. Automate any app and receive SMS.", false],
+    ["support/chat product", "Our AI writes support replies and drafts emails for your team. It generates chat responses, answers tickets, and summarizes long threads into one message.", true],
+    ["image generator", "Generate stunning images and video from a prompt. Create avatars, photos, and 3d renders. Our diffusion model renders hardware-accelerated visuals.", false],
+    ["copywriting tool", "The fastest copywriting assistant. Draft blog posts, rewrite marketing copy, compose newsletters, and generate product descriptions in seconds.", true],
+  ];
+  console.log(`QUALIFICATION (qualify fit >= ${QUALIFY_MIN}):`);
+  let pass = 0;
+  for (const [name, copy, shouldQualify] of cases) {
+    const fit = fitScore(copy);
+    const qualifies = fit >= QUALIFY_MIN;
+    const ok = qualifies === shouldQualify;
+    if (ok) pass++;
+    console.log(`  ${ok ? "OK " : "XX "} ${name.padEnd(28)} fit=${String(fit).padStart(3)}  qualifies=${qualifies}  (expected ${shouldQualify})`);
+  }
+  console.log(`  ${pass}/${cases.length} qualification cases correct.\n`);
+
+  console.log("SEEN LEDGER round-trip:");
+  const s = new Set(["a.com", "b.com"]); s.add(hostOf("https://www.c.com/x"));
+  console.log(`  hostOf("https://www.C.com/x") -> ${hostOf("https://www.C.com/x")} (want c.com); set now {${[...s].join(", ")}}\n`);
+
+  console.log("BETALIST source (live, no cost):");
+  const bl = await fromBetaList(8);
+  bl.slice(0, 8).forEach((l) => console.log(`  - ${l.company}  ->  ${l.url}`));
+  console.log(`  ${bl.length} launch(es) resolved.`);
+}
+
+const entry = process.env.OUTREACH_SELFTEST ? selfTest()
+  : process.env.OUTREACH_EXTRACT_URL ? extractOnly(process.env.OUTREACH_EXTRACT_URL)
   : process.env.OUTREACH_CHECK_URL ? checkOne(process.env.OUTREACH_CHECK_URL)
   : main();
 entry.catch((e) => { console.error("outreach failed:", e); process.exit(1); });
