@@ -242,6 +242,17 @@ async function hnUserEmail(username: string): Promise<string> {
 type Flag = { span: string; issue: string; severity: string; why: string; fix: string };
 type CheckResp = { id: string; credits_charged: number; flags: Flag[]; report_url?: string };
 
+// HIGH flags, with overlaps collapsed: the model may flag both the short span
+// ("automate any app") and the whole sentence containing it. Drop the longer one and keep
+// the shorter, more quotable span. Shortest first, so the DM always quotes the tightest phrase.
+function highFlags(flags: Flag[]): Flag[] {
+  const n = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const high = (flags || []).filter((f) => f.severity === "high");
+  return high
+    .filter((f) => !high.some((g) => g !== f && n(g.span).length < n(f.span).length && n(f.span).includes(n(g.span))))
+    .sort((a, b) => a.span.length - b.span.length);
+}
+
 async function runCheck(company: string, copy: string): Promise<CheckResp | null> {
   try {
     const res = await fetch(`${BASE}/api/v1/check`, {
@@ -327,7 +338,7 @@ async function main() {
     // Keep ONLY HIGH on marketing copy: a HIGH flag is a verifiable/unbackable claim (the
     // thing worth a stranger's DM). MEDIUM here is voice/taste, and a flag that fires on
     // everyone means nothing. Expect ~1 in 20 to survive, which is the point.
-    const hot = (check.flags || []).filter((f) => f.severity === "high");
+    const hot = highFlags(check.flags || []);
     if (!hot.length) { console.log(`- ${l.company}: no HIGH flag, dropped.`); continue; }
     if (!check.report_url) { console.log(`- ${l.company}: flagged but no share link returned, skipping.`); continue; }
 
@@ -371,8 +382,8 @@ async function checkOne(url: string) {
   console.log(`credits charged: ${check.credits_charged}   report: ${check.report_url}`);
   console.log(`\n=== ALL flags returned ===`);
   (check.flags || []).forEach((f) => console.log(`  [${f.severity}] ${f.issue}: "${f.span}"`));
-  const high = (check.flags || []).filter((f) => f.severity === "high");
-  console.log(`\n=== ${high.length} HIGH flag(s) survive the filter ===`);
+  const high = highFlags(check.flags || []);
+  console.log(`\n=== ${high.length} HIGH flag(s) survive the filter (overlaps collapsed) ===`);
   high.forEach((f) => console.log(`  "${f.span}"  ->  ${f.fix}`));
 }
 
