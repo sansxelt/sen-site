@@ -71,7 +71,7 @@ function CandidateCard({ c, flags, isWinner }: { c: CandidateEval; flags: LineFl
         <span style={{ width: 30, height: 30, borderRadius: 9, background: isWinner ? "linear-gradient(135deg, var(--acc), var(--acc-deep))" : "var(--bg-2)", border: `1px solid ${isWinner ? "var(--acc-line)" : "var(--line-2)"}`, color: isWinner ? "#fff" : "var(--fg-4)", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, flex: "none" }}>{c.label}</span>
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)" }}>Version {c.label}</span>
         {isWinner ? <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--bg-1)" }}>Recommended</span> : null}
-        <span style={{ marginLeft: "auto", fontFamily: "var(--font-code)", fontSize: 12.5, color: scoreColor(c.overall) }}>Overall {Math.round(c.overall / 5) * 5}</span>
+        <span style={{ marginLeft: "auto", fontFamily: "var(--font-code)", fontSize: 12.5, color: scoreColor(c.overall) }}>Overall {bandScore("overall", c.overall)}</span>
       </div>
 
       <p style={{ fontSize: 13.5, color: "var(--fg-1)", lineHeight: 1.6, margin: "0 0 14px", whiteSpace: "pre-wrap", padding: "12px 14px", borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>{highlightSpans(c.text, mine)}</p>

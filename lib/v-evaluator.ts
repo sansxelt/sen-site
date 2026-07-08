@@ -192,6 +192,27 @@ function findAbsoluteClaims(prepared: PreparedCandidate[]): { label: string; cla
   return out;
 }
 
+// A model verdict binds to a code-found absolute ONLY when its claim IS that sentence (normalized,
+// trailing punctuation ignored) -- NEVER on loose substring containment. A loose includes() let a
+// short, empty, or shared-clause claim clear a different (or every) absolute and flip the fail-
+// closed gate open (adversarial review, 2026-07). Any non-exact claim leaves the sentence
+// un-verdicted, which the pass treats as HIGH -- fail-closed, the safe direction.
+function sameClaim(normClaim: string, normSentence: string): boolean {
+  const strip = (s: string) => s.replace(/[.!?;:,\s]+$/, "");
+  const a = strip(normClaim), b = strip(normSentence);
+  return a.length > 0 && a === b;
+}
+
+// The displayed HIGH span is the model's tight quote ONLY when it is a UNIQUE, exact-case,
+// in-sentence substring of the candidate (so the report highlights the right, verbatim
+// occurrence and never a benign repeat elsewhere); otherwise the whole sentence. Display only --
+// the gate and dedup key on the sentence, never this.
+function displaySpan(p: PreparedCandidate, sentence: string, quote?: string): string {
+  const q = (quote || "").trim();
+  const unique = !!q && sentence.includes(q) && p.text.indexOf(q) !== -1 && p.text.indexOf(q) === p.text.lastIndexOf(q);
+  return (unique ? q : sentence).trim().slice(0, 400);
+}
+
 // Severity for an OPEN-ENDED flag (a non-absolute problem the model surfaced) is ALWAYS MEDIUM.
 // The LOW tier was DROPPED. We first tried to keep it and make it deterministic with a forced
 // stylistic yes/no binary (steadier than the open-ended issue label), but across 20x5 it still
@@ -229,33 +250,29 @@ export function finalizeEvaluation(
   });
 
   const flags: LineFlag[] = [];
-  const overlaps = (label: string, span: string) =>
-    flags.some((h) => h.candidateLabel === label && (norm(h.span).includes(norm(span)) || norm(span).includes(norm(h.span))));
+  const overlap = (a: string, b: string) => { const x = norm(a), y = norm(b); return x.includes(y) || y.includes(x); };
 
-  // 1) Mandatory absolute-claim gate, FAIL-CLOSED. Code finds every absolute claim; the model
-  //    must affirmatively verdict it `backed` or it becomes a HIGH flag. This closes the
-  //    false-negative hole (open-ended recall wobbled: a real absolute went unflagged 2/10).
+  // 1) Mandatory absolute-claim gate, FAIL-CLOSED. Code finds every absolute claim; the model must
+  //    affirmatively verdict THAT sentence `backed` or it becomes a HIGH flag. Dedup and the gate
+  //    key on the SENTENCE (the claim identity), never on the display quote, so the set of HIGH
+  //    flags the gate consumes cannot wobble with how tightly the model quotes.
+  const absSentences: { label: string; sentence: string }[] = [];
   const verdicts = raw.absolute_verdicts || [];
   for (const { label, claim: sentence } of findAbsoluteClaims(prepared)) {
     const p = prepByLabel.get(label);
     if (!p) continue;
-    const v = verdicts.find((x) => (x.candidate || "").trim().toUpperCase() === label && x.claim && norm(sentence).includes(norm(x.claim)));
-    // The gate keys on this SENTENCE-level verdict, never on the display quote -- structural, so a
-    // wobble in how tightly the model quotes can never move the pass/fail decision.
-    if (v && v.backed === true) continue;                 // model affirmatively cleared the full sentence
-    // Display span: the model's tight quote ONLY if it is a verbatim substring of the sentence AND
-    // present in the candidate; otherwise fall back to the whole sentence. Never affects `backed`.
-    const q = (v?.quote || "").trim();
-    const span = (q && norm(sentence).includes(norm(q)) && p.normText.includes(norm(q)) ? q : sentence).trim().slice(0, 400);
-    if (overlaps(label, span)) continue;                  // already recorded this absolute
-    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span, issue: "overpromise", severity: "high",
+    const v = verdicts.find((x) => (x.candidate || "").trim().toUpperCase() === label && sameClaim(norm(x.claim || ""), norm(sentence)));
+    if (v && v.backed === true) continue;                 // the model affirmatively cleared THIS sentence
+    if (absSentences.some((r) => r.label === label && overlap(r.sentence, sentence))) continue; // already recorded
+    absSentences.push({ label, sentence });
+    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: displaySpan(p, sentence, v?.quote), issue: "overpromise", severity: "high",
       why: ((v?.why || "").trim() || "This makes an absolute claim the copy does not back up.").slice(0, 300),
       fix: ((v?.fix || "").trim() || "Qualify the claim or name what backs it.").slice(0, 400) });
   }
 
-  // 2) Open-ended flags (non-absolute problems), computed to MEDIUM/LOW. A span survives only if
-  //    it is verbatim in its candidate; one that overlaps a HIGH absolute above is the same defect
-  //    and is skipped (keep the HIGH).
+  // 2) Open-ended flags (non-absolute problems), always MEDIUM. A span survives only if it is
+  //    verbatim in its candidate and does not restate an absolute already recorded above (compared
+  //    on the absolute SENTENCE, not the display span) or a prior open-ended flag.
   for (const f of raw.flags || []) {
     const p = prepByLabel.get((f.candidate || "").trim().toUpperCase());
     if (!p) continue;
@@ -264,7 +281,8 @@ export function finalizeEvaluation(
     const why = (f.why || "").trim();
     const fix = (f.fix || "").trim();
     if (!why || !fix) continue;
-    if (overlaps(p.label, span)) continue;                 // same span as a HIGH absolute -> skip
+    if (absSentences.some((r) => r.label === p.label && overlap(r.sentence, span))) continue; // same as a HIGH absolute
+    if (flags.some((h) => h.candidateLabel === p.label && h.severity !== "high" && overlap(h.span, span))) continue; // dup open-ended
     const issue = (ISSUES as string[]).includes((f.issue || "").trim().toLowerCase()) ? ((f.issue || "").trim().toLowerCase() as FlagIssue) : "other";
     flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity: "medium", why: why.slice(0, 300), fix: fix.slice(0, 400) });
   }
@@ -326,7 +344,7 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     `- candidates: for EACH version, its label (e.g. "A"), a one-line summary, and a score for EVERY criterion above (exact key) with a one-line note.\n` +
     `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), why (one line), and fix (a concrete rewrite of just that span).\n` +
     (absClaims.length
-      ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (the FULL sentence, copied verbatim, exactly as listed below), backed (judged from the WHOLE sentence and its surrounding copy: true ONLY if they substantiate it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), quote (the SHORTEST exact phrase WITHIN that sentence that carries the claim, copied verbatim, used only to display the flag; it does NOT change the backed judgment), why (one line), fix (a concrete rewrite). Judge honestly and independently, always on the full sentence: "works with every major tool: Slack, Gmail, and Notion" is backed; "We never sell your data. Your information stays private and is encrypted at rest and in transit." is a backed policy statement; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
+      ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (copy the sentence EXACTLY as it appears in the list below, character for character, no more and no less -- this is how your verdict is matched to the claim), backed (judged from the WHOLE sentence and its surrounding copy: true ONLY if they substantiate it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), quote (the SHORTEST exact phrase WITHIN that sentence that carries the claim, copied verbatim, used only to display the flag; it does NOT change the backed judgment), why (one line), fix (a concrete rewrite). Judge honestly and independently, always on the full sentence and its context: "works with every major tool: Slack, Gmail, and Notion" is backed; "We never sell your data." next to copy about encryption and privacy is a backed policy statement; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
       : "") +
     (multi
       ? `- recommendation: one plain sentence naming which version to ship and why.\n\n`

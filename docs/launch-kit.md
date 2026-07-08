@@ -137,8 +137,8 @@ The fix it suggests: state the real 5 to 10 day timeline and commit to confirmin
 
 4/ It runs a fixed rubric with a pinned model and returns a specific edit, not a mood, and it
 quotes the exact line. It's an LLM grading an LLM, so it isn't perfectly repeatable and I don't
-claim it is; I measure the run-to-run consistency and publish it. For the calls that matter
-there's an optional layer that routes the output to real people.
+claim it is; I'm measuring the run-to-run consistency and will publish the numbers. For the calls
+that matter there's an optional layer that routes the output to real people.
 
 5/ For teams: there's an API with a threshold. POST an output, get back passed true/false, and
 fail your build when AI output scores below the bar. One call takes a batch for a whole

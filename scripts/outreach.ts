@@ -32,7 +32,7 @@
  * never processed again on a later run. A duplicate cold email is worse than no email.
  */
 
-import { writeFileSync, existsSync, readFileSync } from "node:fs";
+import { writeFileSync, existsSync, readFileSync, appendFileSync } from "node:fs";
 
 // ── env ────────────────────────────────────────────────────────────────────────
 // Best-effort .env.local loader so `pnpm outreach` works without exporting vars by hand.
@@ -276,7 +276,12 @@ async function fromBetaList(limit = 15): Promise<Launch[]> {
     if (!name || !AI_RE.test(`${name} ${tagline}`)) continue;
     const loc = await resolveLocation(`https://betalist.com${slug}/visit`);
     const url = loc.replace(/([?&])ref=betalist(&|$)/i, "$1").replace(/[?&]$/, "");
-    if (/^https?:\/\//i.test(url)) out.push({ company: name.slice(0, 80), url, source: "BetaList" });
+    const host = hostOf(url);
+    // Guard: an unclaimed/removed startup's /visit can bounce to a betalist.com login/claim page.
+    // Never treat betalist.com itself as the product, or we'd scrape + draft outreach about it.
+    if (/^https?:\/\//i.test(url) && host && host !== "betalist.com" && !host.endsWith(".betalist.com")) {
+      out.push({ company: name.slice(0, 80), url, source: "BetaList" });
+    }
   }
   console.log(`  BetaList: ${out.length} AI launch(es).`);
   return out;
@@ -368,13 +373,29 @@ function loadSeen(): Set<string> {
   try { return new Set(readFileSync(SEEN_FILE, "utf8").split("\n").map((s) => s.trim().toLowerCase()).filter(Boolean)); }
   catch { return new Set(); }
 }
+// Record a domain and flush it to disk IMMEDIATELY (append), so an interrupted run cannot lose a
+// domain a credit was just spent on and re-contact it next time. saveSeen rewrites the file clean
+// (sorted, deduped) at the end of a normal run.
+function markSeen(seen: Set<string>, host: string) {
+  if (!host || seen.has(host)) return;
+  seen.add(host);
+  try { appendFileSync(SEEN_FILE, host + "\n"); } catch { /* best effort */ }
+}
 function saveSeen(seen: Set<string>) {
   try { writeFileSync(SEEN_FILE, [...seen].sort().join("\n") + "\n"); } catch { /* best effort */ }
 }
 function hostOf(url: string): string { try { return new URL(url).hostname.replace(/^www\./, "").toLowerCase(); } catch { return ""; } }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────────
-function csvCell(v: string): string { return `"${String(v ?? "").replace(/"/g, '""')}"`; }
+function csvCell(v: string): string {
+  let s = String(v ?? "");
+  // Neutralize spreadsheet formula injection: every cell here can hold scraped, attacker-
+  // controllable copy (company/og:title, the flagged line, the fix), and Excel/Sheets evaluate any
+  // cell whose text starts with = + - @ tab or CR even inside quotes. A leading apostrophe makes it
+  // render as literal text instead of executing.
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return `"${s.replace(/"/g, '""')}"`;
+}
 
 // ── debug: print exactly what the checker would see for one URL (no check, no cost) ──
 async function extractOnly(url: string) {
@@ -429,12 +450,12 @@ async function main() {
     // QUALIFY before spending a credit: does this product generate text a human reads? A
     // low-fit product (device automation, image tool) is skipped and recorded as seen.
     const fit = fitScore(copy);
-    if (fit < QUALIFY_MIN) { console.log(`- ${l.company}: fit ${fit} < ${QUALIFY_MIN} (not a text-generating product), skipped pre-check.`); seen.add(host); continue; }
+    if (fit < QUALIFY_MIN) { console.log(`- ${l.company}: fit ${fit} < ${QUALIFY_MIN} (not a text-generating product), skipped pre-check.`); markSeen(seen, host); continue; }
 
     const check = await runCheck(l.company, copy);
     checksRun++;
-    seen.add(host); // record every checked domain: never re-contact, never re-spend on it
-    if (!check) continue;
+    if (!check) continue; // transient failure (non-2xx / network): NO credit charged, leave retryable
+    markSeen(seen, host); // a credit was charged: never re-check or re-contact this domain
     creditsSpent += check.credits_charged || 0;
     if (!check.report_url) { console.log(`- ${l.company}: no share link returned, skipping.`); continue; }
 
