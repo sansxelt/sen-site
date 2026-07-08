@@ -8,10 +8,10 @@ const RECOMMENDED = [9, 39, 99, 299, 999];
 const MIN = 5, DEFAULT_MAX = 999999, RATE = 10;
 
 const RULES: [string, string][] = [
-  ["1 credit = 1 valid judgment", "You only pay for real human signal."],
-  ["Held when you launch", "Credits are escrowed, not spent up front."],
-  ["Low-quality filtered", "Too-fast, duplicate, and spam responses are rejected."],
-  ["Unused credits refunded", "If an evaluation doesn't fill, the rest comes back."],
+  ["1 credit = 1 AI check", "Spend one credit to check a draft against your criteria."],
+  ["Failed checks refunded", "If a check doesn't complete, the credit is returned automatically."],
+  ["Validate on real people", "Optional: 1 credit per valid human judgment; filtered responses are never charged."],
+  ["Credits never expire", "Buy once, spend whenever you ship."],
 ];
 
 const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
@@ -29,12 +29,14 @@ export default function CreditsPage() {
   useEffect(() => {
     const load = () => fetch("/api/v/me").then((r) => r.json()).then((j) => { if (j.signedIn) { setBal(j.balance); if (typeof j.topupMax === "number") setMAX(j.topupMax); setElevated(!!j.elevatedTopup); if (j.plan) setPlan(j.plan); } }).catch(() => {});
     load();
-    const sid = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("session_id") : null;
-    if (sid) {
+    // Stripe returns with session_id; a PayPal credit top-up returns with paypal=1. Both
+    // credit via webhook/capture, so poll the balance until it lands.
+    const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+    if (params && (params.get("session_id") || params.get("paypal"))) {
       setPaid(true);
       window.history.replaceState({}, "", "/app/credits");
       let tries = 0;
-      const iv = setInterval(() => { tries += 1; load(); if (tries >= 6) clearInterval(iv); }, 2000);
+      const iv = setInterval(() => { tries += 1; load(); if (tries >= 8) clearInterval(iv); }, 2000);
       return () => clearInterval(iv);
     }
   }, []);
@@ -52,7 +54,7 @@ export default function CreditsPage() {
         <div>
           <p className="eyebrow">Credits</p>
           <h1 className="display">Top up credits</h1>
-          <p>$1 = 10 credits. 1 credit = 1 valid judgment. Credits never expire.</p>
+          <p>$1 = 10 credits. 1 credit = 1 AI check (or 1 valid judgment when you validate on real people). Credits never expire.</p>
         </div>
       </div>
 
@@ -119,7 +121,7 @@ export default function CreditsPage() {
             </div>
             <div style={{ marginTop: 16 }}>
               <button onClick={go} disabled={!valid} className="btn btn--lg" style={{ width: "100%", justifyContent: "center", opacity: valid ? 1 : 0.55 }}>Continue to checkout <span aria-hidden>→</span></button>
-              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis. No credits? <Link href="/vote" style={{ color: "var(--acc-deep)" }}>Evaluate to earn →</Link></p>
+              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis. Credits never expire.</p>
             </div>
           </div>
         </div>

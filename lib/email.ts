@@ -138,7 +138,7 @@ function baseHtml(content: string) {
         <tr><td style="padding:22px 4px 0;border-top:1px solid #e5e5e5;margin-top:22px;">
           <p class="vrl-footer-links" style="margin:16px 0 0;font-size:11px;line-height:1.9;color:#a3a3a3;word-break:break-word;">
             <a href="https://vraelis.com" style="color:#737373;text-decoration:none;">vraelis.com</a>
-             · <a href="https://vraelis.com/product" style="color:#737373;text-decoration:none;">Product</a>
+             · <a href="https://vraelis.com/how-it-works" style="color:#737373;text-decoration:none;">Product</a>
              · <a href="https://vraelis.com/pricing" style="color:#737373;text-decoration:none;">Pricing</a>
              · <a href="https://vraelis.com/privacy" style="color:#737373;text-decoration:none;">Privacy</a>
              · <a href="https://vraelis.com/terms" style="color:#737373;text-decoration:none;">Terms</a>
@@ -216,9 +216,9 @@ export function welcomeHtml(name?: string) {
       <li>Drop in messy input, a screenshot, rough notes, or a link.</li>
       <li>Push the same thread forward instead of starting over. Keep refining what already works.</li>
     </ul>
-    <a href="https://vraelis.com/account" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
+    <a href="https://vraelis.com/app" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://vraelis.com/product" class="vrl-btn" style="${BTN_LIGHT}">Tour the product</a>
+    <a href="https://vraelis.com/how-it-works" class="vrl-btn" style="${BTN_LIGHT}">Tour the product</a>
     <div style="${NOTE_STYLE}">
       <strong style="color:#0a0a0a;">Didn&apos;t create this account?</strong> You can safely ignore this email, the signup won&apos;t charge you anything and we won&apos;t email you again. If you&apos;re seeing emails you didn&apos;t expect, contact <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
     </div>
@@ -237,7 +237,7 @@ export function earlyAccessHtml(name: string) {
       <li>Rollout order prioritizes focus-area match, not signup date, so feel free to update your profile.</li>
       <li>If access is urgent (team rollout, deadline, specific integration), reach out, we occasionally expedite.</li>
     </ul>
-    <a href="https://vraelis.com/account" class="vrl-btn" style="${BTN_STYLE}">View your account</a>
+    <a href="https://vraelis.com/app" class="vrl-btn" style="${BTN_STYLE}">View your account</a>
     <div style="${NOTE_STYLE}">
       <strong style="color:#0a0a0a;">Need a different path?</strong> Teams/sales conversations get fast-tracked, email <a href="mailto:sales@vraelis.com" style="color:#0a0a0a;">sales@vraelis.com</a>. General questions go to <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
     </div>
@@ -577,11 +577,11 @@ export function subscriptionActivatedHtml(name: string, planName: string, cycle:
       ["Next charge",   cycle === "yearly" ? "In 12 months" : "In 1 month"],
     ])}
 
-    <a href="https://vraelis.com/account" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
+    <a href="https://vraelis.com/app" class="vrl-btn" style="${BTN_STYLE}">Open workspace</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://vraelis.com/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>
+    <a href="https://vraelis.com/app/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>
     <div style="${NOTE_STYLE}">
-      A Stripe receipt with the full invoice is on its way separately. For plan changes, cancellations, or downgrades, head to <a href="https://vraelis.com/account/billing" style="color:#0a0a0a;">/account/billing</a>, all changes are self-serve and take effect immediately. For help, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
+      A Stripe receipt with the full invoice is on its way separately. For plan changes, cancellations, or downgrades, head to <a href="https://vraelis.com/app/billing" style="color:#0a0a0a;">/app/billing</a>, all changes are self-serve and take effect immediately. For help, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
     </div>
   `);
 }
@@ -607,9 +607,9 @@ export function subscriptionCancellationScheduledHtml(name: string, planName: st
       <li>All your saved outputs, history, and API keys stay exactly where they are.</li>
     </ul>
 
-    <a href="https://vraelis.com/account/billing" class="vrl-btn" style="${BTN_STYLE}">Resume subscription</a>
+    <a href="https://vraelis.com/app/billing" class="vrl-btn" style="${BTN_STYLE}">Resume subscription</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Didn&apos;t schedule this cancellation?</strong> Head to <a href="https://vraelis.com/account/billing" style="color:#0a0a0a;">/account/billing</a> and tap Resume subscription, it&apos;s one click and fully reverses this email. If you suspect your account is compromised, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a> immediately.
+      <strong style="color:#0a0a0a;">Didn&apos;t schedule this cancellation?</strong> Head to <a href="https://vraelis.com/app/billing" style="color:#0a0a0a;">/app/billing</a> and tap Resume subscription, it&apos;s one click and fully reverses this email. If you suspect your account is compromised, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a> immediately.
     </div>
   `);
 }
@@ -628,9 +628,9 @@ export function subscriptionEndedHtml(name: string, planName: string) {
     </ul>
     <a href="https://vraelis.com/pricing" class="vrl-btn" style="${BTN_STYLE}">Pick a plan again</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
-    <a href="https://vraelis.com/account" class="vrl-btn" style="${BTN_LIGHT}">Keep using Free</a>
+    <a href="https://vraelis.com/app" class="vrl-btn" style="${BTN_LIGHT}">Keep using Free</a>
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Was this unexpected?</strong> If your plan ended because a charge failed, it&apos;s usually a card issue (expired, frozen, different bank). Update the card at <a href="https://vraelis.com/account/billing" style="color:#0a0a0a;">/account/billing</a> and resubscribe. For billing concerns, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
+      <strong style="color:#0a0a0a;">Was this unexpected?</strong> If your plan ended because a charge failed, it&apos;s usually a card issue (expired, frozen, different bank). Update the card at <a href="https://vraelis.com/app/billing" style="color:#0a0a0a;">/app/billing</a> and resubscribe. For billing concerns, email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
     </div>
   `);
 }
@@ -642,7 +642,7 @@ export function paymentFailedHtml(name: string, planName: string) {
     <h1 class="vrl-h1" style="${H1_STYLE}">We couldn&apos;t charge your card.</h1>
     <p style="${BODY_STYLE}">${greeting} a charge for your <strong style="color:#0a0a0a;">${planName}</strong> subscription just failed. Stripe will retry the card automatically a few more times over the next week, but if the card&apos;s expired, blocked, or doesn&apos;t have funds, the retries won&apos;t succeed either.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Fastest fix:</strong> add or switch the payment method now.</p>
-    <a href="https://vraelis.com/account/billing" class="vrl-btn" style="${BTN_STYLE}">Update payment method</a>
+    <a href="https://vraelis.com/app/billing" class="vrl-btn" style="${BTN_STYLE}">Update payment method</a>
     <p style="${BODY_STYLE}" style="margin-top:22px;"><strong style="color:#0a0a0a;">What happens if retries keep failing:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>After all retries exhaust, your plan drops to Free, paid features pause but nothing is deleted.</li>
@@ -668,7 +668,7 @@ export function paymentMethodUpdatedHtml(name: string, brand: string, last4: str
       ["Takes effect", "Immediately"],
     ])}
 
-    <a href="https://vraelis.com/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Review billing</a>
+    <a href="https://vraelis.com/app/billing" class="vrl-btn" style="${BTN_LIGHT}">Review billing</a>
     <div style="${NOTE_WARN}">
       <strong style="color:#9f1239;">If you didn&apos;t make this change</strong>, email <a href="mailto:help@vraelis.com" style="color:#9f1239;font-weight:600;">help@vraelis.com</a> immediately. Someone else may have access to your account, we can lock it and revert the card while we investigate.
     </div>
@@ -691,11 +691,11 @@ export function renewalSucceededHtml(name: string, planName: string, amountLabel
     ])}
 
     ${invoiceUrl
-      ? `<a href="${invoiceUrl}" class="vrl-btn" style="${BTN_STYLE}">View full invoice</a><span class="vrl-btn-spacer">&nbsp;</span><a href="https://vraelis.com/account/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>`
-      : `<a href="https://vraelis.com/account/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>`
+      ? `<a href="${invoiceUrl}" class="vrl-btn" style="${BTN_STYLE}">View full invoice</a><span class="vrl-btn-spacer">&nbsp;</span><a href="https://vraelis.com/app/billing" class="vrl-btn" style="${BTN_LIGHT}">Manage billing</a>`
+      : `<a href="https://vraelis.com/app/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>`
     }
     <div style="${NOTE_STYLE}">
-      <strong style="color:#0a0a0a;">Want to cancel or downgrade?</strong> No hassle, head to <a href="https://vraelis.com/account/billing" style="color:#0a0a0a;">/account/billing</a>. Cancellation stops future charges immediately; downgrades take effect at the next renewal so you keep paid features until then. Questions: <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
+      <strong style="color:#0a0a0a;">Want to cancel or downgrade?</strong> No hassle, head to <a href="https://vraelis.com/app/billing" style="color:#0a0a0a;">/app/billing</a>. Cancellation stops future charges immediately; downgrades take effect at the next renewal so you keep paid features until then. Questions: <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>.
     </div>
   `);
 }
@@ -721,7 +721,7 @@ export function renewalUpcomingHtml(name: string, planName: string, amountLabel:
       <li><strong style="color:#0a0a0a;">Update the card</strong> if the one on file is about to expire.</li>
     </ul>
 
-    <a href="https://vraelis.com/account/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>
+    <a href="https://vraelis.com/app/billing" class="vrl-btn" style="${BTN_STYLE}">Manage billing</a>
     <div style="${NOTE_STYLE}">
       <strong style="color:#0a0a0a;">Billing questions?</strong> Email <a href="mailto:help@vraelis.com" style="color:#0a0a0a;">help@vraelis.com</a>. For plan / team / enterprise questions, <a href="mailto:sales@vraelis.com" style="color:#0a0a0a;">sales@vraelis.com</a> handles those directly.
     </div>
