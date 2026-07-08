@@ -231,7 +231,10 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     (multi
       ? `- recommendation: one plain sentence naming which version to ship and why.\n\n`
       : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n\n`) +
-    `Rules: copy every span verbatim from the version text — do not invent or paraphrase spans. Only flag real problems. Score honestly against the criteria. Write plainly and do not use em dashes.`;
+    `Severity calibration: HIGH means the line is verifiably false, cannot be backed up, or creates a real safety or legal risk. MEDIUM means a clear, objective problem that is not merely stylistic. A matter of taste, voice, or phrasing preference is LOW at most, never MEDIUM or HIGH. Do not substitute your stylistic preference for the writer's.` +
+    (outputType === "marketing_copy" ? ` Marketing copy is allowed to be bold, aspirational, and confident: a strong, punchy hero line is not a problem unless it makes a specific claim that is false or cannot be backed up.` : "") +
+    `\n\n` +
+    `Rules: copy every span verbatim from the version text, and do not invent or paraphrase spans. Only flag real problems, not rewrites you would merely prefer. Score honestly against the criteria. Write plainly and do not use em dashes.`;
 
   try {
     // maxRetries: 0 (unlike v-themes/v-ai): a check charges a credit and runs behind a

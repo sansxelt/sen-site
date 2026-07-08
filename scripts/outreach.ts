@@ -184,15 +184,19 @@ async function runCheck(company: string, copy: string): Promise<CheckResp | null
 }
 
 // ── DM draft (no em dashes; lowercase prose, verbatim quotes) ─────────────────────
+// The landing page is only the demo; the real ask is their product's OWN output. The DM
+// leads with the specific flag (proof it's not a template) and closes on that ask.
+function sentence(s: string): string { const t = s.trim().replace(/—/g, ", "); return /[.!?]$/.test(t) ? t : `${t}.`; }
+
 function draftDm(company: string, flag: Flag, reportUrl: string): string {
   return [
-    `hey, saw you launched ${company}. i built a checker that flags lines in AI-generated copy that read risky before users see them, and i ran your landing page through it.`,
+    `hey, saw you launched ${company}. i built a checker that flags lines in AI-generated copy that read risky before users see them.`,
     ``,
-    `mostly clean. it flagged this: "${flag.span}", ${flag.why} suggested fix: ${flag.fix}`,
+    `only text of yours i could reach was your landing page, so i ran that. it flagged "${flag.span}". ${sentence(flag.why)} suggested rewrite: "${flag.fix}"`,
     ``,
     `full report: ${reportUrl}`,
     ``,
-    `free, no strings, i'm testing whether the flags are actually good on real copy. if it caught something you'd change, tell me. if it's wrong, tell me that, it's more useful.`,
+    `that's just the demo though. the real use is your product's own output, the stuff it generates for users mid-task. send me a sample and i'll run it free. i'm testing whether the flags hold up on real output, so if it's wrong, tell me, that's more useful than if it's right.`,
   ].join("\n").replace(/—/g, ", ");
 }
 
@@ -230,9 +234,11 @@ async function main() {
     if (!check) continue;
     creditsSpent += check.credits_charged || 0;
 
-    const hot = (check.flags || []).filter((f) => f.severity === "high" || f.severity === "medium")
-      .sort((a, b) => (a.severity === "high" ? -1 : 1) - (b.severity === "high" ? -1 : 1));
-    if (!hot.length) { console.log(`- ${l.company}: clean (no HIGH/MEDIUM flag), dropped.`); continue; }
+    // Keep ONLY HIGH on marketing copy: a HIGH flag is a verifiable/unbackable claim (the
+    // thing worth a stranger's DM). MEDIUM on marketing is voice/taste noise, and a flag that
+    // fires on everyone means nothing. Expect ~1 in 20 to survive, which is the point.
+    const hot = (check.flags || []).filter((f) => f.severity === "high");
+    if (!hot.length) { console.log(`- ${l.company}: no HIGH flag, dropped.`); continue; }
     if (!check.report_url) { console.log(`- ${l.company}: flagged but no share link returned, skipping.`); continue; }
 
     const flag = hot[0];
