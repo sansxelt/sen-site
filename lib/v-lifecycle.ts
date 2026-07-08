@@ -4,7 +4,7 @@
 // Bounded and fail-soft: it never throws and never blocks anything.
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
-import { isEmailConfigured, sendCheckActivationEmail, sendLowCreditsEmail } from "./email";
+import { isEmailConfigured, sendCheckActivationEmail, sendLowCreditsEmail, sendWinbackEmail } from "./email";
 import { getPlan } from "./v-db";
 import { logEvent } from "./v-events";
 
@@ -70,7 +70,10 @@ export async function runActivationNudges(limit = 100): Promise<ActivationSummar
 //   - not already sent (idempotent via the event log)
 const LOWCREDIT_EVENT = "lowcredits_email_sent";
 const LOW_MAX = 5;              // nudge at or below this many credits left
-const ACTIVE_WINDOW_DAYS = 30;  // only users who ran a check within this window
+// "Actively checking" = a check within the last QUIET_AFTER_DAYS. Kept equal to the
+// win-back threshold so stages 2 and 3 are disjoint: active users get the upgrade nudge,
+// quiet users get win-back, and nobody gets both in the same run.
+const ACTIVE_WINDOW_DAYS = 14;
 
 export type LowCreditSummary = { scanned: number; sent: number; skippedPaid: number; skippedBalance: number; alreadySent: number };
 
@@ -122,6 +125,67 @@ export async function runLowCreditNudges(limit = 100): Promise<LowCreditSummary>
     return out;
   } catch (e) {
     console.error("runLowCreditNudges:", e);
+    return out;
+  }
+}
+
+// ── Stage 3: win-back ──────────────────────────────────────────────────────────
+// A user who ran checks, then went quiet (no check in QUIET_AFTER_DAYS but active within
+// QUIET_MAX_DAYS) and still has credits gets one "your credits are waiting" nudge. Disjoint
+// from stage 2 by the QUIET_AFTER_DAYS boundary (stage 2 targets active users, this targets
+// quiet ones). Idempotent via the event log.
+const WINBACK_EVENT = "winback_email_sent";
+const QUIET_AFTER_DAYS = 14; // no check in this many days = "quiet" (matches ACTIVE_WINDOW_DAYS)
+const QUIET_MAX_DAYS = 60;   // but active within this window — don't chase long-gone accounts
+
+export type WinbackSummary = { scanned: number; sent: number; skippedRecent: number; skippedBalance: number; alreadySent: number };
+
+export async function runWinbackNudges(limit = 100): Promise<WinbackSummary> {
+  const out: WinbackSummary = { scanned: 0, sent: 0, skippedRecent: 0, skippedBalance: 0, alreadySent: 0 };
+  if (!isDatabaseConfigured() || !isEmailConfigured()) return out;
+
+  try {
+    const s = getSupabaseAdminClient();
+    const now = Date.now();
+    const from = new Date(now - QUIET_MAX_DAYS * DAY).toISOString();
+    const quietBefore = now - QUIET_AFTER_DAYS * DAY;
+
+    // Checks in the last QUIET_MAX_DAYS, newest first. The first row per user (desc order)
+    // is their latest check — robust to the cap, since only the oldest rows drop if hit.
+    const { data: checks } = await s.from("v_checks" as never)
+      .select("user_id, created_at").gte("created_at", from)
+      .order("created_at", { ascending: false }).limit(5000);
+    const latest = new Map<string, number>();
+    for (const r of ((checks as unknown as { user_id: string; created_at: string }[] | null) ?? [])) {
+      const email = (r.user_id || "").trim().toLowerCase();
+      if (!email) continue;
+      if (!latest.has(email)) latest.set(email, new Date(r.created_at).getTime());
+    }
+
+    // Quiet = latest check older than QUIET_AFTER_DAYS. (Users active more recently are
+    // stage 2's / nobody's, not win-back's.)
+    const quiet = [...latest].filter(([, t]) => t <= quietBefore).map(([e]) => e);
+    out.scanned = quiet.length;
+    out.skippedRecent = latest.size - quiet.length;
+    const emails = quiet.slice(0, limit);
+    if (!emails.length) return out;
+
+    const { data: sent } = await s.from("v_events" as never).select("user_id").eq("event_type", WINBACK_EVENT).in("user_id", emails);
+    const already = new Set(((sent as unknown as { user_id: string }[] | null) ?? []).map((e) => e.user_id));
+
+    const balances = await liveBalances(s, emails);
+
+    for (const email of emails) {
+      if (already.has(email)) { out.alreadySent++; continue; }
+      const bal = balances.get(email) ?? 0;
+      if (bal <= 0) { out.skippedBalance++; continue; } // nothing concrete to return to
+      await sendWinbackEmail(email, bal);
+      await logEvent({ userId: email, eventType: WINBACK_EVENT, actorType: "system", source: "cron", metadata: { remaining: bal } });
+      out.sent++;
+    }
+    return out;
+  } catch (e) {
+    console.error("runWinbackNudges:", e);
     return out;
   }
 }

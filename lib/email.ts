@@ -412,6 +412,35 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
   }
 }
 
+function winbackHtml(remaining: number): string {
+  const run = "https://vraelis.com/app/checks/new";
+  const credits = remaining === 1 ? "1 credit" : `${remaining} credits`;
+  return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
+    <div style="max-width:520px;margin:0 auto;padding:32px 24px">
+      <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
+      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You've got ${credits} waiting.</h1>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You checked some AI output with Vraelis a while back, then things went quiet. Your ${credits} are still here. Next time your AI writes something a customer will see, a support reply, an onboarding message, an agent response, run it through a check first: per-criterion scores and the exact lines to fix, in about 20 seconds.</p>
+      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run a check</a>
+      <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
+    </div></body></html>`;
+}
+
+export async function sendWinbackEmail(email: string, remaining: number) {
+  const resend = getResend();
+  if (!resend) return;
+
+  try {
+    await resend.emails.send({
+      from:    fromAccount,
+      to:      email,
+      subject: `Your Vraelis ${remaining === 1 ? "credit is" : "credits are"} still here`,
+      html:    winbackHtml(remaining),
+    });
+  } catch (error) {
+    console.error("sendWinbackEmail failed:", error);
+  }
+}
+
 export async function sendEarlyAccessEmail(email: string, name: string) {
   const resend = getResend();
   if (!resend) return;
