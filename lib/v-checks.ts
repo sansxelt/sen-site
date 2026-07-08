@@ -16,7 +16,7 @@ import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { balance, spend, refundCheck } from "./v-credits";
 import { evaluateOutput, evaluatorConfigured, OUTPUT_TYPES, type EvalInput, type EvalResult, type OutputType } from "./v-evaluator";
 import { logEvent } from "./v-events";
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 
 const norm = (e: string) => e.trim().toLowerCase();
 
@@ -42,6 +42,8 @@ export type VCheck = {
   error: string | null;
   credits_charged: number;
   source: string;
+  share_token: string | null;   // set once shared; unguessable public link segment
+  share_enabled: boolean;       // public /r/c/<token> report is live only while true
   created_at: string;
 };
 
@@ -281,4 +283,67 @@ export async function listChecks(userId: string, opts: { limit?: number } = {}):
     .select("id, output_type, title, status, credits_charged, created_at")
     .eq("user_id", norm(userId)).order("created_at", { ascending: false }).limit(limit);
   return (data as unknown as VCheckSummary[]) ?? [];
+}
+
+// ── Public sharing ────────────────────────────────────────────────────────────
+// A completed check can be shared as a read-only public report at /r/c/<token>.
+// Sharing is OPT-IN and OWNER-CONTROLLED: the owner flips share_enabled, and the
+// public read path (getSharedCheck) is the ONLY way to read another user's check
+// — gated strictly on (unguessable token AND share_enabled AND status=complete).
+// Flipping it off kills the link immediately. No owner identity is ever exposed.
+
+// Only the report content, never user_id / audience / goal / internal columns.
+export type PublicCheck = { output_type: OutputType; title: string | null; result: EvalResult; model: string | null; created_at: string };
+
+// 128 bits of URL-safe randomness → an unguessable ~22-char path segment.
+function newShareToken(): string {
+  return randomBytes(16).toString("base64url");
+}
+
+// Owner-scoped. Enabling a completed check mints a token; disabling flips share_enabled
+// off. Returns the token ONLY while enabled. Enabling a check that isn't complete is
+// rejected. Turning sharing OFF then ON ROTATES the token — so revoking a leaked link is
+// permanent, and a fresh enable never resurrects an old URL. A redundant enable while
+// already live keeps the existing token (idempotent, link stays stable).
+export async function setCheckShare(
+  userId: string,
+  checkId: string,
+  enabled: boolean,
+): Promise<{ ok: boolean; enabled: boolean; token: string | null }> {
+  if (!isDatabaseConfigured() || !checkId) return { ok: false, enabled: false, token: null };
+  const uid = norm(userId);
+  const s = getSupabaseAdminClient();
+  const { data } = await s.from("v_checks" as never)
+    .select("id, status, share_token, share_enabled")
+    .eq("id", checkId).eq("user_id", uid).maybeSingle();
+  const row = data as unknown as { status: string; share_token: string | null; share_enabled: boolean } | null;
+  if (!row) return { ok: false, enabled: false, token: null };
+  if (enabled && row.status !== "complete") return { ok: false, enabled: false, token: null };
+
+  // Rotate on every off→on transition; keep the token only when it's already live.
+  const token = enabled
+    ? (row.share_enabled && row.share_token ? row.share_token : newShareToken())
+    : row.share_token;
+  const { error } = await s.from("v_checks" as never)
+    .update({ share_enabled: enabled, share_token: token } as never)
+    .eq("id", checkId).eq("user_id", uid);
+  if (error) { console.error("setCheckShare:", error); return { ok: false, enabled: row.share_enabled, token: null }; }
+  return { ok: true, enabled, token: enabled ? token : null };
+}
+
+// PUBLIC read — NOT user-scoped. Returns a report ONLY when it is explicitly shared
+// and complete. The admin client bypasses row scoping, so the WHERE clause here is the
+// entire access gate: an empty/short token, a disabled share, or a non-complete check
+// all resolve to null. Never selects or returns user_id.
+export async function getSharedCheck(token: string): Promise<PublicCheck | null> {
+  if (!isDatabaseConfigured()) return null;
+  const t = (token || "").trim();
+  if (t.length < 16) return null; // guard: never match on a blank/short token
+  const s = getSupabaseAdminClient();
+  const { data } = await s.from("v_checks" as never)
+    .select("output_type, title, result, model, created_at")
+    .eq("share_token", t).eq("share_enabled", true).eq("status", "complete").maybeSingle();
+  const row = data as unknown as PublicCheck | null;
+  if (!row || !row.result) return null;
+  return { output_type: row.output_type, title: row.title, result: row.result, model: row.model, created_at: row.created_at };
 }

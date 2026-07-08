@@ -8,6 +8,7 @@ import { entitlements } from "@/lib/v-entitlements";
 import { getCalibrationForCheck, resolveCalibrationForTest, calibrationSummary } from "@/lib/v-calibration";
 import { CheckReport } from "./check-report";
 import { CalibrationPanel } from "./calibration-panel";
+import { ShareToggle } from "./share-toggle";
 import { AutoRefresh } from "../auto-refresh";
 
 export const metadata: Metadata = { title: "AI output check" };
@@ -107,10 +108,15 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
     />
   );
 
+  const shareUrl = check.share_enabled && check.share_token ? `https://vraelis.com/r/c/${check.share_token}` : null;
+
   return (
     <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <BackLink />
       <CheckReport result={check.result} title={check.title} createdAt={check.created_at} calibrationSlot={calibrationSlot} />
+      <div style={{ marginTop: 24 }}>
+        <ShareToggle checkId={id} initialEnabled={!!check.share_enabled} initialUrl={shareUrl} />
+      </div>
     </div>
   );
 }
