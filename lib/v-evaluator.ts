@@ -129,10 +129,20 @@ const EvalSchema = z.object({
     candidate: z.string(),                            // version letter this flag is about
     span: z.string(),                                 // EXACT problem text, copied verbatim
     issue: z.string(),                                // dismissive|overpromise|confusing|risky|inaccurate|tone|other
-    severity: z.string(),                             // low|medium|high
+    severity: z.string(),                             // low|medium|high (DISCARDED — severity is computed)
     why: z.string(),
     fix: z.string(),                                  // concrete rewrite of just that span
   })),
+  // Mandatory-consideration pass: code pre-finds every absolute/universal claim and the model
+  // MUST return a backed/unbacked verdict on each. This closes the false-negative hole where
+  // the open-ended flag pass simply failed to notice an absolute (recall wobbled run to run).
+  absolute_verdicts: z.array(z.object({
+    candidate: z.string(),
+    claim: z.string(),                                // the absolute claim, copied verbatim
+    backed: z.boolean(),                              // does the surrounding copy substantiate it?
+    why: z.string(),
+    fix: z.string(),
+  })).optional(),
   recommendation: z.string(),
 });
 
@@ -145,24 +155,38 @@ export function prepareCandidates(input: EvalInput): PreparedCandidate[] {
     .map((text, i) => ({ index: i, label: LETTERS[i], text, normText: norm(text) }));
 }
 
-// Absolute / universal claim vocabulary. An unbacked absolute is the one thing we can rate
-// deterministically from text alone.
+// Absolute / universal claim vocabulary. Code finds these; the model verdicts each.
 const ABSOLUTE_RE = /\b(any|anything|anyone|every|everything|everyone|all|always|never|none|guarantee|guaranteed|guarantees|instant|instantly|unlimited|100%)\b/i;
 
-// Compute a flag's severity from its content. The model's own severity guess is DISCARDED:
-// the 10x stability test showed it flaps run-to-run (medium x8 / high x2 on the same line),
-// while the span it flags and the issue it assigns are far more stable. Same compute-don't-
-// assert discipline as the recommended version.
-//
-// SAFETY PROPERTY (structural, not a convention): this is only ever called from the flags
-// loop below, on a span the MODEL already surfaced as a problem. It never scans free text, so
-// a benign absolute the model didn't flag ("all rights reserved", "cancel anytime") is never
-// seen. A full-text scan of real landing pages hits ~15 absolute spans of which ~1 is a real
-// defect; gating on model-flagged spans only is what keeps that false-positive rate at zero.
-function deriveSeverity(span: string, issue: FlagIssue): FlagSeverity {
-  if (ABSOLUTE_RE.test(span)) return "high";     // unbacked absolute on a flagged span -> HIGH
-  if (issue === "tone") return "low";            // a matter of voice is LOW at most
-  return "medium";                               // every other flagged, non-absolute problem
+// Deterministic half of the mandatory-consideration pass: split each candidate into sentence-
+// ish spans and return every one that makes an absolute/universal claim, VERBATIM and bounded.
+// Because CODE finds these, the model can never fail to LOOK at an absolute (its recall on
+// open-ended discovery wobbles run to run; a forced verdict on a named span is far steadier).
+// It is not a full-text severity scanner: a found claim only becomes HIGH if the model then
+// verdicts it unbacked, so a benign backed absolute ("we never sell your data") clears.
+function findAbsoluteClaims(prepared: PreparedCandidate[]): { label: string; claim: string }[] {
+  const out: { label: string; claim: string }[] = [];
+  const seen = new Set<string>();
+  for (const p of prepared) {
+    const sentences = p.text.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter((s) => s.length >= 6 && s.length <= 240);
+    for (const s of sentences) {
+      if (!ABSOLUTE_RE.test(s)) continue;
+      const k = `${p.label}|${s.toLowerCase()}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ label: p.label, claim: s });
+      if (out.length >= 12) return out; // hard cap across all candidates, bounds the prompt
+    }
+  }
+  return out;
+}
+
+// Severity for an OPEN-ENDED flag (a non-absolute problem the model surfaced). The model's own
+// severity guess is DISCARDED (it flapped run-to-run: medium x8 / high x2 on the same line). A
+// matter of voice is LOW, every other flagged problem is MEDIUM. HIGH is reserved for unbacked
+// absolutes and is produced by the verdict pass, never here, so it can't depend on a flappy label.
+function deriveSeverity(issue: FlagIssue): FlagSeverity {
+  return issue === "tone" ? "low" : "medium";
 }
 
 // Pure, exported so the honesty enforcement is independently testable without a key:
@@ -193,8 +217,30 @@ export function finalizeEvaluation(
     return { index: p.index, label: p.label, text: p.text, overall, scores, summary: (rc?.summary || "").trim().slice(0, 240) };
   });
 
-  // A flagged span survives only if it is a verbatim substring of the candidate it flags.
   const flags: LineFlag[] = [];
+  const overlaps = (label: string, span: string) =>
+    flags.some((h) => h.candidateLabel === label && (norm(h.span).includes(norm(span)) || norm(span).includes(norm(h.span))));
+
+  // 1) Mandatory absolute-claim gate, FAIL-CLOSED. Code finds every absolute claim; the model
+  //    must affirmatively verdict it `backed` or it becomes a HIGH flag. This closes the
+  //    false-negative hole (open-ended recall wobbled: a real absolute went unflagged 2/10).
+  const verdicts = raw.absolute_verdicts || [];
+  for (const { label, claim: sentence } of findAbsoluteClaims(prepared)) {
+    const p = prepByLabel.get(label);
+    if (!p) continue;
+    const v = verdicts.find((x) => (x.candidate || "").trim().toUpperCase() === label && x.claim && norm(sentence).includes(norm(x.claim)));
+    if (v && v.backed === true) continue;                 // model affirmatively cleared it
+    // tightest verbatim span: the model's claim if it truly appears in the candidate, else the sentence
+    const span = (v && v.claim && p.normText.includes(norm(v.claim)) ? v.claim : sentence).trim().slice(0, 400);
+    if (overlaps(label, span)) continue;                  // already recorded this absolute
+    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span, issue: "overpromise", severity: "high",
+      why: ((v?.why || "").trim() || "This makes an absolute claim the copy does not back up.").slice(0, 300),
+      fix: ((v?.fix || "").trim() || "Qualify the claim or name what backs it.").slice(0, 400) });
+  }
+
+  // 2) Open-ended flags (non-absolute problems), computed to MEDIUM/LOW. A span survives only if
+  //    it is verbatim in its candidate; one that overlaps a HIGH absolute above is the same defect
+  //    and is skipped (keep the HIGH).
   for (const f of raw.flags || []) {
     const p = prepByLabel.get((f.candidate || "").trim().toUpperCase());
     if (!p) continue;
@@ -203,9 +249,9 @@ export function finalizeEvaluation(
     const why = (f.why || "").trim();
     const fix = (f.fix || "").trim();
     if (!why || !fix) continue;
+    if (overlaps(p.label, span)) continue;                 // same span as a HIGH absolute -> skip
     const issue = (ISSUES as string[]).includes((f.issue || "").trim().toLowerCase()) ? ((f.issue || "").trim().toLowerCase() as FlagIssue) : "other";
-    const severity = deriveSeverity(span, issue); // COMPUTED, not the model's asserted f.severity
-    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity, why: why.slice(0, 300), fix: fix.slice(0, 400) });
+    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity: deriveSeverity(issue), why: why.slice(0, 300), fix: fix.slice(0, 400) });
   }
 
   // Recommended version is COMPUTED from the scores, never the model's word. An exact
@@ -251,6 +297,10 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
   const typeLabel = outputType.replace(/_/g, " ");
   const multi = prepared.length > 1;
 
+  // Deterministic pre-scan: every absolute/universal claim, found by code, that the model MUST verdict.
+  const absClaims = findAbsoluteClaims(prepared);
+  const absList = absClaims.map((a) => `- [${a.label}] "${a.claim}"`).join("\n");
+
   const published = input.context === "published";
   const PROMPT =
     `You are an evaluation engine reviewing AI-generated ${typeLabel} ${published ? "that is already published and live in production" : "for the team about to ship it"}. Give an honest, specific assessment. You are an AI assessment, not a human judgment and not a guarantee.\n\n` +
@@ -260,6 +310,9 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     `Return:\n` +
     `- candidates: for EACH version, its label (e.g. "A"), a one-line summary, and a score for EVERY criterion above (exact key) with a one-line note.\n` +
     `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), why (one line), and fix (a concrete rewrite of just that span).\n` +
+    (absClaims.length
+      ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (copied verbatim), backed (true ONLY if the surrounding copy substantiates it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), why (one line), fix (a concrete rewrite). Judge honestly and independently: "works with every major tool: Slack, Gmail, and Notion" is backed; "we never sell your data" is a policy statement and is backed; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
+      : "") +
     (multi
       ? `- recommendation: one plain sentence naming which version to ship and why.\n\n`
       : published
