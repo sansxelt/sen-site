@@ -32,29 +32,28 @@ jobs:
         env:
           VRAELIS_API_KEY: \${{ secrets.VRAELIS_API_KEY }}`;
 
-const GATE_NODE = `// scripts/check-output.mjs -- block the deploy when output is below the bar
+const GATE_NODE = `// scripts/check-output.mjs -- fail the deploy when the output has a high-severity flag
 const res = await fetch("https://vraelis.com/api/v1/check", {
   method: "POST",
   headers: { "content-type": "application/json", "x-api-key": process.env.VRAELIS_API_KEY },
   body: JSON.stringify({
     output_type: "support_reply",
     candidates: [generatedReply],                    // the output you're about to ship
-    threshold: { overall: 75, criteria: { accuracy: 80 } },
+    // context: "published",         // for copy that is already live, not pre-ship
+    // threshold: { overall: 75 },   // optional: ALSO require a score floor
   }),
 });
 const out = await res.json();
 if (!res.ok) { console.error("check error:", out.error && out.error.message); process.exit(1); }
 if (!out.passed) {
-  console.error("Blocked: version " + out.gate.evaluated.label + " is below the bar.");
-  out.gate.criteria.filter(c => !c.passed)
-    .forEach(c => console.error("  " + c.label + ": " + c.score + " < " + c.min));
-  out.flags.filter(f => f.severity === "high")
-    .forEach(f => console.error("  fix: " + f.fix));
+  console.error("Blocked: " + out.gate.high_flags.length + " high-severity flag(s):");
+  out.gate.high_flags.forEach(f => console.error("  " + JSON.stringify(f.span)));
+  out.flags.filter(f => f.severity === "high").forEach(f => console.error("  fix: " + f.fix));
   process.exit(1);
 }
 console.log("passed the quality gate");`;
 
-const GATE_PY = `# check_output.py -- fail CI when generated output is below the bar
+const GATE_PY = `# check_output.py -- fail CI when the output has a high-severity flag
 import os, sys, requests
 
 r = requests.post(
@@ -63,7 +62,7 @@ r = requests.post(
     json={
         "output_type": "marketing_copy",
         "candidates": [generated_copy],
-        "threshold": {"overall": 75},
+        # "threshold": {"overall": 75},   # optional: ALSO require a score floor
     },
 )
 data = r.json()
@@ -71,9 +70,8 @@ if not r.ok:
     print("check error:", data.get("error", {}).get("message")); sys.exit(1)
 if not data["passed"]:
     print("Blocked by the Vraelis quality gate:")
-    for c in data["gate"]["criteria"]:
-        if not c["passed"]:
-            print("  " + c["label"] + ": " + str(c["score"]) + " < " + str(c["min"]))
+    for f in data["gate"]["high_flags"]:
+        print("  high-severity: " + f["span"])
     sys.exit(1)
 print("passed")`;
 
@@ -98,7 +96,7 @@ export default function DevelopersPage() {
           <p className="eyebrow" style={{ justifyContent: "center" }}>Quality gate for AI output</p>
           <h1 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 16, maxWidth: 880, margin: "0 auto 16px" }}>The <span className="em">quality gate</span> for your AI output.</h1>
           <p className="lead-copy" style={{ margin: "0 auto 14px", textAlign: "center", maxWidth: 720 }}>POST the output your app generates and get a structured check back in one call: <strong style={{ color: "var(--fg-1)" }}>per-criterion scores</strong>, the version to ship, and <strong style={{ color: "var(--fg-1)" }}>line-level flags with fixes</strong>. Set a <strong style={{ color: "var(--fg-1)" }}>threshold</strong> and it returns <code style={{ fontFamily: "var(--font-code, monospace)" }}>passed: true|false</code>, so you can catch bad output in CI before it ships. Calibrated against real humans, the part an observability tool structurally can&apos;t give you.</p>
-          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>POST /api/v1/check + threshold → passed + scores + flags → block the deploy or apply fixes → (optional) validate on real people</p>
+          <p style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)", margin: "0 auto 22px" }}>POST /api/v1/check → passed fails on a high-severity flag → block the deploy or apply the line-level fix → (optional) validate on real people</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/app/sandbox" className="btn btn--lg">Open sandbox console</Link>
             <Link href="/schemas/decision-package-v2.json" className="btn btn--ghost btn--lg">Decision Package schema</Link>

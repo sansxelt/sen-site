@@ -48,11 +48,13 @@ of an output, and it returns a score per criterion (for a support reply: empathy
 tone, accuracy), the version to ship, and line-level flags that quote the exact span and give
 a concrete fix. Takes about 20 seconds.
 
-The obvious objection is that this is an LLM grading an LLM. That's fair. What makes it useful
-in practice is that it's a fixed rubric applied the same way every time, and the output is a
-specific edit ("this line promises an instant refund you can't deliver, say the real 5 to 10
-day timeline") rather than a vibe. There's also an optional layer that routes an output to
-real people when the decision actually matters.
+The obvious objection is that this is an LLM grading an LLM. That's fair, and I won't pretend
+it's perfectly repeatable: run the same copy twice and the scores move a little and a
+borderline flag can shift severity. What makes it useful anyway is that it runs a fixed rubric
+with a pinned model and returns a specific edit ("this line promises an instant refund you
+can't deliver, say the real 5 to 10 day timeline") instead of a vibe, and there's an optional
+layer that routes an output to real people when the decision actually matters. I'm measuring
+its run-to-run consistency and working it down; happy to share the numbers if you ask.
 
 There's a developer API with a threshold mode, so you can run it as a CI gate: POST an output,
 get back passed true/false, and fail the build if it scores below your bar. Same call takes a
@@ -133,9 +135,10 @@ promise and a second angry ticket.
 
 The fix it suggests: state the real 5 to 10 day timeline and commit to confirming.
 
-4/ It's a fixed rubric applied the same way every time, so the output is a specific edit, not
-a mood. Yes, it's an LLM grading an LLM. That's why there's also an optional layer that routes
-an output to real people when the decision actually matters.
+4/ It runs a fixed rubric with a pinned model and returns a specific edit, not a mood, and it
+quotes the exact line. It's an LLM grading an LLM, so it isn't perfectly repeatable and I don't
+claim it is; I measure the run-to-run consistency and publish it. For the calls that matter
+there's an optional layer that routes the output to real people.
 
 5/ For teams: there's an API with a threshold. POST an output, get back passed true/false, and
 fail your build when AI output scores below the bar. One call takes a batch for a whole
