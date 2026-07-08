@@ -15,7 +15,7 @@
 
 import { apiAuth } from "../_auth";
 import { apiError } from "../_lib";
-import { runCheck, runChecks, reconcileStuckChecks, CHECK_CREDITS, MAX_BATCH, type RunCheckInput, type RunCheckResult, type VCheck } from "@/lib/v-checks";
+import { runCheck, runChecks, reconcileStuckChecks, setCheckShare, CHECK_CREDITS, MAX_BATCH, type RunCheckInput, type RunCheckResult, type VCheck } from "@/lib/v-checks";
 import { OUTPUT_TYPES, type EvalResult } from "@/lib/v-evaluator";
 import { parseThreshold, evaluateGate, type ThresholdSpec, type Gate } from "@/lib/v-gate";
 
@@ -104,7 +104,19 @@ async function handleSingle(userId: string, body: Record<string, unknown>): Prom
   if (!res) return apiError("internal_error", "The check did not complete and you were not charged. Try again shortly.", 503);
 
   const gate = threshold ? evaluateGate(res, threshold) : null;
-  return Response.json(renderCheck(r.check, res, gate));
+  const out = renderCheck(r.check, res, gate);
+
+  // Opt-in public share link: `share: true` enables the read-only /r/c/<token> report and
+  // returns its URL. Runs AFTER the charge + eval and only touches the share flag, so it
+  // never affects billing. Owner-scoped (setCheckShare filters on userId); a share failure
+  // is non-fatal (the check already succeeded and was charged).
+  if (body.share === true) {
+    try {
+      const sh = await setCheckShare(userId, r.check.id, true);
+      if (sh.ok && sh.token) out.report_url = `https://vraelis.com/r/c/${sh.token}`;
+    } catch (e) { console.error("check share:", e); }
+  }
+  return Response.json(out);
 }
 
 type ParsedItem =

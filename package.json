@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "outreach": "tsx scripts/outreach.ts",
     "desktop:dev": "npm --prefix desktop run tauri dev",
     "desktop:build": "npm --prefix desktop run tauri build",
     "desktop:keygen": "npm --prefix desktop run tauri signer generate -- -w VRAELIS-updater.key"
@@ -51,6 +52,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }
