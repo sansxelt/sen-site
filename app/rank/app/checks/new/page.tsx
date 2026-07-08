@@ -49,7 +49,7 @@ export default function NewCheckPage() {
       if (d.title) setTitle(d.title);
       setPrefilled(true);
       /* eslint-enable react-hooks/set-state-in-effect */
-    } catch { /* no storage / bad draft — fall through to the empty form */ }
+    } catch { /* no storage / bad draft, fall through to the empty form */ }
   }, []);
 
   function setCandidate(i: number, v: string) { setCandidates((c) => c.map((x, j) => (j === i ? v : x))); }
@@ -182,7 +182,7 @@ export default function NewCheckPage() {
         <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || filled.length < 1} style={{ opacity: busy || filled.length < 1 ? 0.6 : 1 }}>
           {busy ? "Starting…" : "Run check"} {!busy ? <span aria-hidden>→</span> : null}
         </button>
-        <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>1 credit · you&apos;re not charged if it fails</span>
+        <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>1 credit | you&apos;re not charged if it fails</span>
       </div>
     </div>
   );

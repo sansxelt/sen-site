@@ -108,7 +108,7 @@ export default function DevelopersPage() {
         </div>
       </section>
 
-      {/* CI/CD quality gate — the reposition, up front with copy-paste snippets */}
+      {/* CI/CD quality gate, the reposition, up front with copy-paste snippets */}
       <section id="quality-gate" className="section" style={{ borderBottom: "1px solid var(--line-1)" }}>
         <div className="wrap" style={{ maxWidth: 820 }}>
           <div className="sec-head" style={{ marginBottom: 20 }}>
@@ -118,15 +118,15 @@ export default function DevelopersPage() {
           </div>
           <div style={{ display: "grid", gap: 18 }}>
             <div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>1 · GitHub Action</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>1 | GitHub Action</div>
               <Code label="yaml">{GATE_YML}</Code>
             </div>
             <div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>2 · Node pre-deploy script</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>2 | Node pre-deploy script</div>
               <Code label="node">{GATE_NODE}</Code>
             </div>
             <div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>or · Python pre-deploy script</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>or | Python pre-deploy script</div>
               <Code label="python">{GATE_PY}</Code>
             </div>
           </div>
@@ -297,7 +297,7 @@ export default function DevelopersPage() {
       {/* SDK starter */}
       <section id="sdk" className="section">
         <div className="wrap" style={{ maxWidth: 760 }}>
-          <p className="eyebrow">TypeScript SDK <span className="pill" style={{ marginLeft: 8, fontSize: 10.5 }}>SDK starter · coming soon to npm</span></p>
+          <p className="eyebrow">TypeScript SDK <span className="pill" style={{ marginLeft: 8, fontSize: 10.5 }}>SDK starter | coming soon to npm</span></p>
           <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>A typed client for the whole flow.</h2>
           <p className="lead-copy" style={{ marginBottom: 14 }}>Create sandbox evaluations, fetch typed Decision Packages, export results, and verify webhooks, with TypeScript types that match the JSON Schema. The SDK starter is <strong style={{ color: "var(--fg-1)" }}>available in the repository</strong> today and <strong style={{ color: "var(--fg-1)" }}>not on npm yet</strong>.</p>
           <p style={{ fontSize: 13, color: "var(--fg-4)", marginBottom: 16, lineHeight: 1.6 }}>Methods: <code style={{ fontFamily: "var(--font-code, monospace)" }}>evaluations.create / get / exportJson / exportCsv</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>credits.get</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>webhooks.verifySignature</code>. Coming soon: <code style={{ fontFamily: "var(--font-code, monospace)" }}>npm install @vraelis/sdk</code>. Full SDK and curl examples live in the signed-in sandbox console.</p>

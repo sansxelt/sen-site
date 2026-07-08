@@ -38,16 +38,16 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>{workspaceName}</div>
-          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>{billing.used} paid seat{billing.used === 1 ? "" : "s"}{billing.limit != null ? ` of ${billing.limit}` : ""} · Admin, Editor, Viewer are paid. <strong style={{ color: "var(--fg-2)" }}>Client viewers are free.</strong></div>
+          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>{billing.used} paid seat{billing.used === 1 ? "" : "s"}{billing.limit != null ? ` of ${billing.limit}` : ""} | Admin, Editor, Viewer are paid. <strong style={{ color: "var(--fg-2)" }}>Client viewers are free.</strong></div>
         </div>
         {(billing.hasSubscription || billing.status) ? <span className="pill" style={{ fontSize: 10.5, color: payIssue ? "var(--money)" : "var(--acc-deep)" }}>{statusLabel(billing.status)}</span> : null}
       </div>
 
       {!billing.configured ? (
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing isn&apos;t configured yet — seat counts are informational. Client viewers are free.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing isn&apos;t configured yet, seat counts are informational. Client viewers are free.</p>
       ) : billing.hasSubscription ? (
         <>
-          <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "12px 0 0", lineHeight: 1.6 }}>Interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong>{billing.periodEnd ? ` · Next renewal ${new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}` : ""} · {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}.</p>
+          <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "12px 0 0", lineHeight: 1.6 }}>Interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "-"}</strong>{billing.periodEnd ? ` | Next renewal ${new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}` : ""} | {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}.</p>
           {billing.overLimit && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "8px 0 0" }}>You&apos;re over your seat limit. Existing members keep access.</p>}
           {payIssue && (
             <div style={{ border: "1px solid var(--money)", background: "color-mix(in srgb, var(--money) 7%, transparent)", borderRadius: "var(--r-sm)", padding: "11px 13px", margin: "12px 0 0" }}>
@@ -71,8 +71,8 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
               {invoices.map((inv, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 13px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 500 }}>{dateLabel(inv.date)} · {money(inv.status === "paid" ? inv.amountPaid : inv.amountDue, inv.currency)}</div>
-                    <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 1 }}>{INV_STATUS[inv.status] ?? inv.status}{inv.periodStart && inv.periodEnd ? ` · ${dateLabel(inv.periodStart)}–${dateLabel(inv.periodEnd)}` : ""}</div>
+                    <div style={{ fontSize: 13, color: "var(--fg-1)", fontWeight: 500 }}>{dateLabel(inv.date)} | {money(inv.status === "paid" ? inv.amountPaid : inv.amountDue, inv.currency)}</div>
+                    <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 1 }}>{INV_STATUS[inv.status] ?? inv.status}{inv.periodStart && inv.periodEnd ? ` | ${dateLabel(inv.periodStart)}–${dateLabel(inv.periodEnd)}` : ""}</div>
                   </div>
                   {inv.hostedUrl ? <button onClick={() => openInvoice(inv)} className="btn btn--ghost" style={{ padding: "5px 11px", fontSize: 12 }}>View invoice</button> : null}
                 </div>
@@ -88,7 +88,7 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing hasn&apos;t been set up by the workspace owner yet.</p>
       )}
       {err && <p style={{ fontSize: 12.5, color: "var(--money)", margin: "10px 0 0" }}>{err}</p>}
-      <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Payments are securely processed by Stripe. Your complete billing overview — plan, seats, renewal dates, and invoices — stays here in Vraelis. The secure billing portal is used only to update payment methods, tax settings, or billing address.</p>
+      <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Payments are securely processed by Stripe. Your complete billing overview, plan, seats, renewal dates, and invoices, stays here in Vraelis. The secure billing portal is used only to update payment methods, tax settings, or billing address.</p>
     </div>
   );
 }

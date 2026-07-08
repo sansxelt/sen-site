@@ -13,10 +13,10 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const data = await getSharedReport(token);
   // Unknown/disabled → generic card + generic copy (no report-specific preview).
   if (!data || (data.test.status !== "active" && data.test.status !== "complete")) {
-    return ogMeta({ title: "Decision record", description: "A structured Decision Package from quality-filtered human judgment — the recommended option, confidence, and signal quality.", path: `/r/${token}`, index: false });
+    return ogMeta({ title: "Decision record", description: "A structured Decision Package from quality-filtered human judgment, the recommended option, confidence, and signal quality.", path: `/r/${token}`, index: false });
   }
   const { test, report } = data;
-  let description = "A structured Decision Package from quality-filtered human judgment — the recommended option, confidence, and signal quality.";
+  let description = "A structured Decision Package from quality-filtered human judgment, the recommended option, confidence, and signal quality.";
   if (report && test.status === "complete") {
     const r = report.results;
     const win = r.winner_option_id ? r.ranked.find((x) => x.id === r.winner_option_id) : null;
@@ -122,7 +122,7 @@ export default async function PublicReport({ params }: { params: Promise<{ token
   }
 
   // Complete with report
-  if (!report) return <Unavailable />; // unreachable (handled above) — satisfies the type checker
+  if (!report) return <Unavailable />; // unreachable (handled above), satisfies the type checker
   const judgePool = await judgePoolStats(test.id);
   return (
     <Frame>

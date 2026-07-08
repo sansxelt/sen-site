@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 const loadShared = cache((token: string) => getSharedCheck(token));
 
 // Public, read-only AI output check report, shared by its owner. Viewable WITHOUT an
-// account, but ONLY when the owner has explicitly enabled sharing — getSharedCheck is
+// account, but ONLY when the owner has explicitly enabled sharing, getSharedCheck is
 // gated on (unguessable token AND share_enabled AND status=complete) and returns no owner
 // identity. Deliberately noindex: this is user content meant for direct sharing, not search.
 
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const title = check.title || `${label} check`;
   const rec = check.result.recommendation
     || `An AI output check on a ${label.toLowerCase()}: per-criterion scores, the version to ship, and line-level flags with fixes.`;
-  return ogMeta({ title: `${title} · checked by Vraelis`, description: rec.slice(0, 200), path: `/r/c/${token}`, index: false });
+  return ogMeta({ title: `${title} | checked by Vraelis`, description: rec.slice(0, 200), path: `/r/c/${token}`, index: false });
 }
 
 function TopBar({ pill }: { pill: string }) {
@@ -68,11 +68,11 @@ export default async function SharedCheck({ params }: { params: Promise<{ token:
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-2)" }}>
       <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(28px, 4vw, 52px)", paddingBottom: 72 }}>
-        <TopBar pill="Shared report · checked by Vraelis" />
+        <TopBar pill="Shared report | checked by Vraelis" />
 
         <CheckReport result={check.result} title={check.title} createdAt={check.created_at} />
 
-        {/* CTA — the loop: a shared report sends its viewer to run their own. */}
+        {/* CTA, the loop: a shared report sends its viewer to run their own. */}
         <div style={{ textAlign: "center", marginTop: 40, paddingTop: 28, borderTop: "1px solid var(--line-1)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginBottom: 6 }}>Check your own AI output</div>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 auto 16px", maxWidth: 440 }}>

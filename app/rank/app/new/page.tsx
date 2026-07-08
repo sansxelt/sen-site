@@ -14,7 +14,7 @@ const AUDIENCES: [string, string][] = [
   ["general", "General"], ["gamers", "Gamers"], ["creators", "Creators"], ["designers", "Designers"],
   ["gen_z", "Gen Z"], ["shoppers", "Shoppers"], ["entrepreneurs", "Entrepreneurs"],
 ];
-// Evaluation workflows — each prefills the brief (title/question, criteria context),
+// Evaluation workflows, each prefills the brief (title/question, criteria context),
 // the default candidate mode (text vs image), category, a suggested signal target,
 // and a one-line description. "AI output evaluation" is the primary/default workflow.
 type Workflow = { name: string; desc: string; title: string; category: string; context: string; mode: "text" | "image"; votes: number };
@@ -30,8 +30,8 @@ const WORKFLOWS: Workflow[] = [
 // Sample model outputs so a new user can run a real eval without thinking up their own.
 // Fills the Response A / Response B text candidates for the "AI output evaluation" flow.
 const EXAMPLE_RESPONSES = [
-  "Yes, you can cancel anytime. Go to Settings and click Cancel — your plan ends immediately and you won't be charged again. Refunds are issued automatically for any unused time.",
-  "Yes — you can cancel anytime from Settings → Billing → Cancel plan. Your access continues until the end of the current billing period, and you won't be charged again after that. We don't auto-refund unused time, but reach out if your situation is unusual and we'll take a look.",
+  "Yes, you can cancel anytime. Go to Settings and click Cancel, your plan ends immediately and you won't be charged again. Refunds are issued automatically for any unused time.",
+  "Yes, you can cancel anytime from Settings → Billing → Cancel plan. Your access continues until the end of the current billing period, and you won't be charged again after that. We don't auto-refund unused time, but reach out if your situation is unusual and we'll take a look.",
 ];
 
 const MAX_FILE_MB = 15;
@@ -187,7 +187,7 @@ export default function NewTest() {
         <div>
           <p className="eyebrow">New test</p>
           <h1 className="display">Test your AI content with real people</h1>
-          <p>Submit the versions your app generated — responses, images, copy, or product directions — and get real-person feedback on which one wins. You&apos;ll learn what works, why, and whether the result is ready to act on.</p>
+          <p>Submit the versions your app generated, responses, images, copy, or product directions, and get real-person feedback on which one wins. You&apos;ll learn what works, why, and whether the result is ready to act on.</p>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <div className="stat" style={{ padding: "12px 18px" }}><div className="stat__l">Plan</div><div className="stat__v" style={{ fontSize: 18 }}>{planName}</div></div>
@@ -195,7 +195,7 @@ export default function NewTest() {
         </div>
       </div>
 
-      {/* Workflow selector — pick the kind of evaluation run */}
+      {/* Workflow selector, pick the kind of evaluation run */}
       <div style={{ marginBottom: 28 }}>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Choose a workflow</div>
         <div className="tile-grid cols-3">
@@ -222,7 +222,7 @@ export default function NewTest() {
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 320px", gap: "clamp(20px, 3vw, 40px)", alignItems: "start" }} className="cols-stack">
         {/* ── form ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-          {/* Step 1 — the brief */}
+          {/* Step 1, the brief */}
           <section>
             <Step n={1} title="What are you testing?" hint="What you want feedback on, and the criteria people should apply." />
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -244,10 +244,10 @@ export default function NewTest() {
             </div>
           </section>
 
-          {/* Step 2 — candidate outputs */}
+          {/* Step 2, candidate outputs */}
           <section>
             <Step n={2} title="Add your AI-generated content" hint={`2–${maxOptions} versions. People compare these side by side.`} />
-            {/* candidate-type segmented control — text first */}
+            {/* candidate-type segmented control, text first */}
             <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid var(--line-2)", marginBottom: 14 }}>
               {([["text", "Text outputs"], ["image", "Images / creative"]] as ["text" | "image", string][]).map(([m, label]) => (
                 <button key={m} type="button" onClick={() => setMode(m)} style={{ cursor: "pointer", padding: "6px 14px", borderRadius: "calc(var(--r-sm) - 3px)", border: "none", fontSize: 13, fontWeight: 600, background: mode === m ? "var(--bg-1)" : "transparent", color: mode === m ? "var(--fg-1)" : "var(--fg-4)", boxShadow: mode === m ? "var(--shadow-sm)" : "none" }}>{label}</button>
@@ -271,7 +271,7 @@ export default function NewTest() {
                   {texts.length < maxOptions && <button onClick={() => setTexts((a) => [...a, ""])} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>+ Add candidate</button>}
                   <button onClick={() => { setTexts([EXAMPLE_RESPONSES[0], EXAMPLE_RESPONSES[1]]); if (!title.trim()) setTitle("Which version will people prefer?"); if (!context.trim()) setContext("Example: compare two support-agent responses for helpfulness, accuracy, and clarity."); }} className="btn btn--ghost" style={{ alignSelf: "flex-start" }}>Use example AI responses</button>
                 </div>
-                <div style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.5 }}>Candidates are concise text — model responses, prompts, or copy, up to 600 characters each. New here? Tap <strong style={{ color: "var(--fg-3)" }}>Use example AI responses</strong> to try a real eval in seconds. For longer artifacts, link to them or use the images / creative tab.</div>
+                <div style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.5 }}>Candidates are concise text, model responses, prompts, or copy, up to 600 characters each. New here? Tap <strong style={{ color: "var(--fg-3)" }}>Use example AI responses</strong> to try a real eval in seconds. For longer artifacts, link to them or use the images / creative tab.</div>
               </div>
             ) : (
               <>
@@ -304,7 +304,7 @@ export default function NewTest() {
             )}
           </section>
 
-          {/* Step 3 — signal target */}
+          {/* Step 3, signal target */}
           <section>
             <Step n={3} title="Choose how much feedback to collect" hint="How many qualified responses to collect." />
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
@@ -328,7 +328,7 @@ export default function NewTest() {
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 qualified judgment = 1 credit</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{ctx.signedIn && balance < maxVotes ? <>Your balance {balance.toLocaleString()}. <Link href="/app/credits" style={{ color: "var(--acc-deep)" }}>Add credits</Link></> : <>Plan max {maxVotes.toLocaleString()}. <Link href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</Link></>}</span>
             </div>
-            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 8, lineHeight: 1.5 }}>Higher targets improve confidence and readiness — a starter check (10–25) is directional only (good for a first run, not high-confidence), ~50 for a gut read, ~150 for most evaluations, 500+ before a big call. Vraelis tells you whether the signal is <strong style={{ color: "var(--fg-3)" }}>ready to act on</strong>, not just which candidate is leading. You&apos;re only charged for judgments that pass quality filtering, and unused credits are refunded.</p>
+            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 8, lineHeight: 1.5 }}>Higher targets improve confidence and readiness, a starter check (10–25) is directional only (good for a first run, not high-confidence), ~50 for a gut read, ~150 for most evaluations, 500+ before a big call. Vraelis tells you whether the signal is <strong style={{ color: "var(--fg-3)" }}>ready to act on</strong>, not just which candidate is leading. You&apos;re only charged for judgments that pass quality filtering, and unused credits are refunded.</p>
           </section>
         </div>
 
@@ -346,7 +346,7 @@ export default function NewTest() {
               <span style={{ fontSize: 13, fontWeight: 700, color: toneColor }}>{status.tone === "ok" ? "✓ " : "• "}{status.t}</span>
               {status.cta && <Link href={status.cta.href} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>{status.cta.label}</Link>}
             </div>
-            {atTestCap && <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: 0, lineHeight: 1.5 }}>This is a monthly run limit — it resets at the start of next month. Completed and closed runs still count, so finishing your current run won&apos;t free up a slot. <Link href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</Link> to run more now.</p>}
+            {atTestCap && <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: 0, lineHeight: 1.5 }}>This is a monthly run limit, it resets at the start of next month. Completed and closed runs still count, so finishing your current run won&apos;t free up a slot. <Link href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</Link> to run more now.</p>}
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 12 }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Output: Decision Package</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -356,7 +356,7 @@ export default function NewTest() {
               </div>
             </div>
             <p style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.55, margin: 0 }}>
-              Real people read what you submit. Don’t include personal data — names, emails, phone numbers, or anything that identifies your users.
+              Real people read what you submit. Don’t include personal data, names, emails, phone numbers, or anything that identifies your users.
             </p>
             {error && <p style={{ color: "var(--err)", fontSize: 13 }}>{error}</p>}
             <button onClick={submit} disabled={busy || uploading > 0 || !ready} className="btn btn--lg" style={{ justifyContent: "center", opacity: busy || uploading > 0 || !ready ? 0.55 : 1 }}>

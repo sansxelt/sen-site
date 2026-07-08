@@ -164,7 +164,7 @@ export default async function Dashboard() {
             </div>
           ) : (
             <div className="card" style={{ marginBottom: 28, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", background: "var(--bg-2)" }}>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Group related workflows into a decision program — a campaign, a redesign, a client.</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Group related workflows into a decision program, a campaign, a redesign, a client.</div>
               <NewProjectForm label="New program" />
             </div>
           )}

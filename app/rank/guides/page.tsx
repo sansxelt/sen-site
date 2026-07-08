@@ -3,7 +3,7 @@ import { ogMeta } from "@/lib/og-meta";
 import { GUIDES } from "@/lib/rank-guides";
 
 export const metadata = ogMeta({
-  title: "AI Output QA Guides · Vraelis",
+  title: "AI Output QA Guides | Vraelis",
   description: "Practical guides for reviewing AI-generated output before it ships: what to score, the failure modes to catch, and a pre-ship checklist for each type of output.",
   path: "/guides",
 });

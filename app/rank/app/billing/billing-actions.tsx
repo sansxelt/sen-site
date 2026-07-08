@@ -27,7 +27,7 @@ export function BillingActions({ canceling, hasSub }: { canceling: boolean; hasS
 }
 
 // Opens the Stripe-hosted portal to add/update a card and view invoices. Works
-// for everyone — the portal route creates a customer on first use.
+// for everyone, the portal route creates a customer on first use.
 export function PaymentMethodButton() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");

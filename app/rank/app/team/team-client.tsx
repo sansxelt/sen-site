@@ -27,14 +27,14 @@ const ROLE_DESC: Record<Role, string> = {
   admin: "Manage members and project access. See analytics and reports.",
   editor: "Create and edit evaluations and projects. See analytics and reports.",
   viewer: "Read-only workspace access to projects, evaluations, and reports.",
-  client_viewer: "Client-safe reports only — no team, billing, API, or private internals.",
+  client_viewer: "Client-safe reports only, no team, billing, API, or private internals.",
 };
 const PROJ_ROLE_LABEL: Record<ProjRole, string> = { editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 
 function deliveryText(status: string, resend = false): string {
   if (status === "sent") return resend ? "Invite email re-sent with a fresh secure link." : "Invite saved and email sent.";
   if (status === "failed") return "Invite saved, but the email couldn't be sent. They can still sign in with the invited email to activate it.";
-  return "Invite saved. Email delivery isn't connected yet — it activates when the recipient signs in with the invited email.";
+  return "Invite saved. Email delivery isn't connected yet, it activates when the recipient signs in with the invited email.";
 }
 function expiryLabel(iso?: string | null): string | null {
   if (!iso) return null;
@@ -87,7 +87,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       const r = await fetch("/api/v/workspace/members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole, workspace_id: wsId }) });
       const j = await r.json();
       if (j.ok) { setInviteEmail(""); setMsg({ kind: "ok", text: deliveryText(j.email) }); refresh(); }
-      else setMsg({ kind: "err", text: j.error === "already_member" ? "That email is already a member." : j.error === "invalid_email" ? "Enter a valid email." : j.error === "forbidden" ? "You can't invite members." : j.error === "rate_limited" ? "You're sending invites too quickly — try again shortly." : j.error === "seat_limit" ? "You've reached your team seat limit. Add team seats below, or invite as Client viewer (free)." : "Couldn't create the invite." });
+      else setMsg({ kind: "err", text: j.error === "already_member" ? "That email is already a member." : j.error === "invalid_email" ? "Enter a valid email." : j.error === "forbidden" ? "You can't invite members." : j.error === "rate_limited" ? "You're sending invites too quickly, try again shortly." : j.error === "seat_limit" ? "You've reached your team seat limit. Add team seats below, or invite as Client viewer (free)." : "Couldn't create the invite." });
     } finally { setBusy(false); }
   }
   async function setRole(id: string, role: Role) { await fetch(`/api/v/workspace/members/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) }); refresh(); }
@@ -98,7 +98,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
     else setMsg({ kind: "err", text: j.error === "not_eligible" ? "Only active Admins, Editors, or Viewers can be billing admins." : j.error === "forbidden" ? "Only the workspace owner can change billing admins." : "Couldn't update billing admin." });
   }
   async function revoke(id: string) { await fetch(`/api/v/workspace/members/${id}`, { method: "DELETE" }); refresh(); }
-  async function resend(id: string) { const r = await fetch(`/api/v/workspace/members/${id}/resend`, { method: "POST" }); const j = await r.json().catch(() => ({})); setMsg({ kind: j.ok && j.email !== "failed" ? "ok" : "err", text: j.ok ? deliveryText(j.email, true) : j.error === "rate_limited" ? "Too many resends for this invite — try again later." : "Couldn't resend the invite." }); refresh(); }
+  async function resend(id: string) { const r = await fetch(`/api/v/workspace/members/${id}/resend`, { method: "POST" }); const j = await r.json().catch(() => ({})); setMsg({ kind: j.ok && j.email !== "failed" ? "ok" : "err", text: j.ok ? deliveryText(j.email, true) : j.error === "rate_limited" ? "Too many resends for this invite, try again later." : "Couldn't resend the invite." }); refresh(); }
   async function teamBilling(path: string, body?: Record<string, string>) {
     const r = await fetch(`/api/v/team/${path}`, { method: "POST", headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
     const j = await r.json().catch(() => ({}));
@@ -111,7 +111,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
     try {
       const r = await fetch("/api/v/workspace/transfer-owner", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ workspace_id: wsId, target_member_id: tgt, confirmation: confirmName }) });
       const j = await r.json().catch(() => ({}));
-      if (j.ok) { setTMsg({ kind: "ok", text: j.pending ? "Transfer requested — waiting for the new owner to set up billing. Refreshing…" : "Ownership transferred. Refreshing…" }); setTimeout(() => window.location.reload(), 800); }
+      if (j.ok) { setTMsg({ kind: "ok", text: j.pending ? "Transfer requested, waiting for the new owner to set up billing. Refreshing…" : "Ownership transferred. Refreshing…" }); setTimeout(() => window.location.reload(), 800); }
       else setTMsg({ kind: "err", text: j.error === "confirmation_mismatch" ? "Type the workspace name exactly to confirm." : j.error === "transfer_pending" ? "A transfer is already pending for this workspace." : j.error === "target_not_eligible" ? "That member can't become owner." : j.error === "forbidden" ? "Only the current owner can transfer." : "Couldn't transfer ownership." });
     } finally { setTBusy(false); }
   }
@@ -136,7 +136,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         <div>
           <p className="eyebrow">Workspace</p>
           <h1 className="display">Team</h1>
-          <p>Run evaluations with your team and share client-ready decision reports — without exposing private controls.</p>
+          <p>Run evaluations with your team and share client-ready decision reports, without exposing private controls.</p>
         </div>
         <Link href="/app/audit" className="btn btn--ghost">Workspace activity →</Link>
       </div>
@@ -144,7 +144,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
       <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>{ctx.workspace?.name ?? "Your workspace"}</div>
-          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>{active.length} member{active.length === 1 ? "" : "s"} · You are {ROLE_LABEL[ctx.myRole]}</div>
+          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>{active.length} member{active.length === 1 ? "" : "s"} | You are {ROLE_LABEL[ctx.myRole]}</div>
         </div>
       </div>
 
@@ -185,7 +185,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         const money = (m: { amount: number; currency: string } | null | undefined) => (m ? `${sym(m.currency)}${Math.round(m.amount).toLocaleString()}` : null);
         const savings = pricing?.monthly && pricing?.yearly && pricing.monthly.amount > 0 ? Math.round((1 - pricing.yearly.amount / (pricing.monthly.amount * 12)) * 100) : null;
         const priceLabel = seatInterval === "yearly"
-          ? (money(pricing?.yearly) ? `${money(pricing?.yearly)} / seat / year${savings && savings > 0 ? ` — save ${savings}%` : ""}` : null)
+          ? (money(pricing?.yearly) ? `${money(pricing?.yearly)} / seat / year${savings && savings > 0 ? `, save ${savings}%` : ""}` : null)
           : (money(pricing?.monthly) ? `${money(pricing?.monthly)} / seat / month` : null);
         return (
         <div className="card" style={{ marginBottom: 18 }}>
@@ -202,14 +202,14 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Pending invites don&apos;t count until accepted. Team seats are for additional internal collaborators; client viewers are always free.</p>
 
           {billing.configured && billing.hasSubscription && (
-            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "—"}</strong> · {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}. Change your plan, billing interval, or payment method in Manage team billing.</p>
+            <p style={{ fontSize: 12, color: "var(--fg-3)", margin: "10px 0 0" }}>Billing interval: <strong style={{ color: "var(--fg-1)" }}>{billing.interval === "yearly" ? "Annual" : billing.interval === "monthly" ? "Monthly" : "-"}</strong> | {billing.billingOwnerIsCurrentOwner ? "You are the billing owner" : "Billing owner: current workspace owner"}. Change your plan, billing interval, or payment method in Manage team billing.</p>
           )}
 
           {billing.configured && !billing.hasSubscription && (
             <div style={{ marginTop: 14 }}>
               <div className="seg" style={{ marginBottom: 8 }}>
                 <button className={seatInterval === "monthly" ? "on" : ""} onClick={() => setSeatInterval("monthly")}>Monthly</button>
-                <button className={seatInterval === "yearly" ? "on" : ""} disabled={!billing.yearlyConfigured} onClick={() => billing.yearlyConfigured && setSeatInterval("yearly")} style={{ opacity: billing.yearlyConfigured ? 1 : 0.45, cursor: billing.yearlyConfigured ? "pointer" : "not-allowed" }}>Annual{savings && savings > 0 ? ` · save ${savings}%` : ""}</button>
+                <button className={seatInterval === "yearly" ? "on" : ""} disabled={!billing.yearlyConfigured} onClick={() => billing.yearlyConfigured && setSeatInterval("yearly")} style={{ opacity: billing.yearlyConfigured ? 1 : 0.45, cursor: billing.yearlyConfigured ? "pointer" : "not-allowed" }}>Annual{savings && savings > 0 ? ` | save ${savings}%` : ""}</button>
               </div>
               {!billing.yearlyConfigured && <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "0 0 6px" }}>Annual team billing is not configured yet.</p>}
               {priceLabel && <div style={{ fontSize: 13.5, color: "var(--fg-2)", fontWeight: 500 }}>{priceLabel}</div>}
@@ -224,8 +224,8 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
                     <button onClick={() => teamBilling("portal")} className="btn">Manage team billing</button>
                     <button onClick={() => teamBilling("portal", { intent: "invoices" })} className="btn btn--ghost">View invoices</button>
                   </>
-                : <button onClick={() => teamBilling("checkout", { interval: seatInterval })} className="btn">Add team seats — {seatInterval === "yearly" ? "Annual" : "Monthly"}</button>
-            ) : <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Team billing isn&apos;t configured yet — seat counts are informational. Client viewers are free.</span>}
+                : <button onClick={() => teamBilling("checkout", { interval: seatInterval })} className="btn">Add team seats, {seatInterval === "yearly" ? "Annual" : "Monthly"}</button>
+            ) : <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Team billing isn&apos;t configured yet, seat counts are informational. Client viewers are free.</span>}
           </div>
           {billing.periodEnd && billing.hasSubscription ? <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0" }}>Next renewal {new Date(billing.periodEnd).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p> : null}
           <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Taxes and receipts are handled by Stripe. Your invoices are available in Manage team billing.</p>
@@ -285,7 +285,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
           <div className="card" style={{ marginBottom: 18 }}>
             {pending.map((m, i) => (
               <div key={m.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
-                <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>{m.email} <RolePill role={m.role} /> <span style={{ fontSize: 11.5, color: expiryLabel(m.invite_expires_at) === "expired" ? "var(--money)" : "var(--fg-5)" }}>· {expiryLabel(m.invite_expires_at) ?? "activates on sign-in"}</span></div>
+                <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>{m.email} <RolePill role={m.role} /> <span style={{ fontSize: 11.5, color: expiryLabel(m.invite_expires_at) === "expired" ? "var(--money)" : "var(--fg-5)" }}>| {expiryLabel(m.invite_expires_at) ?? "activates on sign-in"}</span></div>
                 {canManage && <span style={{ display: "flex", gap: 6 }}><button onClick={() => resend(m.id)} className="btn btn--ghost" style={{ padding: "5px 10px", fontSize: 12 }}>Resend invite</button><button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "5px 10px", fontSize: 12 }}>Cancel</button></span>}
               </div>
             ))}
@@ -327,7 +327,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
               <Link key={p.project_id} href={`/app/shared/projects/${p.project_id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <div>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15 }}>{p.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2 }}>{p.workspace_name} · {p.evaluations.length} report{p.evaluations.length === 1 ? "" : "s"} · project access</div>
+                  <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 2 }}>{p.workspace_name} | {p.evaluations.length} report{p.evaluations.length === 1 ? "" : "s"} | project access</div>
                 </div>
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}><RolePill role={p.role} /><span style={{ fontSize: 12.5, color: "var(--acc-deep)" }}>Open →</span></span>
               </Link>
@@ -392,7 +392,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
               <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>Invite an Admin, Editor, or Viewer and have them accept, then you can transfer ownership to them. Client viewers and pending invites aren&apos;t eligible.</p>
             ) : (
               <>
-                {transfer.blocked && <div style={{ fontSize: 12.5, color: "var(--fg-2)", padding: "12px 14px", background: "var(--bg-2)", borderRadius: "var(--r-sm)", lineHeight: 1.6, marginBottom: 12 }}>This workspace has active team billing. The new owner must accept billing responsibility before ownership can transfer — they&apos;ll set up their own team seats, then your subscription is canceled.</div>}
+                {transfer.blocked && <div style={{ fontSize: 12.5, color: "var(--fg-2)", padding: "12px 14px", background: "var(--bg-2)", borderRadius: "var(--r-sm)", lineHeight: 1.6, marginBottom: 12 }}>This workspace has active team billing. The new owner must accept billing responsibility before ownership can transfer, they&apos;ll set up their own team seats, then your subscription is canceled.</div>}
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
                   <select value={tgt} onChange={(e) => setTgt(e.target.value)} style={{ ...input, flex: "1 1 240px" } as React.CSSProperties}>{transfer.eligible.map((m) => <option key={m.id} value={m.id}>{m.email} ({ROLE_LABEL[m.role]})</option>)}</select>
                 </div>

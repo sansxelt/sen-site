@@ -124,30 +124,30 @@ function CalibrationTeaser() {
 export default function SampleCheck() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-2)" }}>
-      <div className="wrap" style={{ maxWidth: 780, paddingTop: "clamp(28px, 4vw, 52px)", paddingBottom: 72 }}>
+      <div className="wrap" style={{ maxWidth: 800, paddingTop: "clamp(34px, 5vw, 64px)", paddingBottom: 88 }}>
         {/* top bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 22 }}>
-          <Link href="/" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--fg-1)", textDecoration: "none", letterSpacing: "-0.01em" }}>Vraelis</Link>
-          <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>Sample check · illustrative data</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 30 }}>
+          <Link href="/" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 21, color: "var(--fg-1)", textDecoration: "none", letterSpacing: "-0.02em" }}>Vraelis</Link>
+          <span className="pill" style={{ fontSize: 11, color: "var(--fg-4)" }}>Sample check | illustrative data</span>
         </div>
 
         <FreeCheckEntry />
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "0 0 18px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "18px 0 28px" }}>
           <div style={{ height: 1, flex: 1, background: "var(--line-1)" }} />
-          <span style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Or see a sample first</span>
+          <span style={{ fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.09em", textTransform: "uppercase", color: "var(--fg-4)" }}>Or see a sample first</span>
           <div style={{ height: 1, flex: 1, background: "var(--line-1)" }} />
         </div>
 
-        <p style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.6, margin: "0 0 20px" }}>
+        <p style={{ fontSize: 14.5, color: "var(--fg-4)", lineHeight: 1.65, margin: "0 0 26px" }}>
           A sample check on an example support reply, to show exactly what you get back on your own output.
         </p>
 
         <CheckReport result={SAMPLE} title="Support reply: customer was double-charged" calibrationSlot={<CalibrationTeaser />} />
 
         {/* CTA */}
-        <div style={{ textAlign: "center", marginTop: 32 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginBottom: 12 }}>Run this on your own output</div>
+        <div style={{ textAlign: "center", marginTop: 48 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(20px, 2.6vw, 24px)", letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 16 }}>Run this on your own output</div>
           <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
         </div>
       </div>

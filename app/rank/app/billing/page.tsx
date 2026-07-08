@@ -89,7 +89,7 @@ export default async function BillingPage() {
 
       <div className="card" style={{ marginBottom: 18 }}>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>Payment method</div>
-        <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", maxWidth: 540 }}>Keep a payment method on file for plan renewals and credit top-ups, and view your invoices. Payments are securely processed by Stripe — we never see your card details, and your complete billing state stays here in Vraelis.</p>
+        <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", maxWidth: 540 }}>Keep a payment method on file for plan renewals and credit top-ups, and view your invoices. Payments are securely processed by Stripe, we never see your card details, and your complete billing state stays here in Vraelis.</p>
         <PaymentMethodButton />
       </div>
 
@@ -99,7 +99,7 @@ export default async function BillingPage() {
         <p style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 16, marginBottom: 0, lineHeight: 1.6 }}>Plan changes, cancellations, and resumptions happen here in Vraelis.</p>
       </div>
 
-      {/* Team seats (workspace billing — owner / billing-admin detail) */}
+      {/* Team seats (workspace billing, owner / billing-admin detail) */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Team seats</div>
       {(teamAccess === "owner" || teamAccess === "billing_admin") && teamBilling ? (
         <div style={{ marginBottom: 28 }}><TeamBillingPanel workspaceName={teamWsName} billing={teamBilling} canManage={teamAccess === "owner"} /></div>

@@ -47,15 +47,15 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
 
   const { test, options } = data;
   const report = await getReport(id);
-  // Owner-only context — never shown on the public /r/<token> report.
+  // Owner-only context, never shown on the public /r/<token> report.
   const project = test.project_id ? await getProject(email, test.project_id) : null;
   const projectLine = project ? (
-    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <Link href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</Link> <span style={{ color: "var(--fg-5)" }}>·</span> <Link href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Share this project with a client →</Link></p>
+    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <Link href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</Link> <span style={{ color: "var(--fg-5)" }}>|</span> <Link href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Share this project with a client →</Link></p>
   ) : null;
   // Owner-only audience profile + screening stats (never on the public /r report).
   const screen = await screeningStats(id);
   const audienceLine = test.target_audience ? <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Audience: {test.target_audience}</p> : null;
-  // Follow-up lineage — shown on BOTH the collecting and completed report views.
+  // Follow-up lineage, shown on BOTH the collecting and completed report views.
   const lineage = await followupLineage(id, email);
   const lineageHeader = lineage.parent ? (
     <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}><span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", marginRight: 8 }}>Confirmation round</span>Follow-up of <Link href={`/app/tests/${lineage.parent.id}/report`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{lineage.parent.title}</Link></p>
@@ -70,7 +70,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
 
     // Pace: derive velocity + ETA from timestamps only (no PII). Elapsed since
     // launch; fill velocity over the active valid-vote window; ETA to target at
-    // that rate. All best-effort — shown only when there's enough to be honest.
+    // that rate. All best-effort, shown only when there's enough to be honest.
     const launchMs = new Date(test.created_at).getTime();
     const sinceLaunchMs = Math.max(0, Date.now() - launchMs);
     const remaining = Math.max(0, test.votes_target - fill.valid);
@@ -85,7 +85,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       }
     }
     const fmtDur = (ms: number | null): string => {
-      if (ms == null || !isFinite(ms)) return "—";
+      if (ms == null || !isFinite(ms)) return "-";
       const m = ms / 60000;
       if (m < 1) return "<1m";
       if (m < 60) return `${Math.round(m)}m`;
@@ -94,8 +94,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       return `${Math.round(h / 24)}d`;
     };
     const fillTone: Record<string, { fg: string; label: string; hint: string }> = {
-      healthy: { fg: "var(--acc-deep)", label: "Healthy spread", hint: "Votes are spread across many distinct sources — consistent with real demand." },
-      concentrated: { fg: "var(--money)", label: "Concentrated", hint: "A large share comes from few sources. Could be a small real audience — or early farming. Watch it." },
+      healthy: { fg: "var(--acc-deep)", label: "Healthy spread", hint: "Votes are spread across many distinct sources, consistent with real demand." },
+      concentrated: { fg: "var(--money)", label: "Concentrated", hint: "A large share comes from few sources. Could be a small real audience, or early farming. Watch it." },
       "likely-farmed": { fg: "var(--err)", label: "Likely farmed", hint: "Most votes trace to very few IPs/devices. This fill is probably NOT real cold-pool demand." },
       insufficient: { fg: "var(--fg-4)", label: "Too early", hint: "Not enough valid votes yet to judge source diversity." },
     };
@@ -123,7 +123,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
           <div className="pulse" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, var(--acc), var(--acc-deep))" }} />
         </div>
 
-        {/* Fill monitor — owner-only diagnostic: is this fill REAL demand or a few sources cycling? */}
+        {/* Fill monitor, owner-only diagnostic: is this fill REAL demand or a few sources cycling? */}
         {fill.valid > 0 && (
           <div className="card" style={{ marginBottom: 24, background: "var(--bg-2)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
@@ -131,16 +131,16 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
               <span className="pill" style={{ color: ft.fg, borderColor: "var(--line-2)" }}>{ft.label}</span>
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-              {([["Valid", `${fill.valid}`], ["Filtered", `${fill.filtered}`], ["Unique IPs", `${fill.uniqueIPs}`], ["Unique devices", `${fill.uniqueDevices}`], ["Votes / IP", fill.votesPerIP == null ? "—" : `${fill.votesPerIP}`], ["Top IP share", fill.topIPShare == null ? "—" : `${fill.topIPShare}%`]] as [string, string][]).map(([l, v]) => (
+              {([["Valid", `${fill.valid}`], ["Filtered", `${fill.filtered}`], ["Unique IPs", `${fill.uniqueIPs}`], ["Unique devices", `${fill.uniqueDevices}`], ["Votes / IP", fill.votesPerIP == null ? "-" : `${fill.votesPerIP}`], ["Top IP share", fill.topIPShare == null ? "-" : `${fill.topIPShare}%`]] as [string, string][]).map(([l, v]) => (
                 <div key={l} style={{ padding: "8px 11px", borderRadius: 9, background: "var(--bg-1)", border: "1px solid var(--line-1)", minWidth: 84 }}>
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--fg-4)" }}>{l}</div>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", marginTop: 1 }}>{v}</div>
                 </div>
               ))}
             </div>
-            {/* Pace: fill %, elapsed, velocity, ETA — the "is it filling or stalling?" read. */}
+            {/* Pace: fill %, elapsed, velocity, ETA, the "is it filling or stalling?" read. */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-              {([["Fill", `${pct}% of ${test.votes_target}`], ["Running", fmtDur(sinceLaunchMs)], ["Velocity", velocityPerHr == null ? "—" : `${velocityPerHr}/hr`], ["ETA to target", remaining === 0 ? "target hit" : fmtDur(etaMs)]] as [string, string][]).map(([l, v]) => (
+              {([["Fill", `${pct}% of ${test.votes_target}`], ["Running", fmtDur(sinceLaunchMs)], ["Velocity", velocityPerHr == null ? "-" : `${velocityPerHr}/hr`], ["ETA to target", remaining === 0 ? "target hit" : fmtDur(etaMs)]] as [string, string][]).map(([l, v]) => (
                 <div key={l} style={{ padding: "8px 11px", borderRadius: 9, background: "var(--bg-1)", border: "1px solid var(--line-1)", minWidth: 96 }}>
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--fg-4)" }}>{l}</div>
                   <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", marginTop: 1 }}>{v}</div>
@@ -149,7 +149,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
             </div>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-4)", marginBottom: 10 }}>
               {fill.timeToValid.map((t) => (
-                <span key={t.n}>→ {t.n} valid: <strong style={{ color: "var(--fg-2)" }}>{t.ms == null ? "—" : t.ms < 60000 ? `${Math.round(t.ms / 1000)}s` : `${Math.round(t.ms / 60000)}m`}</strong></span>
+                <span key={t.n}>→ {t.n} valid: <strong style={{ color: "var(--fg-2)" }}>{t.ms == null ? "-" : t.ms < 60000 ? `${Math.round(t.ms / 1000)}s` : `${Math.round(t.ms / 60000)}m`}</strong></span>
               ))}
             </div>
             {/* Recent vote errors (filtered-response reasons, aggregate counts only). */}
@@ -186,17 +186,17 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         )}
         {test.status === "active" && (
           <>
-            {/* 1. Share the evaluator link — the primary action after launch */}
+            {/* 1. Share the evaluator link, the primary action after launch */}
             <ShareControls testId={test.id} enabled={!!test.share_enabled} token={test.share_token ?? null} />
-            {/* 2. Audience screening · 3. Collection links */}
+            {/* 2. Audience screening | 3. Collection links */}
             <div style={{ marginTop: 22 }}><ScreeningManager testId={test.id} /></div>
             <CollectionLinks testId={test.id} />
-            {/* 4. End collection early — secondary, de-emphasised */}
+            {/* 4. End collection early, secondary, de-emphasised */}
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 22 }}>
               <CloseButton testId={test.id} />
               <span style={{ fontSize: 12.5, color: "var(--fg-5)" }}>Results may be weak if you close before enough qualified judgments are collected. Unfilled credits are refunded.</span>
             </div>
-            {/* 5. Embed code — developer-facing, lowest priority */}
+            {/* 5. Embed code, developer-facing, lowest priority */}
             <EmbedSnippet testId={test.id} />
           </>
         )}
@@ -257,7 +257,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
           {screen.screened > 0 ? (
             <>
               <Bars rows={[{ label: "Qualified judgments", value: test.votes_valid }, { label: "Disqualified responses", value: screen.disqualified }]} />
-              <p style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 12, marginBottom: 0 }}>{screen.qualified} of {screen.screened} screened qualified · {screen.rate}% qualification rate · audience fit <span className="pill" style={{ background: screen.fit === "Strong fit" ? "var(--acc-soft)" : "var(--bg-1)", color: screen.fit === "Strong fit" ? "var(--acc-deep)" : "var(--fg-3)", borderColor: "var(--line-2)" }}>{screen.fit}</span></p>
+              <p style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 12, marginBottom: 0 }}>{screen.qualified} of {screen.screened} screened qualified | {screen.rate}% qualification rate | audience fit <span className="pill" style={{ background: screen.fit === "Strong fit" ? "var(--acc-soft)" : "var(--bg-1)", color: screen.fit === "Strong fit" ? "var(--acc-deep)" : "var(--fg-3)", borderColor: "var(--line-2)" }}>{screen.fit}</span></p>
             </>
           ) : <p style={{ fontSize: 13.5, color: "var(--fg-4)", margin: 0 }}>No qualified judgments yet. Share this evaluation with the target audience, or adjust your screening criteria.</p>}
         </div>
@@ -269,7 +269,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
       {filterReasons.length > 0 ? (
         <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)" }}>
           <SectionHead>Response quality</SectionHead>
-          <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: "0 0 14px", lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>{r.total.toLocaleString()} valid</strong> · {(r.filtered ?? 0).toLocaleString()} filtered before they could influence this decision:</p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: "0 0 14px", lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>{r.total.toLocaleString()} valid</strong> | {(r.filtered ?? 0).toLocaleString()} filtered before they could influence this decision:</p>
           <Bars rows={filterReasons.map((x) => ({ label: x.label, value: x.count }))} />
         </div>
       ) : null}

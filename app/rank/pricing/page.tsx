@@ -108,7 +108,7 @@ export default function PricingPage() {
                 {team?.monthly ? (
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5 }}>
                     <span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>{seatMoney(team.monthly)}/seat/month</span>
-                    {team.yearly && <span style={{ color: "var(--fg-3)" }}> · or {seatMoney(team.yearly)}/seat/year</span>}
+                    {team.yearly && <span style={{ color: "var(--fg-3)" }}> | or {seatMoney(team.yearly)}/seat/year</span>}
                   </div>
                 ) : null}
                 <div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: team?.monthly ? 6 : 0 }}>Manage seats in your workspace.</div>

@@ -20,7 +20,7 @@ const DEV_EVENT_LABEL: Record<string, string> = {
   api_request_made: "API request", export_downloaded: "Export downloaded", webhook_delivered: "Webhook delivered",
   webhook_failed: "Webhook failed", test_launched: "Test launched", api_key_created: "API key created",
 };
-const shortDate = (s: string | null) => { if (!s) return "—"; try { return new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return "—"; } };
+const shortDate = (s: string | null) => { if (!s) return "-"; try { return new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return "-"; } };
 
 const CURL = `# Check an AI output. Set a threshold and the response tells you passed: true|false.
 curl -X POST https://vraelis.com/api/v1/check \\
@@ -108,12 +108,12 @@ export default function ApiKeysPage() {
         <Link href="/app/sandbox" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Test exports →</Link>
       </div>
 
-      {/* Test your integration — opens the in-app sandbox console */}
+      {/* Test your integration, opens the in-app sandbox console */}
       <div className="card" style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", gap: 14, alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 320px", minWidth: 0 }}>
             <div style={cardHead}>Test your integration</div>
-            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Use the sandbox console to create a sandbox evaluation, preview a Decision Package, test exports, and send a signed webhook event — with sample data, 0 credits, 0 quota, and nothing in your production analytics.</p>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Use the sandbox console to create a sandbox evaluation, preview a Decision Package, test exports, and send a signed webhook event, with sample data, 0 credits, 0 quota, and nothing in your production analytics.</p>
             <Link href="/app/sandbox" className="btn">Open sandbox console →</Link>
           </div>
         </div>

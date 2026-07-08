@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const guide = getGuide(slug);
   if (!guide) return ogMeta({ title: "Guide not found", description: "This guide is not available.", path: `/guides/${slug}`, index: false });
   const c = guide.content;
-  return ogMeta({ title: `${c.metaTitle} · Vraelis`, description: c.metaDescription, path: `/guides/${slug}` });
+  return ogMeta({ title: `${c.metaTitle} | Vraelis`, description: c.metaDescription, path: `/guides/${slug}` });
 }
 
 const kicker = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" } as const;

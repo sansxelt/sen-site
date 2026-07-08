@@ -24,7 +24,7 @@ export function EvaluationList({ rows, projects, showProject = true, showMove = 
               <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {showProject && r.project_name ? <span style={{ color: "var(--fg-3)" }}>{r.project_name}</span> : null}
                 <span>{r.votes_valid}/{r.votes_target} qualified signals</span>
-                {r.recommended ? <span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>{r.recommended}{r.confidence ? ` · ${r.confidence}` : ""}</span> : null}
+                {r.recommended ? <span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>{r.recommended}{r.confidence ? ` | ${r.confidence}` : ""}</span> : null}
                 <span style={{ color: "var(--fg-5)" }}>{new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
               </div>
             </div>

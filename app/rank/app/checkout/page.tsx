@@ -7,7 +7,7 @@ import { CheckoutClient, PlanPrice } from "./checkout-client";
 
 export const metadata: Metadata = { title: "Checkout" };
 
-// Value-first "what's included" per plan — the AI checks you get + the outputs of each.
+// Value-first "what's included" per plan, the AI checks you get + the outputs of each.
 const PLAN_VALUE: Record<string, string[]> = {
   starter: [
     "150 AI checks every month",

@@ -27,7 +27,7 @@ export default async function ProjectsPage() {
         <div>
           <p className="eyebrow">Workspace</p>
           <h1 className="display">Decision programs</h1>
-          <p>Organize your decision workflows by campaign, client, or initiative — track readiness, confirmations, and final decision records in one place.</p>
+          <p>Organize your decision workflows by campaign, client, or initiative, track readiness, confirmations, and final decision records in one place.</p>
         </div>
         <NewProjectForm label="New program" primary />
       </div>
@@ -38,7 +38,7 @@ export default async function ProjectsPage() {
         <div className="card" style={{ textAlign: "center", padding: "clamp(28px, 5vw, 52px)", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 6 }}>No decision programs yet</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 420, lineHeight: 1.55 }}>Decision programs group related workflows — a summer campaign, a website redesign, or a client review cycle. Create one, then add decision workflows to track readiness, confirmations, and outcomes.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 420, lineHeight: 1.55 }}>Decision programs group related workflows, a summer campaign, a website redesign, or a client review cycle. Create one, then add decision workflows to track readiness, confirmations, and outcomes.</p>
           </div>
           <NewProjectForm label="Create your first program" primary />
         </div>
@@ -48,7 +48,7 @@ export default async function ProjectsPage() {
             <a key={p.id} href={`/app/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7, minHeight: 120, justifyContent: "flex-start" }}>
               <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
               {p.description ? <div className="acard__d" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</div> : null}
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: "auto" }}>{p.evaluation_count ?? 0} workflow{(p.evaluation_count ?? 0) === 1 ? "" : "s"} · updated {new Date(p.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: "auto" }}>{p.evaluation_count ?? 0} workflow{(p.evaluation_count ?? 0) === 1 ? "" : "s"} | updated {new Date(p.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
             </a>
           ))}
         </div>

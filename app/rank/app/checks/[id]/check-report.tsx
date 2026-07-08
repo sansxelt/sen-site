@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { EvalResult, CandidateEval, LineFlag } from "@/lib/v-evaluator";
 
 // The AI Check report. Deliberately NOT the human-vote ReportBody: no posterior, no
-// "N judgments", no credible interval — every one of those would be fabricated for a
+// "N judgments", no credible interval, every one of those would be fabricated for a
 // single AI pass. This renders exactly what the evaluator produced: per-criterion
 // scores, a computed recommendation, and line-level flags whose spans are verbatim
 // from the customer's own output. Server component (pure render).
@@ -24,7 +24,7 @@ function scoreColor(n: number): string { return n >= 75 ? "var(--acc-deep)" : n 
 
 // Best-effort inline highlight: wrap each flag's span where it appears (case-insensitive,
 // non-overlapping, first occurrence). Spans that don't match exactly are simply not
-// highlighted inline — they still appear in the flags list with full detail.
+// highlighted inline, they still appear in the flags list with full detail.
 function highlightSpans(text: string, flags: LineFlag[]): ReactNode {
   const lower = text.toLowerCase();
   const ranges: { start: number; end: number; severity: string }[] = [];
@@ -117,11 +117,11 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
       <p className="eyebrow">AI output check</p>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>{title || `${typeLabel} check`}</h1>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", ...kicker, marginBottom: 22 }}>
-        <span>{typeLabel}</span><span>·</span>
-        <span>{result.candidates.length} version{result.candidates.length === 1 ? "" : "s"}</span><span>·</span>
+        <span>{typeLabel}</span><span>|</span>
+        <span>{result.candidates.length} version{result.candidates.length === 1 ? "" : "s"}</span><span>|</span>
         <span>AI assessment</span>
-        {result.model ? <><span>·</span><span>{result.model}</span></> : null}
-        {createdAt ? <><span>·</span><span>{new Date(createdAt).toISOString().slice(0, 10)}</span></> : null}
+        {result.model ? <><span>|</span><span>{result.model}</span></> : null}
+        {createdAt ? <><span>|</span><span>{new Date(createdAt).toISOString().slice(0, 10)}</span></> : null}
       </div>
 
       {/* recommendation */}
@@ -131,7 +131,7 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
           <div>
             <div style={{ ...kicker, color: "var(--acc-deep)" }}>Recommendation</div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, color: "var(--fg-1)" }}>Ship Version {winner.label}</div>
-            <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>Highest overall score{result.margin != null ? ` · leads the runner-up by ${result.margin} point${result.margin === 1 ? "" : "s"}` : ""}{result.margin != null && result.margin < 5 ? " (a close call)" : ""}</div>
+            <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>Highest overall score{result.margin != null ? `, leads the runner-up by ${result.margin} point${result.margin === 1 ? "" : "s"}` : ""}{result.margin != null && result.margin < 5 ? " (a close call)" : ""}</div>
             {result.recommendation ? <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.5 }}>{result.recommendation}</div> : null}
           </div>
         </div>

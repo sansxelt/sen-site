@@ -51,7 +51,7 @@ export function OrgClient({ email, ctx, activity, domainAccess = [], sso = null 
 }
 
 // Shown to a signed-in user with NO org of their own whose email domain matches a verified org
-// domain. Exposes ONLY the org name + a request/pending state — never members, workspaces, billing,
+// domain. Exposes ONLY the org name + a request/pending state, never members, workspaces, billing,
 // or audit. Joining grants org membership only; workspace/project access is managed separately.
 function JoinCard({ options }: { options: DomainAccessOption[] }) {
   const [state, setState] = useState<Record<string, "idle" | "busy" | "pending" | "joined">>(Object.fromEntries(options.map((o) => [o.id, o.requestStatus === "pending" ? "pending" : "idle"])));
@@ -70,7 +70,7 @@ function JoinCard({ options }: { options: DomainAccessOption[] }) {
         return (
           <div key={o.id} className="card" style={{ marginBottom: 14 }}>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 4 }}>You may belong to {o.name}</div>
-            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 14px", lineHeight: 1.6, maxWidth: 560 }}>Your email domain matches a verified organization domain. {o.joinMode === "auto_member" ? "You can join this organization as a member." : "Request access to join this organization — an admin approves before access is granted."} Joining the organization does not automatically grant access to every workspace; workspace and project permissions are managed separately.</p>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 14px", lineHeight: 1.6, maxWidth: 560 }}>Your email domain matches a verified organization domain. {o.joinMode === "auto_member" ? "You can join this organization as a member." : "Request access to join this organization, an admin approves before access is granted."} Joining the organization does not automatically grant access to every workspace; workspace and project permissions are managed separately.</p>
             {st === "pending" ? (
               <p style={{ fontSize: 13, color: "var(--fg-2)", margin: 0 }}>Your request is pending. An organization admin needs to approve it.</p>
             ) : (
@@ -99,7 +99,7 @@ function CreateOrg() {
   return (
     <div className="card">
       <div style={cardHead}>Create an organization</div>
-      <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", lineHeight: 1.6, maxWidth: 560 }}>Organizations help larger teams govern multiple workspaces, domains, billing admins, and audit trails. SSO and provisioning can be added on top of this layer later. Creating one is optional — your workspaces keep working exactly as they do today.</p>
+      <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 0 14px", lineHeight: 1.6, maxWidth: 560 }}>Organizations help larger teams govern multiple workspaces, domains, billing admins, and audit trails. SSO and provisioning can be added on top of this layer later. Creating one is optional, your workspaces keep working exactly as they do today.</p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Inc." onKeyDown={(e) => { if (e.key === "Enter" && !busy) create(); }} style={{ ...input, flex: "1 1 240px" }} />
         <button onClick={create} disabled={busy || !name.trim()} className="btn" style={{ opacity: busy || !name.trim() ? 0.6 : 1 }}>{busy ? "Creating…" : "Create organization"}</button>
@@ -113,7 +113,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
   const org = ctx.organization!;
   const activeCount = ctx.members.filter((m) => m.status === "active").length;
   const [domains, setDomains] = useState<OrgDomain[]>(ctx.domains);
-  // Freshly-minted TXT tokens (from add/regenerate), keyed by domain id — shown once until reload.
+  // Freshly-minted TXT tokens (from add/regenerate), keyed by domain id, shown once until reload.
   const [tokens, setTokens] = useState<Record<string, { name: string; value: string }>>({});
 
   // members
@@ -192,7 +192,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       <div className="card" style={{ marginBottom: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18 }}>{org.name}</div>
-          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>{activeCount} member{activeCount === 1 ? "" : "s"} · {ctx.linkedWorkspaces.length} linked workspace{ctx.linkedWorkspaces.length === 1 ? "" : "s"} · You are {ROLE_LABEL[ctx.myRole ?? "member"]}</div>
+          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 3 }}>{activeCount} member{activeCount === 1 ? "" : "s"} | {ctx.linkedWorkspaces.length} linked workspace{ctx.linkedWorkspaces.length === 1 ? "" : "s"} | You are {ROLE_LABEL[ctx.myRole ?? "member"]}</div>
         </div>
         <span className="pill" style={{ fontSize: 10.5, color: "var(--acc-deep)" }}>{ctx.canManage ? "Manage" : "Read-only"}</span>
       </div>
@@ -201,7 +201,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       <div style={cardHead}>Linked workspaces</div>
       <div className="card">
         {ctx.linkedWorkspaces.length === 0 ? (
-          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>No workspaces linked yet. Linking keeps billing workspace-level — it only groups workspaces under this organization for governance.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>No workspaces linked yet. Linking keeps billing workspace-level, it only groups workspaces under this organization for governance.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {ctx.linkedWorkspaces.map((w) => (
@@ -231,7 +231,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
             <div key={m.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 14, color: "var(--fg-1)" }}>{m.email}{m.email === email ? <span style={{ color: "var(--fg-5)" }}> (you)</span> : null}</div>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{m.status === "pending" ? "Pending · " : ""}{ROLE_LABEL[m.role]}</div>
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>{m.status === "pending" ? "Pending | " : ""}{ROLE_LABEL[m.role]}</div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <span className="pill" style={{ fontSize: 10, color: m.role === "owner" ? "var(--acc-deep)" : "var(--fg-4)" }}>{ROLE_LABEL[m.role]}</span>
@@ -276,13 +276,13 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       {/* Verified domain access (provisioning) */}
       <div style={cardHead}>Verified domain access</div>
       <div className="card">
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>People who sign in with a verified company domain can request access to this organization. {joinMode === "auto_member" ? "Auto-join is on: " : "Admins approve requests before access is granted."}{joinMode === "auto_member" ? "anyone who signs in with a verified domain email can join as a member. Workspace and project access still require separate permissions." : ""} Joining never grants workspace, project, billing, or API access — those are managed separately. Domain-based access depends on verified domain ownership; if verification becomes stale, new joins are paused for that domain until it is re-checked.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 14px", lineHeight: 1.6 }}>People who sign in with a verified company domain can request access to this organization. {joinMode === "auto_member" ? "Auto-join is on: " : "Admins approve requests before access is granted."}{joinMode === "auto_member" ? "anyone who signs in with a verified domain email can join as a member. Workspace and project access still require separate permissions." : ""} Joining never grants workspace, project, billing, or API access, those are managed separately. Domain-based access depends on verified domain ownership; if verification becomes stale, new joins are paused for that domain until it is re-checked.</p>
         {ctx.canManage ? (
           <>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <select value={joinMode} onChange={(e) => setJoinMode(e.target.value as JoinMode)} style={input as React.CSSProperties}>
-                <option value="disabled">Disabled — no domain access</option>
-                <option value="request">Request — admin approves</option>
+                <option value="disabled">Disabled, no domain access</option>
+                <option value="request">Request, admin approves</option>
                 <option value="auto_member">Auto-join as member</option>
               </select>
               <select value={defaultRole} onChange={(e) => setDefaultRole(e.target.value as "member" | "viewer")} style={input as React.CSSProperties}>
@@ -299,7 +299,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
                   <div key={r.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "10px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 13.5, color: "var(--fg-1)" }}>{r.email}</div>
-                      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>Requested {ROLE_LABEL[(r.requested_role as OrgRole)] ?? r.requested_role} · {when(r.created_at)}</div>
+                      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 2 }}>Requested {ROLE_LABEL[(r.requested_role as OrgRole)] ?? r.requested_role} | {when(r.created_at)}</div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button onClick={() => decide(r.id, "approve")} className="btn" style={{ padding: "5px 12px", fontSize: 12.5 }}>Approve</button>
@@ -344,8 +344,8 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
       {/* Enterprise / SSO readiness */}
       <div style={cardHead}>Enterprise readiness</div>
       <div className="card" style={{ background: "var(--bg-2)" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>OIDC SSO is available · SCIM is not enabled yet</div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only — workspace and project access stay separate. <Link href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</Link></p>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>OIDC SSO is available | SCIM is not enabled yet</div>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.7 }}>OIDC single sign-on can be configured above for any verified domain. SAML configuration is a scaffold (assertion sign-in coming later), and SCIM provisioning is not enabled yet. SSO authenticates users into the organization only, workspace and project access stay separate. <Link href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</Link></p>
       </div>
     </>
   );
@@ -373,7 +373,7 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
     setBusy("");
     if (j.ok) {
       onHealth(d.id, { last_check_status: j.status ?? null, requires_reverification: !!j.requiresReverification, last_checked_at: new Date().toISOString() });
-      setMsg(j.status === "ok" ? { kind: "ok", text: "Domain re-verified — the DNS TXT record is present." } : { kind: "err", text: "Vraelis could not confirm the DNS TXT record. Restore the record and re-check DNS to keep SSO and automatic provisioning active for new users." });
+      setMsg(j.status === "ok" ? { kind: "ok", text: "Domain re-verified, the DNS TXT record is present." } : { kind: "err", text: "Vraelis could not confirm the DNS TXT record. Restore the record and re-check DNS to keep SSO and automatic provisioning active for new users." });
     } else setMsg({ kind: "err", text: "Couldn't re-check DNS. Try again." });
   }
   async function verify() {
@@ -388,7 +388,7 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
     setBusy("regen"); setMsg(null);
     const j = await call("regenerate");
     setBusy("");
-    if (j.ok && j.txtName && j.txtValue) { onToken(d.id, { name: j.txtName, value: j.txtValue }); setMsg({ kind: "info", text: "New TXT token generated — copy it now. The previous token no longer works." }); }
+    if (j.ok && j.txtName && j.txtValue) { onToken(d.id, { name: j.txtName, value: j.txtValue }); setMsg({ kind: "info", text: "New TXT token generated, copy it now. The previous token no longer works." }); }
     else setMsg({ kind: "err", text: j.error === "already_verified" ? "This domain is already verified." : "Couldn't regenerate the token. Try again." });
   }
   async function remove() {
@@ -412,7 +412,7 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
             Name: {token?.name ?? `_vraelis-challenge.${d.domain}`}<br />
             Value: {token ? token.value : <span style={{ color: "var(--fg-5)" }}>Token hidden for security. Regenerate a new token if you lost it.</span>}
           </div>
-          {token && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "6px 0 0" }}>Shown once — copy it now.</p>}
+          {token && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "6px 0 0" }}>Shown once, copy it now.</p>}
         </div>
       )}
       {verified && (() => {
@@ -422,7 +422,7 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
         const healthBad = reverif || (!!ls && ls !== "ok");
         return (
           <div style={{ marginTop: 8 }}>
-            <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>{reverif ? "Verified — but Vraelis could not confirm the DNS TXT record on recent checks." : "Domain verified and recently checked. SSO and provisioning rules can use this domain."}</p>
+            <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>{reverif ? "Verified, but Vraelis could not confirm the DNS TXT record on recent checks." : "Domain verified and recently checked. SSO and provisioning rules can use this domain."}</p>
             <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 5, display: "flex", gap: 8, flexWrap: "wrap" }}>
               <span className="pill" style={{ fontSize: 9.5, color: healthBad ? "var(--money)" : "var(--acc-deep)" }}>{healthLabel}</span>
               {d.last_checked_at ? <span>Last checked {when(d.last_checked_at)}</span> : <span>Not checked yet</span>}
@@ -440,7 +440,7 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
           <button onClick={remove} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5, color: "var(--money)" }}>{busy === "remove" ? "…" : "Remove"}</button>
         </div>
       )}
-      {!verified && canManage && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Regenerate only if you lost the original DNS value — it invalidates the previous token.</p>}
+      {!verified && canManage && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Regenerate only if you lost the original DNS value, it invalidates the previous token.</p>}
       {msg && <p style={{ fontSize: 12, color: msg.kind === "ok" ? "var(--acc-deep)" : msg.kind === "err" ? "var(--money)" : "var(--fg-3)", margin: "10px 0 0", lineHeight: 1.6 }}>{msg.text}</p>}
     </div>
   );
@@ -475,7 +475,7 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
   async function act(action: string, providerId: string) {
     const j = await call({ action, providerId });
     if (j.ok) { window.location.reload(); return; }
-    setMsg({ kind: "err", text: j.error === "saml_not_enabled" ? "SAML assertion sign-in isn't enabled yet — use OIDC." : j.error === "incomplete_config" ? "Complete the OIDC config before enabling." : "Action failed." });
+    setMsg({ kind: "err", text: j.error === "saml_not_enabled" ? "SAML assertion sign-in isn't enabled yet, use OIDC." : j.error === "incomplete_config" ? "Complete the OIDC config before enabling." : "Action failed." });
   }
   const lbl = { fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase" as const, color: "var(--fg-5)", display: "block", margin: "10px 0 4px" };
 
@@ -490,14 +490,14 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
             {sso.providers.map((p) => (
               <div key={p.id} style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", padding: "12px 14px", background: "var(--bg-1)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontWeight: 600, fontSize: 14 }}>{p.type.toUpperCase()} · {p.domain}</span>
+                  <span style={{ fontWeight: 600, fontSize: 14 }}>{p.type.toUpperCase()} | {p.domain}</span>
                   <span className="pill" style={{ fontSize: 10, color: p.status === "active" ? "var(--acc-deep)" : "var(--fg-4)" }}>{p.status === "active" ? "Active" : p.status === "error" ? "Error" : "Disabled"}</span>
                 </div>
                 {paused.has(p.domain) && <p style={{ fontSize: 11.5, color: "var(--money)", margin: "8px 0 0", lineHeight: 1.6 }}>SSO for this domain is paused for new sign-ins until domain ownership is re-confirmed. Re-check DNS for this domain above to restore it.</p>}
                 {p.type === "oidc" ? (
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 6, wordBreak: "break-all", lineHeight: 1.7 }}>Redirect URI: {sso.redirectUriBase}/{p.id}/callback<br />Client ID: {p.client_id ?? "—"} · Secret: {p.hasSecret ? "stored ✓" : "missing"}</div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 6, wordBreak: "break-all", lineHeight: 1.7 }}>Redirect URI: {sso.redirectUriBase}/{p.id}/callback<br />Client ID: {p.client_id ?? "-"} | Secret: {p.hasSecret ? "stored ✓" : "missing"}</div>
                 ) : (
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 6, wordBreak: "break-all", lineHeight: 1.7 }}>SP metadata: {sso.metadataUrlBase}/{p.id}/metadata<br /><span style={{ color: "var(--fg-5)" }}>SAML assertion sign-in is a configuration scaffold — not enabled in this version.</span></div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", marginTop: 6, wordBreak: "break-all", lineHeight: 1.7 }}>SP metadata: {sso.metadataUrlBase}/{p.id}/metadata<br /><span style={{ color: "var(--fg-5)" }}>SAML assertion sign-in is a configuration scaffold, not enabled in this version.</span></div>
                 )}
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                   {p.status !== "active" ? <button onClick={() => act("enable", p.id)} className="btn" style={{ padding: "5px 12px", fontSize: 12 }} disabled={p.type === "saml"}>Enable</button> : <button onClick={() => act("disable", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12 }}>Disable</button>}

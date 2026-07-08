@@ -63,7 +63,7 @@ const CURL_EXPORT = `curl "https://vraelis.com/api/v1/tests/EVAL_ID/export?forma
 const SDK_WEBHOOK = `import { verifyWebhookSignature } from "@vraelis/sdk"
 
 export async function POST(req: Request) {
-  const raw = await req.text() // raw body — required
+  const raw = await req.text() // raw body, required
   const ok = verifyWebhookSignature({
     payload: raw,
     signature: req.headers.get("x-vraelis-signature"),
@@ -148,9 +148,9 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <div className="phead">
         <div>
-          <p className="eyebrow">Developers · Sandbox</p>
+          <p className="eyebrow">Developers | Sandbox</p>
           <h1 className="display">Sandbox console</h1>
-          <p>The everyday path is one POST to <code style={{ fontFamily: "var(--font-code)" }}>/api/v1/check</code> (curl below). This console tests the optional human-validation flow end-to-end before spending credits — create a validation run, preview the Decision Package, test exports, and send a signed webhook.</p>
+          <p>The everyday path is one POST to <code style={{ fontFamily: "var(--font-code)" }}>/api/v1/check</code> (curl below). This console tests the optional human-validation flow end-to-end before spending credits, create a validation run, preview the Decision Package, test exports, and send a signed webhook.</p>
         </div>
         <Link href="/app/api-keys" className="btn btn--ghost">← API &amp; webhooks</Link>
       </div>
@@ -170,7 +170,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
       {hasApiAccess && (
         <>
           {/* Create */}
-          <div style={lbl}>1 · Create a sandbox validation run</div>
+          <div style={lbl}>1 | Create a sandbox validation run</div>
           <div className="card" style={{ marginBottom: 18 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }} className="cols-stack">
               <label style={{ gridColumn: "1 / -1" }}><span style={{ display: "block", fontSize: 12.5, color: "var(--fg-3)", marginBottom: 5 }}>Title</span><input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} style={inputStyle} /></label>
@@ -193,18 +193,18 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
               </div>
 
               {/* Decision Package preview */}
-              <div style={lbl}>2 · Decision Package preview <span className="pill" style={{ marginLeft: 6, fontSize: 10 }}>sample · mode {dp?.mode ?? "sandbox"}</span></div>
+              <div style={lbl}>2 | Decision Package preview <span className="pill" style={{ marginLeft: 6, fontSize: 10 }}>sample | mode {dp?.mode ?? "sandbox"}</span></div>
               <div className="card" style={{ marginBottom: 18 }}>
                 <div className="tile-grid cols-4" style={{ gap: 12, marginBottom: 14 }}>
                   {[
-                    ["Recommended", String(dec.recommended_output ?? "—")],
-                    ["Pref. margin", dec.preference_margin != null ? `${dec.preference_margin} pts` : "—"],
-                    ["Confidence", String(dec.directional_confidence ?? "—")],
-                    ["Signal", String(dec.signal_quality ?? "—")],
-                    ["Health", String(dec.evaluation_health ?? "—")],
-                    ["Valid judgments", String(counts.valid_judgments ?? "—")],
-                    ["Filtered", String(counts.filtered_responses ?? "—")],
-                    ["Audience fit", aud ? String(aud.audience_fit ?? "—") : "—"],
+                    ["Recommended", String(dec.recommended_output ?? "-")],
+                    ["Pref. margin", dec.preference_margin != null ? `${dec.preference_margin} pts` : "-"],
+                    ["Confidence", String(dec.directional_confidence ?? "-")],
+                    ["Signal", String(dec.signal_quality ?? "-")],
+                    ["Health", String(dec.evaluation_health ?? "-")],
+                    ["Valid judgments", String(counts.valid_judgments ?? "-")],
+                    ["Filtered", String(counts.filtered_responses ?? "-")],
+                    ["Audience fit", aud ? String(aud.audience_fit ?? "-") : "-"],
                   ].map(([k, v]) => (
                     <div key={k}><div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>{k}</div><div style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 600, color: "var(--fg-1)", marginTop: 3 }}>{v}</div></div>
                   ))}
@@ -217,7 +217,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
               </div>
 
               {/* Exports */}
-              <div style={lbl}>3 · Test exports</div>
+              <div style={lbl}>3 | Test exports</div>
               <div className="card" style={{ marginBottom: 18 }}>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: exp ? 14 : 0 }}>
                   {(["summary", "standard", "scale"] as const).map((t) => <button key={t} onClick={() => doExport(t)} disabled={!!expBusy} className="btn btn--ghost" style={{ fontSize: 12.5 }}>{expBusy === t ? "…" : `Export ${t} JSON`}</button>)}
@@ -226,7 +226,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
                 {exp && (
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
-                      <span className="pill" style={{ background: exp.ok ? "var(--acc-soft)" : "var(--bg-2)", color: exp.ok ? "var(--acc-deep)" : "var(--money)" }}>{exp.kind} · {exp.status} {exp.ok ? "OK" : "error"}</span>
+                      <span className="pill" style={{ background: exp.ok ? "var(--acc-soft)" : "var(--bg-2)", color: exp.ok ? "var(--acc-deep)" : "var(--money)" }}>{exp.kind} | {exp.status} {exp.ok ? "OK" : "error"}</span>
                       <button onClick={() => download(`sandbox-${ev.id.slice(0, 8)}.${exp.kind === "csv" ? "csv" : "json"}`, exp.body, exp.kind === "csv" ? "text/csv" : "application/json")} className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5 }}>Download</button>
                       <button onClick={() => copy("exp", exp.body)} className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5 }}>{copied === "exp" ? "Copied ✓" : "Copy"}</button>
                     </div>
@@ -236,7 +236,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
               </div>
 
               {/* Webhook self-test */}
-              <div style={lbl}>4 · Send sandbox webhook</div>
+              <div style={lbl}>4 | Send sandbox webhook</div>
               <div className="card" style={{ marginBottom: 18 }}>
                 {endpoints.length === 0 ? (
                   <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Add a webhook endpoint to send a signed sandbox event. <Link href="/app/api-keys#webhooks" style={{ color: "var(--acc-deep)" }}>Add an endpoint →</Link></p>
@@ -249,7 +249,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
                     </div>
                     {wh && (
                       <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                        <span className="pill" style={{ background: wh.ok ? "var(--acc-soft)" : "var(--bg-2)", color: wh.ok ? "var(--acc-deep)" : "var(--money)" }}>{wh.ok ? "Delivered" : "Failed"}{wh.status != null ? ` · HTTP ${wh.status}` : ""}</span>
+                        <span className="pill" style={{ background: wh.ok ? "var(--acc-soft)" : "var(--bg-2)", color: wh.ok ? "var(--acc-deep)" : "var(--money)" }}>{wh.ok ? "Delivered" : "Failed"}{wh.status != null ? ` | HTTP ${wh.status}` : ""}</span>
                         <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{wh.at}</span>
                         {wh.error && <span style={{ fontSize: 12, color: "var(--money)" }}>{wh.error}</span>}
                       </div>
@@ -265,14 +265,14 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
       {/* Snippets + links (always shown) */}
       <div style={lbl}>Implementation examples</div>
       <div className="card" style={{ marginBottom: 18 }}>
-        <Snippet label="curl · check an AI output (primary path)" text={CURL_CHECK} copied={copied === "chk"} onCopy={() => copy("chk", CURL_CHECK)} />
+        <Snippet label="curl | check an AI output (primary path)" text={CURL_CHECK} copied={copied === "chk"} onCopy={() => copy("chk", CURL_CHECK)} />
         <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "0 0 18px" }}>The rest of this section is the optional human-validation flow the console above exercises.</p>
-        <Snippet label="typescript · SDK starter · coming soon to npm" text={SDK_SNIPPET} copied={copied === "sdk"} onCopy={() => copy("sdk", SDK_SNIPPET)} />
-        <Snippet label="curl · create sandbox validation run" text={CURL_CREATE} copied={copied === "cc"} onCopy={() => copy("cc", CURL_CREATE)} />
-        <Snippet label="curl · fetch decision package" text={CURL_GET} copied={copied === "cg"} onCopy={() => copy("cg", CURL_GET)} />
-        <Snippet label="curl · export JSON" text={CURL_EXPORT} copied={copied === "ce"} onCopy={() => copy("ce", CURL_EXPORT)} />
-        <Snippet label="typescript · verify a webhook signature" text={SDK_WEBHOOK} copied={copied === "wv"} onCopy={() => copy("wv", SDK_WEBHOOK)} />
-        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "6px 0 0" }}>Set <code style={{ fontFamily: "var(--font-code)" }}>$VRAELIS_API_KEY</code> to your key. Keep keys server-side only — never ship them to the client. Full reference: the SDK README in the repository.</p>
+        <Snippet label="typescript | SDK starter | coming soon to npm" text={SDK_SNIPPET} copied={copied === "sdk"} onCopy={() => copy("sdk", SDK_SNIPPET)} />
+        <Snippet label="curl | create sandbox validation run" text={CURL_CREATE} copied={copied === "cc"} onCopy={() => copy("cc", CURL_CREATE)} />
+        <Snippet label="curl | fetch decision package" text={CURL_GET} copied={copied === "cg"} onCopy={() => copy("cg", CURL_GET)} />
+        <Snippet label="curl | export JSON" text={CURL_EXPORT} copied={copied === "ce"} onCopy={() => copy("ce", CURL_EXPORT)} />
+        <Snippet label="typescript | verify a webhook signature" text={SDK_WEBHOOK} copied={copied === "wv"} onCopy={() => copy("wv", SDK_WEBHOOK)} />
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "6px 0 0" }}>Set <code style={{ fontFamily: "var(--font-code)" }}>$VRAELIS_API_KEY</code> to your key. Keep keys server-side only, never ship them to the client. Full reference: the SDK README in the repository.</p>
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

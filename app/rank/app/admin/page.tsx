@@ -106,7 +106,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* data requests (admin only — gated server-side by isAdmin) */}
+      {/* data requests (admin only, gated server-side by isAdmin) */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "36px 0 12px" }}>Data requests</div>
       {dreqs.length === 0 ? (
         <div className="empty"><div className="empty__icon">✉</div><h3>No data requests</h3><p>Export, correction, and account-deletion requests from users appear here for manual review.</p></div>
@@ -136,7 +136,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* audit activity (admin only — data is gated server-side by isAdmin) */}
+      {/* audit activity (admin only, data is gated server-side by isAdmin) */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "36px 0 12px" }}>Audit activity</div>
       <div className="seg" style={{ marginBottom: 14 }}>
         {ACTORS.map((a) => <button key={a} onClick={() => setActor(a)} className={actor === a ? "on" : ""} style={{ textTransform: "capitalize" }}>{a}</button>)}
@@ -155,7 +155,7 @@ export default function AdminPage() {
                     <span className="pill" style={{ fontSize: 10.5 }}>{e.actor_type}</span>
                     {e.user_id ? <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)" }}>{e.user_id}</span> : null}
                   </div>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 3 }}>{meta || (e.test_id ? `test ${e.test_id.slice(0, 8)}` : "—")}</div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 3 }}>{meta || (e.test_id ? `test ${e.test_id.slice(0, 8)}` : "-")}</div>
                 </div>
                 <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", flex: "none" }}>{new Date(e.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
               </div>

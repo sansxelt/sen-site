@@ -29,7 +29,7 @@ function EventList({ events, empty }: { events: AuditEntry[]; empty: string }) {
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 14, color: "var(--fg-1)", fontWeight: 500 }}>
               {e.label}
-              {e.subject ? <span style={{ color: "var(--fg-3)", fontWeight: 400 }}> — “{e.subject}”</span> : null}
+              {e.subject ? <span style={{ color: "var(--fg-3)", fontWeight: 400 }}>, “{e.subject}”</span> : null}
             </div>
             <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 3, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <span className="pill" style={{ fontSize: 9.5, color: e.actor === "System" ? "var(--fg-4)" : "var(--acc-deep)" }}>{e.actor}</span>
@@ -70,19 +70,19 @@ export default async function AuditPage() {
         <div>
           <p className="eyebrow">Trust &amp; governance</p>
           <h1 className="display">Activity</h1>
-          <p>A read-only trail of everything that happens in your workspace — evaluations, credits, billing, team access, and governance.</p>
+          <p>A read-only trail of everything that happens in your workspace, evaluations, credits, billing, team access, and governance.</p>
         </div>
         <Link href="/enterprise" className="btn btn--ghost">Trust overview →</Link>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
-        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your evaluation runs, credit top-ups, exports, billing changes, team access, and governance events — organization changes, domain verification, SSO, ownership transfers. Activity never includes participant identities, payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw evaluation data.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your evaluation runs, credit top-ups, exports, billing changes, team access, and governance events, organization changes, domain verification, SSO, ownership transfers. Activity never includes participant identities, payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw evaluation data.</p>
       </div>
 
       {/* Export */}
       <div style={cardHead}>Audit export</div>
       <AuditExport showOrg={!!(org && canOrgAudit)} />
-      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Export the governance trail as sanitized CSV or JSON for your own records. Organization-wide governance, verified domains, OIDC SSO, and scheduled exports with retention controls are part of the enterprise trust layer — <Link href="/contact" style={{ color: "var(--acc-deep)" }}>talk to us about enterprise requirements →</Link></p>
+      <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Export the governance trail as sanitized CSV or JSON for your own records. Organization-wide governance, verified domains, OIDC SSO, and scheduled exports with retention controls are part of the enterprise trust layer, <Link href="/contact" style={{ color: "var(--acc-deep)" }}>talk to us about enterprise requirements →</Link></p>
 
       {/* Trust controls */}
       <div style={cardHead}>Trust controls</div>
@@ -105,7 +105,7 @@ export default async function AuditPage() {
       {/* Organization activity */}
       {org && canOrgAudit && (
         <>
-          <div style={cardHead}>Organization activity — {org.name}</div>
+          <div style={cardHead}>Organization activity, {org.name}</div>
           <EventList events={orgEvents} empty="Organization, domain, SSO, and provisioning changes will appear here." />
           <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Account-level governance events. Organization and workspace activity can be exported as sanitized CSV or JSON above. Scheduled exports and retention controls are planned.</p>
         </>

@@ -16,10 +16,10 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fteam");
   const sp = await searchParams;
 
-  // Billing-migration completion fallback (target's checkout return) — runs regardless of
+  // Billing-migration completion fallback (target's checkout return), runs regardless of
   // which workspace is selected, in case the webhook is delayed. Idempotent.
   if (sp.session_id) await syncMigrationCheckout(sp.session_id);
-  // A pending transfer addressed to this user (target) — show the accept card anywhere.
+  // A pending transfer addressed to this user (target), show the accept card anywhere.
   const incoming = await pendingIncomingTransfer(email);
 
   // A workspace the caller does NOT own shows the read-only team view; a workspace
@@ -30,8 +30,8 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
     const baBilling = billingAdmin ? await teamSeatState(selected.id) : null;
     return (
       <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-        <div className="phead"><div><p className="eyebrow">Workspace: {selected.name}</p><h1 className="display">Team</h1><p>{view.clientSafe ? "Client-safe access — shared reports only." : "Read-only view of this shared workspace."}</p></div></div>
-        <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}><div style={{ fontSize: 13.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>Workspace: {selected.name}</strong> · Role: {ROLE_LABEL[selected.role]}{billingAdmin ? " · Billing admin" : ""} · {view.clientSafe ? "Client-safe access" : "Read-only"}</div></div>
+        <div className="phead"><div><p className="eyebrow">Workspace: {selected.name}</p><h1 className="display">Team</h1><p>{view.clientSafe ? "Client-safe access, shared reports only." : "Read-only view of this shared workspace."}</p></div></div>
+        <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}><div style={{ fontSize: 13.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>Workspace: {selected.name}</strong> | Role: {ROLE_LABEL[selected.role]}{billingAdmin ? " | Billing admin" : ""} | {view.clientSafe ? "Client-safe access" : "Read-only"}</div></div>
 
         {baBilling ? (
           <div style={{ marginBottom: 18 }}>
@@ -65,7 +65,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
                 <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 18 }}>{view.projects.map((p) => <div key={p.project_id} className="card"><div style={{ fontWeight: 600, marginBottom: 6 }}>{p.project_name}</div>{p.members.map((mm) => <div key={mm.email} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--fg-2)", padding: "4px 0" }}><span>{mm.email}</span><span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>{mm.role}</span></div>)}</div>)}</div>
               </>
             )}
-            <p style={{ fontSize: 12, color: "var(--fg-5)" }}>Read-only — switch to your personal workspace to manage your own team. Member management for shared workspaces stays with the workspace owner.</p>
+            <p style={{ fontSize: 12, color: "var(--fg-5)" }}>Read-only, switch to your personal workspace to manage your own team. Member management for shared workspaces stays with the workspace owner.</p>
           </>
         )}
       </div>
@@ -74,7 +74,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
 
   // Owner-managed workspace (the selected one if they own it, else personal).
   const ctx = await getWorkspaceContext(email, selected?.isOwner ? selected.id : undefined);
-  // Normal team-checkout sync — NOT for migration returns (those are handled by
+  // Normal team-checkout sync, NOT for migration returns (those are handled by
   // syncMigrationCheckout above + the webhook, so they never fall through to normal sync).
   if (ctx.workspace && sp.session_id && sp.team !== "migrated") await syncTeamCheckout(ctx.workspace.id, sp.session_id);
   const wsId = ctx.workspace?.id ?? null;

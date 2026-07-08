@@ -40,14 +40,14 @@ export default function SampleReport() {
         {/* top bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 22 }}>
           <Link href="/" style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--fg-1)", textDecoration: "none", letterSpacing: "-0.01em" }}>Vraelis</Link>
-          <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>Sample report · illustrative data</span>
+          <span className="pill" style={{ fontSize: 10, color: "var(--fg-4)" }}>Sample report | illustrative data</span>
         </div>
 
         {/* header */}
         <p className="eyebrow">Human validation</p>
         <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", margin: "6px 0 10px" }}>Which onboarding message should we ship?</h1>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap", ...kicker, marginBottom: 24 }}>
-          <span>Complete</span><span>·</span><span>118 qualified judgments</span><span>·</span><span>12 filtered for quality</span>
+          <span>Complete</span><span>|</span><span>118 qualified judgments</span><span>|</span><span>12 filtered for quality</span>
         </div>
 
         {/* recommendation */}
@@ -56,7 +56,7 @@ export default function SampleReport() {
           <div>
             <div style={{ ...kicker, color: "var(--acc-deep)" }}>Recommendation</div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, color: "var(--fg-1)" }}>Ship Version B</div>
-            <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>Preferred by 63% of qualified judgments · directional confidence: strong</div>
+            <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>Preferred by 63% of qualified judgments | directional confidence: strong</div>
             <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>99% chance</strong> this is genuinely the preferred version, based on the 118 judgments collected (95% range: 54% to 71% preference). A decision aid, not a guarantee.</div>
           </div>
         </div>

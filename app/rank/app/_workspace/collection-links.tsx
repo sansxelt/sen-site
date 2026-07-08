@@ -61,14 +61,14 @@ export function CollectionLinks({ testId }: { testId: string }) {
       )}
 
       {!loaded ? null : links.length === 0 ? (
-        <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Create collection links to compare signal quality across Instagram, Discord, email, embed, and other channels — then see which source produced the cleanest decision signal.</p>
+        <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Create collection links to compare signal quality across Instagram, Discord, email, embed, and other channels, then see which source produced the cleanest decision signal.</p>
       ) : (
         <>
           {(cleanest || biggest) && (
             <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "0 0 14px", lineHeight: 1.5 }}>
               {biggest && cleanest && biggest.id !== cleanest.id ? <><strong style={{ color: "var(--fg-1)" }}>{biggest.label}</strong> produced the most valid judgments, but <strong style={{ color: "var(--fg-1)" }}>{cleanest.label}</strong> had the cleanest signal ({cleanest.stats.filterRate}% filtered).</>
                 : cleanest ? <><strong style={{ color: "var(--fg-1)" }}>{cleanest.label}</strong> has the cleanest signal so far ({cleanest.stats.filterRate}% filtered).</> : null}
-              {noisy ? <span style={{ color: "var(--money)" }}> {" "}{noisy.label} has a high filter rate ({noisy.stats.filterRate}%) — consider another channel.</span> : null}
+              {noisy ? <span style={{ color: "var(--money)" }}> {" "}{noisy.label} has a high filter rate ({noisy.stats.filterRate}%), consider another channel.</span> : null}
             </p>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -77,7 +77,7 @@ export function CollectionLinks({ testId }: { testId: string }) {
                 <div style={{ minWidth: 0, flex: "1 1 200px" }}>
                   <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)" }}>{l.label} <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", fontWeight: 400 }}>{channelLabel(l.source)}</span></div>
                   <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 3 }}>
-                    {l.stats.total > 0 ? <>{l.stats.valid} valid · {l.stats.filtered} filtered · {l.stats.filterRate}% rate</> : "No responses yet"}
+                    {l.stats.total > 0 ? <>{l.stats.valid} valid | {l.stats.filtered} filtered | {l.stats.filterRate}% rate</> : "No responses yet"}
                   </div>
                 </div>
                 <button onClick={() => copy(l.url, l.id)} className="btn btn--ghost" style={{ fontSize: 12, padding: "5px 10px" }}>{copied === l.id ? "Copied ✓" : "Copy link"}</button>

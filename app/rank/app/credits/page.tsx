@@ -60,7 +60,7 @@ export default function CreditsPage() {
 
       {plan !== "free" && (
         <div className="card" style={{ marginBottom: 22, background: "var(--bg-2)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)", textTransform: "capitalize" }}>{plan}</strong> plan — your monthly credits refresh automatically. Top up here only if you want extra beyond your plan.</div>
+          <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}>You&apos;re on the <strong style={{ color: "var(--fg-1)", textTransform: "capitalize" }}>{plan}</strong> plan, your monthly credits refresh automatically. Top up here only if you want extra beyond your plan.</div>
           <Link href="/app/plans" style={{ fontSize: 13, color: "var(--acc-deep)", whiteSpace: "nowrap" }}>Manage plan →</Link>
         </div>
       )}
@@ -102,12 +102,12 @@ export default function CreditsPage() {
           </div>
         </div>
 
-        {/* right column — balance above, you'll receive below, matched size */}
+        {/* right column, balance above, you'll receive below, matched size */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="sticky-side">
           <div className="card" style={{ minHeight: 214, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
               <div style={eyebrow}>Your balance</div>
-              <div style={{ ...bigNum, color: "var(--fg-1)" }}>{bal !== null ? bal.toLocaleString() : "—"}</div>
+              <div style={{ ...bigNum, color: "var(--fg-1)" }}>{bal !== null ? bal.toLocaleString() : "-"}</div>
               <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 6 }}>credits available</div>
             </div>
             <Link href="/app/billing" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none", fontWeight: 500, marginTop: 16 }}>View credit activity →</Link>

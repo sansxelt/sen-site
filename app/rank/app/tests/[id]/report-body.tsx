@@ -40,7 +40,7 @@ const CONF_TONE: Record<string, { bg: string; fg: string }> = {
   None: { bg: "var(--bg-1)", fg: "var(--fg-4)" },
 };
 
-// The shared report deliverable — Evaluation Intelligence (decision summary,
+// The shared report deliverable, Evaluation Intelligence (decision summary,
 // margin, signal quality, action), preference breakdown, optional AI analysis
 // slot, and reasoning signals. Pure render from results + options; used by both
 // the owner report and the public /r/<token> report.
@@ -86,7 +86,7 @@ export function ReportBody({ results, options, analysisSlot, themesSlot, votesTa
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.5rem, 3vw, 2.1rem)", fontWeight: 700, letterSpacing: "-0.02em" }}>{winner.label && !winner.asset_url ? winner.label.slice(0, 48) : `Option ${optLetter(winner.position)}`}</span>
-                <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>{winnerRow.pct}% preferred · {intel.marginPts == null ? "n/a" : `+${intel.marginPts} pts`} margin</span>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--fg-4)" }}>{winnerRow.pct}% preferred | {intel.marginPts == null ? "n/a" : `+${intel.marginPts} pts`} margin</span>
               </div>
               <p style={{ fontSize: 14, color: "var(--fg-2)", marginTop: 6, marginBottom: 0 }}>{intel.decisionSummary}</p>
               {intel.winProbabilityPct != null && (
@@ -106,7 +106,7 @@ export function ReportBody({ results, options, analysisSlot, themesSlot, votesTa
         <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "14px 0 14px" }}>{intel.marginText}</p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <Metric l="Preference margin" v={intel.marginPts == null ? "n/a" : `${intel.marginPts} pts`} accent={!intel.inconclusive} />
-          <Metric l="Confidence" v={intel.confidenceLabel === "None" ? "n/a" : intel.winProbabilityPct != null ? `${intel.confidenceLabel} · ${intel.winProbabilityPct}%` : intel.confidenceLabel} />
+          <Metric l="Confidence" v={intel.confidenceLabel === "None" ? "n/a" : intel.winProbabilityPct != null ? `${intel.confidenceLabel} | ${intel.winProbabilityPct}%` : intel.confidenceLabel} />
           <Metric l="Valid judgments" v={intel.totalValid.toLocaleString()} />
           <Metric l="Signal quality" v={intel.signalLabel} />
         </div>
@@ -120,7 +120,7 @@ export function ReportBody({ results, options, analysisSlot, themesSlot, votesTa
         <div style={head}>Decision readiness</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
           <span className="pill" style={{ background: rt.bg, color: rt.fg, borderColor: "var(--acc-line)", fontSize: 12, fontWeight: 700 }}>{readiness.label}</span>
-          {readiness.signals.targetProgress != null && <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{readiness.signals.validJudgments.toLocaleString()}{readiness.signals.target ? ` / ${readiness.signals.target.toLocaleString()}` : ""} judgments · {readiness.signals.targetProgress}% of target</span>}
+          {readiness.signals.targetProgress != null && <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{readiness.signals.validJudgments.toLocaleString()}{readiness.signals.target ? ` / ${readiness.signals.target.toLocaleString()}` : ""} judgments | {readiness.signals.targetProgress}% of target</span>}
         </div>
         <p style={{ fontSize: 14, color: "var(--fg-2)", margin: "0 0 12px", lineHeight: 1.55 }}>{readiness.reason}</p>
         <div style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
@@ -130,7 +130,7 @@ export function ReportBody({ results, options, analysisSlot, themesSlot, votesTa
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
           <Metric l="Valid judgments" v={readiness.signals.validJudgments.toLocaleString()} accent />
           {readiness.signals.target != null ? <Metric l="Target progress" v={`${readiness.signals.targetProgress}%`} /> : null}
-          <Metric l="Preference margin" v={readiness.signals.marginPts == null ? "—" : `${readiness.signals.marginPts} pts`} />
+          <Metric l="Preference margin" v={readiness.signals.marginPts == null ? "-" : `${readiness.signals.marginPts} pts`} />
           <Metric l="Signal quality" v={readiness.signals.signalQuality} />
           {readiness.signals.audienceFit ? <Metric l="Audience fit" v={readiness.signals.audienceFit} /> : null}
         </div>
@@ -199,12 +199,12 @@ export function ReportBody({ results, options, analysisSlot, themesSlot, votesTa
                 </div>
               ) : null}
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Metric l="Leading share" v={c.winnerSharePct == null ? "—" : `${c.winnerSharePct}%`} accent={c.state === "converged"} />
-                <Metric l="Confident floor" v={c.lowerBoundPct == null ? "—" : `${c.lowerBoundPct}%`} />
-                <Metric l="Even-split line" v={c.chancePct == null ? "—" : `${c.chancePct}%`} />
-                <Metric l="Clears chance by" v={c.clearsChanceByPts == null ? "—" : `${c.clearsChanceByPts > 0 ? "+" : ""}${c.clearsChanceByPts} pts`} />
+                <Metric l="Leading share" v={c.winnerSharePct == null ? "-" : `${c.winnerSharePct}%`} accent={c.state === "converged"} />
+                <Metric l="Confident floor" v={c.lowerBoundPct == null ? "-" : `${c.lowerBoundPct}%`} />
+                <Metric l="Even-split line" v={c.chancePct == null ? "-" : `${c.chancePct}%`} />
+                <Metric l="Clears chance by" v={c.clearsChanceByPts == null ? "-" : `${c.clearsChanceByPts > 0 ? "+" : ""}${c.clearsChanceByPts} pts`} />
               </div>
-              <p style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.6, marginTop: 12, marginBottom: 0 }}>Convergence checks whether the leading share is distinguishable from an even split, using a conservative (95%) estimate that accounts for sample size — so a small or noisy result can&apos;t read as decisive. It measures signal strength, not whether any individual response is &quot;right&quot;.</p>
+              <p style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.6, marginTop: 12, marginBottom: 0 }}>Convergence checks whether the leading share is distinguishable from an even split, using a conservative (95%) estimate that accounts for sample size, so a small or noisy result can&apos;t read as decisive. It measures signal strength, not whether any individual response is &quot;right&quot;.</p>
             </div>
           </>
         );
@@ -231,16 +231,16 @@ export function ReportBody({ results, options, analysisSlot, themesSlot, votesTa
         <>
           <div style={head}>Judge pool</div>
           <div className="card" style={{ marginBottom: 26 }}>
-            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: "0 0 14px", lineHeight: 1.5 }}>This decision came from <strong style={{ color: "var(--fg-1)" }}>{judgePool.uniqueJudges.toLocaleString()} unique judge{judgePool.uniqueJudges === 1 ? "" : "s"}</strong> — real people, each judging once. Quality filtering and reputation gating run on every response.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-2)", margin: "0 0 14px", lineHeight: 1.5 }}>This decision came from <strong style={{ color: "var(--fg-1)" }}>{judgePool.uniqueJudges.toLocaleString()} unique judge{judgePool.uniqueJudges === 1 ? "" : "s"}</strong>, real people, each judging once. Quality filtering and reputation gating run on every response.</p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               <Metric l="Unique judges" v={judgePool.uniqueJudges.toLocaleString()} accent />
               <Metric l="Established judges" v={judgePool.established.toLocaleString()} />
-              <Metric l="Clean track record" v={judgePool.cleanPct == null ? "—" : `${judgePool.cleanPct}%`} />
+              <Metric l="Clean track record" v={judgePool.cleanPct == null ? "-" : `${judgePool.cleanPct}%`} />
             </div>
             <p style={{ fontSize: 11.5, color: "var(--fg-5)", lineHeight: 1.6, marginTop: 12, marginBottom: 0 }}>
               {judgePool.cleanPct == null
                 ? "“Established” judges have a track record of 12+ prior judgments; this run had too few to report a clean-record rate yet. Reputation gating still removes judges whose responses are mostly rejected."
-                : <>Of judges with a track record (12+ prior judgments), <strong style={{ color: "var(--fg-3)" }}>{judgePool.cleanPct}%</strong> have a clean record — their responses are rarely filtered. We report who judged and how filtered the signal is; we don&apos;t claim inter-judge agreement or reliability scores, which we don&apos;t measure.</>}
+                : <>Of judges with a track record (12+ prior judgments), <strong style={{ color: "var(--fg-3)" }}>{judgePool.cleanPct}%</strong> have a clean record, their responses are rarely filtered. We report who judged and how filtered the signal is; we don&apos;t claim inter-judge agreement or reliability scores, which we don&apos;t measure.</>}
             </p>
           </div>
         </>
@@ -279,7 +279,7 @@ export function ReportBody({ results, options, analysisSlot, themesSlot, votesTa
             ["Choose what to ship", "based on this recommendation."],
             ["Judge how strong the call is", "from the preference margin and directional confidence."],
             ["Improve the weaker options", "using the reasoning signals."],
-            ["Share or export it", "as a decision report for clients, teams, or apps — or pull it by API."],
+            ["Share or export it", "as a decision report for clients, teams, or apps, or pull it by API."],
           ].map(([t, d]) => (
             <li key={t} style={{ display: "flex", gap: 11, alignItems: "flex-start", fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5 }}>
               <span style={{ width: 18, height: 18, flex: "none", marginTop: 1, borderRadius: "50%", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", color: "var(--acc-deep)", display: "grid", placeItems: "center", fontSize: 11 }}>→</span>
@@ -292,7 +292,7 @@ export function ReportBody({ results, options, analysisSlot, themesSlot, votesTa
       {/* ── How to read this decision record ── */}
       <div style={{ ...head, marginTop: 26 }}>How to read this decision record</div>
       <div className="card" style={{ marginBottom: 8, background: "var(--bg-2)" }}>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.55 }}>This is a decision record — a structured business artifact capturing the recommendation, confidence, signal quality, and decision readiness derived from qualified human judgment, not a poll result.</p>
+        <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px", lineHeight: 1.55 }}>This is a decision record, a structured business artifact capturing the recommendation, confidence, signal quality, and decision readiness derived from qualified human judgment, not a poll result.</p>
         <div style={{ display: "grid", gap: 11 }}>
           {REPORT_GLOSSARY.map((g) => (
             <div key={g.term} style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>

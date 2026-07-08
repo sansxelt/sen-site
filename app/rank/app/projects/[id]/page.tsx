@@ -20,14 +20,14 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
 
   const project = await getProject(email, id);
   if (!project) {
-    // Not the project owner — but a workspace owner/admin can still manage access,
+    // Not the project owner, but a workspace owner/admin can still manage access,
     // and project/workspace read-members get the client-safe shared view.
     const managed = await managedProjectMeta(email, id);
     if (managed) {
       return (
         <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
           <Link href="/app/team" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</Link>
-          <div className="phead"><div><p className="eyebrow">Program access · Workspace admin</p><h1 className="display">{managed.name}</h1>{managed.description ? <p>{managed.description}</p> : null}</div></div>
+          <div className="phead"><div><p className="eyebrow">Program access | Workspace admin</p><h1 className="display">{managed.name}</h1>{managed.description ? <p>{managed.description}</p> : null}</div></div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "0 0 4px", maxWidth: 620, lineHeight: 1.6 }}>You manage this program&apos;s access as a workspace admin. The program&apos;s analytics stay with its owner; you can invite clients and collaborators and manage their roles below.</p>
           <ProjectAccess projectId={id} />
           <div style={{ marginTop: 22 }}><Link href={`/app/shared/projects/${id}`} className="btn btn--ghost">Open client-safe view →</Link></div>
@@ -76,7 +76,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
               { label: "Tentative", value: pa.quality.tentative, color: CONF_COLORS.Tentative },
               { label: "Inconclusive", value: pa.quality.inconclusive, color: CONF_COLORS.Inconclusive },
             ]} />
-            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Avg preference margin {pa.avgMargin == null ? "—" : `${pa.avgMargin} pts`} · {pa.filtered.toLocaleString()} filtered</p>
+            <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 12, marginBottom: 0 }}>Avg preference margin {pa.avgMargin == null ? "-" : `${pa.avgMargin} pts`} | {pa.filtered.toLocaleString()} filtered</p>
           </div>
           <div className="card">
             <SectionHead>{pa.byCategory.length > 1 ? "Categories" : "Signal quality"}</SectionHead>

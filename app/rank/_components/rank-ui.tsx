@@ -252,10 +252,10 @@ function AppSidebar() {
 }
 
 // Shell UI CSS, injected once (the shell persists across client navigations):
-//  1. Text reveal — eyebrows, display headings, and lead copy fade + rise in on mount.
+//  1. Text reveal, eyebrows, display headings, and lead copy fade + rise in on mount.
 //     Replays per page because page content remounts on client nav. Excludes the hero's
 //     own .rise so nothing double-animates.
-//  2. Instant tactile feedback — buttons press (scale) and clickable cards lift on hover,
+//  2. Instant tactile feedback, buttons press (scale) and clickable cards lift on hover,
 //     with fast transitions, so every click feels registered immediately (perceived
 //     speed), not "did it work? click again". Pairs with the client-side nav + prefetch.
 // Reduced-motion disables all of it.

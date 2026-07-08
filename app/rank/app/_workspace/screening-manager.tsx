@@ -47,8 +47,8 @@ export function ScreeningManager({ testId }: { testId: string }) {
           {qs.map((q) => (
             <div key={q.id} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--line-1)" }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)" }}>{q.question}{q.is_required ? "" : <span style={{ color: "var(--fg-5)", fontWeight: 400 }}> · optional</span>}</div>
-                <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 3 }}>{q.options.map((o) => (q.qualifying_options && q.qualifying_options.includes(o) ? `✓ ${o}` : o)).join("  ·  ")}</div>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)" }}>{q.question}{q.is_required ? "" : <span style={{ color: "var(--fg-5)", fontWeight: 400 }}> | optional</span>}</div>
+                <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 3 }}>{q.options.map((o) => (q.qualifying_options && q.qualifying_options.includes(o) ? `✓ ${o}` : o)).join("  |  ")}</div>
               </div>
               <button onClick={() => del(q.id)} disabled={busy === q.id} className="btn btn--ghost" style={{ fontSize: 12, padding: "5px 10px", color: "var(--fg-4)", flex: "none" }}>Remove</button>
             </div>

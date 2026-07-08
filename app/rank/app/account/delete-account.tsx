@@ -1,7 +1,7 @@
 "use client";
 
 // Confirm-gated account-deletion REQUEST. Submitting creates a request that an
-// admin reviews manually — it deletes nothing automatically.
+// admin reviews manually, it deletes nothing automatically.
 
 import { useState } from "react";
 
@@ -36,7 +36,7 @@ export function DeleteAccount() {
       ) : (
         <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line-1)" }}>
           <ul style={{ margin: "0 0 12px", padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
-            {["Your request is reviewed manually — deletion is not immediate.", "Some billing, security, and legal records may be retained where required.", "Public report links may be disabled while the request is processed.", "Any active subscription may need to be handled as part of review."].map((t) => (
+            {["Your request is reviewed manually, deletion is not immediate.", "Some billing, security, and legal records may be retained where required.", "Public report links may be disabled while the request is processed.", "Any active subscription may need to be handled as part of review."].map((t) => (
               <li key={t} style={{ display: "flex", gap: 9, fontSize: 13, color: "var(--fg-3)", lineHeight: 1.5 }}><span style={{ color: "var(--fg-4)", flex: "none" }}>•</span><span>{t}</span></li>
             ))}
           </ul>

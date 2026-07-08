@@ -17,7 +17,7 @@ const OUTPUT_TYPES: [string, string][] = [
 ];
 
 const chip = (on: boolean) => ({
-  padding: "7px 13px", borderRadius: 999, fontSize: 12.5, cursor: "pointer",
+  padding: "10px 18px", borderRadius: 999, fontSize: 14, cursor: "pointer",
   border: `1px solid ${on ? "var(--acc-line)" : "var(--line-2)"}`,
   background: on ? "var(--acc-soft)" : "var(--bg-1)",
   color: on ? "var(--acc-deep)" : "var(--fg-3)",
@@ -38,13 +38,13 @@ export function FreeCheckEntry() {
   }
 
   return (
-    <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", padding: "clamp(18px, 2.6vw, 26px)", marginBottom: 26 }}>
-      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 19, color: "var(--fg-1)", marginBottom: 6 }}>Check your own AI output, free</div>
-      <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 0 16px" }}>
+    <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", padding: "clamp(24px, 3.4vw, 38px)", marginBottom: 34, boxShadow: "var(--shadow-card)" }}>
+      <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(22px, 3vw, 28px)", letterSpacing: "-0.02em", color: "var(--fg-1)", marginBottom: 10 }}>Check your own AI output, free</div>
+      <p style={{ fontSize: 16, color: "var(--fg-3)", lineHeight: 1.65, margin: "0 0 22px", maxWidth: 560 }}>
         Paste an AI-generated reply, email, or message. You get per-criterion scores, the version to ship, and the exact lines to fix in about 20 seconds.
       </p>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 12 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 9, marginBottom: 16 }}>
         {OUTPUT_TYPES.map(([k, label]) => (
           <button key={k} type="button" onClick={() => setOutputType(k)} style={chip(outputType === k)}>{label}</button>
         ))}
@@ -54,16 +54,16 @@ export function FreeCheckEntry() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Paste your AI output here…"
-        rows={5}
+        rows={6}
         maxLength={8000}
-        style={{ width: "100%", padding: "12px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-2)", color: "var(--fg-1)", fontSize: 14.5, lineHeight: 1.55, resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
+        style={{ width: "100%", padding: "15px 17px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-2)", color: "var(--fg-1)", fontSize: 16, lineHeight: 1.6, resize: "vertical", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
       />
 
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap", marginTop: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", marginTop: 18 }}>
         <button type="button" className="btn btn--lg" onClick={go} disabled={busy || !text.trim()} style={{ opacity: busy || !text.trim() ? 0.6 : 1 }}>
           {busy ? "Taking you in…" : "Get my free check"} {!busy ? <span aria-hidden>→</span> : null}
         </button>
-        <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>Free · ~20 seconds · no card</span>
+        <span style={{ fontSize: 13.5, color: "var(--fg-4)" }}>Free | ~20 seconds | no card</span>
       </div>
     </div>
   );

@@ -35,8 +35,8 @@ function Row({ c }: { c: VCheckSummary }) {
           {c.title || `${OUTPUT_LABELS[c.output_type] ?? "Output"} check`}
         </div>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 2 }}>
-          {OUTPUT_LABELS[c.output_type] ?? "Output"} · {when(c.created_at)}
-          {running ? " · working on it" : ""}
+          {OUTPUT_LABELS[c.output_type] ?? "Output"} | {when(c.created_at)}
+          {running ? " | working on it" : ""}
         </div>
       </div>
       <span className="pill" style={{ fontSize: 10.5, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>

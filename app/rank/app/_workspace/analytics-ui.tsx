@@ -82,7 +82,7 @@ function niceMax(peak: number): number {
 // The caller keeps its own <SectionHead>{label}</SectionHead>; this is the body.
 export function TrendChart({ data, label, caption, tone = "acc" }: { data: number[]; label: string; caption?: string; tone?: "acc" | "money" }) {
   const H = 104; // plot height in px
-  // guard: drop non-finite, clamp negatives — a stray null/NaN day can't break the chart.
+  // guard: drop non-finite, clamp negatives, a stray null/NaN day can't break the chart.
   const series = data.slice(0, 30).map((v) => (Number.isFinite(v) && v > 0 ? v : 0));
   const peak = Math.max(0, ...series);
   const total = series.reduce((a, v) => a + v, 0);
@@ -139,7 +139,7 @@ export function TrendChart({ data, label, caption, tone = "acc" }: { data: numbe
                 const active = v > 0;
                 const pct = active ? Math.max(8, Math.round((v / (axisMax || 1)) * 100)) : 0;
                 return (
-                  <div key={i} title={`${v.toLocaleString()} · ${day}`}
+                  <div key={i} title={`${v.toLocaleString()} | ${day}`}
                     style={{ flex: 1, minWidth: 2, height: active ? `${pct}%` : 2, background: active ? `linear-gradient(180deg, ${barTop}, ${barColor})` : "var(--line-2)", opacity: active ? 1 : 0.55, borderRadius: active ? "2px 2px 0 0" : 1 }} />
                 );
               })}
@@ -153,11 +153,11 @@ export function TrendChart({ data, label, caption, tone = "acc" }: { data: numbe
 
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 11 }}>
         <span style={{ ...mono, fontSize: 10.5, color: "var(--fg-4)" }}>{fmt(last7)} in last 7 days</span>
-        {caption ? <><span style={{ color: "var(--fg-5)" }}>·</span><span style={{ ...mono, fontSize: 10.5, color: "var(--fg-4)" }}>{caption}</span></> : null}
+        {caption ? <><span style={{ color: "var(--fg-5)" }}>|</span><span style={{ ...mono, fontSize: 10.5, color: "var(--fg-4)" }}>{caption}</span></> : null}
       </div>
 
       {!hasData ? (
-        <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 8, lineHeight: 1.5 }}>Nothing recorded in this window yet — bars fill in here as activity lands.</div>
+        <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 8, lineHeight: 1.5 }}>Nothing recorded in this window yet, bars fill in here as activity lands.</div>
       ) : null}
     </div>
   );

@@ -11,7 +11,7 @@ import { ThemesPanel } from "@/app/rank/app/tests/[id]/themes-panel";
 export const metadata: Metadata = { title: "Shared decision record" };
 
 // A client-ready, read-only decision report for workspace members. Reuses the same
-// public-safe ReportBody — NO owner controls (no exports/screening/sources/collection
+// public-safe ReportBody, NO owner controls (no exports/screening/sources/collection
 // links/data-quality). Access is gated by active workspace membership.
 export default async function SharedReportPage({ params }: { params: Promise<{ testId: string }> }) {
   const { testId } = await params;
@@ -47,13 +47,13 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
       <Link href={back.href} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← {back.label}</Link>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <p className="eyebrow" style={{ margin: 0 }}>Shared decision record</p>
-        <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[role]} · client-safe view</span>
+        <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[role]} | client-safe view</span>
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 8 }}>{test.title}</h1>
 
       {test.status === "active" ? (
         <>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>Evaluation in progress — {test.votes_valid} of {test.votes_target} qualified judgments collected so far.</p>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-4)", marginBottom: 14 }}>Evaluation in progress, {test.votes_valid} of {test.votes_target} qualified judgments collected so far.</p>
           {options.every((o) => !o.asset_url) ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 12 }}>
               {options.map((o, i) => (

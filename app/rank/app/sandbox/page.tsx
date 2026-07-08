@@ -14,7 +14,7 @@ export default async function SandboxPage() {
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Fsandbox");
 
   const hasApiAccess = apiAccessAllowed(await getPlan(email), email);
-  // The owner's own webhook endpoints (url + id only — never the secret).
+  // The owner's own webhook endpoints (url + id only, never the secret).
   const endpoints = hasApiAccess
     ? (await listWebhooks(email)).map((w) => ({ id: w.id, url: w.url, enabled: w.enabled }))
     : [];

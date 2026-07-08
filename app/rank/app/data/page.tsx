@@ -14,7 +14,7 @@ import { WorkspaceMemberView } from "../_workspace/workspace-member-view";
 
 export const metadata: Metadata = { title: "Analytics" };
 
-const fmtDate = (s: string | null) => { try { return s ? new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"; } catch { return "—"; } };
+const fmtDate = (s: string | null) => { try { return s ? new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-"; } catch { return "-"; } };
 
 export default async function DataPage() {
   const session = await auth();
@@ -45,7 +45,7 @@ export default async function DataPage() {
         {sharedCard}
         <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 6vw, 64px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 8 }}>No analytics in your workspace yet</div>
-          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.55 }}>Run your first evaluation to see decision quality, signal cleanliness, confidence, and category trends here — all from your real results. Analytics shared with you appear above.</p>
+          <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.55 }}>Run your first evaluation to see decision quality, signal cleanliness, confidence, and category trends here, all from your real results. Analytics shared with you appear above.</p>
           <Link href="/app/new" className="btn btn--lg">Create an evaluation →</Link>
         </div>
       </div>
@@ -58,7 +58,7 @@ export default async function DataPage() {
         <div>
           <p className="eyebrow">Decision analytics</p>
           <h1 className="display">Decision analytics</h1>
-          <p>Decision quality, signal cleanliness, and category trends — derived from your real evaluations and reports.</p>
+          <p>Decision quality, signal cleanliness, and category trends, derived from your real evaluations and reports.</p>
         </div>
         <Link href="/app/data-quality" className="btn btn--ghost">Data quality →</Link>
       </div>
@@ -70,7 +70,7 @@ export default async function DataPage() {
         <div className="stat"><div className="stat__l">Evaluations</div><div className="stat__v tnum">{a.core.total.toLocaleString()}</div><div className="stat__s">{a.core.completed} completed, {a.core.active} active</div></div>
         <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{a.core.validJudgments.toLocaleString()}</div><div className="stat__s">real human signal</div></div>
         <div className="stat"><div className="stat__l">Filtered</div><div className="stat__v tnum">{a.core.filtered.toLocaleString()}</div><div className="stat__s">{a.core.filterRate}% filter rate</div></div>
-        <div className="stat"><div className="stat__l">Avg preference margin</div><div className="stat__v tnum">{a.core.avgMargin == null ? "—" : `${a.core.avgMargin} pts`}</div><div className="stat__s">across decisions</div></div>
+        <div className="stat"><div className="stat__l">Avg preference margin</div><div className="stat__v tnum">{a.core.avgMargin == null ? "-" : `${a.core.avgMargin} pts`}</div><div className="stat__s">across decisions</div></div>
       </div>
       <div className="tile-grid cols-4" style={{ marginBottom: 26 }}>
         <div className="stat"><div className="stat__l">Total responses</div><div className="stat__v tnum">{a.core.responses.toLocaleString()}</div><div className="stat__s">valid + filtered</div></div>
@@ -137,7 +137,7 @@ export default async function DataPage() {
                 <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.count}</td>
                 <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.completed}</td>
                 <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.valid.toLocaleString()}</td>
-                <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.avgMargin == null ? "—" : `${c.avgMargin} pts`}</td>
+                <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{c.avgMargin == null ? "-" : `${c.avgMargin} pts`}</td>
                 <td style={{ padding: "10px 0", textAlign: "right", fontFamily: "var(--font-mono)", color: c.strongRate >= 50 ? "var(--acc-deep)" : "var(--fg-3)", fontWeight: 600 }}>{c.strongRate}%</td>
               </tr>
             ))}
