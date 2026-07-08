@@ -149,8 +149,9 @@ const EvalSchema = z.object({
   // the open-ended flag pass simply failed to notice an absolute (recall wobbled run to run).
   absolute_verdicts: z.array(z.object({
     candidate: z.string(),
-    claim: z.string(),                                // the absolute claim, copied verbatim
-    backed: z.boolean(),                              // does the surrounding copy substantiate it?
+    claim: z.string(),                                // the FULL sentence, verbatim -- backing is judged on THIS
+    backed: z.boolean(),                              // does the sentence + surrounding copy substantiate it?
+    quote: z.string().optional(),                     // tightest verbatim phrase within the sentence, DISPLAY ONLY
     why: z.string(),
     fix: z.string(),
   })).optional(),
@@ -241,9 +242,13 @@ export function finalizeEvaluation(
     const p = prepByLabel.get(label);
     if (!p) continue;
     const v = verdicts.find((x) => (x.candidate || "").trim().toUpperCase() === label && x.claim && norm(sentence).includes(norm(x.claim)));
-    if (v && v.backed === true) continue;                 // model affirmatively cleared it
-    // tightest verbatim span: the model's claim if it truly appears in the candidate, else the sentence
-    const span = (v && v.claim && p.normText.includes(norm(v.claim)) ? v.claim : sentence).trim().slice(0, 400);
+    // The gate keys on this SENTENCE-level verdict, never on the display quote -- structural, so a
+    // wobble in how tightly the model quotes can never move the pass/fail decision.
+    if (v && v.backed === true) continue;                 // model affirmatively cleared the full sentence
+    // Display span: the model's tight quote ONLY if it is a verbatim substring of the sentence AND
+    // present in the candidate; otherwise fall back to the whole sentence. Never affects `backed`.
+    const q = (v?.quote || "").trim();
+    const span = (q && norm(sentence).includes(norm(q)) && p.normText.includes(norm(q)) ? q : sentence).trim().slice(0, 400);
     if (overlaps(label, span)) continue;                  // already recorded this absolute
     flags.push({ candidateIndex: p.index, candidateLabel: p.label, span, issue: "overpromise", severity: "high",
       why: ((v?.why || "").trim() || "This makes an absolute claim the copy does not back up.").slice(0, 300),
@@ -323,7 +328,7 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     `- candidates: for EACH version, its label (e.g. "A"), a one-line summary, and a score for EVERY criterion above (exact key) with a one-line note.\n` +
     `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), stylistic (true ONLY if the problem is purely a matter of style, voice, or phrasing that does NOT affect factual accuracy or a commitment made to the user; false if it touches a fact, a claim, or a promise), why (one line), and fix (a concrete rewrite of just that span).\n` +
     (absClaims.length
-      ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (the SHORTEST exact phrase that carries the absolute claim, copied verbatim, NOT the whole sentence), backed (true ONLY if the surrounding copy substantiates it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), why (one line), fix (a concrete rewrite). Judge honestly and independently: "works with every major tool: Slack, Gmail, and Notion" is backed; "we never sell your data" is a policy statement and is backed; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
+      ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (the FULL sentence, copied verbatim, exactly as listed below), backed (judged from the WHOLE sentence and its surrounding copy: true ONLY if they substantiate it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), quote (the SHORTEST exact phrase WITHIN that sentence that carries the claim, copied verbatim, used only to display the flag; it does NOT change the backed judgment), why (one line), fix (a concrete rewrite). Judge honestly and independently, always on the full sentence: "works with every major tool: Slack, Gmail, and Notion" is backed; "We never sell your data. Your information stays private and is encrypted at rest and in transit." is a backed policy statement; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
       : "") +
     (multi
       ? `- recommendation: one plain sentence naming which version to ship and why.\n\n`
