@@ -22,30 +22,25 @@ const DEV_EVENT_LABEL: Record<string, string> = {
 };
 const shortDate = (s: string | null) => { if (!s) return "—"; try { return new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return "—"; } };
 
-const CURL = `# Create an evaluation
-curl -X POST https://vraelis.com/api/v1/tests \\
+const CURL = `# Check an AI output. Set a threshold and the response tells you passed: true|false.
+curl -X POST https://vraelis.com/api/v1/check \\
   -H "X-Api-Key: YOUR_KEY" -H "Content-Type: application/json" \\
   -d '{
-    "title": "Which response is more helpful, accurate, and safe?",
-    "category": "ai_image",
-    "audience": "general",
-    "votes": 50,
-    "options": [
-      { "text": "Response A — paste model output A here" },
-      { "text": "Response B — paste model output B here" }
-    ]
+    "output_type": "support_reply",
+    "candidates": ["Paste the AI output you are about to ship"],
+    "threshold": { "overall": 75, "criteria": { "accuracy": 80 } }
   }'
-# -> { "id": "...", "status": "active", "credits_charged": 50 }
+# -> { "passed": true, "recommended": {...}, "candidates": [ per-criterion scores ],
+#      "flags": [ { "span": "...", "issue": "overpromise", "fix": "..." } ] }
 
-# Get status + results (poll until status = "complete")
-curl https://vraelis.com/api/v1/tests/TEST_ID -H "X-Api-Key: YOUR_KEY"
+# Batch-check a whole release in one call (up to 10 outputs). Fail the build if any fail.
+curl -X POST https://vraelis.com/api/v1/check \\
+  -H "X-Api-Key: YOUR_KEY" -H "Content-Type: application/json" \\
+  -d '{ "items": [ { "output_type": "onboarding", "candidates": ["..."] } ], "threshold": { "overall": 75 } }'
+# -> { "batch": true, "passed": true, "ok_count": 1, "count": 1, "results": [ ... ] }
 
 # Check your credit balance
-curl https://vraelis.com/api/v1/credits -H "X-Api-Key: YOUR_KEY"
-
-# Export preference data (JSON or CSV) for dashboards / training pipelines
-curl "https://vraelis.com/api/v1/tests/TEST_ID/export?format=json" -H "X-Api-Key: YOUR_KEY"
-curl "https://vraelis.com/api/v1/tests/TEST_ID/export?format=csv"  -H "X-Api-Key: YOUR_KEY"`;
+curl https://vraelis.com/api/v1/credits -H "X-Api-Key: YOUR_KEY"`;
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<Key[]>([]);
@@ -250,7 +245,7 @@ export default function ApiKeysPage() {
       <div className="codebar"><i /><i /><i /><span>shell</span></div>
       <pre className="codeblock"><code>{CURL}</code></pre>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
-        Evaluations cost credits the same as the web app (1 credit = 1 valid judgment). Image candidates must be public URLs. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
+        Checks cost credits the same as the web app (1 credit = 1 AI check). Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>
 
       <div id="webhooks"><WebhooksSection /></div>

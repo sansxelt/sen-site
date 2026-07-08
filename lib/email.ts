@@ -112,7 +112,7 @@ function baseHtml(content: string) {
         <!-- ── Brand header ──────────────────────────────────── -->
         <tr><td style="padding:0 4px 20px;">
           <span style="font-size:18px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">Vraelis</span>
-          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">Build something REAL.</span>
+          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">QA for AI output.</span>
         </td></tr>
 
         <!-- ── Message card ──────────────────────────────────── -->

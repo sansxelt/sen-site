@@ -170,12 +170,12 @@ export default async function DataPage() {
       {/* export */}
       <div className="card" style={{ background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 240 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Export your decision data</div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Summary, standard, and Scale exports as JSON or CSV — recommended output, margin, confidence, judgment quality, and reasoning. From any completed report.</p>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, marginBottom: 4 }}>Export your check data</div>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Summary, standard, and Scale exports as JSON or CSV: per-criterion scores, the recommended version, flags, and fixes. From any completed check or validation.</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <Link href="/app/data-quality" className="btn btn--ghost">Data quality</Link>
-          <Link href="/developers#export" className="btn btn--ghost">Export docs →</Link>
+          <Link href="/developers#webhooks" className="btn btn--ghost">Export docs →</Link>
         </div>
       </div>
     </div>

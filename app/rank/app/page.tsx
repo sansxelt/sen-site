@@ -139,9 +139,9 @@ export default async function Dashboard() {
       {/* stats */}
       <div className="tile-grid cols-4" style={{ marginBottom: 26 }}>
         <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</Link></div></div>
-        <div className="stat"><div className="stat__l">Collecting signal</div><div className="stat__v tnum">{stats.active}</div><div className="stat__s">active workflows</div></div>
-        <div className="stat"><div className="stat__l">Decisions made</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">decision records</div></div>
-        <div className="stat"><div className="stat__l">Qualified signals</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">quality-filtered human signal</div></div>
+        <div className="stat"><div className="stat__l">Validations running</div><div className="stat__v tnum">{stats.active}</div><div className="stat__s">on real people</div></div>
+        <div className="stat"><div className="stat__l">Validations completed</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">finished runs</div></div>
+        <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">from real people, filtered</div></div>
       </div>
 
       {isEmpty ? (

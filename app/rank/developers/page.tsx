@@ -159,8 +159,8 @@ export default function DevelopersPage() {
               ["TypeScript SDK", "A typed client for create / fetch / export / webhook verification, matching the schema. In the repo today."],
               ["Signed webhooks", "An HMAC-signed completion webhook fires the moment an evaluation fills: retried, idempotent, no polling."],
               ["Sandbox", "Exercise the whole flow at 0 credits / 0 quota, isolated from production, before you spend."],
-              ["Embedded evaluation surface", "One way to collect signal among several. The product output is always the Decision Package."],
-              ["Decision Package schema", "A public JSON Schema for typed integrations. The platform output, not a raw tally."],
+              ["Embedded validation surface", "One optional way to collect human signal. It calibrates a check; the primary output is the check result."],
+              ["Decision Package schema", "A public JSON Schema for the human-validation result, for typed integrations. Not a raw tally."],
               ["Audit events", "Governance actions recorded as a safe, exportable trail: no secrets, tokens, or ids."],
               ["Governed access", "Organizations, verified domains, OIDC SSO, and role-separated, client-safe sharing."],
             ].map(([t, d]) => (
@@ -210,15 +210,15 @@ export default function DevelopersPage() {
       <section className="section" style={{ background: "var(--bg-2)" }}>
         <div className="wrap" style={{ maxWidth: 760 }}>
           <p className="eyebrow">First integration</p>
-          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>From zero to a Decision Package in a few steps.</h2>
-          <p className="lead-copy" style={{ marginBottom: 22 }}>Start in sandbox at 0 credits, then move to production. No contract and no sales call: just an API key and an evaluation run.</p>
+          <h2 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", marginBottom: 12 }}>From zero to a passing check in a few steps.</h2>
+          <p className="lead-copy" style={{ marginBottom: 22 }}>No contract and no sales call: just an API key and one POST. Human validation is available on the same platform when you want to calibrate a check against real people.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {[
-              ["Create a sandbox evaluation", "Call the create endpoint with mode: sandbox to exercise the full flow at 0 credits and 0 quota."],
-              ["Submit candidate outputs", "Send 2 to 3 candidates as text, images, or both, with your prompt and judgment criteria."],
-              ["Receive the Decision Package", "When the run fills, fetch the typed Decision Package: preferred output, preference margin, confidence, signal quality, valid-vs-filtered counts, and readiness."],
-              ["Listen for the completion webhook", "Register an endpoint and get an HMAC-signed callback the instant a run completes, no polling. Verify it with the SDK helper."],
-              ["Move to production credits", "Switch off sandbox, pick a plan with API access, and scale with the same calls."],
+              ["Get an API key", "Create a key in the console. Authenticate with X-Api-Key or Authorization: Bearer on every call."],
+              ["POST your output to /api/v1/check", "Send the AI output plus its type and, optionally, your quality threshold. 1 credit per output, and you're never charged for a check that fails to run."],
+              ["Read the result", "Get per-criterion scores, flagged issues, and line-level fixes back instantly, plus passed when you set a threshold, so you can gate a deploy on it."],
+              ["Batch a whole release", "POST { items: [ ... ] } with up to 10 outputs for one passed per item and a batch-level verdict. Same call, same envelope."],
+              ["Calibrate on real people (optional)", "When a check matters, route the output to qualified human validators on the same platform and get a governed Decision Package back over a signed webhook."],
             ].map(([title, desc], i) => (
               <div key={title} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 16, alignItems: "start" }}>
                 <div style={{ display: "grid", placeItems: "center", width: 30, height: 30, borderRadius: "50%", background: "var(--acc)", color: "#fff", fontWeight: 700, fontSize: 13, flex: "none" }}>{i + 1}</div>
@@ -229,7 +229,7 @@ export default function DevelopersPage() {
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.6 }}>SDK methods: <code style={{ fontFamily: "var(--font-code, monospace)" }}>evaluations.create / get / exportJson / exportCsv</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>webhooks.verifySignature</code>. Full SDK and curl examples live in the signed-in sandbox console.</p>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "20px 0 0", lineHeight: 1.6 }}>The check is one POST to <code style={{ fontFamily: "var(--font-code, monospace)" }}>/api/v1/check</code>; a curl example is above. The SDK also wraps the human-validation flow: <code style={{ fontFamily: "var(--font-code, monospace)" }}>evaluations.create / get / exportJson / exportCsv</code>, <code style={{ fontFamily: "var(--font-code, monospace)" }}>webhooks.verifySignature</code>. Full SDK and curl examples live in the signed-in sandbox console.</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 }}>
             <Link href="/app/api-keys" className="btn">Get an API key</Link>
             <Link href="/app/sandbox" className="btn btn--ghost">Open sandbox console</Link>

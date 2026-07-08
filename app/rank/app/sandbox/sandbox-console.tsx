@@ -19,6 +19,18 @@ const CATEGORIES: [string, string][] = [
   ["ai_image", "AI image output"], ["logo", "Logo"], ["hook", "Copy / headline"],
 ];
 
+const CURL_CHECK = `# The primary path: check an AI output. 1 credit, instant result.
+curl -X POST https://vraelis.com/api/v1/check \\
+  -H "X-Api-Key: $VRAELIS_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"output_type":"support_reply",
+       "candidates":["Hi! Your refund is on its way..."],
+       "threshold":{"overall":80}}'
+# -> { "passed": true, "candidates": [ { "overall": 86, "scores": {...} } ],
+#      "flags": [ { "span": "...", "issue": "overpromise", "fix": "..." } ] }
+# Batch a release (up to 10, one passed per item + a batch verdict):
+#   { "items": [ { "output_type": "onboarding", "candidates": ["..."] } ], "threshold": { "overall": 80 } }`;
+
 const SDK_SNIPPET = `import { Vraelis } from "@vraelis/sdk"
 
 const vraelis = new Vraelis({ apiKey: process.env.VRAELIS_API_KEY! })
@@ -138,7 +150,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
         <div>
           <p className="eyebrow">Developers · Sandbox</p>
           <h1 className="display">Sandbox console</h1>
-          <p>Test your Vraelis integration end-to-end before spending credits — create an evaluation, preview the Decision Package, test exports, and send a signed webhook.</p>
+          <p>The everyday path is one POST to <code style={{ fontFamily: "var(--font-code)" }}>/api/v1/check</code> (curl below). This console tests the optional human-validation flow end-to-end before spending credits — create a validation run, preview the Decision Package, test exports, and send a signed webhook.</p>
         </div>
         <Link href="/app/api-keys" className="btn btn--ghost">← API &amp; webhooks</Link>
       </div>
@@ -158,7 +170,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
       {hasApiAccess && (
         <>
           {/* Create */}
-          <div style={lbl}>1 · Create a sandbox evaluation</div>
+          <div style={lbl}>1 · Create a sandbox validation run</div>
           <div className="card" style={{ marginBottom: 18 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }} className="cols-stack">
               <label style={{ gridColumn: "1 / -1" }}><span style={{ display: "block", fontSize: 12.5, color: "var(--fg-3)", marginBottom: 5 }}>Title</span><input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} style={inputStyle} /></label>
@@ -253,8 +265,10 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
       {/* Snippets + links (always shown) */}
       <div style={lbl}>Implementation examples</div>
       <div className="card" style={{ marginBottom: 18 }}>
+        <Snippet label="curl · check an AI output (primary path)" text={CURL_CHECK} copied={copied === "chk"} onCopy={() => copy("chk", CURL_CHECK)} />
+        <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "0 0 18px" }}>The rest of this section is the optional human-validation flow the console above exercises.</p>
         <Snippet label="typescript · SDK starter · coming soon to npm" text={SDK_SNIPPET} copied={copied === "sdk"} onCopy={() => copy("sdk", SDK_SNIPPET)} />
-        <Snippet label="curl · create sandbox evaluation" text={CURL_CREATE} copied={copied === "cc"} onCopy={() => copy("cc", CURL_CREATE)} />
+        <Snippet label="curl · create sandbox validation run" text={CURL_CREATE} copied={copied === "cc"} onCopy={() => copy("cc", CURL_CREATE)} />
         <Snippet label="curl · fetch decision package" text={CURL_GET} copied={copied === "cg"} onCopy={() => copy("cg", CURL_GET)} />
         <Snippet label="curl · export JSON" text={CURL_EXPORT} copied={copied === "ce"} onCopy={() => copy("ce", CURL_EXPORT)} />
         <Snippet label="typescript · verify a webhook signature" text={SDK_WEBHOOK} copied={copied === "wv"} onCopy={() => copy("wv", SDK_WEBHOOK)} />
