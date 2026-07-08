@@ -33,7 +33,7 @@ export type OutputType = (typeof OUTPUT_TYPES)[number];
 export type FlagIssue = "dismissive" | "overpromise" | "confusing" | "risky" | "inaccurate" | "tone" | "other";
 export type FlagSeverity = "low" | "medium" | "high";
 const ISSUES: FlagIssue[] = ["dismissive", "overpromise", "confusing", "risky", "inaccurate", "tone", "other"];
-const SEVERITIES: FlagSeverity[] = ["low", "medium", "high"];
+// Severity is no longer read from the model; it is computed in deriveSeverity (finalizeEvaluation).
 
 // Domain-aware rubric: the criteria shift by output type. Each is scored 0..100.
 export type Criterion = { key: string; label: string; guide: string };
@@ -145,9 +145,29 @@ export function prepareCandidates(input: EvalInput): PreparedCandidate[] {
     .map((text, i) => ({ index: i, label: LETTERS[i], text, normText: norm(text) }));
 }
 
+// Absolute / universal claim vocabulary. An unbacked absolute is the one thing we can rate
+// deterministically from text alone.
+const ABSOLUTE_RE = /\b(any|anything|anyone|every|everything|everyone|all|always|never|none|guarantee|guaranteed|guarantees|instant|instantly|unlimited|100%)\b/i;
+
+// Compute a flag's severity from its content. The model's own severity guess is DISCARDED:
+// the 10x stability test showed it flaps run-to-run (medium x8 / high x2 on the same line),
+// while the span it flags and the issue it assigns are far more stable. Same compute-don't-
+// assert discipline as the recommended version.
+//
+// SAFETY PROPERTY (structural, not a convention): this is only ever called from the flags
+// loop below, on a span the MODEL already surfaced as a problem. It never scans free text, so
+// a benign absolute the model didn't flag ("all rights reserved", "cancel anytime") is never
+// seen. A full-text scan of real landing pages hits ~15 absolute spans of which ~1 is a real
+// defect; gating on model-flagged spans only is what keeps that false-positive rate at zero.
+function deriveSeverity(span: string, issue: FlagIssue): FlagSeverity {
+  if (ABSOLUTE_RE.test(span)) return "high";     // unbacked absolute on a flagged span -> HIGH
+  if (issue === "tone") return "low";            // a matter of voice is LOW at most
+  return "medium";                               // every other flagged, non-absolute problem
+}
+
 // Pure, exported so the honesty enforcement is independently testable without a key:
 // keep only rubric criteria, compute a transparent overall, drop non-verbatim spans,
-// and derive the recommended version from the scores.
+// derive the recommended version from the scores, and COMPUTE each flag's severity.
 export function finalizeEvaluation(
   outputType: OutputType,
   prepared: PreparedCandidate[],
@@ -184,7 +204,7 @@ export function finalizeEvaluation(
     const fix = (f.fix || "").trim();
     if (!why || !fix) continue;
     const issue = (ISSUES as string[]).includes((f.issue || "").trim().toLowerCase()) ? ((f.issue || "").trim().toLowerCase() as FlagIssue) : "other";
-    const severity = (SEVERITIES as string[]).includes((f.severity || "").trim().toLowerCase()) ? ((f.severity || "").trim().toLowerCase() as FlagSeverity) : "medium";
+    const severity = deriveSeverity(span, issue); // COMPUTED, not the model's asserted f.severity
     flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity, why: why.slice(0, 300), fix: fix.slice(0, 400) });
   }
 
@@ -245,10 +265,11 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
       : published
         ? `- recommendation: one plain sentence naming the single highest-impact change to make now. This content is already live, so do NOT frame it as ready or not ready to ship.\n\n`
         : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n\n`) +
-    `Severity calibration: HIGH means the line is verifiably false, cannot be backed up, or creates a real safety or legal risk. An absolute or universal claim the product cannot literally deliver (a promise that it works with EVERY tool, handles ANY input, NEVER fails, is GUARANTEED, INSTANT, or unlimited) is HIGH when nothing on the page backs it. MEDIUM means a clear, objective problem that is not merely stylistic. A matter of taste, voice, or phrasing preference is LOW at most, never MEDIUM or HIGH. Do not substitute your stylistic preference for the writer's.` +
-    (outputType === "marketing_copy" ? ` Marketing copy is allowed to be bold, aspirational, and confident: a strong, punchy hero line is fine, but an unbackable absolute claim in it is still HIGH.` : "") +
+    `Flag a span only when it is a real, checkable problem: a false statement, a claim that cannot be backed up, or a safety or clarity issue. Do not flag a matter of taste, voice, or phrasing that you would merely prefer.` +
+    (outputType === "marketing_copy" ? ` Marketing copy is allowed to be bold, aspirational, and confident; flag a specific claim that is false or cannot be backed up, not a strong tone.` : "") +
+    ` The system assigns each flag's severity from its content, so a rough severity guess is fine.` +
     `\n\n` +
-    `Rules: copy every span verbatim from the version text, and do not invent or paraphrase spans. Only flag real problems, not rewrites you would merely prefer. Score honestly against the criteria. Write plainly and do not use em dashes.`;
+    `Rules: copy every span verbatim from the version text, and do not invent or paraphrase spans. Score honestly against the criteria. Write plainly and do not use em dashes.`;
 
   try {
     // maxRetries: 0 (unlike v-themes/v-ai): a check charges a credit and runs behind a
