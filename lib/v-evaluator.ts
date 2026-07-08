@@ -140,7 +140,6 @@ const EvalSchema = z.object({
     span: z.string(),                                 // EXACT problem text, copied verbatim
     issue: z.string(),                                // dismissive|overpromise|confusing|risky|inaccurate|tone|other
     severity: z.string(),                             // low|medium|high (DISCARDED — severity is computed)
-    stylistic: z.boolean(),                           // forced binary: purely style/voice (LOW) vs affects fact/commitment (MEDIUM)
     why: z.string(),
     fix: z.string(),                                  // concrete rewrite of just that span
   })),
@@ -193,14 +192,13 @@ function findAbsoluteClaims(prepared: PreparedCandidate[]): { label: string; cla
   return out;
 }
 
-// Severity for an OPEN-ENDED flag (a non-absolute problem the model surfaced). Driven by a
-// FORCED BINARY the model answers per span (stylistic yes/no), not the open-ended issue label
-// (which flapped, causing 2/35 severity drift). Same shape as the absolute verdict: a forced
-// binary on a named span is far steadier than an open-ended category. Purely stylistic -> LOW;
-// anything touching fact or a commitment -> MEDIUM. HIGH is only ever the unbacked-absolute pass.
-function deriveSeverity(stylistic: boolean): FlagSeverity {
-  return stylistic ? "low" : "medium";
-}
+// Severity for an OPEN-ENDED flag (a non-absolute problem the model surfaced) is ALWAYS MEDIUM.
+// The LOW tier was DROPPED. We first tried to keep it and make it deterministic with a forced
+// stylistic yes/no binary (steadier than the open-ended issue label), but across 20x5 it still
+// drifted 1 span (low x4 / medium x1) -- so per the rule "target 0, else drop LOW" the boundary
+// is removed entirely: no LOW/MEDIUM line left to flap. HIGH is only ever the unbacked-absolute
+// pass, MEDIUM is everything else the model flags. (FlagSeverity keeps "low" in the type for the
+// stored history of older runs; nothing emits it now.)
 
 // Pure, exported so the honesty enforcement is independently testable without a key:
 // keep only rubric criteria, compute a transparent overall, drop non-verbatim spans,
@@ -268,7 +266,7 @@ export function finalizeEvaluation(
     if (!why || !fix) continue;
     if (overlaps(p.label, span)) continue;                 // same span as a HIGH absolute -> skip
     const issue = (ISSUES as string[]).includes((f.issue || "").trim().toLowerCase()) ? ((f.issue || "").trim().toLowerCase() as FlagIssue) : "other";
-    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity: deriveSeverity(f.stylistic === true), why: why.slice(0, 300), fix: fix.slice(0, 400) });
+    flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity: "medium", why: why.slice(0, 300), fix: fix.slice(0, 400) });
   }
 
   // Recommended version is COMPUTED from the scores, never the model's word. An exact
@@ -326,7 +324,7 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     (multi ? `There are ${prepared.length} versions to compare:\n\n${candidatesBlock}\n\n` : `One version to review:\n\n${candidatesBlock}\n\n`) +
     `Return:\n` +
     `- candidates: for EACH version, its label (e.g. "A"), a one-line summary, and a score for EVERY criterion above (exact key) with a one-line note.\n` +
-    `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), stylistic (true ONLY if the problem is purely a matter of style, voice, or phrasing that does NOT affect factual accuracy or a commitment made to the user; false if it touches a fact, a claim, or a promise), why (one line), and fix (a concrete rewrite of just that span).\n` +
+    `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), why (one line), and fix (a concrete rewrite of just that span).\n` +
     (absClaims.length
       ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (the FULL sentence, copied verbatim, exactly as listed below), backed (judged from the WHOLE sentence and its surrounding copy: true ONLY if they substantiate it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), quote (the SHORTEST exact phrase WITHIN that sentence that carries the claim, copied verbatim, used only to display the flag; it does NOT change the backed judgment), why (one line), fix (a concrete rewrite). Judge honestly and independently, always on the full sentence: "works with every major tool: Slack, Gmail, and Notion" is backed; "We never sell your data. Your information stays private and is encrypted at rest and in transit." is a backed policy statement; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
       : "") +
