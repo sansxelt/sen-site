@@ -376,6 +376,42 @@ export async function sendCheckActivationEmail(email: string) {
   }
 }
 
+function lowCreditsHtml(remaining: number): string {
+  const plans = "https://vraelis.com/app/plans";
+  const run = "https://vraelis.com/app/checks/new";
+  const out = remaining <= 0;
+  const left = remaining === 1 ? "1 free check" : `${remaining} free checks`;
+  const headline = out ? "You're out of free checks." : `You're down to ${left}.`;
+  const lead = out
+    ? "You've used all your free Vraelis checks, which means you've been catching issues in your AI output before your users ever saw them. To keep going, pick a plan."
+    : `You've been checking your AI output with Vraelis, and your free credits are almost gone (${left} left). To keep gating what your AI ships, pick a plan.`;
+  return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
+    <div style="max-width:520px;margin:0 auto;padding:32px 24px">
+      <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
+      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">${headline}</h1>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">${lead} Every plan is the same simple deal: 1 credit = 1 AI check, with per-criterion scores and the exact lines to fix.</p>
+      <a href="${plans}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">See plans</a>
+      ${out ? "" : `<p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Still have checks to run? <a href="${run}" style="color:#0d5c46">Run one now</a>.</p>`}
+      <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
+    </div></body></html>`;
+}
+
+export async function sendLowCreditsEmail(email: string, remaining: number) {
+  const resend = getResend();
+  if (!resend) return;
+
+  try {
+    await resend.emails.send({
+      from:    fromAccount,
+      to:      email,
+      subject: remaining <= 0 ? "You're out of Vraelis checks" : `${remaining} Vraelis ${remaining === 1 ? "check" : "checks"} left`,
+      html:    lowCreditsHtml(remaining),
+    });
+  } catch (error) {
+    console.error("sendLowCreditsEmail failed:", error);
+  }
+}
+
 export async function sendEarlyAccessEmail(email: string, name: string) {
   const resend = getResend();
   if (!resend) return;

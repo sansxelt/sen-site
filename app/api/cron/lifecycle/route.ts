@@ -1,10 +1,12 @@
-// Vercel Cron: lifecycle automation. Emails accounts that signed up but haven't run their
-// first check (activation nudge), once each. CRON_SECRET-gated (Vercel Cron sends
-// Authorization: Bearer <secret>). Bounded, idempotent, never blocks anything. Returns safe
-// summary counts only (no emails).
+// Vercel Cron: lifecycle automation — a short, well-timed email sequence, each stage sent
+// once per user (idempotent via the event log). Stage 1: accounts that signed up but never
+// ran a check (activation). Stage 2: free users who are actively checking and nearly out of
+// their 25 signup credits (upgrade nudge). CRON_SECRET-gated (Vercel Cron sends
+// Authorization: Bearer <secret>). Bounded, fail-soft, never blocks. Returns safe summary
+// counts only (no emails or PII).
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { runActivationNudges } from "@/lib/v-lifecycle";
+import { runActivationNudges, runLowCreditNudges } from "@/lib/v-lifecycle";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,5 +17,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
   const activation = await runActivationNudges(100);
-  return NextResponse.json({ ok: true, activation });
+  const lowCredits = await runLowCreditNudges(100);
+  return NextResponse.json({ ok: true, activation, lowCredits });
 }
