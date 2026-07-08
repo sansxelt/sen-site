@@ -89,7 +89,7 @@ export default function ApiKeysPage() {
         <div>
           <p className="eyebrow">Developers</p>
           <h1 className="display">API &amp; webhooks</h1>
-          <p>A human evaluation API for your app. Send candidates, get a structured result, with usage analytics and webhook reliability below.</p>
+          <p>The AI output check API for your app. POST your output, get per-criterion scores, the version to ship, and line-level fixes, with usage analytics and webhook reliability below.</p>
         </div>
       </div>
 

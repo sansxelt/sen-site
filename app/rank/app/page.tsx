@@ -71,8 +71,8 @@ export default async function Dashboard() {
       <section className="section" style={{ borderBottom: "none" }}>
         <div className="wrap" style={{ maxWidth: 520, textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Workspace</p>
-          <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Your <span className="em">decisions</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to run decision workflows, organize them into programs, and see your decision records.</p>
+          <h1 className="display" style={{ fontSize: "clamp(1.9rem, 4vw, 2.8rem)", marginBottom: 14 }}>Check your <span className="em">AI output</span>.</h1>
+          <p className="lead-copy" style={{ margin: "0 auto 26px" }}>Sign in to run AI output checks, see per-criterion scores and the exact lines to fix, and keep an audit trail.</p>
           <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Continue with Google</Link>
         </div>
       </section>
@@ -132,7 +132,7 @@ export default async function Dashboard() {
       <div className="tile-grid cols-4" style={{ marginBottom: 22 }}>
         <QuickAction href="/app/projects" title="Decision programs" sub="Group related workflows by campaign or client" />
         <QuickAction href="/vote" title="Evaluate & earn" sub="Judge others' outputs, earn credits" />
-        <QuickAction href="/demo" title="Sample decision package" sub="See a completed decision record" />
+        <QuickAction href="/r/check" title="Sample AI check" sub="See a check report" />
         <QuickAction href="/app/data" title="Audit & exports" sub="Aggregate decision records, JSON / CSV" />
       </div>
 
