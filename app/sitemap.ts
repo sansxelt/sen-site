@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { allGuideSlugs } from "@/lib/rank-guides";
 
 // Canonical host is the apex, matching lib/og-meta.ts (previously this used www, which
 // conflicted with the canonical tags). Lists the live Vraelis marketing + public surfaces
@@ -26,6 +27,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/enterprise", 0.7),
     page("/r/check", 0.7),      // public sample AI check
     page("/r/sample", 0.5),     // public sample human-validation report
+    page("/guides", 0.7, "weekly"),
+    ...allGuideSlugs().map((slug) => page(`/guides/${slug}`, 0.6)),
     page("/contact", 0.5),
     page("/signin", 0.4, "yearly"),
     page("/privacy", 0.3, "yearly"),

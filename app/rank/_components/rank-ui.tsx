@@ -143,7 +143,7 @@ function Footer() {
             </a>
           </div>
         </div>
-        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/app/checks/new", "Check your AI output"], ["/vote", "Evaluate & Earn"]]} />
+        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/app/checks/new", "Check your AI output"], ["/guides", "QA guides"], ["/vote", "Evaluate & Earn"]]} />
         <Col title="Developers" links={[["/developers", "Developers"], ["/app/api-keys", "API keys"], ["/app/api-keys", "Webhooks"], ["/app/data", "Data exports"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/app/account", "Account"], ["/app/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />

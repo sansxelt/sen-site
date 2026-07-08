@@ -78,6 +78,7 @@ export default function proxy(req: NextRequest) {
   if (!target) {
     if (path === "/app" || path.startsWith("/app/")) target = "/rank" + path;
     else if (path === "/vote" || path.startsWith("/vote/")) target = "/rank" + path;
+    else if (path === "/guides" || path.startsWith("/guides/")) target = "/rank" + path; // programmatic QA guides
   }
   if (target) return go(req, target, "rewrite");
 
