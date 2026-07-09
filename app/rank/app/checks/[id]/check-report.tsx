@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { bandScore, type EvalResult, type CandidateEval, type LineFlag } from "@/lib/v-evaluator";
+import { CorrectedBlock } from "./corrected-block";
 
 // The AI Check report. Deliberately NOT the human-vote ReportBody: no posterior, no
 // "N judgments", no credible interval, every one of those would be fabricated for a
@@ -109,6 +110,7 @@ function FlagRow({ f }: { f: LineFlag }) {
 export function CheckReport({ result, title, createdAt, calibrationSlot }: { result: EvalResult; title?: string | null; createdAt?: string | null; calibrationSlot?: ReactNode }) {
   const multi = result.candidates.length > 1;
   const winner = result.recommendedIndex != null ? result.candidates.find((c) => c.index === result.recommendedIndex) ?? null : null;
+  const corrected = result.candidates.find((c) => c.correctedVersion); // only the ship-pick/sole candidate carries it
   const typeLabel = OUTPUT_LABELS[result.outputType] ?? "Output";
 
   return (
@@ -162,6 +164,9 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
           <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>No specific problem spans were flagged.</p>
         </div>
       )}
+
+      {/* corrected version: the ship-pick with every applicable fix applied (assembly only) */}
+      {corrected?.correctedVersion ? <CorrectedBlock text={corrected.correctedVersion} label={corrected.label} multi={multi} /> : null}
 
       {/* calibration: validate on real people + the rolling agreement rate (owner only) */}
       {calibrationSlot}

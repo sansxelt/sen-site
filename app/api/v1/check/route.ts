@@ -52,7 +52,7 @@ function renderCheck(check: VCheck, res: EvalResult, gate: Gate | null): Record<
     credits_charged: check.credits_charged,
     recommended: res.recommendedIndex != null ? { index: res.recommendedIndex, label: res.recommendedLabel, margin: res.margin } : null,
     recommendation: res.recommendation,
-    candidates: res.candidates.map((x) => ({ index: x.index, label: x.label, overall: x.overall, summary: x.summary, scores: x.scores })),
+    candidates: res.candidates.map((x) => ({ index: x.index, label: x.label, overall: x.overall, summary: x.summary, scores: x.scores, ...(x.correctedVersion ? { corrected_version: x.correctedVersion } : {}) })),
     flags: res.flags.map((f) => ({ candidate: f.candidateLabel, span: f.span, issue: f.issue, severity: f.severity, why: f.why, fix: f.fix })),
     note: "This is an AI assessment, not a human judgment or a guarantee.",
   };

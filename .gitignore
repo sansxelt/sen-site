@@ -58,3 +58,4 @@ VRAELIS-updater.key.pub
 # Outreach prep output (target data + drafted DMs) and the seen-domain ledger — never commit
 outreach-*.csv
 outreach-seen.txt
+distribution-kit.md

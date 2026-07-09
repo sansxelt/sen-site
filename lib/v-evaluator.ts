@@ -81,7 +81,7 @@ export function bandScore(criterion: string, score: number): number {
 }
 
 export type CriterionScore = { criterion: string; label: string; score: number; note: string };
-export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string };
+export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string; correctedVersion?: string };
 export type LineFlag = { candidateIndex: number; candidateLabel: string; span: string; issue: FlagIssue; severity: FlagSeverity; why: string; fix: string };
 
 // Is the output about to ship, or already live? A published landing page cannot be "not
@@ -224,6 +224,60 @@ function displaySpan(p: PreparedCandidate, sentence: string, quote?: string): st
 // Pure, exported so the honesty enforcement is independently testable without a key:
 // keep only rubric criteria, compute a transparent overall, drop non-verbatim spans,
 // derive the recommended version from the scores, and COMPUTE each flag's severity.
+// A fix that asks for no change -> leave the span untouched in the corrected version.
+function isNoOpFix(fix: string): boolean {
+  return /^\s*(no fix|no change|works as|leave (as|it|this)|keep (as|it|this)|fine as|already|n\/a|none|unchanged)\b/i.test(fix);
+}
+
+// Reduce a fix to the drop-in replacement text. `fix` is meant to be a rewrite of the span, but
+// the model sometimes wraps it as an instruction ("Replace with '...' to remove X"). If so, use
+// the quoted rewrite; otherwise the fix as written. Pure parsing of an already-generated field.
+function cleanFix(fix: string): string {
+  if (/^\s*(replace|change|rewrite|reword|swap|use|drop)\b/i.test(fix)) {
+    const quoted = [...fix.matchAll(/["'“]([^"'”]{3,})["'”]/g)].map((m) => m[1].trim());
+    if (quoted.length) return quoted.sort((a, b) => b.length - a.length)[0];
+  }
+  return fix;
+}
+
+// Assemble the recommended text with every APPLICABLE fix already applied: a single copy-pasteable
+// corrected version, diagnosis to cure. PURE ASSEMBLY from fixes ALREADY generated -- no second
+// evaluation, no re-check. The `fix` the model returns is a rewrite of the SENTENCE the flagged
+// span sits in (not a drop-in for the bare span -- swapping the span alone duplicates surrounding
+// words), so a fix replaces the whole sentence that verbatim-contains its span. A span not found
+// verbatim is skipped (never hallucinated); a sentence already rewritten by an earlier (HIGH-first)
+// flag is left as it is; a fix equal to the sentence is a no-op. Untouched sentences are preserved.
+export function buildCorrectedVersion(text: string, flags: LineFlag[]): string {
+  const edits: { start: number; end: number; replacement: string }[] = [];
+  const taken: Array<[number, number]> = [];
+  for (const f of flags) {
+    const span = (f.span || "").trim();
+    if (!span || isNoOpFix(f.fix || "")) continue;
+    const replacement = cleanFix((f.fix || "").trim());
+    if (!replacement) continue;
+    const idx = text.indexOf(span);
+    if (idx === -1) continue;                                    // not verbatim -> skip, never hallucinate
+    // Expand to the sentence that contains the span (the scope the fix is written for).
+    let s = idx;
+    while (s > 0 && !/[.!?\n]/.test(text[s - 1])) s--;
+    while (s < idx && /\s/.test(text[s])) s++;                   // trim leading whitespace of the sentence
+    let e = idx + span.length;
+    if (!/[.!?]/.test(text[e - 1])) {                           // unless the span already ends the sentence
+      while (e < text.length && !/[.!?\n]/.test(text[e])) e++;
+      if (e < text.length && /[.!?]/.test(text[e])) e++;        // include the terminal . ! ?
+    }
+    if (taken.some(([ts, te]) => s < te && ts < e)) continue;   // sentence already rewritten by a prior flag
+    if (norm(replacement) === norm(text.slice(s, e))) continue; // fix equals the sentence -> no change
+    edits.push({ start: s, end: e, replacement });
+    taken.push([s, e]);
+  }
+  if (!edits.length) return text;
+  edits.sort((a, b) => a.start - b.start);
+  let out = "", cursor = 0;
+  for (const ed of edits) { out += text.slice(cursor, ed.start) + ed.replacement; cursor = ed.end; }
+  return out + text.slice(cursor);
+}
+
 export function finalizeEvaluation(
   outputType: OutputType,
   prepared: PreparedCandidate[],
@@ -298,6 +352,18 @@ export function finalizeEvaluation(
     recommendedIndex = margin > 0 ? sorted[0].index : null;
   }
   const recommendedLabel = recommendedIndex != null ? (candidates.find((c) => c.index === recommendedIndex)?.label ?? null) : null;
+
+  // Corrected version (display-layer consolidation): the ship-pick with its fixes already applied,
+  // or, when there is a single candidate (a critique, not a pick), that one. Assembly only -- it
+  // never touches the gate, the scores, or the recommendation, and does not re-check the result.
+  const correctTarget = recommendedIndex != null ? recommendedIndex : (candidates.length === 1 ? candidates[0].index : null);
+  if (correctTarget != null) {
+    const tc = candidates.find((c) => c.index === correctTarget);
+    if (tc) {
+      const corrected = buildCorrectedVersion(tc.text, flags.filter((f) => f.candidateIndex === correctTarget));
+      if (corrected && corrected !== tc.text) tc.correctedVersion = corrected; // only when a fix actually applied
+    }
+  }
 
   return {
     outputType,
