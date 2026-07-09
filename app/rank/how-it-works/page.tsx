@@ -42,6 +42,18 @@ export default function HowItWorks() {
         </div>
       </section>
 
+      <section className="section" style={{ paddingTop: "clamp(20px, 3vw, 36px)" }}>
+        <div className="wrap" style={{ maxWidth: 720 }}>
+          <div className="acard" style={{ display: "block" }}>
+            <p className="eyebrow">Reproducibility</p>
+            <h2 style={{ fontSize: "clamp(1.2rem, 2vw, 1.5rem)", marginBottom: 10 }}>How stable is the check?</h2>
+            <p style={{ fontSize: 14.5, color: "var(--fg-2)", lineHeight: 1.65, margin: 0 }}>
+              Across 20 diverse inputs run 5 times each, the pass/fail gate verdict was identical in all 5 runs for all 20. Per-criterion scores vary between runs and are not used by the gate.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="section cta-band" style={{ borderBottom: "none" }}>
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 640, textAlign: "center" }}>
