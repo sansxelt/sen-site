@@ -59,3 +59,10 @@ VRAELIS-updater.key.pub
 outreach-*.csv
 outreach-seen.txt
 distribution-kit.md
+
+# Local ops/diagnostic tools — machine-specific, and grant-credits writes the prod money ledger
+outreach-cron.log
+run-outreach-daily.cmd
+scripts/whoami.ts
+scripts/dbcheck.ts
+scripts/grant-credits.ts
