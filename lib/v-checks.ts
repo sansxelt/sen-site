@@ -55,6 +55,7 @@ export type RunCheckInput = {
   title?: string;
   audience?: string;
   goal?: string;
+  originalRequest?: string;  // the prompt/task the AI was given; enables instruction-fit judging
   candidates: { label?: string; text?: string }[];
   source: "app" | "api";
   context?: CheckContext;   // "pre_ship" (default) | "published"
@@ -87,6 +88,7 @@ export async function startCheck(userId: string, input: RunCheckInput): Promise<
 
   const audience = input.audience ? String(input.audience).trim().slice(0, 400) : undefined;
   const goal = input.goal ? String(input.goal).trim().slice(0, 800) : undefined;
+  const originalRequest = input.originalRequest ? String(input.originalRequest).trim().slice(0, 20000) : undefined;
   const title = input.title ? String(input.title).trim().slice(0, 140) : null;
 
   // If the evaluator has no key it would fail-soft anyway — bail BEFORE charging.
@@ -116,7 +118,7 @@ export async function startCheck(userId: string, input: RunCheckInput): Promise<
   }
 
   await logEvent({ userId: uid, eventType: "check_started", actorType: input.source === "api" ? "api" : "owner", source: input.source, metadata: { check_id: checkId, output_type: outputType, candidate_count: candidates.length, source: input.source } });
-  return { status: "ok", checkId, evalInput: { outputType, audience, goal, candidates, context: input.context } };
+  return { status: "ok", checkId, evalInput: { outputType, audience, goal, originalRequest, candidates, context: input.context } };
 }
 
 // Evaluate a running check and finalize it. Fail-soft; the sole finalizer in the normal

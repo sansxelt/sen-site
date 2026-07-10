@@ -32,6 +32,7 @@ export default function NewCheckPage() {
   const [prefilled, setPrefilled] = useState(false);
   const [published, setPublished] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
+  const [originalRequest, setOriginalRequest] = useState("");
 
   // Free-check handoff: a visitor who pasted their output on /r/check and signed up lands
   // here with ?draft=1. Consume the stashed draft once and fill the form so their first
@@ -59,6 +60,10 @@ export default function NewCheckPage() {
     fetch("/api/credits/balance").then((r) => (r.ok ? r.json() : null)).then((j) => { if (typeof j?.balance === "number") setBalance(j.balance); }).catch(() => {});
   }, []);
 
+  async function pasteRequest() {
+    try { const t = await navigator.clipboard.readText(); if (t) setOriginalRequest(t.slice(0, 20000)); } catch { /* clipboard blocked; user can paste manually */ }
+  }
+
   function setCandidate(i: number, v: string) { setCandidates((c) => c.map((x, j) => (j === i ? v : x))); }
   function addCandidate() { setCandidates((c) => (c.length >= MAX_CANDIDATES ? c : [...c, ""])); }
   function removeCandidate(i: number) { setCandidates((c) => (c.length <= 1 ? c : c.filter((_, j) => j !== i))); }
@@ -78,6 +83,7 @@ export default function NewCheckPage() {
           title: title.trim() || undefined,
           audience: audience.trim() || undefined,
           goal: goal.trim() || undefined,
+          original_request: originalRequest.trim() || undefined,
           context: published ? "published" : undefined,
           candidates: filled.map((text) => ({ text })),
         }),
@@ -104,7 +110,11 @@ export default function NewCheckPage() {
   }
 
   const active = OUTPUT_TYPES.find(([k]) => k === outputType);
-  const ctaText = busy ? "Starting…" : published ? "Find the highest-impact fix" : filled.length > 1 ? `Compare ${filled.length} versions` : "Run check";
+  const hasTask = originalRequest.trim().length > 0;
+  const ctaText = busy ? "Starting…"
+    : published ? "Find the highest-impact fix"
+    : hasTask ? (filled.length > 1 ? "Compare instruction fit" : "Check instruction fit")
+    : filled.length > 1 ? `Compare ${filled.length} versions` : "Run check";
 
   return (
     <div className="wrap" style={{ maxWidth: 760, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -145,6 +155,24 @@ export default function NewCheckPage() {
           ))}
         </div>
         {active ? <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "8px 0 0" }}>Judged on: {active[2]}.</p> : null}
+      </div>
+
+      {/* original request — when provided, the check also judges whether the output did the task */}
+      <div style={{ marginBottom: 22 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+          <span style={{ ...lab, marginBottom: 0 }}>Original request</span>
+          <button type="button" onClick={pasteRequest} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11.5, color: "var(--acc-deep)", padding: 0, fontFamily: "inherit" }}>Paste from clipboard</button>
+        </div>
+        <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "6px 0 8px" }}>Optional. Paste the prompt, instructions, or task the AI was given. The check then also judges whether the output did what was asked, not just whether it reads well.</p>
+        <textarea
+          value={originalRequest}
+          onChange={(e) => setOriginalRequest(e.target.value)}
+          onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = `${Math.min(t.scrollHeight, 360)}px`; }}
+          placeholder="e.g. Write a concise refund response that acknowledges the issue without promising a refund."
+          maxLength={20000}
+          style={{ ...inputStyle, minHeight: 70, resize: "none", overflow: "auto", fontFamily: "var(--font-sans)", lineHeight: 1.55 }}
+        />
+        {originalRequest.length > 18000 ? <p style={{ fontSize: 11.5, color: "var(--fg-4)", margin: "6px 0 0", textAlign: "right" }}>{originalRequest.length.toLocaleString()} / 20,000</p> : null}
       </div>
 
       {/* context */}

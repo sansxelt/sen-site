@@ -52,8 +52,10 @@ function renderCheck(check: VCheck, res: EvalResult, gate: Gate | null): Record<
     credits_charged: check.credits_charged,
     recommended: res.recommendedIndex != null ? { index: res.recommendedIndex, label: res.recommendedLabel, margin: res.margin } : null,
     recommendation: res.recommendation,
+    ...(res.originalRequest ? { original_request: res.originalRequest } : {}),
     candidates: res.candidates.map((x) => ({ index: x.index, label: x.label, overall: x.overall, summary: x.summary, scores: x.scores,
       ...(x.correctedVersion ? { corrected_version: x.correctedVersion } : {}),
+      ...(x.instructionFit ? { instruction_fit: { score: x.instructionFit.score, met: x.instructionFit.met, missed: x.instructionFit.missed, contradictions: x.instructionFit.contradictions, fix: x.instructionFit.fix } } : {}),
       ...(x.aiReview ? { ai_tells: { verdict: x.aiReview.verdict, density: x.aiReview.density, count: x.aiReview.count, reads_as: x.aiReview.readsAs, note: x.aiReview.readsAsNote, tells: x.aiReview.tells.map((t) => ({ span: t.span, kind: t.kind, why: t.why, fix: t.fix, severity: t.severity })) } } : {}) })),
     flags: res.flags.map((f) => ({ candidate: f.candidateLabel, span: f.span, issue: f.issue, severity: f.severity, why: f.why, fix: f.fix })),
     note: "This is an AI assessment, not a human judgment or a guarantee.",
@@ -98,6 +100,7 @@ async function handleSingle(userId: string, body: Record<string, unknown>): Prom
     title: str(body.title),
     audience: str(body.audience),
     goal: str(body.goal),
+    originalRequest: str(body.original_request),
     candidates,
     source: "api",
     context: validContext(body.context),
@@ -142,6 +145,7 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
   if (defThreshold === "invalid") return apiError("validation_error", THRESHOLD_HELP, 400);
   const defAudience = str(body.audience);
   const defGoal = str(body.goal);
+  const defOriginalRequest = str(body.original_request);
   const defContext = validContext(body.context);
 
   const parsed: ParsedItem[] = items.map((raw) => {
@@ -160,6 +164,7 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
         // default (startCheck drops "" anyway), matching an item that omits the field.
         audience: str(it.audience) || defAudience,
         goal: str(it.goal) || defGoal,
+        originalRequest: str(it.original_request) || defOriginalRequest,
         context: validContext(it.context) ?? defContext,
         candidates,
         source: "api",

@@ -130,6 +130,54 @@ function AiTellsSection({ review }: { review: AiReview }) {
   );
 }
 
+function FitList({ label, items, color, mark }: { label: string; items: string[]; color: string; mark: string }) {
+  return (
+    <div style={{ marginBottom: 6 }}>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 3 }}>{label}</div>
+      {items.map((it, i) => <div key={i} style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, display: "flex", gap: 6 }}><span style={{ color, flex: "none", fontWeight: 700 }} aria-hidden>{mark}</span>{it}</div>)}
+    </div>
+  );
+}
+
+// "Did it do the task?": instruction fit vs the original request, judged separately from quality and
+// never affecting the gate. Per candidate, so comparison mode shows which version fulfilled it best.
+function InstructionFitSection({ result, winnerIndex }: { result: EvalResult; winnerIndex: number | null }) {
+  const withFit = result.candidates.filter((c) => c.instructionFit);
+  if (!withFit.length) return null;
+  const req = result.originalRequest;
+  const multi = withFit.length > 1;
+  return (
+    <div style={{ ...box, padding: "clamp(16px, 2.4vw, 22px)", marginBottom: 18 }}>
+      <div style={{ ...kicker, marginBottom: 6 }}>Instruction fit</div>
+      <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 12px", lineHeight: 1.55 }}>Whether the output did what the request asked, judged against your original request and kept separate from the quality scores. It does not affect the pass or fail gate.</p>
+      {req ? (
+        <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, padding: "10px 12px", borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid var(--line-1)", marginBottom: 14, whiteSpace: "pre-wrap" }}>
+          <span style={{ fontFamily: "var(--font-code)", fontSize: 9.5, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>You asked</span>
+          <div style={{ marginTop: 4 }}>{req.length > 400 ? `${req.slice(0, 400)}…` : req}</div>
+        </div>
+      ) : null}
+      <div style={{ display: "grid", gap: 12 }}>
+        {withFit.map((c) => {
+          const f = c.instructionFit!;
+          return (
+            <div key={c.index} style={{ borderTop: "1px solid var(--line-1)", paddingTop: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
+                {multi ? <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-1)" }}>Version {c.label}</span> : null}
+                {multi && c.index === winnerIndex ? <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--bg-1)" }}>Recommended</span> : null}
+                <span style={{ marginLeft: multi ? "auto" : 0, fontFamily: "var(--font-code)", fontSize: 13, color: scoreColor(f.score) }}>Did the task: {f.score}/100</span>
+              </div>
+              {f.met.length ? <FitList label="Satisfied" items={f.met} color="var(--acc-deep)" mark="✓" /> : null}
+              {f.missed.length ? <FitList label="Missed or partial" items={f.missed} color="var(--fg-3)" mark="•" /> : null}
+              {f.contradictions.length ? <FitList label="Contradicts the request" items={f.contradictions} color="var(--err)" mark="!" /> : null}
+              {f.fix ? <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, margin: "8px 0 0" }}><span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>To fit the task: </span>{f.fix}</p> : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function CheckReport({ result, title, createdAt, calibrationSlot }: { result: EvalResult; title?: string | null; createdAt?: string | null; calibrationSlot?: ReactNode }) {
   const multi = result.candidates.length > 1;
   const winner = result.recommendedIndex != null ? result.candidates.find((c) => c.index === result.recommendedIndex) ?? null : null;
@@ -175,6 +223,9 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
           <CandidateCard key={c.index} c={c} flags={result.flags} isWinner={winner?.index === c.index} />
         ))}
       </div>
+
+      {/* instruction fit — only present when an original request was supplied */}
+      <InstructionFitSection result={result} winnerIndex={result.recommendedIndex} />
 
       {/* flags */}
       {result.flags.length ? (

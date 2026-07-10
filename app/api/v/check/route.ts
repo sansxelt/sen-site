@@ -43,6 +43,7 @@ export async function POST(req: Request) {
     title: typeof body?.title === "string" ? body.title : undefined,
     audience: typeof body?.audience === "string" ? body.audience : undefined,
     goal: typeof body?.goal === "string" ? body.goal : undefined,
+    originalRequest: typeof body?.original_request === "string" ? body.original_request : (typeof body?.originalRequest === "string" ? body.originalRequest : undefined),
     candidates,
     source: "app",
     context,

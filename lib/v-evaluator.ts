@@ -86,7 +86,11 @@ export function bandScore(criterion: string, score: number): number {
 }
 
 export type CriterionScore = { criterion: string; label: string; score: number; note: string };
-export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string; correctedVersion?: string; aiReview?: AiReview };
+// Instruction fit: how fully a version did what the original request ASKED, judged separately from
+// general quality. Only produced when the caller supplies an original request. Informational -- like
+// the scores, it NEVER touches the pass/fail gate.
+export type InstructionFit = { score: number; met: string[]; missed: string[]; contradictions: string[]; fix: string };
+export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string; correctedVersion?: string; aiReview?: AiReview; instructionFit?: InstructionFit };
 export type LineFlag = { candidateIndex: number; candidateLabel: string; span: string; issue: FlagIssue; severity: FlagSeverity; why: string; fix: string };
 
 // Is the output about to ship, or already live? A published landing page cannot be "not
@@ -104,10 +108,11 @@ export type EvalResult = {
   candidates: CandidateEval[];
   flags: LineFlag[];
   context?: CheckContext;           // rides the stored result jsonb; drives report framing
+  originalRequest?: string;         // the task the AI was given (when supplied); rides the jsonb, shown on the report
 };
 
 export type EvalCandidate = { label?: string; text: string };
-export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext };
+export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext; originalRequest?: string };
 export type PreparedCandidate = { index: number; label: string; text: string; normText: string };
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -164,6 +169,16 @@ const EvalSchema = z.object({
   // A SUMMARY only -- it never creates flags; the specific tells are found in code (findAiTells).
   reads_as: z.enum(["human", "ai", "mixed"]).optional(),
   reads_as_note: z.string().optional(),
+  // Instruction fit -- ONLY when an original request is supplied. Judged per candidate against the
+  // stated request, separate from the quality scores; never gates. Absent otherwise.
+  instruction_fit: z.array(z.object({
+    candidate: z.string(),
+    score: z.number(),                        // 0-100: how fully this version did what was asked
+    met: z.array(z.string()),                 // requirements clearly satisfied
+    missed: z.array(z.string()),              // requirements missed or only partly done
+    contradictions: z.array(z.string()),      // anything that directly contradicts the request
+    fix: z.string(),                          // single highest-impact task-compliance change
+  })).optional(),
 });
 
 // Trim, drop empties, cap at MAX_CANDIDATES, and assign stable letters + normalized text.
@@ -393,6 +408,20 @@ export function finalizeEvaluation(
     }
   }
 
+  // Instruction fit (present only when an original request was supplied). Attached PER candidate so
+  // comparison mode shows how each version did the task. Informational -- never touches the gate.
+  for (const f of raw.instruction_fit || []) {
+    const p = prepByLabel.get((f.candidate || "").trim().toUpperCase());
+    const c = p ? candidates.find((x) => x.index === p.index) : undefined;
+    if (!c) continue;
+    const list = (a: string[] | undefined, n: number) => (a || []).map((s) => (s || "").trim()).filter(Boolean).slice(0, n);
+    c.instructionFit = {
+      score: bandScore("instruction_fit", clampScore(f.score)),
+      met: list(f.met, 12), missed: list(f.missed, 12), contradictions: list(f.contradictions, 8),
+      fix: (f.fix || "").trim().slice(0, 400),
+    };
+  }
+
   return {
     outputType,
     model,
@@ -429,9 +458,11 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
   const absList = absClaims.map((a) => `- [${a.label}] "${a.claim}"`).join("\n");
 
   const published = input.context === "published";
+  const task = (input.originalRequest || "").trim().slice(0, 20000);
   const PROMPT =
     `You are an evaluation engine reviewing AI-generated ${typeLabel} ${published ? "that is already published and live in production" : "for the team about to ship it"}. Give an honest, specific assessment. You are an AI assessment, not a human judgment and not a guarantee.\n\n` +
     (ctx ? `${ctx}\n\n` : "") +
+    (task ? `The AI was ORIGINALLY ASKED to produce the following. Judge INSTRUCTION FIT against this, and judge ONLY against what is actually asked here (never penalize for things the request never mentions):\n"""\n${task}\n"""\n\n` : "") +
     `Score each version on these criteria, 0 to 100 (higher is better). Use the exact criterion key:\n${criteriaBlock}\n\n` +
     (multi ? `There are ${prepared.length} versions to compare:\n\n${candidatesBlock}\n\n` : `One version to review:\n\n${candidatesBlock}\n\n`) +
     `Return:\n` +
@@ -446,8 +477,11 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
         ? `- recommendation: one plain sentence naming the single highest-impact change to make now. This content is already live, so do NOT frame it as ready or not ready to ship.\n`
         : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n`) +
     (AI_TELLS_TYPES.has(outputType)
-      ? `- reads_as: does the recommended version read as written by a human or by AI? One of: human, ai, mixed. reads_as_note: one short line on the giveaways (or what keeps it human). This is a HOLISTIC read only; do NOT create flags for it.\n\n`
+      ? `- reads_as: does the recommended version read as written by a human or by AI? One of: human, ai, mixed. reads_as_note: one short line on the giveaways (or what keeps it human). This is a HOLISTIC read only; do NOT create flags for it.\n`
       : `\n`) +
+    (task
+      ? `- instruction_fit: for EACH version, judge how fully it did what the ORIGINAL REQUEST asked. Return candidate (letter), score (0-100, how completely it satisfied the request), met (requirements clearly satisfied), missed (requirements missed or only partly done), contradictions (anything that directly contradicts the request), fix (the single highest-impact change to better satisfy the request). This is SEPARATE from the quality scores: a well-written version can still miss the task, and a plain one can nail it. Judge only against stated requirements.\n\n`
+      : "") +
     `Flag a span only when it is a real, checkable problem: a false statement, a claim that cannot be backed up, or a safety or clarity issue. Do not flag a matter of taste, voice, or phrasing that you would merely prefer.` +
     (outputType === "marketing_copy" ? ` Marketing copy is allowed to be bold, aspirational, and confident; flag a specific claim that is false or cannot be backed up, not a strong tone.` : "") +
     ` The system assigns each flag's severity from its content, so a rough severity guess is fine.` +
@@ -462,7 +496,8 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     const client = new Anthropic({ apiKey: API_KEY, timeout: 40_000, maxRetries: 0 });
     const res = await client.messages.parse({
       model: MODEL,
-      max_tokens: 2600,
+      max_tokens: task ? 3600 : 2600, // instruction_fit adds per-candidate output; give it headroom
+
       temperature: 0,   // a rubric that means anything must be applied as identically as the
                         // model allows; temp 0 collapses most run-to-run variance (it is NOT a
                         // determinism guarantee: batching + float nondeterminism still exist).
@@ -473,6 +508,7 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     if (!raw) return null;
     const result = finalizeEvaluation(outputType, prepared, raw, MODEL);
     result.context = published ? "published" : "pre_ship";
+    if (task) result.originalRequest = task;
     return result;
   } catch (e) {
     console.error("evaluateOutput failed:", e);
