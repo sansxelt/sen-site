@@ -165,7 +165,7 @@ export default function NewCheckPage() {
                 onChange={(e) => setCandidate(i, e.target.value)}
                 placeholder={i === 0 ? "Paste the first version here…" : "Another version…"}
                 rows={4}
-                maxLength={8000}
+                maxLength={50000}
                 style={{ ...inputStyle, paddingLeft: 30, paddingTop: 10, resize: "vertical", fontFamily: "var(--font-sans)", lineHeight: 1.55 }}
               />
               {candidates.length > 1 ? (
