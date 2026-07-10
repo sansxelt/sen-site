@@ -506,6 +506,9 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     });
     const raw = res.parsed_output ?? null;
     if (!raw) return null;
+    // No original request -> ignore any instruction_fit the model volunteered (the schema field
+    // exists even when the prompt didn't ask for it, so haiku can fill it against nothing).
+    if (!task) raw.instruction_fit = undefined;
     const result = finalizeEvaluation(outputType, prepared, raw, MODEL);
     result.context = published ? "published" : "pre_ship";
     if (task) result.originalRequest = task;
