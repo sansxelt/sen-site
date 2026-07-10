@@ -127,14 +127,14 @@ export default function NewCheckPage() {
         ) : null}
       </div>
       <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)", margin: "6px 0 8px" }}>Check your AI output</h1>
-      <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, marginBottom: 26, maxWidth: 560 }}>
-        Paste one or more versions of an AI-generated output. You get an instant assessment: per-criterion scores, a recommended version, and the exact lines to fix. Costs 1 credit.
+      <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, marginBottom: 26, maxWidth: 580 }}>
+        Submit one or more versions your AI produced. Vraelis returns a per-criterion assessment: how well each version did the task, the version to ship, and the exact lines to fix. One credit per check.
       </p>
 
       {prefilled ? (
         <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)", background: "var(--acc-soft)", padding: "12px 16px" }}>
           <p style={{ margin: 0, fontSize: 13.5, color: "var(--acc-deep)", lineHeight: 1.55 }}>
-            Your output is loaded below. Hit <strong>Run check</strong> to see your results, your first checks are on us.
+            Your output is loaded below. Hit <strong>Run check</strong> to see your results. Your first checks are on us.
           </p>
         </div>
       ) : null}
@@ -154,7 +154,7 @@ export default function NewCheckPage() {
             </button>
           ))}
         </div>
-        {active ? <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "8px 0 0" }}>Judged on: {active[2]}.</p> : null}
+        {active ? <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "8px 0 0" }}>Scored on {active[2]}.</p> : null}
       </div>
 
       {/* original request — when provided, the check also judges whether the output did the task */}
@@ -163,12 +163,12 @@ export default function NewCheckPage() {
           <span style={{ ...lab, marginBottom: 0 }}>Original request</span>
           <button type="button" onClick={pasteRequest} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 11.5, color: "var(--acc-deep)", padding: 0, fontFamily: "inherit" }}>Paste from clipboard</button>
         </div>
-        <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "6px 0 8px" }}>Optional. Paste the prompt, instructions, or task the AI was given. The check then also judges whether the output did what was asked, not just whether it reads well.</p>
+        <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "6px 0 8px" }}>Optional. Paste the prompt or task the AI was given. The check then also grades instruction fit: whether the output did what was asked, not just whether it reads well.</p>
         <textarea
           value={originalRequest}
           onChange={(e) => setOriginalRequest(e.target.value)}
           onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = `${Math.min(t.scrollHeight, 360)}px`; }}
-          placeholder="e.g. Write a concise refund response that acknowledges the issue without promising a refund."
+          placeholder="e.g. Reply to a customer asking to cancel. Acknowledge the frustration, explain the policy, and do not promise a refund."
           maxLength={20000}
           style={{ ...inputStyle, minHeight: 70, resize: "none", overflow: "auto", fontFamily: "var(--font-sans)", lineHeight: 1.55 }}
         />
@@ -178,26 +178,27 @@ export default function NewCheckPage() {
       {/* context */}
       <div style={{ display: "grid", gap: 16, marginBottom: 22 }}>
         <div>
-          <label style={lab} htmlFor="ck-title">Title <span style={{ textTransform: "none", color: "var(--fg-5)" }}>(optional)</span></label>
+          <label style={lab} htmlFor="ck-title">Check name <span style={{ textTransform: "none", color: "var(--fg-5)" }}>(optional)</span></label>
           <input id="ck-title" style={inputStyle} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Cancellation reply, v3" maxLength={140} />
         </div>
         <div>
           <label style={lab} htmlFor="ck-aud">Audience <span style={{ textTransform: "none", color: "var(--fg-5)" }}>(optional)</span></label>
-          <input id="ck-aud" style={inputStyle} value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. frustrated customer asking for a refund" maxLength={200} />
+          <input id="ck-aud" style={inputStyle} value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="e.g. A long-time customer, frustrated and asking to cancel" maxLength={200} />
         </div>
         <div>
-          <label style={lab} htmlFor="ck-goal">What &ldquo;good&rdquo; means here <span style={{ textTransform: "none", color: "var(--fg-5)" }}>(optional)</span></label>
-          <input id="ck-goal" style={inputStyle} value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. resolve the issue without overpromising a refund" maxLength={400} />
+          <label style={lab} htmlFor="ck-goal">Success criteria <span style={{ textTransform: "none", color: "var(--fg-5)" }}>(optional)</span></label>
+          <input id="ck-goal" style={inputStyle} value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. De-escalates and gives a clear next step, without overpromising" maxLength={400} />
         </div>
         <label htmlFor="ck-published" style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
           <input id="ck-published" type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} style={{ marginTop: 3, accentColor: "var(--acc)", width: 16, height: 16, flex: "none" }} />
-          <span style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5 }}>This is already published (live). Get the single highest-impact change instead of a ship / no-ship verdict.</span>
+          <span style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5 }}>This output is already published and live. Return the single highest-impact change to make, not a ship or no-ship verdict.</span>
         </label>
       </div>
 
       {/* candidates */}
       <div style={{ marginBottom: 22 }}>
         <span style={lab}>Versions to check</span>
+        <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "-2px 0 10px" }}>Add up to 8 to compare them side by side and get the one to ship.</p>
         <div style={{ display: "grid", gap: 12 }}>
           {candidates.map((c, i) => (
             <div key={i} style={{ position: "relative" }}>
@@ -205,7 +206,7 @@ export default function NewCheckPage() {
               <textarea
                 value={c}
                 onChange={(e) => setCandidate(i, e.target.value)}
-                placeholder={i === 0 ? "Paste the first version here…" : "Another version…"}
+                placeholder={i === 0 ? "Paste the first version here" : "Paste another version to compare"}
                 rows={4}
                 maxLength={50000}
                 style={{ ...inputStyle, paddingLeft: 30, paddingTop: 10, resize: "vertical", fontFamily: "var(--font-sans)", lineHeight: 1.55 }}
@@ -231,7 +232,7 @@ export default function NewCheckPage() {
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
           <span style={{ ...lab, marginBottom: 0 }}>Ready to check</span>
           <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>
-            {filled.length || 1} version{filled.length === 1 ? "" : "s"} · 1 credit{balance != null ? ` · ${balance.toLocaleString()} now${balance >= 1 ? `, ${(balance - 1).toLocaleString()} after` : ""}` : ""}
+            {filled.length || 1} version{(filled.length || 1) === 1 ? "" : "s"} · 1 credit{balance != null ? ` · ${balance.toLocaleString()} now${balance >= 1 ? `, ${(balance - 1).toLocaleString()} after` : ""}` : ""}
           </span>
         </div>
         <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || filled.length < 1}
