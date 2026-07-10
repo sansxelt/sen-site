@@ -14,17 +14,24 @@ const DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingm
 const PPTX_MIME = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 
 type FormatDef = { kind: FileKind; ext: string[]; vision: boolean };
-// vision:true = the check's Claude model reads the file visually (layout, hierarchy, imagery), not just text.
+// LEAN release: only formats the check can genuinely understand end-to-end are exposed. Images + PDF are
+// native to the vision model; txt/md are plain text. DOCX/PPTX are DETECTED (see sniffMime + COMING_SOON)
+// so we can return a clear "not supported yet" instead of a broken promise, but they are NOT offered.
+// vision:true = the model reads the file visually (layout, hierarchy, imagery), not just its text.
 export const FORMATS: Record<string, FormatDef> = {
   "image/png": { kind: "image", ext: ["png"], vision: true },
   "image/jpeg": { kind: "image", ext: ["jpg", "jpeg"], vision: true },
   "image/webp": { kind: "image", ext: ["webp"], vision: true },
   "application/pdf": { kind: "pdf", ext: ["pdf"], vision: true },
-  [DOCX_MIME]: { kind: "office", ext: ["docx"], vision: false },
-  [PPTX_MIME]: { kind: "office", ext: ["pptx"], vision: false },
   "text/plain": { kind: "text", ext: ["txt"], vision: false },
   "text/markdown": { kind: "text", ext: ["md", "markdown"], vision: false },
 };
+// Detected but not yet processable end-to-end. Kept out of FORMATS on purpose.
+const COMING_SOON: ReadonlySet<string> = new Set([DOCX_MIME, PPTX_MIME]);
+// For the UI: the accept filter + the human-readable supported list.
+export const ACCEPT_EXT = Object.values(FORMATS).flatMap((f) => f.ext).map((e) => `.${e}`);
+export const ACCEPT_MIME = Object.keys(FORMATS);
+export const SUPPORTED_LABEL = "PNG, JPG, WEBP, PDF, TXT, MD";
 
 export const LIMITS = {
   filesPerVersion: 5,
@@ -36,10 +43,11 @@ export const LIMITS = {
 };
 
 export type UploadError =
-  | "unsupported_type" | "too_large" | "empty_file" | "encrypted_pdf" | "unreadable_document" | "too_many_pages";
+  | "unsupported_type" | "not_supported_yet" | "too_large" | "empty_file" | "encrypted_pdf" | "unreadable_document" | "too_many_pages";
 
 const ERROR_MESSAGES: Record<UploadError, string> = {
   unsupported_type: "This file type is not supported.",
+  not_supported_yet: "Word and PowerPoint files aren't supported yet. Use PDF, an image, or text.",
   too_large: "This file is larger than the 20 MB limit.",
   empty_file: "This file is empty.",
   encrypted_pdf: "This PDF is encrypted and cannot be read.",
@@ -112,6 +120,7 @@ export async function validateFile(buffer: Buffer, filename: string): Promise<Va
   if (buffer.length === 0) return err("empty_file");
   if (buffer.length > LIMITS.maxBytes) return err("too_large");
   const mime = sniffMime(buffer, filename);
+  if (mime && COMING_SOON.has(mime)) return err("not_supported_yet"); // detected DOCX/PPTX -> clear message
   if (!mime || !FORMATS[mime]) return err("unsupported_type");
   const fmt = FORMATS[mime];
 

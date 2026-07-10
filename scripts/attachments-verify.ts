@@ -40,6 +40,10 @@ async function main() {
   ok("oversized rejected (>20MB)", "error" in big && big.error === "too_large", "error" in big ? big.message : "");
   const bad = await validateFile(EXE, "x.exe");
   ok("unsupported type rejected", "error" in bad && bad.error === "unsupported_type");
+  const docx = await validateFile(ZIP, "brief.docx");
+  ok("docx detected but NOT supported yet (clear message, not generic)", "error" in docx && docx.error === "not_supported_yet");
+  const pptx = await validateFile(ZIP, "deck.pptx");
+  ok("pptx not supported yet", "error" in pptx && pptx.error === "not_supported_yet");
 
   // ── sanitizeFilename: strip paths + unsafe chars, KEEP digits/dots ──
   ok("keeps digits/extension", sanitizeFilename("game-concept-page-1.png") === "game-concept-page-1.png");
