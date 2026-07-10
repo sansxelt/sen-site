@@ -96,6 +96,29 @@ export const RUBRICS: Record<OutputType, Criterion[]> = {
   ],
 };
 
+// The Custom (other) rubric is CONDITIONAL: with an original request there is a task to fit, so it grades
+// instruction fit; without one there is nothing to fit against, so it grades relevance instead. Every
+// other output type is static. Both the prompt (evaluateOutput) and the score-matching (finalizeEvaluation)
+// must use the SAME resolved rubric, so they both call this.
+const OTHER_NO_REQUEST: Criterion[] = [
+  { key: "clarity", label: "Clarity", guide: "clear and easy to follow" },
+  { key: "relevance", label: "Relevance", guide: "on-topic and appropriate for its evident purpose; nothing off-target or padding" },
+  { key: "effectiveness", label: "Effectiveness", guide: "does its job well for the stated goal" },
+  { key: "risk", label: "Risk", guide: "no overpromising, unsafe, or misleading content" },
+];
+export function rubricFor(outputType: OutputType, hasRequest: boolean): Criterion[] {
+  if (outputType === "other" && !hasRequest) return OTHER_NO_REQUEST;
+  return RUBRICS[outputType] ?? RUBRICS.other;
+}
+
+// Every criterion key a threshold may legitimately target for an output type, i.e. the UNION of the
+// conditional variants (for `other`, both intent_fit and relevance). Used to validate API thresholds.
+export function criteriaKeysFor(outputType: OutputType): string[] {
+  const keys = new Set((RUBRICS[outputType] ?? RUBRICS.other).map((c) => c.key));
+  if (outputType === "other") keys.add("relevance");
+  return [...keys];
+}
+
 // Displayed scores are rounded to no finer than each criterion's MEASURED run-to-run spread
 // (from the 20-input x5 stability set), so a report never shows precision the number lacks: a
 // criterion that swings 40 points must not render as a 2-digit integer. Scores are indicative
@@ -359,8 +382,9 @@ export function finalizeEvaluation(
   prepared: PreparedCandidate[],
   raw: z.infer<typeof EvalSchema>,
   model: string,
+  requestSupplied = false, // must match evaluateOutput so `other`'s conditional rubric lines up with the prompt
 ): EvalResult {
-  const rubric = RUBRICS[outputType] ?? RUBRICS.other;
+  const rubric = rubricFor(outputType, requestSupplied);
   const critByKey = new Map(rubric.map((c) => [c.key.toLowerCase(), c]));
   const prepByLabel = new Map(prepared.map((p) => [p.label, p]));
   const rawByLabel = new Map((raw.candidates || []).map((c) => [(c.label || "").trim().toUpperCase(), c]));
@@ -530,7 +554,8 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
   const prepared = prepareCandidates(input);
   if (prepared.length === 0) return null;
 
-  const rubric = RUBRICS[outputType];
+  const hasRequest = (input.originalRequest || "").trim().length > 0;
+  const rubric = rubricFor(outputType, hasRequest); // `other` grades instruction fit only when a request exists
   const criteriaBlock = rubric.map((c) => `- ${c.key}: ${c.label} — ${c.guide}`).join("\n");
   const ctx = [
     input.audience ? `Audience: ${input.audience.trim()}` : null,
@@ -598,7 +623,7 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     // No original request -> ignore any instruction_fit the model volunteered (the schema field
     // exists even when the prompt didn't ask for it, so haiku can fill it against nothing).
     if (!task) raw.instruction_fit = undefined;
-    const result = finalizeEvaluation(outputType, prepared, raw, MODEL);
+    const result = finalizeEvaluation(outputType, prepared, raw, MODEL, hasRequest);
     result.context = published ? "published" : "pre_ship";
     if (task) result.originalRequest = task;
     return result;

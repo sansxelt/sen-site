@@ -16,8 +16,8 @@
 import { apiAuth } from "../_auth";
 import { apiError } from "../_lib";
 import { runCheck, runChecks, reconcileStuckChecks, setCheckShare, CHECK_CREDITS, MAX_BATCH, type RunCheckInput, type RunCheckResult, type VCheck } from "@/lib/v-checks";
-import { OUTPUT_TYPES, type EvalResult, type CheckContext } from "@/lib/v-evaluator";
-import { parseThreshold, evaluateGate, type ThresholdSpec, type Gate } from "@/lib/v-gate";
+import { OUTPUT_TYPES, type EvalResult, type CheckContext, type OutputType } from "@/lib/v-evaluator";
+import { parseThreshold, evaluateGate, resolveThresholdCriteria, type ThresholdSpec, type Gate } from "@/lib/v-gate";
 
 export const runtime = "nodejs";
 export const maxDuration = 300; // batch: up to MAX_BATCH checks (each <=40s) across a few concurrency lanes
@@ -95,6 +95,15 @@ async function handleSingle(userId: string, body: Record<string, unknown>): Prom
   const threshold = parseThreshold(body.threshold);
   if (threshold === "invalid") return apiError("validation_error", THRESHOLD_HELP, 400);
 
+  // Validate threshold criterion keys against this output type BEFORE charging: remap deprecated keys
+  // where valid, reject unknown ones with a clear error. Never let a stale key silently fail the gate.
+  let gateThreshold = threshold;
+  if (threshold && threshold.criteria) {
+    const rc = resolveThresholdCriteria((outputType || "other") as OutputType, threshold);
+    if (!rc.ok) return apiError("validation_error", `Unsupported threshold criterion for output_type "${outputType || "other"}": ${rc.unsupported.join(", ")}. Supported criteria: ${rc.valid.join(", ")}.`, 400);
+    gateThreshold = rc.spec;
+  }
+
   const candidates = (Array.isArray(body.candidates) ? body.candidates : []).map(toCandidate);
 
   const r = await runCheck(userId, {
@@ -115,7 +124,7 @@ async function handleSingle(userId: string, body: Record<string, unknown>): Prom
   if (!res) return apiError("internal_error", "The check did not complete and you were not charged. Try again shortly.", 503);
 
   // Always gate on HIGH flags (the reproducible signal); the optional threshold adds score bars.
-  const gate = evaluateGate(res, threshold);
+  const gate = evaluateGate(res, gateThreshold);
   const out = renderCheck(r.check, res, gate);
 
   // Opt-in public share link: `share: true` enables the read-only /r/c/<token> report and
@@ -156,11 +165,19 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
     if (ot === null) return { ok: false, error: `output_type must be one of: ${OUTPUT_TYPES.join(", ")}.` };
     const th = it.threshold !== undefined ? parseThreshold(it.threshold) : defThreshold;
     if (th === "invalid") return { ok: false, error: THRESHOLD_HELP };
+    const itemType = ((ot || defOutputType) || "other") as OutputType;
+    // Same pre-charge threshold-key validation as the single path (per item, against its own type).
+    let itemThreshold = th;
+    if (th && th.criteria) {
+      const rc = resolveThresholdCriteria(itemType, th);
+      if (!rc.ok) return { ok: false, error: `Unsupported threshold criterion for output_type "${itemType}": ${rc.unsupported.join(", ")}. Supported criteria: ${rc.valid.join(", ")}.` };
+      itemThreshold = rc.spec;
+    }
     const candidates = (Array.isArray(it.candidates) ? it.candidates : []).map(toCandidate);
     return {
       ok: true,
       input: {
-        outputType: (ot || defOutputType) || "other",
+        outputType: itemType,
         title: str(it.title),
         // `||` not `??`: an item that sends audience/goal as "" should inherit the batch
         // default (startCheck drops "" anyway), matching an item that omits the field.
@@ -171,7 +188,7 @@ async function handleBatch(userId: string, body: Record<string, unknown>): Promi
         candidates,
         source: "api",
       },
-      threshold: th,
+      threshold: itemThreshold,
     };
   });
 

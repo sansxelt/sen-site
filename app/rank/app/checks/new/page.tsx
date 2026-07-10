@@ -190,7 +190,7 @@ export default function NewCheckPage() {
             {active ? (
               <div style={{ marginTop: 12, padding: "11px 13px", background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)" }}>
                 <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.5 }}>{active.hint}</p>
-                <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "5px 0 0" }}>Scored on {active.criteria}.</p>
+                <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "5px 0 0" }}>Scored on {outputType === "other" ? `clarity, ${hasTask ? "instruction fit" : "relevance"}, effectiveness, risk` : active.criteria}.</p>
               </div>
             ) : null}
           </section>

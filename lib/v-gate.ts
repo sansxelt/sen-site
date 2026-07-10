@@ -9,7 +9,7 @@
 // highest-overall candidate. For the common CI case (one output per item) that is simply
 // that output; for a multi-version compare it is the best available version.
 
-import type { EvalResult, CandidateEval } from "./v-evaluator";
+import { criteriaKeysFor, type EvalResult, type CandidateEval, type OutputType } from "./v-evaluator";
 
 export type ThresholdSpec = { overall?: number; criteria?: Record<string, number> };
 
@@ -67,6 +67,38 @@ export function parseThreshold(raw: unknown): ThresholdSpec | null | "invalid" {
   // A threshold with no bound at all is a caller mistake, not a silent no-op gate.
   if (spec.overall == null && !spec.criteria) return "invalid";
   return spec;
+}
+
+// Criterion keys removed from a rubric in the 2026-07 taxonomy rework, mapped to their closest current
+// criterion where the mapping is semantically valid. A deprecated key WITHOUT a valid successor is not
+// aliased -- it is reported as unsupported so the caller gets a clear error instead of a silent fail.
+const DEPRECATED_ALIASES: Record<string, Record<string, string>> = {
+  marketing_copy: { overpromise: "credibility" },   // both: claims believable and backed, no hype / legal risk
+  agent_action: { completeness: "task_completion" }, // both: finishes the whole task, not just part of it
+};
+
+// Validate a threshold's criterion keys against an output type BEFORE the check runs (and before any
+// charge). Deprecated keys with a valid successor are remapped; unknown/deprecated keys with no successor
+// are returned as `unsupported` so the caller returns a 400. This keeps a stale CI threshold from silently
+// producing a failed verdict after the taxonomy change.
+export function resolveThresholdCriteria(outputType: OutputType, spec: ThresholdSpec):
+  | { ok: true; spec: ThresholdSpec }
+  | { ok: false; unsupported: string[]; valid: string[] } {
+  if (!spec.criteria) return { ok: true, spec };
+  const valid = criteriaKeysFor(outputType);
+  const validSet = new Set(valid);
+  const aliases = DEPRECATED_ALIASES[outputType] ?? {};
+  const out: Record<string, number> = {};
+  const unsupported: string[] = [];
+  for (const [k, v] of Object.entries(spec.criteria)) {
+    const key = k.trim().toLowerCase();
+    if (validSet.has(key)) { out[key] = v; continue; }
+    const alias = aliases[key];
+    if (alias && validSet.has(alias)) { out[alias] = v; continue; } // deprecated -> current
+    unsupported.push(key);
+  }
+  if (unsupported.length) return { ok: false, unsupported, valid };
+  return { ok: true, spec: { ...spec, criteria: out } };
 }
 
 // The candidate the gate judges: the recommended pick if present, else the highest
