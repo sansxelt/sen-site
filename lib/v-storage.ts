@@ -51,6 +51,19 @@ export async function signedCheckUrl(path: string, ttlSeconds = 300): Promise<st
   } catch { return null; }
 }
 
+// Cheap existence check (no bytes transferred) — used by the evaluation snapshot to reject an
+// attachment whose object has gone missing before the model is ever called.
+export async function checkObjectExists(path: string): Promise<boolean> {
+  if (!path || !isDatabaseConfigured()) return false;
+  const i = path.lastIndexOf("/");
+  const folder = i >= 0 ? path.slice(0, i) : "";
+  const name = i >= 0 ? path.slice(i + 1) : path;
+  try {
+    const { data } = await getSupabaseAdminClient().storage.from(CHECK_BUCKET).list(folder, { search: name, limit: 100 });
+    return !!data?.some((o) => o.name === name);
+  } catch { return false; }
+}
+
 // Download raw bytes of a private attachment (for server-side extraction / vision in pass 2).
 export async function downloadCheckAttachment(path: string): Promise<Buffer | null> {
   if (!path || !isDatabaseConfigured()) return null;

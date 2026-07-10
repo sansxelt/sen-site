@@ -102,6 +102,13 @@ export async function countImagesTotal(userId: string, draftKey: string): Promis
   return count ?? 0;
 }
 
+// Owner-scoped status setter (uploading -> processing -> ready | failed). Pass 2 flips it as extraction
+// / model-input construction runs.
+export async function setStatus(userId: string, id: string, status: "uploading" | "processing" | "ready" | "failed"): Promise<void> {
+  if (!isDatabaseConfigured()) return;
+  await getSupabaseAdminClient().from(TABLE as never).update({ status } as never).eq("user_id", userId).eq("id", id);
+}
+
 // Bind a draft's uploads to the created check (and clear the orphan-sweep deadline).
 export async function bindDraftToCheck(userId: string, draftKey: string, checkId: string): Promise<void> {
   if (!isDatabaseConfigured() || !draftKey) return;
