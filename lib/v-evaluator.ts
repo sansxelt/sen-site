@@ -249,11 +249,13 @@ const EvalSchema = z.object({
   })).optional(),
 });
 
-// Trim, drop empties, cap at MAX_CANDIDATES, and assign stable letters + normalized text.
-export function prepareCandidates(input: EvalInput): PreparedCandidate[] {
+// Trim, cap at MAX_CANDIDATES, and assign stable letters + normalized text. Drops empty-text candidates
+// UNLESS keepEmpty (multimodal): a files-only candidate has empty text but is still a real candidate,
+// its content living in the image/PDF blocks. The snapshot has already rejected truly-empty candidates.
+export function prepareCandidates(input: EvalInput, keepEmpty = false): PreparedCandidate[] {
   return (input.candidates || [])
     .map((c) => (c?.text || "").trim())
-    .filter((t) => t.length > 0)
+    .filter((t) => keepEmpty || t.length > 0)
     .slice(0, MAX_CANDIDATES)
     .map((text, i) => ({ index: i, label: LETTERS[i], text, normText: norm(text) }));
 }
@@ -554,7 +556,8 @@ export function finalizeEvaluation(
 export async function evaluateOutput(input: EvalInput): Promise<EvalResult | null> {
   if (!API_KEY) return null;
   const outputType: OutputType = OUTPUT_TYPES.includes(input.outputType) ? input.outputType : "other";
-  const prepared = prepareCandidates(input);
+  const hasAttachments = !!(input.attachments && input.attachments.blocks.length);
+  const prepared = prepareCandidates(input, hasAttachments); // keep files-only candidates in multimodal
   if (prepared.length === 0) return null;
 
   const hasRequest = (input.originalRequest || "").trim().length > 0;

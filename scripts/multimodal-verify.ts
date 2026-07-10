@@ -4,23 +4,14 @@
 // only after a validated result, and cleans up. Refuses to run without the guard. Prints only a redacted
 // report (no base64 / paths / signed URLs / raw content).
 //   Run: VRAELIS_MULTIMODAL_VERIFY=1 ANTHROPIC_API_KEY=<real key> npx tsx scripts/multimodal-verify.ts
-import { readFileSync } from "node:fs";
 import crypto from "node:crypto";
+import { loadEnvConfig } from "@next/env";
 
 if (process.env.VRAELIS_MULTIMODAL_VERIFY !== "1") { console.error("Refusing to run. Set VRAELIS_MULTIMODAL_VERIFY=1 to allow this internal harness."); process.exit(2); }
-
-function envLongest(raw: string, name: string): string {
-  const all = [...raw.matchAll(new RegExp(`^\\s*${name}\\s*=\\s*(.*)\\s*$`, "gm"))].map((m) => m[1].replace(/^["']|["']$/g, "").trim());
-  return all.slice().sort((a, b) => b.length - a.length)[0] || "";
-}
-const raw = readFileSync(".env.local", "utf8");
-process.env.NEXT_PUBLIC_SUPABASE_URL = envLongest(raw, "NEXT_PUBLIC_SUPABASE_URL") || envLongest(raw, "SUPABASE_URL");
-process.env.SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-process.env.SUPABASE_SERVICE_ROLE_KEY = envLongest(raw, "SUPABASE_SERVICE_ROLE_KEY");
-// Prod-equivalent model; key from the invoking env (preferred) or .env.local. Placeholder -> model unavailable.
-const key = process.env.ANTHROPIC_API_KEY || envLongest(raw, "ANTHROPIC_API_KEY");
-process.env.ANTHROPIC_API_KEY = key; process.env.VRAELIS_LLM_API_KEY = key;
-process.env.VRAELIS_EVAL_MODEL = process.env.VRAELIS_EVAL_MODEL || "claude-haiku-4-5";
+// Load .env.local exactly as Next does (Supabase, ANTHROPIC/VRAELIS_LLM keys, VRAELIS_EVAL_MODEL) so the
+// shared modules read the same values the app uses. Pull it first with `vercel env pull .env.local`.
+loadEnvConfig(process.cwd());
+if (!process.env.VRAELIS_EVAL_MODEL) process.env.VRAELIS_EVAL_MODEL = "claude-haiku-4-5";
 
 type Seed = { role: "candidate_output" | "supporting_context"; versionKey: string | null; filename: string; mime: string; bytes: Buffer; pageCount?: number | null };
 const owner = "mm-verify@vraelis.local";
