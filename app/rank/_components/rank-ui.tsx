@@ -98,7 +98,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
       </div>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16 }}>
         <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{authed ? "Dashboard" : "Sign in"}</Link>
-        <Link href="/app/checks/new" className="btn">Check your AI output</Link>
+        <Link href="/app/checks/new" className="btn">{authed ? "New check" : "Check an output"}</Link>
         <button aria-label="Menu" onClick={() => setOpen((v) => !v)} className="vra-nav-burger" style={{ display: "none", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 11, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", color: "var(--fg-1)" }}>
           <span aria-hidden>{open ? "✕" : "☰"}</span>
         </button>

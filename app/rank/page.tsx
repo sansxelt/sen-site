@@ -133,58 +133,58 @@ export default function RankLanding() {
       {/* ── Hero ── */}
       <section style={{ position: "relative" }}>
         <div className="glow glow--bleed" />
-        <div className="grid-faint" />
+        <div className="grid-faint" style={{ opacity: 0.55 }} />
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 7vw, 96px)", paddingBottom: "clamp(40px, 5vw, 68px)", textAlign: "center" }}>
-          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Automated QA for AI output</p>
-          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.5rem, 5.6vw, 4.4rem)", margin: "0 auto 22px", maxWidth: 920 }}>
-            Catch your AI&apos;s <span className="em">bad output</span> before your users do.
+          <p className="eyebrow rise" data-d="1" style={{ justifyContent: "center" }}>Instruction-aware AI output QA</p>
+          <h1 className="display rise" data-d="2" style={{ fontSize: "clamp(2.4rem, 5.4vw, 4.2rem)", margin: "0 auto 22px", maxWidth: 860, lineHeight: 1.05, textWrap: "balance" }}>
+            <span style={{ color: "var(--fg-3)" }}>Your AI answered.</span><br />
+            Did it actually do the job?
           </h1>
-          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 700, margin: "0 auto 30px", lineHeight: 1.55 }}>
-            Paste what your app generates and get an instant check: per-criterion scores, the version to ship, and the exact lines to fix. The pass/fail gate is fail-closed on unbacked claims, and its verdict is stable run to run, measured and published.
+          <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 700, margin: "0 auto 26px", lineHeight: 1.55 }}>
+            Paste the original request and one or more AI outputs. Vraelis checks instruction fit, clarity, risk, and effectiveness, then recommends the version to ship and shows the exact lines to fix.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
-            <Link href="/r/check" className="btn btn--ghost btn--lg">See a sample check</Link>
+            <Link href="/app/checks/new" className="btn btn--lg">Check an AI output <span aria-hidden>→</span></Link>
+            <Link href="/r/check" className="btn btn--ghost btn--lg">View a sample report</Link>
           </div>
+          <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "14px 0 0" }}>1 credit per successful check · No charge if analysis fails</p>
 
-          {/* Product preview: the instant AI check and its recommended version */}
-          <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 860, margin: "clamp(34px, 4vw, 52px) auto 0" }}>
+          {/* Product preview: instruction fit in action — the request, per-version fit, and the pick */}
+          <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 880, margin: "clamp(24px, 3vw, 40px) auto 0" }}>
             <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
-              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>AI output check</span><span style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>illustrative example</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Instant</span></div>
-              <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.05fr) minmax(0,1fr)", gap: 0 }} className="cols-stack">
-                {/* LEFT: the instant AI check — scores, the pick, a flagged line + fix */}
-                <div style={{ padding: "clamp(18px,2.4vw,26px)", borderRight: "1px solid var(--line-1)" }}>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 8 }}>The instant check</div>
-                  <div style={{ display: "grid", gap: 9, marginBottom: 13 }}>
-                    {[["A", "Direct answer, but states one claim as fact without a caveat.", 61, false], ["B", "Answers, flags its uncertainty, and adds a safety note.", 84, true]].map(([l, d, score, win]) => (
-                      <div key={l as string} style={{ padding: 10, background: "var(--bg-2)", borderRadius: 9, border: `1px solid ${win ? "var(--acc-line)" : "var(--line-2)"}` }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.07em", textTransform: "uppercase", color: win ? "var(--acc-deep)" : "var(--fg-4)" }}>Version {l}{win ? " · ship this" : ""}</span>
-                          <span style={{ marginLeft: "auto", fontFamily: "var(--font-code)", fontSize: 10.5, color: win ? "var(--acc-deep)" : "var(--fg-4)" }}>Score {score}</span>
-                        </div>
-                        <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{d}</div>
+              <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-2)" }}>AI output check</span><span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>illustrative example</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Instruction fit</span></div>
+              <div style={{ padding: "clamp(18px,2.6vw,28px)" }}>
+                {/* the original request */}
+                <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 }}>Original request</div>
+                <div style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.5, padding: "11px 13px", background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: 10, marginBottom: 16 }}>Explain the refund policy without promising the customer a refund.</div>
+                {/* two versions, each with its overall score AND its instruction fit */}
+                <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 12, marginBottom: 16 }} className="cols-stack">
+                  {[
+                    { l: "A", overall: 74, fit: 35, kind: "Contradiction", note: "Promises that a refund will be issued.", win: false },
+                    { l: "B", overall: 88, fit: 95, kind: "Satisfied", note: "Explains the policy clearly without guaranteeing an outcome.", win: true },
+                  ].map((v) => (
+                    <div key={v.l} style={{ padding: "13px 14px", background: "var(--bg-2)", borderRadius: 11, border: `1px solid ${v.win ? "var(--acc-line)" : "var(--line-2)"}` }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
+                        <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)" }}>Version {v.l}</span>
+                        {v.win ? <span className="pill" style={{ background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)", fontSize: 10 }}>Ship this</span> : null}
                       </div>
-                    ))}
-                  </div>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Flagged line</div>
-                  <div style={{ fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.5, paddingLeft: 10, borderLeft: "2px solid var(--err)" }}>
-                    <span style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--err)" }}>Overpromise </span> in A: &ldquo;states one claim as fact&rdquo;
-                    <div style={{ color: "var(--fg-4)", marginTop: 3 }}>Fix: add a caveat before the claim.</div>
-                  </div>
-                </div>
-                {/* RIGHT: the check's recommended version + the corrected copy */}
-                <div style={{ padding: "clamp(18px,2.4vw,26px)" }}>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 10 }}>The check&apos;s pick</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 11, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18 }}>B</div>
-                    <div>
-                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", letterSpacing: "-0.01em" }}>Response B preferred</div>
-                      <span className="pill" style={{ marginTop: 4, background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>High confidence</span>
+                      <div style={{ display: "flex", gap: 16, marginBottom: 10 }}>
+                        <div><div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)" }}>Overall</div><div style={{ fontFamily: "var(--font-code)", fontSize: 16, color: "var(--fg-2)" }}>{v.overall}</div></div>
+                        <div><div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)" }}>Instruction fit</div><div style={{ fontFamily: "var(--font-code)", fontSize: 16, color: v.win ? "var(--acc-deep)" : "var(--err)" }}>{v.fit}</div></div>
+                      </div>
+                      <div style={{ fontSize: 12, lineHeight: 1.5, color: "var(--fg-3)" }}>
+                        <span style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: v.win ? "var(--acc-deep)" : "var(--err)" }}>{v.kind} </span>{v.note}
+                      </div>
                     </div>
+                  ))}
+                </div>
+                {/* the recommendation with the reason to ship */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 13, padding: "13px 14px", borderRadius: 11, border: "1px solid var(--acc-line)", background: "var(--acc-soft)" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17 }}>B</div>
+                  <div>
+                    <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)" }}>Ship Version B</div>
+                    <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginTop: 2 }}>It follows the original request, avoids the unsupported promise, and gives the customer a clear next step.</div>
                   </div>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 7 }}>Score comparison</div>
-                  <Verdict rows={[["A", 39, false], ["B", 61, true]]} />
-                  <div style={{ marginTop: 12, fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", lineHeight: 1.5 }}>Ship Version B with every flag&apos;s fix already applied: the corrected version, ready to copy.</div>
                 </div>
               </div>
             </div>
