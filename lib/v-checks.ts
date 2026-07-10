@@ -15,6 +15,10 @@
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { balance, spend, refundCheck } from "./v-credits";
 import { evaluateOutput, evaluatorConfigured, OUTPUT_TYPES, type EvalInput, type EvalResult, type OutputType, type CheckContext } from "./v-evaluator";
+import { buildEvaluationSnapshot } from "./v-attachment-snapshot";
+import { buildEvaluationContent } from "./v-content-blocks";
+import { bindDraftToCheck } from "./v-attachments-db";
+import { reserveSubmission, completeSubmission, failSubmission } from "./v-idempotency";
 import { logEvent } from "./v-events";
 import { randomBytes, randomUUID } from "crypto";
 
@@ -56,13 +60,22 @@ export type RunCheckInput = {
   audience?: string;
   goal?: string;
   originalRequest?: string;  // the prompt/task the AI was given; enables instruction-fit judging
-  candidates: { label?: string; text?: string }[];
+  candidates: { label?: string; text?: string; versionKey?: string }[]; // versionKey groups attachments in multimodal
   source: "app" | "api";
   context?: CheckContext;   // "pre_ship" (default) | "published"
+  // Attachment lifecycle (Pass 2A Phase 4). Present only when the check has uploads.
+  draftKey?: string;                 // the client draft the uploads are bound to
+  attachmentIds?: string[];          // the EXACT expected owner-scoped set; a mismatch aborts pre-charge
+  contextText?: string;              // pasted supporting-context text
+  submissionId?: string;             // server-side idempotency key (no double-charge)
 };
 
+// bind info carried from startCheck to finishCheck so a successful check binds its attachments + closes
+// the idempotency record.
+export type CheckBind = { draftKey?: string; submissionId?: string };
 export type StartResult =
-  | { status: "ok"; checkId: string; evalInput: EvalInput }
+  | { status: "ok"; checkId: string; evalInput: EvalInput; bind?: CheckBind }
+  | { status: "duplicate"; checkId: string | null } // same submission_id already completed/in flight
   | { status: "invalid"; message: string }
   | { status: "insufficient_credits" }
   | { status: "unavailable" };
@@ -80,32 +93,59 @@ export async function startCheck(userId: string, input: RunCheckInput): Promise<
   const uid = norm(userId);
 
   const outputType: OutputType = (OUTPUT_TYPES as readonly string[]).includes(input.outputType) ? (input.outputType as OutputType) : "other";
-  const candidates = (Array.isArray(input.candidates) ? input.candidates : [])
-    .map((c) => ({ text: String(c?.text || "").trim().slice(0, MAX_TEXT_CHARS) }))
-    .filter((c) => c.text.length > 0)
-    .slice(0, MAX_CANDIDATES);
+  const hasAttachments = !!(input.draftKey && input.attachmentIds && input.attachmentIds.length);
+  // Version texts in submission order (used to group attachments). Files-only candidates (empty text) are
+  // kept ONLY in multimodal mode -- their content is the attachments; the snapshot rejects a candidate
+  // with neither text nor files.
+  const versions = (Array.isArray(input.candidates) ? input.candidates : []).slice(0, MAX_CANDIDATES)
+    .map((c, i) => ({ versionKey: c?.versionKey ? String(c.versionKey).slice(0, 100) : `v${i}`, text: String(c?.text || "").trim().slice(0, MAX_TEXT_CHARS) }));
+  const candidates = (hasAttachments ? versions : versions.filter((v) => v.text.length > 0)).map((v) => ({ text: v.text }));
   if (candidates.length < 1) return { status: "invalid", message: "Provide at least one non-empty version to check." };
 
   const audience = input.audience ? String(input.audience).trim().slice(0, 400) : undefined;
   const goal = input.goal ? String(input.goal).trim().slice(0, 800) : undefined;
   const originalRequest = input.originalRequest ? String(input.originalRequest).trim().slice(0, 20000) : undefined;
+  const contextText = input.contextText ? String(input.contextText).trim().slice(0, 20000) : "";
+  const submissionId = input.submissionId ? String(input.submissionId).slice(0, 100) : undefined;
   const title = input.title ? String(input.title).trim().slice(0, 140) : null;
 
   // If the evaluator has no key it would fail-soft anyway — bail BEFORE charging.
   if (!evaluatorConfigured()) return { status: "unavailable" };
+
+  // Idempotency: reserve BEFORE any charge. A duplicate/concurrent submission never charges or evaluates
+  // twice -- it returns the already-reserved/completed state.
+  if (submissionId) {
+    const r = await reserveSubmission(uid, submissionId);
+    if (!r.reserved) return { status: "duplicate", checkId: r.checkId };
+  }
+  const releaseOnAbort = async (cat: string) => { if (submissionId) await failSubmission(uid, submissionId, cat, true); };
+
+  // Attachments: build + validate the immutable snapshot and multimodal content BEFORE charging. Any
+  // failure (mismatch, missing object, unsupported, empty candidate, oversized request) aborts with NO
+  // charge and releases the reservation for a deliberate retry.
+  let attachments: EvalInput["attachments"];
+  if (hasAttachments) {
+    const snap = await buildEvaluationSnapshot(uid, input.draftKey as string, versions, contextText, input.attachmentIds as string[]);
+    if (!snap.ok) { await releaseOnAbort(snap.error); return { status: "invalid", message: snap.message }; }
+    const content = await buildEvaluationContent(snap.snapshot);
+    if (!content.ok) { await releaseOnAbort(content.error); return { status: "invalid", message: content.message }; }
+    attachments = { blocks: content.blocks, prepared: content.prepared, textById: content.textById };
+  }
+
   // Fast pre-check; the atomic charge below is the authoritative gate.
-  if ((await balance(uid)) < CHECK_CREDITS) return { status: "insufficient_credits" };
+  if ((await balance(uid)) < CHECK_CREDITS) { await releaseOnAbort("insufficient_credits"); return { status: "insufficient_credits" }; }
 
   const checkId = randomUUID();
 
   // Charge FIRST (atomic). Refund on any post-charge failure.
   const charge = await chargeForCheck(uid, checkId, CHECK_CREDITS);
-  if (charge === "insufficient_credits") return { status: "insufficient_credits" }; // no debit written
+  if (charge === "insufficient_credits") { await releaseOnAbort("insufficient_credits"); return { status: "insufficient_credits" }; } // no debit written
   if (charge !== "ok") {
     // Ambiguous: the debit may have committed. refundCheck reverses it if so, no-ops if
     // not. No v_checks row exists yet, so if the refund itself fails there is nothing for
     // reconcileStuckChecks to find later — log loudly for manual reversal.
     if (!(await refundCheck(uid, checkId))) console.error(`ORPHANED CHARGE (ambiguous charge) check=${checkId} user=${uid}: manual reconciliation required`);
+    await releaseOnAbort("charge_failed");
     return { status: "unavailable" };
   }
 
@@ -114,17 +154,19 @@ export async function startCheck(userId: string, input: RunCheckInput): Promise<
     // Charged but no row was written → no anchor for the reconcile sweep. Refund now; if
     // that also fails, log loudly (the only recovery is manual).
     if (!(await refundCheck(uid, checkId))) console.error(`ORPHANED CHARGE (row insert failed) check=${checkId} user=${uid}: manual reconciliation required`);
+    await releaseOnAbort("row_insert_failed");
     return { status: "unavailable" };
   }
 
   await logEvent({ userId: uid, eventType: "check_started", actorType: input.source === "api" ? "api" : "owner", source: input.source, metadata: { check_id: checkId, output_type: outputType, candidate_count: candidates.length, source: input.source } });
-  return { status: "ok", checkId, evalInput: { outputType, audience, goal, originalRequest, candidates, context: input.context } };
+  return { status: "ok", checkId, evalInput: { outputType, audience, goal, originalRequest, candidates, context: input.context, attachments }, bind: { draftKey: input.draftKey, submissionId } };
 }
 
 // Evaluate a running check and finalize it. Fail-soft; the sole finalizer in the normal
 // flow (reconcile only fires far later). complete → result stored; failed → refund.
-export async function finishCheck(userId: string, checkId: string, evalInput: EvalInput): Promise<CheckStatus> {
+export async function finishCheck(userId: string, checkId: string, evalInput: EvalInput, bind?: CheckBind): Promise<CheckStatus> {
   const uid = norm(userId);
+  const submissionId = bind?.submissionId;
   let result: EvalResult | null = null;
   try { result = await evaluateOutput(evalInput); } catch (e) { console.error("finishCheck evaluate:", e); }
 
@@ -134,13 +176,23 @@ export async function finishCheck(userId: string, checkId: string, evalInput: Ev
     // the row 'running' so reconcileStuckChecks retries — a 'failed' row is never revisited,
     // so flipping before a confirmed refund would strand the charge permanently.
     if (await refundCheck(uid, checkId)) await markCheckFailed(uid, checkId, "evaluator_unavailable");
+    // Terminal for idempotency: the credit is refunded, so a same-id replay returns 'failed' (no
+    // re-charge); a deliberate retry uses a new submission id. The draft attachments stay UNBOUND, so
+    // they remain available for that intentional retry.
+    if (submissionId) await failSubmission(uid, submissionId, "evaluator_unavailable");
     return "failed";
   }
   const stored = await completeCheck(uid, checkId, result);
   if (!stored) {
     if (await refundCheck(uid, checkId)) await markCheckFailed(uid, checkId, "store_failed");
+    if (submissionId) await failSubmission(uid, submissionId, "store_failed");
     return "failed";
   }
+  // Success: bind the exact attachments to the completed check (clears their orphan-sweep expiry) and
+  // close the idempotency record. Both run AFTER the result is persisted and are best-effort -- the
+  // check is already complete + charged, so a bind/idempotency hiccup must never fail or refund it.
+  if (bind?.draftKey) await bindDraftToCheck(uid, bind.draftKey, checkId);
+  if (submissionId) await completeSubmission(uid, submissionId, checkId);
   await logEvent({ userId: uid, eventType: "check_completed", actorType: "system", source: "check", metadata: { check_id: checkId, output_type: evalInput.outputType, recommended: result.recommendedLabel } });
   return "complete";
 }
@@ -150,8 +202,13 @@ export async function runCheck(userId: string, input: RunCheckInput): Promise<Ru
   const started = await startCheck(userId, input);
   if (started.status === "invalid") return { status: "invalid", message: started.message };
   if (started.status === "insufficient_credits") return { status: "insufficient_credits" };
+  // A duplicate submission id: return the already-completed check without charging or evaluating again.
+  if (started.status === "duplicate") {
+    const existing = started.checkId ? await getCheck(userId, started.checkId) : null;
+    return existing && existing.status === "complete" && existing.result ? { status: "ok", check: existing } : { status: "unavailable" };
+  }
   if (started.status !== "ok") return { status: "unavailable" };
-  const final = await finishCheck(userId, started.checkId, started.evalInput);
+  const final = await finishCheck(userId, started.checkId, started.evalInput, started.bind);
   if (final !== "complete") return { status: "unavailable" };
   const check = await getCheck(userId, started.checkId);
   return check && check.status === "complete" && check.result ? { status: "ok", check } : { status: "unavailable" };
