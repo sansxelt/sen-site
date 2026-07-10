@@ -53,6 +53,8 @@ function renderCheck(check: VCheck, res: EvalResult, gate: Gate | null): Record<
     recommended: res.recommendedIndex != null ? { index: res.recommendedIndex, label: res.recommendedLabel, margin: res.margin } : null,
     recommendation: res.recommendation,
     ...(res.originalRequest ? { original_request: res.originalRequest } : {}),
+    ...(res.taskFit ? { task_fit: { outcome: res.taskFit.outcome, label: res.taskFit.label, score: res.taskFit.score, reason: res.taskFit.reason } } : {}),
+    ...(res.recommendedOnTaskFit ? { recommended_on_task_fit: true } : {}),
     candidates: res.candidates.map((x) => ({ index: x.index, label: x.label, overall: x.overall, summary: x.summary, scores: x.scores,
       ...(x.correctedVersion ? { corrected_version: x.correctedVersion } : {}),
       ...(x.instructionFit ? { instruction_fit: { score: x.instructionFit.score, met: x.instructionFit.met, missed: x.instructionFit.missed, contradictions: x.instructionFit.contradictions, fix: x.instructionFit.fix } } : {}),

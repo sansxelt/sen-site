@@ -87,9 +87,28 @@ export function bandScore(criterion: string, score: number): number {
 
 export type CriterionScore = { criterion: string; label: string; score: number; note: string };
 // Instruction fit: how fully a version did what the original request ASKED, judged separately from
-// general quality. Only produced when the caller supplies an original request. Informational -- like
-// the scores, it NEVER touches the pass/fail gate.
+// general quality. Only produced when the caller supplies an original request. It stays OUT of the
+// risk gate (an instruction miss never becomes a HIGH safety flag), but it IS a decision dimension:
+// it drives which version is recommended and the ship / revise / fails-task verdict.
 export type InstructionFit = { score: number; met: string[]; missed: string[]; contradictions: string[]; fix: string };
+
+// The task dimension for one candidate, derived from its instruction fit. A contradiction of the
+// request, or a very low fit score, is a task failure regardless of how well-written the version is.
+export type TaskOutcome = "meets" | "revise" | "fails";
+export function taskOutcome(fit: InstructionFit | undefined): TaskOutcome | null {
+  if (!fit) return null;
+  if (fit.contradictions.length > 0 || fit.score < 50) return "fails";
+  if (fit.score < 80 || fit.missed.length > 0) return "revise";
+  return "meets";
+}
+const TASK_TIER: Record<TaskOutcome, number> = { meets: 2, revise: 1, fails: 0 };
+
+// The task-fit verdict for the whole check: about the recommended pick (or the sole candidate),
+// combining its task outcome with the risk gate. Present only when an original request was supplied.
+//   ship   -> follows the request and clears the quality/risk checks
+//   revise -> substantially follows it but misses requirements (or a flagged claim must be fixed first)
+//   fails  -> contradicts or materially fails the request
+export type TaskFit = { index: number; label: string; score: number; outcome: "ship" | "revise" | "fails"; reason: string };
 export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string; correctedVersion?: string; aiReview?: AiReview; instructionFit?: InstructionFit };
 export type LineFlag = { candidateIndex: number; candidateLabel: string; span: string; issue: FlagIssue; severity: FlagSeverity; why: string; fix: string };
 
@@ -101,14 +120,16 @@ export type EvalResult = {
   outputType: OutputType;
   model: string;
   assessment: "ai";                 // never "human" — a model assessment, not a guarantee
-  recommendedIndex: number | null;  // computed from scores; null for a single candidate or an exact tie
+  recommendedIndex: number | null;  // the pick; null for a single candidate or an exact tie
   recommendedLabel: string | null;
   margin: number | null;            // winner overall minus runner-up (points); null with < 2 scored candidates
+  recommendedOnTaskFit?: boolean;   // true when the pick won on instruction fit despite a lower/equal overall
   recommendation: string;
   candidates: CandidateEval[];
   flags: LineFlag[];
   context?: CheckContext;           // rides the stored result jsonb; drives report framing
   originalRequest?: string;         // the task the AI was given (when supplied); rides the jsonb, shown on the report
+  taskFit?: TaskFit;                // ship / revise / fails-task verdict (only when a request was supplied)
 };
 
 export type EvalCandidate = { label?: string; text: string };
@@ -375,15 +396,42 @@ export function finalizeEvaluation(
     flags.push({ candidateIndex: p.index, candidateLabel: p.label, span: span.slice(0, 400), issue, severity: "medium", why: why.slice(0, 300), fix: fix.slice(0, 400) });
   }
 
-  // Recommended version is COMPUTED from the scores, never the model's word. An exact
-  // tie (margin 0) yields no recommendation; a single candidate is a critique, not a pick.
+  // Instruction fit (present only when an original request was supplied). Attached PER candidate so
+  // comparison mode shows how each version did the task -- and so the recommendation below can weigh it.
+  // This must run BEFORE the recommendation, which now uses task fit as its first sort key.
+  for (const f of raw.instruction_fit || []) {
+    const p = prepByLabel.get((f.candidate || "").trim().toUpperCase());
+    const c = p ? candidates.find((x) => x.index === p.index) : undefined;
+    if (!c) continue;
+    const list = (a: string[] | undefined, n: number) => (a || []).map((s) => (s || "").trim()).filter(Boolean).slice(0, n);
+    c.instructionFit = {
+      score: bandScore("instruction_fit", clampScore(f.score)),
+      met: list(f.met, 12), missed: list(f.missed, 12), contradictions: list(f.contradictions, 8),
+      fix: (f.fix || "").trim().slice(0, 400),
+    };
+  }
+  const hasRequest = candidates.some((c) => c.instructionFit);
+
+  // Recommended version. Without a request: argmax of the quality scores (unchanged). WITH a request:
+  // task fit is the FIRST sort key, so a version that contradicts or materially fails the request (task
+  // tier "fails") can never be recommended over one that followed it, however much better written it is.
+  // An exact tie (same task tier AND same overall) yields no recommendation; a single candidate is a critique.
   let recommendedIndex: number | null = null;
   let margin: number | null = null;
+  let recommendedOnTaskFit = false;
+  const tierOf = (c: CandidateEval) => { const o = taskOutcome(c.instructionFit); return o ? TASK_TIER[o] : 1; };
   const scored = candidates.filter((c) => c.scores.length > 0);
   if (scored.length >= 2) {
-    const sorted = [...scored].sort((a, b) => b.overall - a.overall || a.index - b.index);
-    margin = sorted[0].overall - sorted[1].overall;
-    recommendedIndex = margin > 0 ? sorted[0].index : null;
+    const sorted = [...scored].sort((a, b) =>
+      (hasRequest ? tierOf(b) - tierOf(a) : 0) || (b.overall - a.overall) || (a.index - b.index));
+    const [top, runner] = sorted;
+    margin = top.overall - runner.overall;
+    if (hasRequest && tierOf(top) > tierOf(runner)) {
+      recommendedIndex = top.index;             // decisive task-fit win, regardless of quality gap
+      recommendedOnTaskFit = margin <= 0;       // and it wasn't already ahead on quality
+    } else if (margin > 0) {
+      recommendedIndex = top.index;             // same task tier -> higher quality wins
+    }                                           // else: a true tie -> no pick
   }
   const recommendedLabel = recommendedIndex != null ? (candidates.find((c) => c.index === recommendedIndex)?.label ?? null) : null;
 
@@ -408,18 +456,34 @@ export function finalizeEvaluation(
     }
   }
 
-  // Instruction fit (present only when an original request was supplied). Attached PER candidate so
-  // comparison mode shows how each version did the task. Informational -- never touches the gate.
-  for (const f of raw.instruction_fit || []) {
-    const p = prepByLabel.get((f.candidate || "").trim().toUpperCase());
-    const c = p ? candidates.find((x) => x.index === p.index) : undefined;
-    if (!c) continue;
-    const list = (a: string[] | undefined, n: number) => (a || []).map((s) => (s || "").trim()).filter(Boolean).slice(0, n);
-    c.instructionFit = {
-      score: bandScore("instruction_fit", clampScore(f.score)),
-      met: list(f.met, 12), missed: list(f.missed, 12), contradictions: list(f.contradictions, 8),
-      fix: (f.fix || "").trim().slice(0, 400),
-    };
+  // Task-fit verdict for the whole check: ship / revise / fails-task, about the ship-pick (or the sole
+  // candidate). Combines the pick's task outcome with the RISK gate signal (a HIGH flag on the pick).
+  // It never converts an instruction miss into a HIGH flag -- the risk gate itself is unchanged.
+  let taskFit: TaskFit | undefined;
+  if (hasRequest && correctTarget != null) {
+    const vc = candidates.find((c) => c.index === correctTarget);
+    const fit = vc?.instructionFit;
+    if (vc && fit) {
+      const outc = taskOutcome(fit);
+      const hasHigh = flags.some((f) => f.candidateIndex === vc.index && f.severity === "high");
+      let outcome: TaskFit["outcome"];
+      let reason: string;
+      if (outc === "fails") {
+        outcome = "fails";
+        reason = fit.contradictions.length
+          ? `Contradicts the request: ${fit.contradictions[0]}`
+          : `Scores ${fit.score}/100 on instruction fit and misses the core of what was asked.`;
+      } else if (outc === "revise" || hasHigh) {
+        outcome = "revise";
+        reason = hasHigh
+          ? "Follows the request, but a flagged claim needs fixing before it ships."
+          : (fit.missed.length ? `Follows most of the request but misses: ${fit.missed[0]}` : "Substantially follows the request; close the remaining gaps before shipping.");
+      } else {
+        outcome = "ship";
+        reason = "Follows the request and clears the quality and risk checks.";
+      }
+      taskFit = { index: vc.index, label: vc.label, score: fit.score, outcome, reason };
+    }
   }
 
   return {
@@ -429,9 +493,11 @@ export function finalizeEvaluation(
     recommendedIndex,
     recommendedLabel,
     margin,
+    ...(recommendedOnTaskFit ? { recommendedOnTaskFit: true } : {}),
     recommendation: (raw.recommendation || "").trim().slice(0, 400),
     candidates,
     flags,
+    ...(taskFit ? { taskFit } : {}),
   };
 }
 
@@ -472,7 +538,9 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
       ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (copy the sentence EXACTLY as it appears in the list below, character for character, no more and no less -- this is how your verdict is matched to the claim), backed (judged from the WHOLE sentence and its surrounding copy: true ONLY if they substantiate it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), quote (the SHORTEST exact phrase WITHIN that sentence that carries the claim, copied verbatim, used only to display the flag; it does NOT change the backed judgment), why (one line), fix (a concrete rewrite). Judge honestly and independently, always on the full sentence and its context: "works with every major tool: Slack, Gmail, and Notion" is backed; "We never sell your data." next to copy about encryption and privacy is a backed policy statement; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
       : "") +
     (multi
-      ? `- recommendation: one plain sentence naming which version to ship and why.\n`
+      ? (task
+          ? `- recommendation: one plain sentence naming which version to ship and why. If one version FOLLOWS the original request and another is better written but contradicts or misses the request, prefer the one that followed the request and say that is why.\n`
+          : `- recommendation: one plain sentence naming which version to ship and why.\n`)
       : published
         ? `- recommendation: one plain sentence naming the single highest-impact change to make now. This content is already live, so do NOT frame it as ready or not ready to ship.\n`
         : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n`) +

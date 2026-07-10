@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { bandScore, type EvalResult, type CandidateEval, type LineFlag, type AiReview } from "@/lib/v-evaluator";
+import { bandScore, taskOutcome, type EvalResult, type CandidateEval, type LineFlag, type AiReview, type TaskFit, type TaskOutcome } from "@/lib/v-evaluator";
 import { CorrectedBlock } from "./corrected-block";
 
 // The AI Check report. Deliberately NOT the human-vote ReportBody: no posterior, no
@@ -22,6 +22,20 @@ const kicker = { fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0
 
 function sevColor(s: string): string { return s === "high" ? "var(--err)" : s === "medium" ? "var(--acc-deep)" : "var(--fg-4)"; }
 function scoreColor(n: number): string { return n >= 75 ? "var(--acc-deep)" : n >= 50 ? "var(--acc)" : "var(--fg-4)"; }
+
+// Task-fit verdict styling. Amber (revise) has no design token, so it is a literal that reads on
+// both the light and dark report grounds; ship/fails reuse the existing green and error tokens.
+const AMBER = "#c2831a";
+const TASK_STYLE: Record<TaskFit["outcome"], { label: string; color: string }> = {
+  ship: { label: "Ship", color: "var(--acc-deep)" },
+  revise: { label: "Revise", color: AMBER },
+  fails: { label: "Fails task", color: "var(--err)" },
+};
+const TASK_CHIP: Record<TaskOutcome, { label: string; color: string }> = {
+  meets: { label: "Meets the request", color: "var(--acc-deep)" },
+  revise: { label: "Misses requirements", color: AMBER },
+  fails: { label: "Fails the request", color: "var(--err)" },
+};
 
 // Best-effort inline highlight: wrap each flag's span where it appears (case-insensitive,
 // non-overlapping, first occurrence). Spans that don't match exactly are simply not
@@ -139,6 +153,23 @@ function FitList({ label, items, color, mark }: { label: string; items: string[]
   );
 }
 
+// The headline answer when an original request was supplied: did the ship-pick actually do the job?
+// SHIP / REVISE / FAILS TASK, derived from instruction fit + the risk flags on that version. Distinct
+// from the risk gate itself (an instruction miss is never a HIGH safety flag).
+function TaskVerdictBanner({ tf, multi }: { tf: TaskFit; multi: boolean }) {
+  const v = TASK_STYLE[tf.outcome];
+  return (
+    <div style={{ ...box, borderLeft: `3px solid ${v.color}`, padding: "clamp(14px, 2.2vw, 20px)", marginBottom: 14, display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: v.color, border: `1px solid ${v.color}`, borderRadius: 999, padding: "5px 12px", flex: "none" }}>{v.label}</div>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ ...kicker, marginBottom: 3 }}>Did it do the job?{multi ? ` — Version ${tf.label}` : ""}</div>
+        <div style={{ fontSize: 14, color: "var(--fg-2)", lineHeight: 1.5 }}>{tf.reason}</div>
+        <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 5 }}>Instruction fit {tf.score}/100. Separate from the risk flags below.</div>
+      </div>
+    </div>
+  );
+}
+
 // "Did it do the task?": instruction fit vs the original request, judged separately from quality and
 // never affecting the gate. Per candidate, so comparison mode shows which version fulfilled it best.
 function InstructionFitSection({ result, winnerIndex }: { result: EvalResult; winnerIndex: number | null }) {
@@ -149,7 +180,7 @@ function InstructionFitSection({ result, winnerIndex }: { result: EvalResult; wi
   return (
     <div style={{ ...box, padding: "clamp(16px, 2.4vw, 22px)", marginBottom: 18 }}>
       <div style={{ ...kicker, marginBottom: 6 }}>Instruction fit</div>
-      <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 12px", lineHeight: 1.55 }}>Whether the output did what the request asked, judged against your original request and kept separate from the quality scores. It does not affect the pass or fail gate.</p>
+      <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 12px", lineHeight: 1.55 }}>How fully each version did what the request asked, judged against your original request and kept separate from the quality scores. It never becomes a risk flag, but it decides which version is recommended and the ship verdict above.</p>
       {req ? (
         <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, padding: "10px 12px", borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid var(--line-1)", marginBottom: 14, whiteSpace: "pre-wrap" }}>
           <span style={{ fontFamily: "var(--font-code)", fontSize: 9.5, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>You asked</span>
@@ -164,7 +195,8 @@ function InstructionFitSection({ result, winnerIndex }: { result: EvalResult; wi
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
                 {multi ? <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-1)" }}>Version {c.label}</span> : null}
                 {multi && c.index === winnerIndex ? <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--bg-1)" }}>Recommended</span> : null}
-                <span style={{ marginLeft: multi ? "auto" : 0, fontFamily: "var(--font-code)", fontSize: 13, color: scoreColor(f.score) }}>Did the task: {f.score}/100</span>
+                {(() => { const o = taskOutcome(f); return o ? <span className="pill" style={{ fontSize: 10, color: TASK_CHIP[o].color, background: "var(--bg-1)", border: `1px solid ${TASK_CHIP[o].color}` }}>{TASK_CHIP[o].label}</span> : null; })()}
+                <span style={{ marginLeft: "auto", fontFamily: "var(--font-code)", fontSize: 13, color: scoreColor(f.score) }}>Did the task: {f.score}/100</span>
               </div>
               {f.met.length ? <FitList label="Satisfied" items={f.met} color="var(--acc-deep)" mark="✓" /> : null}
               {f.missed.length ? <FitList label="Missed or partial" items={f.missed} color="var(--fg-3)" mark="•" /> : null}
@@ -199,6 +231,9 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
         {createdAt ? <><span>|</span><span>{new Date(createdAt).toISOString().slice(0, 10)}</span></> : null}
       </div>
 
+      {/* task-fit verdict: the headline answer when a request was supplied (did it do the job?) */}
+      {result.taskFit ? <TaskVerdictBanner tf={result.taskFit} multi={multi} /> : null}
+
       {/* recommendation */}
       {multi && winner ? (
         <div className="card card--acc" style={{ display: "flex", alignItems: "flex-start", gap: 16, marginBottom: 18 }}>
@@ -206,7 +241,9 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
           <div>
             <div style={{ ...kicker, color: "var(--acc-deep)" }}>Recommendation</div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, color: "var(--fg-1)" }}>Ship Version {winner.label}</div>
-            <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>Highest overall score{result.margin != null ? `, leads the runner-up by ${result.margin} point${result.margin === 1 ? "" : "s"}` : ""}{result.margin != null && result.margin < 5 ? " (a close call)" : ""}</div>
+            <div style={{ fontSize: 13, color: "var(--fg-3)", marginTop: 2 }}>{result.recommendedOnTaskFit
+              ? "Best instruction fit. Another version scores higher overall but does not follow the request as well."
+              : `Highest overall score${result.margin != null && result.margin > 0 ? `, leads the runner-up by ${result.margin} point${result.margin === 1 ? "" : "s"}` : ""}${result.margin != null && result.margin > 0 && result.margin < 5 ? " (a close call)" : ""}`}</div>
             {result.recommendation ? <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.5 }}>{result.recommendation}</div> : null}
           </div>
         </div>
@@ -217,9 +254,11 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
         </div>
       )}
 
-      {/* candidates */}
+      {/* candidates — the recommended pick first (it may not be the highest overall), then by score */}
       <div style={{ display: "grid", gap: 14, marginBottom: 18 }}>
-        {[...result.candidates].sort((a, b) => b.overall - a.overall).map((c) => (
+        {[...result.candidates].sort((a, b) =>
+          (winner ? Number(b.index === winner.index) - Number(a.index === winner.index) : 0) || b.overall - a.overall
+        ).map((c) => (
           <CandidateCard key={c.index} c={c} flags={result.flags} isWinner={winner?.index === c.index} />
         ))}
       </div>
