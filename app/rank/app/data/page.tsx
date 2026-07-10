@@ -46,7 +46,7 @@ export default async function DataPage() {
         <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 6vw, 64px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 8 }}>No analytics in your workspace yet</div>
           <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.55 }}>Run your first evaluation to see decision quality, signal cleanliness, confidence, and category trends here, all from your real results. Analytics shared with you appear above.</p>
-          <Link href="/app/new" className="btn btn--lg">Create an evaluation →</Link>
+          <Link href="/app/checks/new" className="btn btn--lg">Run a check →</Link>
         </div>
       </div>
     );

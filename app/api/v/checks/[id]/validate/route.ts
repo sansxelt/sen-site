@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { validateCheckWithHumans } from "@/lib/v-calibration";
+import { humanEvalEnabled } from "@/lib/v-entitlements";
 import { piiMessage } from "@/lib/v-content-policy";
 
 export const runtime = "nodejs";
@@ -15,6 +16,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const session = await auth();
   const email = session?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  // Human validation is demoted until an evaluator pool exists.
+  if (!humanEvalEnabled()) return NextResponse.json({ error: "human_eval_unavailable" }, { status: 403 });
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));

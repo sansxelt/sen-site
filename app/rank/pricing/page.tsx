@@ -8,10 +8,10 @@ import { useEffect, useState } from "react";
 // Recurring plans + enterprise governance live at /enterprise.
 
 const CREDIT_RULES: [string, string][] = [
-  ["1 credit = 1 check", "The unit you spend. One credit runs one AI check. Validating on real people spends 1 credit per valid judgment."],
-  ["Filtered responses: not charged", "On human validation, responses filtered for speed, spam, velocity, or low reputation never cost a credit."],
-  ["Validation is escrowed", "Credits for a human validation are held when you launch it, not spent up front."],
-  ["Unused credits refunded", "If a validation run doesn't fill, the remaining credits return to your account."],
+  ["1 credit = 1 check", "The unit you spend. One credit runs one AI check on the output your app ships."],
+  ["Failed checks: not charged", "If a check errors before it returns a result, the credit is refunded automatically."],
+  ["New accounts start free", "Every new account gets free credits to try the check before paying."],
+  ["Human validation is coming", "An optional layer to route a check to real people. When it ships, validation credits are escrowed and unused credits refunded."],
 ];
 
 type TeamPricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
@@ -38,7 +38,7 @@ export default function PricingPage() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>The quality gate, <span className="em">priced by the check</span>.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Vraelis is the quality gate for your AI output: check it in CI before it ships, and validate against real humans when the call matters. New accounts start with <strong style={{ color: "var(--fg-1)" }}>free credits</strong>, so your first checks are on us. After that it&apos;s <strong style={{ color: "var(--fg-1)" }}>1 credit per check</strong>, and <strong style={{ color: "var(--fg-1)" }}>$1 buys 10 credits</strong> that never expire. Human validation spends 1 credit per valid judgment, and you&apos;re never charged for the responses we filter out.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Vraelis is the quality gate for your AI output: check it in CI before it ships. New accounts start with <strong style={{ color: "var(--fg-1)" }}>free credits</strong>, so your first checks are on us. After that it&apos;s <strong style={{ color: "var(--fg-1)" }}>1 credit per check</strong>, and <strong style={{ color: "var(--fg-1)" }}>$1 buys 10 credits</strong> that never expire. An optional human-validation layer is coming.</p>
         </div>
       </section>
 
@@ -54,7 +54,7 @@ export default function PricingPage() {
               <ul className="price__feat">
                 <li>Instant checks on your AI output</li>
                 <li>Scores, the version to ship, and line-level fixes</li>
-                <li>Validate on real people when you want to</li>
+                <li>Human validation on real people (coming)</li>
               </ul>
               <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/checks/new">Check your AI output</Link>
             </div>
@@ -66,7 +66,7 @@ export default function PricingPage() {
               <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Top up whenever. Credits never expire, and human validation is there when the call matters.</div>
               <ul className="price__feat">
                 <li>1 credit per AI check</li>
-                <li>Human validation: 1 credit per valid judgment</li>
+                <li>Human validation: coming</li>
                 <li>Structured results by API, export as JSON or CSV</li>
               </ul>
               <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/checks/new">Check your AI output</Link>

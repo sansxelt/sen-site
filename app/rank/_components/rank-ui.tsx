@@ -113,8 +113,10 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
   );
 }
 
-function Footer() {
+function Footer({ humanEval }: { humanEval: boolean }) {
   const col = { display: "flex", flexDirection: "column", gap: 10 } as const;
+  const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/app/checks/new", "Check your AI output"], ["/guides", "QA guides"]];
+  if (humanEval) productLinks.push(["/vote", "Evaluate & Earn"]);
   const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5 } as const;
   const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 } as const;
   const Col = ({ title, links }: { title: string; links: [string, string][] }) => (
@@ -127,7 +129,7 @@ function Footer() {
       <div className="wrap foot-grid" style={{ padding: "clamp(44px, 5vw, 68px) var(--gutter)" }}>
         <div>
           <Brand href="/" />
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 260, marginTop: 14 }}>Automated QA for AI output, calibrated on real people.</p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 260, marginTop: 14 }}>QA for AI-generated content: an instant AI check.</p>
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
             <a href="https://instagram.com/usevraelis" target="_blank" rel="noreferrer" aria-label="Vraelis on Instagram" style={{ width: 34, height: 34, borderRadius: 9, border: "1px solid var(--line-2)", background: "var(--bg-1)", display: "grid", placeItems: "center", color: "var(--fg-3)", textDecoration: "none" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="2" width="20" height="20" rx="5.5" /><circle cx="12" cy="12" r="4.2" /><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" /></svg>
@@ -143,7 +145,7 @@ function Footer() {
             </a>
           </div>
         </div>
-        <Col title="Product" links={[["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/app/checks/new", "Check your AI output"], ["/guides", "QA guides"], ["/vote", "Evaluate & Earn"]]} />
+        <Col title="Product" links={productLinks} />
         <Col title="Developers" links={[["/developers", "Developers"], ["/app/api-keys", "API keys"], ["/app/api-keys", "Webhooks"], ["/app/data", "Data exports"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/app/account", "Account"], ["/app/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
@@ -175,7 +177,7 @@ function AppTopbar({ email }: { email: string | null }) {
           small left nudge so the wordmark sits centered over the sidebar column */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        <Link href="/app/new" className="btn" style={{ padding: "9px 16px" }}>+ New test</Link>
+        <Link href="/app/checks/new" className="btn" style={{ padding: "9px 16px" }}>+ New check</Link>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(who || "?").slice(0, 1).toUpperCase()}</span>
           <span style={{ fontSize: 13, color: "var(--fg-3)" }} aria-hidden>▾</span>
@@ -227,13 +229,15 @@ function WorkspaceSwitcher() {
   );
 }
 
-function AppSidebar() {
+function AppSidebar({ humanEval }: { humanEval: boolean }) {
   const pathname = usePathname() || "";
   const active = (href: string) => href === "/app" ? pathname === "/app" : (pathname === href || pathname.startsWith(href + "/"));
+  // Human-eval ingress ("Evaluate & Earn" -> /vote) is hidden unless the flag is on.
+  const nav = APP_NAV.map((g) => ({ ...g, items: g.items.filter((it) => humanEval || it.href !== "/vote") }));
   return (
     <aside className="app-side">
       <WorkspaceSwitcher />
-      {APP_NAV.map((g) => (
+      {nav.map((g) => (
         <div key={g.group}>
           <div className="app-side__group">{g.group}</div>
           {g.items.map((it) => (
@@ -274,7 +278,7 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   + ".rank-root .app-main>.wrap{padding-top:clamp(12px,1.6vw,20px)!important}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 
-export function RankShell({ signedIn = false, email = null, children }: { signedIn?: boolean; email?: string | null; children: ReactNode }) {
+export function RankShell({ signedIn = false, email = null, humanEval = false, children }: { signedIn?: boolean; email?: string | null; humanEval?: boolean; children: ReactNode }) {
   const pathname = usePathname() || "";
   const inApp = pathname.startsWith("/app");
 
@@ -284,7 +288,7 @@ export function RankShell({ signedIn = false, email = null, children }: { signed
         <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
         <div style={{ position: "sticky", top: 0, zIndex: 50 }}><AppTopbar email={email} /></div>
         <div className="app-shell">
-          <AppSidebar />
+          <AppSidebar humanEval={humanEval} />
           <main className="app-main">{children}</main>
         </div>
       </div>
@@ -296,7 +300,7 @@ export function RankShell({ signedIn = false, email = null, children }: { signed
       <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
       <div style={{ position: "sticky", top: 0, zIndex: 50 }}><PublicNav signedIn={signedIn} /></div>
       {children}
-      <Footer />
+      <Footer humanEval={humanEval} />
     </div>
   );
 }

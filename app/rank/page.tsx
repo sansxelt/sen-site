@@ -4,7 +4,7 @@ import { ogMeta } from "@/lib/og-meta";
 export const metadata = {
   ...ogMeta({
     title: "QA for AI output",
-    description: "Automated QA for the output your AI app ships. Get an instant check with per-criterion scores, the version to ship, and the exact lines to fix. Calibrated on real human judgment.",
+    description: "Automated QA for the output your AI app ships. Get an instant check with per-criterion scores, the version to ship, and the exact lines to fix, with a stable pass/fail gate.",
     path: "/",
   }),
   title: { absolute: "Vraelis" },
@@ -30,7 +30,7 @@ const ICONS = {
 };
 
 const AUDIENCE = [
-  { t: "AI app builders shipping user-facing output", d: "Check the responses, messages, and content your app puts in front of users before they ship. Get scores, the version to ship, and the exact lines to fix, calibrated on real people.", i: ICONS.layers },
+  { t: "AI app builders shipping user-facing output", d: "Check the responses, messages, and content your app puts in front of users before they ship. Get scores, the version to ship, and the exact lines to fix, with a stable pass/fail gate.", i: ICONS.layers },
 ];
 
 const STEPS = [
@@ -38,7 +38,7 @@ const STEPS = [
   { k: "02", t: "Set the context", d: "Output type, audience, and what \"good\" means here. The rubric adapts, so a support reply is judged on empathy and safety, marketing on clarity and overpromise.", i: ICONS.layers },
   { k: "03", t: "Get the instant check", d: "Per-criterion scores, the version to ship, and line-level flags on the exact spans that read as dismissive, risky, or off.", i: ICONS.spark },
   { k: "04", t: "Apply the fixes", d: "Each flag comes with a concrete suggested rewrite for that span. Ship the version that scores best, with the problems already fixed.", i: ICONS.flag },
-  { k: "05", t: "Validate on real people", d: "Optional. Route the same output to human evaluation to confirm the call, and we track how often the check's pick matches theirs.", i: ICONS.users },
+  { k: "05", t: "Ship the corrected version", d: "The recommended version with every fix already applied, in one clean block you can copy and paste.", i: ICONS.flag },
   { k: "06", t: "Ship, or check the next batch", d: "Pull the structured result by API or run it in the app. Every check is recorded, so you keep an audit trail.", i: ICONS.report },
 ];
 
@@ -51,11 +51,11 @@ const USE_CASES: { t: string; c: string; g: string }[] = [
   { t: "Marketing copy", c: "Headlines, landing heroes, product copy", g: "Clarity and persuasion, plus any claim that overpromises or invites risk." },
   { t: "Agent actions", c: "What your agent decides to do", g: "Correctness and safety, with risky or irreversible steps flagged before they run." },
   { t: "Model & prompt comparison", c: "Output from two prompts, models, or versions", g: "Which version scores higher on the rubric, and exactly why." },
-  { t: "Validate on real people", c: "Any check you want to confirm", g: "Route the same output to human evaluation and see whether people agree with the check." },
+  { t: "Content at volume", c: "Variations, batches, and rewrites", g: "Score every version against the rubric, get the one to ship, and the exact lines to fix." },
 ];
 
-const IS_THINGS = ["An instant AI check on the output your app ships: per-criterion scores, the version to ship, and the exact lines to fix", "Calibrated on real human judgment, so the scores track what people actually think", "Structured results by API or in the app, with an audit trail you can act on"];
-const IS_NOT_THINGS = ["An LLM marking its own homework with no human grounding", "A guarantee: it is an AI assessment, not a promise of outcomes", "A slow panel you wait days on before every ship"];
+const IS_THINGS = ["An instant AI check on the output your app ships: per-criterion scores, the version to ship, and the exact lines to fix", "A pass/fail gate that holds run to run, on a fixed rubric that adapts to your output type", "Structured results by API or in the app, with an audit trail you can act on"];
+const IS_NOT_THINGS = ["A black-box score you can't inspect: every flag quotes the exact span, with a concrete fix", "A guarantee: it is an AI assessment, not a promise of outcomes", "A slow panel you wait days on before every ship"];
 
 const REPORT_PARTS = [
   "The recommended version, computed from the scores",
@@ -69,12 +69,12 @@ const REPORT_PARTS = [
 const SUPPORTS: [string, string][] = [
   ["Instant AI check", "Scores, the version to ship, and line-level fixes in seconds."],
   ["Domain rubrics", "Criteria that shift by output type: support, onboarding, copy, agent."],
-  ["Calibrate on real people", "Validate any check against human judgment."],
+  ["Corrected version", "The recommended output with every fix applied, ready to copy."],
   ["Check API", "POST your output to /api/v1/check, get structured results."],
   ["Pay per check", "1 credit per check. New accounts start with free credits."],
-  ["Signed webhooks", "Get notified the moment a human validation completes."],
+  ["Signed webhooks", "Get notified the moment a check completes."],
   ["Schema-versioned exports", "Pull structured results as JSON or CSV."],
-  ["Quality-filtered calibration", "Rushed and gamed human responses rejected automatically."],
+  ["Stable pass/fail gate", "The gate verdict holds run to run; scores are indicative, not gated."],
 ];
 
 // The value proposition: what a check gives you, and what shipping unchecked costs.
@@ -83,7 +83,7 @@ const WHAT_YOU_GET: [string, string][] = [
   ["Per-criterion scores", "on a rubric for your output type"],
   ["Line-level flags", "the exact spans that read as risky or off"],
   ["A concrete fix", "a suggested rewrite for each flag"],
-  ["Calibrated on real people", "the scores track human judgment"],
+  ["Stable pass/fail gate", "the gate verdict holds run to run"],
   ["Instant", "seconds, on every ship, not days"],
   ["By API or in the app", "for pipelines and internal tools"],
   ["An audit trail", "every check recorded and exportable"],
@@ -140,14 +140,14 @@ export default function RankLanding() {
             Catch your AI&apos;s <span className="em">bad output</span> before your users do.
           </h1>
           <p className="rise" data-d="3" style={{ fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)", color: "var(--fg-2)", maxWidth: 700, margin: "0 auto 30px", lineHeight: 1.55 }}>
-            Paste what your app generates and get an instant check: per-criterion scores, the version to ship, and the exact lines to fix. Calibrated on real human judgment, so the scores track what people actually think, not just what a model guesses.
+            Paste what your app generates and get an instant check: per-criterion scores, the version to ship, and the exact lines to fix. The pass/fail gate is fail-closed on unbacked claims, and its verdict is stable run to run, measured and published.
           </p>
           <div className="rise" data-d="4" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
             <Link href="/r/check" className="btn btn--ghost btn--lg">See a sample check</Link>
           </div>
 
-          {/* Product preview: the instant AI check, calibrated on real people */}
+          {/* Product preview: the instant AI check and its recommended version */}
           <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 860, margin: "clamp(34px, 4vw, 52px) auto 0" }}>
             <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
               <div className="win__bar"><span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>AI output check</span><span style={{ fontFamily: "var(--font-code)", fontSize: 9.5, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>illustrative example</span><span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Instant</span></div>
@@ -172,9 +172,9 @@ export default function RankLanding() {
                     <div style={{ color: "var(--fg-4)", marginTop: 3 }}>Fix: add a caveat before the claim.</div>
                   </div>
                 </div>
-                {/* RIGHT: the calibration proof — the same output, judged by real people */}
+                {/* RIGHT: the check's recommended version + the corrected copy */}
                 <div style={{ padding: "clamp(18px,2.4vw,26px)" }}>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 10 }}>Calibrated on real people</div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 10 }}>The check&apos;s pick</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                     <div style={{ width: 44, height: 44, borderRadius: 11, background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", flex: "none", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18 }}>B</div>
                     <div>
@@ -182,9 +182,9 @@ export default function RankLanding() {
                       <span className="pill" style={{ marginTop: 4, background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>High confidence</span>
                     </div>
                   </div>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 7 }}>Preference breakdown</div>
+                  <div style={{ fontFamily: "var(--font-code)", fontSize: 9, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)", marginBottom: 7 }}>Score comparison</div>
                   <Verdict rows={[["A", 39, false], ["B", 61, true]]} />
-                  <div style={{ marginTop: 12, fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", lineHeight: 1.5 }}>122 real people judged the same output. The check&apos;s pick matched theirs.</div>
+                  <div style={{ marginTop: 12, fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-4)", lineHeight: 1.5 }}>Ship Version B with every flag&apos;s fix already applied: the corrected version, ready to copy.</div>
                 </div>
               </div>
             </div>
@@ -198,7 +198,7 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">Why Vraelis</p>
             <h2 className="display">You&apos;re not paying for another model&apos;s guess. You&apos;re paying for a check you can <span className="em">trust</span>.</h2>
-            <p>The hard part isn&apos;t scoring output; it&apos;s trusting the score. Vraelis checks your output against a domain rubric and calibrates that check on real people, so what you get back tracks human judgment, not a model marking its own homework. Credits are the unit; a trustworthy check is the product.</p>
+            <p>The hard part isn&apos;t scoring output; it&apos;s trusting the score. Vraelis checks your output against a domain rubric with a fail-closed pass/fail gate whose verdict is measured for run-to-run stability, so what you get back is a check you can trust, not a model marking its own homework. Credits are the unit; a trustworthy check is the product.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.02fr) minmax(0,0.98fr)", gap: 16, alignItems: "stretch" }} className="cols-stack">
             <div className="card">
@@ -219,12 +219,12 @@ export default function RankLanding() {
                   <li key={t} style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.5 }}><strong style={{ color: "var(--fg-1)" }}>{t}</strong> {d}</li>
                 ))}
               </ul>
-              <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 16, marginBottom: 0, fontWeight: 600 }}>Replace shipping-and-hoping with an instant check, calibrated on real people.</p>
+              <p style={{ fontSize: 13.5, color: "var(--fg-2)", marginTop: 16, marginBottom: 0, fontWeight: 600 }}>Replace shipping-and-hoping with an instant check and a stable pass/fail gate.</p>
             </div>
           </div>
           <div className="card card--acc" style={{ textAlign: "center", marginTop: 16, padding: "clamp(22px, 3vw, 30px)" }}>
             <div className="display" style={{ fontSize: "clamp(1.4rem, 2.8vw, 2rem)", marginBottom: 8 }}>Trust the check, <span className="em">calibrated on people</span>.</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}>The instant check gives you scores, the version to ship, and the exact lines to fix. Validate it on real people whenever the call matters, and the check stays honest over time. It informs your decisions; it is an AI assessment, not a guarantee of outcomes.</p>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", maxWidth: 600, margin: "0 auto", lineHeight: 1.55 }}>The instant check gives you scores, the version to ship, and the exact lines to fix, with a pass/fail gate that holds run to run. Human validation on real people is coming, for when the call matters. It informs your decisions; it is an AI assessment, not a guarantee of outcomes.</p>
           </div>
         </div>
       </section>
@@ -235,7 +235,7 @@ export default function RankLanding() {
           <div className="sec-head sec-head--center">
             <p className="eyebrow">Who it&apos;s for</p>
             <h2 className="display">Built for teams shipping <span className="em">user-facing AI</span>.</h2>
-            <p>Vraelis is automated QA for AI output. Paste what your app generates and get an instant check with scores, the version to ship, and the lines to fix. It is calibrated on real human judgment, so the scores track what your users will actually think, and any check can be validated against real people.</p>
+            <p>Vraelis is automated QA for AI output. Paste what your app generates and get an instant check with scores, the version to ship, and the lines to fix. The pass/fail gate is measured for run-to-run stability, and an optional human-validation layer is coming.</p>
           </div>
           <div className="tile-grid cols-1" style={{ maxWidth: 520, margin: "0 auto" }}>
             {AUDIENCE.map((a) => (
@@ -255,7 +255,7 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">How it works</p>
             <h2 className="display">From raw output to a check you can <span className="em">trust</span>.</h2>
-            <p>Paste your output, set the context, and get an instant check: scores, the version to ship, and the lines to fix. Validate on real people whenever you want to be sure.</p>
+            <p>Paste your output, set the context, and get an instant check: scores, the version to ship, and the lines to fix. Human validation on real people is coming.</p>
           </div>
           <div className="tile-grid cols-2">
             {STEPS.map((s, i) => {
@@ -339,7 +339,7 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">What teams check</p>
             <h2 className="display">A check for <span className="em">every kind of output</span>.</h2>
-            <p>Paste the output, get an instant check with scores and the lines to fix, and route the structured result into your pipeline, your team, or your client. Validate on real people whenever the call matters.</p>
+            <p>Paste the output, get an instant check with scores and the lines to fix, and route the structured result into your pipeline, your team, or your client. Human validation on real people is coming.</p>
           </div>
           <div className="tile-grid cols-3" style={{ marginBottom: 22 }}>
             {USE_CASES.map((u) => (
@@ -376,14 +376,14 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">For AI teams &amp; pipelines</p>
             <h2 className="display">Wire the check into your <span className="em">pipeline</span>.</h2>
-            <p>POST your output to the check API and get structured results back in one call: scores, the version to ship, and line-level fixes. Route them into your CI, your app, or your review flow. Validate on real people when you need to be sure.</p>
+            <p>POST your output to the check API and get structured results back in one call: scores, the version to ship, and line-level fixes. Route them into your CI, your app, or your review flow. Human validation on real people is coming.</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "minmax(0,0.92fr) minmax(0,1.08fr)", gap: 18, alignItems: "stretch", marginBottom: 16 }} className="cols-stack">
             {/* left: the loop, on cream */}
             <div className="card" style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 20 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>The external loop</div>
               <div style={{ display: "grid", gap: 14 }}>
-                {[["Send output", "POST to /api/v1/check"], ["Instant check", "Scores, the pick, and flags come back"], ["Apply fixes", "Ship the version to ship"], ["Validate", "Confirm on real people, optional"]].map(([s, d], i) => (
+                {[["Send output", "POST to /api/v1/check"], ["Instant check", "Scores, the pick, and flags come back"], ["Apply fixes", "Ship the version to ship"], ["Corrected version", "Every fix applied, ready to copy"]].map(([s, d], i) => (
                   <div key={s as string} style={{ display: "flex", gap: 12, alignItems: "center" }}>
                     <span style={{ flex: "none", width: 28, height: 28, borderRadius: 9, background: "var(--acc-soft)", border: "1px solid var(--acc-line)", color: "var(--acc-deep)", display: "grid", placeItems: "center", fontFamily: "var(--font-code)", fontSize: 12.5, fontWeight: 600 }}>{i + 1}</span>
                     <div><div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>{s}</div><div style={{ fontSize: 12.5, color: "var(--fg-4)" }}>{d}</div></div>
@@ -417,9 +417,9 @@ export default function RankLanding() {
       <section className="section">
         <div className="wrap">
           <div className="sec-head">
-            <p className="eyebrow">How the calibration stays honest</p>
-            <h2 className="display">Real quality gates, <span className="em">not good faith</span>.</h2>
-            <p>When you validate a check on real people, Vraelis runs automatic filters on every response. Rushed and gamed answers are rejected, so the calibration reflects genuine judgment, and you&apos;re never charged for the ones we filter.</p>
+            <p className="eyebrow">Human validation is coming</p>
+            <h2 className="display">Built for real quality gates, <span className="em">not good faith</span>.</h2>
+            <p>An optional human-validation layer is on the way. When it ships, you&apos;ll route a check to real people and Vraelis will run automatic filters on every response, so rushed and gamed answers are rejected and you&apos;re only charged for genuine judgment. Here is how it will stay honest.</p>
           </div>
           <div className="tile-grid cols-3">
             {[
@@ -436,7 +436,7 @@ export default function RankLanding() {
               </div>
             ))}
           </div>
-          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "18px 0 0", lineHeight: 1.6, textAlign: "center" }}>Every validation reports valid-vs-filtered counts and filter reasons, so you can audit the calibration programmatically. That is what lets the check claim it tracks real people.</p>
+          <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "18px 0 0", lineHeight: 1.6, textAlign: "center" }}>Every validation will report valid-vs-filtered counts and filter reasons, so you can audit it programmatically. Until it ships, the product is the instant AI check.</p>
         </div>
       </section>
 
@@ -446,15 +446,15 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">For AI teams: honest answers</p>
             <h2 className="display">Questions we hear from <span className="em">builders</span>.</h2>
-            <p>ChatGPT tells you what it thinks. Vraelis tells you what your users will think, consistently, in your pipeline, and measured against real people.</p>
+            <p>ChatGPT tells you what it thinks. Vraelis gives you a neutral check with a fixed rubric and a stable pass/fail gate, in your pipeline, on the output your app ships.</p>
           </div>
           <div className="tile-grid cols-2">
             {[
-              ["Why not just ask ChatGPT to check it?", "Because ChatGPT gives you an opinion and can't tell you whether it's right. A model grading its own kind of output is circular: biased toward its own style, with no ground truth to check against. Vraelis is a neutral check with a scoreboard. It applies the same domain rubric every time (a support reply on empathy and resolution, marketing on clarity and overpromise), so the same criteria are applied every time and versions stay comparable, and it runs in your pipeline as an API, not a chat tab someone has to remember to open. And as real people validate its picks, it earns the one thing a raw model can't: proof of how often it matches human judgment. Checking one message? ChatGPT is free and fine. Vraelis is for teams shipping output at volume that need a consistent rubric, automation, and that proof."],
-              ["Why not just use a cheap survey or panel?", "Panels ship you raw responses: you pay for volume, then hand-clean noise out of rushed and gamed answers. Vraelis filters automatically (time-on-task, IP velocity, reputation, screening) and you pay only for judgments that pass. A survey gives you responses; Vraelis gives you signal."],
-              ["Who actually judges? Are they vetted experts?", "Real people completing evaluation tasks, not verified experts or a vetted specialist panel. Screening questions let you qualify who judges before they answer, and reputation gating removes evaluators who consistently produce rejected responses. For preference and eval data, that's real human preference, not expert opinion."],
-              ["What happens to the responses you reject?", "Rejected responses are recorded for transparency but don't count toward your result, and you're not charged for them. You see valid-vs-filtered counts and filter reasons in every report and in the API response."],
-              ["Can this plug into my pipeline?", "Yes: POST your output to /api/v1/check and get structured scores, the recommended version, and line-level flags back in one call. Wire it into CI to catch bad output before it ships, or into your app. Human validation runs return signed webhooks and JSON / CSV exports."],
+              ["Why not just ask ChatGPT to check it?", "Because ChatGPT gives you an opinion and can't tell you whether it's right. A model grading its own kind of output is circular: biased toward its own style, with no ground truth to check against. Vraelis is a neutral check with a scoreboard. It applies the same domain rubric every time (a support reply on empathy and resolution, marketing on clarity and overpromise), so the same criteria are applied every time and versions stay comparable, and it runs in your pipeline as an API, not a chat tab someone has to remember to open. And its pass/fail gate is measured for run-to-run stability and published, so you are not trusting a score that moves. Checking one message? ChatGPT is free and fine. Vraelis is for teams shipping output at volume that need a consistent rubric, automation, and a stable gate."],
+              ["Why not just use a cheap survey or panel? (human validation, coming)", "Panels ship you raw responses: you pay for volume, then hand-clean noise out of rushed and gamed answers. When Vraelis human validation ships, it will filter automatically (time-on-task, IP velocity, reputation, screening) and you'll pay only for judgments that pass. A survey gives you responses; Vraelis will give you signal."],
+              ["Who will judge? Are they vetted experts? (coming)", "When the human-validation layer ships: real people completing evaluation tasks, not verified experts or a vetted specialist panel. Screening questions will let you qualify who judges before they answer, and reputation gating will remove evaluators who consistently produce rejected responses. For preference and eval data, that's real human preference, not expert opinion."],
+              ["What will happen to rejected responses? (coming)", "Rejected responses will be recorded for transparency but won't count toward your result, and you won't be charged for them. You'll see valid-vs-filtered counts and filter reasons in every report and in the API response."],
+              ["Can this plug into my pipeline?", "Yes: POST your output to /api/v1/check and get structured scores, the recommended version, and line-level flags back in one call. Wire it into CI to catch bad output before it ships, or into your app. Checks return signed webhooks and JSON / CSV exports."],
               ["Is this lab-scale RLHF?", "Vraelis is built for quality-filtered human preference and eval signal via API, at the scale of your plan. Very large or highly custom human-data pipelines may need an enterprise setup; talk to us and we'll be straight about what fits."],
               ["Are you SOC 2 / SAML / SCIM?", "No SOC 2 today, and we won't claim it. OIDC SSO is live for verified domains; SAML configuration is in preview and SCIM is on the roadmap. Ask us and we'll be direct about timing and what's supported now."],
             ].map(([q, a], i, arr) => {
@@ -496,7 +496,7 @@ export default function RankLanding() {
           <div className="sec-head">
             <p className="eyebrow">What&apos;s live today</p>
             <h2 className="display">The instant check is the <span className="em">product</span>.</h2>
-            <p>From pasted output to a structured check by API or in the app, plus domain rubrics, line-level fixes, a check API, and human validation to keep the scores calibrated on real people.</p>
+            <p>From pasted output to a structured check by API or in the app, plus domain rubrics, line-level fixes, the corrected version, and a check API. Human validation on real people is coming.</p>
           </div>
           <div className="tile-grid cols-4">
             {SUPPORTS.map(([t, d]) => (
@@ -514,7 +514,7 @@ export default function RankLanding() {
         <div className="glow glow--soft" />
         <div className="wrap" style={{ maxWidth: 720, textAlign: "center" }}>
           <h2 className="display" style={{ fontSize: "clamp(2.1rem, 4.4vw, 3.4rem)", marginBottom: 18 }}>Check your AI output <span className="em">before you ship it</span>.</h2>
-          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Paste what your app generates and get an instant check: the scores, the version to ship, and the exact lines to fix. Calibrated on real people, and free to try.</p>
+          <p className="lead-copy" style={{ margin: "0 auto 28px", textAlign: "center" }}>Paste what your app generates and get an instant check: the scores, the version to ship, and the exact lines to fix. A stable pass/fail gate, and free to try.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <Link href="/app/checks/new" className="btn btn--lg">Check your AI output <span aria-hidden>→</span></Link>
             <Link href="/r/sample" className="btn btn--ghost btn--lg">See a real report</Link>

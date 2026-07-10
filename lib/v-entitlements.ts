@@ -79,3 +79,12 @@ export function isAdmin(email: string | null | undefined): boolean {
   const allow = (process.env.VRAELIS_ADMIN || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
   return allow.includes(email.trim().toLowerCase());
 }
+
+// Human evaluation (route an output to real people to vote) is DEMOTED until an evaluator pool
+// exists to staff it: surfacing validation we cannot deliver would violate the product's own
+// "don't overpromise" bar. Hidden globally unless VRAELIS_HUMAN_EVAL is "1". The eval code, DB
+// tables, and the /vote supply side are all PRESERVED for when a panel exists — this flag only
+// hides the ingress (the "+ New" nav, /app/new, /vote, the validate bridge). Default OFF.
+export function humanEvalEnabled(): boolean {
+  return process.env.VRAELIS_HUMAN_EVAL === "1";
+}

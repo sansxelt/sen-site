@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan } from "@/lib/v-db";
 import { ensureSignupGrant, balance } from "@/lib/v-credits";
-import { isAdmin } from "@/lib/v-entitlements";
+import { isAdmin, humanEvalEnabled } from "@/lib/v-entitlements";
 import { listProjects, listEvaluations, workspaceStats } from "@/lib/v-projects";
 import { resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
 import { getDomainAccessForEmail } from "@/lib/v-organization";
@@ -22,7 +22,7 @@ function FirstRun({ bal }: { bal: number }) {
     ["Add context (optional)", "Who it's for and what good looks like, so the check knows your bar"],
     ["Get the check back", "Per-criterion scores, the version to ship, and line-level flags"],
     ["Apply the fixes", "Each flag quotes the exact span with a concrete fix"],
-    ["Validate on real people", "Optional: send the same output to real people when the call matters"],
+    ["Ship the corrected version", "Every fix applied, in one clean block you can copy and paste"],
   ];
   return (
     <>
@@ -94,6 +94,7 @@ export default async function Dashboard() {
   const planName = plan === "free" ? "Free" : plan.charAt(0).toUpperCase() + plan.slice(1);
   const projOpts = projects.map((p) => ({ id: p.id, name: p.name }));
   const isEmpty = stats.total === 0 && projects.length === 0;
+  const humanEval = humanEvalEnabled(); // human validation is demoted until a panel exists
 
   return (
     <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
@@ -130,8 +131,10 @@ export default async function Dashboard() {
 
       {/* quick actions */}
       <div className="tile-grid cols-4" style={{ marginBottom: 22 }}>
-        <QuickAction href="/app/projects" title="Decision programs" sub="Group related workflows by campaign or client" />
-        <QuickAction href="/vote" title="Evaluate & earn" sub="Judge others' outputs, earn credits" />
+        <QuickAction href="/app/checks/new" title="New check" sub="Paste AI output, get scores and the lines to fix" />
+        {humanEval
+          ? <QuickAction href="/vote" title="Evaluate & earn" sub="Judge others' outputs, earn credits" />
+          : <QuickAction href="/app/checks" title="Your checks" sub="Every check you've run, with reports" />}
         <QuickAction href="/r/check" title="Sample AI check" sub="See a check report" />
         <QuickAction href="/app/data" title="Audit & exports" sub="Aggregate decision records, JSON / CSV" />
       </div>
@@ -139,9 +142,11 @@ export default async function Dashboard() {
       {/* stats */}
       <div className="tile-grid cols-4" style={{ marginBottom: 26 }}>
         <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</Link></div></div>
-        <div className="stat"><div className="stat__l">Validations running</div><div className="stat__v tnum">{stats.active}</div><div className="stat__s">on real people</div></div>
-        <div className="stat"><div className="stat__l">Validations completed</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">finished runs</div></div>
-        <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">from real people, filtered</div></div>
+        {humanEval && <>
+          <div className="stat"><div className="stat__l">Validations running</div><div className="stat__v tnum">{stats.active}</div><div className="stat__s">on real people</div></div>
+          <div className="stat"><div className="stat__l">Validations completed</div><div className="stat__v tnum">{stats.completed}</div><div className="stat__s">finished runs</div></div>
+          <div className="stat"><div className="stat__l">Valid judgments</div><div className="stat__v tnum">{stats.validJudgments.toLocaleString()}</div><div className="stat__s">from real people, filtered</div></div>
+        </>}
       </div>
 
       {isEmpty ? (
@@ -175,9 +180,9 @@ export default async function Dashboard() {
             <EvaluationList rows={evaluations.slice(0, 14)} projects={projOpts} />
           ) : (
             <div className="card" style={{ textAlign: "center", padding: "clamp(24px, 4vw, 40px)" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>No decision workflows yet</div>
-              <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto 16px", maxWidth: 360 }}>Start your first decision workflow and the decision record shows up here.</p>
-              <Link href="/app/new" className="btn">Start a decision workflow →</Link>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Nothing here yet</div>
+              <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto 16px", maxWidth: 360 }}>Run a check to score your AI output and get the exact lines to fix. It shows up under Checks.</p>
+              <Link href="/app/checks/new" className="btn">Run a check →</Link>
             </div>
           )}
         </>

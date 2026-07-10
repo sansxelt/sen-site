@@ -3,7 +3,7 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
   title: "How it works",
-  description: "How the AI output check works: paste your output, get per-criterion scores, the version to ship, and the exact lines to fix. Calibrated on real people.",
+  description: "How the AI output check works: paste your output, get per-criterion scores, the version to ship, and the exact lines to fix, with a stable pass/fail gate.",
   path: "/how-it-works",
 });
 
@@ -11,7 +11,7 @@ const STEPS: [string, string, string][] = [
   ["1", "Paste your output", "One or more versions of what your app generates, in the app or by API. Pick the output type so the rubric fits."],
   ["2", "Get the instant check", "Per-criterion scores, the version to ship, and line-level flags on the exact spans that read as dismissive, risky, or off."],
   ["3", "Apply the fixes", "Each flag comes with a concrete suggested rewrite. Ship the version that scores best, already fixed."],
-  ["4", "Validate on real people", "Optional. Route the same output to human evaluation to confirm the call, and we track how often people agree with the check."],
+  ["4", "Ship the corrected version", "The recommended output with every fix already applied, in one clean block you can copy. Human validation on real people is coming."],
 ];
 
 export default function HowItWorks() {
@@ -22,7 +22,7 @@ export default function HowItWorks() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(48px, 6vw, 88px)", paddingBottom: "clamp(20px, 3vw, 32px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>How it works</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.4vw, 3.4rem)", marginBottom: 14 }}>How Vraelis works</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Paste your output, get an instant check with the lines to fix, and ship the version to ship. Validate on real people whenever you want to be sure.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Paste your output, get an instant check with the lines to fix, and ship the corrected version. Human validation on real people is coming.</p>
         </div>
       </section>
 

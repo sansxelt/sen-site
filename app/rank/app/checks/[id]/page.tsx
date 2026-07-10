@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getCheck, reconcileStuckChecks } from "@/lib/v-checks";
 import { getPlan } from "@/lib/v-db";
-import { entitlements } from "@/lib/v-entitlements";
+import { entitlements, humanEvalEnabled } from "@/lib/v-entitlements";
 import { getCalibrationForCheck, resolveCalibrationForTest, calibrationSummary } from "@/lib/v-calibration";
 import { CheckReport } from "./check-report";
 import { CalibrationPanel } from "./calibration-panel";
@@ -97,16 +97,20 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
     tooManyVersions = nCands > maxOptions;
   }
   const panelCal = cal ? { status: cal.status, testId: cal.test_id, aiWinner: cal.ai_winner_label, humanWinner: cal.human_winner_label, agreement: cal.agreement, humanValid: cal.human_valid_judgments } : null;
-  const calibrationSlot = (
+  // The in-check "Validate on real people" bridge is the only sanctioned eval entry, and it too is
+  // hidden until an evaluator pool exists. When a past check already HAS a calibration, still show
+  // its result (historical data), but never offer a NEW validation while the flag is off.
+  const showCalibration = humanEvalEnabled() || !!cal;
+  const calibrationSlot = showCalibration ? (
     <CalibrationPanel
       checkId={id}
       calibration={panelCal}
-      canValidate={canValidate}
+      canValidate={canValidate && humanEvalEnabled()}
       tooManyVersions={tooManyVersions}
       maxOptions={maxOptions}
       summary={{ display: summary.display, ratePct: summary.ratePct, n: summary.n, lo: summary.lo, hi: summary.hi }}
     />
-  );
+  ) : null;
 
   const shareUrl = check.share_enabled && check.share_token ? `https://vraelis.com/r/c/${check.share_token}` : null;
 

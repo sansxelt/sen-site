@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan, launchTest } from "@/lib/v-db";
 import { ensureSignupGrant } from "@/lib/v-credits";
-import { entitlements, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
+import { entitlements, humanEvalEnabled, MIN_OPTIONS, MIN_VOTES } from "@/lib/v-entitlements";
 import { assignTestToProject } from "@/lib/v-projects";
 import { setTargetAudience } from "@/lib/v-screening";
 import { scanFields, piiMessage } from "@/lib/v-content-policy";
@@ -21,6 +21,8 @@ export async function POST(req: Request) {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  // Human evaluation is demoted until an evaluator pool exists — launching a test is disabled.
+  if (!humanEvalEnabled()) return NextResponse.json({ error: "human_eval_unavailable" }, { status: 403 });
   await ensureProfile(email, session.user?.name ?? undefined);
   await ensureSignupGrant(email);
 
