@@ -36,10 +36,18 @@ export const screenshotPng = (): Buffer => makePng(480, 360, (b) => {
   fillRect(b, 480, 40, 280, 360, 330, [246, 246, 246, 255]);   // very low-contrast block on white
 });
 
+// A screen dominated by one distinct color band (for ordering tests: each of N screenshots is a
+// different color so the model can distinguish "screenshot 2" from the others).
+export const coloredScreenshotPng = (rgb: [number, number, number]): Buffer => makePng(360, 240, (b) => {
+  fillRect(b, 360, 20, 20, 340, 90, [rgb[0], rgb[1], rgb[2], 255]); // dominant colored band at the top
+  fillRect(b, 360, 20, 140, 120, 180, [230, 230, 230, 255]);        // a small pale control below
+});
+
 // Minimal valid PDF with text + a table drawn with line ops + a planted overlap/cramped-column defect.
-export function makePdf(): Buffer {
+// `variant` changes the heading so two PDF candidates have distinct identities.
+export function makePdf(variant = "Q3 Performance Report"): Buffer {
   const content =
-    "BT /F1 20 Tf 72 740 Td (Q3 Performance Report) Tj ET\n" +
+    `BT /F1 20 Tf 72 740 Td (${variant}) Tj ET\n` +
     "BT /F1 11 Tf 72 712 Td (Revenue grew across every region this quarter.) Tj ET\n" +
     "BT /F1 11 Tf 72 694 Td (The regional breakdown is in the table below.) Tj ET\n" +
     "72 640 m 520 640 l S\n72 600 m 520 600 l S\n72 640 m 72 590 l S\n300 640 m 300 590 l S\n520 640 m 520 590 l S\n" +

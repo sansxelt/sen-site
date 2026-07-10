@@ -30,24 +30,30 @@ async function main() {
     const seeded: { id: string; path: string }[] = [];
     const expected: string[] = [];
     try {
+      let ord = 0;
       for (const s of seeds) {
         const path = `users/mmverify/${draftKey}/${crypto.randomUUID()}`;
         await st.uploadCheckAttachment(path, s.bytes, s.mime);
-        const row = await db.insertAttachment({ userId: owner, draftKey, role: s.role, versionKey: s.versionKey, filename: s.filename, mime: s.mime, sizeBytes: s.bytes.length, storagePath: path, pageCount: s.pageCount ?? null, capabilities: { text: s.mime.startsWith("text") || s.mime === "application/pdf", vision: s.mime.startsWith("image") || s.mime === "application/pdf" }, orderIndex: 0 });
+        const row = await db.insertAttachment({ userId: owner, draftKey, role: s.role, versionKey: s.versionKey, filename: s.filename, mime: s.mime, sizeBytes: s.bytes.length, storagePath: path, pageCount: s.pageCount ?? null, capabilities: { text: s.mime.startsWith("text") || s.mime === "application/pdf", vision: s.mime.startsWith("image") || s.mime === "application/pdf" }, orderIndex: ord++ });
         if (!row) throw new Error("seed failed");
         seeded.push({ id: row.id, path }); expected.push(row.id);
       }
       const s = await snap.buildEvaluationSnapshot(owner, draftKey, versions, contextText, expected);
       if (!s.ok) { report.push({ case: name, result: "snapshot_error", error: s.error }); return; }
-      const c = await cbmod.buildEvaluationContent(s.snapshot);
-      if (!c.ok) { report.push({ case: name, result: "content_error", error: c.error }); return; }
-      const result = await ev.evaluateOutput({ outputType: outputType as never, candidates: versions.map((v) => ({ text: v.text })), originalRequest, attachments: { blocks: c.blocks, prepared: c.prepared } });
-      if (!result) { report.push({ case: name, result: "model_unavailable", note: "evaluateOutput returned null (invalid/placeholder key here) — run with the prod key for real findings", snapshot_hash: s.snapshot.hash, budget_tokens: c.estTokens, block_count: c.blocks.length }); return; }
-      // Tolerant semantic detection of planted VISUAL concepts (not exact strings).
+      // No attachments -> legacy text-only path (no multimodal content). With attachments -> content blocks.
+      let content: { blocks: unknown[]; prepared: { attachmentId: string; kind: string }[]; estTokens: number } | null = null;
+      if (seeds.length) {
+        const c = await cbmod.buildEvaluationContent(s.snapshot);
+        if (!c.ok) { report.push({ case: name, result: "content_error", error: c.error }); return; }
+        content = c;
+      }
+      const result = await ev.evaluateOutput({ outputType: outputType as never, candidates: versions.map((v) => ({ text: v.text })), originalRequest, attachments: content ? { blocks: content.blocks as never, prepared: content.prepared as never } : undefined });
+      if (!result) { report.push({ case: name, result: "model_unavailable", note: "evaluateOutput returned null (invalid/placeholder key) — run with the prod key", snapshot_hash: s.snapshot.hash, budget_tokens: content?.estTokens ?? null, block_count: content?.blocks.length ?? 0 }); return; }
+      // Tolerant semantic detection of planted concepts (not exact strings). Only meaningful when files exist.
       const hay = JSON.stringify({ candidates: result.candidates.map((x) => ({ summary: x.summary, scores: x.scores })), flags: result.flags, rec: result.recommendation }).toLowerCase();
       const detected = conceptGroups.map((g) => g.some((kw) => hay.includes(kw)));
-      const capabilities = c.prepared.map((p) => ({ id: p.attachmentId.slice(0, 8), kind: p.kind, capability: p.kind === "image" ? "visual" : p.kind === "pdf" ? "text_and_visual" : "text" }));
-      report.push({ case: name, result: "real_model", model: process.env.VRAELIS_EVAL_MODEL, candidates_scored: result.candidates.length, visual_concepts_expected: conceptGroups.length, visual_concepts_detected: detected.filter(Boolean).length, passed_visual: detected.some(Boolean), capabilities, budget_tokens: c.estTokens, snapshot_hash: s.snapshot.hash });
+      const capabilities = (content?.prepared ?? []).map((p) => ({ id: p.attachmentId.slice(0, 8), kind: p.kind, capability: p.kind === "image" ? "visual" : p.kind === "pdf" ? "text_and_visual" : "text" }));
+      report.push({ case: name, result: "real_model", model: process.env.VRAELIS_EVAL_MODEL, candidates_scored: result.candidates.length, context_attachments: s.snapshot.context.attachments.length, visual_concepts_expected: conceptGroups.length, visual_concepts_detected: detected.filter(Boolean).length, passed: conceptGroups.length === 0 ? true : detected.some(Boolean), capabilities, budget_tokens: content?.estTokens ?? null, snapshot_hash: s.snapshot.hash });
     } catch (e) {
       report.push({ case: name, result: "error", message: (e as Error).message });
     } finally {
@@ -73,6 +79,44 @@ async function main() {
     [{ versionKey: "A", text: "Checkout screen: the user reviews the cart and taps the main button to pay." }, { versionKey: "B", text: "Plain text alternative: a single Pay button at the bottom." }], "",
     [{ role: "candidate_output", versionKey: "A", filename: "checkout.png", mime: "image/png", bytes: fx.screenshotPng() }],
     [["prominent", "dominan", "hierarch", "primary", "button", "visual"]]);
+
+  // B4 — four ORDERED, color-distinct screenshots as one candidate (ordering preserved DB->result).
+  await runCase("B4_ordered_screens", "product_ux", "Review these four screens.",
+    [{ versionKey: "A", text: "" }], "",
+    (["red", "green", "blue", "gold"] as const).map((_, i) => ({ role: "candidate_output" as const, versionKey: "A", filename: `screen-${i + 1}.png`, mime: "image/png", bytes: fx.coloredScreenshotPng(([[220, 40, 40], [40, 180, 60], [40, 90, 220], [220, 180, 40]] as [number, number, number][])[i]) })),
+    [["image", "screen", "color", "hierarch", "dominan", "multiple", "second"]]);
+
+  // F — PDF Candidate A vs PDF Candidate B (distinct identities, no cross-blend).
+  await runCase("F_pdf_vs_pdf", "long_form", "Compare these two reports.",
+    [{ versionKey: "A", text: "" }, { versionKey: "B", text: "" }], "",
+    [{ role: "candidate_output", versionKey: "A", filename: "alpha.pdf", mime: "application/pdf", bytes: fx.makePdf("Alpha Division Report"), pageCount: 1 },
+     { role: "candidate_output", versionKey: "B", filename: "beta.pdf", mime: "application/pdf", bytes: fx.makePdf("Beta Division Report"), pageCount: 1 }],
+    [["table", "layout", "overlap", "column", "report"]]);
+
+  // G — candidate screenshot + supporting brand-guide PDF (context informs, never scored).
+  await runCase("G_context", "product_ux", "Does this screen follow the brand guide?",
+    [{ versionKey: "A", text: "The checkout screen." }], "",
+    [{ role: "candidate_output", versionKey: "A", filename: "screen.png", mime: "image/png", bytes: fx.screenshotPng() },
+     { role: "supporting_context", versionKey: null, filename: "brand.pdf", mime: "application/pdf", bytes: fx.makePdf("Brand Guide: no red primary buttons; refunds are never promised"), pageCount: 1 }],
+    [["brand", "guide", "requirement", "context"]]);
+
+  // H — TXT and MD candidates (structure preserved).
+  await runCase("H_txt_md", "other", "Which is clearer?",
+    [{ versionKey: "A", text: "" }, { versionKey: "B", text: "" }], "",
+    [{ role: "candidate_output", versionKey: "A", filename: "notes.txt", mime: "text/plain", bytes: fx.brandTxt() },
+     { role: "candidate_output", versionKey: "B", filename: "guide.md", mime: "text/markdown", bytes: fx.guideMd() }],
+    [["rule", "tone", "voice", "step", "cta", "heading", "list"]]);
+
+  // L — legacy text-only check (no attachments): existing path must still work.
+  await runCase("L_text_only", "support_reply", "Reply to a frustrated customer.",
+    [{ versionKey: "A", text: "I'm sorry for the trouble. I've flagged this and will follow up within two business days." }, { versionKey: "B", text: "Not my problem, figure it out." }], "",
+    [], []);
+
+  // M — original request ABSENT, with a screenshot (general-quality path still works).
+  await runCase("M_no_request", "product_ux", undefined,
+    [{ versionKey: "A", text: "" }], "",
+    [{ role: "candidate_output", versionKey: "A", filename: "screen.png", mime: "image/png", bytes: fx.screenshotPng() }],
+    [["hierarch", "dominan", "contrast", "align", "visual", "spacing"]]);
 
   console.log(JSON.stringify({ harness: "multimodal-verify", owner_redacted: true, cases: report }, null, 2));
   const anyReal = report.some((r) => r.result === "real_model");
