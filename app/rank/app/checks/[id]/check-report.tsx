@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { bandScore, type EvalResult, type CandidateEval, type LineFlag } from "@/lib/v-evaluator";
+import { bandScore, type EvalResult, type CandidateEval, type LineFlag, type AiReview } from "@/lib/v-evaluator";
 import { CorrectedBlock } from "./corrected-block";
 
 // The AI Check report. Deliberately NOT the human-vote ReportBody: no posterior, no
@@ -107,10 +107,34 @@ function FlagRow({ f }: { f: LineFlag }) {
   );
 }
 
+// "Reads as AI-written": its own section, visually distinct from the overpromise flags. These
+// tells are LOW/MEDIUM and never affect the pass/fail gate.
+function AiTellsSection({ review }: { review: AiReview }) {
+  const label = review.verdict === "reads_ai" ? "Reads as AI-written" : review.verdict === "some" ? "A few AI tells" : "Reads human";
+  const color = review.verdict === "reads_ai" ? "var(--err)" : review.verdict === "some" ? "var(--acc-deep)" : "var(--fg-4)";
+  return (
+    <div style={{ ...box, padding: "clamp(16px, 2.4vw, 22px)", marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+        <div style={{ ...kicker }}>Reads as AI-written</div>
+        <span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase", color: "#fff", background: color, borderRadius: 4, padding: "2px 7px" }}>{label}</span>
+        <span style={{ marginLeft: "auto", fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)" }}>{review.count} tell{review.count === 1 ? "" : "s"}</span>
+      </div>
+      <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 4px", lineHeight: 1.5 }}>Spans that read as machine-written, each with a plainer human rewrite. These do not affect the pass or fail gate.{review.readsAsNote ? ` ${review.readsAsNote}` : ""}</p>
+      {review.tells.map((t, i) => (
+        <div key={i} style={{ display: "grid", gap: 4, padding: "11px 0", borderTop: "1px solid var(--line-1)" }}>
+          <div style={{ fontSize: 12.5, color: "var(--fg-1)", lineHeight: 1.5 }}><span style={{ fontFamily: "var(--font-code)", fontSize: 9.5, color: "var(--fg-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 8 }}>{t.kind.replace("_", " ")}</span>&ldquo;{t.span}&rdquo;</div>
+          <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5 }}><span style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Fix: </span>{t.fix}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function CheckReport({ result, title, createdAt, calibrationSlot }: { result: EvalResult; title?: string | null; createdAt?: string | null; calibrationSlot?: ReactNode }) {
   const multi = result.candidates.length > 1;
   const winner = result.recommendedIndex != null ? result.candidates.find((c) => c.index === result.recommendedIndex) ?? null : null;
   const corrected = result.candidates.find((c) => c.correctedVersion); // only the ship-pick/sole candidate carries it
+  const aiReview = result.candidates.find((c) => c.aiReview)?.aiReview ?? null;
   const typeLabel = OUTPUT_LABELS[result.outputType] ?? "Output";
 
   return (
@@ -122,6 +146,7 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
         <span>{typeLabel}</span><span>|</span>
         <span>{result.candidates.length} version{result.candidates.length === 1 ? "" : "s"}</span><span>|</span>
         <span>AI assessment</span>
+        {aiReview && aiReview.count > 0 ? <><span>|</span><span style={{ color: aiReview.verdict === "reads_ai" ? "var(--err)" : "inherit" }}>{aiReview.count} AI tell{aiReview.count === 1 ? "" : "s"}</span></> : null}
         {result.model ? <><span>|</span><span>{result.model}</span></> : null}
         {createdAt ? <><span>|</span><span>{new Date(createdAt).toISOString().slice(0, 10)}</span></> : null}
       </div>
@@ -166,6 +191,8 @@ export function CheckReport({ result, title, createdAt, calibrationSlot }: { res
       )}
 
       {/* corrected version: the ship-pick with every applicable fix applied (assembly only) */}
+      {aiReview && aiReview.count > 0 ? <AiTellsSection review={aiReview} /> : null}
+
       {corrected?.correctedVersion ? <CorrectedBlock text={corrected.correctedVersion} label={corrected.label} multi={multi} /> : null}
 
       {/* calibration: validate on real people + the rolling agreement rate (owner only) */}

@@ -26,9 +26,14 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { findAiTells, type AiTell } from "./ai-tells";
 
 export const OUTPUT_TYPES = ["support_reply", "onboarding", "marketing_copy", "agent_action", "other"] as const;
 export type OutputType = (typeof OUTPUT_TYPES)[number];
+
+// "Reads as AI-written" detection runs on human-read prose, not machine action logs (agent_action).
+const AI_TELLS_TYPES: ReadonlySet<string> = new Set(["support_reply", "onboarding", "marketing_copy", "other"]);
+export type AiReview = { tells: AiTell[]; verdict: "clean" | "some" | "reads_ai"; density: number; count: number; readsAs?: "human" | "ai" | "mixed"; readsAsNote?: string };
 
 export type FlagIssue = "dismissive" | "overpromise" | "confusing" | "risky" | "inaccurate" | "tone" | "other";
 export type FlagSeverity = "low" | "medium" | "high";
@@ -81,7 +86,7 @@ export function bandScore(criterion: string, score: number): number {
 }
 
 export type CriterionScore = { criterion: string; label: string; score: number; note: string };
-export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string; correctedVersion?: string };
+export type CandidateEval = { index: number; label: string; text: string; overall: number; scores: CriterionScore[]; summary: string; correctedVersion?: string; aiReview?: AiReview };
 export type LineFlag = { candidateIndex: number; candidateLabel: string; span: string; issue: FlagIssue; severity: FlagSeverity; why: string; fix: string };
 
 // Is the output about to ship, or already live? A published landing page cannot be "not
@@ -155,6 +160,10 @@ const EvalSchema = z.object({
     fix: z.string(),
   })).optional(),
   recommendation: z.string(),
+  // Holistic "reads as AI-written" read (the model layer, on top of the deterministic tell scan).
+  // A SUMMARY only -- it never creates flags; the specific tells are found in code (findAiTells).
+  reads_as: z.enum(["human", "ai", "mixed"]).optional(),
+  reads_as_note: z.string().optional(),
 });
 
 // Trim, drop empties, cap at MAX_CANDIDATES, and assign stable letters + normalized text.
@@ -247,7 +256,7 @@ function cleanFix(fix: string): string {
 // words), so a fix replaces the whole sentence that verbatim-contains its span. A span not found
 // verbatim is skipped (never hallucinated); a sentence already rewritten by an earlier (HIGH-first)
 // flag is left as it is; a fix equal to the sentence is a no-op. Untouched sentences are preserved.
-export function buildCorrectedVersion(text: string, flags: LineFlag[]): string {
+export function buildCorrectedVersion(text: string, flags: LineFlag[], aiTells: AiTell[] = []): string {
   const edits: { start: number; end: number; replacement: string }[] = [];
   const taken: Array<[number, number]> = [];
   for (const f of flags) {
@@ -271,11 +280,21 @@ export function buildCorrectedVersion(text: string, flags: LineFlag[]): string {
     edits.push({ start: s, end: e, replacement });
     taken.push([s, e]);
   }
-  if (!edits.length) return text;
-  edits.sort((a, b) => a.start - b.start);
-  let out = "", cursor = 0;
-  for (const ed of edits) { out += text.slice(cursor, ed.start) + ed.replacement; cursor = ed.end; }
-  return out + text.slice(cursor);
+  let out = text;
+  if (edits.length) {
+    edits.sort((a, b) => a.start - b.start);
+    let acc = "", cursor = 0;
+    for (const ed of edits) { acc += text.slice(cursor, ed.start) + ed.replacement; cursor = ed.end; }
+    out = acc + text.slice(cursor);
+  }
+  // De-slop, but ONLY the grammatically-safe swap: em dash -> comma (also the founder's pet peeve).
+  // Word/phrase swaps are NOT clean drop-ins ("a myriad of" -> "a many of"), so they stay advisory in
+  // the AI-tells section for the human to apply, rather than corrupting the corrected copy.
+  for (const t of aiTells) {
+    if (t.kind !== "em_dash" || t.replacement === undefined || !t.span || !out.includes(t.span)) continue;
+    out = out.split(t.span).join(t.replacement);
+  }
+  return out.replace(/ {2,}/g, " ").replace(/\s+([.,;:!?])/g, "$1"); // tidy spacing
 }
 
 export function finalizeEvaluation(
@@ -360,8 +379,17 @@ export function finalizeEvaluation(
   if (correctTarget != null) {
     const tc = candidates.find((c) => c.index === correctTarget);
     if (tc) {
-      const corrected = buildCorrectedVersion(tc.text, flags.filter((f) => f.candidateIndex === correctTarget));
-      if (corrected && corrected !== tc.text) tc.correctedVersion = corrected; // only when a fix actually applied
+      // "Reads as AI-written": DETERMINISTIC tell scan (findAiTells) + the model's holistic read.
+      // LOW/MEDIUM, its own section, NEVER touches the gate. Human-read prose only (not agent_action).
+      const isTellType = AI_TELLS_TYPES.has(outputType);
+      const found = isTellType ? findAiTells(tc.text) : { tells: [] as AiTell[], verdict: "clean" as const, density: 0, count: 0 };
+      const readsAs = ["human", "ai", "mixed"].includes(raw.reads_as as string) ? (raw.reads_as as "human" | "ai" | "mixed") : undefined;
+      if (isTellType && (found.count > 0 || readsAs)) {
+        tc.aiReview = { tells: found.tells, verdict: found.verdict, density: found.density, count: found.count, readsAs, readsAsNote: (raw.reads_as_note || "").trim().slice(0, 240) || undefined };
+      }
+      // Corrected version: ship-pick with overpromise fixes applied AND the AI tells de-slopped.
+      const corrected = buildCorrectedVersion(tc.text, flags.filter((f) => f.candidateIndex === correctTarget), found.tells);
+      if (corrected && corrected !== tc.text) tc.correctedVersion = corrected; // only when something changed
     }
   }
 
@@ -413,10 +441,13 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
       ? `- absolute_verdicts: the text makes the absolute or universal claims listed below, and you MUST return a verdict on EVERY one. For each: candidate (letter), claim (copy the sentence EXACTLY as it appears in the list below, character for character, no more and no less -- this is how your verdict is matched to the claim), backed (judged from the WHOLE sentence and its surrounding copy: true ONLY if they substantiate it with a real mechanism, specifics, or evidence; false if the product cannot literally deliver it or nothing on the page backs it), quote (the SHORTEST exact phrase WITHIN that sentence that carries the claim, copied verbatim, used only to display the flag; it does NOT change the backed judgment), why (one line), fix (a concrete rewrite). Judge honestly and independently, always on the full sentence and its context: "works with every major tool: Slack, Gmail, and Notion" is backed; "We never sell your data." next to copy about encryption and privacy is a backed policy statement; "automate any app" with nothing behind it is NOT backed. The claims:\n${absList}\n`
       : "") +
     (multi
-      ? `- recommendation: one plain sentence naming which version to ship and why.\n\n`
+      ? `- recommendation: one plain sentence naming which version to ship and why.\n`
       : published
-        ? `- recommendation: one plain sentence naming the single highest-impact change to make now. This content is already live, so do NOT frame it as ready or not ready to ship.\n\n`
-        : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n\n`) +
+        ? `- recommendation: one plain sentence naming the single highest-impact change to make now. This content is already live, so do NOT frame it as ready or not ready to ship.\n`
+        : `- recommendation: one plain sentence on whether this is ready to ship and the single most important change.\n`) +
+    (AI_TELLS_TYPES.has(outputType)
+      ? `- reads_as: does the recommended version read as written by a human or by AI? One of: human, ai, mixed. reads_as_note: one short line on the giveaways (or what keeps it human). This is a HOLISTIC read only; do NOT create flags for it.\n\n`
+      : `\n`) +
     `Flag a span only when it is a real, checkable problem: a false statement, a claim that cannot be backed up, or a safety or clarity issue. Do not flag a matter of taste, voice, or phrasing that you would merely prefer.` +
     (outputType === "marketing_copy" ? ` Marketing copy is allowed to be bold, aspirational, and confident; flag a specific claim that is false or cannot be backed up, not a strong tone.` : "") +
     ` The system assigns each flag's severity from its content, so a rough severity guess is fine.` +
