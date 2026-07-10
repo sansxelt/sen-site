@@ -143,7 +143,7 @@ export default function SampleCheck() {
           A sample check on an example support reply, to show exactly what you get back on your own output.
         </p>
 
-        <CheckReport result={SAMPLE} title="Support reply: customer was double-charged" calibrationSlot={<CalibrationTeaser />} />
+        <CheckReport result={SAMPLE} title="Reply to a double-charged customer" calibrationSlot={<CalibrationTeaser />} />
 
         {/* CTA */}
         <div style={{ textAlign: "center", marginTop: 48 }}>
