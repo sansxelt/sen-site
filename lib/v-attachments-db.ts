@@ -115,6 +115,32 @@ export async function bindDraftToCheck(userId: string, draftKey: string, checkId
   await getSupabaseAdminClient().from(TABLE as never).update({ check_id: checkId, expires_at: null } as never).eq("user_id", userId).eq("draft_key", draftKey).is("check_id", null);
 }
 
+// SYSTEM-level (cron) orphan sweep. Draft uploads never bound to a check, past expiry. NOT owner-scoped
+// on purpose -- it runs as a trusted job. The caller purges bytes FIRST, then deletes the rows, so a
+// byte-purge failure just retries next run instead of orphaning an object. Bound attachments (check_id
+// set) are never returned. Bounded batch; idempotent.
+export async function findExpiredDrafts(limit = 200): Promise<{ id: string; storage_path: string }[]> {
+  if (!isDatabaseConfigured()) return [];
+  const { data } = await getSupabaseAdminClient().from(TABLE as never).select("id, storage_path")
+    .is("check_id", null).lt("expires_at", new Date().toISOString()).limit(limit);
+  return (data ?? []) as { id: string; storage_path: string }[];
+}
+// Delete rows by id (system-level; used by the sweep AFTER bytes are purged). Returns how many.
+export async function deleteAttachmentRowsById(ids: string[]): Promise<number> {
+  if (!isDatabaseConfigured() || !ids.length) return 0;
+  const { error } = await getSupabaseAdminClient().from(TABLE as never).delete().in("id", ids);
+  if (error) { console.error("deleteAttachmentRowsById:", error.message); return 0; }
+  return ids.length;
+}
+
+// Owner-scoped storage paths for a check's attachments -- fetched BEFORE deleting the check so the bytes
+// can be purged (the v_checks -> attachments cascade removes rows only, never storage objects).
+export async function attachmentPathsForCheck(userId: string, checkId: string): Promise<string[]> {
+  if (!isDatabaseConfigured()) return [];
+  const { data } = await getSupabaseAdminClient().from(TABLE as never).select("storage_path").eq("user_id", userId).eq("check_id", checkId);
+  return ((data ?? []) as { storage_path: string }[]).map((r) => r.storage_path).filter(Boolean);
+}
+
 // Persist a new order for a version's (or the context set's) attachments.
 export async function reorder(userId: string, draftKey: string, orderedIds: string[]): Promise<void> {
   if (!isDatabaseConfigured() || !orderedIds.length) return;
