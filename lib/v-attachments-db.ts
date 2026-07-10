@@ -6,10 +6,20 @@
 // live in lib/v-storage.ts (private bucket + signed URLs). Uploading rows here never charges a credit.
 
 import crypto from "crypto";
+import { auth } from "@/auth";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import type { AttachmentRole } from "./v-attachments";
 
 const TABLE = "v_check_attachments";
+
+// The ONLY authoritative source of an attachment owner: the authenticated NextAuth session. Routes call
+// this instead of reading the session themselves, so a client-supplied owner can never be treated as
+// authoritative and every owner-scoped query below is passed a session-derived tenant key. Returns the
+// lowercased email (the tenant scope used across the app) or null when unauthenticated.
+export async function requireOwner(): Promise<string | null> {
+  const email = (await auth())?.user?.email;
+  return email ? email.trim().toLowerCase() : null;
+}
 const DRAFT_TTL_MS = 24 * 60 * 60 * 1000; // abandoned draft uploads are swept 24h after upload
 
 export type AttachmentRow = {

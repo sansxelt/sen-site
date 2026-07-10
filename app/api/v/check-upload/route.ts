@@ -9,16 +9,16 @@
 
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { auth } from "@/auth";
 import { validateFile, sanitizeFilename, FORMATS, LIMITS, type AttachmentRole } from "@/lib/v-attachments";
 import { uploadCheckAttachment, signedCheckUrl, deleteCheckAttachments } from "@/lib/v-storage";
-import { insertAttachment, listByDraft, deleteAttachmentRow, getAttachment, countForVersion, countContext, countImagesTotal, reorder, type AttachmentRow } from "@/lib/v-attachments-db";
+import { insertAttachment, listByDraft, deleteAttachmentRow, getAttachment, countForVersion, countContext, countImagesTotal, reorder, requireOwner, type AttachmentRow } from "@/lib/v-attachments-db";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const uid = (email: string) => email.trim().toLowerCase();
-const ns = (email: string) => crypto.createHash("sha256").update(uid(email)).digest("hex").slice(0, 16);
+// Owner comes ONLY from requireOwner() (the session); routes never read a client-supplied owner. The
+// storage namespace hashes that session-derived tenant key.
+const ns = (owner: string) => crypto.createHash("sha256").update(owner).digest("hex").slice(0, 16);
 const fail = (message: string, status = 400, code = "validation_error") => NextResponse.json({ error: code, message }, { status });
 
 // Public shape: everything the UI needs, and NOT storage_path.
@@ -27,10 +27,8 @@ function publicRow(r: AttachmentRow) {
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  const email = session?.user?.email;
-  if (!email) return fail("Sign in to upload files.", 401, "signin_required");
-  const u = uid(email);
+  const u = await requireOwner();
+  if (!u) return fail("Sign in to upload files.", 401, "signin_required");
 
   const form = await req.formData().catch(() => null);
   if (!form) return fail("Expected a multipart file upload.");
@@ -56,7 +54,7 @@ export async function POST(req: Request) {
     return fail(`You can attach up to ${LIMITS.maxImagesTotal} images across the check.`, 400, "too_many_files");
   }
 
-  const path = `users/${ns(email)}/${draftKey}/${crypto.randomUUID()}`;
+  const path = `users/${ns(u)}/${draftKey}/${crypto.randomUUID()}`;
   if (!(await uploadCheckAttachment(path, buffer, v.mime))) return fail("Upload storage is unavailable right now. Try again.", 503, "storage_unavailable");
 
   const row = await insertAttachment({
@@ -68,10 +66,8 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  const session = await auth();
-  const email = session?.user?.email;
-  if (!email) return fail("Sign in to view files.", 401, "signin_required");
-  const u = uid(email);
+  const u = await requireOwner();
+  if (!u) return fail("Sign in to view files.", 401, "signin_required");
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
   if (id && url.searchParams.get("signed") === "1") {
@@ -86,10 +82,8 @@ export async function GET(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const session = await auth();
-  const email = session?.user?.email;
-  if (!email) return fail("Sign in.", 401, "signin_required");
-  const u = uid(email);
+  const u = await requireOwner();
+  if (!u) return fail("Sign in.", 401, "signin_required");
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!id) return fail("Missing id.");
   const path = await deleteAttachmentRow(u, id); // owner-scoped delete; returns the path to purge bytes
@@ -98,10 +92,8 @@ export async function DELETE(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const session = await auth();
-  const email = session?.user?.email;
-  if (!email) return fail("Sign in.", 401, "signin_required");
-  const u = uid(email);
+  const u = await requireOwner();
+  if (!u) return fail("Sign in.", 401, "signin_required");
   const body = (await req.json().catch(() => ({}))) as { draftKey?: string; orderedIds?: unknown };
   const draftKey = String(body.draftKey || "").slice(0, 100);
   const orderedIds = Array.isArray(body.orderedIds) ? body.orderedIds.filter((x): x is string => typeof x === "string").slice(0, 32) : [];
