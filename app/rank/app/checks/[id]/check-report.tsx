@@ -9,8 +9,8 @@ import { CorrectedBlock } from "./corrected-block";
 // from the customer's own output. Server component (pure render).
 
 const OUTPUT_LABELS: Record<string, string> = {
-  support_reply: "Support reply", onboarding: "Onboarding", marketing_copy: "Marketing copy",
-  agent_action: "Agent action", other: "Output",
+  support_reply: "Customer support", onboarding: "Onboarding", marketing_copy: "Marketing",
+  agent_action: "Agent action", other: "Custom", product_ux: "Product & UX", long_form: "Long-form content",
 };
 const ISSUE_LABELS: Record<string, string> = {
   dismissive: "Dismissive", overpromise: "Overpromise", confusing: "Confusing",

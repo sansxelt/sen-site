@@ -28,11 +28,14 @@ import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { findAiTells, type AiTell } from "./ai-tells";
 
-export const OUTPUT_TYPES = ["support_reply", "onboarding", "marketing_copy", "agent_action", "other"] as const;
+// `onboarding` is retained as a LEGACY key (older stored checks + API callers still send it); it is
+// no longer offered in the UI. The live taxonomy is: support_reply (Customer support), marketing_copy
+// (Marketing), product_ux (Product & UX), long_form (Long-form content), agent_action, other (Custom).
+export const OUTPUT_TYPES = ["support_reply", "onboarding", "marketing_copy", "agent_action", "other", "product_ux", "long_form"] as const;
 export type OutputType = (typeof OUTPUT_TYPES)[number];
 
 // "Reads as AI-written" detection runs on human-read prose, not machine action logs (agent_action).
-const AI_TELLS_TYPES: ReadonlySet<string> = new Set(["support_reply", "onboarding", "marketing_copy", "other"]);
+const AI_TELLS_TYPES: ReadonlySet<string> = new Set(["support_reply", "onboarding", "marketing_copy", "other", "product_ux", "long_form"]);
 export type AiReview = { tells: AiTell[]; verdict: "clean" | "some" | "reads_ai"; density: number; count: number; readsAs?: "human" | "ai" | "mixed"; readsAsNote?: string };
 
 export type FlagIssue = "dismissive" | "overpromise" | "confusing" | "risky" | "inaccurate" | "tone" | "other";
@@ -46,9 +49,11 @@ export const RUBRICS: Record<OutputType, Criterion[]> = {
   support_reply: [
     { key: "empathy", label: "Empathy", guide: "acknowledges the person's situation without being hollow or scripted" },
     { key: "resolution", label: "Resolution", guide: "actually moves the issue toward being solved, with a clear next step" },
+    { key: "accuracy", label: "Accuracy", guide: "factually careful; no invented policy, no unsafe or unverifiable claims" },
     { key: "tone", label: "Tone", guide: "warm and respectful, never dismissive, defensive, or robotic" },
-    { key: "accuracy", label: "Accuracy & safety", guide: "factually careful; no invented policy, no unsafe or unverifiable claims" },
+    { key: "policy_compliance", label: "Policy compliance", guide: "stays within stated policy; makes no promise, refund, or exception that was not authorized" },
   ],
+  // LEGACY (hidden from the UI, kept valid for old checks + API callers).
   onboarding: [
     { key: "clarity", label: "Clarity", guide: "immediately understandable; no jargon or ambiguity about what to do" },
     { key: "next_step", label: "Next step", guide: "points to one concrete first action, not an open-ended 'get started'" },
@@ -58,20 +63,36 @@ export const RUBRICS: Record<OutputType, Criterion[]> = {
   marketing_copy: [
     { key: "clarity", label: "Clarity", guide: "the value is legible in one read; no vague or abstract filler" },
     { key: "persuasion", label: "Persuasion", guide: "gives a concrete reason to care or act, grounded in a real benefit" },
-    { key: "overpromise", label: "Overpromise / risk", guide: "no claims that cannot be backed up; no hype that invites distrust or legal risk" },
-    { key: "brand_tone", label: "Brand tone", guide: "consistent, confident voice that fits the audience" },
+    { key: "differentiation", label: "Differentiation", guide: "makes clear why this over the alternatives; not a generic claim any competitor could make" },
+    { key: "credibility", label: "Credibility", guide: "claims are believable and backed; no hype that invites distrust or legal risk" },
+    { key: "cta_strength", label: "CTA strength", guide: "one clear, compelling next action the reader knows how to take" },
   ],
   agent_action: [
+    { key: "task_completion", label: "Task completion", guide: "actually finishes what was asked, not just part of it" },
     { key: "correctness", label: "Correctness", guide: "the action or answer is right for the request; no wrong operation" },
     { key: "safety", label: "Safety", guide: "no destructive, irreversible, or out-of-scope action taken without warrant" },
-    { key: "completeness", label: "Completeness", guide: "handles the whole task, including obvious edge cases, not just the happy path" },
-    { key: "reversibility", label: "Reversibility", guide: "prefers reversible steps and surfaces how to undo when it matters" },
+    { key: "tool_use", label: "Tool use", guide: "calls the right tools with the right arguments; no needless or malformed calls" },
+    { key: "unintended_effects", label: "Unintended effects", guide: "no side effects beyond the task; nothing changed that should not have been" },
+  ],
+  product_ux: [
+    { key: "clarity", label: "Clarity", guide: "the purpose and content are immediately understandable; no ambiguity" },
+    { key: "usability", label: "Usability", guide: "easy to act on; the primary action is obvious and low-effort" },
+    { key: "hierarchy", label: "Hierarchy", guide: "the most important thing reads first; information order matches priority" },
+    { key: "user_intent", label: "User intent", guide: "matches what the user is actually trying to do at this moment" },
+    { key: "friction", label: "Friction", guide: "removes needless steps, choices, or confusion that would stall the user" },
+  ],
+  long_form: [
+    { key: "structure", label: "Structure", guide: "a clear arc; sections and order make the whole easy to navigate" },
+    { key: "coherence", label: "Coherence", guide: "ideas connect and build; no contradictions or non-sequiturs" },
+    { key: "completeness", label: "Completeness", guide: "covers what the topic needs, including the obvious gaps, not just the easy parts" },
+    { key: "accuracy", label: "Accuracy", guide: "factually careful; claims are correct and verifiable" },
+    { key: "readability", label: "Readability", guide: "clear sentences and pacing; not a wall of jargon or filler" },
   ],
   other: [
     { key: "clarity", label: "Clarity", guide: "clear and easy to follow" },
-    { key: "tone", label: "Tone", guide: "appropriate for the audience and purpose" },
-    { key: "risk", label: "Risk", guide: "no overpromising, unsafe, or misleading content" },
+    { key: "intent_fit", label: "Instruction fit", guide: "does what the output is meant to do; follows the intent and constraints it was given" },
     { key: "effectiveness", label: "Effectiveness", guide: "does its job well for the stated goal" },
+    { key: "risk", label: "Risk", guide: "no overpromising, unsafe, or misleading content" },
   ],
 };
 

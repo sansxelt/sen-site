@@ -9,11 +9,12 @@ import { stashFreeCheckDraft } from "@/lib/free-check-draft";
 // /signin means a visitor who is ALREADY signed in passes straight through to the form.
 
 const OUTPUT_TYPES: [string, string][] = [
-  ["support_reply", "Support reply"],
-  ["onboarding", "Onboarding"],
-  ["marketing_copy", "Marketing copy"],
+  ["support_reply", "Customer support"],
+  ["marketing_copy", "Marketing"],
+  ["product_ux", "Product & UX"],
+  ["long_form", "Long-form content"],
   ["agent_action", "Agent action"],
-  ["other", "Other"],
+  ["other", "Custom"],
 ];
 
 const chip = (on: boolean) => ({
