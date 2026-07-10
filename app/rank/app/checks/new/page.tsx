@@ -26,11 +26,12 @@ export default function NewCheckPage() {
   const [title, setTitle] = useState("");
   const [audience, setAudience] = useState("");
   const [goal, setGoal] = useState("");
-  const [candidates, setCandidates] = useState<string[]>(["", ""]);
+  const [candidates, setCandidates] = useState<string[]>([""]); // start with one; add more to compare
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [prefilled, setPrefilled] = useState(false);
   const [published, setPublished] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
 
   // Free-check handoff: a visitor who pasted their output on /r/check and signed up lands
   // here with ?draft=1. Consume the stashed draft once and fill the form so their first
@@ -51,6 +52,11 @@ export default function NewCheckPage() {
       setPrefilled(true);
       /* eslint-enable react-hooks/set-state-in-effect */
     } catch { /* no storage / bad draft, fall through to the empty form */ }
+  }, []);
+
+  // Show the signed-in credit balance so the cost is never a surprise, and refresh it after a run.
+  useEffect(() => {
+    fetch("/api/credits/balance").then((r) => (r.ok ? r.json() : null)).then((j) => { if (typeof j?.balance === "number") setBalance(j.balance); }).catch(() => {});
   }, []);
 
   function setCandidate(i: number, v: string) { setCandidates((c) => c.map((x, j) => (j === i ? v : x))); }
@@ -98,10 +104,18 @@ export default function NewCheckPage() {
   }
 
   const active = OUTPUT_TYPES.find(([k]) => k === outputType);
+  const ctaText = busy ? "Starting…" : published ? "Find the highest-impact fix" : filled.length > 1 ? `Compare ${filled.length} versions` : "Run check";
 
   return (
     <div className="wrap" style={{ maxWidth: 760, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <p className="eyebrow">AI output check</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <p className="eyebrow" style={{ marginBottom: 0 }}>AI output check</p>
+        {balance != null ? (
+          <a href="/app/credits" style={{ textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 12, color: balance === 0 ? "var(--err)" : "var(--fg-3)", border: `1px solid ${balance === 0 ? "var(--err)" : "var(--line-2)"}`, borderRadius: 999, padding: "4px 12px", whiteSpace: "nowrap" }}>
+            {balance.toLocaleString()} credit{balance === 1 ? "" : "s"}{balance === 0 ? " · buy more" : ""}
+          </a>
+        ) : null}
+      </div>
       <h1 className="display" style={{ fontSize: "clamp(1.8rem, 3.4vw, 2.6rem)", margin: "6px 0 8px" }}>Check your AI output</h1>
       <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, marginBottom: 26, maxWidth: 560 }}>
         Paste one or more versions of an AI-generated output. You get an instant assessment: per-criterion scores, a recommended version, and the exact lines to fix. Costs 1 credit.
@@ -184,11 +198,19 @@ export default function NewCheckPage() {
 
       {err ? <p style={{ fontSize: 13.5, color: "var(--err)", marginBottom: 14 }}>{err}</p> : null}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-        <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || filled.length < 1} style={{ opacity: busy || filled.length < 1 ? 0.6 : 1 }}>
-          {busy ? "Starting…" : "Run check"} {!busy ? <span aria-hidden>→</span> : null}
+      {/* Ready to check: what will run, the cost, and the balance after -- so credits are never a surprise. */}
+      <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 18, marginTop: 4 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+          <span style={{ ...lab, marginBottom: 0 }}>Ready to check</span>
+          <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>
+            {filled.length || 1} version{filled.length === 1 ? "" : "s"} · 1 credit{balance != null ? ` · ${balance.toLocaleString()} now${balance >= 1 ? `, ${(balance - 1).toLocaleString()} after` : ""}` : ""}
+          </span>
+        </div>
+        <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || filled.length < 1}
+          style={{ width: "100%", justifyContent: "center", height: 50, fontSize: 15.5, fontWeight: 600, opacity: busy || filled.length < 1 ? 0.6 : 1 }}>
+          {ctaText} {!busy ? <span aria-hidden>→</span> : null}
         </button>
-        <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>1 credit | you&apos;re not charged if it fails</span>
+        <p style={{ fontSize: 12, color: "var(--fg-4)", textAlign: "center", margin: "8px 0 0" }}>You&apos;re only charged after a successful check.{balance === 0 ? <> Out of credits? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Buy more</a>.</> : null}</p>
       </div>
     </div>
   );
