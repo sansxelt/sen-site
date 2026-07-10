@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { takeFreeCheckDraft } from "@/lib/free-check-draft";
+import { UploadZone, type UIItem } from "./upload-zone";
+
+// Uploads ship dark until Pass 2 wires attachments into the evaluator; otherwise a user could attach
+// files that never affect the result (the exact broken promise we're avoiding). Flip via env when ready.
+const UPLOADS_ENABLED = process.env.NEXT_PUBLIC_VRAELIS_UPLOADS === "1";
 
 // In-app AI Output Check form. Any signed-in user with credits can run one; it costs
 // 1 credit and opens the report at /app/checks/<id>. Posts to /api/v/check (session).
@@ -25,6 +30,17 @@ type Version = { id: string; text: string; name: string };
 const lab = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase" as const, color: "var(--fg-4)", display: "block", marginBottom: 8 };
 const help = { fontSize: 12, color: "var(--fg-4)", margin: "6px 0 0", lineHeight: 1.5 };
 const inputStyle = { width: "100%", padding: "11px 14px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14.5, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box" as const };
+
+// "3 images, 1 PDF" for the summary.
+function describeUploads(items: UIItem[]): string {
+  const n = (k: string) => items.filter((i) => i.kind === k).length;
+  const parts: string[] = [];
+  const img = n("image"), pdf = n("pdf"), txt = n("text");
+  if (img) parts.push(`${img} image${img === 1 ? "" : "s"}`);
+  if (pdf) parts.push(`${pdf} PDF${pdf === 1 ? "" : "s"}`);
+  if (txt) parts.push(`${txt} text file${txt === 1 ? "" : "s"}`);
+  return parts.join(", ") || `${items.length} file${items.length === 1 ? "" : "s"}`;
+}
 
 function SectionHead({ n, title, hint }: { n: number; title: string; hint?: string }) {
   return (
@@ -57,6 +73,8 @@ export default function NewCheckPage() {
   const [balance, setBalance] = useState<number | null>(null);
   const [originalRequest, setOriginalRequest] = useState("");
   const [showDetails, setShowDetails] = useState(false); // Audience + success criteria stay collapsed by default
+  const [draftKey, setDraftKey] = useState("");           // stable id so uploads survive a refresh
+  const [zoneItems, setZoneItems] = useState<Record<string, UIItem[]>>({}); // per-zone upload state, keyed by role:versionKey
 
   // Free-check handoff: a visitor who pasted their output on /r/check and signed up lands
   // here with ?draft=1. Consume the stashed draft once and fill the form so their first
@@ -82,6 +100,19 @@ export default function NewCheckPage() {
   // Show the signed-in credit balance so the cost is never a surprise, and refresh it after a run.
   useEffect(() => {
     fetch("/api/credits/balance").then((r) => (r.ok ? r.json() : null)).then((j) => { if (typeof j?.balance === "number") setBalance(j.balance); }).catch(() => {});
+  }, []);
+
+  // Stable per-draft id so uploaded files survive a refresh (independent of general autosave, which
+  // does not exist yet). Persisted in localStorage; the upload zones re-list their files against it.
+  useEffect(() => {
+    if (!UPLOADS_ENABLED) return;
+    try {
+      const KEY = "vraelis:check-draft-key";
+      let k = localStorage.getItem(KEY);
+      if (!k) { k = crypto.randomUUID(); localStorage.setItem(KEY, k); }
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDraftKey(k);
+    } catch { /* no storage: uploads just won't persist across refresh */ }
   }, []);
 
   // Auto-dismiss the undo toast so a removed version can't be undone forever.
@@ -119,6 +150,12 @@ export default function NewCheckPage() {
   const filled = versions.filter((v) => v.text.trim());
   const shownVersions = filled.length || 1;
   const unit = format === "short" ? "option" : "version";
+
+  // Upload aggregates. Zone keys encode the role, so the summary can split outputs from context, and the
+  // CTA can block while anything is still uploading.
+  const readyOut = Object.entries(zoneItems).filter(([k]) => k.startsWith("candidate_output")).flatMap(([, v]) => v).filter((i) => i.status === "ready");
+  const readyCtx = Object.entries(zoneItems).filter(([k]) => k.startsWith("supporting_context")).flatMap(([, v]) => v).filter((i) => i.status === "ready");
+  const anyUploading = Object.values(zoneItems).flat().some((i) => i.status === "uploading");
 
   async function submit() {
     setErr(null);
@@ -170,6 +207,8 @@ export default function NewCheckPage() {
   const summary: [string, string][] = [
     ["Review type", active?.label ?? "Custom"],
     [format === "short" ? "Options" : "Versions", `${shownVersions}`],
+    ...(readyOut.length ? [["Uploads", describeUploads(readyOut)] as [string, string]] : []),
+    ...(readyCtx.length ? [["Supporting context", describeUploads(readyCtx)] as [string, string]] : []),
     ["Instruction fit", hasTask ? "On" : "Off"],
     ["Live output", published ? "On" : "Off"],
     ...(balance != null ? [["Your balance", balance.toLocaleString()] as [string, string]] : []),
@@ -285,6 +324,11 @@ export default function NewCheckPage() {
                       maxLength={50000}
                       style={{ ...inputStyle, minHeight: format === "short" ? 42 : 90, resize: format === "short" ? "none" : "vertical", overflow: "auto", fontFamily: "var(--font-sans)", lineHeight: 1.55, borderColor: focused === tk ? "var(--acc)" : "var(--line-2)", boxShadow: focused === tk ? "0 0 0 3px var(--acc-soft)" : "none" }}
                     />
+                    {UPLOADS_ENABLED && draftKey ? (
+                      <div style={{ marginTop: 10 }}>
+                        <UploadZone draftKey={draftKey} role="candidate_output" versionKey={v.id} onItemsChange={(its) => setZoneItems((z) => ({ ...z, [`candidate_output:${v.id}`]: its }))} />
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}
@@ -297,9 +341,17 @@ export default function NewCheckPage() {
             </div>
           </section>
 
-          {/* 4 · evaluation details (check name always shown; audience + criteria collapsed by default) */}
+          {/* supporting context (uploads only): informs judgment, never scored as a version */}
+          {UPLOADS_ENABLED && draftKey ? (
+            <section>
+              <SectionHead n={4} title="Supporting context" hint="Optional. References, requirements, brand guides, source material, or examples the output was expected to follow. It informs the judgment but is never scored as a version." />
+              <UploadZone draftKey={draftKey} role="supporting_context" onItemsChange={(its) => setZoneItems((z) => ({ ...z, ["supporting_context:ctx"]: its }))} />
+            </section>
+          ) : null}
+
+          {/* evaluation details (check name always shown; audience + criteria collapsed by default) */}
           <section>
-            <SectionHead n={4} title="Evaluation details" hint="Optional context that sharpens the scoring. Skip it for a fast check." />
+            <SectionHead n={UPLOADS_ENABLED ? 5 : 4} title="Evaluation details" hint="Optional context that sharpens the scoring. Skip it for a fast check." />
             <div style={{ display: "grid", gap: 16 }}>
               <div>
                 <label style={lab} htmlFor="ck-title">Check name <span style={{ textTransform: "none", color: "var(--fg-5)" }}>(optional)</span></label>
@@ -352,12 +404,12 @@ export default function NewCheckPage() {
               ))}
             </div>
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 14 }}>
-              <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || filled.length < 1}
-                style={{ width: "100%", justifyContent: "center", height: 48, fontSize: 15, fontWeight: 600, opacity: busy || filled.length < 1 ? 0.6 : 1 }}>
-                {ctaText} {!busy ? <span aria-hidden>→</span> : null}
+              <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || filled.length < 1 || anyUploading}
+                style={{ width: "100%", justifyContent: "center", height: 48, fontSize: 15, fontWeight: 600, opacity: busy || filled.length < 1 || anyUploading ? 0.6 : 1 }}>
+                {anyUploading ? "Uploading…" : ctaText} {!busy && !anyUploading ? <span aria-hidden>→</span> : null}
               </button>
               <p style={{ fontSize: 11.5, color: "var(--fg-4)", textAlign: "center", margin: "10px 0 0", lineHeight: 1.5 }}>
-                You&apos;re only charged after a successful check.{balance === 0 ? <> Out of credits? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Buy more</a>.</> : null}
+                {anyUploading ? "Finish processing your uploads before running the check." : <>You&apos;re only charged after a successful check.{balance === 0 ? <> Out of credits? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Buy more</a>.</> : null}</>}
               </p>
             </div>
           </div>
