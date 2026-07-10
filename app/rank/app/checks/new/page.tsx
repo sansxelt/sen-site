@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { takeFreeCheckDraft } from "@/lib/free-check-draft";
@@ -20,6 +20,7 @@ const OUTPUT_OPTIONS: OutputOption[] = [
   { key: "other", label: "Custom", criteria: "clarity, instruction fit, effectiveness, risk", hint: "Anything else. Judged on general quality and instruction fit." },
 ];
 const MAX_CANDIDATES = 8;
+type Version = { id: string; text: string; name: string };
 
 const lab = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase" as const, color: "var(--fg-4)", display: "block", marginBottom: 8 };
 const help = { fontSize: 12, color: "var(--fg-4)", margin: "6px 0 0", lineHeight: 1.5 };
@@ -43,7 +44,12 @@ export default function NewCheckPage() {
   const [title, setTitle] = useState("");
   const [audience, setAudience] = useState("");
   const [goal, setGoal] = useState("");
-  const [candidates, setCandidates] = useState<string[]>([""]); // start with one; add more to compare
+  const idRef = useRef(1); // stable per-version ids, so React keys survive add/remove/reorder
+  const [versions, setVersions] = useState<Version[]>([{ id: "0", text: "", name: "" }]); // start with one; add more to compare
+  const [format, setFormat] = useState<"short" | "full">("full"); // stored with the draft state below
+  const [undo, setUndo] = useState<{ v: Version; index: number } | null>(null);
+  const [focused, setFocused] = useState<string | null>(null);
+  const [justAddedId, setJustAddedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [prefilled, setPrefilled] = useState(false);
@@ -66,7 +72,7 @@ export default function NewCheckPage() {
       // Strict Mode / SSR hydration.
       /* eslint-disable react-hooks/set-state-in-effect */
       if (OUTPUT_OPTIONS.some((o) => o.key === d.outputType)) setOutputType(d.outputType);
-      if (d.candidates.length) setCandidates(d.candidates);
+      if (d.candidates.length) setVersions(d.candidates.map((text) => ({ id: String(idRef.current++), text, name: "" })));
       if (d.title) setTitle(d.title);
       setPrefilled(true);
       /* eslint-enable react-hooks/set-state-in-effect */
@@ -78,16 +84,41 @@ export default function NewCheckPage() {
     fetch("/api/credits/balance").then((r) => (r.ok ? r.json() : null)).then((j) => { if (typeof j?.balance === "number") setBalance(j.balance); }).catch(() => {});
   }, []);
 
+  // Auto-dismiss the undo toast so a removed version can't be undone forever.
+  useEffect(() => {
+    if (!undo) return;
+    const t = setTimeout(() => setUndo(null), 6000);
+    return () => clearTimeout(t);
+  }, [undo]);
+
   async function pasteRequest() {
     try { const t = await navigator.clipboard.readText(); if (t) setOriginalRequest(t.slice(0, 20000)); } catch { /* clipboard blocked; user can paste manually */ }
   }
 
-  function setCandidate(i: number, v: string) { setCandidates((c) => c.map((x, j) => (j === i ? v : x))); }
-  function addCandidate() { setCandidates((c) => (c.length >= MAX_CANDIDATES ? c : [...c, ""])); }
-  function removeCandidate(i: number) { setCandidates((c) => (c.length <= 1 ? c : c.filter((_, j) => j !== i))); }
+  function setVersionText(i: number, v: string) { setVersions((xs) => xs.map((x, j) => (j === i ? { ...x, text: v } : x))); }
+  function setVersionName(i: number, v: string) { setVersions((xs) => xs.map((x, j) => (j === i ? { ...x, name: v } : x))); }
+  function addVersion() {
+    if (versions.length >= MAX_CANDIDATES) return;
+    const id = String(idRef.current++);
+    setJustAddedId(id);
+    setVersions((xs) => (xs.length >= MAX_CANDIDATES ? xs : [...xs, { id, text: "", name: "" }]));
+  }
+  function removeVersion(i: number) {
+    if (versions.length <= 1) return;                 // Version A is never removable as the sole version
+    const removed = versions[i];
+    setVersions((xs) => xs.filter((_, j) => j !== i)); // remaining versions re-letter by index automatically
+    if (removed.text.trim()) setUndo({ v: removed, index: i }); // offer Undo only when content is actually lost
+  }
+  function undoRemove() {
+    if (!undo) return;
+    const { v, index } = undo;
+    setVersions((xs) => { const n = [...xs]; n.splice(index, 0, v); return n; });
+    setUndo(null);
+  }
 
-  const filled = candidates.map((t) => t.trim()).filter(Boolean);
+  const filled = versions.filter((v) => v.text.trim());
   const shownVersions = filled.length || 1;
+  const unit = format === "short" ? "option" : "version";
 
   async function submit() {
     setErr(null);
@@ -104,7 +135,7 @@ export default function NewCheckPage() {
           goal: goal.trim() || undefined,
           original_request: originalRequest.trim() || undefined,
           context: published ? "published" : undefined,
-          candidates: filled.map((text) => ({ text })),
+          candidates: filled.map((v) => ({ text: v.text.trim() })),
         }),
       });
       if (res.status === 401) { signIn(undefined, { callbackUrl: "/app/checks/new" }); return; }
@@ -133,11 +164,12 @@ export default function NewCheckPage() {
   const ctaText = busy ? "Starting…"
     : published ? "Find the highest-impact fix"
     : hasTask ? (filled.length > 1 ? "Compare instruction fit" : "Check instruction fit")
-    : filled.length > 1 ? `Compare ${filled.length} versions` : "Run check";
+    : filled.length > 1 ? `Compare ${filled.length} ${unit}s`
+    : format === "short" ? "Check option" : "Check output";
 
   const summary: [string, string][] = [
     ["Review type", active?.label ?? "Custom"],
-    ["Versions", `${shownVersions}`],
+    [format === "short" ? "Options" : "Versions", `${shownVersions}`],
     ["Instruction fit", hasTask ? "On" : "Off"],
     ["Live output", published ? "On" : "Off"],
     ...(balance != null ? [["Your balance", balance.toLocaleString()] as [string, string]] : []),
@@ -205,40 +237,64 @@ export default function NewCheckPage() {
               value={originalRequest}
               onChange={(e) => setOriginalRequest(e.target.value)}
               onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = `${Math.min(t.scrollHeight, 360)}px`; }}
+              onFocus={() => setFocused("req")} onBlur={() => setFocused((f) => (f === "req" ? null : f))}
               placeholder="Paste the prompt or task the AI was originally given."
               maxLength={20000}
-              style={{ ...inputStyle, minHeight: 70, resize: "none", overflow: "auto", fontFamily: "var(--font-sans)", lineHeight: 1.55 }}
+              style={{ ...inputStyle, minHeight: 70, resize: "none", overflow: "auto", fontFamily: "var(--font-sans)", lineHeight: 1.55, borderColor: focused === "req" ? "var(--acc)" : "var(--line-2)", boxShadow: focused === "req" ? "0 0 0 3px var(--acc-soft)" : "none" }}
             />
             {originalRequest.length > 18000 ? <p style={{ fontSize: 11.5, color: "var(--fg-4)", margin: "6px 0 0", textAlign: "right" }}>{originalRequest.length.toLocaleString()} / 20,000</p> : null}
           </section>
 
-          {/* 3 · add outputs (moved high, so the actual inputs come before the optional context) */}
+          {/* 3 · add outputs (moved high; version cards + short/full format) */}
           <section>
-            <SectionHead n={3} title="Add your outputs" hint="Paste one version, or several to compare side by side. Up to 8." />
-            <div style={{ display: "grid", gap: 12 }}>
-              {candidates.map((c, i) => (
-                <div key={i} style={{ position: "relative" }}>
-                  <div style={{ position: "absolute", top: 10, left: 12, fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)" }}>{String.fromCharCode(65 + i)}</div>
-                  <textarea
-                    value={c}
-                    onChange={(e) => setCandidate(i, e.target.value)}
-                    placeholder={i === 0 ? "Paste the first version here" : "Paste another version to compare"}
-                    rows={4}
-                    maxLength={50000}
-                    style={{ ...inputStyle, paddingLeft: 30, paddingTop: 10, resize: "vertical", fontFamily: "var(--font-sans)", lineHeight: 1.55 }}
-                  />
-                  {candidates.length > 1 ? (
-                    <button type="button" onClick={() => removeCandidate(i)} aria-label={`Remove version ${String.fromCharCode(65 + i)}`}
-                      style={{ position: "absolute", top: 8, right: 8, width: 24, height: 24, borderRadius: 6, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-4)", cursor: "pointer", fontSize: 13, lineHeight: 1 }}>×</button>
-                  ) : null}
-                </div>
+            <SectionHead n={3} title="Add your outputs" hint="Paste one, or several to compare side by side. Up to 8." />
+            {/* format control */}
+            <div style={{ display: "inline-flex", gap: 4, padding: 4, borderRadius: "var(--r-sm)", background: "var(--bg-2)", border: "1px solid var(--line-2)", marginBottom: 16 }}>
+              {([["short", "Short options"], ["full", "Full responses"]] as ["short" | "full", string][]).map(([m, label]) => (
+                <button key={m} type="button" onClick={() => setFormat(m)}
+                  style={{ cursor: "pointer", padding: "6px 14px", borderRadius: "calc(var(--r-sm) - 3px)", border: "none", fontSize: 13, fontWeight: 600, background: format === m ? "var(--bg-1)" : "transparent", color: format === m ? "var(--fg-1)" : "var(--fg-4)", boxShadow: format === m ? "var(--shadow-sm)" : "none" }}>{label}</button>
               ))}
             </div>
-            {candidates.length < MAX_CANDIDATES ? (
-              <button type="button" onClick={addCandidate} style={{ marginTop: 10, padding: "8px 14px", borderRadius: "var(--r-sm)", border: "1px dashed var(--line-2)", background: "transparent", color: "var(--fg-3)", cursor: "pointer", fontSize: 13 }}>
-                + Add another version
-              </button>
-            ) : null}
+            {/* version cards */}
+            <div style={{ display: "grid", gap: 12 }}>
+              {versions.map((v, i) => {
+                const L = String.fromCharCode(65 + i);
+                const tk = `t${v.id}`, nk = `n${v.id}`;
+                const near = v.text.length > 45000;
+                return (
+                  <div key={v.id} style={{ border: `1px solid ${focused === tk ? "var(--acc-line)" : "var(--line-2)"}`, borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: 12, transition: "border-color .12s" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-1)", flex: "none" }}>Version {L}</span>
+                      <input value={v.name} onChange={(e) => setVersionName(i, e.target.value)} onFocus={() => setFocused(nk)} onBlur={() => setFocused((f) => (f === nk ? null : f))} placeholder="Name (optional)" maxLength={60}
+                        style={{ flex: 1, minWidth: 0, background: "transparent", border: "none", borderBottom: `1px solid ${focused === nk ? "var(--acc)" : "transparent"}`, outline: "none", fontSize: 12.5, color: "var(--fg-2)", fontFamily: "var(--font-sans)", padding: "2px 0" }} />
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: near ? "var(--err)" : "var(--fg-5)", flex: "none" }}>{v.text.length.toLocaleString()}</span>
+                      {versions.length > 1 ? (
+                        <button type="button" onClick={() => removeVersion(i)} aria-label={`Remove version ${L}`}
+                          style={{ flex: "none", width: 24, height: 24, borderRadius: 6, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-4)", cursor: "pointer", fontSize: 13, lineHeight: 1 }}>×</button>
+                      ) : null}
+                    </div>
+                    <textarea
+                      value={v.text}
+                      onChange={(e) => setVersionText(i, e.target.value)}
+                      onInput={(e) => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = `${Math.min(t.scrollHeight, 360)}px`; }}
+                      onKeyDown={format === "short" ? (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (v.text.trim() && versions.length < MAX_CANDIDATES) addVersion(); } } : undefined}
+                      onFocus={() => setFocused(tk)} onBlur={() => setFocused((f) => (f === tk ? null : f))}
+                      autoFocus={v.id === justAddedId}
+                      placeholder={format === "short" ? (i === 0 ? "Your first option (headline, subject line, CTA…)" : "Another option") : (i === 0 ? "Paste the first version here" : "Paste another version to compare")}
+                      rows={format === "short" ? 1 : 3}
+                      maxLength={50000}
+                      style={{ ...inputStyle, minHeight: format === "short" ? 42 : 90, resize: format === "short" ? "none" : "vertical", overflow: "auto", fontFamily: "var(--font-sans)", lineHeight: 1.55, borderColor: focused === tk ? "var(--acc)" : "var(--line-2)", boxShadow: focused === tk ? "0 0 0 3px var(--acc-soft)" : "none" }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
+              {versions.length < MAX_CANDIDATES ? (
+                <button type="button" onClick={addVersion} className="btn btn--ghost" style={{ fontSize: 13, padding: "8px 14px" }}>+ Add version</button>
+              ) : null}
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)" }}>{versions.length} / {MAX_CANDIDATES}</span>
+            </div>
           </section>
 
           {/* 4 · evaluation details (check name always shown; audience + criteria collapsed by default) */}
@@ -307,6 +363,14 @@ export default function NewCheckPage() {
           </div>
         </div>
       </div>
+
+      {/* undo toast for a removed populated version (non-blocking; not a modal) */}
+      {undo ? (
+        <div role="status" style={{ position: "fixed", left: "50%", bottom: 24, transform: "translateX(-50%)", zIndex: 60, display: "flex", alignItems: "center", gap: 16, background: "var(--fg-1)", color: "var(--bg-1)", padding: "11px 18px", borderRadius: 10, boxShadow: "var(--shadow-lg)", fontSize: 13.5, maxWidth: "calc(100vw - 32px)" }}>
+          <span>Version {String.fromCharCode(65 + undo.index)} removed</span>
+          <button type="button" onClick={undoRemove} style={{ background: "none", border: "none", color: "var(--acc)", cursor: "pointer", fontWeight: 700, fontSize: 13.5, fontFamily: "inherit" }}>Undo</button>
+        </div>
+      ) : null}
     </div>
   );
 }
