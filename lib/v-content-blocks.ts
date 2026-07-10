@@ -21,12 +21,13 @@ export type Block =
 // real model request succeeds, in a later slice).
 export type RequestedCapability = "visual_requested" | "native_document_requested" | "text_requested";
 export type PreparedAttachment = {
-  attachmentId: string; role: SnapshotAttachment["role"]; versionKey: string | null;
+  attachmentId: string; filename: string; role: SnapshotAttachment["role"]; versionKey: string | null;
   kind: string; mime: string; blockType: Block["type"]; requested: RequestedCapability; sizeBytes: number; pageCount: number | null;
+  index: number; // 1-based within its group (the image_index/document_index the model was shown)
 };
 export type ContentBuildError = "request_build_failed" | "request_too_large";
 export type ContentBuildResult =
-  | { ok: true; blocks: Block[]; prepared: PreparedAttachment[]; estTokens: number; logSummary: string }
+  | { ok: true; blocks: Block[]; prepared: PreparedAttachment[]; textById: Record<string, string>; estTokens: number; logSummary: string }
   | { ok: false; error: ContentBuildError; message: string; attachmentId?: string };
 
 const MAX_TEXT_FILE = 50_000;             // bounded txt/md content
@@ -57,6 +58,7 @@ const labelFor = (a: SnapshotAttachment, index: number, versionLabel: string | n
 export async function buildEvaluationContent(snapshot: EvaluationSnapshot): Promise<ContentBuildResult> {
   const blocks: Block[] = [];
   const prepared: PreparedAttachment[] = [];
+  const textById: Record<string, string> = {}; // extracted text per text attachment (for evidence-excerpt validation)
   let estTokens = OVERHEAD_TOKENS + txtTokens(snapshot.context.text.length) + snapshot.candidates.reduce((n, c) => n + txtTokens(c.text.length), 0);
 
   // Pre-flight the budget with metadata only (no downloads) so an oversized request is rejected cheaply.
@@ -76,16 +78,18 @@ export async function buildEvaluationContent(snapshot: EvaluationSnapshot): Prom
       blocks.push({ type: "text", text: labelFor(a, i, versionLabel) });
       const bytes = await downloadCheckAttachment(a.storagePath);
       if (!bytes) return "request_build_failed";
+      const base = { attachmentId: a.attachmentId, filename: a.filename, role: a.role, versionKey: a.versionKey, kind: a.kind, mime: a.mime, sizeBytes: a.sizeBytes, pageCount: a.pageCount, index: i };
       if (a.kind === "image") {
         blocks.push({ type: "image", source: { type: "base64", media_type: a.mime, data: bytes.toString("base64") } });
-        prepared.push({ attachmentId: a.attachmentId, role: a.role, versionKey: a.versionKey, kind: a.kind, mime: a.mime, blockType: "image", requested: "visual_requested", sizeBytes: a.sizeBytes, pageCount: a.pageCount });
+        prepared.push({ ...base, blockType: "image", requested: "visual_requested" });
       } else if (a.kind === "pdf") {
         blocks.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: bytes.toString("base64") } });
-        prepared.push({ attachmentId: a.attachmentId, role: a.role, versionKey: a.versionKey, kind: a.kind, mime: a.mime, blockType: "document", requested: "native_document_requested", sizeBytes: a.sizeBytes, pageCount: a.pageCount });
+        prepared.push({ ...base, blockType: "document", requested: "native_document_requested" });
       } else {
-        const content = bytes.toString("utf8").slice(0, MAX_TEXT_FILE);
-        blocks.push({ type: "text", text: `--- file content (${a.filename}) ---\n${content}\n--- end ---` });
-        prepared.push({ attachmentId: a.attachmentId, role: a.role, versionKey: a.versionKey, kind: a.kind, mime: a.mime, blockType: "text", requested: "text_requested", sizeBytes: a.sizeBytes, pageCount: a.pageCount });
+        const text = bytes.toString("utf8").slice(0, MAX_TEXT_FILE);
+        textById[a.attachmentId] = text;
+        blocks.push({ type: "text", text: `--- file content (${a.filename}) ---\n${text}\n--- end ---` });
+        prepared.push({ ...base, blockType: "text", requested: "text_requested" });
       }
       i++;
     }
@@ -107,5 +111,5 @@ export async function buildEvaluationContent(snapshot: EvaluationSnapshot): Prom
 
   // Log-safe: ids/mime/size/pages/role/blockType/budget only — never content, base64, paths, or filenames beyond ids.
   const logSummary = `blocks=${blocks.length} est_tokens=${estTokens} attachments=[${prepared.map((p) => `${p.attachmentId.slice(0, 8)}:${p.mime}:${p.sizeBytes}b:${p.pageCount ?? "-"}pg:${p.blockType}`).join(", ")}]`;
-  return { ok: true, blocks, prepared, estTokens, logSummary };
+  return { ok: true, blocks, prepared, textById, estTokens, logSummary };
 }

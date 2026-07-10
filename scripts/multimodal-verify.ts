@@ -41,19 +41,21 @@ async function main() {
       const s = await snap.buildEvaluationSnapshot(owner, draftKey, versions, contextText, expected);
       if (!s.ok) { report.push({ case: name, result: "snapshot_error", error: s.error }); return; }
       // No attachments -> legacy text-only path (no multimodal content). With attachments -> content blocks.
-      let content: { blocks: unknown[]; prepared: { attachmentId: string; kind: string }[]; estTokens: number } | null = null;
+      let content: { blocks: unknown[]; prepared: { attachmentId: string; kind: string }[]; textById: Record<string, string>; estTokens: number } | null = null;
       if (seeds.length) {
         const c = await cbmod.buildEvaluationContent(s.snapshot);
         if (!c.ok) { report.push({ case: name, result: "content_error", error: c.error }); return; }
         content = c;
       }
-      const result = await ev.evaluateOutput({ outputType: outputType as never, candidates: versions.map((v) => ({ text: v.text })), originalRequest, attachments: content ? { blocks: content.blocks as never, prepared: content.prepared as never } : undefined });
+      const result = await ev.evaluateOutput({ outputType: outputType as never, candidates: versions.map((v) => ({ text: v.text })), originalRequest, attachments: content ? { blocks: content.blocks as never, prepared: content.prepared as never, textById: content.textById } : undefined });
       if (!result) { report.push({ case: name, result: "model_unavailable", note: "evaluateOutput returned null (invalid/placeholder key) — run with the prod key", snapshot_hash: s.snapshot.hash, budget_tokens: content?.estTokens ?? null, block_count: content?.blocks.length ?? 0 }); return; }
       // Tolerant semantic detection of planted concepts (not exact strings). Only meaningful when files exist.
       const hay = JSON.stringify({ candidates: result.candidates.map((x) => ({ summary: x.summary, scores: x.scores })), flags: result.flags, rec: result.recommendation }).toLowerCase();
       const detected = conceptGroups.map((g) => g.some((kw) => hay.includes(kw)));
-      const capabilities = (content?.prepared ?? []).map((p) => ({ id: p.attachmentId.slice(0, 8), kind: p.kind, capability: p.kind === "image" ? "visual" : p.kind === "pdf" ? "text_and_visual" : "text" }));
-      report.push({ case: name, result: "real_model", model: process.env.VRAELIS_EVAL_MODEL, candidates_scored: result.candidates.length, context_attachments: s.snapshot.context.attachments.length, visual_concepts_expected: conceptGroups.length, visual_concepts_detected: detected.filter(Boolean).length, passed: conceptGroups.length === 0 ? true : detected.some(Boolean), capabilities, budget_tokens: content?.estTokens ?? null, snapshot_hash: s.snapshot.hash });
+      // Finalized capabilities + validated evidence come from the RESULT (set after schema+evidence validation).
+      const capabilities = (result.attachmentCapabilities ?? []).map((p) => ({ id: p.attachment_id.slice(0, 8), kind: p.kind, capability: p.capability }));
+      const evidence = result.attachmentEvidence ?? [];
+      report.push({ case: name, result: "real_model", model: process.env.VRAELIS_EVAL_MODEL, candidates_scored: result.candidates.length, context_attachments: s.snapshot.context.attachments.length, visual_concepts_expected: conceptGroups.length, visual_concepts_detected: detected.filter(Boolean).length, passed: conceptGroups.length === 0 ? true : detected.some(Boolean), capabilities, evidence_validated: evidence.length, evidence_bases: [...new Set(evidence.map((e) => e.basis))], budget_tokens: content?.estTokens ?? null, snapshot_hash: s.snapshot.hash });
     } catch (e) {
       report.push({ case: name, result: "error", message: (e as Error).message });
     } finally {

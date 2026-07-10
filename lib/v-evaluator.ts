@@ -174,13 +174,17 @@ export type EvalResult = {
   context?: CheckContext;           // rides the stored result jsonb; drives report framing
   originalRequest?: string;         // the task the AI was given (when supplied); rides the jsonb, shown on the report
   taskFit?: TaskFit;                // ship / revise / fails-task verdict (only when a request was supplied)
+  // Attachment audit (multimodal checks only). All redacted -- never storage paths / signed URLs / base64.
+  attachmentEvidence?: import("./v-evidence").AttachmentEvidence[]; // model evidence VALIDATED against the snapshot
+  attachmentCapabilities?: { attachment_id: string; kind: string; capability: "visual" | "text_and_visual" | "text" | "text_only_fallback" | "failed" }[];
+  attachmentSummary?: { attachment_id: string; role: string; version_key: string | null; index: number; mime: string; size_bytes: number; page_count: number | null }[];
 };
 
 export type EvalCandidate = { label?: string; text: string };
 // When a check has attachments, the caller (route/harness) builds the snapshot + content blocks and
 // passes them here; evaluateOutput then sends a multimodal message instead of the text-only string.
 // candidates order MUST match the snapshot candidate order so the A/B labels line up.
-export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext; originalRequest?: string; attachments?: { blocks: import("./v-content-blocks").Block[]; prepared: import("./v-content-blocks").PreparedAttachment[] } };
+export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext; originalRequest?: string; attachments?: { blocks: import("./v-content-blocks").Block[]; prepared: import("./v-content-blocks").PreparedAttachment[]; textById?: Record<string, string> } };
 export type PreparedCandidate = { index: number; label: string; text: string; normText: string };
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -247,6 +251,10 @@ const EvalSchema = z.object({
     contradictions: z.array(z.string()),      // anything that directly contradicts the request
     fix: z.string(),                          // single highest-impact task-compliance change
   })).optional(),
+  // NOTE: a model-produced structured `evidence` field was tried here but the extra structured-output
+  // surface pushed constrained decoding past the 40s timeout on every check. Reverted. The evidence
+  // VALIDATOR (lib/v-evidence.ts) is kept + tested for a later, lighter wiring (e.g. a second lean pass
+  // or free-form refs normalized), so the model never becomes authoritative about attachment metadata.
 });
 
 // Trim, cap at MAX_CANDIDATES, and assign stable letters + normalized text. Drops empty-text candidates
@@ -647,6 +655,17 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     const result = finalizeEvaluation(outputType, prepared, raw, MODEL, hasRequest);
     result.context = published ? "published" : "pre_ship";
     if (task) result.originalRequest = task;
+
+    // Multimodal: validate the model's evidence against the authoritative prepared metadata (never the
+    // model's claims), finalize per-attachment capability now that a validated result exists, and attach
+    // a redacted attachment summary. All are additive + redacted (no paths / URLs / base64).
+    if (useMultimodal && mm) {
+      // Finalize per-attachment capability NOW that a validated result exists (not on upload / mere HTTP
+      // success), and attach a redacted summary. Model-produced structured evidence is deferred (see the
+      // schema note above); the validator in lib/v-evidence.ts is ready for its lighter wiring.
+      result.attachmentCapabilities = mm.prepared.map((p) => ({ attachment_id: p.attachmentId, kind: p.kind, capability: (p.kind === "image" ? "visual" : p.kind === "pdf" ? "text_and_visual" : "text") as "visual" | "text_and_visual" | "text" }));
+      result.attachmentSummary = mm.prepared.map((p) => ({ attachment_id: p.attachmentId, role: p.role, version_key: p.versionKey, index: p.index, mime: p.mime, size_bytes: p.sizeBytes, page_count: p.pageCount }));
+    }
     return result;
   } catch (e) {
     console.error("evaluateOutput failed:", e);
