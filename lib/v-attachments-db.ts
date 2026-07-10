@@ -1,6 +1,9 @@
-// DB access for v_check_attachments. All reads/writes are tenant-scoped by user_id (never trust a
-// client-supplied owner). Storage bytes are managed in lib/v-storage.ts; this tracks the metadata rows
-// and the draft->check binding. Uploading rows here never charges a credit.
+// DB access for v_check_attachments. This app uses NextAuth (not Supabase Auth), so every call goes
+// through the SERVICE-ROLE client with an EXPLICIT owner filter (user_id = the NextAuth session email)
+// on every query -- never trust a client-supplied owner. Defense in depth: RLS is enabled on the table
+// with NO permissive policies (sql/ai-check-attachments-rls.sql), so the anon/public key can never read
+// a row even if a future route forgets its owner filter (the service role bypasses RLS). Storage bytes
+// live in lib/v-storage.ts (private bucket + signed URLs). Uploading rows here never charges a credit.
 
 import crypto from "crypto";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";

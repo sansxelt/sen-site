@@ -1,0 +1,23 @@
+-- Defense in depth for private attachment metadata.
+--
+-- IMPORTANT architectural note: this app authenticates with NextAuth, NOT Supabase Auth. There is no
+-- Supabase-authenticated user in any request, so auth.uid()-based RLS policies would never match any
+-- client and would be security theater (they'd look like protection while protecting nothing). Every
+-- DB access goes through the SERVICE-ROLE client, which has BYPASSRLS, with an explicit owner filter
+-- (user_id = the NextAuth session email) applied in code.
+--
+-- The backstop that is actually meaningful here: enable RLS with NO permissive policies. The service
+-- role keeps working (it bypasses RLS); the anon / public key -- if any future route ever accidentally
+-- uses it instead of the service-role client -- can read ZERO rows. So a lookup by attachment id that
+-- forgot its owner filter still cannot leak another user's metadata through the public client.
+--
+-- Storage is protected the same way in spirit: the bucket vraelis-check-attachments is PRIVATE (no
+-- public URLs; anon has no read access), objects are namespaced under an unguessable per-user hash
+-- (users/<sha256(email)>/<draft>/<uuid>), and reads are only ever served via short-lived signed URLs
+-- minted by the service role after an owner check. Supabase storage.objects already has RLS enabled by
+-- default, and a private bucket with no public policy denies anon -- so no extra storage policy is
+-- needed for this NextAuth architecture (an auth.uid() storage policy would, again, match nothing).
+
+alter table v_check_attachments enable row level security;
+-- No policies on purpose: anon/authenticated get no rows; the service role bypasses RLS. Owner scoping
+-- stays in application code (see lib/v-attachments-db.ts). RLS here is the second layer, not the first.
