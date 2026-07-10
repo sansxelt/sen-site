@@ -177,7 +177,10 @@ export type EvalResult = {
 };
 
 export type EvalCandidate = { label?: string; text: string };
-export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext; originalRequest?: string };
+// When a check has attachments, the caller (route/harness) builds the snapshot + content blocks and
+// passes them here; evaluateOutput then sends a multimodal message instead of the text-only string.
+// candidates order MUST match the snapshot candidate order so the A/B labels line up.
+export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext; originalRequest?: string; attachments?: { blocks: import("./v-content-blocks").Block[]; prepared: import("./v-content-blocks").PreparedAttachment[] } };
 export type PreparedCandidate = { index: number; label: string; text: string; normText: string };
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -571,12 +574,15 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
 
   const published = input.context === "published";
   const task = (input.originalRequest || "").trim().slice(0, 20000);
-  const PROMPT =
+  // Split so the TEXT-ONLY prompt stays byte-identical (promptPrefix + candidatesTextOnly + promptSuffix)
+  // while the multimodal path swaps the candidates text for labeled content blocks.
+  const promptPrefix =
     `You are an evaluation engine reviewing AI-generated ${typeLabel} ${published ? "that is already published and live in production" : "for the team about to ship it"}. Give an honest, specific assessment. You are an AI assessment, not a human judgment and not a guarantee.\n\n` +
     (ctx ? `${ctx}\n\n` : "") +
     (task ? `The AI was ORIGINALLY ASKED to produce the following. Judge INSTRUCTION FIT against this, and judge ONLY against what is actually asked here (never penalize for things the request never mentions):\n"""\n${task}\n"""\n\n` : "") +
-    `Score each version on these criteria, 0 to 100 (higher is better). Use the exact criterion key:\n${criteriaBlock}\n\n` +
-    (multi ? `There are ${prepared.length} versions to compare:\n\n${candidatesBlock}\n\n` : `One version to review:\n\n${candidatesBlock}\n\n`) +
+    `Score each version on these criteria, 0 to 100 (higher is better). Use the exact criterion key:\n${criteriaBlock}\n\n`;
+  const candidatesTextOnly = (multi ? `There are ${prepared.length} versions to compare:\n\n${candidatesBlock}\n\n` : `One version to review:\n\n${candidatesBlock}\n\n`);
+  const promptSuffix =
     `Return:\n` +
     `- candidates: for EACH version, its label (e.g. "A"), a one-line summary, and a score for EVERY criterion above (exact key) with a one-line note.\n` +
     `- flags: specific line-level problems. For each: candidate (the version letter), span (the EXACT problem text copied WORD FOR WORD from that version, never paraphrased), issue (one of: dismissive, overpromise, confusing, risky, inaccurate, tone, other), severity (low, medium, high), why (one line), and fix (a concrete rewrite of just that span).\n` +
@@ -601,6 +607,18 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     ` The system assigns each flag's severity from its content, so a rough severity guess is fine.` +
     `\n\n` +
     `Rules: copy every span verbatim from the version text, and do not invent or paraphrase spans. Score honestly against the criteria. Write plainly and do not use em dashes.`;
+  const PROMPT = promptPrefix + candidatesTextOnly + promptSuffix; // TEXT-ONLY: identical to the previous single string
+
+  // Multimodal path: candidate text lives INSIDE the labeled content blocks, so the intro replaces the
+  // text-only candidates block; the schema suffix is unchanged. Text-only checks never touch this.
+  const mm = input.attachments;
+  const useMultimodal = !!(mm && mm.blocks.length);
+  const multimodalIntro = multi
+    ? `There are ${prepared.length} versions to compare, shown below with their attachments. Each candidate and every attachment is clearly labeled; score each candidate by its Version letter, and when a finding comes from an attachment, say which attachment and (for a document) which page.\n\n`
+    : `One version to review, shown below with its attachments; it and every attachment is clearly labeled.\n\n`;
+  const content = useMultimodal
+    ? [{ type: "text" as const, text: promptPrefix + multimodalIntro }, ...mm!.blocks, { type: "text" as const, text: promptSuffix }]
+    : PROMPT;
 
   try {
     // maxRetries: 0 (unlike v-themes/v-ai): a check charges a credit and runs behind a
@@ -610,12 +628,12 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     const client = new Anthropic({ apiKey: API_KEY, timeout: 40_000, maxRetries: 0 });
     const res = await client.messages.parse({
       model: MODEL,
-      max_tokens: task ? 3600 : 2600, // instruction_fit adds per-candidate output; give it headroom
+      max_tokens: useMultimodal ? 4200 : (task ? 3600 : 2600), // attachments add per-candidate output; give headroom
 
       temperature: 0,   // a rubric that means anything must be applied as identically as the
                         // model allows; temp 0 collapses most run-to-run variance (it is NOT a
                         // determinism guarantee: batching + float nondeterminism still exist).
-      messages: [{ role: "user", content: PROMPT }],
+      messages: [{ role: "user", content: content as never }],
       output_config: { format: zodOutputFormat(EvalSchema) },
     });
     const raw = res.parsed_output ?? null;

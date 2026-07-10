@@ -49,8 +49,8 @@ async function main() {
     if (r.ok) {
       const texts = r.blocks.map((b) => (b.type === "text" ? b.text : `[${b.type}]`));
       const idxCtx = texts.findIndex((t) => t.startsWith("SUPPORTING_CONTEXT"));
-      const idxA = texts.findIndex((t) => t.includes("version_key: verA") && t.startsWith("CANDIDATE_OUTPUT"));
-      const idxB = texts.findIndex((t) => t.includes("version_key: verB") && t.startsWith("CANDIDATE_OUTPUT"));
+      const idxA = texts.findIndex((t) => t.startsWith("CANDIDATE_OUTPUT") && t.includes("Version A"));
+      const idxB = texts.findIndex((t) => t.startsWith("CANDIDATE_OUTPUT") && t.includes("Version B"));
       ok("order: supporting context before candidate A before candidate B", idxCtx >= 0 && idxA > idxCtx && idxB > idxA);
       const img = r.blocks.find((b) => b.type === "image");
       ok("PNG -> native image block (base64, media_type image/png)", !!img && img.type === "image" && img.source.type === "base64" && img.source.media_type === "image/png" && img.source.data.length > 0);

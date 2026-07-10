@@ -36,10 +36,14 @@ const IMAGE_TOKENS = 1_600;              // Anthropic caps a single image near ~
 const PDF_TOKENS_PER_PAGE = 2_500;        // conservative: native PDF processing is text + visual per page
 const txtTokens = (chars: number) => Math.ceil(chars / 3.5);
 
-const labelFor = (a: SnapshotAttachment, index: number): string => {
+// Candidate letters (A, B, ...) match the labels the evaluator schema + finalize use, so the model
+// scores "A"/"B" and its evidence references line up. Context has no letter.
+const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+const labelFor = (a: SnapshotAttachment, index: number, versionLabel: string | null): string => {
   const lines = [
     a.role.toUpperCase(),
-    a.versionKey ? `version_key: ${a.versionKey}` : null,
+    versionLabel ? `version: ${versionLabel}` : null,
     `attachment_id: ${a.attachmentId}`,
     `filename: ${a.filename}`,
     a.kind === "image" ? `image_index: ${index}` : `document_index: ${index}`,
@@ -65,11 +69,11 @@ export async function buildEvaluationContent(snapshot: EvaluationSnapshot): Prom
   }
 
   // Emit one section per group, attachments in persisted order, each behind its label.
-  async function section(header: string, text: string, atts: SnapshotAttachment[]): Promise<ContentBuildError | null> {
+  async function section(header: string, text: string, atts: SnapshotAttachment[], versionLabel: string | null): Promise<ContentBuildError | null> {
     blocks.push({ type: "text", text: text.trim() ? `${header}\n${text}` : header });
     let i = 1;
     for (const a of atts) {
-      blocks.push({ type: "text", text: labelFor(a, i) });
+      blocks.push({ type: "text", text: labelFor(a, i, versionLabel) });
       const bytes = await downloadCheckAttachment(a.storagePath);
       if (!bytes) return "request_build_failed";
       if (a.kind === "image") {
@@ -89,13 +93,16 @@ export async function buildEvaluationContent(snapshot: EvaluationSnapshot): Prom
   }
 
   // Order: supporting context FIRST (reference/requirements), then each candidate. Context is never a candidate.
+  const buildFail = "A file could not be read while preparing the check. Nothing was charged. Try again.";
   if (snapshot.context.text.trim() || snapshot.context.attachments.length) {
-    const e = await section("SUPPORTING_CONTEXT (reference/requirements — never scored as a version)", snapshot.context.text, snapshot.context.attachments);
-    if (e) return { ok: false, error: e, message: "A file could not be read while preparing the check. Nothing was charged. Try again." };
+    const e = await section("SUPPORTING_CONTEXT (reference/requirements — never scored as a version)", snapshot.context.text, snapshot.context.attachments, null);
+    if (e) return { ok: false, error: e, message: buildFail };
   }
-  for (const c of snapshot.candidates) {
-    const e = await section(`CANDIDATE_OUTPUT version_key: ${c.versionKey}`, c.text, c.attachments);
-    if (e) return { ok: false, error: e, message: "A file could not be read while preparing the check. Nothing was charged. Try again." };
+  for (let ci = 0; ci < snapshot.candidates.length; ci++) {
+    const c = snapshot.candidates[ci];
+    const letter = LETTERS[ci] ?? `V${ci + 1}`;
+    const e = await section(`CANDIDATE_OUTPUT — Version ${letter}`, c.text, c.attachments, letter);
+    if (e) return { ok: false, error: e, message: buildFail };
   }
 
   // Log-safe: ids/mime/size/pages/role/blockType/budget only — never content, base64, paths, or filenames beyond ids.
