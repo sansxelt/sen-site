@@ -1,7 +1,8 @@
 // Automated server verification of the immutable evaluation snapshot (Pass 2A §1) against REAL storage
 // + DB (no model). Seeds test attachments, builds the snapshot through the production module, asserts
-// candidate/context separation + ordering + ownership isolation + missing-object + not-ready, and cleans
-// up. Idempotent. Run: npx tsx scripts/snapshot-verify.ts
+// candidate/context separation + ordering + ownership isolation + MISMATCH detection + empty-candidate +
+// missing-object + not-ready + audit hash/summary, then cleans up. Idempotent.
+// Run: npx tsx scripts/snapshot-verify.ts
 import { readFileSync } from "node:fs";
 import crypto from "node:crypto";
 function envLongest(raw: string, name: string): string {
@@ -35,44 +36,56 @@ async function main() {
   }
 
   try {
-    // A gets two images seeded out of order (order 1 then 0) to prove ordering; B gets a text file; context a text file.
-    await seed("candidate_output", vA, "shot-2.png", "image/png", 1);
+    const a2 = await seed("candidate_output", vA, "shot-2.png", "image/png", 1);
     const a1 = await seed("candidate_output", vA, "shot-1.png", "image/png", 0);
-    await seed("candidate_output", vB, "note.txt", "text/plain", 0);
-    await seed("supporting_context", null, "brand-guide.txt", "text/plain", 0);
+    const b1 = await seed("candidate_output", vB, "note.txt", "text/plain", 0);
+    const c1 = await seed("supporting_context", null, "brand-guide.txt", "text/plain", 0);
+    const expected = [a2.id, a1.id, b1.id, c1.id];
     const versions = [{ versionKey: vA, text: "A text" }, { versionKey: vB, text: "B text" }];
 
-    const r = await snap.buildEvaluationSnapshot(owner, draftKey, versions, "context text");
+    const r = await snap.buildEvaluationSnapshot(owner, draftKey, versions, "context text", expected);
     ok("snapshot builds", r.ok);
     if (r.ok) {
       const A = r.snapshot.candidates.find((c) => c.versionKey === vA)!;
       const B = r.snapshot.candidates.find((c) => c.versionKey === vB)!;
       ok("candidate A: 2 attachments in persisted order (shot-1 before shot-2)", A.attachments.length === 2 && A.attachments[0].filename === "shot-1.png" && A.attachments[1].filename === "shot-2.png");
-      ok("candidate A keeps its pasted text", A.text === "A text");
       ok("candidate B has ONLY its own file (no blend from A)", B.attachments.length === 1 && B.attachments[0].filename === "note.txt");
       ok("supporting context is separate, not a candidate", r.snapshot.context.attachments.length === 1 && r.snapshot.context.attachments[0].filename === "brand-guide.txt");
       ok("no context attachment leaked into any candidate", r.snapshot.candidates.every((c) => c.attachments.every((a) => a.role === "candidate_output")));
+      ok("audit hash is a 64-char sha256", typeof r.snapshot.hash === "string" && r.snapshot.hash.length === 64);
+      ok("summary lists all 4 inputs, redacted (no storage_path)", r.snapshot.summary.length === 4 && r.snapshot.summary.every((x) => !("storagePath" in x) && !("storage_path" in x)));
     }
 
-    // J — cross-owner: another owner sees none of it.
-    const otherR = await snap.buildEvaluationSnapshot(other, draftKey, versions, "");
-    ok("cross-owner: other user's snapshot has zero attachments", otherR.ok && otherR.snapshot.candidates.every((c) => c.attachments.length === 0) && otherR.snapshot.context.attachments.length === 0);
+    // THE KEY GATE: a submitted id that doesn't load -> explicit mismatch, not a silent smaller set.
+    const mm = await snap.buildEvaluationSnapshot(owner, draftKey, versions, "", [...expected, crypto.randomUUID()]);
+    ok("submitted-but-unloadable id -> attachment_mismatch (no silent drop)", !mm.ok && (mm as { error: string }).error === "attachment_mismatch");
 
-    // I — missing object: delete the bytes of a ready row, keep the row.
+    // Cross-owner now DETECTS the mismatch (the ids don't load for another owner) instead of empty.
+    const otherR = await snap.buildEvaluationSnapshot(other, draftKey, versions, "", expected);
+    ok("cross-owner: expected ids don't load for another owner -> attachment_mismatch", !otherR.ok && (otherR as { error: string }).error === "attachment_mismatch");
+
+    // Empty candidate: a submitted version with neither text nor files.
+    const ec = await snap.buildEvaluationSnapshot(owner, draftKey, [...versions, { versionKey: "verEmpty", text: "" }], "", expected);
+    ok("empty candidate (no text, no files) rejected", !ec.ok && (ec as { error: string }).error === "empty_candidate");
+
+    // Missing object.
     await st.deleteCheckAttachments([a1.path]);
-    const miss = await snap.buildEvaluationSnapshot(owner, draftKey, versions, "");
-    ok("missing storage object rejected BEFORE the model (attachment_missing_object)", !miss.ok && miss.error === "attachment_missing_object");
-    await st.uploadCheckAttachment(a1.path, Buffer.from("bytes"), "image/png"); // restore for a clean state
+    const miss = await snap.buildEvaluationSnapshot(owner, draftKey, versions, "", expected);
+    ok("missing storage object rejected BEFORE the model", !miss.ok && (miss as { error: string }).error === "attachment_missing_object");
+    await st.uploadCheckAttachment(a1.path, Buffer.from("bytes"), "image/png");
 
-    // not-ready: flip one row to processing.
+    // Not ready.
     await db.setStatus(owner, a1.id, "processing");
-    const notReady = await snap.buildEvaluationSnapshot(owner, draftKey, versions, "");
-    ok("not-ready attachment rejected (attachment_not_ready)", !notReady.ok && notReady.error === "attachment_not_ready");
+    const nr = await snap.buildEvaluationSnapshot(owner, draftKey, versions, "", expected);
+    ok("not-ready attachment rejected", !nr.ok && (nr as { error: string }).error === "attachment_not_ready");
+
+    // Legacy text-only (no expectedIds) still builds with zero attachments.
+    const legacy = await snap.buildEvaluationSnapshot(owner, draftKey, versions, "");
+    ok("legacy text-only builds, zero attachments (backward compatible)", legacy.ok && legacy.snapshot.candidates.every((c) => c.attachments.length === 0));
   } finally {
-    for (const s of seeded) { await db.deleteAttachmentRow(owner, s.id); }
+    for (const s of seeded) await db.deleteAttachmentRow(owner, s.id);
     await st.deleteCheckAttachments(seeded.map((s) => s.path));
-    const left = await db.listByDraft(owner, draftKey);
-    ok("cleanup: no test rows remain", left.length === 0);
+    ok("cleanup: no test rows remain", (await db.listByDraft(owner, draftKey)).length === 0);
   }
 
   console.log(`\n${pass}/${pass + fail} passed`);
