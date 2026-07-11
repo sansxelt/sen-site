@@ -1,0 +1,451 @@
+<!--
+  Vraelis Preflight demo fixture.
+  Self-contained static page. No build step, no backend, no external requests.
+  It GENUINELY exhibits defects in a real browser. Nothing here is hardcoded to
+  produce a Vraelis result; the defects emerge from real behavior.
+
+  Mode is read from the URL query string:
+    ?mode=broken            (default) persistence fails + mobile nav overlay
+    ?mode=partially_fixed   persistence works + mobile nav overlay remains
+    ?mode=fixed             everything passes
+-->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Your projects</title>
+
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --ink: #16202e;
+    --muted: #5c6b7f;
+    --line: #dfe4ee;
+    --brand: #2b59ff;
+    --brand-ink: #ffffff;
+    --nav: #0f172a;
+    --nav-ink: #f8fafc;
+    --ok: #0f9d58;
+    --warn: #b45309;
+    --warn-bg: #fff6e5;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.45;
+    /* Always clear the fixed top nav. */
+    padding-top: 64px;
+  }
+
+  /* ---- Sticky (fixed) top navigation ---- */
+  .topnav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 1000;             /* paints above page content */
+    background: var(--nav);    /* opaque, so it truly covers what is under it */
+    color: var(--nav-ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  }
+  .topnav .brand {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    font-size: 15px;
+  }
+  .topnav .hamburger {
+    appearance: none;
+    background: transparent;
+    border: 1px solid rgba(248, 250, 252, 0.35);
+    color: var(--nav-ink);
+    border-radius: 8px;
+    width: 40px;
+    height: 36px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .navlinks {
+    display: none;
+    position: fixed;
+    top: 56px;
+    right: 8px;
+    z-index: 1000;
+    background: var(--nav);
+    color: var(--nav-ink);
+    border-radius: 10px;
+    padding: 8px;
+    min-width: 160px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+  .navlinks a {
+    display: block;
+    color: var(--nav-ink);
+    text-decoration: none;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  .navlinks a:hover { background: rgba(248, 250, 252, 0.12); }
+  body.nav-open .navlinks { display: block; }
+
+  /* ---- Layout ---- */
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 64px;
+  }
+
+  .fixture-banner {
+    background: var(--warn-bg);
+    color: var(--warn);
+    border: 1px solid #f0d9a8;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: 22px;
+    margin: 4px 0 16px;
+  }
+
+  .composer {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .composer label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .composer .row {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .composer input[type="text"] {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+  }
+  .composer input[type="text"]:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+    border-color: var(--brand);
+  }
+
+  .btn-create {
+    appearance: none;
+    border: none;
+    background: var(--brand);
+    color: var(--brand-ink);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-create:hover { filter: brightness(1.05); }
+
+  ul.projects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+  ul.projects li {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  ul.projects li .badge {
+    font-size: 11px;
+    color: var(--ok);
+    border: 1px solid #bfe6cd;
+    background: #edfaf1;
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+  .empty {
+    color: var(--muted);
+    font-size: 14px;
+    padding: 8px 2px;
+  }
+
+  .tools {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn-clear {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-clear:hover { border-color: #c7d0dd; color: var(--ink); }
+  .mode-note { font-size: 12px; color: var(--muted); }
+
+  /* ---- Success toast ---- */
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%) translateY(12px);
+    background: #10241a;
+    color: #eafff1;
+    border: 1px solid #1c4a34;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    z-index: 1200;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /*
+    ---- The mobile nav-overlay DEFECT ----
+    At a phone viewport, in 'broken' and 'partially_fixed' modes, the primary
+    action is pinned into the top strip that the fixed nav (z-index 1000) paints
+    over. Because the button (z-index 5) sits under the opaque nav, it is
+    genuinely covered: document.elementFromPoint at the button's center returns
+    the nav, and a real click lands on the nav, not the button.
+
+    In 'fixed' mode the button stays in normal flow, fully visible and clickable.
+  */
+  @media (max-width: 480px) {
+    body.mode-broken .btn-create,
+    body.mode-partially_fixed .btn-create {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      z-index: 5;          /* below the nav's 1000 -> obscured */
+      margin: 0;
+    }
+  }
+</style>
+
+<nav class="topnav" aria-label="Primary">
+  <span class="brand">Vraelis Fixture Dashboard</span>
+  <button
+    type="button"
+    class="hamburger"
+    id="hamburger"
+    aria-label="Open navigation menu"
+    aria-controls="navlinks"
+    aria-expanded="false"
+  >&#9776;</button>
+</nav>
+<div class="navlinks" id="navlinks" role="menu" aria-label="Navigation">
+  <a href="#" role="menuitem">Overview</a>
+  <a href="#" role="menuitem">Settings</a>
+  <a href="#" role="menuitem">Help</a>
+</div>
+
+<main>
+  <div class="fixture-banner" role="note">This is a Vraelis test fixture</div>
+
+  <h1>Your projects</h1>
+
+  <form class="composer" id="composer" novalidate>
+    <label for="project-name">Project name</label>
+    <div class="row">
+      <input
+        type="text"
+        id="project-name"
+        name="project-name"
+        placeholder="e.g. Onboarding revamp"
+        autocomplete="off"
+      />
+      <button type="submit" class="btn-create" id="create-btn">Create project</button>
+    </div>
+  </form>
+
+  <ul class="projects" id="project-list" aria-label="Project list"></ul>
+
+  <div class="tools">
+    <button type="button" class="btn-clear" id="clear-btn">Clear all (fixture only)</button>
+    <span class="mode-note" id="mode-note"></span>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite">Project created</div>
+
+<script>
+  (function () {
+    "use strict";
+
+    var ALLOWED = ["broken", "partially_fixed", "fixed"];
+    var STORAGE_KEY = "vraelis-fixture-projects";
+
+    var params = new URLSearchParams(window.location.search);
+    var mode = params.get("mode");
+    if (ALLOWED.indexOf(mode) === -1) {
+      mode = "broken"; // default
+    }
+    document.body.classList.add("mode-" + mode);
+
+    // Persistence is real: 'broken' keeps records in memory only (a refresh
+    // loses them), the other modes write to localStorage.
+    function persists() {
+      return mode === "partially_fixed" || mode === "fixed";
+    }
+
+    var projects = [];
+
+    var input = document.getElementById("project-name");
+    var list = document.getElementById("project-list");
+    var toast = document.getElementById("toast");
+    var modeNote = document.getElementById("mode-note");
+    var toastTimer = null;
+
+    modeNote.textContent = "mode: " + mode + (persists()
+      ? " (records persist across refresh)"
+      : " (records live in memory only)");
+
+    function load() {
+      if (persists()) {
+        try {
+          var raw = window.localStorage.getItem(STORAGE_KEY);
+          var parsed = raw ? JSON.parse(raw) : [];
+          projects = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+          projects = [];
+        }
+      } else {
+        // 'broken': never read persistence, so a refresh always starts empty.
+        projects = [];
+      }
+      render();
+    }
+
+    function save() {
+      if (!persists()) {
+        return; // 'broken': deliberately does not persist.
+      }
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      } catch (e) {
+        // Storage unavailable: degrade quietly, fixture stays usable.
+      }
+    }
+
+    function render() {
+      list.innerHTML = "";
+      if (projects.length === 0) {
+        var li = document.createElement("li");
+        li.className = "empty";
+        li.textContent = "No projects yet. Create one above.";
+        list.appendChild(li);
+        return;
+      }
+      projects.forEach(function (p) {
+        var li = document.createElement("li");
+        var label = document.createElement("span");
+        label.textContent = p.name;
+        var badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = "fixture";
+        li.appendChild(label);
+        li.appendChild(badge);
+        list.appendChild(li);
+      });
+    }
+
+    function showToast() {
+      toast.classList.add("show");
+      if (toastTimer) {
+        window.clearTimeout(toastTimer);
+      }
+      toastTimer = window.setTimeout(function () {
+        toast.classList.remove("show");
+      }, 2400);
+    }
+
+    function createProject() {
+      var raw = (input.value || "").trim();
+      var display = "Vraelis Fixture: " + (raw || "Untitled project");
+      projects.push({
+        id: Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7),
+        name: display
+      });
+      input.value = "";
+      save();
+      render();
+      showToast();
+    }
+
+    document.getElementById("composer").addEventListener("submit", function (e) {
+      e.preventDefault();
+      createProject();
+    });
+
+    document.getElementById("clear-btn").addEventListener("click", function () {
+      projects = [];
+      try {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch (e) {
+        // ignore
+      }
+      render();
+      input.focus();
+    });
+
+    var hamburger = document.getElementById("hamburger");
+    hamburger.addEventListener("click", function () {
+      var open = document.body.classList.toggle("nav-open");
+      hamburger.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+
+    load();
+  })();
+</script>
