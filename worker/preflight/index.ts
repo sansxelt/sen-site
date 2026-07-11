@@ -3,15 +3,20 @@
 // starts the claim loop, exposes a health endpoint for Railway, and shuts down gracefully on SIGTERM/
 // SIGINT (stop claiming, let the bounded in-flight run finish, close sessions, exit).
 import http from "node:http";
+import { loadLocalEnv } from "./local-env";
 import { loadWorkerConfig, configSummary } from "./config";
 import { PreflightWorker } from "./worker";
 import { PostgresRunStore } from "./run-store-postgres";
 import { FakeBrowserProvider } from "./providers/fake";
 import { BrowserbaseBrowserProvider } from "./providers/browserbase";
-import type { BrowserProvider } from "./types";
+import { uploadPreflightArtifact, artifactObjectPath } from "../../lib/preflight/artifacts";
+import type { BrowserProvider, ArtifactSink } from "./types";
 import { log } from "./redaction";
 
 async function main() {
+  // Local dev: load .env.local / .env / .env.preflight so the worker connects without exporting env by hand.
+  // On Railway (env injected into process.env, no .env files) this is a no-op and never overrides a set var.
+  loadLocalEnv();
   const cfg = loadWorkerConfig();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Worker needs NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (server-only).");
@@ -22,7 +27,18 @@ async function main() {
   else provider = new FakeBrowserProvider(); // "fake"/"local": deterministic no-op browser for dev/tests
   log({ event: "worker_start", ...configSummary(cfg) } as never);
 
-  const worker = new PreflightWorker(cfg, store, provider);
+  // Real evidence sink: upload each flow's screenshot to the DEDICATED private artifact bucket + record it.
+  // Only wired for the real browser path. Best-effort inside the executor: a missing bucket throws
+  // ArtifactBucketMissingError, which the executor logs (artifact_save_failed) without failing the run.
+  const artifacts: ArtifactSink | undefined = cfg.provider === "browserbase" ? {
+    async saveScreenshot(runId, flowId, bytes) {
+      const path = artifactObjectPath(runId, "screenshot", "png");
+      await uploadPreflightArtifact(path, bytes, "image/png");
+      await store.persistArtifact(runId, flowId, path, "screenshot");
+    },
+  } : undefined;
+
+  const worker = new PreflightWorker(cfg, store, provider, artifacts);
   worker.start();
 
   // Health endpoint for Railway (no secrets).

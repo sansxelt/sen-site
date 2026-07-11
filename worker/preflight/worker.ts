@@ -2,7 +2,7 @@
 // alongside the executor's per-step heartbeat) and graceful shutdown. Concurrency-capped. Framework-free
 // (no Next request lifecycle). Real deployment wires a RunStore (Postgres) + BrowserProvider (Browserbase);
 // tests wire the fakes.
-import type { BrowserProvider, RunStore } from "./types";
+import type { BrowserProvider, RunStore, ArtifactSink } from "./types";
 import type { WorkerConfig } from "./config";
 import { executeRun, type ExecLimits } from "./execute-run";
 import { log } from "./redaction";
@@ -11,7 +11,7 @@ export class PreflightWorker {
   private stopping = false;
   private active = 0;
   private loopDone: Promise<void> | null = null;
-  constructor(private cfg: WorkerConfig, private store: RunStore, private provider: BrowserProvider) {}
+  constructor(private cfg: WorkerConfig, private store: RunStore, private provider: BrowserProvider, private artifacts?: ArtifactSink) {}
 
   private limits(): ExecLimits {
     return { leaseSecs: this.cfg.leaseSecs, maxRunMs: this.cfg.maxRunMs, maxFlowMs: this.cfg.maxFlowMs, maxStepsPerFlow: this.cfg.maxStepsPerFlow };
@@ -27,7 +27,7 @@ export class PreflightWorker {
     // aborts on loss/cancel, so a heartbeat failure here is non-fatal.
     const hb = setInterval(() => { void this.store.heartbeat(run.runId, this.cfg.workerId, this.cfg.leaseSecs).catch(() => {}); }, this.cfg.heartbeatSecs * 1000);
     try {
-      await executeRun(run, { store: this.store, provider: this.provider, workerId: this.cfg.workerId, limits: this.limits() });
+      await executeRun(run, { store: this.store, provider: this.provider, workerId: this.cfg.workerId, limits: this.limits(), artifacts: this.artifacts });
     } finally {
       clearInterval(hb);
       this.active--;

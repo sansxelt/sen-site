@@ -1,0 +1,16 @@
+# Docker build context is the REPO ROOT (worker/preflight/Dockerfile is built from here, e.g. Railway).
+# Real secret env files must NEVER be copied into image layers: the worker loads .env.local/.env at runtime
+# (worker/preflight/local-env.ts), so a baked-in .env.local would both leak in the layers AND be loaded.
+.env
+.env.*
+
+# Host-only / not needed in the worker image. node_modules is reinstalled inside the image before COPY,
+# so copying the host's (Windows) node_modules would clobber the container's correct binaries.
+node_modules
+.git
+.gitignore
+.next
+.vercel
+desktop
+*.log
+npm-debug.log*

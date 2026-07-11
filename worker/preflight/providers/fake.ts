@@ -15,6 +15,8 @@ class FakePage implements PreflightPage {
   currentUrl() { return this.url; }
   drainConsoleErrors() { const c = this.console; this.console = []; return c; }
   drainNetworkFailures() { const n = this.net; this.net = []; return n; }
+  async captureScreenshot(): Promise<Buffer | null> { return null; } // fake: no real bytes to upload
+  async setViewport(): Promise<void> { /* fake: no real viewport */ }
   async perform(step: Step): Promise<StepObservation> {
     const key = step.target ? `${step.action}:${step.target}` : step.action;
     const o = this.script[key] ?? this.script[step.action] ?? { ok: true, detail: "default_ok" };

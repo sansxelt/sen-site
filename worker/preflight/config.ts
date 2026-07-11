@@ -6,7 +6,7 @@ import crypto from "node:crypto";
 export type WorkerConfig = {
   workerId: string;
   provider: "browserbase" | "fake" | "local";
-  browserbase?: { apiKey: string; projectId: string };
+  browserbase?: { apiKey: string };
   pollMs: number; leaseSecs: number; heartbeatSecs: number;
   maxRunMs: number; maxFlowMs: number; maxStepsPerFlow: number; maxConcurrentRuns: number;
 };
@@ -27,11 +27,11 @@ export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerCo
     maxConcurrentRuns: num(env.PREFLIGHT_MAX_CONCURRENT_RUNS, 1),
   };
   if (cfg.provider === "browserbase") {
-    const apiKey = env.BROWSERBASE_API_KEY, projectId = env.BROWSERBASE_PROJECT_ID;
-    if (!apiKey || !projectId) {
-      throw new Error("BROWSER_PROVIDER=browserbase but BROWSERBASE_API_KEY / BROWSERBASE_PROJECT_ID are missing. Set them (server-only, never NEXT_PUBLIC) or use BROWSER_PROVIDER=fake for lifecycle tests.");
+    const apiKey = env.BROWSERBASE_API_KEY;
+    if (!apiKey) {
+      throw new Error("BROWSER_PROVIDER=browserbase but BROWSERBASE_API_KEY is missing. Set it (server-only, never NEXT_PUBLIC) or use BROWSER_PROVIDER=fake for lifecycle tests. The Browserbase project is inferred from the API key; no project id is needed.");
     }
-    cfg.browserbase = { apiKey, projectId };
+    cfg.browserbase = { apiKey };
   }
   return cfg;
 }

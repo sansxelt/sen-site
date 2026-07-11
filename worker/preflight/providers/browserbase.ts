@@ -1,6 +1,7 @@
 // Browserbase browser provider — the REAL implementation behind BrowserProvider. NOT YET EXERCISED (needs
-// BROWSERBASE_API_KEY + a paid/free session and the runtime deps @browserbasehq/sdk + playwright-core,
-// which are worker-only). Lazy dynamic imports keep this file compiling without those deps installed.
+// BROWSERBASE_API_KEY + a paid/free session and the worker-only dep playwright-core). Session create/release
+// go over REST (./browserbase-api, native fetch); a lazy dynamic import keeps this file compiling without
+// playwright installed.
 // Browserbase is replaceable infrastructure and is never surfaced in the Vraelis product UI.
 //
 // It creates an isolated session (attaching ONLY safe metadata: run/flow/env/worker ids — never user data,
@@ -8,10 +9,16 @@
 // action allowlist with sanitized console/network capture. Downloads/permissions are restricted.
 import type { BrowserProvider, BrowserSession, CreateBrowserSessionInput, PreflightPage, Step, StepObservation } from "../types";
 import { safePath, redactString } from "../redaction";
+import { createBrowserbaseSession, releaseBrowserbaseSession } from "./browserbase-api";
 
-// Variable module names: keeps tsc from resolving these worker-only deps until they are installed.
-const BROWSERBASE_PKG = "@browserbasehq/sdk";
+// Playwright is a worker-only dep imported via a VARIABLE module name so tsc does not resolve it until it is
+// installed. The Browserbase SESSION writes (create/release) go through ./browserbase-api over native fetch
+// (the SDK's POST sets an invalid Content-Length), so no SDK import is needed here.
 const PLAYWRIGHT_PKG = "playwright-core";
+
+// Bounded session auto-end (seconds): a hard safety cap so a Browserbase session can never run forever, even
+// if the worker crashes mid-run. Comfortably above the per-run cap; the worker still closes on completion.
+const SESSION_TIMEOUT_SECS = 600;
 
 // Coerce to Browserbase's metadata rules: string values only, no arrays, serialized < 512 chars. Values
 // are truncated and low-priority keys dropped until it fits. Exported for the smoke test to assert on.
@@ -30,7 +37,7 @@ export function safeMetadata(input: Record<string, string>): Record<string, stri
 type PWPage = {
   goto: (u: string, o?: unknown) => Promise<unknown>; reload: (o?: unknown) => Promise<unknown>; url: () => string;
   getByRole: (r: string, o?: unknown) => PWLocator; getByText: (t: string, o?: unknown) => PWLocator; getByLabel: (t: string, o?: unknown) => PWLocator; locator: (s: string) => PWLocator;
-  keyboard: { press: (k: string) => Promise<void> }; screenshot: (o?: unknown) => Promise<Buffer>;
+  keyboard: { press: (k: string) => Promise<void> }; screenshot: (o?: unknown) => Promise<Buffer>; setViewportSize: (o: { width: number; height: number }) => Promise<void>;
   on: (ev: string, cb: (a: unknown) => void) => void;
 };
 type PWLocator = { first: () => PWLocator; click: (o?: unknown) => Promise<void>; fill: (v: string, o?: unknown) => Promise<void>; selectOption: (v: string) => Promise<unknown>; check: (o?: unknown) => Promise<void>; uncheck: (o?: unknown) => Promise<void>; waitFor: (o?: unknown) => Promise<void>; isVisible: () => Promise<boolean>; textContent: () => Promise<string | null>; count: () => Promise<number> };
@@ -43,7 +50,7 @@ function resolve(page: PWPage, target: string): { locator: PWLocator; candidates
   return { locator, candidates, selected: candidates[0] };
 }
 
-class PlaywrightPreflightPage implements PreflightPage {
+export class PlaywrightPreflightPage implements PreflightPage {
   private consoleErrors: string[] = [];
   private netFailures: { method: string; path: string; status: number }[] = [];
   constructor(private page: PWPage) {
@@ -54,6 +61,8 @@ class PlaywrightPreflightPage implements PreflightPage {
   currentUrl() { return this.page.url(); }
   drainConsoleErrors() { const c = this.consoleErrors; this.consoleErrors = []; return c; }
   drainNetworkFailures() { const n = this.netFailures; this.netFailures = []; return n; }
+  async captureScreenshot(): Promise<Buffer | null> { try { return await this.page.screenshot({ fullPage: false }); } catch { return null; } }
+  async setViewport(width: number, height: number): Promise<void> { try { await this.page.setViewportSize({ width, height }); } catch { /* non-fatal */ } }
 
   async perform(step: Step): Promise<StepObservation> {
     const t0 = Date.now();
@@ -82,19 +91,21 @@ class PlaywrightPreflightPage implements PreflightPage {
 
 export class BrowserbaseBrowserProvider implements BrowserProvider {
   readonly name = "browserbase";
-  constructor(private cfg: { apiKey: string; projectId: string }) {}
+  constructor(private cfg: { apiKey: string }) {}
 
   async createSession(input: CreateBrowserSessionInput): Promise<BrowserSession> {
-    // Lazy imports via VARIABLE module names so tsc does not resolve these worker-only deps until they are
-    // installed for Phase 3 (they are absent in the web app's node_modules).
-    const [SDK, PW] = [BROWSERBASE_PKG, PLAYWRIGHT_PKG];
-    const { Browserbase } = (await import(SDK).catch(() => { throw new Error("browserbase_sdk_missing: install @browserbasehq/sdk in the worker"); })) as { Browserbase: new (o: { apiKey: string }) => { sessions: { create: (o: unknown) => Promise<{ id: string; connectUrl: string }>; } } };
+    // Create the session over REST (native fetch; the project is inferred from the API key). Metadata is
+    // compact + sanitized: string values only, no arrays, serialized under 512 chars, compact ids only,
+    // never user identity or secrets.
+    const session = await createBrowserbaseSession(this.cfg.apiKey, {
+      userMetadata: safeMetadata({ run_id: input.runId, flow_run_id: input.flowRunId ?? "", worker_id: input.workerId, env: input.environment }),
+      timeout: SESSION_TIMEOUT_SECS,
+    });
+
+    // Playwright is lazily imported via a VARIABLE module name so tsc does not resolve it until installed.
+    const PW = PLAYWRIGHT_PKG;
     const { chromium } = (await import(PW).catch(() => { throw new Error("playwright_missing: install playwright-core in the worker"); })) as { chromium: { connectOverCDP: (u: string) => Promise<{ contexts: () => { pages: () => PWPage[] }[]; newContext: (o?: unknown) => Promise<{ newPage: () => Promise<PWPage> }>; close: () => Promise<void> }> } };
 
-    const bb = new Browserbase({ apiKey: this.cfg.apiKey });
-    // Browserbase constraints: metadata must serialize under 512 chars, STRING values only, no arrays, and
-    // only strings are queryable. Compact ids only — never user identity or secrets.
-    const session = await bb.sessions.create({ projectId: this.cfg.projectId, userMetadata: safeMetadata({ run_id: input.runId, flow_run_id: input.flowRunId ?? "", worker_id: input.workerId, env: input.environment }) });
     const browser = await chromium.connectOverCDP(session.connectUrl);
     const ctx = browser.contexts()[0] ?? (await browser.newContext({ viewport: input.viewport ?? { width: 1280, height: 800 }, acceptDownloads: false, permissions: [] }));
     const page = (ctx as unknown as { pages: () => PWPage[]; newPage: () => Promise<PWPage> }).pages?.()[0] ?? await (ctx as unknown as { newPage: () => Promise<PWPage> }).newPage();
@@ -104,9 +115,7 @@ export class BrowserbaseBrowserProvider implements BrowserProvider {
   }
 
   async closeSession(providerSessionId: string): Promise<void> {
-    const { Browserbase } = (await import(BROWSERBASE_PKG).catch(() => null)) as { Browserbase: new (o: { apiKey: string }) => { sessions: { update: (id: string, o: unknown) => Promise<unknown> } } } | null ?? { Browserbase: null as never };
-    if (!Browserbase) return;
-    const bb = new Browserbase({ apiKey: this.cfg.apiKey });
-    await bb.sessions.update(providerSessionId, { status: "REQUEST_RELEASE", projectId: this.cfg.projectId }).catch(() => {});
+    // REQUEST_RELEASE over REST; best-effort so a close path never throws.
+    await releaseBrowserbaseSession(this.cfg.apiKey, providerSessionId).catch(() => {});
   }
 }

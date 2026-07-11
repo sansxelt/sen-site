@@ -52,6 +52,18 @@ export interface PreflightPage {
   // Deterministic side-channel evidence captured continuously by the provider.
   drainConsoleErrors(): string[];        // sanitized console error lines
   drainNetworkFailures(): { method: string; path: string; status: number }[]; // sanitized (no bodies/secrets)
+  // Capture the current viewport as PNG bytes for evidence upload. Null when unavailable (fake / no-op).
+  captureScreenshot(): Promise<Buffer | null>;
+  // Resize the viewport for the flow about to run (mobile flows run narrow so viewport-gated defects
+  // reproduce; desktop flows run wide). No-op in the fake.
+  setViewport(width: number, height: number): Promise<void>;
+}
+
+// Uploads run evidence (e.g. screenshots) to private storage and records it. Best-effort: an upload failure
+// must NEVER fail the run (evidence is supplementary to the deterministic decision). Injected into the
+// executor for real runs; absent for the in-memory fake lifecycle tests.
+export interface ArtifactSink {
+  saveScreenshot(runId: string, flowId: string, bytes: Buffer): Promise<void>;
 }
 
 // ── Run store (the job queue behind an interface) ────────────────────────────────────────────────────
@@ -63,7 +75,7 @@ export type ClaimedRun = {
   flows: FlowSpec[];            // approved, enabled flows only
   leaseExpiresAt: number;       // epoch ms
 };
-export type FlowSpec = { flowId: string; name: string; priority: "critical" | "important" | "informational"; startPath?: string; steps: Step[]; maxMs: number; destructiveAllowed: boolean };
+export type FlowSpec = { flowId: string; name: string; priority: "critical" | "important" | "informational"; startPath?: string; steps: Step[]; maxMs: number; destructiveAllowed: boolean; viewport?: { width: number; height: number } };
 
 export type FlowEvidence = { consoleErrors: string[]; networkFailures: { method: string; path: string; status: number }[] };
 export type FlowResult = { flowId: string; state: "passed" | "failed" | "blocked" | "skipped"; severity?: "critical" | "high" | "medium" | "low"; steps: StepObservation[]; evidence?: FlowEvidence };

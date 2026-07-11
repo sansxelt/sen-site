@@ -64,17 +64,36 @@ The JSON prints `{ "ready": <bool>, "checks": <n>, "passed": <n>, "failed": [ ..
 
 ---
 
+## 2b. Create the private artifact bucket (one-time manual action)
+
+Preflight stores run evidence (screenshots) in a **dedicated private** Storage bucket. It is **not**
+auto-created and there is **no fallback** to any other bucket: if it is missing, evidence upload fails with an
+explicit `ArtifactBucketMissingError` (the run still completes with a real decision, but without screenshots).
+Create it once in the Supabase SQL editor:
+
+```sql
+insert into storage.buckets (id, name, public)
+values ('vraelis-preflight-artifacts', 'vraelis-preflight-artifacts', false)
+on conflict (id) do nothing;
+```
+
+Or in the dashboard: **Storage → New bucket →** name `vraelis-preflight-artifacts` → leave **Public bucket
+OFF**. The worker uploads with the service-role key (bypasses Storage RLS); reads are server-minted, owner-
+authorized, short-TTL (120s) signed URLs, so no extra Storage policies are required.
+
+---
+
 ## 3. Configure environment (manual action 2, part A)
 
-Copy `.env.preflight.example` and fill in real values. Keep local values in `.env.local` for the web app and
-the verify script. The worker process reads `process.env` directly, so also export the same values into the
-shell you launch the worker from (or source them). See step 5.
+Copy `.env.preflight.example` and fill in real values. Keep local values in `.env.local` (the web app, the
+verify script, the local worker, and the smoke all read it). Locally, `npm run preflight:worker` and
+`npm run preflight:smoke:browserbase` load `.env.local` / `.env.preflight` themselves (via `@next/env`), so
+you do not need to export these by hand. On Railway the values come from the service env (see step 5).
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `BROWSER_PROVIDER` | yes | `browserbase` for real runs, `fake` for the deterministic lifecycle test. |
-| `BROWSERBASE_API_KEY` | when `BROWSER_PROVIDER=browserbase` | Browserbase API key. Server-only. Worker fails fast if missing. |
-| `BROWSERBASE_PROJECT_ID` | when `BROWSER_PROVIDER=browserbase` | Browserbase project id. |
+| `BROWSERBASE_API_KEY` | when `BROWSER_PROVIDER=browserbase` | Browserbase API key. The project is inferred from the key (no project id needed). Server-only. Worker fails fast if missing. |
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | Supabase project URL. Reused by the worker as the data plane. |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Service-role key (BYPASSRLS). **Server-only.** Never `NEXT_PUBLIC`. |
 | `VRAELIS_PREFLIGHT_INTERNAL_ONLY` | yes (Phase 1) | `1` gates route access to internal/owner only. |
@@ -96,15 +115,15 @@ Every other value above is a secret and must stay server-side.
 
 ---
 
-## 4. Create a Browserbase project and API key (manual action 2, part B)
+## 4. Create a Browserbase API key (manual action 2, part B)
 
 No key values belong in the repo or in any `NEXT_PUBLIC_` name.
 
 1. Sign in to the Browserbase dashboard.
-2. Create (or select) a project. Copy its **Project ID** into `BROWSERBASE_PROJECT_ID`.
-3. Open the API keys area for that project, generate a new key, and copy it once into `BROWSERBASE_API_KEY`.
-   Store it in your secret manager / `.env.local`; the dashboard will not show it again.
-4. Confirm both values are set as server-only env, not committed, not `NEXT_PUBLIC_`.
+2. Open the API keys area, generate a new key, and copy it once into `BROWSERBASE_API_KEY`. Store it in
+   `.env.local` (or your secret manager); the dashboard will not show it again. The project is inferred from
+   the key, so no project id is required.
+3. Confirm the key is set as server-only env, not committed, not `NEXT_PUBLIC_`.
 
 ---
 
@@ -131,14 +150,14 @@ before the first real run:
 npm install @browserbasehq/sdk playwright-core
 ```
 
-Then export the env from step 3 into your shell (the worker reads `process.env` directly and does not auto-load
-`.env` files) and start it:
+Then start it. Locally the worker loads `.env.local` / `.env.preflight` itself, so a set `BROWSER_PROVIDER`
+there is picked up; export it inline only to override:
 
 ```
 BROWSER_PROVIDER=browserbase npm run preflight:worker
 ```
 
-The worker fails fast with a clear message if `BROWSERBASE_API_KEY` / `BROWSERBASE_PROJECT_ID` are missing. On
+The worker fails fast with a clear message if `BROWSERBASE_API_KEY` is missing. On
 start it logs a presence-only summary (`browserbaseConfigured:true`, never the key value) and serves a health
 endpoint on `PORT` (default 8080) at `/health`. Stop it with Ctrl-C (SIGINT); it stops claiming, lets the
 bounded in-flight run finish, closes sessions, then exits.
@@ -162,7 +181,9 @@ PREFLIGHT_SMOKE_URL=https://<your-fixture-deployment>.vercel.app
 
 ## 7. Run the owned-fixture smoke
 
-With the fixture deployed, `PREFLIGHT_SMOKE_URL` set, and the Browserbase env from steps 3 and 4 in the shell:
+With the fixture deployed and `PREFLIGHT_SMOKE_URL` set, run the smoke. The script loads the repo's
+`.env.local` / `.env.preflight` itself (via `@next/env`), so `BROWSERBASE_API_KEY` can live there rather than
+being exported. `VRAELIS_SMOKE=1` still gates the run:
 
 ```
 VRAELIS_SMOKE=1 npm run preflight:smoke:browserbase

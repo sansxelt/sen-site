@@ -29,9 +29,9 @@ Vercel web app --enqueue--> Postgres queue --claim--> THIS worker --CDP--> Brows
   and `BROWSERBASE_API_KEY` must be set before a real run.
 
 ## Env (server-only — see .env.preflight.example)
-`BROWSER_PROVIDER=browserbase | fake`, `BROWSERBASE_API_KEY`, `BROWSERBASE_PROJECT_ID`,
+`BROWSER_PROVIDER=browserbase | fake`, `BROWSERBASE_API_KEY` (the project is inferred from the key),
 `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, plus the `PREFLIGHT_WORKER_*` / `PREFLIGHT_MAX_*`
-bounds. Missing Browserbase creds under `BROWSER_PROVIDER=browserbase` fail startup clearly.
+bounds. A missing `BROWSERBASE_API_KEY` under `BROWSER_PROVIDER=browserbase` fails startup clearly.
 
 ## Commands
 - `npm run preflight:worker`      start the worker (uses BROWSER_PROVIDER)

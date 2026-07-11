@@ -3,11 +3,11 @@
 // derives each flow's pass/fail and the run decision by explainable rules, persists incrementally, and
 // finalizes. The session is always closed in a finally, and a lost lease / requested cancel aborts
 // browser work immediately (checked before every step via the ownership-checked heartbeat). No AI here.
-import type { BrowserProvider, RunStore, ClaimedRun, FlowResult, FlowSpec, RunDecision, StepObservation } from "./types";
+import type { BrowserProvider, RunStore, ClaimedRun, FlowResult, FlowSpec, RunDecision, StepObservation, ArtifactSink } from "./types";
 import { log } from "./redaction";
 
 export type ExecLimits = { leaseSecs: number; maxRunMs: number; maxFlowMs: number; maxStepsPerFlow: number };
-export type ExecDeps = { store: RunStore; provider: BrowserProvider; workerId: string; limits: ExecLimits; now?: () => number };
+export type ExecDeps = { store: RunStore; provider: BrowserProvider; workerId: string; limits: ExecLimits; now?: () => number; artifacts?: ArtifactSink };
 
 export class LeaseLostError extends Error { constructor() { super("lease_lost"); } }
 export class CancelledError extends Error { constructor() { super("cancelled"); } }
@@ -18,6 +18,10 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
   const flowDeadline = Math.min(now() + flow.maxMs, runDeadline);
   const boundedSteps = flow.steps.slice(0, deps.limits.maxStepsPerFlow);
   let state: FlowResult["state"] = "passed";
+
+  // Set this flow's viewport before its steps: mobile flows run narrow so viewport-gated defects (e.g. a
+  // nav overlay covering the primary action) reproduce; desktop flows run wide. Non-fatal on failure.
+  if (flow.viewport) { try { await page.setViewport(flow.viewport.width, flow.viewport.height); } catch { /* non-fatal */ } }
 
   for (const step of boundedSteps) {
     // Heartbeat BEFORE each step: extends the lease if we still own it, aborts if we lost it / cancel.
@@ -74,6 +78,14 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
       const result = await runFlow(flow, session.page, deps, run.runId, runDeadline);
       results.push(result);
       await deps.store.persistFlowResult(run.runId, result);      // incremental persistence
+      // Evidence: capture the flow's final-state screenshot and upload it. Best-effort — an upload failure
+      // (incl. a missing artifact bucket) is logged and never fails the run, whose decision is deterministic.
+      if (deps.artifacts) {
+        try {
+          const shot = await session.page.captureScreenshot();
+          if (shot) await deps.artifacts.saveScreenshot(run.runId, flow.flowId, shot);
+        } catch (e) { log({ worker_id: deps.workerId, run_id: run.runId, flow_run_id: flow.flowId, event: "artifact_save_failed", result: (e as Error).message.slice(0, 80) }); }
+      }
       log({ worker_id: deps.workerId, run_id: run.runId, flow_run_id: flow.flowId, event: "flow_done", result: result.state });
     }
 
