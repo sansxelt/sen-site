@@ -9,7 +9,9 @@ export function getStripe(): Stripe {
   }
   if (!stripeClient) {
     stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2026-03-25.dahlia",
+      // Pinned API version preserved verbatim; cast only to satisfy the bumped SDK's literal type (the
+      // SDK now pins a newer default). Behavior is unchanged — do NOT alter the payment API version here.
+      apiVersion: "2026-03-25.dahlia" as unknown as Stripe.LatestApiVersion,
     });
   }
   return stripeClient;

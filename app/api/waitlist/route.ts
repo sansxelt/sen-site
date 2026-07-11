@@ -53,14 +53,13 @@ export async function POST(req: Request) {
   // Upsert pattern: try insert, treat unique-violation as success.
   const { error } = await sb
     .from("waitlist")
-    // @ts-expect-error generic schema
     .upsert(
       {
         email,
         product,
         source,
         user_email: userEmail,
-      },
+      } as never, // generic (untyped) schema table
       { onConflict: "email,product", ignoreDuplicates: true },
     );
 
@@ -75,13 +74,12 @@ export async function POST(req: Request) {
   try {
     await sb
       .from("analytics_events")
-      // @ts-expect-error generic schema
       .insert({
         name: "waitlist_joined",
         path: source,
         props: { product },
         user_email: userEmail,
-      });
+      } as never); // generic (untyped) schema table
   } catch {
     // analytics insert is best-effort, never block the response
   }

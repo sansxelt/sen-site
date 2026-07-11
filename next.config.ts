@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   // Load undici from node_modules at runtime instead of bundling it — the webhook
   // SSRF guard pairs undici's fetch with its Agent (IP pinning), and a bundled
   // copy mismatches the runtime and breaks deliveries.
-  serverExternalPackages: ["undici"],
+  serverExternalPackages: ["undici", "pdf-parse"],
   // Compress responses
   compress: true,
   // Cache static assets aggressively

@@ -9,7 +9,8 @@
 
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { validateFile, sanitizeFilename, FORMATS, LIMITS, type AttachmentRole } from "@/lib/v-attachments";
+import { sanitizeFilename, FORMATS, LIMITS, type AttachmentRole } from "@/lib/v-attachments";
+import { validateFile } from "@/lib/v-attachments-validate";
 import { uploadCheckAttachment, signedCheckUrl, deleteCheckAttachments } from "@/lib/v-storage";
 import { insertAttachment, listByDraft, deleteAttachmentRow, getAttachment, countForVersion, countContext, countImagesTotal, reorder, requireOwner, type AttachmentRow } from "@/lib/v-attachments-db";
 

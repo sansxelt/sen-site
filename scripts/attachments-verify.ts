@@ -1,6 +1,7 @@
 // Credit-free verification of attachment validation (MIME sniffing, size/format/empty rules, filename
 // sanitization). Pure logic, no storage/DB/network. Run: npx tsx scripts/attachments-verify.ts
-import { sniffMime, validateFile, sanitizeFilename, LIMITS } from "../lib/v-attachments";
+import { sniffMime, sanitizeFilename, LIMITS } from "../lib/v-attachments";
+import { validateFile } from "../lib/v-attachments-validate";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
