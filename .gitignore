@@ -67,3 +67,9 @@ scripts/whoami.ts
 scripts/dbcheck.ts
 scripts/grant-credits.ts
 scripts/apikey-audit.ts
+
+# Playwright E2E (auth state + reports; never commit sessions)
+.auth/
+test-results/
+playwright-report/
+playwright/.cache/

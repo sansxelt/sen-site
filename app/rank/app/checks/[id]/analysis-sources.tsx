@@ -33,7 +33,7 @@ export function AnalysisSources({ sources, capabilities, evidence }: {
     setPreview({ id: s.id, filename: s.filename, kind: s.kind, page, sourceLabel: `${groupTitle === "Supporting context" ? "Context" : groupTitle}${s.kind === "image" ? ` · Screenshot ${shotNo}` : ""}` });
 
   return (
-    <div style={{ ...box, padding: "clamp(16px, 2.4vw, 22px)", marginBottom: 18 }}>
+    <div data-testid="analysis-sources" style={{ ...box, padding: "clamp(16px, 2.4vw, 22px)", marginBottom: 18 }}>
       <div style={{ ...kicker, marginBottom: 4 }}>Analysis sources</div>
       <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "0 0 12px", lineHeight: 1.5 }}>What each version and reference was actually evaluated as. Open any file to see the exact source.</p>
 

@@ -431,7 +431,7 @@ export default function NewCheckPage() {
 
         {/* ── sticky check summary (desktop); stacks to the bottom on mobile ── */}
         <div className="sticky-side">
-          <div className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="card" data-testid="check-summary" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>Check summary</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
               {summary.map(([k, v]) => (
@@ -442,7 +442,7 @@ export default function NewCheckPage() {
               ))}
             </div>
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 14 }}>
-              <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || !canSubmit}
+              <button type="button" data-testid="run-check" className="btn btn--lg" onClick={submit} disabled={busy || !canSubmit}
                 style={{ width: "100%", justifyContent: "center", height: 48, fontSize: 15, fontWeight: 600, opacity: busy || !canSubmit ? 0.6 : 1 }}>
                 {anyUploading ? "Uploading…" : ctaText} {!busy && !anyUploading ? <span aria-hidden>→</span> : null}
               </button>

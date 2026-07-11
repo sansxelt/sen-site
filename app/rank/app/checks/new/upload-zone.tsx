@@ -157,7 +157,7 @@ export function UploadZone({ draftKey, role, versionKey, onItemsChange }: {
             const from = items.findIndex((x) => x.localId === it.localId);
             const label = isImage ? `Screenshot ${shotNo}` : it.filename;
             return (
-              <li key={it.localId}
+              <li key={it.localId} data-testid="attachment-row" data-kind={it.kind} data-status={it.status}
                 draggable={canReorder}
                 onDragStart={() => canReorder && setDragId(it.localId)}
                 onDragOver={(e) => { if (dragId) e.preventDefault(); }}

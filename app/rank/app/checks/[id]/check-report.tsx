@@ -313,7 +313,7 @@ export function CheckReport({ result, title, createdAt, calibrationSlot, attachm
 
       {/* audit: safe check details (multimodal checks only) — no paths, URLs, base64, or identities */}
       {hasAttachments ? (
-        <details style={{ ...box, background: "var(--bg-2)", padding: "clamp(14px, 2.2vw, 20px)", marginTop: 18 }}>
+        <details data-testid="check-details" style={{ ...box, background: "var(--bg-2)", padding: "clamp(14px, 2.2vw, 20px)", marginTop: 18 }}>
           <summary style={{ ...kicker, cursor: "pointer", color: "var(--fg-3)" }}>Check details</summary>
           <div style={{ display: "grid", gap: 7, marginTop: 12 }}>
             {([
