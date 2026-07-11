@@ -66,3 +66,4 @@ run-outreach-daily.cmd
 scripts/whoami.ts
 scripts/dbcheck.ts
 scripts/grant-credits.ts
+scripts/apikey-audit.ts
