@@ -10,6 +10,8 @@
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium webkit",
     "preflight:verify-db": "tsx scripts/preflight-verify-db.ts",
+    "preflight:worker": "tsx worker/preflight/index.ts",
+    "preflight:worker:test": "tsx scripts/preflight-worker-lifecycle-verify.ts",
     "outreach": "tsx scripts/outreach.ts",
     "desktop:dev": "npm --prefix desktop run tauri dev",
     "desktop:build": "npm --prefix desktop run tauri build",

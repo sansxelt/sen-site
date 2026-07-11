@@ -1,0 +1,15 @@
+# Railway service config for the Vraelis Preflight worker. Deploy as its OWN service (separate from the
+# Next web app), pointed at this repo with this Dockerfile. Set the env vars from .env.preflight.example
+# (server-only; never NEXT_PUBLIC). Browserbase + Railway are replaceable infrastructure.
+[build]
+builder = "dockerfile"
+dockerfilePath = "worker/preflight/Dockerfile"
+
+[deploy]
+startCommand = "npx tsx worker/preflight/index.ts"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+# Give in-flight bounded runs time to finish + close their browser session on redeploy.
+# (The worker traps SIGTERM and drains within PREFLIGHT_SHUTDOWN_GRACE_MS.)
