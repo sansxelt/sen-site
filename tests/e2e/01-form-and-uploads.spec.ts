@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
 import { fixtures } from "./fixtures";
-import { AUTHED, NEW_CHECK, needsAuth, attachmentRows, runCheck, summaryValue, outputZoneInput, contextZoneInput } from "./helpers";
+import { AUTHED, NEW_CHECK, needsAuth, gotoNewCheck, attachmentRows, runCheck, summaryValue, outputZoneInput, contextZoneInput, outputReplaceInput } from "./helpers";
 
 // Cases 1-18: the flag-on form + upload interactions. Requires a signed-in test account on a preview
 // where NEXT_PUBLIC_VRAELIS_UPLOADS=1. These assert real DOM/behaviour in a browser — not React source.
 
 test.describe("form + uploads", () => {
-  test.beforeEach(async ({ page }) => { needsAuth(); if (AUTHED) await page.goto(NEW_CHECK); });
+  test.beforeEach(async ({ page }) => { needsAuth(); if (AUTHED) await gotoNewCheck(page); });
 
   test("1. authenticated flag-on form loads with upload zones", async ({ page }) => {
     await expect(page.getByRole("heading", { name: /check your ai output/i })).toBeVisible();
@@ -44,16 +44,19 @@ test.describe("form + uploads", () => {
 
   test("6. screenshot order changes by keyboard (Move up)", async ({ page }) => {
     await outputZoneInput(page).setInputFiles([fixtures.screenshotN(1), fixtures.screenshotN(2)]);
-    const secondName = await attachmentRows(page).nth(1).getAttribute("data-kind");
+    await expect(attachmentRows(page)).toHaveCount(2);
+    await expect(attachmentRows(page).nth(1)).toHaveAttribute("data-status", "ready");
     await page.getByRole("button", { name: /move screenshot 2 up/i }).click();
     await expect(attachmentRows(page).first()).toContainText("Screenshot 1");
-    expect(secondName).toBe("image");
+    await expect(attachmentRows(page).first()).toHaveAttribute("data-kind", "image");
   });
 
   test("7. refresh preserves uploaded files and their order", async ({ page }) => {
     await outputZoneInput(page).setInputFiles([fixtures.screenshotN(1), fixtures.screenshotN(2)]);
     await expect(attachmentRows(page)).toHaveCount(2);
+    await expect(attachmentRows(page).nth(1)).toHaveAttribute("data-status", "ready"); // both persisted before reload
     await page.reload();
+    await page.getByLabel("Add output attachment files").first().waitFor({ state: "visible" });
     await expect(attachmentRows(page)).toHaveCount(2);
   });
 
@@ -101,8 +104,8 @@ test.describe("form + uploads", () => {
     await outputZoneInput(page).setInputFiles(fixtures.screenshot("first.png"));
     await expect(attachmentRows(page).first()).toContainText("first.png");
     await page.getByRole("button", { name: /replace screenshot 1/i }).click();
-    // The hidden replace input receives the new file.
-    await page.locator("input[type=file]").last().setInputFiles(fixtures.screenshot2("second.png"));
+    // The hidden single-file replace input receives the new file.
+    await outputReplaceInput(page).setInputFiles(fixtures.screenshot2("second.png"));
     await expect(page.getByText("second.png")).toBeVisible();
   });
 

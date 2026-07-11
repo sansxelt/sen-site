@@ -3,7 +3,15 @@
 // can be imported by "use client" components (the upload zone) without dragging pdf-parse/fs into the
 // browser bundle. Only server routes import this module. pdf-parse is also in serverExternalPackages.
 
+import { createRequire } from "node:module";
 import { sniffMime, FORMATS, LIMITS, COMING_SOON, uploadErrorMessage, type UploadError, type ValidatedFile } from "./v-attachments";
+
+// pdf-parse internally does a COMPUTED require of its bundled pdf.js (`require('./pdf.js/<ver>/build/…')`).
+// A bundler (Turbopack) can't trace that and breaks it in the built server even with serverExternalPackages,
+// so `import('pdf-parse')` there throws and every PDF upload failed with "could not process". A genuine
+// runtime require (createRequire) is left untouched by the bundler and resolves the package + its internal
+// relative requires at runtime, matching the standalone behavior.
+const nodeRequire = createRequire(import.meta.url);
 
 // PDF page count + readability. pdf-parse throws on corrupt PDFs; encrypted PDFs are caught by the
 // /Encrypt marker (best effort). Lazy dynamic import of the main entry (matches app/api/sources) so the
@@ -13,7 +21,7 @@ async function pdfInfo(buf: Buffer): Promise<{ pages: number } | { error: Upload
   const tail = buf.toString("latin1", Math.max(0, buf.length - 4096));
   if (/\/Encrypt\b/.test(head) || /\/Encrypt\b/.test(tail)) return { error: "encrypted_pdf" };
   try {
-    const mod = (await import("pdf-parse")) as
+    const mod = nodeRequire("pdf-parse") as
       | { default: (b: Buffer) => Promise<{ numpages?: number }> }
       | ((b: Buffer) => Promise<{ numpages?: number }>);
     const parse = typeof mod === "function" ? mod : mod.default;
@@ -21,7 +29,8 @@ async function pdfInfo(buf: Buffer): Promise<{ pages: number } | { error: Upload
     const pages = data?.numpages ?? 0;
     if (!pages) return { error: "unreadable_document" };
     return { pages };
-  } catch {
+  } catch (e) {
+    console.error("pdfInfo parse failed:", (e as Error)?.message);
     return { error: "unreadable_document" };
   }
 }

@@ -10,8 +10,10 @@ const runLocal = process.env.PLAYWRIGHT_LOCAL === "1";
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  timeout: 60_000,
-  expect: { timeout: 10_000 },
+  // Generous timeouts: a local `next dev` compiles routes on demand (first upload/route hit is slow) and
+  // uploads round-trip to real private storage. Against a prebuilt server these finish far faster.
+  timeout: 120_000,
+  expect: { timeout: 30_000 },
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

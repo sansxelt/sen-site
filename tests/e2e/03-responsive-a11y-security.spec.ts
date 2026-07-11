@@ -1,13 +1,13 @@
 import { test, expect, request as pwRequest } from "@playwright/test";
 import { fixtures } from "./fixtures";
-import { AUTHED, NEW_CHECK, needsAuth, attachmentRows, outputZoneInput } from "./helpers";
+import { AUTHED, NEW_CHECK, needsAuth, gotoNewCheck, attachmentRows, outputZoneInput } from "./helpers";
 
 // Cases 31-34: responsive layout, keyboard-only flow, and the security boundaries. The cross-owner and
 // deleted-check cases assert the API's ownership enforcement directly (the real boundary the signed
 // preview relies on), which needs a SECOND test account's storageState.
 
 test.describe("responsive + a11y", () => {
-  test.beforeEach(async ({ page }) => { needsAuth(); if (AUTHED) await page.goto(NEW_CHECK); });
+  test.beforeEach(async ({ page }) => { needsAuth(); if (AUTHED) await gotoNewCheck(page); });
 
   test("31. mobile layout: summary is full-width, no horizontal scroll", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });

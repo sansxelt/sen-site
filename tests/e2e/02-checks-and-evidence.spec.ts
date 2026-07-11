@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { fixtures } from "./fixtures";
-import { AUTHED, NEW_CHECK, needsAuth, attachmentRows, runCheck, outputZoneInput } from "./helpers";
+import { AUTHED, NEW_CHECK, needsAuth, gotoNewCheck, attachmentRows, runCheck, outputZoneInput, contextZoneInput } from "./helpers";
 
 // Cases 19-30: running real checks + the completed report (capabilities, evidence, no-charge failure,
 // idempotency, replay). These spend a test credit per successful check, so they run only on a funded
@@ -14,7 +14,7 @@ async function waitForReport(page: import("@playwright/test").Page) {
 }
 
 test.describe("checks + evidence", () => {
-  test.beforeEach(async ({ page }) => { needsAuth(); if (AUTHED) await page.goto(NEW_CHECK); });
+  test.beforeEach(async ({ page }) => { needsAuth(); if (AUTHED) await gotoNewCheck(page); });
 
   test("19. successful screenshot check -> report shows Visual analysis source", async ({ page }) => {
     await outputZoneInput(page).setInputFiles(fixtures.screenshot());
@@ -66,7 +66,7 @@ test.describe("checks + evidence", () => {
 
   test("25. context evidence is labeled Context, not attributed to a version", async ({ page }) => {
     await outputZoneInput(page).setInputFiles(fixtures.screenshot());
-    await page.getByLabel("Add supporting context files").locator("input[type=file]").setInputFiles(fixtures.pdf("brand-guide.pdf"));
+    await contextZoneInput(page).setInputFiles(fixtures.pdf("brand-guide.pdf"));
     await runCheck(page).click();
     await waitForReport(page);
     await expect(page.getByTestId("analysis-sources")).toContainText("Supporting context");
