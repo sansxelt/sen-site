@@ -36,6 +36,19 @@ export async function allow(key: string, limit: number, windowSecs: number): Pro
   }
 }
 
+// STRICT variant for expensive / abuse-sensitive endpoints (e.g. discovery, which crawls + makes a paid
+// LLM call): FAIL CLOSED. Denies whenever the limiter cannot be consulted — DB unconfigured, RPC not
+// migrated, or any error — so a limiter outage can never unlock unbounded paid work. Only returns true
+// when the RPC explicitly confirms the request is under the limit.
+export async function allowStrict(key: string, limit: number, windowSecs: number): Promise<boolean> {
+  if (!isDatabaseConfigured()) return false;
+  try {
+    const { data, error } = await getSupabaseAdminClient().rpc("vraelis_rate_check" as never, { p_key: key, p_limit: limit, p_window_secs: windowSecs } as never);
+    if (error) { captureError("ratelimit-strict", error, { key }); return false; }
+    return data !== false;
+  } catch (e) { captureError("ratelimit-strict", e, { key }); return false; }
+}
+
 // Convenience: build a key from route + IP and check it. Returns a 429
 // Response when blocked, or null when allowed.
 import { NextResponse } from "next/server";

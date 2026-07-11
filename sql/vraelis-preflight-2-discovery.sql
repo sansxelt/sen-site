@@ -55,3 +55,9 @@ alter table v_preflight_runs add column if not exists provider_session_id text;
 alter table v_preflight_runs add column if not exists current_flow_id uuid;
 alter table v_preflight_runs add column if not exists contract_version int;
 alter table v_preflight_runs add column if not exists cost_reservation_id text;
+
+-- Discovery idempotency + one-active-per-app DB backstop. The partial-unique index makes a concurrent
+-- double-submit collide at insert (one wins, the other 409s) rather than racing the app-level check.
+alter table v_discovery_snapshots add column if not exists idempotency_key text;
+create unique index if not exists v_discovery_active_uidx on v_discovery_snapshots(application_id)
+  where state in ('pending','running','fetching','extracting','synthesizing','persisting');
