@@ -33,6 +33,14 @@ export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerCo
     }
     cfg.browserbase = { apiKey };
   }
+  // Loud one-time startup notes for operational flags (loadWorkerConfig runs once at boot). Values only,
+  // never secrets.
+  if (env.PREFLIGHT_SEED_ALLOW_PROD === "1") {
+    console.warn("[preflight-worker] unsafe flag set: PREFLIGHT_SEED_ALLOW_PROD=1 lets seed/fixture scripts target production. Unset it when the deliberate seeding session is over.");
+  }
+  if (env.VRAELIS_RUNS_DISABLED === "1") {
+    console.warn("[preflight-worker] kill switch is ON (VRAELIS_RUNS_DISABLED=1): the app routes refuse NEW runs; this worker keeps draining already-claimed work until the queue is empty.");
+  }
   return cfg;
 }
 

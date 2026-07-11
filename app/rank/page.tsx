@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
+import { PassDemo } from "./_components/pass-demo";
+import { TwoUserDemo } from "./_components/two-user-demo";
 
 export const metadata = {
   ...ogMeta({
@@ -84,37 +86,8 @@ const IS_NOT_THINGS = [
   "A code writer: in V1 it proposes fixes and proves them, it does not modify or deploy your code on its own.",
 ];
 
-// ── Signature device: the two-user proof timeline ──
-function TwoUserProof() {
-  const rows: { who: "A" | "B"; act: string; expect: string; ok: boolean }[] = [
-    { who: "A", act: "Creates a project, sees “Saved”", expect: "Written to the database", ok: true },
-    { who: "A", act: "Refreshes the page", expect: "Project is still there", ok: true },
-    { who: "A", act: "Signs out, signs back in", expect: "Project survives a new session", ok: true },
-    { who: "B", act: "Opens User A's project by id", expect: "Access is denied", ok: false },
-  ];
-  return (
-    <div className="win" style={{ boxShadow: "var(--shadow-lg)" }}>
-      <div className="win__bar">
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, color: "var(--fg-2)" }}>Two-user state check</span>
-        <span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>illustrative</span>
-        <span className="pill" style={{ marginLeft: "auto", background: "var(--acc-soft)", color: "var(--acc-deep)", borderColor: "var(--acc-line)" }}>Isolation held</span>
-      </div>
-      <div style={{ padding: "clamp(16px,2.4vw,24px)", display: "grid", gap: 10 }}>
-        {rows.map((r, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 13px", borderRadius: 11, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
-            <span aria-hidden style={{ flex: "none", width: 26, height: 26, borderRadius: 8, display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12, color: "#fff", background: r.who === "A" ? "linear-gradient(135deg, var(--acc), var(--acc-deep))" : "linear-gradient(135deg, #7c8698, #5a6478)" }}>{r.who}</span>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500 }}>{r.act}</div>
-              <div style={{ fontSize: 12, color: "var(--fg-4)" }}>{r.expect}</div>
-            </div>
-            <span aria-hidden style={{ flex: "none", width: 22, height: 22, borderRadius: "50%", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, color: r.ok ? "var(--acc-deep)" : "#C0392B", background: r.ok ? "var(--acc-soft)" : "#FBEBEA", border: `1px solid ${r.ok ? "var(--acc-line)" : "#F0C7C2"}` }}>{r.ok ? "✓" : "✕"}</span>
-          </div>
-        ))}
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 2 }}>Persistence held. Session survived. User B was denied. All three proven in a real browser.</div>
-      </div>
-    </div>
-  );
-}
+// The signature two-user proof timeline now lives in
+// _components/two-user-demo.tsx as an interactive client component.
 
 export default function VraelisLanding() {
   return (
@@ -138,38 +111,10 @@ export default function VraelisLanding() {
           </div>
           <p className="rise" data-d="4" style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)", margin: "14px 0 0" }}>Test-only. No real charges, nothing deleted. You approve every flow before it runs.</p>
 
-          {/* Signature artifact: the Production Pass, a launch decision, not a dashboard */}
+          {/* Signature artifact: the Production Pass, a launch decision, not a dashboard.
+              Interactive demonstration: pick a build state and watch the pass run. */}
           <div className="rise" data-d="5" style={{ position: "relative", maxWidth: 880, margin: "clamp(24px, 3vw, 40px) auto 0" }}>
-            <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
-              <div className="win__bar">
-                <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-2)" }}>Production Pass</span>
-                <span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>illustrative example</span>
-                <span style={{ marginLeft: "auto" }}><StatusPill s="blocked" /></span>
-              </div>
-              <div style={{ padding: "clamp(18px,2.6vw,28px)" }}>
-                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(1.2rem,2.4vw,1.6rem)", color: "var(--fg-1)" }}>Not ready to launch</div>
-                  <div style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-4)" }}>5 critical flows checked, 2 blocked</div>
-                </div>
-                <div style={{ display: "grid", gap: 10 }}>
-                  {[
-                    { s: "blocked" as StatusKey, layer: "Data", t: "Created project disappears after refresh", d: "Saved to memory, never written to the database." },
-                    { s: "blocked" as StatusKey, layer: "Auth / row security", t: "User B can open User A's invoice by id", d: "No ownership check on the record route." },
-                    { s: "review" as StatusKey, layer: "Billing", t: "Upgrade shows success with no subscription", d: "Stripe test mode created no subscription for the checkout." },
-                  ].map((f, i) => (
-                    <div key={i} style={{ display: "flex", gap: 13, alignItems: "flex-start", padding: "13px 14px", borderRadius: 11, background: "var(--bg-2)", border: `1px solid ${STATUS[f.s].line}` }}>
-                      <span style={{ marginTop: 1 }}><StatusPill s={f.s} /></span>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--fg-1)" }}>{f.t}</div>
-                        <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, marginTop: 2 }}>{f.d}</div>
-                        <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--fg-5)", marginTop: 6 }}>{f.layer}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 14 }}>Every finding carries deterministic browser evidence, a screenshot, and reproduction steps.</div>
-              </div>
-            </div>
+            <PassDemo />
           </div>
         </div>
       </section>
@@ -207,7 +152,7 @@ export default function VraelisLanding() {
               </div>
               <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 16, lineHeight: 1.55 }}>State integrity is a first-class check, not a side effect. Vraelis asks whether apparent success survives a refresh, a new session, and a second user.</p>
             </div>
-            <TwoUserProof />
+            <TwoUserDemo />
           </div>
         </div>
       </section>

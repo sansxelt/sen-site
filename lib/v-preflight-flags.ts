@@ -7,6 +7,7 @@
 //   VRAELIS_PREFLIGHT_INTERNAL_ONLY=1    internal-only (owner/allowlist) — Phase 1 default
 //   NEXT_PUBLIC_VRAELIS_PREFLIGHT=1      show the Applications nav item (client-readable)
 //   VRAELIS_LEGACY_CHECKER_ENABLED       (default on) keep the AI-output checker visible
+//   VRAELIS_RUNS_DISABLED=1              kill switch: pause NEW runs only (routes 503); history stays visible
 
 const on = (v: string | undefined) => v === "1" || v === "true";
 
@@ -23,4 +24,11 @@ export function preflightInternalOnly(): boolean {
 // the shipping product mid-development).
 export function legacyCheckerEnabled(): boolean {
   return process.env.VRAELIS_LEGACY_CHECKER_ENABLED !== "0";
+}
+
+// Kill switch for NEW runs only. When on, the run + rerun routes refuse to queue (503 runs_paused) while
+// every existing report stays readable and the worker keeps draining already-claimed work. It never hides
+// history and never touches read routes.
+export function runsDisabled(): boolean {
+  return process.env.VRAELIS_RUNS_DISABLED === "1";
 }

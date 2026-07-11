@@ -26,6 +26,10 @@ export type RunFlow = { name: string; state: string; severity: string | null; st
 export type RunHeader = {
   state: string; decision: string | null; summary: Record<string, unknown>;
   deployment_url: string | null; commit_sha: string | null; created_at: string; completed_at: string | null;
+  // Coarse, owner-safe failure enum set by the worker (worker/preflight/provider-errors.ts), e.g.
+  // provider_capacity / session_timeout. Never a raw provider message (that stays in failure_message,
+  // which is server-side only and deliberately NOT selected here).
+  failure_code: string | null;
 };
 export type RunIssue = {
   id: string; flow_id: string | null; severity: string; category: string | null; title: string;
@@ -45,7 +49,7 @@ export async function getRun(owner: string, runId: string): Promise<RunDetail | 
   const uid = norm(owner);
 
   const { data: runRow } = await db().from("v_preflight_runs")
-    .select("state, decision, summary, deployment_url, commit_sha, created_at, completed_at")
+    .select("state, decision, summary, deployment_url, commit_sha, created_at, completed_at, failure_code")
     .eq("user_id", uid).eq("id", runId).maybeSingle();
   if (!runRow) return null;                                        // not owned / not found / not migrated
   const rr = runRow as Record<string, unknown>;
@@ -101,6 +105,7 @@ export async function getRun(owner: string, runId: string): Promise<RunDetail | 
     state: String(rr.state ?? "draft"), decision: (rr.decision as string) ?? null,
     summary: (rr.summary as Record<string, unknown>) ?? {}, deployment_url: (rr.deployment_url as string) ?? null,
     commit_sha: (rr.commit_sha as string) ?? null, created_at: String(rr.created_at ?? ""), completed_at: (rr.completed_at as string) ?? null,
+    failure_code: (rr.failure_code as string) ?? null,
   };
   return { run, flows, issues };
 }
@@ -151,7 +156,7 @@ export async function getRunArtifactPath(owner: string, runId: string, artifactI
 // page. Reuses the owner-scoped, degrade-safe listRuns from the applications data layer rather than
 // duplicating the query; one summary shape across the shell.
 export async function listRunsForApp(owner: string, appId: string, limit = 20): Promise<RunSummary[]> {
-  return listRuns(owner, appId, limit);
+  return listRuns(owner, appId, limit); // transitive ownership: listRuns filters eq("user_id") itself
 }
 
 // Count of the owner's runs in a NON-terminal state; the per-owner concurrency cap. Degrades to 0 on a
@@ -163,6 +168,22 @@ export async function ownerActiveRunCount(owner: string): Promise<number> {
     .select("id", { count: "exact", head: true })
     .eq("user_id", norm(owner))
     .not("state", "in", `(${TERMINAL_RUN_STATES.join(",")})`);
+  if (error) return 0;
+  return count ?? 0;
+}
+
+// Count of the owner's runs created since UTC midnight; the per-owner DAILY cap (spend/worker-load velocity
+// guard). Degrades to 0 on a missing table / transient error for the same reason as ownerActiveRunCount:
+// the route has already passed preflightDbReady, and the credit hold remains the hard spend limit, so a
+// fail-open blip here is bounded.
+export async function ownerRunsToday(owner: string): Promise<number> {
+  if (!isDatabaseConfigured()) return 0;
+  const utcMidnight = new Date();
+  utcMidnight.setUTCHours(0, 0, 0, 0);
+  const { count, error } = await db().from("v_preflight_runs")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", norm(owner))
+    .gte("created_at", utcMidnight.toISOString());
   if (error) return 0;
   return count ?? 0;
 }

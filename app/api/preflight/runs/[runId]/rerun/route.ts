@@ -9,21 +9,22 @@
 // Issue resolution is worker-side: an issue resolves only when its flow's rerun passes. This route resolves
 // nothing.
 //
-// Gates, in order: preflight flag (404) -> auth (401) -> DB migrated (503) -> parent run owned (404) -> app
-// owned (404) -> parent has a contract (400) -> safe https deployment URL (400) -> flow selection non-empty
-// (400) -> per-owner concurrency cap (429) -> credit hold (402). Only after the hold do we insert; a
-// unique-submission collision returns the existing run (409) and releases this attempt's hold. Billing mirrors
-// the launch route exactly (app/api/preflight/apps/[id]/runs/route.ts).
+// Gates, in order: preflight flag (404) -> kill switch (503) -> auth (401) -> DB migrated (503) -> parent
+// run owned (404) -> app owned (404) -> parent has a contract (400) -> safe https deployment URL (400) ->
+// flow selection non-empty (400) -> per-owner concurrency cap (429) -> per-owner DAILY cap (429) -> credit
+// hold (402). Only after the hold do we insert; a unique-submission collision returns the existing run (409)
+// and releases this attempt's hold. Billing mirrors the launch route exactly
+// (app/api/preflight/apps/[id]/runs/route.ts).
 
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { auth } from "@/auth";
-import { preflightEnabled } from "@/lib/v-preflight-flags";
+import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, listFlows } from "@/lib/v-applications";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
-import { createRun, ownerActiveRunCount } from "@/lib/preflight/runs-db";
+import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { getRunInternal, parentRunFlows, setParentRun } from "@/lib/preflight/run-report-db";
 import { logEvent } from "@/lib/v-events";
 
@@ -45,6 +46,10 @@ function billingBypassAllowed(): boolean {
 
 export async function POST(req: Request, { params }: { params: Promise<{ runId: string }> }) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  // Kill switch: pauses NEW runs only. Reports, history, and the worker's already-claimed work are untouched.
+  if (runsDisabled()) {
+    return NextResponse.json({ error: "runs_paused", message: "New Production Passes are temporarily paused. Existing reports remain available." }, { status: 503 });
+  }
   const email = (await auth())?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const owner = email.toLowerCase();
@@ -105,6 +110,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   // Per-owner concurrency cap.
   if ((await ownerActiveRunCount(owner)) >= MAX_ACTIVE_RUNS_PER_OWNER) {
     return NextResponse.json({ error: "too_many_active_runs", message: "You already have preflight runs in progress. Wait for them to finish." }, { status: 429 });
+  }
+
+  // Per-owner DAILY cap (runs created since UTC midnight), checked BEFORE the credit hold so no hold is
+  // ever taken for a run the cap would refuse.
+  if ((await ownerRunsToday(owner)) >= Number(process.env.PREFLIGHT_MAX_RUNS_PER_DAY || 20)) {
+    return NextResponse.json({ error: "daily_limit", message: "Daily run limit reached. Try again tomorrow or contact support." }, { status: 429 });
   }
 
   // Idempotency: an Idempotency-Key header or a submission_id in the body dedupes an accidental double POST;

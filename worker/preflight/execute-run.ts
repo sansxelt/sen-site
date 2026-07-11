@@ -4,6 +4,7 @@
 // finalizes. The session is always closed in a finally, and a lost lease / requested cancel aborts
 // browser work immediately (checked before every step via the ownership-checked heartbeat). No AI here.
 import type { BrowserProvider, RunStore, ClaimedRun, FlowResult, FlowSpec, RunDecision, StepObservation, ArtifactSink } from "./types";
+import { classifyProviderError } from "./provider-errors";
 import { log } from "./redaction";
 
 export type ExecLimits = { leaseSecs: number; maxRunMs: number; maxFlowMs: number; maxStepsPerFlow: number };
@@ -94,7 +95,10 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
     await deps.store.finalizeRun(run.runId, decision, summary);   // atomic: decision + charge-on-completion
     log({ worker_id: deps.workerId, run_id: run.runId, event: "run_finalized", result: decision });
   } catch (e) {
-    const code = e instanceof CancelledError ? "cancelled" : e instanceof LeaseLostError ? "lease_lost" : "run_error";
+    // Cancels / lost leases keep their exact codes; everything else is classified into a coarse, owner-safe
+    // failure code (classifyProviderError NEVER puts a raw provider string in the code). The truncated real
+    // message still rides along as failure_message, which is stored server-side only.
+    const code = e instanceof CancelledError ? "cancelled" : e instanceof LeaseLostError ? "lease_lost" : classifyProviderError(e).code;
     // A failed cleanup must never strand the run: failRun requeues (attempts remain) or fails terminally,
     // and refunds the reservation when no flow ran.
     await deps.store.failRun(run.runId, code, (e as Error).message.slice(0, 200), executedAny);

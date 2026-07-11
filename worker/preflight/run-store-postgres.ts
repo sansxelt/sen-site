@@ -36,9 +36,31 @@ if (process.env.PREFLIGHT_INTERNAL_BILLING_BYPASS === "1"
 
 export class PostgresRunStore implements RunStore {
   private s: SupabaseClient;
+  private lastReapMs = 0;
   constructor(url: string, serviceKey: string) { this.s = createClient(url, serviceKey, { auth: { persistSession: false } }); }
 
+  // Queue recovery: a run whose worker died mid-flight stays 'running' with an expired lease, and the claim
+  // RPC only picks up 'queued' rows, so without this it would be stranded forever. Every claim cycle (at
+  // most every 30s) each expired-lease running run is routed through the SAME failRun semantics as a live
+  // failure: attempts left -> requeued (hold kept for the retry); attempts exhausted -> terminal 'failed'
+  // with the reservation refunded when no flow ever executed. Concurrent workers reaping the same row are
+  // harmless: failRun is idempotent for an already-terminal run and a double-requeue is the same write.
+  private async reapExpiredLeases(): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastReapMs < 30_000) return;
+    this.lastReapMs = now;
+    try {
+      const { data } = await this.s.from("v_preflight_runs").select("id")
+        .eq("state", "running").lt("lease_expires_at", new Date().toISOString()).limit(20);
+      for (const row of (data as { id: string }[] | null) ?? []) {
+        const { count } = await this.s.from("v_flow_runs").select("id", { count: "exact", head: true }).eq("preflight_run_id", row.id);
+        await this.failRun(row.id, "lease_expired", "The worker lost its lease before finishing this run.", (count ?? 0) > 0);
+      }
+    } catch (e) { console.warn("preflight lease reap:", (e as Error).message); }
+  }
+
   async claim(workerId: string, leaseSecs: number): Promise<ClaimedRun | null> {
+    await this.reapExpiredLeases();
     const { data: runId, error } = await this.s.rpc("v_preflight_claim", { p_worker: workerId, p_lease_secs: leaseSecs });
     if (error || !runId) return null;
     const { data: run } = await this.s.from("v_preflight_runs").select("id,application_id,deployment_url,contract_id,lease_expires_at,environment:provider").eq("id", runId).maybeSingle();
