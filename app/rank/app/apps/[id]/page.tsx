@@ -8,6 +8,7 @@ import {
   type ContractRequirement, type TestFlow, type RunSummary,
 } from "@/lib/v-applications";
 import { listRunsForApp } from "@/lib/preflight/runs-db";
+import { AppTabs } from "./app-tabs";
 
 export const metadata: Metadata = { title: "Application" };
 
@@ -125,7 +126,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         {builderLabel ? <span className="pill" style={{ fontSize: 10.5 }}>{builderLabel}</span> : null}
       </div>
 
-      <div style={{ display: "grid", gap: 14, marginTop: 28 }}>
+      <AppTabs appId={id} active="overview" />
+
+      <div style={{ display: "grid", gap: 14, marginTop: 0 }}>
 
         {/* Production Contract */}
         <div className="card" style={cardStyle}>

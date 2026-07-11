@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { getApplication, getContract, listRequirements } from "@/lib/v-applications";
 import { ContractEditor } from "./contract-editor";
+import { AppTabs } from "../app-tabs";
 
 export const metadata: Metadata = { title: "Production Contract" };
 
@@ -38,9 +39,11 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
       </Link>
       <p className="eyebrow">Production Contract</p>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>What this app must do</h1>
-      <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 0 28px", maxWidth: 640 }}>
+      <p style={{ fontSize: 14.5, color: "var(--fg-3)", lineHeight: 1.6, margin: 0, maxWidth: 640 }}>
         The approved definition of what the product promises. Vraelis tests these before you launch.
       </p>
+
+      <AppTabs appId={id} active="contract" />
 
       {contract ? (
         <ContractEditor contractId={contract.id} initial={reqs} status={contract.status} />
