@@ -72,13 +72,13 @@
      typographic flourish.
      ═══════════════════════════════════════════════════════════════════ */
   --font-sans:   "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  /* --font-mono is used everywhere for labels/captions/KPIs/status. JetBrains Mono
-     reads poorly at the small sizes those use, so it now points at the clean
-     sans (labels keep their uppercase + letter-spacing for the "label" feel).
-     Use --font-code for the few places that need true monospace (keys, URLs,
-     code snippets) where character alignment actually matters. */
+  /* --font-mono AND --font-code both point at the clean sans: monospace read as
+     "server log" in every label, timestamp, and status context it touched, so no
+     UI text renders in a code font anymore (labels keep their uppercase +
+     letter-spacing for the "label" feel). Actual code samples (.codeblock) carry
+     their own literal monospace stack, the ONLY place true mono remains. */
   --font-mono:   "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --font-code:   "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-code:   "Inter Tight", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --font-italic: "Instrument Serif", Georgia, "Times New Roman", serif;
 
   /* ═══════════════════════════════════════════════════════════════════

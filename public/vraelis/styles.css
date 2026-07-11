@@ -515,12 +515,14 @@ summary::-webkit-details-marker { display: none; }
 @keyframes shimmer { 100% { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) { .skel::after { animation: none; } }
 
-/* ─── Code block ─── */
+/* ─── Code block ─── the ONLY surface that keeps true monospace (real code needs
+   character alignment); every other --font-code usage renders in the sans. */
 .codeblock {
   margin: 0; padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid rgba(255,255,255,0.08);
   background: #16202B; color: #E7ECF3; overflow-x: auto; box-shadow: var(--shadow-lg);
-  font-family: var(--font-code); font-size: 13px; line-height: 1.7;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7;
 }
+.codeblock code, .codeblock kbd { font-family: inherit; }
 /* the global `code` rule sets a dark ink color; inside the dark panel the inner
    <code> must inherit the panel's light foreground, not the dark page color */
 .codeblock code, .codeblock kbd { color: inherit; background: none; border: none; padding: 0; font-size: inherit; }
@@ -642,3 +644,10 @@ summary::-webkit-details-marker { display: none; }
 .foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr; gap: 30px; }
 @media (max-width: 900px) { .foot-grid { grid-template-columns: 1.4fr 1fr 1fr; row-gap: 32px; } }
 @media (max-width: 560px) { .foot-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ─── Global scale ─── the whole Vraelis surface (marketing + app) renders ~20%
+   smaller on desktop: the density the design was judged best at (the "75% zoom
+   looks right" note). Phones keep 1:1 so touch targets and text stay readable. */
+@media (min-width: 768px) {
+  .rank-root { zoom: 0.8; }
+}
