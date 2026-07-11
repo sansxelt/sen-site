@@ -28,6 +28,8 @@ export type ContractRequirement = {
 export type TestFlow = {
   id: string; contract_id: string; name: string; goal: string | null; role: string | null; start_path: string | null;
   steps: unknown[]; expected: Record<string, unknown>; destructive_allowed: boolean; max_ms: number; priority: Severity; enabled: boolean; order_index: number;
+  // Phase-2 additive columns (sql/vraelis-preflight-2-discovery.sql); absent until that migration runs.
+  requirement_ids?: string[] | null; review_state?: string | null;
 };
 // Lightweight run row for the dashboard/list (no heavy evidence payload).
 export type RunSummary = {
@@ -86,6 +88,34 @@ export async function getContract(userId: string, applicationId: string): Promis
   if (!isDatabaseConfigured()) return null;
   const { data } = await db().from("v_production_contracts").select("*").eq("user_id", norm(userId)).eq("application_id", applicationId).order("version", { ascending: false }).limit(1).maybeSingle();
   return (data as unknown as ProductionContract) ?? null;
+}
+
+// A contract by its own id, owner-scoped (route guards read this before allowing a mutation).
+export async function getContractById(userId: string, contractId: string): Promise<ProductionContract | null> {
+  if (!isDatabaseConfigured()) return null;
+  const { data } = await db().from("v_production_contracts").select("*").eq("user_id", norm(userId)).eq("id", contractId).maybeSingle();
+  return (data as unknown as ProductionContract) ?? null;
+}
+
+// The latest APPROVED contract for an app (may differ from getContract when a newer draft revision
+// exists). Runs verify against this one until the draft is approved.
+export async function getApprovedContract(userId: string, applicationId: string): Promise<ProductionContract | null> {
+  if (!isDatabaseConfigured()) return null;
+  const { data } = await db().from("v_production_contracts").select("*").eq("user_id", norm(userId)).eq("application_id", applicationId)
+    .eq("status", "approved").order("version", { ascending: false }).limit(1).maybeSingle();
+  return (data as unknown as ProductionContract) ?? null;
+}
+
+// Status of the contract that owns a requirement, both lookups owner-scoped. Null when the requirement
+// (or its contract) does not exist for this owner, so callers fall through to their normal not-found path.
+export async function contractStatusForRequirement(userId: string, requirementId: string): Promise<"draft" | "approved" | null> {
+  if (!isDatabaseConfigured()) return null;
+  const uid = norm(userId);
+  const { data } = await db().from("v_contract_requirements").select("contract_id").eq("user_id", uid).eq("id", requirementId).maybeSingle();
+  const contractId = (data as { contract_id?: string } | null)?.contract_id;
+  if (!contractId) return null;
+  const contract = await getContractById(uid, contractId);
+  return contract?.status ?? null;
 }
 
 export async function listRequirements(userId: string, contractId: string): Promise<ContractRequirement[]> {

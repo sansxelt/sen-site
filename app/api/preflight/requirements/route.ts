@@ -4,11 +4,17 @@
 //   DELETE /api/preflight/requirements?id=...                                                               remove
 //   POST   /api/preflight/requirements   { contract_id, approve: true }                                     approve contract
 // Session-authenticated + Preflight-flag gated; every mutation is owner-scoped in the data layer.
+// APPROVED contracts are IMMUTABLE: every mutating path (add/update/delete) loads the requirement's
+// contract owner-scoped first and returns 409 contract_approved when it is approved. Re-approving an
+// already-approved contract is an idempotent no-op (200) so approved_at is never rewritten.
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
-import { addRequirement, updateRequirement, deleteRequirement, approveContract, type Severity } from "@/lib/v-applications";
+import {
+  addRequirement, updateRequirement, deleteRequirement, approveContract,
+  getContractById, contractStatusForRequirement, type Severity,
+} from "@/lib/v-applications";
 
 export const runtime = "nodejs";
 
@@ -16,6 +22,11 @@ const SEVERITIES: Severity[] = ["critical", "important", "informational"];
 const sev = (v: unknown): Severity | undefined => (typeof v === "string" && (SEVERITIES as string[]).includes(v) ? (v as Severity) : undefined);
 
 async function owner() { return (await auth())?.user?.email || null; }
+
+const approvedImmutable = () => NextResponse.json(
+  { error: "contract_approved", message: "Approved contracts are immutable. Create a new draft to make changes." },
+  { status: 409 },
+);
 
 export async function POST(req: Request) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -25,10 +36,16 @@ export async function POST(req: Request) {
   const contractId = typeof body?.contract_id === "string" ? body.contract_id : "";
   if (!contractId) return NextResponse.json({ error: "missing_contract" }, { status: 400 });
 
+  // Owner-scoped read; null means not-found/not-owned and falls through to the normal failure paths.
+  const contract = await getContractById(email, contractId);
+
   if (body?.approve === true) {
+    if (contract?.status === "approved") return NextResponse.json({ ok: true }); // idempotent; approved_at untouched
     const ok = await approveContract(email, contractId);
     return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "approve_failed", message: "Enable at least one requirement before approving." }, { status: 400 });
   }
+
+  if (contract?.status === "approved") return approvedImmutable();
   const r = await addRequirement(email, contractId, {
     requirement: typeof body?.requirement === "string" ? body.requirement : "",
     category: typeof body?.category === "string" ? body.category : undefined,
@@ -44,6 +61,7 @@ export async function PATCH(req: Request) {
   const body = await req.json().catch(() => ({}));
   const id = typeof body?.id === "string" ? body.id : "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
+  if ((await contractStatusForRequirement(email, id)) === "approved") return approvedImmutable();
   const ok = await updateRequirement(email, id, {
     enabled: typeof body?.enabled === "boolean" ? body.enabled : undefined,
     severity: sev(body?.severity),
@@ -58,6 +76,7 @@ export async function DELETE(req: Request) {
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
+  if ((await contractStatusForRequirement(email, id)) === "approved") return approvedImmutable();
   const ok = await deleteRequirement(email, id);
   return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "delete_failed" }, { status: 400 });
 }

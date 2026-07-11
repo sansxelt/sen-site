@@ -16,7 +16,7 @@ import { randomUUID } from "node:crypto";
 import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { getApplication, getContract, listFlows } from "@/lib/v-applications";
+import { getApplication, getApprovedContract, listFlows } from "@/lib/v-applications";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { createRun, ownerActiveRunCount } from "@/lib/preflight/runs-db";
@@ -55,8 +55,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "setup_required", message: "Preflight is not fully set up yet." }, { status: 503 });
   }
 
-  // The Production Contract must be APPROVED; approval is the gate before any paid run.
-  const contract = await getContract(owner, id);
+  // The Production Contract must be APPROVED; approval is the gate before any paid run. The latest
+  // APPROVED version is used, so an in-progress draft revision never blocks runs: the approved contract
+  // remains what runs verify against until the draft is approved.
+  const contract = await getApprovedContract(owner, id);
   if (!contract || contract.status !== "approved") {
     return NextResponse.json({ error: "contract_not_approved", message: "Approve the Production Contract before launching a preflight run." }, { status: 400 });
   }

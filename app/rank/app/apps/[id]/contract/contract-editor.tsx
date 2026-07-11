@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ContractRequirement, Severity } from "@/lib/v-applications";
+import { categoryLabel, SEVERITY_LABELS as SEV_LABEL, SEVERITY_COLORS as SEV_COLOR } from "./labels";
 
 // Client editor for a Production Contract's requirements. Optimistic local state: every toggle / severity
 // change / delete updates the UI immediately and persists in the background; a failed write reverts the
@@ -10,17 +12,12 @@ import type { ContractRequirement, Severity } from "@/lib/v-applications";
 // execution or discovery here — this is the manual, Phase-1 editing surface.
 
 const SEVERITIES: Severity[] = ["critical", "important", "informational"];
-const SEV_LABEL: Record<Severity, string> = { critical: "Critical", important: "Important", informational: "Informational" };
-// critical = red, important = amber literal, informational = grey (matches the app's status palette).
-const SEV_COLOR: Record<Severity, string> = { critical: "var(--err)", important: "#c2831a", informational: "var(--fg-4)" };
 
 const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box" };
 const selectStyle: React.CSSProperties = { padding: "7px 10px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-2)", fontSize: 12.5, fontFamily: "var(--font-sans)", outline: "none", cursor: "pointer" };
 const deleteBtnStyle: React.CSSProperties = { width: 26, height: 26, borderRadius: 6, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-4)", cursor: "pointer", fontSize: 15, lineHeight: 1, flex: "none" };
 const lab: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", display: "block", marginBottom: 6 };
 const catHead: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 };
-
-function catLabel(c: string): string { return c ? c.charAt(0).toUpperCase() + c.slice(1) : "General"; }
 
 function SevPill({ severity }: { severity: Severity }) {
   return (
@@ -32,6 +29,7 @@ function SevPill({ severity }: { severity: Severity }) {
 }
 
 export function ContractEditor({ contractId, initial, status }: { contractId: string; initial: ContractRequirement[]; status: "draft" | "approved" }) {
+  const router = useRouter();
   const [reqs, setReqs] = useState<ContractRequirement[]>(initial);
   const [contractStatus, setContractStatus] = useState<"draft" | "approved">(status);
   const [draft, setDraft] = useState<{ requirement: string; category: string; severity: Severity }>({ requirement: "", category: "", severity: "important" });
@@ -131,6 +129,8 @@ export function ContractEditor({ contractId, initial, status }: { contractId: st
       if (res.ok && j?.ok) {
         setContractStatus("approved");
         setMsg({ kind: "ok", text: "Contract approved. Vraelis will test these requirements before you launch." });
+        // The server page renders an approved contract read-only; refresh so this editor is replaced by it.
+        router.refresh();
       } else {
         setMsg({ kind: "err", text: typeof j?.message === "string" ? j.message : "Could not approve the contract. Enable at least one requirement and try again." });
       }
@@ -154,7 +154,7 @@ export function ContractEditor({ contractId, initial, status }: { contractId: st
       ) : (
         grouped.map(([cat, items]) => (
           <div key={cat} className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)" }}>
-            <div style={catHead}>{catLabel(cat)}</div>
+            <div style={catHead}>{categoryLabel(cat)}</div>
             <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
               {items.map((r, idx) => (
                 <li key={r.id} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "14px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none" }}>
