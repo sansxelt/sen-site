@@ -128,7 +128,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
             </ul>
           </div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "14px 0 0", lineHeight: 1.6 }}>
-            Vraelis runs this whole checklist automatically in about 20 seconds: per-criterion scores, the version to ship, and the exact lines to fix. <Link href="/r/check" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Try it on your own output →</Link>
+            A checklist catches bad copy. Vraelis catches what breaks in production: it runs your AI-built app in a real browser and returns a launch decision with evidence. <Link href="/how-it-works" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>See how it works →</Link>
           </p>
         </section>
 
@@ -163,11 +163,11 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
 
         {/* final CTA */}
         <section style={{ marginTop: 48, textAlign: "center", paddingTop: 30, borderTop: "1px solid var(--line-1)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, color: "var(--fg-1)", marginBottom: 8 }}>Stop shipping AI output on vibes</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 20, color: "var(--fg-1)", marginBottom: 8 }}>Stop shipping demos as products</div>
           <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 auto 18px", maxWidth: 460 }}>
-            Paste your {guide.outputType.replace(/_/g, " ")} and get scores, the version to ship, and line-level fixes in about 20 seconds. Your first checks are free.
+            Your {guide.outputType.replace(/_/g, " ")} lives inside an app. Vraelis runs that app like production and tells you what blocks the launch, with the evidence to prove it. Your first Production Pass is free.
           </p>
-          <Link href="/r/check" className="btn btn--lg">Run a free check <span aria-hidden>→</span></Link>
+          <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
         </section>
       </article>
     </>

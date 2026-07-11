@@ -207,7 +207,7 @@ export const GUIDES: Guide[] = [
         },
         {
           "q": "Can I check these messages automatically before they send?",
-          "a": "Yes. Paste one or more versions into a check and get per-criterion scores for clarity, next step, reassurance, and tone, the version to ship, and line-level flags that quote the exact problem span with a fix. Wire it into your send pipeline by API, or run it in the app before you schedule a lifecycle campaign."
+          "a": "The checklist above is the fastest manual review for an individual message. Vraelis itself focuses one level up: it runs the AI-built app those messages live in like production, in a real browser, and returns a launch decision with the exact blockers to fix, so a message that reads well never ships inside a flow that loses data."
         }
       ]
     }

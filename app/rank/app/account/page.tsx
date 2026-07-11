@@ -75,7 +75,6 @@ export default async function AccountPage() {
         {linkCard("/app/credits", "Credits", "Top up your balance with packs or a custom amount.")}
         {linkCard("/app/api-keys", "API & webhooks", "Create API keys, manage webhook endpoints and deliveries.")}
         {linkCard("/app/data", "Data & exports", "Aggregate results and JSON / CSV exports of your tests.")}
-        {linkCard("/vote", "Evaluate & Earn", "Evaluate others' candidates and earn credits back.")}
       </div>
 
       {/* account activity (your own audit trail) */}

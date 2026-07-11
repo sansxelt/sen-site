@@ -84,7 +84,7 @@ export default function ApiKeysPage() {
         <div>
           <p className="eyebrow">Developers</p>
           <h1 className="display">API &amp; webhooks</h1>
-          <p>The AI output check API for your app. POST your output, get per-criterion scores, the version to ship, and line-level fixes, with usage analytics and webhook reliability below.</p>
+          <p>API keys and signed webhooks for your Vraelis integration. Triggering Production Passes from CI is opening in early access; usage analytics and webhook reliability are below.</p>
         </div>
       </div>
 

@@ -33,11 +33,11 @@ export default function GuidesIndex() {
       )}
 
       <div style={{ marginTop: 40, textAlign: "center", paddingTop: 28, borderTop: "1px solid var(--line-1)" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 19, color: "var(--fg-1)", marginBottom: 8 }}>Skip the manual review</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 19, color: "var(--fg-1)", marginBottom: 8 }}>The copy is the easy part</div>
         <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 auto 16px", maxWidth: 440 }}>
-          Vraelis runs the whole checklist for you: paste any AI output and get scores, the version to ship, and line-level fixes in about 20 seconds.
+          AI built the product. Vraelis finishes the engineering: it runs your AI-built app like production, in a real browser, and returns a launch decision with the exact blockers to fix.
         </p>
-        <Link href="/r/check" className="btn btn--lg">Run a free check <span aria-hidden>→</span></Link>
+        <Link href="/how-it-works" className="btn btn--lg">See how Vraelis works <span aria-hidden>→</span></Link>
       </div>
     </div>
   );

@@ -7,38 +7,38 @@ import { CheckoutClient, PlanPrice } from "./checkout-client";
 
 export const metadata: Metadata = { title: "Checkout" };
 
-// Value-first "what's included" per plan, the AI checks you get + the outputs of each.
+// Value-first "what's included" per plan: the credits that fund Production Passes + what each pass returns.
 const PLAN_VALUE: Record<string, string[]> = {
   starter: [
-    "150 AI checks every month",
-    "Per-criterion scores + the version to ship",
-    "Line-level flags with the exact fix inline",
-    "Validate on real people whenever the call matters",
-    "Shareable check reports",
+    "150 credits every month",
+    "Production Passes with a launch decision",
+    "Screenshots and repro steps on every blocker",
+    "Reruns that verify your repairs",
+    "Shareable pass reports",
     "Cancel anytime, no lock-in",
   ],
   creator: [
-    "500 AI checks every month",
-    "Full check reports: scores, recommendation, line-level fixes",
-    "Audience + goal context per check",
-    "Shareable check reports + JSON / CSV exports",
-    "Validate on real people whenever the call matters",
+    "500 credits every month",
+    "Full pass reports: decision, blockers, evidence",
+    "Issue history across runs",
+    "Shareable reports + JSON / CSV exports",
+    "Reruns that verify your repairs",
     "Cancel anytime, no lock-in",
   ],
   pro: [
-    "2,000 AI checks every month",
-    "Client-ready check reports",
+    "2,000 credits every month",
+    "Client-ready pass reports",
     "Exports + webhooks to automate your workflow",
-    "Batch-check drafts via the API",
+    "API run triggers (early access)",
     "Priority routing",
     "Cancel anytime, no lock-in",
   ],
   scale: [
-    "7,500 AI checks every month",
-    "AI check API + embeddable widget",
+    "7,500 credits every month",
+    "Many applications, one workspace",
     "Webhooks + developer usage analytics",
     "Schema-versioned JSON / CSV exports",
-    "Validate on real people, calibrated over time",
+    "Priority support",
     "Cancel anytime, no lock-in",
   ],
 };
@@ -60,8 +60,8 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const title = plan ? `${plan.name} plan` : `${(amount * 10).toLocaleString()} credits`;
   const backHref = plan ? "/app/plans" : "/app/credits";
   const included: string[] = plan
-    ? PLAN_VALUE[plan.plan] ?? [`${plan.monthlyCredits.toLocaleString()} AI checks every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
-    : ["1 credit = 1 AI check", "Validate on real people: 1 credit per valid judgment", "Failed checks are refunded automatically", "Filtered human responses are never charged", "Credits never expire"];
+    ? PLAN_VALUE[plan.plan] ?? [`${plan.monthlyCredits.toLocaleString()} credits every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
+    : ["Credits fund Production Passes (a credit per approved flow)", "Nothing ran, nothing charged: unused holds refund automatically", "Credits never expire"];
 
   return (
     <section className="section" style={{ borderBottom: "none", paddingTop: "clamp(20px, 3vw, 40px)", paddingBottom: "clamp(56px, 7vw, 96px)" }}>
@@ -72,7 +72,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           <div>
             <p className="eyebrow">Checkout</p>
             <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.6rem)" }}>{title}</h1>
-            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Check your AI output against your criteria and get the version to ship, with line-level fixes you can act on, share, and export.</p> : null}
+            {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Run your AI-built app like production and get a launch decision with the exact blockers to fix, with evidence you can act on, share, and export.</p> : null}
             {plan ? <PlanPrice plan={plan.plan} cycle={cycle} /> : null}
 
             <div className="card" style={{ marginTop: 22, padding: 20 }}>

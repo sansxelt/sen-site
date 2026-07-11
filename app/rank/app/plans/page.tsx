@@ -6,12 +6,12 @@ import Link from "next/link";
 type Cycle = "monthly" | "yearly";
 
 const PLANS: { key: string; name: string; price: Record<Cycle, number>; credits: string; blurb: string; perks: string[]; featured?: boolean }[] = [
-  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 AI checks", blurb: "Check a few drafts on us.", perks: ["Per-criterion scores + line-level fixes", "See a sample check"] },
-  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 AI checks / mo", blurb: "For solo creators shipping AI output.", perks: ["Scores + the version to ship", "Line-level fixes on every check"] },
-  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 AI checks / mo", blurb: "For ongoing content QA.", perks: ["Full check reports", "Audience + goal context", "Shareable check reports"] },
-  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 AI checks / mo", blurb: "For teams and client work.", perks: ["Client-ready check reports", "Batch-check via the API", "Exports + webhooks"], featured: true },
-  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 AI checks / mo", blurb: "For apps and high-volume teams.", perks: ["AI check API + embed", "Developer analytics + webhooks", "Validate on real people"] },
-  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom check volume", blurb: "For governed QA programs.", perks: ["Unlimited checks", "Org governance + audit + OIDC SSO", "Custom exports + workflows"] },
+  { key: "free", name: "Free", price: { monthly: 0, yearly: 0 }, credits: "25 credits", blurb: "Run your first preflight on us.", perks: ["A real browser runs your approved flows", "Launch decision with evidence"] },
+  { key: "starter", name: "Starter", price: { monthly: 19, yearly: 190 }, credits: "150 credits / mo", blurb: "For solo builders shipping AI-built apps.", perks: ["Production Passes with launch decisions", "Screenshots and repro steps on every blocker"] },
+  { key: "creator", name: "Creator", price: { monthly: 49, yearly: 490 }, credits: "500 credits / mo", blurb: "For apps that ship every week.", perks: ["Reruns that verify repairs", "Issue history across runs", "Shareable pass reports"] },
+  { key: "pro", name: "Pro", price: { monthly: 149, yearly: 1490 }, credits: "2,000 credits / mo", blurb: "For teams and client work.", perks: ["Client-ready pass reports", "API triggers (early access)", "Exports + webhooks"], featured: true },
+  { key: "scale", name: "Scale", price: { monthly: 399, yearly: 3990 }, credits: "7,500 credits / mo", blurb: "For agencies and high-volume teams.", perks: ["Many applications, one workspace", "Developer analytics + webhooks", "Priority support"] },
+  { key: "enterprise", name: "Enterprise", price: { monthly: -1, yearly: -1 }, credits: "Custom volume", blurb: "For governed production programs.", perks: ["Unlimited runs", "Org governance + audit + OIDC SSO", "Custom exports + workflows"] },
 ];
 
 const ORDER: Record<string, number> = { free: 0, starter: 1, creator: 2, pro: 3, scale: 4, enterprise: 5 };
@@ -62,7 +62,7 @@ export default function PlansPage() {
         <div>
           <p className="eyebrow">Plans</p>
           <h1 className="display">Pick a plan</h1>
-          <p>Each plan gives you monthly AI checks with per-criterion scores, the version to ship, and line-level fixes you can export. Validate on real people whenever the call matters. Credits refresh monthly. <Link href="/app/credits" style={{ color: "var(--acc-deep)" }}>Top up anytime →</Link></p>
+          <p>Each plan gives you monthly credits that fund Production Passes: real browser runs of your approved flows, with a launch decision and the evidence behind it. Credits refresh monthly. <Link href="/app/credits" style={{ color: "var(--acc-deep)" }}>Top up anytime →</Link></p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <div className="seg">
