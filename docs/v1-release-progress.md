@@ -36,10 +36,29 @@ continuous monitoring) is labeled future and has no fake controls.
 - Old-copy audit: 15 flagged surfaces cleaned; site metadata repositioned.
 - Real production proof: run b833713d BLOCKED with 2 real issues + 3 Browserbase screenshots.
 
-## In flight
+## Completed this session (verified, all suites green)
 
-- Evidence redesign (report verdict hero, health-first app overview + live Run Production Pass button,
-  immutable approved contracts + server guard + create-draft flow): agents done, verifying now.
+- Evidence redesign shipped to prod: report verdict hero with large evidence and collapsed technical
+  details, health-first application overview with a live Run Production Pass button, immutable approved
+  contracts (server 409 guard, idempotent re-approve, create-draft revision endpoint, runs verify against
+  the latest APPROVED version).
+- Worker reliability: expired-lease reaper (stranded running runs requeue or fail terminally through the
+  same failRun semantics, refunds included), provider error classification (auth / quota / capacity /
+  outage / timeout mapped to owner-safe codes, raw messages stay server-side).
+- Kill switch VRAELIS_RUNS_DISABLED (pauses new runs, history stays), per-owner daily run cap
+  (PREFLIGHT_MAX_RUNS_PER_DAY, default 20, checked before any credit hold), credit estimate on the launch
+  button, safe failure sentences on the report.
+- Interactive landing: PassDemo (broken to fixed animated Production Pass) + TwoUserDemo, reduced-motion
+  aware, ad-ready.
+- Security suite: 118/118 static assertions (ownership on every data-layer function, route auth plus
+  owner-loader ordering, artifact TTL, SSRF gates, internal-tool lockdown, secret hygiene).
+- UX states: loading skeletons, error boundaries, not-found for the app shell.
+- Docs: worker deploy runbook, rollback runbook, user guide, launch checklist.
+
+## Test matrix (this checkpoint)
+
+tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run 25/25, worker lifecycle
+26/26, artifacts 14/14, transport 18/18, limits 43/43, security 118/118.
 
 ## Blockers (operator or paid infra; cannot be done autonomously)
 
