@@ -83,3 +83,40 @@ export function issuesFromRun(results: FlowResult[], flows: FlowSpec[], flowRequ
   const rank = { critical: 0, high: 1, medium: 2, low: 3 };
   return out.sort((a, b) => rank[a.severity] - rank[b.severity]);
 }
+
+// ── Cross-run issue reconciliation (repair verification) ──────────────────────────────────────────────
+// Pure decision: given each flow that RAN in a (re)run (passed, or its failure categories) and the
+// application's currently OPEN issues, decide which open issues RESOLVE (their flow passed), which CONTINUE
+// (their flow still fails the same category, so bump + refresh), and which NEW issues to OPEN (a failure with
+// no matching open issue = a regression). Open issues whose flow did NOT run are left untouched (unverified).
+// Correlation identity is application + flow + category. No DB, no time, no model.
+export type ReconcileFlow = { flowId: string; passed: boolean; failureCategories: string[] };
+export type OpenIssueRef = { id: string; flowId: string; category: string | null };
+export type ReconcilePlan = {
+  resolve: string[];                                                              // open issue ids -> resolved
+  continueExisting: { id: string; flowId: string; category: string | null }[];    // still failing -> refresh
+  openNew: { flowId: string; category: string | null }[];                         // regressions -> insert
+};
+export function planReconcile(ranFlows: ReconcileFlow[], open: OpenIssueRef[]): ReconcilePlan {
+  const openByFlow = new Map<string, string[]>();
+  const openByFlowCat = new Map<string, string>();
+  for (const o of open) {
+    if (!o.flowId) continue;
+    if (!openByFlow.has(o.flowId)) openByFlow.set(o.flowId, []);
+    openByFlow.get(o.flowId)!.push(o.id);
+    openByFlowCat.set(`${o.flowId}|${o.category ?? ""}`, o.id);
+  }
+  const resolve: string[] = [];
+  const continueExisting: ReconcilePlan["continueExisting"] = [];
+  const openNew: ReconcilePlan["openNew"] = [];
+  for (const f of ranFlows) {
+    if (!f.flowId) continue;
+    if (f.passed) { for (const id of openByFlow.get(f.flowId) ?? []) resolve.push(id); continue; }
+    for (const cat of f.failureCategories) {
+      const existing = openByFlowCat.get(`${f.flowId}|${cat ?? ""}`);
+      if (existing) continueExisting.push({ id: existing, flowId: f.flowId, category: cat });
+      else openNew.push({ flowId: f.flowId, category: cat });
+    }
+  }
+  return { resolve, continueExisting, openNew };
+}

@@ -7,7 +7,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { RunStore, ClaimedRun, FlowResult, RunDecision, FlowSpec, Step, StepObservation, FlowEvidence } from "./types";
 import { refund } from "../../lib/v-credits";
-import { issuesFromRun } from "../../lib/preflight/issues";
+import { issuesFromRun, planReconcile, type Issue, type OpenIssueRef, type ReconcileFlow } from "../../lib/preflight/issues";
 
 // Owner + billing fields read once per settlement. Missing columns / absent table => null (degrade).
 type RunSettlementRow = {
@@ -170,9 +170,11 @@ export class PostgresRunStore implements RunStore {
     const contractId = run.contract_id ? String(run.contract_id) : null;
     if (!applicationId || frRows.length === 0) return;
 
-    // Idempotency: if this run already has issues, a prior finalize persisted them -- do not duplicate.
-    const { data: existing } = await this.s.from("v_issues").select("id").eq("run_id", runId).eq("user_id", userId).limit(1);
-    if (Array.isArray(existing) && existing.length > 0) return;
+    // Idempotency: if this run already touched any issue (opened, continued, or resolved), a prior finalize
+    // reconciled it -- do not repeat.
+    const { data: touched } = await this.s.from("v_issues").select("id")
+      .eq("user_id", userId).or(`first_seen_run.eq.${runId},last_seen_run.eq.${runId},resolved_run.eq.${runId}`).limit(1);
+    if (Array.isArray(touched) && touched.length > 0) return;
 
     // Reconstruct FlowResult[] from v_flow_runs (+ v_run_steps) -- the exact shape issuesFromRun expects.
     const results: FlowResult[] = [];
@@ -208,22 +210,53 @@ export class PostgresRunStore implements RunStore {
     }
     if (flows.length === 0) return;
 
-    // Deterministic issues, generated per flow so each row carries its flow_id (the Issue shape has none).
-    // v_issues has no requirement_refs column, so the covered requirements ride inside evidence.
-    const rows: Record<string, unknown>[] = [];
+    // Reconcile against the application's currently OPEN issues via the PURE, tested planReconcile
+    // (lib/preflight/issues.ts) — correlation identity is (application, flow, category). A flow that PASSED
+    // resolves its open issue(s); a flow that still FAILED continues the existing open issue (bumped
+    // last_seen_run, refreshed evidence) or opens a new one (a regression); a flow that did not run is
+    // untouched (left unverified). Resolution is a status transition, never a delete — history is preserved.
+    const { data: openRows } = await this.s.from("v_issues")
+      .select("id, flow_id, category").eq("user_id", userId).eq("application_id", applicationId).eq("status", "open");
+    const open: OpenIssueRef[] = ((openRows as Record<string, unknown>[] | null) ?? [])
+      .filter((o) => o.flow_id)
+      .map((o) => ({ id: String(o.id), flowId: String(o.flow_id), category: o.category ? String(o.category) : null }));
+
+    // This run's failures as fresh Issue payloads, keyed by flow|category (planReconcile decides what to do
+    // with each; the payloads carry the evidence either way).
+    const ran: ReconcileFlow[] = [];
+    const freshByFlowCat = new Map<string, Issue>();
     for (const result of results) {
-      for (const issue of issuesFromRun([result], flows, refs)) {
-        rows.push({
-          user_id: userId, application_id: applicationId, run_id: runId, flow_id: result.flowId || null,
-          severity: issue.severity, category: issue.category, title: issue.title,
-          expected: issue.expected, observed: issue.observed, repro: issue.repro,
-          evidence: { ...issue.evidence, requirement_refs: issue.requirement_refs },
-          status: "open", first_seen_run: runId, last_seen_run: runId,
-        });
-      }
+      if (!result.flowId) continue;
+      if (result.state === "passed") { ran.push({ flowId: result.flowId, passed: true, failureCategories: [] }); continue; }
+      const fresh = issuesFromRun([result], flows, refs);
+      for (const issue of fresh) freshByFlowCat.set(`${result.flowId}|${issue.category ?? ""}`, issue);
+      ran.push({ flowId: result.flowId, passed: false, failureCategories: fresh.map((i) => i.category ?? "") });
     }
-    if (rows.length === 0) return;
-    const { error } = await this.s.from("v_issues").insert(rows as never);
-    if (error) console.warn(`preflight persist issues (${runId}):`, error.message);
+
+    const plan = planReconcile(ran, open);
+    for (const id of plan.resolve) {
+      await this.s.from("v_issues").update({ status: "resolved", resolved_run: runId, last_seen_run: runId } as never)
+        .eq("user_id", userId).eq("id", id);
+    }
+    for (const cont of plan.continueExisting) {
+      const issue = freshByFlowCat.get(`${cont.flowId}|${cont.category ?? ""}`);
+      if (!issue) continue;
+      await this.s.from("v_issues").update({
+        last_seen_run: runId, observed: issue.observed, expected: issue.expected, repro: issue.repro,
+        evidence: { ...issue.evidence, requirement_refs: issue.requirement_refs }, severity: issue.severity,
+      } as never).eq("user_id", userId).eq("id", cont.id);
+    }
+    for (const reg of plan.openNew) {
+      const issue = freshByFlowCat.get(`${reg.flowId}|${reg.category ?? ""}`);
+      if (!issue) continue;
+      const { error } = await this.s.from("v_issues").insert({
+        user_id: userId, application_id: applicationId, run_id: runId, flow_id: reg.flowId,
+        severity: issue.severity, category: issue.category, title: issue.title,
+        expected: issue.expected, observed: issue.observed, repro: issue.repro,
+        evidence: { ...issue.evidence, requirement_refs: issue.requirement_refs },
+        status: "open", first_seen_run: runId, last_seen_run: runId,
+      } as never);
+      if (error) console.warn(`preflight open issue (${runId}):`, error.message);
+    }
   }
 }
