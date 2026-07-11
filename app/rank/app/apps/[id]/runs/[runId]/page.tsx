@@ -262,6 +262,13 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
   const tone = decisionTone(run.decision);
   const terminal = run.decision != null || ["completed", "failed", "cancelled"].includes(run.state);
   const active = !terminal;
+  // Header line: a terminal run shows the decision reason; an in-progress run shows real progress, never the
+  // stale "No flows recorded" text once flows start landing.
+  const headline = terminal
+    ? reasonLine(run.summary)
+    : flows.length === 0
+      ? "Waiting for the first flow"
+      : `${flows.length} flow${flows.length === 1 ? "" : "s"} completed, still running`;
 
   // Join per-flow display metadata (readable name + screenshots) onto getRun's id-less flows by raw name.
   const metaByRaw = new Map<string, FlowRunMeta>();
@@ -278,11 +285,13 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
 
   return (
     <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <Link href={`/app/apps/${id}`} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>
-        ← {app?.name ?? "Application"}
-      </Link>
-
-      <p className="eyebrow">Preflight run</p>
+      <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 16 }}>
+        <Link href="/app/apps" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
+        <Link href={`/app/apps/${id}`} style={{ color: "var(--fg-4)", textDecoration: "none", maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app?.name ?? "Application"}</Link>
+        <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
+        <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Preflight run</span>
+      </nav>
 
       <div style={{ display: "grid", gap: 14, marginTop: 10 }}>
 
@@ -292,7 +301,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
             <span style={{ display: "inline-flex", alignItems: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: tone.color, background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 999, padding: "9px 18px" }}>
               {tone.label}
             </span>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)" }}>{reasonLine(run.summary)}</div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)" }}>{headline}</div>
           </div>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", marginTop: 14, fontSize: 12.5, color: "var(--fg-4)" }}>

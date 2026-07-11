@@ -45,14 +45,6 @@ function runPill(decision: string | null, state: string): Pill {
 const cardStyle = { padding: "clamp(18px, 2.4vw, 24px)" } as const;
 const cardTitle = { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 } as const;
 
-function BackLink() {
-  return (
-    <Link href="/app/apps" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>
-      ← Applications
-    </Link>
-  );
-}
-
 // One key/value row in the Details card. Missing values read "Not set" (muted), never a blank.
 function KV({ k, v }: { k: string; v: string | null }) {
   return (
@@ -117,10 +109,13 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
 
   return (
     <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <BackLink />
+      <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
+        <Link href="/app/apps" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
+        <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>
+        <span style={{ color: "var(--fg-2)", fontWeight: 600, maxWidth: 360, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</span>
+      </nav>
 
       {/* header */}
-      <p className="eyebrow">Application</p>
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>{app.name}</h1>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <a href={app.app_url} target="_blank" rel="noopener noreferrer"

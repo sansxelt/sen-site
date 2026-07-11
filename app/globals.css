@@ -34,6 +34,10 @@
   --motion:      180ms;
   --motion-fast: 140ms;
   --ease:        cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Code / label mono. Geist Mono is self-hosted via next/font; defining this keeps the ugly Consolas
+     fallback out of every var(--font-code) usage across the product. */
+  --font-code:   var(--font-geist-mono), ui-monospace, monospace;
 }
 
 @theme inline {
