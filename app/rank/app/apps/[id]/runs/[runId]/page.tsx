@@ -24,39 +24,35 @@ function ago(iso: string): string {
   const d = Math.floor(h / 24); return `${d} day${d === 1 ? "" : "s"} ago`;
 }
 
+// Decision + status tones (the shared decision palette: ready / needs_review / blocked / muted).
 type Tone = { label: string; color: string; bg: string; border: string };
-const TONE_GREEN = { color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
-const TONE_AMBER = { color: "#c2831a", bg: "rgba(194,131,26,0.08)", border: "rgba(194,131,26,0.30)" };
-const TONE_RED = { color: "var(--err)", bg: "rgba(255,100,112,0.08)", border: "rgba(255,100,112,0.30)" };
+const TONE_READY = { color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+const TONE_REVIEW = { color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
+const TONE_BLOCKED = { color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
 const TONE_MUTED = { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
 
-function decisionTone(decision: string | null): Tone {
-  if (decision === "ready") return { label: "READY", ...TONE_GREEN };
-  if (decision === "needs_review") return { label: "NEEDS REVIEW", ...TONE_AMBER };
-  if (decision === "blocked") return { label: "BLOCKED", ...TONE_RED };
+// The verdict tone. A run with no decision that ended anyway is labeled by its real terminal state,
+// never left saying IN PROGRESS.
+function runTone(decision: string | null, state: string): Tone {
+  if (decision === "ready") return { label: "READY", ...TONE_READY };
+  if (decision === "needs_review") return { label: "NEEDS REVIEW", ...TONE_REVIEW };
+  if (decision === "blocked") return { label: "BLOCKED", ...TONE_BLOCKED };
+  if (state === "cancelled") return { label: "CANCELLED", ...TONE_MUTED };
+  if (state === "failed") return { label: "INCOMPLETE", ...TONE_MUTED };
   return { label: "IN PROGRESS", ...TONE_MUTED };
 }
 
-// The plain reason for the decision, straight from the run summary — never a numeric score.
-function reasonLine(summary: Record<string, unknown>): string {
-  const ct = num(summary.critical_total), cp = num(summary.critical_passed);
-  const ft = num(summary.flows_total), fp = num(summary.flows_passed);
-  if (ct > 0) return `${cp} / ${ct} critical flow${ct === 1 ? "" : "s"} passed`;
-  if (ft > 0) return `${fp} / ${ft} flow${ft === 1 ? "" : "s"} passed`;
-  return "No flows recorded for this run yet";
-}
-
 function flowTone(state: string): Tone {
-  if (state === "passed") return { label: "Passed", ...TONE_GREEN };
-  if (state === "failed") return { label: "Failed", ...TONE_RED };
-  if (state === "blocked") return { label: "Blocked", ...TONE_RED };
-  if (state === "running") return { label: "Running", ...TONE_AMBER };
+  if (state === "passed") return { label: "Passed", ...TONE_READY };
+  if (state === "failed") return { label: "Failed", ...TONE_BLOCKED };
+  if (state === "blocked") return { label: "Blocked", ...TONE_BLOCKED };
+  if (state === "running") return { label: "Running", ...TONE_REVIEW };
   if (state === "skipped") return { label: "Skipped", ...TONE_MUTED };
   const label = state ? state.charAt(0).toUpperCase() + state.slice(1) : "Pending";
   return { label, ...TONE_MUTED };
 }
 
-const SEV_COLOR: Record<string, string> = { critical: "var(--err)", high: "#c2831a", medium: "var(--fg-3)", low: "var(--fg-4)" };
+const SEV_COLOR: Record<string, string> = { critical: "#C0392B", high: "#B45309", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 const CATEGORY_LABEL: Record<string, string> = {
   persistence_failure: "Persistence", session_failure: "Session", cross_account: "Authorization",
@@ -86,145 +82,230 @@ function stepText(action: string | null, target: string | null): string {
   }
 }
 
-const cardStyle = { padding: "clamp(18px, 2.4vw, 24px)" } as const;
-const cardTitle = { fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 } as const;
-const sectionLabel = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "0 0 12px" } as const;
+// The plain-English verdict sentence under the big decision word. Counts come straight from the run
+// summary (or the deterministic issues) — nothing invented.
+function verdictLine(decision: string | null, state: string, summary: Record<string, unknown>, criticalIssueCount: number, terminal: boolean, progress: string): string {
+  if (decision === "ready") return "Every critical flow held. This deployment is cleared to launch.";
+  if (decision === "needs_review") return "Nearly there. A non-critical flow needs a human call.";
+  if (decision === "blocked") {
+    const n = Math.max(0, num(summary.critical_total) - num(summary.critical_passed)) || criticalIssueCount;
+    return n > 0
+      ? `This deployment is not ready. ${n} critical flow${n === 1 ? "" : "s"} failed.`
+      : "This deployment is not ready.";
+  }
+  if (terminal) {
+    if (state === "cancelled") return "This run was cancelled before it finished.";
+    if (state === "failed") return "This run stopped before it reached a decision.";
+    return "This run finished without a launch decision.";
+  }
+  return progress;
+}
+
+// Quiet context line: "1 of 3 critical flows passed". Null when nothing has been recorded.
+function flowsSummary(summary: Record<string, unknown>): string | null {
+  const ct = num(summary.critical_total), cp = num(summary.critical_passed);
+  const ft = num(summary.flows_total), fp = num(summary.flows_passed);
+  if (ct > 0) return `${cp} of ${ct} critical flow${ct === 1 ? "" : "s"} passed`;
+  if (ft > 0) return `${fp} of ${ft} flow${ft === 1 ? "" : "s"} passed`;
+  return null;
+}
+
+// A human "what happened" sentence for a blocker, derived from the failed step the deterministic
+// evidence already points at. The raw technical detail string stays inside the technical details element.
+function humanObserved(issue: RunIssue): string {
+  const ev = (issue.evidence && typeof issue.evidence === "object" ? issue.evidence : {}) as Record<string, unknown>;
+  const repro = Array.isArray(issue.repro) ? (issue.repro as unknown[]).filter((x): x is string => typeof x === "string") : [];
+  const idx = typeof ev.failed_step_index === "number" ? ev.failed_step_index : -1;
+  const stepLine = idx >= 0 && typeof repro[idx] === "string" ? repro[idx].replace(/^\d+\.\s*/, "").trim() : "";
+  if (stepLine) return `The flow stopped at step ${idx + 1}: "${stepLine}".`;
+  const action = typeof ev.failed_action === "string" && ev.failed_action && ev.failed_action !== "unknown" ? ev.failed_action.replace(/_/g, " ") : "";
+  if (action) return `The flow stopped at the "${action}" step.`;
+  return "The flow did not complete.";
+}
+
+// v_flow_runs.name falls back to the test flow id when the contract name could not be resolved; never
+// put an id in a sentence.
+function looksLikeId(name: string): boolean { return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(name.trim()); }
+
+const labelStyle = { fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: 0 } as const;
+const techLine = { fontSize: 12.5, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5 } as const;
+const sectionHeading = { fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(1.3rem, 2.4vw, 1.65rem)", color: "var(--fg-1)", margin: 0 } as const;
+const quietHeading = { fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(1.05rem, 1.8vw, 1.25rem)", color: "var(--fg-1)", margin: 0 } as const;
 
 function Pill({ tone, size = 10.5 }: { tone: Tone; size?: number }) {
   return <span className="pill" style={{ fontSize: size, color: tone.color, background: tone.bg, borderColor: tone.border, flex: "none" }}>{tone.label}</span>;
 }
 
-// One launch blocker (a critical/high issue). Evidence is deterministic; POSSIBLE CAUSE is clearly marked as
-// interpretation and only shown when the worker attached one.
-function BlockerCard({ issue }: { issue: RunIssue }) {
+// Evidence screenshots, large. Every image loads through the owner-checked artifacts route — never a
+// storage path — and links to the same route full-size.
+function ScreenshotGrid({ runId, ids, min = 320 }: { runId: string; ids: string[]; min?: number }) {
+  if (!ids.length) return null;
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fit, minmax(min(${min}px, 100%), 1fr))`, gap: 14 }}>
+      {ids.map((sid) => (
+        <figure key={sid} style={{ margin: 0, minWidth: 0 }}>
+          <a href={`/api/preflight/runs/${runId}/artifacts/${sid}`} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/api/preflight/runs/${runId}/artifacts/${sid}`} alt="Screenshot from this run" loading="lazy" style={{ display: "block", width: "100%", maxWidth: "100%", height: "auto", border: "1px solid var(--line-2)", borderRadius: 10 }} />
+          </a>
+          <figcaption style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 6 }}>Screenshot from this run</figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
+
+// One launch blocker told as a full story: plain-English title, what Vraelis did, expected vs observed
+// in prose, the evidence large, how to reproduce, the repair prompt. Raw technical strings (the observed
+// detail, console errors, network failures) live ONLY inside the collapsed technical details element.
+function BlockerStory({ issue, index, flowName, screenshotIds, runId }: { issue: RunIssue; index: number; flowName: string | null; screenshotIds: string[]; runId: string }) {
   const ev = (issue.evidence && typeof issue.evidence === "object" ? issue.evidence : {}) as Record<string, unknown>;
   const consoleErrors = Array.isArray(ev.console_errors) ? (ev.console_errors as unknown[]).filter((x): x is string => typeof x === "string") : [];
   const networkFailures = Array.isArray(ev.network_failures) ? (ev.network_failures as { method?: string; path?: string; status?: number }[]) : [];
   const requirementRefs = Array.isArray(ev.requirement_refs) ? (ev.requirement_refs as unknown[]).filter((x): x is string => typeof x === "string") : [];
   const repro = Array.isArray(issue.repro) ? (issue.repro as unknown[]).filter((x): x is string => typeof x === "string") : [];
   const sevColor = SEV_COLOR[issue.severity] ?? "var(--fg-3)";
+  const expected = (issue.expected ?? "").replace(/^Expected:\s*/i, "").trim();
+  const observed = humanObserved(issue);
+  const hasTechnical = Boolean(issue.observed) || consoleErrors.length > 0 || networkFailures.length > 0 || requirementRefs.length > 0;
 
   return (
-    <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", borderLeft: `3px solid ${sevColor}` }}>
+    <section className="card" style={{ padding: "clamp(22px, 3vw, 32px)", borderLeft: `4px solid ${sevColor}` }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-1)", lineHeight: 1.4, flex: "1 1 260px", minWidth: 0 }}>{issue.title}</div>
+        <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(19px, 2vw, 21px)", lineHeight: 1.35, color: "var(--fg-1)", margin: 0, flex: "1 1 300px", minWidth: 0, wordBreak: "break-word" }}>
+          {index + 1}. {issue.title}
+        </h3>
         <div style={{ display: "flex", gap: 7, flex: "none" }}>
           <span className="pill" style={{ fontSize: 10.5, color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
           <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{catLabel(issue.category)}</span>
         </div>
       </div>
 
-      {requirementRefs.length ? (
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", margin: "10px 0 0" }}>
-          Requirement: {requirementRefs.join(", ")}
+      {flowName ? (
+        <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "8px 0 0" }}>
+          Vraelis hit this while running the &quot;{flowName}&quot; flow in a real browser.
         </p>
       ) : null}
 
-      <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
-        {issue.expected ? (
+      <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
+        {expected ? (
           <div>
-            <div style={sectionLabel}>Expected</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, margin: 0 }}>{issue.expected}</p>
+            <div style={labelStyle}>Expected</div>
+            <p style={{ fontSize: 14.5, color: "var(--fg-2)", lineHeight: 1.55, margin: "5px 0 0" }}>{expected}</p>
           </div>
         ) : null}
-        {issue.observed ? (
-          <div>
-            <div style={sectionLabel}>Observed</div>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, margin: 0, wordBreak: "break-word" }}>{issue.observed}</p>
-          </div>
-        ) : null}
+        <div>
+          <div style={labelStyle}>Observed</div>
+          <p style={{ fontSize: 14.5, color: "var(--fg-2)", lineHeight: 1.55, margin: "5px 0 0" }}>{observed}</p>
+        </div>
       </div>
 
+      {screenshotIds.length ? (
+        <div style={{ marginTop: 20 }}>
+          <div style={labelStyle}>Evidence</div>
+          <div style={{ marginTop: 8 }}>
+            <ScreenshotGrid runId={runId} ids={screenshotIds} />
+          </div>
+        </div>
+      ) : null}
+
       {repro.length ? (
-        <div style={{ marginTop: 14 }}>
-          <div style={sectionLabel}>Reproduce</div>
-          <ol style={{ margin: 0, padding: "0 0 0 18px", display: "grid", gap: 4 }}>
-            {repro.map((r, i) => <li key={i} style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5 }}>{r.replace(/^\d+\.\s*/, "")}</li>)}
+        <div style={{ marginTop: 20 }}>
+          <div style={labelStyle}>How to reproduce</div>
+          <ol style={{ margin: "8px 0 0", padding: "0 0 0 18px", display: "grid", gap: 5 }}>
+            {repro.map((r, i) => <li key={i} style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5 }}>{r.replace(/^\d+\.\s*/, "")}</li>)}
           </ol>
         </div>
       ) : null}
 
-      {consoleErrors.length || networkFailures.length ? (
-        <div style={{ marginTop: 14, background: "var(--bg-2)", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)", padding: "11px 13px" }}>
-          <div style={sectionLabel}>Console &amp; network</div>
-          <div style={{ display: "grid", gap: 4 }}>
-            {consoleErrors.slice(0, 5).map((c, i) => (
-              <div key={`c${i}`} style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--err)", wordBreak: "break-all" }}>{c}</div>
-            ))}
-            {networkFailures.slice(0, 5).map((n, i) => (
-              <div key={`n${i}`} style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-3)", wordBreak: "break-all" }}>
-                {n.status ?? ""} {n.method ?? ""} {n.path ?? ""}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
       {issue.likely_cause ? (
-        <div style={{ marginTop: 14, background: "rgba(194,131,26,0.06)", border: "1px dashed rgba(194,131,26,0.35)", borderRadius: "var(--r-sm)", padding: "11px 13px" }}>
-          <div style={{ ...sectionLabel, color: "#c2831a", marginBottom: 6 }}>Possible cause (interpretation)</div>
-          <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55, margin: 0 }}>{issue.likely_cause}</p>
+        <div style={{ marginTop: 20, borderLeft: "3px solid var(--line-2)", paddingLeft: 14 }}>
+          <div style={labelStyle}>Possible cause (interpretation)</div>
+          <p style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55, margin: "6px 0 0" }}>{issue.likely_cause}</p>
           {typeof issue.suggested_areas === "string" && issue.suggested_areas ? (
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", margin: "8px 0 0" }}>Look at: {issue.suggested_areas}</p>
+            <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "6px 0 0", wordBreak: "break-word" }}>Look at: {issue.suggested_areas}</p>
           ) : null}
         </div>
       ) : null}
 
       {issue.repair_prompt ? (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 20 }}>
           <CopyButton text={issue.repair_prompt} />
         </div>
       ) : null}
-    </div>
+
+      {hasTechnical ? (
+        <details style={{ marginTop: 18, border: "1px solid var(--line-1)", borderRadius: 8, padding: "10px 14px" }}>
+          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)" }}>View technical details</summary>
+          <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
+            {issue.observed ? <div style={techLine}>{issue.observed}</div> : null}
+            {requirementRefs.length ? <div style={techLine}>Requirement refs: {requirementRefs.join(", ")}</div> : null}
+            {consoleErrors.slice(0, 10).map((c, i) => <div key={`c${i}`} style={techLine}>{c}</div>)}
+            {networkFailures.slice(0, 10).map((n, i) => (
+              <div key={`n${i}`} style={techLine}>{n.status ?? ""} {n.method ?? ""} {n.path ?? ""}</div>
+            ))}
+          </div>
+        </details>
+      ) : null}
+    </section>
   );
 }
 
-// One flow's step timeline. Failed steps are highlighted; screenshots (if the worker attached any) load
-// through the owner-checked artifacts route — never a storage path.
-function FlowTimeline({ flow, displayName, screenshotIds, runId }: { flow: RunFlow; displayName: string; screenshotIds: string[]; runId: string }) {
+// One flow in the "What ran" timeline: a flat row with name + status + step count, the full step list
+// inside a details element (open only when the flow failed). Screenshots render here only when they were
+// not already shown as evidence on a blocker above.
+function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flow: RunFlow; displayName: string; screenshotIds: string[]; runId: string; showShots: boolean }) {
   const tone = flowTone(flow.state);
+  const failed = flow.state === "failed" || flow.state === "blocked";
+  const passed = flow.state === "passed";
   return (
-    <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", margin: 0, minWidth: 0, wordBreak: "break-word" }}>{displayName}</h3>
+    <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "12px 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        {passed ? <span aria-hidden style={{ color: "var(--acc-deep)", flex: "none" }}>✓</span> : null}
+        <span style={{ fontSize: 13.5, fontWeight: failed ? 600 : 500, color: failed ? "var(--fg-1)" : "var(--fg-2)", flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{displayName}</span>
         <Pill tone={tone} />
+        <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{flow.steps.length} step{flow.steps.length === 1 ? "" : "s"}</span>
       </div>
+
       {flow.steps.length ? (
-        <ol style={{ listStyle: "none", margin: "14px 0 0", padding: 0, display: "grid", gap: 6 }}>
-          {flow.steps.map((s: RunStep, i) => {
-            const ok = s.status === "ok";
-            const failed = !ok && s.status != null && s.status !== "";
-            return (
-              <li key={i} style={{
-                display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", borderRadius: "var(--r-sm)",
-                background: failed ? "rgba(255,100,112,0.06)" : "var(--bg-2)",
-                border: `1px solid ${failed ? "rgba(255,100,112,0.30)" : "var(--line-1)"}`,
-              }}>
-                <span aria-hidden style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2, width: 18, textAlign: "right" }}>{i + 1}</span>
-                <span aria-hidden style={{ color: ok ? "var(--acc-deep)" : failed ? "var(--err)" : "var(--fg-4)", flex: "none", marginTop: 1, fontSize: 13 }}>{ok ? "✓" : failed ? "✕" : "•"}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, color: "var(--fg-1)", lineHeight: 1.45, wordBreak: "break-word" }}>{stepText(s.action, s.target)}</div>
-                  {failed && s.observed ? <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--err)", marginTop: 3, wordBreak: "break-all" }}>{s.observed}</div> : null}
-                </div>
-                <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2 }}>{s.ms != null ? `${s.ms} ms` : ""}</span>
-              </li>
-            );
-          })}
-        </ol>
+        <details open={failed} style={{ marginTop: 8 }}>
+          <summary style={{ cursor: "pointer", fontSize: 13, color: "var(--fg-4)" }}>View steps</summary>
+          <ol style={{ listStyle: "none", margin: "10px 0 0", padding: 0, display: "grid", gap: 6 }}>
+            {flow.steps.map((s: RunStep, i) => {
+              const ok = s.status === "ok";
+              const stepFailed = !ok && s.status != null && s.status !== "";
+              return (
+                <li key={i} style={{
+                  display: "flex", alignItems: "flex-start", gap: 10, padding: "8px 10px", borderRadius: "var(--r-sm)",
+                  background: stepFailed ? "#FBEBEA" : "var(--bg-2)",
+                  border: `1px solid ${stepFailed ? "#F0C7C2" : "var(--line-1)"}`,
+                }}>
+                  <span aria-hidden style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2, width: 18, textAlign: "right" }}>{i + 1}</span>
+                  <span aria-hidden style={{ color: ok ? "var(--acc-deep)" : stepFailed ? "#C0392B" : "var(--fg-4)", flex: "none", marginTop: 1, fontSize: 13 }}>{ok ? "✓" : stepFailed ? "✕" : "•"}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, color: "var(--fg-1)", lineHeight: 1.45, wordBreak: "break-word" }}>{stepText(s.action, s.target)}</div>
+                    {stepFailed && s.observed ? (
+                      <details style={{ marginTop: 4 }}>
+                        <summary style={{ cursor: "pointer", fontSize: 12, color: "var(--fg-4)" }}>Error detail</summary>
+                        <div style={{ fontSize: 12, color: "var(--fg-3)", wordBreak: "break-all", lineHeight: 1.5, marginTop: 4 }}>{s.observed}</div>
+                      </details>
+                    ) : null}
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2 }}>{s.ms != null ? `${s.ms} ms` : ""}</span>
+                </li>
+              );
+            })}
+          </ol>
+        </details>
       ) : (
-        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>No steps recorded for this flow.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "8px 0 0" }}>No steps recorded for this flow.</p>
       )}
 
-      {screenshotIds.length ? (
-        <div style={{ marginTop: 14 }}>
-          <div style={sectionLabel}>Screenshots</div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {screenshotIds.map((sid) => (
-              <a key={sid} href={`/api/preflight/runs/${runId}/artifacts/${sid}`} target="_blank" rel="noopener noreferrer" style={{ display: "block", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", overflow: "hidden", maxWidth: 240 }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/api/preflight/runs/${runId}/artifacts/${sid}`} alt="Run screenshot" loading="lazy" style={{ display: "block", width: "100%", height: "auto" }} />
-              </a>
-            ))}
+      {showShots && screenshotIds.length ? (
+        <div style={{ marginTop: 12 }}>
+          <div style={labelStyle}>Evidence</div>
+          <div style={{ marginTop: 8 }}>
+            <ScreenshotGrid runId={runId} ids={screenshotIds} min={280} />
           </div>
         </div>
       ) : null}
@@ -234,7 +315,8 @@ function FlowTimeline({ flow, displayName, screenshotIds, runId }: { flow: RunFl
 
 // Preflight RUN report (server component). Flag-gated + owner-scoped: getRun / getRunInternal are user-scoped,
 // so a guessed run id 404s here. All data degrades to null/[] before the run tables exist, and nothing is
-// fabricated — no numeric score, no fake progress, no invented metrics.
+// fabricated — no numeric score, no fake progress, no invented metrics. Reads as a production investigation
+// report: verdict hero first, launch blockers as full stories with the evidence large, then a quiet timeline.
 export default async function RunReportPage({ params }: { params: Promise<{ id: string; runId: string }> }) {
   const { id, runId } = await params;
   const owner = await requirePreflightOwner(`/app/apps/${id}/runs/${runId}`);
@@ -259,29 +341,38 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
   }
 
   const { run, flows, issues } = detail;
-  const tone = decisionTone(run.decision);
+  const tone = runTone(run.decision, run.state);
   const terminal = run.decision != null || ["completed", "failed", "cancelled"].includes(run.state);
   const active = !terminal;
-  // Header line: a terminal run shows the decision reason; an in-progress run shows real progress, never the
-  // stale "No flows recorded" text once flows start landing.
-  const headline = terminal
-    ? reasonLine(run.summary)
-    : flows.length === 0
-      ? "Waiting for the first flow"
-      : `${flows.length} flow${flows.length === 1 ? "" : "s"} completed, still running`;
+  const progressHeadline = flows.length === 0
+    ? "Waiting for the first flow"
+    : `${flows.length} flow${flows.length === 1 ? "" : "s"} completed, still running`;
 
   // Join per-flow display metadata (readable name + screenshots) onto getRun's id-less flows by raw name.
+  // rawName is v_flow_runs.name, which the worker sets to the test flow id — the same id v_issues.flow_id
+  // carries — so a blocker maps to its flow's meta (name + screenshots) through the same map.
   const metaByRaw = new Map<string, FlowRunMeta>();
   for (const m of meta) if (!metaByRaw.has(m.rawName)) metaByRaw.set(m.rawName, m);
   const nameFor = (f: RunFlow) => metaByRaw.get(f.name)?.displayName || f.name;
   const shotsFor = (f: RunFlow) => metaByRaw.get(f.name)?.screenshotIds ?? [];
+  const metaForIssue = (iss: RunIssue) => (iss.flow_id ? metaByRaw.get(iss.flow_id) : undefined);
 
   const blockers = issues.filter((i) => i.severity === "critical" || i.severity === "high");
   const otherIssues = issues.filter((i) => i.severity !== "critical" && i.severity !== "high");
-  const problemFlows = flows.filter((f) => f.state !== "passed");
-  const passedFlows = flows.filter((f) => f.state === "passed");
-  const hasFailures = problemFlows.some((f) => f.state === "failed" || f.state === "blocked") || blockers.length > 0;
+  const criticalIssueCount = issues.filter((i) => i.severity === "critical").length;
+  const hasFailures = flows.some((f) => f.state === "failed" || f.state === "blocked") || blockers.length > 0;
   const completedIso = run.completed_at || run.created_at;
+  const heroLine = verdictLine(run.decision, run.state, run.summary, criticalIssueCount, terminal, progressHeadline);
+  const summaryLine = flowsSummary(run.summary);
+
+  // Flows whose screenshots already appear as evidence on a blocker above; the timeline does not repeat them.
+  // A blocker that cannot be mapped to a flow shows no screenshots itself — that flow's screenshots stay in
+  // the timeline instead. Never fabricated either way.
+  const shotsShownInBlockers = new Set<string>();
+  for (const b of blockers) {
+    const m = metaForIssue(b);
+    if (m && m.screenshotIds.length) shotsShownInBlockers.add(m.rawName);
+  }
 
   return (
     <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -293,101 +384,99 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
         <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>Preflight run</span>
       </nav>
 
-      <div style={{ display: "grid", gap: 14, marginTop: 10 }}>
+      <div style={{ display: "grid", gap: "clamp(26px, 3.5vw, 38px)", marginTop: 10 }}>
 
-        {/* (1) LAUNCH DECISION */}
-        <div className="card" style={cardStyle}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 13, letterSpacing: "0.08em", color: tone.color, background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: 999, padding: "9px 18px" }}>
-              {tone.label}
-            </span>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)" }}>{headline}</div>
+        {/* (1) VERDICT HERO: the launch decision, full width, in the decision tone */}
+        <section style={{ background: tone.bg, border: `1px solid ${tone.border}`, borderRadius: "var(--r-lg)", padding: "clamp(28px, 4vw, 44px)" }}>
+          <div style={labelStyle}>Launch decision</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(2.2rem, 4.5vw, 3.2rem)", lineHeight: 1.05, letterSpacing: "-0.01em", color: tone.color, marginTop: 10 }}>
+            {tone.label}
           </div>
+          <p style={{ fontSize: 16.5, color: "var(--fg-1)", lineHeight: 1.55, margin: "14px 0 0", maxWidth: "58ch" }}>{heroLine}</p>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", marginTop: 14, fontSize: 12.5, color: "var(--fg-4)" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 18px", marginTop: 18, fontSize: 13, color: "var(--fg-3)" }}>
             {run.deployment_url ? (
-              <span>
-                Target:{" "}
-                <a href={run.deployment_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "var(--font-mono)", color: "var(--fg-3)", textDecoration: "none", wordBreak: "break-all" }}>{run.deployment_url}</a>
-              </span>
+              <a href={run.deployment_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--fg-2)", textDecoration: "none", wordBreak: "break-all" }}>{run.deployment_url}</a>
             ) : null}
-            {run.commit_sha ? <span style={{ fontFamily: "var(--font-mono)" }}>commit {run.commit_sha.slice(0, 10)}</span> : null}
+            {run.commit_sha ? <span>commit {run.commit_sha.slice(0, 10)}</span> : null}
             <span title={when(completedIso)}>{terminal ? `Completed ${ago(completedIso)}` : `Started ${ago(run.created_at)}`}</span>
+            {summaryLine ? <span>{summaryLine}</span> : null}
+            {active ? <span>Updates automatically</span> : null}
           </div>
 
-          {active ? (
-            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "16px 0 0", lineHeight: 1.55 }}>
-              This run is still in progress. Results appear here as each flow finishes.
-            </p>
-          ) : (
-            <div style={{ marginTop: 18 }}>
-              {/* (2) primary action */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 22 }}>
+            {terminal ? (
               <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} />
-            </div>
-          )}
-        </div>
+            ) : null}
+            <Link href={`/app/apps/${id}`} className="btn btn--ghost">Back to application</Link>
+          </div>
+        </section>
 
-        {/* (3) LAUNCH BLOCKERS */}
+        {/* (2) LAUNCH BLOCKERS as full stories, evidence large */}
         {blockers.length ? (
-          <div style={{ display: "grid", gap: 12 }}>
-            <h2 style={{ ...cardTitle, marginTop: 6 }}>Launch blockers</h2>
-            {blockers.map((iss) => <BlockerCard key={iss.id} issue={iss} />)}
-          </div>
+          <section style={{ display: "grid", gap: 16 }}>
+            <h2 style={sectionHeading}>{blockers.length} launch blocker{blockers.length === 1 ? "" : "s"}</h2>
+            {blockers.map((iss, i) => {
+              const m = metaForIssue(iss);
+              const rawFlowName = m?.displayName ?? "";
+              return (
+                <BlockerStory
+                  key={iss.id}
+                  issue={iss}
+                  index={i}
+                  flowName={rawFlowName && !looksLikeId(rawFlowName) ? rawFlowName : null}
+                  screenshotIds={m?.screenshotIds ?? []}
+                  runId={runId}
+                />
+              );
+            })}
+          </section>
         ) : terminal && run.decision === "ready" ? (
-          <div className="card" style={{ ...cardStyle, borderLeft: "3px solid var(--acc-line)" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-1)", marginBottom: 4 }}>No launch blockers.</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>Every critical flow passed against this deployment.</p>
+          <div style={{ border: "1px solid var(--line-1)", borderLeft: "4px solid var(--acc-line)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "16px 20px" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)" }}>No launch blockers</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "4px 0 0" }}>Every critical flow passed against this deployment.</p>
           </div>
         ) : null}
 
-        {/* Other, lower-severity findings (kept, never hidden) */}
+        {/* Lower-severity findings (kept, never hidden) */}
         {otherIssues.length ? (
-          <div className="card" style={cardStyle}>
-            <h2 style={cardTitle}>Other findings</h2>
-            <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+          <section style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22 }}>
+            <h2 style={quietHeading}>Other findings</h2>
+            <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
               {otherIssues.map((iss) => (
-                <div key={iss.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 13, color: "var(--fg-2)", lineHeight: 1.45 }}>
+                <div key={iss.id} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[iss.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{SEV_LABEL[iss.severity] ?? iss.severity}</span>
-                  <span style={{ minWidth: 0, wordBreak: "break-word" }}>{iss.title}</span>
+                  <span style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.5, minWidth: 0, wordBreak: "break-word" }}>{iss.title}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
         ) : null}
 
-        {/* (4) TIMELINE: problem flows in full */}
-        {problemFlows.length ? (
-          <div style={{ display: "grid", gap: 12 }}>
-            <h2 style={{ ...cardTitle, marginTop: 6 }}>Flow timeline</h2>
-            {problemFlows.map((f, i) => <FlowTimeline key={`${f.name}-${i}`} flow={f} displayName={nameFor(f)} screenshotIds={shotsFor(f)} runId={runId} />)}
-          </div>
+        {/* (3) WHAT RAN: the quiet flow timeline */}
+        {flows.length ? (
+          <section style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22, display: "grid", gap: 12 }}>
+            <h2 style={quietHeading}>What ran</h2>
+            {flows.map((f, i) => (
+              <FlowBlock
+                key={`${f.name}-${i}`}
+                flow={f}
+                displayName={nameFor(f)}
+                screenshotIds={shotsFor(f)}
+                runId={runId}
+                showShots={!shotsShownInBlockers.has(f.name)}
+              />
+            ))}
+          </section>
         ) : null}
 
-        {/* (5) PASSED flows: compact */}
-        {passedFlows.length ? (
-          <div className="card" style={cardStyle}>
-            <h2 style={cardTitle}>Passed flows</h2>
-            <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
-              {passedFlows.map((f, i) => (
-                <div key={`${f.name}-${i}`} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
-                  <span aria-hidden style={{ color: "var(--acc-deep)", flex: "none" }}>✓</span>
-                  <span style={{ fontSize: 13, color: "var(--fg-2)", flex: 1, minWidth: 0, wordBreak: "break-word" }}>{nameFor(f)}</span>
-                  <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none" }}>{f.steps.length} step{f.steps.length === 1 ? "" : "s"}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {/* Empty body for an in-progress run with nothing yet */}
+        {/* (4) Empty body for an in-progress run with nothing yet */}
         {!blockers.length && !otherIssues.length && !flows.length ? (
-          <div className="card" style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-              <span className="pulse" aria-hidden style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--money)", flex: "none", marginTop: 4 }} />
-              <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
-                {active ? "Waiting for the first flow to run. This page updates on its own." : "This run recorded no flows."}
-              </p>
-            </div>
+          <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "18px 20px", display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <span className="pulse" aria-hidden style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--acc)", flex: "none", marginTop: 4 }} />
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: 0 }}>
+              {active ? "Waiting for the first flow to run. This page updates on its own." : "This run recorded no flows."}
+            </p>
           </div>
         ) : null}
       </div>
