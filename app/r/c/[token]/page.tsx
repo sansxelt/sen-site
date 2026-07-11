@@ -3,7 +3,7 @@ import { cache } from "react";
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 import { getSharedCheck } from "@/lib/v-checks";
-import { CheckReport } from "@/app/rank/app/checks/[id]/check-report";
+import { CheckReport } from "@/app/rank/app/legacy/checks/[id]/check-report";
 
 // Never cache: sharing is revocable, so a turned-off link must stop resolving immediately
 // rather than serve a stale render from the full-route cache.

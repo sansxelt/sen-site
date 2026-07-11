@@ -32,35 +32,30 @@ const I = {
   shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4",
   clock: "M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
   building: "M4 21V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v17M13 9h6a1 1 0 0 1 1 1v11M3 21h18M7 7h2M7 11h2M7 15h2M16 13h1M16 17h1",
+  alert: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01",
+  wrench: "M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a1.5 1.5 0 0 0 2.1 2.1l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.1-2.1z",
+  deploy: "M12 15V3m0 0l-4 4m4-4l4 4M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4",
 };
 
-// Preflight (the pivot) shows an "Applications" nav item for internal testers only. NEXT_PUBLIC_ is
-// inlined at build, so this controls nav VISIBILITY; route access is gated server-side in each page.
-const PREFLIGHT_NAV = process.env.NEXT_PUBLIC_VRAELIS_PREFLIGHT === "1";
-
+// The signed-in product: Vraelis is the production layer for AI-built software. The legacy AI-output checker
+// is deliberately NOT here (it lives flag-gated at /app/legacy/checks); Projects / Analytics / Data quality
+// belonged to that product and are out of the primary navigation with it.
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
-  { group: "Workspace", items: [
-    { href: "/app", label: "Dashboard", d: I.grid },
-    ...(PREFLIGHT_NAV ? [{ href: "/app/apps", label: "Applications", d: I.shield }] : []),
-    { href: "/app/checks", label: "Checks", d: I.check },
-    { href: "/app/projects", label: "Projects", d: I.folder },
-    { href: "/app/team", label: "Team", d: I.user },
-    { href: "/app/organization", label: "Organization", d: I.building },
-    { href: "/app/data", label: "Analytics", d: I.data },
-    { href: "/app/data-quality", label: "Data quality", d: I.shield },
+  { group: "Product", items: [
+    { href: "/app", label: "Overview", d: I.grid },
+    { href: "/app/apps", label: "Applications", d: I.layers },
+    { href: "/app/passes", label: "Production Passes", d: I.shield },
+    { href: "/app/issues", label: "Issues", d: I.alert },
+    { href: "/app/repairs", label: "Repairs", d: I.wrench },
+    { href: "/app/deployments", label: "Deployments", d: I.deploy },
     { href: "/app/audit", label: "Activity", d: I.clock },
   ] },
-  { group: "Billing", items: [
-    { href: "/app/credits", label: "Credits", d: I.coin },
-    { href: "/app/plans", label: "Plans", d: I.layers },
+  { group: "Settings", items: [
+    { href: "/app/team", label: "Team", d: I.user },
+    { href: "/app/organization", label: "Organization", d: I.building },
+    { href: "/app/api-keys", label: "API & Webhooks", d: I.code },
     { href: "/app/billing", label: "Billing", d: I.card },
-  ] },
-  { group: "Developer", items: [
-    { href: "/app/api-keys", label: "API & webhooks", d: I.code },
-  ] },
-  { group: "Account", items: [
     { href: "/app/account", label: "Account", d: I.user },
-    { href: "/vote", label: "Evaluate & Earn", d: I.vote },
   ] },
 ];
 

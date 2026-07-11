@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
-import { CheckReport } from "@/app/rank/app/checks/[id]/check-report";
+import { CheckReport } from "@/app/rank/app/legacy/checks/[id]/check-report";
 import { FreeCheckEntry } from "./free-check-entry";
 import type { EvalResult } from "@/lib/v-evaluator";
 

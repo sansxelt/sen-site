@@ -73,6 +73,12 @@ export default function proxy(req: NextRequest) {
     return go(req, "/", "redirect");
   }
 
+  // 2c) Legacy AI-output checker: the checker moved out of the primary product to /app/legacy/checks
+  // (flag-gated there). Every historical /app/checks link (emails, bookmarks, share pages) redirects in.
+  if (path === "/app/checks" || path.startsWith("/app/checks/")) {
+    return go(req, "/app/legacy/checks" + path.slice("/app/checks".length), "redirect");
+  }
+
   // 3) Clean public paths -> internal /rank routes (rewrite; URL stays clean).
   let target = CLEAN_EXACT[path];
   if (!target) {
