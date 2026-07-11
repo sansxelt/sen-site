@@ -34,9 +34,14 @@ const I = {
   building: "M4 21V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v17M13 9h6a1 1 0 0 1 1 1v11M3 21h18M7 7h2M7 11h2M7 15h2M16 13h1M16 17h1",
 };
 
+// Preflight (the pivot) shows an "Applications" nav item for internal testers only. NEXT_PUBLIC_ is
+// inlined at build, so this controls nav VISIBILITY; route access is gated server-side in each page.
+const PREFLIGHT_NAV = process.env.NEXT_PUBLIC_VRAELIS_PREFLIGHT === "1";
+
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Workspace", items: [
     { href: "/app", label: "Dashboard", d: I.grid },
+    ...(PREFLIGHT_NAV ? [{ href: "/app/apps", label: "Applications", d: I.shield }] : []),
     { href: "/app/checks", label: "Checks", d: I.check },
     { href: "/app/projects", label: "Projects", d: I.folder },
     { href: "/app/team", label: "Team", d: I.user },
