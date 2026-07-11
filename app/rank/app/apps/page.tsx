@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { preflightDbReady } from "@/lib/preflight/db-ready";
+import { SetupRequired } from "./setup-required";
 import { listApplications, latestRunByApp, type Application, type RunSummary } from "@/lib/v-applications";
 
 export const metadata: Metadata = { title: "Applications" };
@@ -84,6 +86,7 @@ function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }
 // execution or discovery lives here — a run is a later phase.
 export default async function ApplicationsPage() {
   const owner = await requirePreflightOwner("/app/apps");
+  if (!(await preflightDbReady())) return <SetupRequired />;
   const apps = await listApplications(owner);
   const latest = await latestRunByApp(owner, apps.map((a) => a.id));
 

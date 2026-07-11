@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
+import { preflightDbReady } from "@/lib/preflight/db-ready";
+import { SetupRequired } from "../setup-required";
 import {
   getApplication, getContract, listRequirements, listFlows, listRuns,
   type ContractRequirement, type TestFlow, type RunSummary,
@@ -86,6 +88,7 @@ function RunRow({ r }: { r: RunSummary }) {
 export default async function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const owner = await requirePreflightOwner("/app/apps/" + id);
+  if (!(await preflightDbReady())) return <SetupRequired />;
 
   const app = await getApplication(owner, id);
   if (!app) {

@@ -13,6 +13,19 @@ import { safePath, redactString } from "../redaction";
 const BROWSERBASE_PKG = "@browserbasehq/sdk";
 const PLAYWRIGHT_PKG = "playwright-core";
 
+// Coerce to Browserbase's metadata rules: string values only, no arrays, serialized < 512 chars. Values
+// are truncated and low-priority keys dropped until it fits. Exported for the smoke test to assert on.
+export function safeMetadata(input: Record<string, string>): Record<string, string> {
+  const order = ["run_id", "flow_run_id", "worker_id", "env"]; // most useful first
+  let out: Record<string, string> = {};
+  for (const k of [...order, ...Object.keys(input).filter((k) => !order.includes(k))]) {
+    if (typeof input[k] !== "string" || input[k] === "") continue;
+    const next = { ...out, [k]: String(input[k]).slice(0, 200) };
+    if (JSON.stringify(next).length <= 512) out = next; // keep only while it still fits
+  }
+  return out;
+}
+
 // Minimal structural types for the lazily-imported deps (avoid a hard dependency at compile time).
 type PWPage = {
   goto: (u: string, o?: unknown) => Promise<unknown>; reload: (o?: unknown) => Promise<unknown>; url: () => string;
@@ -79,8 +92,9 @@ export class BrowserbaseBrowserProvider implements BrowserProvider {
     const { chromium } = (await import(PW).catch(() => { throw new Error("playwright_missing: install playwright-core in the worker"); })) as { chromium: { connectOverCDP: (u: string) => Promise<{ contexts: () => { pages: () => PWPage[] }[]; newContext: (o?: unknown) => Promise<{ newPage: () => Promise<PWPage> }>; close: () => Promise<void> }> } };
 
     const bb = new Browserbase({ apiKey: this.cfg.apiKey });
-    // Safe metadata only — never user identity or secrets.
-    const session = await bb.sessions.create({ projectId: this.cfg.projectId, userMetadata: { vraelis_run_id: input.runId, flow_run_id: input.flowRunId ?? null, environment: input.environment, worker_id: input.workerId } });
+    // Browserbase constraints: metadata must serialize under 512 chars, STRING values only, no arrays, and
+    // only strings are queryable. Compact ids only — never user identity or secrets.
+    const session = await bb.sessions.create({ projectId: this.cfg.projectId, userMetadata: safeMetadata({ run_id: input.runId, flow_run_id: input.flowRunId ?? "", worker_id: input.workerId, env: input.environment }) });
     const browser = await chromium.connectOverCDP(session.connectUrl);
     const ctx = browser.contexts()[0] ?? (await browser.newContext({ viewport: input.viewport ?? { width: 1280, height: 800 }, acceptDownloads: false, permissions: [] }));
     const page = (ctx as unknown as { pages: () => PWPage[]; newPage: () => Promise<PWPage> }).pages?.()[0] ?? await (ctx as unknown as { newPage: () => Promise<PWPage> }).newPage();

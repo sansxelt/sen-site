@@ -27,8 +27,10 @@ const TABLE_COL: [string, string][] = [
   ["v_discovery_snapshots", "content_hash"],          // migration 2
 ];
 
+const JSON_MODE = process.argv.includes("--json");
 let missing = 0;
-const ok = (label: string, present: boolean, note = "") => { console.log(`${present ? "PASS" : "FAIL"}  ${label}${note ? `  (${note})` : ""}`); if (!present) missing++; };
+const failed: string[] = [];
+const ok = (label: string, present: boolean, note = "") => { if (!JSON_MODE) console.log(`${present ? "PASS" : "FAIL"}  ${label}${note ? `  (${note})` : ""}`); if (!present) { missing++; failed.push(label); } };
 
 async function main() {
   for (const [table, col] of TABLE_COL) {
@@ -43,11 +45,17 @@ async function main() {
   const rpcPresent = !rpcErr || !/could not find the function|PGRST202|does not exist/i.test(rpcErr.message || "");
   ok("rpc v_preflight_claim()", rpcPresent, rpcErr?.message?.slice(0, 80));
 
-  console.log(`\n${TABLE_COL.length + 1 - missing}/${TABLE_COL.length + 1} present`);
+  const checks = TABLE_COL.length + 1;
+  if (JSON_MODE) {
+    console.log(JSON.stringify({ ready: missing === 0, checks, passed: checks - missing, failed }));
+    process.exit(missing ? 1 : 0);
+  }
+  console.log(`\n${checks - missing}/${checks} present`);
   if (missing) {
     console.log("\nMigration NOT fully applied. Apply in the Supabase SQL editor (additive, idempotent):");
     console.log("  1) sql/vraelis-preflight.sql");
     console.log("  2) sql/vraelis-preflight-2-discovery.sql");
+    console.log("Then re-run. See docs/preflight-activation.md.");
     process.exit(1);
   }
   console.log("Preflight database is ready.");
