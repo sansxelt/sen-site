@@ -63,7 +63,7 @@ function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }
   const last = timeAgo(run?.completed_at ?? run?.created_at);
   const crit = criticalFlows(run?.summary);
   const metaParts = [crit, last ? `Last run ${last}` : null].filter(Boolean);
-  const metaText = metaParts.length ? metaParts.join(" · ") : "No preflight yet";
+  const metaText = metaParts.length ? metaParts.join(", ") : "No preflight yet";
   return (
     <Link href={`/app/apps/${app.id}`} className="card card--hover" style={{ display: "flex", flexDirection: "column", gap: 14, textDecoration: "none", color: "inherit", padding: 18 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>

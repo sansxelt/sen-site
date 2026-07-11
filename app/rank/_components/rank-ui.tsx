@@ -103,7 +103,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
       </div>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 16 }}>
         <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{authed ? "Dashboard" : "Sign in"}</Link>
-        <Link href="/app/checks/new" className="btn">{authed ? "New check" : "Check an output"}</Link>
+        <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="btn">{authed ? "Open app" : "Get early access"}</Link>
         <button aria-label="Menu" onClick={() => setOpen((v) => !v)} className="vra-nav-burger" style={{ display: "none", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 11, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", color: "var(--fg-1)" }}>
           <span aria-hidden>{open ? "✕" : "☰"}</span>
         </button>
@@ -120,7 +120,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
 
 function Footer({ humanEval }: { humanEval: boolean }) {
   const col = { display: "flex", flexDirection: "column", gap: 10 } as const;
-  const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/app/checks/new", "Check your AI output"], ["/guides", "QA guides"]];
+  const productLinks: [string, string][] = [["/how-it-works", "How it works"], ["/pricing", "Pricing"], ["/enterprise", "Enterprise"], ["/signin?callbackUrl=%2Fapp", "Get early access"]];
   if (humanEval) productLinks.push(["/vote", "Evaluate & Earn"]);
   const a = { color: "var(--fg-3)", textDecoration: "none", fontSize: 13.5 } as const;
   const head = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 4 } as const;
@@ -134,7 +134,7 @@ function Footer({ humanEval }: { humanEval: boolean }) {
       <div className="wrap foot-grid" style={{ padding: "clamp(44px, 5vw, 68px) var(--gutter)" }}>
         <div>
           <Brand href="/" />
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 260, marginTop: 14 }}>QA for AI-generated content: an instant AI check.</p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, maxWidth: 260, marginTop: 14 }}>The production layer for AI-built software: a launch decision before your users find the blockers.</p>
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
             <a href="https://instagram.com/usevraelis" target="_blank" rel="noreferrer" aria-label="Vraelis on Instagram" style={{ width: 34, height: 34, borderRadius: 9, border: "1px solid var(--line-2)", background: "var(--bg-1)", display: "grid", placeItems: "center", color: "var(--fg-3)", textDecoration: "none" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="2" width="20" height="20" rx="5.5" /><circle cx="12" cy="12" r="4.2" /><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" /></svg>

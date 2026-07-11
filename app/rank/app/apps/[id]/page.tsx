@@ -4,9 +4,10 @@ import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../setup-required";
 import {
-  getApplication, getContract, listRequirements, listFlows, listRuns,
+  getApplication, getContract, listRequirements, listFlows,
   type ContractRequirement, type TestFlow, type RunSummary,
 } from "@/lib/v-applications";
+import { listRunsForApp } from "@/lib/preflight/runs-db";
 
 export const metadata: Metadata = { title: "Application" };
 
@@ -64,10 +65,10 @@ function KV({ k, v }: { k: string; v: string | null }) {
   );
 }
 
-function RunRow({ r }: { r: RunSummary }) {
+function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
   const p = runPill(r.decision, r.state);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)" }}>
+    <Link href={`/app/apps/${appId}/runs/${r.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
       <span aria-hidden style={{ width: 9, height: 9, borderRadius: "50%", background: p.color, flex: "none" }} />
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)" }}>{when(r.created_at)}</div>
@@ -78,7 +79,8 @@ function RunRow({ r }: { r: RunSummary }) {
         ) : null}
       </div>
       <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}>{p.label}</span>
-    </div>
+      <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
+    </Link>
   );
 }
 
@@ -104,7 +106,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     );
   }
 
-  const [contract, runs] = await Promise.all([getContract(owner, id), listRuns(owner, id)]);
+  const [contract, runs] = await Promise.all([getContract(owner, id), listRunsForApp(owner, id)]);
   let reqs: ContractRequirement[] = [];
   let flows: TestFlow[] = [];
   if (contract) [reqs, flows] = await Promise.all([listRequirements(owner, contract.id), listFlows(owner, contract.id)]);
@@ -139,7 +141,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           {contract ? (
             <>
               <p style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-3)", margin: "12px 0 16px" }}>
-                {reqCount} requirement{reqCount === 1 ? "" : "s"} · {flowCount} flow{flowCount === 1 ? "" : "s"}
+                {reqCount} requirement{reqCount === 1 ? "" : "s"}, {flowCount} flow{flowCount === 1 ? "" : "s"}
               </p>
               <Link href={`/app/apps/${app.id}/contract`} className="btn">Review contract <span aria-hidden>→</span></Link>
             </>
@@ -166,18 +168,18 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           </p>
         </div>
 
-        {/* Runs */}
+        {/* Recent runs */}
         <div className="card" style={cardStyle}>
-          <h2 style={cardTitle}>Runs</h2>
+          <h2 style={cardTitle}>Recent runs</h2>
           {runs.length ? (
             <div style={{ display: "grid", gap: 8, marginTop: 14 }}>
-              {runs.map((r) => <RunRow key={r.id} r={r} />)}
+              {runs.map((r) => <RunRow key={r.id} appId={app.id} r={r} />)}
             </div>
           ) : (
             <div style={{ textAlign: "center", padding: "22px 0 6px" }}>
               <div aria-hidden style={{ fontFamily: "var(--font-mono)", fontSize: 24, color: "var(--fg-5)", marginBottom: 8 }}>∅</div>
               <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>No preflight runs yet.</p>
-              <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "6px 0 0" }}>Runs will show here once browser preflight is available.</p>
+              <p style={{ fontSize: 12, color: "var(--fg-4)", margin: "6px 0 0" }}>Once a preflight run finishes, its ship decision and evidence show here.</p>
             </div>
           )}
         </div>
