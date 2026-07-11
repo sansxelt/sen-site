@@ -10,7 +10,10 @@ import {
   analysisFromUploads, canSubmitCheck, submissionIdFor, CAPABILITY_LABEL, evidenceChipLabel,
   groupReportSources, evidenceForSource, type ReportAttachment,
 } from "../lib/v-check-ui";
+import { loadReportAttachments, resultHasAttachments } from "../lib/v-report-attachments";
 import type { AttachmentEvidence } from "../lib/v-evidence";
+import type { AttachmentRow } from "../lib/v-attachments-db";
+import type { EvalResult } from "../lib/v-evaluator";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -70,6 +73,22 @@ eq("output image evidence chip", evidenceChipLabel(evidence[0]), "Output · Scre
 // Evidence that references an unknown source id is simply absent from every rendered source.
 ok("evidence for an unknown source id renders nowhere", evidenceForSource(evidence, "zzz").length === 0);
 
+// ── Report attachment loading: text-only makes NO query; attachment reports load + map sources ──
+async function reportLoadCheck() {
+  let textOnlyCalls = 0;
+  const textOnly = { attachmentSummary: undefined } as unknown as EvalResult; // legacy text-only result
+  const outT = await loadReportAttachments(textOnly, "chk", "owner", async () => { textOnlyCalls++; return []; });
+  ok("resultHasAttachments false for text-only", resultHasAttachments(textOnly) === false);
+  ok("text-only report makes NO listByCheck query", textOnlyCalls === 0 && outT.length === 0);
+
+  let attCalls = 0;
+  const rows = [{ id: "a1", user_id: "owner", check_id: "chk", role: "candidate_output", version_key: "vA", order_index: 0, filename: "s.png", mime: "image/png", size_bytes: 60, storage_path: "x", page_count: null, status: "ready", capabilities: null }] as unknown as AttachmentRow[];
+  const attResult = { attachmentSummary: [{ attachment_id: "a1", role: "candidate_output", version_key: "vA", candidate_label: "A", index: 1, mime: "image/png", size_bytes: 60, page_count: null }] } as unknown as EvalResult;
+  const outA = await loadReportAttachments(attResult, "chk", "owner", async () => { attCalls++; return rows; });
+  ok("resultHasAttachments true for an attachment result", resultHasAttachments(attResult) === true);
+  ok("attachment report DOES query + maps sources", attCalls === 1 && outA[0]?.id === "a1" && outA[0]?.candidateLabel === "A" && outA[0]?.kind === "image");
+}
+
 // ── DB-level ownership boundary (what the signed-preview route enforces) ──
 async function ownershipCheck() {
   loadEnvConfig(process.cwd());
@@ -91,6 +110,7 @@ async function ownershipCheck() {
 }
 
 async function main() {
+  await reportLoadCheck();
   if (process.env.VRAELIS_CONTRACT_DB === "1") await ownershipCheck();
   else console.log("SKIP  DB ownership boundary (set VRAELIS_CONTRACT_DB=1 to run)");
   console.log(`\n${pass}/${pass + fail} passed`);

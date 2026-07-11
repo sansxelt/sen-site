@@ -27,6 +27,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { findAiTells, type AiTell } from "./ai-tells";
+import { validateEvidence, type EvidenceMeta, type EvidenceSource } from "./v-evidence";
 
 // `onboarding` is retained as a LEGACY key (older stored checks + API callers still send it); it is
 // no longer offered in the UI. The live taxonomy is: support_reply (Customer support), marketing_copy
@@ -253,10 +254,30 @@ const EvalSchema = z.object({
     contradictions: z.array(z.string()),      // anything that directly contradicts the request
     fix: z.string(),                          // single highest-impact task-compliance change
   })).optional(),
-  // NOTE: a model-produced structured `evidence` field was tried here but the extra structured-output
-  // surface pushed constrained decoding past the 40s timeout on every check. Reverted. The evidence
-  // VALIDATOR (lib/v-evidence.ts) is kept + tested for a later, lighter wiring (e.g. a second lean pass
-  // or free-form refs normalized), so the model never becomes authoritative about attachment metadata.
+});
+
+// Model-produced grounding evidence — MULTIMODAL ONLY. An earlier attempt put this on the shared
+// EvalSchema and the extra constrained-decoding surface timed out even text-only checks; scoping it to a
+// separate schema used only when attachments are present keeps the text-only path byte-identical and
+// unaffected. Every field the model returns here is UNTRUSTED: lib/v-evidence.ts re-validates each ref
+// against the authoritative snapshot metadata (filename replaced, impossible page/index dropped,
+// fabricated excerpt dropped, context never relabeled) before any of it is persisted or shown.
+// Kept deliberately LEAN — the model supplies only the id, a locator, and the basis; role, version, and
+// source_type are DERIVED from the authoritative snapshot metadata in the validator (the model never
+// needs to state them, which also means it cannot mislabel a version). A richer item shape overflowed the
+// structured-output grammar ("Schema is too complex"), which is what the earlier attempt hit.
+const EvidenceItem = z.object({
+  attachment_id: z.string(),                                   // copied from the attachment label shown above
+  image_index: z.number().optional(),                          // for a screenshot: the number shown
+  page_start: z.number().optional(),                           // for a PDF page (or range start)
+  page_end: z.number().optional(),
+  excerpt: z.string().optional(),                              // text-basis only; verbatim, re-matched in code
+  basis: z.enum(["text", "visual"]),
+});
+const EvalSchemaMM = EvalSchema.extend({
+  // The most important findings that come from an attachment, each grounded to its source. Optional and
+  // never required on every finding.
+  evidence: z.array(EvidenceItem).optional(),
 });
 
 // Trim, cap at MAX_CANDIDATES, and assign stable letters + normalized text. Drops empty-text candidates
@@ -629,8 +650,11 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
   const multimodalIntro = multi
     ? `There are ${prepared.length} versions to compare, shown below with their attachments. Each candidate and every attachment is clearly labeled; score each candidate by its Version letter, and when a finding comes from an attachment, say which attachment and (for a document) which page.\n\n`
     : `One version to review, shown below with its attachments; it and every attachment is clearly labeled.\n\n`;
+  // Evidence instruction is appended ONLY to the multimodal suffix (text-only prompt + schema are
+  // untouched). Every ref the model returns is re-validated in code against the authoritative metadata.
+  const evidenceInstruction = `\n\n- evidence: for the most important findings that are grounded in an attachment, add a reference. For each: attachment_id (copy it EXACTLY from that attachment's label above) and the locator that applies: image_index (the screenshot number shown) for an image, or page_start and page_end for a PDF page or range. Set basis to "visual" if you saw it in the image or page, or "text" if you read it in the extracted text; only a text-basis reference may add an excerpt copied verbatim from the file. Reference ONLY attachments shown above, and do not invent page numbers, screenshot numbers, or quotes. Do not attach evidence to a finding that is not grounded in a file.`;
   const content = useMultimodal
-    ? [{ type: "text" as const, text: promptPrefix + multimodalIntro }, ...mm!.blocks, { type: "text" as const, text: promptSuffix }]
+    ? [{ type: "text" as const, text: promptPrefix + multimodalIntro }, ...mm!.blocks, { type: "text" as const, text: promptSuffix + evidenceInstruction }]
     : PROMPT;
 
   try {
@@ -638,18 +662,20 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     // 60s route maxDuration. One 40s attempt fits with headroom; a retry could push two
     // attempts to ~80s and get the function hard-killed mid-flight — which would strand
     // the charge with no chance to refund. One attempt, then a clean fail-soft.
-    const client = new Anthropic({ apiKey: API_KEY, timeout: 40_000, maxRetries: 0 });
+    // Multimodal gets a larger timeout + token budget: the evidence field adds constrained-decoding
+    // surface, and multimodal responses are longer. Still one attempt (maxRetries 0) inside the 60s route.
+    const client = new Anthropic({ apiKey: API_KEY, timeout: useMultimodal ? 52_000 : 40_000, maxRetries: 0 });
     const res = await client.messages.parse({
       model: MODEL,
-      max_tokens: useMultimodal ? 4200 : (task ? 3600 : 2600), // attachments add per-candidate output; give headroom
+      max_tokens: useMultimodal ? 5000 : (task ? 3600 : 2600), // attachments + evidence add output; give headroom
 
       temperature: 0,   // a rubric that means anything must be applied as identically as the
                         // model allows; temp 0 collapses most run-to-run variance (it is NOT a
                         // determinism guarantee: batching + float nondeterminism still exist).
       messages: [{ role: "user", content: content as never }],
-      output_config: { format: zodOutputFormat(EvalSchema) },
+      output_config: { format: zodOutputFormat(useMultimodal ? EvalSchemaMM : EvalSchema) },
     });
-    const raw = res.parsed_output ?? null;
+    const raw = (res.parsed_output ?? null) as z.infer<typeof EvalSchemaMM> | null; // MM is a superset of EvalSchema
     if (!raw) return null;
     // No original request -> ignore any instruction_fit the model volunteered (the schema field
     // exists even when the prompt didn't ask for it, so haiku can fill it against nothing).
@@ -663,12 +689,22 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
     // a redacted attachment summary. All are additive + redacted (no paths / URLs / base64).
     if (useMultimodal && mm) {
       // Finalize per-attachment capability NOW that a validated result exists (not on upload / mere HTTP
-      // success), and attach a redacted summary. Model-produced structured evidence is deferred (see the
-      // schema note above); the validator in lib/v-evidence.ts is ready for its lighter wiring.
+      // success), and attach a redacted summary. All additive + redacted (no paths / URLs / base64).
       result.attachmentCapabilities = mm.prepared.map((p) => ({ attachment_id: p.attachmentId, kind: p.kind, capability: (p.kind === "image" ? "visual" : p.kind === "pdf" ? "text_and_visual" : "text") as "visual" | "text_and_visual" | "text" }));
       result.attachmentSummary = mm.prepared.map((p) => ({ attachment_id: p.attachmentId, role: p.role, version_key: p.versionKey, candidate_label: p.candidateLabel, index: p.index, mime: p.mime, size_bytes: p.sizeBytes, page_count: p.pageCount }));
       if (mm.snapshotHash) result.snapshotHash = mm.snapshotHash;          // content-free audit fingerprint
-      if (mm.warnings && mm.warnings.length) result.attachmentWarnings = mm.warnings.slice(0, 16); // redacted, no content
+
+      // Validate the model's grounding evidence against the AUTHORITATIVE snapshot metadata: unknown ids,
+      // impossible pages/indexes, fabricated excerpts, and role/version mismatches are stripped; authoritative
+      // filenames replace any the model supplied. A usable evaluation survives recoverable bad evidence.
+      const meta: EvidenceMeta[] = mm.prepared.map((p) => ({
+        attachmentId: p.attachmentId, filename: p.filename, role: p.role, versionKey: p.versionKey,
+        source: (p.kind === "image" ? "image" : p.kind === "pdf" ? "pdf" : "text") as EvidenceSource, pageCount: p.pageCount, index: p.index,
+      }));
+      const ev = validateEvidence(raw.evidence, meta, mm.textById ?? {});
+      if (ev.evidence.length) result.attachmentEvidence = ev.evidence;
+      const warnings = [...(mm.warnings ?? []), ...ev.warnings];
+      if (warnings.length) result.attachmentWarnings = warnings.slice(0, 16); // redacted, no content
     }
     return result;
   } catch (e) {

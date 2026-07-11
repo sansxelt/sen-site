@@ -4,8 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getCheck, reconcileStuckChecks } from "@/lib/v-checks";
 import { listByCheck } from "@/lib/v-attachments-db";
-import { FORMATS } from "@/lib/v-attachments";
-import type { ReportAttachment } from "./analysis-sources";
+import { loadReportAttachments } from "@/lib/v-report-attachments";
 import { getPlan } from "@/lib/v-db";
 import { entitlements, humanEvalEnabled } from "@/lib/v-entitlements";
 import { getCalibrationForCheck, resolveCalibrationForTest, calibrationSummary } from "@/lib/v-calibration";
@@ -117,14 +116,10 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
 
   const shareUrl = check.share_enabled && check.share_token ? `https://vraelis.com/r/c/${check.share_token}` : null;
 
-  // Bound attachments (owner-scoped) for the Analysis sources + evidence viewer. The Version letter comes
-  // from the persisted summary (authoritative candidate order); kind from the sniffed MIME. No storage
-  // path is ever passed to the client — only ids the owner-checked signed-preview route can resolve.
-  const labelById = new Map((check.result.attachmentSummary ?? []).map((s) => [s.attachment_id, s.candidate_label]));
-  const reportAttachments: ReportAttachment[] = (await listByCheck(email, id)).map((r) => ({
-    id: r.id, filename: r.filename, kind: FORMATS[r.mime]?.kind ?? "text", role: r.role,
-    versionKey: r.version_key, candidateLabel: labelById.get(r.id) ?? null, orderIndex: r.order_index, pageCount: r.page_count,
-  }));
+  // Bound attachments (owner-scoped) for the Analysis sources + evidence viewer. Gated on the persisted
+  // result: an ordinary text-only report runs NO attachments query; an attachment report loads its
+  // sources. No storage path reaches the client — only ids the owner-checked signed-preview route resolves.
+  const reportAttachments = await loadReportAttachments(check.result, id, email, listByCheck);
 
   return (
     <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
