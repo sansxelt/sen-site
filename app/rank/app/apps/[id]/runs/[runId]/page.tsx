@@ -82,9 +82,22 @@ function stepText(action: string | null, target: string | null): string {
   }
 }
 
+// Coarse, owner-safe failure codes (worker/preflight/provider-errors.ts) told as user sentences. An unknown
+// or absent code keeps the generic line; a raw provider message never reaches this page. The "nothing was
+// charged" claim is safe for these codes: they are thrown at session creation, before any flow ran, and the
+// worker refunds the full hold on a terminal failure where no flow executed.
+const FAILURE_LINE: Record<string, string> = {
+  provider_auth_failed: "Browser provider authorization failed. Nothing was charged for flows that never ran.",
+  provider_quota: "The browser usage allowance was exhausted. Nothing was charged for flows that never ran.",
+  provider_capacity: "Browser capacity was unavailable. Nothing was charged for flows that never ran.",
+  provider_unavailable: "The browser provider had an outage. Nothing was charged for flows that never ran.",
+  infra_misconfigured: "The run infrastructure was misconfigured. This was on our side, not your deployment.",
+  session_timeout: "The browser session timed out before the run could finish.",
+};
+
 // The plain-English verdict sentence under the big decision word. Counts come straight from the run
 // summary (or the deterministic issues) — nothing invented.
-function verdictLine(decision: string | null, state: string, summary: Record<string, unknown>, criticalIssueCount: number, terminal: boolean, progress: string): string {
+function verdictLine(decision: string | null, state: string, summary: Record<string, unknown>, criticalIssueCount: number, terminal: boolean, progress: string, failureCode: string | null): string {
   if (decision === "ready") return "Every critical flow held. This deployment is cleared to launch.";
   if (decision === "needs_review") return "Nearly there. A non-critical flow needs a human call.";
   if (decision === "blocked") {
@@ -95,7 +108,7 @@ function verdictLine(decision: string | null, state: string, summary: Record<str
   }
   if (terminal) {
     if (state === "cancelled") return "This run was cancelled before it finished.";
-    if (state === "failed") return "This run stopped before it reached a decision.";
+    if (state === "failed") return (failureCode && FAILURE_LINE[failureCode]) || "This run stopped before it reached a decision.";
     return "This run finished without a launch decision.";
   }
   return progress;
@@ -362,7 +375,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
   const criticalIssueCount = issues.filter((i) => i.severity === "critical").length;
   const hasFailures = flows.some((f) => f.state === "failed" || f.state === "blocked") || blockers.length > 0;
   const completedIso = run.completed_at || run.created_at;
-  const heroLine = verdictLine(run.decision, run.state, run.summary, criticalIssueCount, terminal, progressHeadline);
+  const heroLine = verdictLine(run.decision, run.state, run.summary, criticalIssueCount, terminal, progressHeadline, run.failure_code);
   const summaryLine = flowsSummary(run.summary);
 
   // Flows whose screenshots already appear as evidence on a blocker above; the timeline does not repeat them.
