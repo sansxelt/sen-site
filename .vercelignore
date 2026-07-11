@@ -1,0 +1,5 @@
+# This is an npm project (package-lock.json is the tracked lockfile). Keep the stray, untracked
+# pnpm files out of the Vercel upload so the build uses npm — under pnpm's strict node_modules the
+# transitive @auth/core dependency (imported by lib/v-sso.ts) fails to resolve.
+pnpm-lock.yaml
+pnpm-workspace.yaml
