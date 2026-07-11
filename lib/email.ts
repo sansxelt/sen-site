@@ -209,14 +209,14 @@ export function welcomeHtml(name?: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Welcome to Vraelis</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">Your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up, with free credits to start. Vraelis is a quality gate for the output your AI ships. Paste something it generated (a support reply, onboarding copy, an agent response) and get per-criterion scores, the version to ship, and the exact lines to fix before your users ever see them.</p>
-    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Try it in about 20 seconds:</strong></p>
+    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up, with free credits to start. Vraelis is the production layer for AI-built software: connect your AI-built app and Vraelis runs it like production, in a real browser, then hands you a launch decision with the exact blockers to fix before your users find them.</p>
+    <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Your first Production Pass:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li>Paste one or two versions of a real AI output.</li>
-      <li>Get scores, the version to ship, and line-level flags with fixes.</li>
-      <li>When the call matters, validate the same output on real people.</li>
+      <li>Connect your deployed app and the prompt you built it from.</li>
+      <li>Approve the critical flows it must get right.</li>
+      <li>Get READY, NEEDS REVIEW, or BLOCKED, with evidence and repro steps.</li>
     </ul>
-    <a href="https://vraelis.com/app/checks/new" class="vrl-btn" style="${BTN_STYLE}">Run your first check</a>
+    <a href="https://vraelis.com/app/apps/new" class="vrl-btn" style="${BTN_STYLE}">Connect your app</a>
     <span class="vrl-btn-spacer">&nbsp;</span>
     <a href="https://vraelis.com/how-it-works" class="vrl-btn" style="${BTN_LIGHT}">How it works</a>
     <div style="${NOTE_STYLE}">

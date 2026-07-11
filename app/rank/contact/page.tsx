@@ -18,7 +18,7 @@ export default function ContactPage() {
       <div className="wrap" style={{ maxWidth: 720, paddingTop: "clamp(28px, 4vw, 52px)" }}>
         <p className="eyebrow">Contact</p>
         <h1 className="display" style={{ fontSize: "clamp(2rem, 3.4vw, 2.8rem)", marginBottom: 10 }}>Contact</h1>
-        <p className="lead-copy" style={{ marginBottom: 28 }}>Questions, support, or business inquiries? Get in touch.</p>
+        <p className="lead-copy" style={{ marginBottom: 28 }}>Vraelis is the production layer for AI-built software: it runs your app like production in a real browser and returns a launch decision with evidence. Questions, support, or business inquiries? Get in touch.</p>
 
         <div className="tile-grid cols-3">
           {WAYS.map(([t, d, email, href]) => (
