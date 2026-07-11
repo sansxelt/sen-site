@@ -129,7 +129,7 @@ export async function startCheck(userId: string, input: RunCheckInput): Promise<
     if (!snap.ok) { await releaseOnAbort(snap.error); return { status: "invalid", message: snap.message }; }
     const content = await buildEvaluationContent(snap.snapshot);
     if (!content.ok) { await releaseOnAbort(content.error); return { status: "invalid", message: content.message }; }
-    attachments = { blocks: content.blocks, prepared: content.prepared, textById: content.textById };
+    attachments = { blocks: content.blocks, prepared: content.prepared, textById: content.textById, snapshotHash: snap.snapshot.hash, warnings: snap.snapshot.warnings };
   }
 
   // Fast pre-check; the atomic charge below is the authoritative gate.

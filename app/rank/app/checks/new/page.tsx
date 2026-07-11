@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { takeFreeCheckDraft } from "@/lib/free-check-draft";
 import { UploadZone, type UIItem } from "./upload-zone";
+import { analysisFromUploads, canSubmitCheck, submissionIdFor, type UploadKind } from "@/lib/v-check-ui";
 
 // Uploads ship dark until Pass 2 wires attachments into the evaluator; otherwise a user could attach
 // files that never affect the result (the exact broken promise we're avoiding). Flip via env when ready.
@@ -75,6 +76,9 @@ export default function NewCheckPage() {
   const [showDetails, setShowDetails] = useState(false); // Audience + success criteria stay collapsed by default
   const [draftKey, setDraftKey] = useState("");           // stable id so uploads survive a refresh
   const [zoneItems, setZoneItems] = useState<Record<string, UIItem[]>>({}); // per-zone upload state, keyed by role:versionKey
+  // One idempotency key per submission ATTEMPT: locked on first click so repeated clicks reuse it (no
+  // double-charge), regenerated only after a terminal failure so a corrected retry is a clean attempt.
+  const submitIdRef = useRef<string | null>(null);
 
   // Free-check handoff: a visitor who pasted their output on /r/check and signed up lands
   // here with ?draft=1. Consume the stashed draft once and fill the form so their first
@@ -148,19 +152,43 @@ export default function NewCheckPage() {
   }
 
   const filled = versions.filter((v) => v.text.trim());
-  const shownVersions = filled.length || 1;
   const unit = format === "short" ? "option" : "version";
 
   // Upload aggregates. Zone keys encode the role, so the summary can split outputs from context, and the
-  // CTA can block while anything is still uploading.
+  // CTA can block while anything is still uploading or failed.
   const readyOut = Object.entries(zoneItems).filter(([k]) => k.startsWith("candidate_output")).flatMap(([, v]) => v).filter((i) => i.status === "ready");
   const readyCtx = Object.entries(zoneItems).filter(([k]) => k.startsWith("supporting_context")).flatMap(([, v]) => v).filter((i) => i.status === "ready");
   const anyUploading = Object.values(zoneItems).flat().some((i) => i.status === "uploading");
+  const anyFailed = Object.values(zoneItems).flat().some((i) => i.status === "failed");
+  const versionHasFiles = (vid: string) => (zoneItems[`candidate_output:${vid}`] ?? []).some((i) => i.status === "ready" && i.serverId);
+  // A version counts as submittable if it has pasted text OR a ready output attachment (files-only version).
+  const submittable = versions.filter((v) => v.text.trim() || (UPLOADS_ENABLED && versionHasFiles(v.id)));
+  const hasUploads = UPLOADS_ENABLED && (readyOut.length > 0 || readyCtx.length > 0);
+  const shownVersions = submittable.length || 1;
+
+  // Analysis mode + counts, from what will actually be submitted (shared pure helper, contract-tested).
+  const readyOutKinds = readyOut.map((i) => (i.kind ?? "text") as UploadKind);
+  const { images: outImages, pdfs: outPdfs, texts: outTexts, mode: analysisMode } = analysisFromUploads(readyOutKinds, filled.length > 0);
 
   async function submit() {
     setErr(null);
-    if (filled.length < 1) { setErr("Add at least one version to check."); return; }
+    if (submittable.length < 1) { setErr("Add at least one version to check."); return; }
+    if (anyUploading) { setErr("Finish uploading your files before running the check."); return; }
+    if (anyFailed) { setErr("Remove or retry the failed attachment before running the check."); return; }
     setBusy(true);
+    // A failed attempt clears the id (below) so this generates a fresh one; a double-click while busy
+    // reuses the locked id so the server dedupes it to a single charge.
+    const submissionId = submissionIdFor(submitIdRef.current, hasUploads, () => crypto.randomUUID());
+    if (submissionId) submitIdRef.current = submissionId;
+    // Multimodal: carry version_key so attachments group to the right version, keep files-only versions,
+    // and pass the exact expected attachment id set + draft. Text-only path is byte-identical to before.
+    const candidates = hasUploads
+      ? submittable.map((v) => ({ text: v.text.trim(), version_key: v.id }))
+      : filled.map((v) => ({ text: v.text.trim() }));
+    const expectedIds = hasUploads
+      ? [...readyOut, ...readyCtx].map((i) => i.serverId).filter((x): x is string => !!x)
+      : undefined;
+    const clearAttempt = () => { submitIdRef.current = null; setBusy(false); }; // terminal: next click is a new attempt
     try {
       const res = await fetch("/api/v/check", {
         method: "POST",
@@ -172,48 +200,58 @@ export default function NewCheckPage() {
           goal: goal.trim() || undefined,
           original_request: originalRequest.trim() || undefined,
           context: published ? "published" : undefined,
-          candidates: filled.map((v) => ({ text: v.text.trim() })),
+          candidates,
+          ...(hasUploads ? { draft_key: draftKey, expected_attachment_ids: expectedIds, submission_id: submissionId } : {}),
         }),
       });
       if (res.status === 401) { signIn(undefined, { callbackUrl: "/app/checks/new" }); return; }
-      if (res.status === 402) { setErr("You're out of credits. A check costs 1 credit."); setBusy(false); return; }
+      if (res.status === 402) { setErr("You're out of credits. A check costs 1 credit. You were not charged."); clearAttempt(); return; }
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        setErr(j?.error === "evaluator_unavailable"
-          ? "The evaluator is busy right now, and you were not charged. Try again in a moment."
-          : "Something went wrong, and you were not charged. Try again.");
-        setBusy(false);
+        const msg = typeof j?.error === "string" && j.error === "evaluator_unavailable"
+          ? "The evaluator is busy right now, and you were not charged. Your files are still here — try again in a moment."
+          : typeof j?.error === "string" && j.error.length > 0 && j.error !== "internal_error"
+            ? `${j.error} You were not charged, and your files are still here.`
+            : "Something went wrong, and you were not charged. Your files are still here — try again.";
+        setErr(msg);
+        clearAttempt();
         return;
       }
       const j = await res.json();
-      // The check now runs in the background; land on the activity list where it shows
-      // as "running" and flips to complete on its own.
-      if (j?.id) router.push("/app/checks");
-      else { setErr("Could not start the check. Try again."); setBusy(false); }
+      // Running or a duplicate of an in-flight/complete submission: either way the answer is one check —
+      // land on the activity list (or the existing report) instead of launching a second evaluation.
+      if (j?.id || j?.status === "duplicate") router.push(j?.id ? `/app/checks/${j.id}` : "/app/checks");
+      else { setErr("Could not start the check. You were not charged. Try again."); clearAttempt(); }
     } catch {
-      setErr("Network error. Try again.");
-      setBusy(false);
+      setErr("Network error. You were not charged. Try again.");
+      clearAttempt();
     }
   }
 
   const active = OUTPUT_OPTIONS.find((o) => o.key === outputType);
   const hasTask = originalRequest.trim().length > 0;
+  const nSub = submittable.length;
+  const filesOnly = hasUploads && filled.length === 0;
   const ctaText = busy ? "Starting…"
     : published ? "Find the highest-impact fix"
-    : hasTask ? (filled.length > 1 ? "Compare instruction fit" : "Check instruction fit")
-    : filled.length > 1 ? `Compare ${filled.length} ${unit}s`
+    : hasTask ? (nSub > 1 ? "Compare instruction fit" : "Check instruction fit")
+    : nSub > 1 ? (filesOnly && outPdfs >= 2 && outImages === 0 ? `Compare ${nSub} documents` : `Compare ${nSub} ${unit}s`)
+    : filesOnly ? (outPdfs === 1 && outImages === 0 ? "Review document" : outImages === 1 && outPdfs === 0 && outTexts === 0 ? "Analyze screenshot" : `Review ${readyOut.length} file${readyOut.length === 1 ? "" : "s"}`)
     : format === "short" ? "Check option" : "Check output";
 
   const summary: [string, string][] = [
     ["Review type", active?.label ?? "Custom"],
     [format === "short" ? "Options" : "Versions", `${shownVersions}`],
+    ...(hasUploads ? [["Analysis", analysisMode] as [string, string]] : []),
     ...(readyOut.length ? [["Uploads", describeUploads(readyOut)] as [string, string]] : []),
     ...(readyCtx.length ? [["Supporting context", describeUploads(readyCtx)] as [string, string]] : []),
     ["Instruction fit", hasTask ? "On" : "Off"],
     ["Live output", published ? "On" : "Off"],
     ...(balance != null ? [["Your balance", balance.toLocaleString()] as [string, string]] : []),
     ["Cost", "1 credit"],
+    ...(balance != null && balance >= 1 ? [["Balance after", (balance - 1).toLocaleString()] as [string, string]] : []),
   ];
+  const canSubmit = canSubmitCheck({ submittableCount: nSub, anyUploading, anyFailed });
 
   return (
     <div className="wrap" style={{ maxWidth: 1000, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -404,12 +442,14 @@ export default function NewCheckPage() {
               ))}
             </div>
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 14 }}>
-              <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || filled.length < 1 || anyUploading}
-                style={{ width: "100%", justifyContent: "center", height: 48, fontSize: 15, fontWeight: 600, opacity: busy || filled.length < 1 || anyUploading ? 0.6 : 1 }}>
+              <button type="button" className="btn btn--lg" onClick={submit} disabled={busy || !canSubmit}
+                style={{ width: "100%", justifyContent: "center", height: 48, fontSize: 15, fontWeight: 600, opacity: busy || !canSubmit ? 0.6 : 1 }}>
                 {anyUploading ? "Uploading…" : ctaText} {!busy && !anyUploading ? <span aria-hidden>→</span> : null}
               </button>
-              <p style={{ fontSize: 11.5, color: "var(--fg-4)", textAlign: "center", margin: "10px 0 0", lineHeight: 1.5 }}>
-                {anyUploading ? "Finish processing your uploads before running the check." : <>You&apos;re only charged after a successful check.{balance === 0 ? <> Out of credits? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Buy more</a>.</> : null}</>}
+              <p style={{ fontSize: 11.5, color: "var(--fg-4)", textAlign: "center", margin: "10px 0 0", lineHeight: 1.5 }} aria-live="polite">
+                {anyUploading ? "Finish processing your uploads before running the check."
+                  : anyFailed ? "Remove or retry the failed attachment to continue."
+                  : <>You&apos;re only charged after a successful check.{balance === 0 ? <> Out of credits? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Buy more</a>.</> : null}</>}
               </p>
             </div>
           </div>

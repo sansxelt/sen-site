@@ -177,14 +177,16 @@ export type EvalResult = {
   // Attachment audit (multimodal checks only). All redacted -- never storage paths / signed URLs / base64.
   attachmentEvidence?: import("./v-evidence").AttachmentEvidence[]; // model evidence VALIDATED against the snapshot
   attachmentCapabilities?: { attachment_id: string; kind: string; capability: "visual" | "text_and_visual" | "text" | "text_only_fallback" | "failed" }[];
-  attachmentSummary?: { attachment_id: string; role: string; version_key: string | null; index: number; mime: string; size_bytes: number; page_count: number | null }[];
+  attachmentSummary?: { attachment_id: string; role: string; version_key: string | null; candidate_label: string | null; index: number; mime: string; size_bytes: number; page_count: number | null }[];
+  snapshotHash?: string;            // deterministic fingerprint of the exact evaluated inputs (content-free audit id)
+  attachmentWarnings?: string[];    // redacted snapshot/evidence-validation warnings (no content), for the audit panel
 };
 
 export type EvalCandidate = { label?: string; text: string };
 // When a check has attachments, the caller (route/harness) builds the snapshot + content blocks and
 // passes them here; evaluateOutput then sends a multimodal message instead of the text-only string.
 // candidates order MUST match the snapshot candidate order so the A/B labels line up.
-export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext; originalRequest?: string; attachments?: { blocks: import("./v-content-blocks").Block[]; prepared: import("./v-content-blocks").PreparedAttachment[]; textById?: Record<string, string> } };
+export type EvalInput = { outputType: OutputType; audience?: string; goal?: string; candidates: EvalCandidate[]; context?: CheckContext; originalRequest?: string; attachments?: { blocks: import("./v-content-blocks").Block[]; prepared: import("./v-content-blocks").PreparedAttachment[]; textById?: Record<string, string>; snapshotHash?: string; warnings?: string[] } };
 export type PreparedCandidate = { index: number; label: string; text: string; normText: string };
 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -664,7 +666,9 @@ export async function evaluateOutput(input: EvalInput): Promise<EvalResult | nul
       // success), and attach a redacted summary. Model-produced structured evidence is deferred (see the
       // schema note above); the validator in lib/v-evidence.ts is ready for its lighter wiring.
       result.attachmentCapabilities = mm.prepared.map((p) => ({ attachment_id: p.attachmentId, kind: p.kind, capability: (p.kind === "image" ? "visual" : p.kind === "pdf" ? "text_and_visual" : "text") as "visual" | "text_and_visual" | "text" }));
-      result.attachmentSummary = mm.prepared.map((p) => ({ attachment_id: p.attachmentId, role: p.role, version_key: p.versionKey, index: p.index, mime: p.mime, size_bytes: p.sizeBytes, page_count: p.pageCount }));
+      result.attachmentSummary = mm.prepared.map((p) => ({ attachment_id: p.attachmentId, role: p.role, version_key: p.versionKey, candidate_label: p.candidateLabel, index: p.index, mime: p.mime, size_bytes: p.sizeBytes, page_count: p.pageCount }));
+      if (mm.snapshotHash) result.snapshotHash = mm.snapshotHash;          // content-free audit fingerprint
+      if (mm.warnings && mm.warnings.length) result.attachmentWarnings = mm.warnings.slice(0, 16); // redacted, no content
     }
     return result;
   } catch (e) {

@@ -54,6 +54,8 @@ async function main() {
     ok("multimodal check completes", r2.status === "ok");
     ok("multimodal charged exactly once", (await bal()) === b1 - 1, `${b1} -> ${await bal()}`);
     ok("result carries attachment capabilities", r2.status === "ok" && (r2.check.result?.attachmentCapabilities?.[0]?.capability === "visual"));
+    ok("result carries a content-free snapshot hash", r2.status === "ok" && typeof r2.check.result?.snapshotHash === "string" && r2.check.result.snapshotHash.length > 0);
+    ok("summary carries the Version letter (candidate_label)", r2.status === "ok" && r2.check.result?.attachmentSummary?.[0]?.candidate_label === "A");
     ok("attachment BOUND to the completed check (check_id set)", !!(await db.getAttachment(owner, imgId))?.check_id);
 
     // 3. Duplicate submission id -> no new charge, returns the same check.

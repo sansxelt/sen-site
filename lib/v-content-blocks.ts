@@ -22,6 +22,7 @@ export type Block =
 export type RequestedCapability = "visual_requested" | "native_document_requested" | "text_requested";
 export type PreparedAttachment = {
   attachmentId: string; filename: string; role: SnapshotAttachment["role"]; versionKey: string | null;
+  candidateLabel: string | null; // the Version letter (A/B/…) this attachment belongs to; null for context
   kind: string; mime: string; blockType: Block["type"]; requested: RequestedCapability; sizeBytes: number; pageCount: number | null;
   index: number; // 1-based within its group (the image_index/document_index the model was shown)
 };
@@ -78,7 +79,7 @@ export async function buildEvaluationContent(snapshot: EvaluationSnapshot): Prom
       blocks.push({ type: "text", text: labelFor(a, i, versionLabel) });
       const bytes = await downloadCheckAttachment(a.storagePath);
       if (!bytes) return "request_build_failed";
-      const base = { attachmentId: a.attachmentId, filename: a.filename, role: a.role, versionKey: a.versionKey, kind: a.kind, mime: a.mime, sizeBytes: a.sizeBytes, pageCount: a.pageCount, index: i };
+      const base = { attachmentId: a.attachmentId, filename: a.filename, role: a.role, versionKey: a.versionKey, candidateLabel: versionLabel, kind: a.kind, mime: a.mime, sizeBytes: a.sizeBytes, pageCount: a.pageCount, index: i };
       if (a.kind === "image") {
         blocks.push({ type: "image", source: { type: "base64", media_type: a.mime, data: bytes.toString("base64") } });
         prepared.push({ ...base, blockType: "image", requested: "visual_requested" });
