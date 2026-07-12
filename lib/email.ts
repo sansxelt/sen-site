@@ -35,11 +35,12 @@ const fromBilling = "Vraelis <noreply@vraelis.com>";
  *     They're used as the `from` only on contact-form threads that
  *     started on the user's side, so the conversation stays on-channel.
  *
- * Automated sends therefore don't set `replyTo` at all, Resend
- * defaults it to the `from` address, which is the correct "no reply
- * expected" behavior for hello@ and noreply@. Setting replyTo to help@
- * on billing mail (the old behavior) bled customer billing questions
- * into the general support inbox and muddied the channel model.
+ * Automated sends set `replyTo: help@vraelis.com`. hello@ and noreply@
+ * are DROP addresses (no inbox), and several nurture emails promise
+ * "just reply and we'll stop" — an opt-out reply must land somewhere a
+ * human reads, or the promise (and CAN-SPAM's working-opt-out rule) is
+ * silently broken. All replies to automated mail therefore route to the
+ * monitored help@ inbox.
  */
 
 
@@ -335,6 +336,7 @@ export async function sendWelcomeEmail(email: string, name?: string) {
   try {
     await resend.emails.send({
       from:    fromAccount,
+      replyTo: "help@vraelis.com",
       to:      email,
       subject: "Welcome to Vraelis",
       html:    welcomeHtml(name),
@@ -367,6 +369,7 @@ export async function sendCheckActivationEmail(email: string) {
   try {
     await resend.emails.send({
       from:    fromAccount,
+      replyTo: "help@vraelis.com",
       to:      email,
       subject: "Run your first check on Vraelis (about 20 seconds)",
       html:    checkActivationHtml(),
@@ -403,6 +406,7 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
   try {
     await resend.emails.send({
       from:    fromAccount,
+      replyTo: "help@vraelis.com",
       to:      email,
       subject: remaining <= 0 ? "Your Vraelis balance is used up" : `${remaining} Vraelis credit${remaining === 1 ? "" : "s"} left`,
       html:    lowCreditsHtml(remaining),
@@ -432,6 +436,7 @@ export async function sendWinbackEmail(email: string, remaining: number) {
   try {
     await resend.emails.send({
       from:    fromAccount,
+      replyTo: "help@vraelis.com",
       to:      email,
       subject: `Your Vraelis ${remaining === 1 ? "credit is" : "credits are"} still here`,
       html:    winbackHtml(remaining),
@@ -448,6 +453,7 @@ export async function sendEarlyAccessEmail(email: string, name: string) {
   try {
     await resend.emails.send({
       from:    fromAccount,
+      replyTo: "help@vraelis.com",
       to:      email,
       subject: "Your Vraelis invite request is on file",
       html:    earlyAccessHtml(name),
@@ -464,6 +470,7 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
   try {
     await resend.emails.send({
       from:    fromAccount,
+      replyTo: "help@vraelis.com",
       to:      email,
       subject: "Reset your Vraelis password",
       html:    passwordResetHtml(resetUrl),
@@ -485,6 +492,7 @@ export async function sendVerifyAccountEmail(opts: {
   try {
     await resend.emails.send({
       from:    fromAccount,
+      replyTo: "help@vraelis.com",
       to:      opts.email,
       subject: "Confirm your Vraelis account",
       html:    verifyAccountHtml(opts.name ?? "", opts.verifyUrl, opts.expiryLabel),
@@ -940,6 +948,7 @@ export async function sendNewsletterEmail(opts: {
   try {
     await resend.emails.send({
       from:    fromBilling,
+      replyTo: "help@vraelis.com",
       to:      opts.to,
       subject: opts.subject,
       html:    baseHtml(opts.bodyHtml),
