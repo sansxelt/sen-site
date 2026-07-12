@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { createApplication, deleteApplication } from "@/lib/v-applications";
+import { addConnection, applySetupExtras, normalizeBoundaries, normalizeContextSources, CONNECTION_KINDS } from "@/lib/preflight/connections-db";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 
 export const runtime = "nodejs";
@@ -36,7 +37,24 @@ export async function POST(req: Request) {
     const status = r.error === "unavailable" ? 503 : 400;
     return NextResponse.json({ error: r.error }, { status });
   }
-  return NextResponse.json({ id: r.application.id });
+
+  // Production-context extras from the onboarding workspace, ALL non-secret and all best-effort: the
+  // application above is already created and usable with URL-only context, so a failed extra never fails
+  // the connect. Secrets (test accounts) NEVER ride this payload — they go to the dedicated sealed route.
+  const appId = r.application.id;
+  await applySetupExtras(email, appId, {
+    environment: typeof body?.environment === "string" ? body.environment : null,
+    context: normalizeContextSources(body?.context_sources),
+    boundaries: normalizeBoundaries(body?.test_boundaries),
+  });
+  const rawConnections: unknown = Array.isArray(body?.connections) ? body.connections : [];
+  for (const c of (rawConnections as Record<string, unknown>[]).slice(0, 20)) {
+    const provider = typeof c?.provider === "string" ? c.provider : "";
+    if (!(CONNECTION_KINDS as readonly string[]).includes(provider) || provider === "test_account") continue;
+    await addConnection(email, appId, provider, (c?.meta && typeof c.meta === "object" ? c.meta : {}) as Record<string, unknown>);
+  }
+
+  return NextResponse.json({ id: appId });
 }
 
 export async function DELETE(req: Request) {
@@ -45,6 +63,8 @@ export async function DELETE(req: Request) {
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
-  await deleteApplication(email, id);
+  // Honest result: a zero-row delete (not owned / already gone) must not read as "deleted".
+  const ok = await deleteApplication(email, id);
+  if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

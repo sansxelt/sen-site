@@ -102,3 +102,10 @@ tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run
 - New early-access model published: Free (one complete pass, 3 critical flows, no card) and $10/Production Pass (5 flows included, $2/additional). Pro/Scale render only as a disabled preview; no subscription checkout wired.
 - Billing LOGIC unchanged by design: ledger still holds 1 credit/flow. Migration plan (cents ledger, price-paid balance conversion, Stripe changes, flag-gated estimator swap) in docs/pricing-migration-plan.md; execute it as a unit, never piecemeal.
 - Guard: npm run pricing:copy:test (21/21) fails the build of any resurfaced stale economics.
+
+## 2026-07-12: Connect an app -> production-context onboarding workspace
+- New /app/apps/new: 6 grouped sections (application, source+deployment, product definition, data+auth, billing+services, test boundaries) with a sticky connection summary, setup progress, and a local draft (credentials excluded).
+- Three honest connection states: available fields; MANUAL connection cards (GitHub repo/branch/commit, Vercel, custom deploy, Supabase, custom auth, Stripe test-mode marker, Sentry DSN, webhooks); Coming later chips (OAuth, Railway, Netlify, Firebase, Clerk, Auth0, Better Auth, Lemon Squeezy, Paddle, Resend, Twilio, PostHog, OpenAPI import). No fake OAuth anywhere.
+- Secrets: lib/preflight/secret-vault.ts (AES-256-GCM, VRAELIS_SECRET_KEY, fail-closed, fresh IV, GCM tamper-proof), sealed test accounts in v_app_connections.encrypted_ref via the dedicated /secrets route (masked-only responses, honest 404 on zero-row revoke). Adversarial review (9 agents) confirmed 3 findings, all fixed: value-channel credential redaction, attempt-all + on-page retry for secret storage (no plaintext loss), row-counted deletes.
+- Boundaries conservative by default (all permits off; fixed never-rules displayed). Context sources bounded + typed. Suite: preflight:connect:test 46/46; security suite auto-grew to 122/122.
+- OPERATOR: apply sql/vraelis-preflight-5-connections.sql and set VRAELIS_SECRET_KEY (64 hex chars) in Vercel before storing test accounts; storing fails closed with a clear 503 until then.

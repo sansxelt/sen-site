@@ -80,8 +80,10 @@ export async function createApplication(userId: string, input: NewApplication): 
 
 export async function deleteApplication(userId: string, id: string): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
-  const { error } = await db().from("v_applications").delete().eq("user_id", norm(userId)).eq("id", id);
-  return !error;
+  // True only when a row was actually removed: a zero-row delete is no PostgREST error, and a false
+  // "deleted" would also falsely imply the cascade (connections + sealed credentials) ran.
+  const { data, error } = await db().from("v_applications").delete().eq("user_id", norm(userId)).eq("id", id).select("id");
+  return !error && Array.isArray(data) && data.length > 0;
 }
 
 // ── Production Contract + requirements + flows (read for the shell; manual edits in Phase 1) ──
