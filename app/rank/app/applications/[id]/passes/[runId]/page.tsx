@@ -9,6 +9,7 @@ import { SetupRequired } from "../../../setup-required";
 import { RerunButton } from "./rerun-button";
 import { CopyButton } from "./copy-button";
 import { AutoRefresh } from "./auto-refresh";
+import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Preflight run" };
 
@@ -224,7 +225,7 @@ function BlockerStory({ issue, index, flowName, screenshotIds, runId }: { issue:
 
       {screenshotIds.length ? (
         <div style={{ marginTop: 20 }}>
-          <div style={labelStyle}>Evidence</div>
+          <div style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.camera} size={13} sw={2} />Evidence</div>
           <div style={{ marginTop: 8 }}>
             <ScreenshotGrid runId={runId} ids={screenshotIds} />
           </div>
@@ -283,7 +284,7 @@ function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flo
   return (
     <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "12px 16px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        {passed ? <span aria-hidden style={{ color: "var(--acc-deep)", flex: "none" }}>✓</span> : null}
+        {passed ? <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)", flex: "none" }}><Ic d={I.check} size={14} sw={2.2} /></span> : null}
         <span style={{ fontSize: 13.5, fontWeight: failed ? 600 : 500, color: failed ? "var(--fg-1)" : "var(--fg-2)", flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{displayName}</span>
         <Pill tone={tone} />
         <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{flow.steps.length} step{flow.steps.length === 1 ? "" : "s"}</span>
@@ -303,7 +304,7 @@ function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flo
                   border: `1px solid ${stepFailed ? "#F0C7C2" : "var(--line-1)"}`,
                 }}>
                   <span aria-hidden style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", flex: "none", marginTop: 2, width: 18, textAlign: "right" }}>{i + 1}</span>
-                  <span aria-hidden style={{ color: ok ? "var(--acc-deep)" : stepFailed ? "#C0392B" : "var(--fg-4)", flex: "none", marginTop: 1, fontSize: 13 }}>{ok ? "✓" : stepFailed ? "✕" : "•"}</span>
+                  <span aria-hidden style={{ display: "inline-flex", color: ok ? "var(--acc-deep)" : stepFailed ? "#C0392B" : "var(--fg-4)", flex: "none", marginTop: 3 }}><Ic d={ok ? I.check : stepFailed ? I.x : I.dash} size={13} sw={2.4} /></span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, color: "var(--fg-1)", lineHeight: 1.45, wordBreak: "break-word" }}>{stepText(s.action, s.target)}</div>
                     {stepFailed && s.observed ? (
@@ -325,7 +326,7 @@ function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flo
 
       {showShots && screenshotIds.length ? (
         <div style={{ marginTop: 12 }}>
-          <div style={labelStyle}>Evidence</div>
+          <div style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.camera} size={13} sw={2} />Evidence</div>
           <div style={{ marginTop: 8 }}>
             <ScreenshotGrid runId={runId} ids={screenshotIds} min={280} />
           </div>
@@ -353,7 +354,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
     return (
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
-          <div className="empty__icon">∅</div>
+          <EmptyIcon d={I.slash} />
           <h3>Run not found</h3>
           <p>This preflight run doesn&apos;t exist, or it belongs to another account.</p>
           <Link href={`/applications/${id}`} className="btn">Back to application</Link>
@@ -442,7 +443,10 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
         {/* (2) LAUNCH BLOCKERS as full stories, evidence large */}
         {blockers.length ? (
           <section style={{ display: "grid", gap: 16 }}>
-            <h2 style={sectionHeading}>{blockers.length} launch blocker{blockers.length === 1 ? "" : "s"}</h2>
+            <h2 style={{ ...sectionHeading, display: "flex", alignItems: "center", gap: 10 }}>
+              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.alert} size={20} sw={1.8} /></span>
+              {blockers.length} launch blocker{blockers.length === 1 ? "" : "s"}
+            </h2>
             {blockers.map((iss, i) => {
               const m = metaForIssue(iss);
               const rawFlowName = m?.displayName ?? "";
@@ -460,7 +464,10 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
           </section>
         ) : terminal && run.decision === "ready" ? (
           <div style={{ border: "1px solid var(--line-1)", borderLeft: "4px solid var(--acc-line)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "16px 20px" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)" }}>No launch blockers</div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", display: "flex", alignItems: "center", gap: 8 }}>
+              <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)" }}><Ic d={I.check} size={15} sw={2.2} /></span>
+              No launch blockers
+            </div>
             <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "4px 0 0" }}>Every critical flow passed against this deployment.</p>
           </div>
         ) : null}
@@ -468,7 +475,10 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
         {/* Lower-severity findings (kept, never hidden) */}
         {otherIssues.length ? (
           <section style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22 }}>
-            <h2 style={quietHeading}>Other findings</h2>
+            <h2 style={{ ...quietHeading, display: "flex", alignItems: "center", gap: 9 }}>
+              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.eye} size={17} sw={1.8} /></span>
+              Other findings
+            </h2>
             <div style={{ display: "grid", gap: 10, marginTop: 14 }}>
               {otherIssues.map((iss) => (
                 <div key={iss.id} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -483,7 +493,10 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
         {/* (3) WHAT RAN: the quiet flow timeline */}
         {flows.length ? (
           <section style={{ borderTop: "1px solid var(--line-1)", paddingTop: 22, display: "grid", gap: 12 }}>
-            <h2 style={quietHeading}>What ran</h2>
+            <h2 style={{ ...quietHeading, display: "flex", alignItems: "center", gap: 9 }}>
+              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.list} size={17} sw={1.8} /></span>
+              What ran
+            </h2>
             {flows.map((f, i) => (
               <FlowBlock
                 key={`${f.name}-${i}`}

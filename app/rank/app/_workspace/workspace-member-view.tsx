@@ -4,6 +4,7 @@
 // private controls (billing/API/webhooks/collection-links/screening) are rendered.
 import Link from "next/link";
 import type { SelectedWorkspace, WorkspaceSummary } from "@/lib/v-workspace";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 const ROLE_LABEL: Record<string, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 const TITLE: Record<string, string> = { dashboard: "Dashboard", projects: "Projects", data: "Analytics", "data-quality": "Data quality" };
@@ -32,7 +33,7 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
         <>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 16 }}>Client viewers can access client-safe reports only.</p>
           {summary.projects.length === 0 ? (
-            <div className="empty"><div className="empty__icon">📂</div><h3>No projects shared with you yet</h3><p>Projects shared with you in this workspace will appear here.</p></div>
+            <div className="empty"><EmptyIcon d={I.folder} /><h3>No projects shared with you yet</h3><p>Projects shared with you in this workspace will appear here.</p></div>
           ) : (
             <div className="tile-grid cols-3">
               {summary.projects.map((p) => (
@@ -57,9 +58,9 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
           )}
           <p style={{ fontSize: 12.5, color: "var(--fg-4)", marginBottom: 14 }}>You are viewing analytics for decision programs shared with you in this workspace. Open a program for its full decision and signal-quality analytics.</p>
           {summary.projects.length === 0 ? (
-            <div className="empty"><div className="empty__icon">📂</div><h3>This workspace has no decision programs yet</h3><p>Decision programs created in this workspace will appear here.</p></div>
+            <div className="empty"><EmptyIcon d={I.folder} /><h3>This workspace has no decision programs yet</h3><p>Decision programs created in this workspace will appear here.</p></div>
           ) : projectsWithWork.length === 0 ? (
-            <div className="empty"><div className="empty__icon">◷</div><h3>No decisions made yet</h3><p>Completed decision workflows will appear here with decision quality and signal analytics.</p></div>
+            <div className="empty"><EmptyIcon d={I.clock} /><h3>No decisions made yet</h3><p>Completed decision workflows will appear here with decision quality and signal analytics.</p></div>
           ) : (
             <div className="tile-grid cols-3">
               {summary.projects.map((p) => (

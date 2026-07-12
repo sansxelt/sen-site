@@ -28,7 +28,9 @@ const DRAFT_KEY = "vraelis-connect-draft-v1";
 
 type Conn = Record<string, string>;
 type TestAccount = { label: string; username: string; password: string; scope: string };
-type Source = { kind: string; name: string; content: string };
+// added: client-side timestamp for the honest "Added just now / Xm ago" line on source cards. Stripped
+// before submit (the server stamps its own added_at) and tolerated as absent on old restored drafts.
+type Source = { kind: string; name: string; content: string; added?: number };
 
 function friendlyError(code: unknown): string {
   switch (code) {
@@ -139,7 +141,10 @@ export default function ConnectWorkspace() {
   // Section 1: identity
   const [appUrl, setAppUrl] = useState(""); const [name, setName] = useState("");
   const [environment, setEnvironment] = useState(""); const [builder, setBuilder] = useState("");
-  const [prompt, setPrompt] = useState(""); const [productDesc, setProductDesc] = useState("");
+  const [prompt, setPrompt] = useState("");
+  // Section 3 primary field: the short product summary (state + draft key keep the historical name
+  // "productDesc" so drafts saved before the redesign restore into the new field).
+  const [productDesc, setProductDesc] = useState("");
   // Section 2/4/5: manual connections (null = not connected)
   const [github, setGithub] = useState<Conn | null>(null);
   const [vercel, setVercel] = useState<Conn | null>(null);
@@ -247,8 +252,8 @@ export default function ConnectWorkspace() {
           source_prompt: prompt.trim() || undefined, ownership_confirmed: true,
           environment: envValue || undefined,
           context_sources: [
-            ...(productDesc.trim() ? [{ kind: "prd", name: "Product description", content: productDesc.trim() }] : []),
-            ...sources,
+            ...(productDesc.trim() ? [{ kind: "summary", name: "Product summary", content: productDesc.trim() }] : []),
+            ...sources.map((s) => ({ kind: s.kind, name: s.name, content: s.content })),
           ],
           test_boundaries: {
             allowed_domains: domainsValue.split(",").map((d) => d.trim()).filter(Boolean),
@@ -354,10 +359,6 @@ export default function ConnectWorkspace() {
               <label style={lab} htmlFor="c-prompt">Original build prompt <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(recommended)</span></label>
               <textarea id="c-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Paste the prompt you built the app with" maxLength={60000} rows={4} style={{ ...input, minHeight: 100, resize: "vertical", lineHeight: 1.55 }} />
             </div>
-            <div>
-              <label style={lab} htmlFor="c-desc">Product description <span style={{ textTransform: "none", letterSpacing: 0, color: "var(--fg-5)" }}>(optional)</span></label>
-              <textarea id="c-desc" value={productDesc} onChange={(e) => setProductDesc(e.target.value)} placeholder="What the product does, who uses it, what must never break" maxLength={20000} rows={3} style={{ ...input, minHeight: 76, resize: "vertical", lineHeight: 1.55 }} />
-            </div>
           </Section>
 
           <Section n={2} title="Source and deployment" sub="What code, which deployment, which exact version: so a pass verifies the build you actually ship.">
@@ -381,8 +382,9 @@ export default function ConnectWorkspace() {
             <ComingLater names={["GitHub OAuth", "Vercel OAuth", "Railway", "Netlify"]} />
           </Section>
 
-          <Section n={3} title="Product definition" sub="What the app is supposed to do. Every source strengthens the Production Contract Vraelis derives.">
-            <SourceAdder sources={sources} onAdd={(s) => setSources((prev) => [...prev, s])} onRemove={(i) => setSources((prev) => prev.filter((_, idx) => idx !== i))} readTextFile={readTextFile} promptAdded={prompt.trim().length > 0} />
+          <Section n={3} title="Product definition" sub="What the app is supposed to do. A short summary is enough to start; every source strengthens the Production Contract Vraelis derives.">
+            <ProductDefinition sources={sources} onAdd={(s) => setSources((prev) => [...prev, s])} onRemove={(i) => setSources((prev) => prev.filter((_, idx) => idx !== i))}
+              readTextFile={readTextFile} promptAdded={prompt.trim().length > 0} summary={productDesc} onSummaryChange={setProductDesc} />
           </Section>
 
           <Section n={4} title="Data and authentication" sub="Where state lives and how users sign in, so passes can prove persistence and isolation.">
@@ -549,40 +551,167 @@ function WebhookList({ webhooks, onChange, open, onToggle }: { webhooks: string[
   );
 }
 
-function SourceAdder({ sources, onAdd, onRemove, readTextFile, promptAdded }: { sources: Source[]; onAdd: (s: Source) => void; onRemove: (i: number) => void; readTextFile: (f: File, cb: (name: string, content: string) => void) => void; promptAdded: boolean }) {
-  const [kind, setKind] = useState("prd");
-  const [text, setText] = useState("");
-  const KINDS: [string, string][] = [["prd", "Product specification / PRD"], ["requirements", "Requirements"], ["readme", "README"], ["risks", "Known risks"], ["roles", "Expected user roles"]];
+// ── product definition (section 3): progressive disclosure ─────────────────────────────────────────────
+// Primary (always visible): the build-prompt status chip, a short Product summary, and the document
+// paste/upload affordance. Advanced: seven guided small fields behind an "Add more context" expander.
+// Every entry becomes a bounded context source (the server re-validates kind and caps size); nothing here
+// is a secret, and the expander says so where free text is typed. A guided field disappears once its
+// source exists; Edit on the card reloads the content into the field, so there is exactly one honest
+// place per fact and no dead controls.
+
+const DOC_KINDS: [string, string][] = [["prd", "Product specification / PRD"], ["requirements", "Requirements"], ["readme", "README"]];
+const GUIDED_FIELDS: { kind: string; name: string; placeholder: string }[] = [
+  { kind: "goal", name: "Core user goal", placeholder: "The job a user hires this app for, e.g. send invoices and get paid" },
+  { kind: "roles", name: "Primary user roles", placeholder: "e.g. Owner, staff member, read-only accountant" },
+  { kind: "workflows", name: "Critical workflows", placeholder: "e.g. Sign up, create an invoice, send it, mark it paid" },
+  { kind: "data", name: "Expected data behavior", placeholder: "e.g. Invoices persist across sessions and never leak between accounts" },
+  { kind: "auth_expect", name: "Authentication expectations", placeholder: "e.g. Email and password, sessions persist, no public admin routes" },
+  { kind: "billing_expect", name: "Billing expectations", placeholder: "e.g. Stripe test mode, Pro plan gates exports, trial ends on day 14" },
+  { kind: "risks", name: "Known risks", placeholder: "e.g. PDF export has broken before, timezone math is fragile" },
+];
+const KIND_LABELS: Record<string, string> = {
+  prompt: "Build prompt", summary: "Summary", prd: "PRD / spec", requirements: "Requirements", readme: "README",
+  goal: "User goal", roles: "User roles", workflows: "Workflows", data: "Data behavior",
+  auth_expect: "Authentication", billing_expect: "Billing", risks: "Known risks",
+};
+// The server keeps 12 sources per application; the Product summary field occupies one slot at submit.
+const MAX_ADDED_SOURCES = 11;
+
+function charLabel(n: number): string { return n < 1000 ? `${n} chars` : `${(n / 1000).toFixed(1)}k chars`; }
+function agoLabel(ts?: number): string {
+  if (!ts) return "from a saved draft"; // drafts saved before timestamps existed
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return "just now";
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+function ProductDefinition({ sources, onAdd, onRemove, readTextFile, promptAdded, summary, onSummaryChange }: {
+  sources: Source[]; onAdd: (s: Source) => void; onRemove: (i: number) => void;
+  readTextFile: (f: File, cb: (name: string, content: string) => void) => void;
+  promptAdded: boolean; summary: string; onSummaryChange: (v: string) => void;
+}) {
+  const [docKind, setDocKind] = useState("prd");
+  const [docText, setDocText] = useState("");
+  const [docName, setDocName] = useState<string | null>(null); // survives an Edit so an uploaded file keeps its filename
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [guided, setGuided] = useState<Record<string, string>>({});
+  const full = sources.length >= MAX_ADDED_SOURCES;
+  const openGuided = GUIDED_FIELDS.filter((g) => !sources.some((s) => s.kind === g.kind));
+
+  // Edit = reload the source into the field it came from (guided kinds reopen the expander; document
+  // kinds land back in the paste area with their name preserved), then drop the card.
+  function editSource(i: number) {
+    const s = sources[i];
+    if (GUIDED_FIELDS.some((g) => g.kind === s.kind)) {
+      setGuided((p) => ({ ...p, [s.kind]: s.content }));
+      setMoreOpen(true);
+    } else {
+      setDocKind(DOC_KINDS.some(([v]) => v === s.kind) ? s.kind : "prd");
+      setDocName(s.name);
+      setDocText(s.content);
+    }
+    onRemove(i);
+  }
+
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+    <div style={{ display: "grid", gap: 14 }}>
+      {/* primary: prompt status + product summary */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <span className="pill" style={{ fontSize: 10, color: promptAdded ? "var(--acc-deep)" : "var(--fg-4)", background: promptAdded ? "var(--acc-soft)" : "var(--bg-2)", borderColor: promptAdded ? "var(--acc-line)" : "var(--line-2)" }}>
           Original build prompt: {promptAdded ? "Added" : "Missing"}
         </span>
-        {sources.map((s, i) => (
-          <span key={`${s.name}-${i}`} className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            {s.name} ({(s.content.length / 1000).toFixed(1)}k chars)
-            <button type="button" onClick={() => onRemove(i)} aria-label={`Remove ${s.name}`} style={{ border: "none", background: "none", color: "inherit", cursor: "pointer", fontSize: 12, padding: 0, lineHeight: 1 }}>×</button>
-          </span>
-        ))}
+        {!promptAdded ? <span style={{ fontSize: 12, color: "var(--fg-4)" }}>Paste it in section 01 above; it is the strongest single source.</span> : null}
       </div>
+      <div>
+        <label style={lab} htmlFor="c-summary">Product summary</label>
+        <textarea id="c-summary" value={summary} onChange={(e) => onSummaryChange(e.target.value)} placeholder="One or two sentences: what the product does, who uses it, what must never break" maxLength={2000} rows={2} style={{ ...input, minHeight: 58, resize: "vertical", lineHeight: 1.55 }} />
+        <p style={help}>Enough to start: URL, summary, and prompt. Everything below adds depth when you have it.</p>
+      </div>
+
+      {/* primary: document paste / upload */}
       <div style={{ display: "grid", gridTemplateColumns: "200px minmax(0,1fr)", gap: 10, alignItems: "start" }} className="cols-stack">
-        <select value={kind} onChange={(e) => setKind(e.target.value)} style={{ ...input, appearance: "none", cursor: "pointer" }} aria-label="Source type">
-          {KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-        </select>
-        <div style={{ display: "grid", gap: 8 }}>
-          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Paste the document, or upload a file below" rows={3} maxLength={120000} style={{ ...input, minHeight: 76, resize: "vertical", lineHeight: 1.55 }} />
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <button type="button" className="btn" disabled={!text.trim()} style={{ opacity: text.trim() ? 1 : 0.55 }}
-              onClick={() => { onAdd({ kind, name: KINDS.find(([v]) => v === kind)?.[1] ?? kind, content: text.trim() }); setText(""); }}>Add source</button>
-            <label className="btn btn--ghost" style={{ cursor: "pointer" }}>
-              Upload .md / .txt
-              <input type="file" accept=".md,.markdown,.txt" style={{ display: "none" }}
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) readTextFile(f, (n, c) => onAdd({ kind, name: n, content: c })); e.target.value = ""; }} />
-            </label>
-            <span style={{ fontSize: 11.5, color: "var(--fg-5)" }}>Plain text and Markdown, up to 300KB.</span>
+        <div>
+          <label style={lab} htmlFor="c-dockind">Document type</label>
+          <select id="c-dockind" value={docKind} onChange={(e) => { setDocKind(e.target.value); setDocName(null); }} style={{ ...input, appearance: "none", cursor: "pointer" }}>
+            {DOC_KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={lab} htmlFor="c-doctext">PRD, README, or requirements</label>
+          <div style={{ display: "grid", gap: 8 }}>
+            <textarea id="c-doctext" value={docText} onChange={(e) => setDocText(e.target.value)} placeholder="Paste the document, or upload a file below" rows={3} maxLength={120000} style={{ ...input, minHeight: 76, resize: "vertical", lineHeight: 1.55 }} />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <button type="button" className="btn" disabled={!docText.trim() || full} style={{ opacity: docText.trim() && !full ? 1 : 0.55 }}
+                onClick={() => { onAdd({ kind: docKind, name: docName ?? (DOC_KINDS.find(([v]) => v === docKind)?.[1] ?? docKind), content: docText.trim(), added: Date.now() }); setDocText(""); setDocName(null); }}>Add document</button>
+              {!full ? (
+                <label className="btn btn--ghost" style={{ cursor: "pointer" }}>
+                  Upload .md / .txt
+                  <input type="file" accept=".md,.markdown,.txt" style={{ display: "none" }}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) readTextFile(f, (n, c) => onAdd({ kind: docKind, name: n, content: c, added: Date.now() })); e.target.value = ""; }} />
+                </label>
+              ) : null}
+              <span style={{ fontSize: 11.5, color: "var(--fg-5)" }}>Plain text and Markdown, up to 300KB.</span>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* source cards for everything added */}
+      {sources.length ? (
+        <div style={{ display: "grid", gap: 8 }}>
+          {sources.map((s, i) => (
+            <div key={`${s.kind}-${s.name}-${i}`} className="card" style={{ padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, borderColor: "var(--acc-line)" }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: 600, fontSize: 13, color: "var(--fg-1)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
+                  <span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)" }}>{KIND_LABELS[s.kind] ?? s.kind}</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 2 }}>Added {agoLabel(s.added)}, {charLabel(s.content.length)}</div>
+              </div>
+              <button type="button" className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5, flex: "none" }} onClick={() => editSource(i)}>Edit</button>
+              <button type="button" className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5, flex: "none" }} onClick={() => onRemove(i)}>Remove</button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+      {full ? <p style={help}>Source limit reached ({MAX_ADDED_SOURCES}). Remove a source to add another.</p> : null}
+
+      {/* advanced: guided context behind the expander */}
+      <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <button type="button" className="btn btn--ghost" aria-expanded={moreOpen} onClick={() => setMoreOpen((o) => !o)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 12px", fontSize: 12.5 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ transform: moreOpen ? "rotate(90deg)" : "none", transition: "transform 150ms ease" }}><path d="M9 6l6 6-6 6" /></svg>
+            Add more context
+          </button>
+          <span style={{ fontSize: 11.5, color: "var(--fg-5)" }}>Guided fields: goal, roles, workflows, data, auth, billing, risks.</span>
+        </div>
+        {moreOpen ? (
+          <div style={{ display: "grid", gap: 12, padding: "14px 16px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-2)" }}>
+            <p style={{ ...help, margin: 0 }}>Each answer is stored as a plain-text context source. No passwords or keys here; test credentials belong in section 04, where they are encrypted.</p>
+            {openGuided.length ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: 12 }}>
+                {openGuided.map((g) => {
+                  const v = guided[g.kind] ?? "";
+                  const can = v.trim().length > 0 && !full;
+                  return (
+                    <div key={g.kind}>
+                      <label style={lab} htmlFor={`c-g-${g.kind}`}>{g.name}</label>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input id={`c-g-${g.kind}`} value={v} onChange={(e) => setGuided((p) => ({ ...p, [g.kind]: e.target.value }))} placeholder={g.placeholder} maxLength={2000} style={{ ...input, flex: 1, minWidth: 0 }} />
+                        <button type="button" className="btn" disabled={!can} style={{ opacity: can ? 1 : 0.55, flex: "none" }}
+                          onClick={() => { onAdd({ kind: g.kind, name: g.name, content: v.trim(), added: Date.now() }); setGuided((p) => ({ ...p, [g.kind]: "" })); }}>Add</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p style={{ ...help, margin: 0 }}>Every guided field has been added. Edit or remove them from the source cards above.</p>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../applications/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Production Passes" };
 
@@ -62,7 +63,7 @@ function PassLine({ pass }: { pass: PassRow }) {
       href={`/applications/${pass.applicationId}/passes/${pass.id}`}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", textDecoration: "none", color: "inherit" }}
     >
-      <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
+      <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={pass.decision} />{st.label}</span>
       <span style={{ fontWeight: 600, fontSize: 14, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "0 1 auto", minWidth: 0 }}>
         {pass.applicationName || "Untitled application"}
       </span>
@@ -134,7 +135,7 @@ export default async function PassesPage() {
 
       {passes.length === 0 ? (
         <div className="empty">
-          <div className="empty__icon" aria-hidden>◇</div>
+          <EmptyIcon d={I.shield} />
           <h3>No Production Passes yet</h3>
           <p>Connect an application and run its critical flows in a real browser to get a launch decision.</p>
           <Link href="/applications/new" className="btn">Connect an app</Link>

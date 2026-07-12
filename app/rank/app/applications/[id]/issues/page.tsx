@@ -6,6 +6,7 @@ import { SetupRequired } from "../../setup-required";
 import { getApplication } from "@/lib/v-applications";
 import { listAllIssues, type IssueRow } from "@/lib/preflight/overview-db";
 import { AppTabs } from "../app-tabs";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Issues" };
 
@@ -52,7 +53,7 @@ function IssueRowView({ appId, issue, resolved }: { appId: string; issue: IssueR
           {[catLabel(issue.category), timeAgo(issue.createdAt)].filter(Boolean).join(", ")}
         </div>
       </div>
-      {resolved ? <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)", flex: "none" }}>Resolved</span> : null}
+      {resolved ? <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)", flex: "none" }}><DecisionMark decision="resolved" />Resolved</span> : null}
       {issue.lastSeenRun ? <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span> : null}
     </>
   );
@@ -81,7 +82,7 @@ export default async function AppIssuesPage({ params }: { params: Promise<{ id: 
     return (
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
-          <div className="empty__icon">∅</div>
+          <EmptyIcon d={I.slash} />
           <h3>Application not found</h3>
           <p>This application doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/applications" className="btn">Back to applications</Link>
@@ -112,7 +113,7 @@ export default async function AppIssuesPage({ params }: { params: Promise<{ id: 
 
       {issues.length === 0 ? (
         <div className="empty">
-          <div className="empty__icon" aria-hidden>∅</div>
+          <EmptyIcon d={I.alert} />
           <h3>No issues recorded</h3>
           <p>Issues are launch blockers found by a Production Pass, each with evidence and a repair prompt. Run a pass to find out what breaks before your users do.</p>
           <Link href={`/applications/${id}`} className="btn">Back to overview</Link>

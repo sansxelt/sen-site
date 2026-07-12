@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ContractRequirement, Severity } from "@/lib/v-applications";
 import { categoryLabel, SEVERITY_LABELS as SEV_LABEL, SEVERITY_COLORS as SEV_COLOR } from "./labels";
+import { Ic, I } from "@/app/rank/_components/icons";
 
 // Client editor for a Production Contract's requirements. Optimistic local state: every toggle / severity
 // change / delete updates the UI immediately and persists in the background; a failed write reverts the
@@ -15,7 +16,7 @@ const SEVERITIES: Severity[] = ["critical", "important", "informational"];
 
 const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, fontFamily: "var(--font-sans)", outline: "none", boxSizing: "border-box" };
 const selectStyle: React.CSSProperties = { padding: "7px 10px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-2)", fontSize: 12.5, fontFamily: "var(--font-sans)", outline: "none", cursor: "pointer" };
-const deleteBtnStyle: React.CSSProperties = { width: 26, height: 26, borderRadius: 6, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-4)", cursor: "pointer", fontSize: 15, lineHeight: 1, flex: "none" };
+const deleteBtnStyle: React.CSSProperties = { width: 26, height: 26, borderRadius: 6, border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-4)", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none" };
 const lab: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", display: "block", marginBottom: 6 };
 const catHead: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 };
 
@@ -176,7 +177,7 @@ export function ContractEditor({ contractId, initial, status }: { contractId: st
                     <select value={r.severity} onChange={(e) => changeSeverity(r, e.target.value as Severity)} aria-label={`Severity for: ${r.requirement}`} style={selectStyle}>
                       {SEVERITIES.map((s) => <option key={s} value={s}>{SEV_LABEL[s]}</option>)}
                     </select>
-                    <button type="button" onClick={() => remove(r)} aria-label={`Delete requirement: ${r.requirement}`} style={deleteBtnStyle}>×</button>
+                    <button type="button" onClick={() => remove(r)} aria-label={`Delete requirement: ${r.requirement}`} style={deleteBtnStyle}><Ic d={I.trash} size={13} sw={1.9} /></button>
                   </div>
                 </li>
               ))}
@@ -241,7 +242,7 @@ export function ContractEditor({ contractId, initial, status }: { contractId: st
         </div>
         {contractStatus === "approved" ? (
           <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", display: "inline-flex", alignItems: "center", gap: 7, fontSize: 12.5, padding: "6px 14px" }}>
-            <span aria-hidden>✓</span> Approved
+            <Ic d={I.check} size={13} sw={2.4} /> Approved
           </span>
         ) : (
           <button type="button" className="btn btn--lg" onClick={approve} disabled={busyApprove || enabledCount === 0} style={{ opacity: busyApprove || enabledCount === 0 ? 0.6 : 1 }}>

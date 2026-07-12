@@ -6,6 +6,7 @@ import { SetupRequired } from "../../setup-required";
 import { getApplication, type RunSummary } from "@/lib/v-applications";
 import { listRunsForApp } from "@/lib/preflight/runs-db";
 import { AppTabs } from "../app-tabs";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Production Passes" };
 
@@ -52,7 +53,7 @@ function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
           </div>
         ) : null}
       </div>
-      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}>{p.label}</span>
+      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={r.decision} />{p.label}</span>
       <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
     </Link>
   );
@@ -70,7 +71,7 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
     return (
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
-          <div className="empty__icon">∅</div>
+          <EmptyIcon d={I.slash} />
           <h3>Application not found</h3>
           <p>This application doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/applications" className="btn">Back to applications</Link>
@@ -103,7 +104,7 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
         </div>
       ) : (
         <div className="empty">
-          <div className="empty__icon" aria-hidden>∅</div>
+          <EmptyIcon d={I.shield} />
           <h3>No passes yet</h3>
           <p>A Production Pass walks this app in a real browser against its contract and returns a launch decision with evidence. Once one runs, it shows here.</p>
           <Link href={`/applications/${id}`} className="btn">Back to overview</Link>

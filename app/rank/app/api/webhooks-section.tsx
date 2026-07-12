@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Ic, I } from "@/app/rank/_components/icons";
 
 type Hook = { id: string; url: string; enabled: boolean; failure_count: number; last_success_at: string | null; last_failure_at: string | null };
 type Delivery = { id: string; test_id: string | null; event: string; status: string; response_status: number | null; error: string | null; attempts: number; created_at: string };
@@ -99,9 +100,9 @@ export function WebhooksSection() {
               <button onClick={() => patch(h, { enabled: !h.enabled })} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>{h.enabled ? "Disable" : "Enable"}</button>
               <button onClick={() => sendTest(h)} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>Send test</button>
               <button onClick={() => reveal(h)} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>Reveal secret</button>
-              <button onClick={() => reveal(h, true)} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>Rotate</button>
+              <button onClick={() => reveal(h, true)} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px", gap: 6 }}><Ic d={I.retry} size={12} sw={2.2} />Rotate</button>
               <button onClick={() => showDeliveries(h)} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>{delsFor === h.id ? "Hide" : "Deliveries"}</button>
-              <button onClick={() => del(h)} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px", color: "var(--err)" }}>Delete</button>
+              <button onClick={() => del(h)} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px", color: "var(--err)", gap: 6 }}><Ic d={I.trash} size={12} sw={2.2} />Delete</button>
               {note[h.id] && <span style={{ fontSize: 12, color: "var(--fg-3)", alignSelf: "center" }}>{note[h.id]}</span>}
             </div>
             {delsFor === h.id && (
@@ -111,7 +112,7 @@ export function WebhooksSection() {
                     <span style={{ color: d.status === "success" ? "var(--acc-deep)" : "var(--err)", whiteSpace: "nowrap" }}>{d.status}{d.response_status ? ` ${d.response_status}` : ""}{d.attempts > 1 ? `, try ${d.attempts}` : ""}{d.test_id ? "" : ", test"}</span>
                     <span style={{ display: "flex", gap: 8, alignItems: "center", whiteSpace: "nowrap" }}>
                       <span>{new Date(d.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
-                      {d.status === "failed" && <button onClick={() => retry(h, d)} className="btn btn--ghost" style={{ fontSize: 11, padding: "2px 9px" }}>Retry</button>}
+                      {d.status === "failed" && <button onClick={() => retry(h, d)} className="btn btn--ghost" style={{ fontSize: 11, padding: "2px 9px", gap: 5 }}><Ic d={I.retry} size={11} sw={2.2} />Retry</button>}
                     </span>
                   </div>
                 ))}

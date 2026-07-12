@@ -5,6 +5,7 @@ import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../applications/setup-required";
 import { listRepairs, type RepairRow } from "@/lib/preflight/overview-db";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Repairs" };
 
@@ -52,7 +53,7 @@ function RepairRowItem({ repair }: { repair: RepairRow }) {
 
   const body = (
     <>
-      <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
+      <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={repair.status} />{st.label}</span>
       <div style={{ minWidth: 0, flex: "1 1 260px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.35, minWidth: 0, wordBreak: "break-word" }}>
@@ -119,7 +120,7 @@ export default async function RepairsPage() {
 
       {repairs.length === 0 ? (
         <div className="empty">
-          <div className="empty__icon" aria-hidden>◇</div>
+          <EmptyIcon d={I.wrench} />
           <h3>No verified repairs yet</h3>
           <p>Open a blocker from a Production Pass to get repair guidance. When you push a fix, Vraelis reruns the exact failed check and records the verification here.</p>
           <Link href="/issues" className="btn">View issues</Link>

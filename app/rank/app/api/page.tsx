@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { WebhooksSection } from "./webhooks-section";
+import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
 
 type Key = { id: string; prefix: string; scopes: string[]; last_used: string | null; created_at: string; name?: string | null };
 type DevEvent = { id: string; event_type: string; metadata: Record<string, unknown>; created_at: string; test_id: string | null };
@@ -144,7 +145,7 @@ export default function ApiKeysPage() {
       {/* keys list */}
       {loaded && keys.length === 0 && !fresh && (
         <div className="empty" style={{ marginBottom: 28 }}>
-          <div className="empty__icon">⌘</div>
+          <EmptyIcon d={I.key} />
           <h3>No API keys yet</h3>
           <p>Create a key to call the Vraelis API from your app. The full key is shown once at creation.</p>
           <button onClick={create} disabled={busy} className="btn">{busy ? "Creating…" : "Create your first key"}</button>
@@ -162,7 +163,7 @@ export default function ApiKeysPage() {
                 <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 4 }}>Created {new Date(k.created_at).toLocaleDateString()}, {k.last_used ? `last used ${new Date(k.last_used).toLocaleDateString()}` : "never used"}{u?.usage?.byPrefix?.[k.prefix] ? `, ${u.usage.byPrefix[k.prefix].toLocaleString()} request${u.usage.byPrefix[k.prefix] === 1 ? "" : "s"}` : ""}</div>
                 {k.scopes?.length ? <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, color: "var(--fg-5)", marginTop: 3 }}>{k.scopes.join("  ")}</div> : null}
               </div>
-              <button onClick={() => revoke(k.id)} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Revoke</button>
+              <button onClick={() => revoke(k.id)} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5, gap: 6 }}><Ic d={I.slash} size={12} sw={2.2} />Revoke</button>
             </div>
           ))}
         </div>
@@ -208,7 +209,7 @@ export default function ApiKeysPage() {
                   <div className="stat"><div className="stat__l">Last delivery</div><div className="stat__v tnum" style={{ fontSize: 20 }}>{shortDate(u.webhook.lastAt)}</div></div>
                 </div>
               ) : (
-                <div className="empty" style={{ marginBottom: 14 }}><div className="empty__icon">⇄</div><h3>No webhooks yet</h3><p>Add an endpoint below to receive a signed test.completed event the moment a test finishes. Delivery success, failures, and retries show here.</p></div>
+                <div className="empty" style={{ marginBottom: 14 }}><EmptyIcon d={I.swap} /><h3>No webhooks yet</h3><p>Add an endpoint below to receive a signed test.completed event the moment a test finishes. Delivery success, failures, and retries show here.</p></div>
               )}
             </>
           )}

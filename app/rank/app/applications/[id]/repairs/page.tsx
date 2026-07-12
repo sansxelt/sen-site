@@ -6,6 +6,7 @@ import { SetupRequired } from "../../setup-required";
 import { getApplication } from "@/lib/v-applications";
 import { listRepairs, type RepairRow } from "@/lib/preflight/overview-db";
 import { AppTabs } from "../app-tabs";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Repairs" };
 
@@ -58,7 +59,7 @@ function RepairRowView({ appId, r }: { appId: string; r: RepairRow }) {
           Verification run <span aria-hidden>→</span>
         </Link>
       ) : null}
-      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}>{p.label}</span>
+      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={r.status} />{p.label}</span>
     </div>
   );
 }
@@ -75,7 +76,7 @@ export default async function AppRepairsPage({ params }: { params: Promise<{ id:
     return (
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
-          <div className="empty__icon">∅</div>
+          <EmptyIcon d={I.slash} />
           <h3>Application not found</h3>
           <p>This application doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/applications" className="btn">Back to applications</Link>
@@ -108,7 +109,7 @@ export default async function AppRepairsPage({ params }: { params: Promise<{ id:
         </div>
       ) : (
         <div className="empty">
-          <div className="empty__icon" aria-hidden>∅</div>
+          <EmptyIcon d={I.wrench} />
           <h3>No repairs yet</h3>
           <p>When a Production Pass finds an issue, Vraelis writes a repair prompt for your AI builder. Apply it, rerun the pass, and the fix is verified here.</p>
           <Link href={`/applications/${id}/issues`} className="btn">View issues</Link>

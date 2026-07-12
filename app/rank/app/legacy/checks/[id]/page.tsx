@@ -12,6 +12,7 @@ import { CheckReport } from "./check-report";
 import { CalibrationPanel } from "./calibration-panel";
 import { ShareToggle } from "./share-toggle";
 import { AutoRefresh } from "../auto-refresh";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "AI output check" };
 
@@ -39,7 +40,7 @@ export default async function CheckReportPage({ params }: { params: Promise<{ id
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}>
         <div className="empty">
-          <div className="empty__icon">∅</div>
+          <EmptyIcon d={I.slash} />
           <h3>Check not found</h3>
           <p>This check doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/app/checks/new" className="btn">Run a new check</Link>

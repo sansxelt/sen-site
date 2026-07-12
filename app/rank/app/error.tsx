@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 // Error boundary for the signed-in app segment. Friendly and quiet: nothing
 // technical is rendered; the error goes to the console only. Next 16.2 passes
@@ -24,7 +25,7 @@ export default function AppError({
   return (
     <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <div className="empty">
-        <div className="empty__icon" aria-hidden>!</div>
+        <EmptyIcon d={I.alert} />
         <h3>Something went wrong loading this page.</h3>
         <p>This is on our side, not yours. Your account and data are unaffected. Try again, or head back to the overview.</p>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>

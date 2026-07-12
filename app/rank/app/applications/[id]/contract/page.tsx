@@ -9,6 +9,7 @@ import { ContractEditor } from "./contract-editor";
 import { NewDraftButton } from "./new-draft-button";
 import { AppTabs } from "../app-tabs";
 import { categoryLabel, sourceLabel, SEVERITY_LABELS, SEVERITY_COLORS } from "./labels";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Production Contract" };
 
@@ -68,7 +69,7 @@ function ApprovedContract({ appId, contract, reqs, flows }: { appId: string; con
       <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
-            <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", fontSize: 11 }}>Approved</span>
+            <span className="pill" style={{ color: "var(--acc-deep)", borderColor: "var(--acc-line)", background: "var(--acc-soft)", fontSize: 11 }}><DecisionMark decision="approved" />Approved</span>
             <span style={smallLabel}>Contract v{contract.version}</span>
           </div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", lineHeight: 1.4 }}>
@@ -130,7 +131,7 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}>
         <div className="empty">
-          <div className="empty__icon">∅</div>
+          <EmptyIcon d={I.slash} />
           <h3>App not found</h3>
           <p>This app doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/applications" className="btn">Your apps</Link>

@@ -12,6 +12,7 @@ import { pickHealthRun } from "@/lib/preflight/target-url";
 import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
 import { AppTabs } from "./app-tabs";
 import { LaunchPassButton } from "./launch-button";
+import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Application" };
 
@@ -93,7 +94,7 @@ function RunRow({ appId, r }: { appId: string; r: RunSummary }) {
           </div>
         ) : null}
       </div>
-      <span className="pill" style={{ fontSize: 10.5, color: p.fg, background: p.bg, borderColor: p.line, flex: "none" }}>{p.label}</span>
+      <span className="pill" style={{ fontSize: 10.5, color: p.fg, background: p.bg, borderColor: p.line, flex: "none" }}><DecisionMark decision={r.decision} />{p.label}</span>
       <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
     </Link>
   );
@@ -113,7 +114,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     return (
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
-          <div className="empty__icon">∅</div>
+          <EmptyIcon d={I.slash} />
           <h3>Application not found</h3>
           <p>This application doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/applications" className="btn">Back to applications</Link>
@@ -274,7 +275,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       {blockers.length > 0 && latest ? (
         <section style={sectionStyle} aria-label="Open blockers">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-            <div style={headLbl}>Open blockers ({blockers.length})</div>
+            <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.alert} size={13} sw={2} />Open blockers ({blockers.length})</div>
             <Link href={`/applications/${id}/issues`} style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All issues →</Link>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
@@ -293,7 +294,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       {/* ── Latest Production Passes ──────────────────────────────────────────────────────────────────── */}
       <section style={sectionStyle} aria-label="Latest Production Passes">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
-          <div style={headLbl}>Latest Production Passes</div>
+          <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.shield} size={13} sw={2} />Latest Production Passes</div>
           {runs.length > 0 ? <Link href={`/applications/${id}/passes`} style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All passes →</Link> : null}
         </div>
         {runs.length ? (
@@ -310,10 +311,11 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         <div className="card" style={{ padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.fileText} size={15} sw={1.8} /></span>
               <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14.5, color: "var(--fg-1)" }}>Production Contract</span>
               {contract ? (
                 contractApproved
-                  ? <span className="pill" style={{ fontSize: 10.5, color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line }}>Approved</span>
+                  ? <span className="pill" style={{ fontSize: 10.5, color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line }}><DecisionMark decision="approved" />Approved</span>
                   : <span className="pill" style={{ fontSize: 10.5, color: TONE_REVIEW.fg, background: TONE_REVIEW.bg, borderColor: TONE_REVIEW.line }}>Draft</span>
               ) : null}
             </div>
@@ -333,7 +335,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       {verifiedRepairCount > 0 ? (
         <Link href={`/applications/${id}/repairs`}
           style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "12px 18px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none" }}>
-          <span className="pill" style={{ fontSize: 10.5, color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line, flex: "none" }}>Verified</span>
+          <span className="pill" style={{ fontSize: 10.5, color: TONE_READY.fg, background: TONE_READY.bg, borderColor: TONE_READY.line, flex: "none" }}><DecisionMark decision="verified" />Verified</span>
           <span style={{ fontSize: 13, color: "var(--fg-2)", fontWeight: 500, flex: 1 }}>
             {verifiedRepairCount} verified repair{verifiedRepairCount === 1 ? "" : "s"} on this application
           </span>

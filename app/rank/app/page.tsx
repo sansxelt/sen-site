@@ -11,6 +11,7 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { listApplications, latestRunByApp, type Application, type RunSummary } from "@/lib/v-applications";
 import { listAllRuns, listAllIssues, overviewCounts, type PassRow, type IssueRow } from "@/lib/preflight/overview-db";
 import { WorkspaceMemberView } from "./_workspace/workspace-member-view";
+import { DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -57,7 +58,7 @@ function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }
           <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.name}</div>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.app_url}</div>
         </div>
-        <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
+        <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={run?.decision} />{st.label}</span>
       </div>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--acc-deep)", marginTop: "auto" }}>Open <span aria-hidden>→</span></span>
     </Link>
@@ -219,7 +220,7 @@ export default async function Dashboard() {
               const st = decisionStyle(p);
               return (
                 <Link key={p.id} href={`/applications/${p.applicationId}/passes/${p.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none", color: "inherit" }}>
-                  <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
+                  <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={p.decision} />{st.label}</span>
                   <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, flex: "none" }}>{p.applicationName || "Application"}</span>
                   {p.flowsTotal > 0 && <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", flex: "none" }}>{p.flowsPassed}/{p.flowsTotal} flows</span>}
                   <span style={{ fontSize: 12, color: "var(--fg-4)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right" }}>{timeAgo(p.completedAt ?? p.createdAt)}</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 type Vote = { id: string; test_id: string; voter_id: string; status: string; reject_reason: string | null; reason: string | null; time_spent_ms: number | null; created_at: string; title: string | null };
 type Stats = { valid: number; rejected: number; byReason: Record<string, number> };
@@ -86,7 +87,7 @@ export default function AdminPage() {
       {!loaded ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{[0, 1, 2, 3].map((i) => <div key={i} className="skel" style={{ height: 62, borderRadius: "var(--r-lg)" }} />)}</div>
       ) : votes.length === 0 ? (
-        <div className="empty"><div className="empty__icon">✓</div><h3>Nothing to review</h3><p>No {filter === "all" ? "" : filter} votes in the last 7 days.</p></div>
+        <div className="empty"><EmptyIcon d={I.check} /><h3>Nothing to review</h3><p>No {filter === "all" ? "" : filter} votes in the last 7 days.</p></div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {votes.map((v) => (
@@ -109,7 +110,7 @@ export default function AdminPage() {
       {/* data requests (admin only, gated server-side by isAdmin) */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "36px 0 12px" }}>Data requests</div>
       {dreqs.length === 0 ? (
-        <div className="empty"><div className="empty__icon">✉</div><h3>No data requests</h3><p>Export, correction, and account-deletion requests from users appear here for manual review.</p></div>
+        <div className="empty"><EmptyIcon d={I.mail} /><h3>No data requests</h3><p>Export, correction, and account-deletion requests from users appear here for manual review.</p></div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {dreqs.map((d) => (
@@ -142,7 +143,7 @@ export default function AdminPage() {
         {ACTORS.map((a) => <button key={a} onClick={() => setActor(a)} className={actor === a ? "on" : ""} style={{ textTransform: "capitalize" }}>{a}</button>)}
       </div>
       {audit.length === 0 ? (
-        <div className="empty"><div className="empty__icon">◷</div><h3>No audit events</h3><p>Account, key, webhook, sharing, export, and admin actions appear here as they happen.</p></div>
+        <div className="empty"><EmptyIcon d={I.clock} /><h3>No audit events</h3><p>Account, key, webhook, sharing, export, and admin actions appear here as they happen.</p></div>
       ) : (
         <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)" }}>
           {audit.map((e, i) => {

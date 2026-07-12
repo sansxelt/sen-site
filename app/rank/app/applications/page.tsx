@@ -4,6 +4,7 @@ import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "./setup-required";
 import { listApplications, latestRunByApp, type Application, type RunSummary } from "@/lib/v-applications";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Applications" };
 
@@ -72,7 +73,7 @@ function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, color: "var(--fg-1)", lineHeight: 1.25, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.name}</div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.app_url}</div>
         </div>
-        <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
+        <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}><DecisionMark decision={run?.decision} />{st.label}</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
         <span style={{ fontSize: 12, color: "var(--fg-4)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{metaText}</span>
@@ -111,7 +112,7 @@ export default async function ApplicationsPage() {
 
       {apps.length === 0 ? (
         <div className="empty">
-          <div className="empty__icon" aria-hidden>◇</div>
+          <EmptyIcon d={I.layers} />
           <h3>No applications yet</h3>
           <p>A preflight walks your live app the way a user would, then reports the critical flows that break before your users hit them. Connect your first app to begin.</p>
           <Link href="/applications/new" className="btn">Connect an app</Link>

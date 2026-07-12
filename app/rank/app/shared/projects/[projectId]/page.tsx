@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { sharedProjectView, ROLE_LABEL } from "@/lib/v-workspace";
 import { SectionHead, Dist, Bars, CONF_COLORS, SIGNAL_COLORS } from "../../../_workspace/analytics-ui";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Shared program" };
 
@@ -20,7 +21,7 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
   if (!view) {
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}>
-        <div className="empty"><div className="empty__icon">🔒</div><h3>No access to this project</h3><p>This project hasn&apos;t been shared with you, or your access was changed.</p><Link href="/team" className="btn">Back to Team</Link></div>
+        <div className="empty"><EmptyIcon d={I.lock} /><h3>No access to this project</h3><p>This project hasn&apos;t been shared with you, or your access was changed.</p><Link href="/team" className="btn">Back to Team</Link></div>
       </div>
     );
   }
@@ -84,7 +85,7 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
 
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Decision records</div>
       {completed.length === 0 && inProgress.length === 0 ? (
-        <div className="empty"><div className="empty__icon">◷</div><h3>No decision records yet</h3><p>Completed decision workflows will appear here as decision records are ready.</p></div>
+        <div className="empty"><EmptyIcon d={I.clock} /><h3>No decision records yet</h3><p>Completed decision workflows will appear here as decision records are ready.</p></div>
       ) : (
         <>
           {completed.length > 0 && (

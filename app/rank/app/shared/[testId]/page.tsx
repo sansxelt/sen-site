@@ -7,6 +7,7 @@ import { reportAccessRole, canViewSharedProject, ROLE_LABEL } from "@/lib/v-work
 import { ReportBody, OptionThumb } from "@/app/rank/app/tests/[id]/report-body";
 import { AnalysisPanel } from "@/app/rank/app/tests/[id]/analysis-panel";
 import { ThemesPanel } from "@/app/rank/app/tests/[id]/themes-panel";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Shared decision record" };
 
@@ -26,14 +27,14 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
   if (!role) {
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}>
-        <div className="empty"><div className="empty__icon">🔒</div><h3>No access to this decision record</h3><p>This decision record hasn&apos;t been shared with you, or your access was changed. Ask the workspace owner to invite you.</p><Link href="/team" className="btn">Back to Team</Link></div>
+        <div className="empty"><EmptyIcon d={I.lock} /><h3>No access to this decision record</h3><p>This decision record hasn&apos;t been shared with you, or your access was changed. Ask the workspace owner to invite you.</p><Link href="/team" className="btn">Back to Team</Link></div>
       </div>
     );
   }
 
   const data = await getTestWithOptions(testId);
   if (!data) {
-    return <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}><div className="empty"><div className="empty__icon">∅</div><h3>Decision record not found</h3><Link href="/team" className="btn">Back to Team</Link></div></div>;
+    return <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}><div className="empty"><EmptyIcon d={I.slash} /><h3>Decision record not found</h3><Link href="/team" className="btn">Back to Team</Link></div></div>;
   }
   const { test, options } = data;
   const report = test.status === "complete" ? await getReport(testId) : null;
@@ -87,7 +88,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
           />
         </>
       ) : (
-        <div className="empty" style={{ marginTop: 20 }}><div className="empty__icon">◷</div><h3>No report yet</h3><p>This evaluation hasn&apos;t produced a report.</p></div>
+        <div className="empty" style={{ marginTop: 20 }}><EmptyIcon d={I.clock} /><h3>No report yet</h3><p>This evaluation hasn&apos;t produced a report.</p></div>
       )}
     </div>
   );

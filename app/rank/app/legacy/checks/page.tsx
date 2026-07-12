@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { listChecks, reconcileStuckChecks, type VCheckSummary } from "@/lib/v-checks";
 import { AutoRefresh } from "./auto-refresh";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "AI output checks" };
 
@@ -69,7 +70,7 @@ export default async function ChecksListPage() {
 
       {checks.length === 0 ? (
         <div className="empty">
-          <div className="empty__icon">✓</div>
+          <EmptyIcon d={I.vote} />
           <h3>No checks yet</h3>
           <p>Run your first AI output check to see it here.</p>
           <Link href="/app/checks/new" className="btn">Check your AI output</Link>

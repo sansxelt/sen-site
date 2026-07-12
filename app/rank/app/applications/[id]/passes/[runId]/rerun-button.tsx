@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Ic, I } from "@/app/rank/_components/icons";
 
 // Queue a rerun of this run's flows, then navigate to the new run's report. POSTs the selected scope
 // ('failed' re-runs only the failed/blocked flows; 'all' re-runs everything; 'critical' runs every
@@ -34,8 +35,8 @@ export function RerunButton({ appId, runId, scope, label }: { appId: string; run
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
-      <button type="button" className="btn" onClick={run} disabled={busy} style={{ opacity: busy ? 0.6 : 1 }}>
-        {busy ? "Starting…" : label}
+      <button type="button" className="btn" onClick={run} disabled={busy} style={{ opacity: busy ? 0.6 : 1, gap: 8 }}>
+        {busy ? "Starting…" : <><Ic d={I.retry} size={14} sw={2} />{label}</>}
       </button>
       {err ? <p role="status" aria-live="polite" style={{ fontSize: 12.5, color: "var(--err)", margin: 0, maxWidth: 360 }}>{err}</p> : null}
     </div>

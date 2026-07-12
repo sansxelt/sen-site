@@ -10,6 +10,7 @@ import { resolveWorkspaceSelection, ownedWorkspaceForBilling, isBillingAdminMemb
 import { teamSeatState } from "@/lib/v-team-billing";
 import { BillingActions, PaymentMethodButton } from "./billing-actions";
 import { TeamBillingPanel } from "./team-billing-panel";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Billing" };
 
@@ -116,7 +117,7 @@ export default async function BillingPage() {
 
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Recent credit activity</div>
       {ledger.length === 0 ? (
-        <div className="empty"><div className="empty__icon">◷</div><h3>No activity yet</h3><p>Credit grants, holds, refunds and rewards will show up here once you start testing.</p></div>
+        <div className="empty"><EmptyIcon d={I.clock} /><h3>No activity yet</h3><p>Credit grants, holds, refunds and rewards will show up here once you start testing.</p></div>
       ) : (
         <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)" }}>
           {ledger.map((l, i) => (

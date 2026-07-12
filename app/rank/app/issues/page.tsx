@@ -4,6 +4,7 @@ import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../applications/setup-required";
 import { listAllIssues, type IssueRow } from "@/lib/preflight/overview-db";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Issues" };
 
@@ -103,7 +104,7 @@ function ResolvedIssueRow({ issue }: { issue: IssueRow }) {
       style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px", borderLeft: "3px solid var(--line-2)", textDecoration: "none", color: "inherit", background: "var(--bg-2)" }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)" }}>Resolved</span>
+        <span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", background: "var(--acc-soft)", borderColor: "var(--acc-line)" }}><DecisionMark decision="resolved" />Resolved</span>
         <span className="pill" style={{ fontSize: 10 }}>{issue.severity}</span>
         {issue.category ? <span className="pill" style={{ fontSize: 10 }}>{humanizeCategory(issue.category)}</span> : null}
       </div>
@@ -119,7 +120,7 @@ function ResolvedIssueRow({ issue }: { issue: IssueRow }) {
 function NoOpenIssues() {
   return (
     <div className="empty">
-      <div className="empty__icon" aria-hidden>◇</div>
+      <EmptyIcon d={I.alert} />
       <h3>No open issues</h3>
       <p>Run a Production Pass and any launch blocker it finds appears here with evidence and reproduction steps.</p>
       <Link href="/applications" className="btn">Go to applications</Link>

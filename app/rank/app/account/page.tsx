@@ -5,9 +5,11 @@ import { auth } from "@/auth";
 import { ensureProfile, getPlan, getSubscription } from "@/lib/v-db";
 import { balance } from "@/lib/v-credits";
 import { recentAccountEvents } from "@/lib/v-events";
+import { getDisplayName } from "@/lib/v-account-profile";
 import { SignOutButton } from "../../_components/rank-ui";
 import { DeleteAccount } from "./delete-account";
 import { AccountRequests } from "./account-requests";
+import { ProfileSection } from "./profile-section";
 
 export const metadata: Metadata = { title: "Account" };
 
@@ -29,7 +31,7 @@ export default async function AccountPage() {
   if (!email) redirect("/signin?callbackUrl=%2Fapp%2Faccount");
 
   await ensureProfile(email, session.user?.name ?? undefined);
-  const [bal, plan, sub, activity] = await Promise.all([balance(email), getPlan(email), getSubscription(email), recentAccountEvents(email, 8)]);
+  const [bal, plan, sub, activity, displayName] = await Promise.all([balance(email), getPlan(email), getSubscription(email), recentAccountEvents(email, 8), getDisplayName(email)]);
   const planName = plan === "free" ? "Free" : cap(plan);
   const status = sub?.status ?? "active";
   const renews = sub?.current_period_end ? new Date(sub.current_period_end).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : null;
@@ -50,15 +52,8 @@ export default async function AccountPage() {
         </div>
       </div>
 
-      {/* identity */}
-      <div className="card" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
-        <span aria-hidden style={{ width: 52, height: 52, borderRadius: 14, flex: "none", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22 }}>{email.slice(0, 1).toUpperCase()}</span>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 17, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis" }}>{email}</div>
-          <div style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 2 }}>Signed in with Google</div>
-        </div>
-        <span className="badge-now" style={{ marginLeft: "auto" }}>{planName} plan</span>
-      </div>
+      {/* profile: picture (private-bucket upload / replace / remove), display name, read-only email */}
+      <ProfileSection email={email} initialDisplayName={displayName} planBadge={`${planName} plan`} />
 
       {/* stats */}
       <div className="tile-grid cols-3" style={{ marginBottom: 26 }}>
