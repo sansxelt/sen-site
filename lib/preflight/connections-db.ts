@@ -159,9 +159,14 @@ export function normalizeBoundaries(raw: unknown): TestBoundaries {
   };
 }
 
-// Product-definition sources (prompt/PRD/requirements/readme/risks/roles). Content is bounded so a giant
-// paste can't balloon the row; anything over the cap is truncated with an honest marker.
-export const CONTEXT_KINDS = ["prompt", "prd", "requirements", "readme", "risks", "roles"] as const;
+// Product-definition sources: document kinds (prompt/PRD/requirements/readme) plus the guided fields the
+// connect workspace collects (summary/goal/workflows/data/auth_expect/billing_expect and the original
+// risks/roles). Content is bounded so a giant paste can't balloon the row; anything over the cap is
+// truncated with an honest marker. Unknown kinds are still rejected (fail closed).
+export const CONTEXT_KINDS = [
+  "prompt", "prd", "requirements", "readme", "risks", "roles",                 // documents + original kinds
+  "summary", "goal", "workflows", "data", "auth_expect", "billing_expect",     // guided product-definition fields
+] as const;
 const MAX_SOURCE_CHARS = 60_000;
 const MAX_SOURCES = 12;
 export type ContextSource = { kind: string; name: string; chars: number; added_at: string; content: string };
