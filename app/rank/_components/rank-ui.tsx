@@ -298,7 +298,7 @@ export function RankShell({ signedIn = false, email = null, humanEval = false, c
   }
 
   return (
-    <div className="rank-root">
+    <div className="rank-root rank-root--site">
       <style dangerouslySetInnerHTML={{ __html: SHELL_UI_CSS }} />
       <div style={{ position: "sticky", top: 0, zIndex: 50 }}><PublicNav signedIn={signedIn} /></div>
       {children}

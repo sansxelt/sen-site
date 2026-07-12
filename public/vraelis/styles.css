@@ -647,7 +647,11 @@ summary::-webkit-details-marker { display: none; }
 
 /* ─── Global scale ─── the whole Vraelis surface (marketing + app) renders ~20%
    smaller on desktop: the density the design was judged best at (the "75% zoom
-   looks right" note). Phones keep 1:1 so touch targets and text stay readable. */
+   looks right" note). The signed-out marketing shell (.rank-root--site) goes a
+   further 10% (0.8 x 0.9 = 0.72) so the front page hero + live demo land in one
+   viewport for every visitor (the "90% should be global" note). Phones keep 1:1
+   so touch targets and text stay readable. */
 @media (min-width: 768px) {
   .rank-root { zoom: 0.8; }
+  .rank-root--site { zoom: 0.72; }
 }
