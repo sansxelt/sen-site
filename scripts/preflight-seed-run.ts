@@ -47,15 +47,17 @@ const REQUIREMENTS = [
   { category: "responsive", requirement: "Mobile navigation must not block the primary action.", order: 3 },
 ];
 
-// Approved semantic flows for the fixture. Steps use ONLY actions the worker supports. The mobile flow is
-// mobile_relevant so the worker runs it at a narrow viewport (where the fixture's nav-overlay defect exists).
-function seedFlows(url: string) {
+// Approved semantic flows for the fixture. Steps use ONLY actions the worker supports; navigation targets
+// are RELATIVE ("/") so flows bind to route intent, never to a specific deployment URL: the worker rebases
+// them onto each run's snapshot target (lib/preflight/target-url.ts), which carries the ?mode=X params.
+// The mobile flow is mobile_relevant so it runs at a narrow viewport (where the nav-overlay defect exists).
+function seedFlows() {
   return [
     {
       name: "Create a project", priority: "critical", mobile: false, order: 1,
       goal: "A user can create a project.",
       steps: [
-        { action: "navigate", target: url },
+        { action: "navigate", target: "/" },
         { action: "fill", target: "Project name", value: "Vraelis seed project" },
         { action: "click", target: "Create project" },
         { action: "assert_visible", target: "Vraelis seed project", expect: "Vraelis seed project" },
@@ -65,7 +67,7 @@ function seedFlows(url: string) {
       name: "Create project and verify it remains after refresh", priority: "critical", mobile: false, order: 2,
       goal: "Created projects persist after refresh.",
       steps: [
-        { action: "navigate", target: url },
+        { action: "navigate", target: "/" },
         { action: "fill", target: "Project name", value: "Persisted seed project" },
         { action: "click", target: "Create project" },
         { action: "assert_visible", target: "Persisted seed project", expect: "Persisted seed project" },
@@ -77,7 +79,7 @@ function seedFlows(url: string) {
       name: "Verify the primary mobile action remains reachable", priority: "critical", mobile: true, order: 3,
       goal: "Mobile navigation must not block the primary action.",
       steps: [
-        { action: "navigate", target: url },
+        { action: "navigate", target: "/" },
         { action: "click", target: "Create project" },
         { action: "assert_visible", target: "Vraelis Fixture", expect: "Vraelis Fixture" },
       ],
@@ -159,7 +161,7 @@ async function main(): Promise<void> {
 
   // 8. Seed APPROVED semantic flows (definitions only).
   const flowIds: string[] = [];
-  for (const f of seedFlows(url)) {
+  for (const f of seedFlows()) {
     const { data: fRow, error } = await s.from("v_test_flows").insert({
       contract_id: contractId, user_id: owner, name: f.name, goal: f.goal, start_path: "/",
       steps: f.steps, priority: f.priority, enabled: true, review_state: "approved", origin: "user",

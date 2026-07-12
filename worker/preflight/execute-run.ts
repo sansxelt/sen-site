@@ -5,6 +5,7 @@
 // browser work immediately (checked before every step via the ownership-checked heartbeat). No AI here.
 import type { BrowserProvider, RunStore, ClaimedRun, FlowResult, FlowSpec, RunDecision, StepObservation, ArtifactSink } from "./types";
 import { classifyProviderError } from "./provider-errors";
+import { resolveNavigationUrl, targetInvariantViolation } from "../../lib/preflight/target-url";
 import { log } from "./redaction";
 
 export type ExecLimits = { leaseSecs: number; maxRunMs: number; maxFlowMs: number; maxStepsPerFlow: number };
@@ -12,8 +13,12 @@ export type ExecDeps = { store: RunStore; provider: BrowserProvider; workerId: s
 
 export class LeaseLostError extends Error { constructor() { super("lease_lost"); } }
 export class CancelledError extends Error { constructor() { super("cancelled"); } }
+// The run's snapshot target could not be honored (a Vraelis harness bug, NEVER an application blocker):
+// the run aborts as an infrastructure failure before any browser work, is terminal (retrying a
+// deterministic resolution bug cannot heal it), opens no issues, and refunds the reservation.
+export class TargetMismatchError extends Error { constructor(reason: string) { super(`target_mismatch: ${reason}`); } }
 
-async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, deps: ExecDeps, runId: string, runDeadline: number): Promise<FlowResult> {
+async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, deps: ExecDeps, runId: string, runDeadline: number, targetUrl: string): Promise<FlowResult> {
   const now = deps.now ?? (() => Date.now());
   const steps: StepObservation[] = [];
   const flowDeadline = Math.min(now() + flow.maxMs, runDeadline);
@@ -30,11 +35,23 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
       throw (await deps.store.cancelRequested(runId)) ? new CancelledError() : new LeaseLostError();
     }
     if (now() > flowDeadline) { steps.push({ action: step.action, ok: false, detail: "flow_timeout", ms: 0 }); state = "blocked"; break; }
+    // Navigations are REBASED onto the current run target at execution time: the stored step keeps its
+    // route intent, the run snapshot supplies origin + winning query params. The step the browser actually
+    // executes carries the resolved URL, and the observation records requested vs resolved vs final.
+    let exec = step;
+    let requested: string | null = null;
+    if (step.action === "navigate") {
+      requested = step.target || step.value || "";
+      exec = { ...step, target: resolveNavigationUrl(requested, targetUrl), value: undefined };
+    }
     let obs: StepObservation;
     try {
-      obs = await page.perform(step);
+      obs = await page.perform(exec);
     } catch (e) {
-      obs = { action: step.action, target: step.target, ok: false, detail: `step_error: ${(e as Error).message}`.slice(0, 120), ms: 0 };
+      obs = { action: exec.action, target: exec.target, ok: false, detail: `step_error: ${(e as Error).message}`.slice(0, 120), ms: 0 };
+    }
+    if (requested !== null && requested !== exec.target) {
+      obs = { ...obs, detail: `${obs.detail} [requested ${requested}] [resolved ${exec.target}]`.slice(0, 400) };
     }
     steps.push(obs);
     // Stop the flow at the first failed step; an assertion/interaction that fails means the journey broke.
@@ -67,6 +84,16 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
   let session: Awaited<ReturnType<BrowserProvider["createSession"]>> | null = null;
 
   try {
+    // Pre-execution invariant, BEFORE any browser is paid for: the first navigation must resolve onto the
+    // run's snapshot target (same origin, every target query param honored). A violation is a harness bug:
+    // abort as a terminal infrastructure failure with no session, no flows, no issues, and a full refund.
+    if (run.deploymentUrl) {
+      const firstNav = run.flows.flatMap((f) => f.steps).find((s) => s.action === "navigate");
+      const resolvedFirst = resolveNavigationUrl(firstNav?.target || firstNav?.value || "", run.deploymentUrl);
+      const violation = targetInvariantViolation(resolvedFirst, run.deploymentUrl);
+      if (violation) throw new TargetMismatchError(violation);
+    }
+
     await deps.store.setState(run.runId, "running");
     session = await deps.provider.createSession({ runId: run.runId, environment: run.environment, workerId: deps.workerId });
     await deps.store.setProviderSession(run.runId, deps.provider.name, session.providerSessionId);
@@ -76,7 +103,7 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
     for (const flow of run.flows) {
       if (await deps.store.cancelRequested(run.runId)) throw new CancelledError();
       executedAny = true;
-      const result = await runFlow(flow, session.page, deps, run.runId, runDeadline);
+      const result = await runFlow(flow, session.page, deps, run.runId, runDeadline, run.deploymentUrl);
       results.push(result);
       await deps.store.persistFlowResult(run.runId, result);      // incremental persistence
       // Evidence: capture the flow's final-state screenshot and upload it. Best-effort — an upload failure
@@ -98,7 +125,7 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
     // Cancels / lost leases keep their exact codes; everything else is classified into a coarse, owner-safe
     // failure code (classifyProviderError NEVER puts a raw provider string in the code). The truncated real
     // message still rides along as failure_message, which is stored server-side only.
-    const code = e instanceof CancelledError ? "cancelled" : e instanceof LeaseLostError ? "lease_lost" : classifyProviderError(e).code;
+    const code = e instanceof CancelledError ? "cancelled" : e instanceof LeaseLostError ? "lease_lost" : e instanceof TargetMismatchError ? "target_mismatch" : classifyProviderError(e).code;
     // A failed cleanup must never strand the run: failRun requeues (attempts remain) or fails terminally,
     // and refunds the reservation when no flow ran.
     await deps.store.failRun(run.runId, code, (e as Error).message.slice(0, 200), executedAny);

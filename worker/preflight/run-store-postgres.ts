@@ -113,7 +113,8 @@ export class PostgresRunStore implements RunStore {
     const run = await this.loadRunSettlement(runId);
     // A run already settled as completed (charged) must never be resurrected to queued/failed or refunded.
     if (run && run.state === "completed") return;
-    const terminal = code === "cancelled" || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
+    // cancelled and target_mismatch are deterministic (a retry cannot change them) -> terminal immediately.
+    const terminal = code === "cancelled" || code === "target_mismatch" || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
     await this.s.from("v_preflight_runs").update({ state: terminal ? "failed" : "queued", failure_code: code, failure_message: message.slice(0, 500), lease_owner: null, lease_expires_at: null }).eq("id", runId);
     // Refund the FULL reservation ONLY on a terminal failure where no flow executed (discovery / queue /
     // provider-fail-before-browser). A requeue keeps the hold for the retry; a cancel or lease-loss AFTER

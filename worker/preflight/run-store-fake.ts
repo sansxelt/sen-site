@@ -56,8 +56,9 @@ export class FakeRunStore implements RunStore {
   }
   async failRun(runId: string, code: string, message: string, executedAnyFlow: boolean): Promise<void> {
     const r = this.rows.get(runId); if (!r) return;
-    // Requeue if attempts remain and it wasn't a terminal/cancel; else fail terminally.
-    const terminal = code === "cancelled" || r.attempts >= r.maxAttempts;
+    // Requeue if attempts remain and it wasn't a terminal/cancel; else fail terminally. target_mismatch is
+    // deterministic (a retry cannot heal it), so it is terminal immediately, matching the Postgres store.
+    const terminal = code === "cancelled" || code === "target_mismatch" || r.attempts >= r.maxAttempts;
     r.state = terminal ? "failed" : "queued"; r.failureCode = code; r.leaseOwner = null; r.leaseExpiresAt = 0;
     if (!executedAnyFlow && r.billing === "held") r.billing = "refunded"; // no charge if nothing ran
   }

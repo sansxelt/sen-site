@@ -5,6 +5,7 @@
 // is applied. No browser execution, discovery, or billing lives here — this is the shell's data plane.
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
+import { pickHealthRun } from "./preflight/target-url";
 import { logEvent } from "./v-events";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -189,7 +190,18 @@ export async function listRuns(userId: string, applicationId: string, limit = 20
 export async function latestRunByApp(userId: string, appIds: string[]): Promise<Record<string, RunSummary>> {
   if (!isDatabaseConfigured() || !appIds.length) return {};
   const { data } = await db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).in("application_id", appIds).order("created_at", { ascending: false });
+  // Application HEALTH comes from pickHealthRun, never "newest terminal row": the newest ACTIVE run still
+  // surfaces as in-progress, but a failed / invalidated run (e.g. a harness target_mismatch) can never
+  // displace the newest VALID completed decision.
+  const byApp = new Map<string, RunSummary[]>();
+  for (const r of (data as RunSummary[]) ?? []) {
+    if (!byApp.has(r.application_id)) byApp.set(r.application_id, []);
+    byApp.get(r.application_id)!.push(r);
+  }
   const out: Record<string, RunSummary> = {};
-  for (const r of (data as RunSummary[]) ?? []) if (!out[r.application_id]) out[r.application_id] = r;
+  for (const [appId, runs] of byApp) {
+    const pick = pickHealthRun(runs);
+    if (pick) out[appId] = pick;
+  }
   return out;
 }

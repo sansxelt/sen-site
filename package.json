@@ -25,7 +25,9 @@
     "outreach": "tsx scripts/outreach.ts",
     "desktop:dev": "npm --prefix desktop run tauri dev",
     "desktop:build": "npm --prefix desktop run tauri build",
-    "desktop:keygen": "npm --prefix desktop run tauri signer generate -- -w VRAELIS-updater.key"
+    "desktop:keygen": "npm --prefix desktop run tauri signer generate -- -w VRAELIS-updater.key",
+    "preflight:target:test": "tsx scripts/preflight-target-verify.ts",
+    "preflight:invalidate": "tsx scripts/preflight-invalidate-runs.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
