@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { PLAN_CATALOG } from "@/lib/v-plans";
 import { TOPUP_MIN_DOLLARS, topupMaxDollars } from "@/lib/v-entitlements";
+import { passPricingEnabled, PLAN_CATALOG_V1 } from "@/lib/preflight/pass-pricing";
 import { CheckoutClient, PlanPrice } from "./checkout-client";
+import { PlanPriceV1, v1Blurb, v1Included } from "./checkout-v1";
 
 export const metadata: Metadata = { title: "Checkout" };
 
@@ -45,7 +47,11 @@ const PLAN_VALUE: Record<string, string[]> = {
 
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ amount?: string; plan?: string; cycle?: string }> }) {
   const sp = await searchParams;
-  const planKey = sp.plan && PLAN_CATALOG.some((p) => p.plan === sp.plan) ? sp.plan : "";
+  // _v1 plan keys (pricing cutover step 11) are recognized ONLY behind VRAELIS_PASS_PRICING — with the
+  // flag off they stay unknown and take today's redirect-to-/credits path. Legacy plans and top-ups are
+  // untouched either way.
+  const v1Plan = passPricingEnabled() && sp.plan ? PLAN_CATALOG_V1.find((p) => p.key === sp.plan) ?? null : null;
+  const planKey = v1Plan ? v1Plan.key : (sp.plan && PLAN_CATALOG.some((p) => p.plan === sp.plan) ? sp.plan : "");
   const cycle: "monthly" | "yearly" = sp.cycle === "yearly" ? "yearly" : "monthly";
   if (!planKey && !sp.amount) redirect("/credits");
   const amount = Math.max(TOPUP_MIN_DOLLARS, Math.min(topupMaxDollars(), parseInt(sp.amount || "0", 10) || 0));
@@ -56,10 +62,12 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
     redirect(`/signin?callbackUrl=${encodeURIComponent(back)}`);
   }
 
-  const plan = PLAN_CATALOG.find((p) => p.plan === planKey);
-  const title = plan ? `${plan.name} plan` : `${(amount * 10).toLocaleString()} credits`;
-  const backHref = plan ? "/plans" : "/credits";
-  const included: string[] = plan
+  const plan = v1Plan ? undefined : PLAN_CATALOG.find((p) => p.plan === planKey);
+  const title = v1Plan ? `${v1Plan.name} plan` : plan ? `${plan.name} plan` : `${(amount * 10).toLocaleString()} credits`;
+  const backHref = plan || v1Plan ? "/plans" : "/credits";
+  const included: string[] = v1Plan
+    ? v1Included(v1Plan, cycle)
+    : plan
     ? PLAN_VALUE[plan.plan] ?? [`${plan.monthlyCredits.toLocaleString()} credits every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
     : ["Your balance funds Production Passes during early access", "Nothing ran, nothing charged: unused holds refund automatically", "Balance keeps its full purchase value as per-pass pricing rolls out"];
 
@@ -73,10 +81,12 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
             <p className="eyebrow">Checkout</p>
             <h1 className="display" style={{ fontSize: "clamp(1.9rem, 3.4vw, 2.6rem)" }}>{title}</h1>
             {plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{plan.blurb} Run your AI-built app like production and get a launch decision with the exact blockers to fix, with evidence you can act on, share, and export.</p> : null}
+            {v1Plan ? <p style={{ fontSize: 14.5, color: "var(--fg-3)", marginTop: 6, marginBottom: 0, lineHeight: 1.5 }}>{v1Blurb(v1Plan)} Run your AI-built app like production and get a launch decision with the exact blockers to fix, with evidence you can act on and share.</p> : null}
             {plan ? <PlanPrice plan={plan.plan} cycle={cycle} /> : null}
+            {v1Plan ? <PlanPriceV1 plan={v1Plan} cycle={cycle} /> : null}
 
             <div className="card" style={{ marginTop: 22, padding: 20 }}>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>{plan ? "What's included" : "How your balance works"}</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>{plan || v1Plan ? "What's included" : "How your balance works"}</div>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
                 {included.map((x) => (
                   <li key={x} style={{ display: "flex", gap: 10, fontSize: 13.5, color: "var(--fg-2)", alignItems: "flex-start", lineHeight: 1.4 }}>
@@ -94,7 +104,9 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
 
           {/* payment */}
           <div className="card" style={{ padding: "clamp(16px, 2vw, 22px)" }}>
-            {plan ? <CheckoutClient plan={planKey} cycle={cycle} /> : <CheckoutClient amount={amount} />}
+            {/* PayPal is suppressed for _v1 plans: only the six Stripe prices exist for them (PayPal
+                _v1 plans are not provisioned), so the button would always fail. */}
+            {planKey ? <CheckoutClient plan={planKey} cycle={cycle} paypal={!v1Plan} /> : <CheckoutClient amount={amount} />}
           </div>
         </div>
       </div>

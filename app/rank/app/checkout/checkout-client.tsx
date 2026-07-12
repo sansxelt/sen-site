@@ -143,7 +143,9 @@ function PaypalSubscribe({ plan, cycle }: { plan: string; cycle: "monthly" | "ye
   );
 }
 
-export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?: string; cycle?: string }) {
+// `paypal` (default true) lets a caller suppress the PayPal option for plans that only exist as Stripe
+// prices (the _v1 pricing-cutover plans) — everything else is unchanged.
+export function CheckoutClient({ amount, plan, cycle, paypal = true }: { amount?: number; plan?: string; cycle?: string; paypal?: boolean }) {
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
 
@@ -181,7 +183,7 @@ export function CheckoutClient({ amount, plan, cycle }: { amount?: number; plan?
     <div className="checkout-pay" style={{ minHeight: 200 }}>
       {/* PayPal above Stripe; hidden unless configured. Credits = SDK buttons, plans = redirect. */}
       {!plan && typeof amount === "number" && amount > 0 ? <PaypalCredits amount={amount} /> : null}
-      {plan ? <PaypalSubscribe plan={plan} cycle={cycle === "yearly" ? "yearly" : "monthly"} /> : null}
+      {plan && paypal ? <PaypalSubscribe plan={plan} cycle={cycle === "yearly" ? "yearly" : "monthly"} /> : null}
       {!ready && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="skel" style={{ height: 46 }} />

@@ -216,8 +216,11 @@ async function main(): Promise<void> {
   // unchanged from today's baseline (the plans page's DISABLED preview already carried these; this
   // build must not add any) ──
   {
-    const pricing = read("app", "rank", "pricing", "page.tsx");
-    const plans = read("app", "rank", "app", "plans", "page.tsx");
+    // Step 11 split page.tsx into a server gate over pricing-legacy/pricing-v1 (and plans-legacy/
+    // plans-v1); today's baseline copy these counts pin now lives verbatim in the -legacy files. The
+    // flag-ON surfaces are held to ZERO of these phrases by scripts/pricing-v1-ui-verify.ts.
+    const pricing = read("app", "rank", "pricing", "pricing-legacy.tsx");
+    const plans = read("app", "rank", "app", "plans", "plans-legacy.tsx");
     ok("public pricing page: no retention/priority/concurrency claims; 'API access' only in the future-tense line",
       count(pricing, "retention") === 0 && count(pricing, "priority") === 0 && count(pricing, "concurrency") === 0 && count(pricing, "api access") === 1);
     ok("plans page: unenforced-benefit phrases unchanged (2 retention, 1 priority, 1 api access, 0 concurrency)",

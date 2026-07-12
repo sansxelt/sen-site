@@ -33,7 +33,11 @@ for (const phrase of STALE) {
 }
 
 // ── The new model, present where it must be ──
-const pricing = read("app/rank/pricing/page.tsx");
+// Pricing cutover (step 11): page.tsx is now a server gate on VRAELIS_PASS_PRICING, so the flag-OFF
+// copy these checks guard lives verbatim in pricing-legacy.tsx / plans-legacy.tsx. The stale-phrase
+// walk above already sweeps the flag-ON files (pricing-v1.tsx / plans-v1.tsx) since they sit under
+// app/rank; their approved-ladder copy is verified by scripts/pricing-v1-ui-verify.ts.
+const pricing = read("app/rank/pricing/pricing-legacy.tsx");
 ok("pricing keeps the headline: priced by the run, not the seat", pricing.includes("Priced by the") && pricing.includes("not the seat"));
 ok("pricing carries the new subtitle", pricing.includes("Run your AI-built application through a real production review"));
 ok("free tier: one complete Production Pass, up to 3 critical flows, no card",
@@ -46,7 +50,7 @@ ok("early-access billing note is present (checkout not yet migrated)", pricing.i
 const pricingMeta = read("app/rank/pricing/layout.tsx");
 ok("pricing metadata no longer sells judgments or credit packs", !pricingMeta.includes("judgment") && !pricingMeta.includes("credits"));
 
-const plans = read("app/rank/app/plans/page.tsx");
+const plans = read("app/rank/app/plans/plans-legacy.tsx");
 ok("signed-in plans: future Pro/Scale render as a disabled preview, no subscription checkout",
   plans.includes("Not available yet") && !plans.includes("checkout?plan="));
 ok("signed-in plans show the per-pass model", plans.includes("$10") && plans.includes("Production Pass"));
