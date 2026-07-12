@@ -10,24 +10,38 @@
 
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { SIGNUP_FREE_CREDITS } from "./v-entitlements";
+import { passPricingEnabled } from "./preflight/pass-pricing";
 
 function norm(email: string): string {
   return email.trim().toLowerCase();
 }
 
-type LedgerRow = { delta: number; bucket: string | null; expires_at: string | null; ext_ref: string | null; reason?: string | null; ref_type?: string | null; ref_id?: string | null };
+type LedgerRow = { delta: number; bucket: string | null; expires_at: string | null; ext_ref: string | null; reason?: string | null; ref_type?: string | null; ref_id?: string | null; unit?: string | null };
 
 // All ledger rows for a user that are not yet expired.
-async function liveRows(userId: string): Promise<LedgerRow[]> {
+//
+// Units (per-pass pricing, VRAELIS_PASS_PRICING): post-flip the ledger carries BOTH 'credit' and 'cent'
+// rows (sql/vraelis-preflight-6-pass-pricing.sql), and a balance is only meaningful PER UNIT. `unit`
+// selects which rows to return; null returns every live row WITH its unit so the caller can partition
+// (refund derives the hold's own unit from the escrow rows). With the flag OFF and credits requested,
+// this runs the exact legacy query (no unit column selected) so behavior is byte-identical on a
+// pre-migration database. Flag ON requires the phase-6 migration: the unit-selecting query fails closed
+// (empty rows) when the column is missing.
+async function liveRows(userId: string, unit: string | null = "credit"): Promise<LedgerRow[]> {
   if (!userId || !isDatabaseConfigured()) return [];
   const s = getSupabaseAdminClient();
+  const legacy = unit === "credit" && !passPricingEnabled();
   const { data } = await s
     .from("v_credit_ledger" as never)
-    .select("delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id")
+    .select(legacy
+      ? "delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id"
+      : "delta, bucket, expires_at, ext_ref, reason, ref_type, ref_id, unit")
     .eq("user_id", norm(userId));
   const rows = (data as unknown as LedgerRow[]) ?? [];
   const now = Date.now();
-  return rows.filter((r) => r.expires_at === null || new Date(r.expires_at).getTime() > now);
+  const live = rows.filter((r) => r.expires_at === null || new Date(r.expires_at).getTime() > now);
+  if (legacy || unit === null) return live;
+  return live.filter((r) => (r.unit ?? "credit") === unit);
 }
 
 export async function balance(userId: string): Promise<number> {
@@ -35,10 +49,13 @@ export async function balance(userId: string): Promise<number> {
   return rows.reduce((sum, r) => sum + r.delta, 0);
 }
 
-type GrantOpts = { bucket?: string; expiresAt?: string | null; refType?: string; refId?: string; extRef?: string | null };
+type GrantOpts = { bucket?: string; expiresAt?: string | null; refType?: string; refId?: string; extRef?: string | null; unit?: string };
 
 // Append a ledger row. Returns false if it was a duplicate (extRef already used)
 // or failed — true on a fresh insert. Idempotent when extRef is provided.
+// `unit` (per-pass pricing): 'cent' rows carry it explicitly; 'credit' (or absent) omits the column
+// entirely so every legacy call site produces the exact pre-migration insert payload (the column
+// default supplies 'credit' post-migration).
 export async function grant(userId: string, delta: number, reason: string, opts: GrantOpts = {}): Promise<boolean> {
   if (!isDatabaseConfigured()) return false;
   const s = getSupabaseAdminClient();
@@ -51,6 +68,7 @@ export async function grant(userId: string, delta: number, reason: string, opts:
     ref_type: opts.refType ?? null,
     ref_id: opts.refId ?? null,
     ext_ref: opts.extRef ?? null,
+    ...(opts.unit && opts.unit !== "credit" ? { unit: opts.unit } : {}),
   } as never);
   if (error) {
     if ((error as { code?: string }).code === "23505") return false; // already granted — idempotent no-op
@@ -62,6 +80,11 @@ export async function grant(userId: string, delta: number, reason: string, opts:
 
 // One-time free credits for a brand-new account.
 export async function ensureSignupGrant(userId: string): Promise<void> {
+  // Per-pass pricing cutover (docs/pricing-verdict-final.md, ruling 4 / step 10): at the flag flip the
+  // 25-credit signup grant is CUT — the free tier becomes ONE lifetime pass of up to 3 flows, enforced
+  // by gatePassLaunch (lib/preflight/entitlements-v1.ts). No new signup credits are minted while the
+  // flag is on; with the flag off this keeps granting exactly as before.
+  if (passPricingEnabled()) return;
   if (!userId || !isDatabaseConfigured()) return;
   const s = getSupabaseAdminClient();
   const { count } = await s
@@ -79,9 +102,12 @@ export async function ensureSignupGrant(userId: string): Promise<void> {
 // Escrow `amount` credits for a test launch. Returns false if insufficient.
 // Spends the expiring monthly bucket first, tagging that portion of the debit
 // with the monthly expiry so it expires alongside the credits it consumed.
-export async function hold(userId: string, testId: string, amount: number): Promise<boolean> {
+// `unit` (per-pass pricing): 'cent' escrows dollars-as-cents against the CENT balance only — the same
+// hold semantics, keyed by the same reservation, never mixing units. Every legacy call site passes no
+// unit and behaves exactly as before.
+export async function hold(userId: string, testId: string, amount: number, unit: "credit" | "cent" = "credit"): Promise<boolean> {
   if (amount <= 0) return true;
-  const rows = await liveRows(userId);
+  const rows = await liveRows(userId, unit);
   const bal = rows.reduce((s, r) => s + r.delta, 0);
   if (bal < amount) return false;
 
@@ -90,8 +116,8 @@ export async function hold(userId: string, testId: string, amount: number): Prom
   const fromMonthly = Math.max(0, Math.min(amount, monthlyNet));
   const fromPurchased = amount - fromMonthly;
 
-  if (fromMonthly > 0) await grant(userId, -fromMonthly, "hold", { bucket: "monthly", expiresAt: monthlyExpiry, refType: "test", refId: testId });
-  if (fromPurchased > 0) await grant(userId, -fromPurchased, "hold", { bucket: "purchased", refType: "test", refId: testId });
+  if (fromMonthly > 0) await grant(userId, -fromMonthly, "hold", { bucket: "monthly", expiresAt: monthlyExpiry, refType: "test", refId: testId, unit });
+  if (fromPurchased > 0) await grant(userId, -fromPurchased, "hold", { bucket: "purchased", refType: "test", refId: testId, unit });
   return true;
 }
 
@@ -112,8 +138,15 @@ export async function refund(userId: string, testId: string, amount: number): Pr
   // never mint permanent credit out of monthly credit. A monthly-sourced hold that
   // already expired with its cycle is simply gone — refunding it as purchased would
   // resurrect expired value as never-expiring credit (the laundering we prevent).
-  const rows = await liveRows(userId);
-  const held = rows.filter((r) => r.reason === "hold" && r.ref_type === "test" && r.ref_id === testId);
+  //
+  // Unit (per-pass pricing): the hold's OWN rows decide what is refunded — a 'cent' reservation (PAYG
+  // pass) is reversed as cents, a legacy 'credit' one as credits, so the worker's unchanged
+  // refund(user, reservation, credits_held) settles both. One reservation is always one unit. With the
+  // flag off there are no cent rows and this collapses to the exact legacy computation.
+  const all = await liveRows(userId, passPricingEnabled() ? null : "credit");
+  const held = all.filter((r) => r.reason === "hold" && r.ref_type === "test" && r.ref_id === testId);
+  const unit = held[0]?.unit ?? "credit";
+  const rows = all.filter((r) => (r.unit ?? "credit") === unit);
   // hold deltas are negative; live purchased hold magnitude = -sum(purchased holds).
   const purchasedHeld = -held.filter((r) => r.bucket === "purchased").reduce((sum, r) => sum + r.delta, 0);
   const exp = latestMonthlyExpiry(rows);
@@ -124,13 +157,13 @@ export async function refund(userId: string, testId: string, amount: number): Pr
   // extRef (split :p/:m) keeps each leg idempotent per test, so a completion race
   // can't refund twice.
   if (toPurchased > 0) {
-    await grant(userId, toPurchased, "refund", { bucket: "purchased", refType: "test", refId: testId, extRef: `refund:${testId}:p` });
+    await grant(userId, toPurchased, "refund", { bucket: "purchased", refType: "test", refId: testId, extRef: `refund:${testId}:p`, unit });
   }
   // Only refund the monthly remainder if a live monthly bucket still exists to hold
   // it (with that bucket's expiry). If the cycle already ended, the held monthly
   // credit expired — drop it rather than converting it to permanent credit.
   if (remainder > 0 && exp) {
-    await grant(userId, remainder, "refund", { bucket: "monthly", expiresAt: exp, refType: "test", refId: testId, extRef: `refund:${testId}:m` });
+    await grant(userId, remainder, "refund", { bucket: "monthly", expiresAt: exp, refType: "test", refId: testId, extRef: `refund:${testId}:m`, unit });
   }
 }
 

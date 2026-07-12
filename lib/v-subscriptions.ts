@@ -9,6 +9,8 @@ import type Stripe from "stripe";
 import { planFromPriceId, monthlyCreditsFor } from "./v-plans";
 import { setSubscription, getSubscription, recordInvoiceGrant } from "./v-db";
 import { grantMonthly, expireMonthly } from "./v-credits";
+import { resolvePlanV1FromPriceId, setPlanV1, clearPlanV1, type PlanV1Cycle } from "./preflight/entitlements-v1";
+import { planV1 } from "./preflight/pass-pricing";
 
 function linePriceId(invoice: any): string | null {
   const ls = invoice.lines?.data?.[0];
@@ -42,10 +44,52 @@ function toIso(unix: any, cycle: string): string {
 function invoicePeriodEnd(invoice: any, cycle: string): string {
   return toIso(invoice.period_end || invoice.lines?.data?.[0]?.period?.end, cycle);
 }
+// unix seconds -> ISO for the _v1 subscription anchor (current_period_start). A missing/garbled payload
+// anchors at "now" — the metering window simply starts today — never at 1970.
+function periodStartIso(invoice: any): string {
+  const n = Number(invoice.period_start ?? invoice.lines?.data?.[0]?.period?.start);
+  return new Date(Number.isFinite(n) && n > 0 ? n * 1000 : Date.now()).toISOString();
+}
+// Resolve a _v1 plan the same two ways the legacy path resolves its plans: by price id
+// (STRIPE_PRICE_{BUILDER_V1,PRO_V1,SCALE_V1}_{MONTHLY,YEARLY}), else by the locked subscription
+// metadata (covers a missing/renamed env in the webhook runtime). Legacy plan keys never match planV1
+// (fresh _v1 keys, ruling 2), so a legacy subscription can never resolve as _v1 — and vice versa.
+function v1FromPriceOrMeta(priceId: string | null, meta: Record<string, string> | null | undefined): { key: string; cycle: PlanV1Cycle } | null {
+  const byPrice = resolvePlanV1FromPriceId(priceId);
+  if (byPrice) return byPrice;
+  if (meta?.type === "v_plan" && meta.plan && planV1(meta.plan)) {
+    return { key: planV1(meta.plan)!.key, cycle: meta.cycle === "yearly" ? "yearly" : "monthly" };
+  }
+  return null;
+}
 
 // Returns true if this invoice was a Rank subscription invoice (handled here).
 export async function handleRankInvoicePaid(invoice: Stripe.Invoice): Promise<boolean> {
   const inv = invoice as any;
+
+  // ── Versioned per-pass plans (_v1) — flag-INDEPENDENT storage, inert until VRAELIS_PASS_PRICING
+  // flips (nothing reads plan_v1 before then). A _v1 invoice NEVER grants ledger credits: the allowance
+  // is METERED in flow units from v_profiles.plan_v1 (docs/pricing-verdict-final.md), not granted. The
+  // anchor is current_period_start of the FIRST period (billing_reason subscription_create); renewal
+  // invoices never move it — that anchor is what makes monthlyWindow release an ANNUAL plan's usage in
+  // monthly buckets with no scheduler (ruling 7). Cancellation keeps plan_v1 until the subscription
+  // deletion event (ruling 8: no clawback on a mere renewal cancellation).
+  {
+    const v1 = v1FromPriceOrMeta(linePriceId(inv), subMeta(inv));
+    if (v1) {
+      const v1User = invoiceUserId(inv);
+      if (!v1User) { console.error("[rank] _v1 invoice.paid could not attribute a user:", inv.id); return true; }
+      if (inv.status === "paid") {
+        await setPlanV1(v1User, {
+          plan: v1.key, cycle: v1.cycle,
+          anchorIso: periodStartIso(inv),
+          anchorOnlyIfUnset: inv.billing_reason !== "subscription_create",
+        });
+      }
+      return true; // handled — never fall through to the legacy credit-granting path
+    }
+  }
+
   // Resolve the Rank plan: by line price, else the subscription-metadata snapshot
   // (covers a missing/renamed STRIPE_PRICE_* env in the webhook runtime).
   let plan: string | null = null, cycle = "monthly", monthlyCredits = 0;
@@ -88,6 +132,29 @@ export async function handleRankInvoicePaid(invoice: Stripe.Invoice): Promise<bo
 export async function handleRankSubChange(event: Stripe.Event, subscription: Stripe.Subscription): Promise<void> {
   const userId = subscription.metadata?.user_id;
   if (!userId) return;
+
+  // ── Versioned per-pass plans (_v1): plan_v1 state only — never v_subscriptions, never the ledger
+  // (there are no monthly credits to grant or claw back; the allowance is metered). past_due keeps the
+  // plan through dunning; cancel-at-period-end stays "active" until the deletion event, so plan_v1
+  // persists until the paid-for period actually ends (ruling 8). Cleared ONLY on a true termination.
+  {
+    const v1 = v1FromPriceOrMeta(subscription.items?.data?.[0]?.price?.id ?? null, subscription.metadata as Record<string, string>);
+    if (v1) {
+      const gone = event.type === "customer.subscription.deleted" || ["canceled", "unpaid", "incomplete_expired"].includes(subscription.status);
+      if (gone) {
+        await clearPlanV1(userId);
+      } else {
+        const ps = Number((subscription as any).current_period_start ?? (subscription as any).items?.data?.[0]?.current_period_start);
+        await setPlanV1(userId, {
+          plan: v1.key, cycle: v1.cycle,
+          anchorIso: new Date(Number.isFinite(ps) && ps > 0 ? ps * 1000 : Date.now()).toISOString(),
+          anchorOnlyIfUnset: true, // invoice.paid on subscription_create owns the anchor reset
+        });
+      }
+      return;
+    }
+  }
+
   const rank = planFromPriceId(subscription.items?.data?.[0]?.price?.id ?? null);
   const status = subscription.status;
   const canceled = event.type === "customer.subscription.deleted" || ["canceled", "unpaid", "incomplete_expired"].includes(status);

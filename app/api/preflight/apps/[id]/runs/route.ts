@@ -21,6 +21,8 @@ import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { estimateRunCredits } from "@/lib/preflight/flow-selection";
+import { passPricingEnabled } from "@/lib/preflight/pass-pricing";
+import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements-v1";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -119,8 +121,35 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const reservationId = randomUUID();
   let creditsHeld = 0;
   let heldReservationId: string | null = null;
+  let paygHeldCents: number | null = null;
 
-  if (billingBypassAllowed()) {
+  if (passPricingEnabled()) {
+    // Per-pass pricing (docs/pricing-verdict-final.md), behind VRAELIS_PASS_PRICING — this branch fully
+    // replaces the legacy credit hold. Subscription: the entitlement gate IS the billing decision (no
+    // hold; the metered monthly flow-unit window is the spend limit). Free tier: one lifetime pass of up
+    // to 3 flows (no hold). PAYG: hold CENTS via the same ledger reservation semantics as legacy credits
+    // (kept as the charge on completion, refunded by the worker when nothing ran). Exhausted allowances
+    // REFUSE — they never auto-spill into a paid charge.
+    if (billingBypassAllowed()) {
+      console.warn(`[preflight] BILLING BYPASS active (PREFLIGHT_INTERNAL_BILLING_BYPASS=1); run for ${owner} on app ${id} will NOT be charged.`);
+    } else {
+      const gate = await gatePassLaunch(owner, flowIds.length);
+      if (!gate.ok) {
+        return NextResponse.json({ error: gate.error, message: gate.message }, { status: gate.status });
+      }
+      if (gate.mode === "payg") {
+        const ok = await hold(owner, reservationId, gate.cents, "cent");
+        if (!ok) {
+          return NextResponse.json({ error: "insufficient_balance", message: `This Production Pass costs $${(gate.cents / 100).toFixed(2)}. Add balance to launch it.` }, { status: 402 });
+        }
+        // credits_held carries the held amount in the hold's OWN unit (cents here), so the worker's
+        // unchanged settlement — refund credits_held via the reservation — settles cent holds too.
+        creditsHeld = gate.cents;
+        heldReservationId = reservationId;
+        paygHeldCents = gate.cents;
+      }
+    }
+  } else if (billingBypassAllowed()) {
     console.warn(`[preflight] BILLING BYPASS active (PREFLIGHT_INTERNAL_BILLING_BYPASS=1); run for ${owner} on app ${id} will NOT be charged.`);
   } else {
     const ok = await hold(owner, reservationId, estCredits);
@@ -139,15 +168,23 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   if (!created) {
     // Nothing eligible at re-read, or a transient insert failure; release any hold we just made so the owner
-    // is never left with stranded escrow for a run that does not exist.
-    if (heldReservationId) await refund(owner, reservationId, estCredits);
+    // is never left with stranded escrow for a run that does not exist. creditsHeld is the hold's own
+    // amount in its own unit (legacy credits, or cents on the flag-on PAYG branch).
+    if (heldReservationId) await refund(owner, reservationId, creditsHeld);
     return NextResponse.json({ error: "unavailable", message: "Could not queue the run. Try again." }, { status: 503 });
   }
   if ("conflict" in created) {
     // A run for this submission already exists (idempotent replay / lost race). Release this attempt's hold
     // and point the caller at the existing run.
-    if (heldReservationId) await refund(owner, reservationId, estCredits);
+    if (heldReservationId) await refund(owner, reservationId, creditsHeld);
     return NextResponse.json({ error: "run_exists", runId: created.runId, status: "queued" }, { status: 409 });
+  }
+
+  if (passPricingEnabled()) {
+    // Record the selected-flow units this run consumes (subscription metering sums flow_units over the
+    // anchor window) plus the PAYG cents escrow (audit mirror). Best-effort: the run is queued and billed
+    // either way, and metering falls back to the stored flow_ids length.
+    await recordRunPassUsage(owner, created.runId, { flowUnits: created.flowCount, heldCents: paygHeldCents });
   }
 
   await logEvent({

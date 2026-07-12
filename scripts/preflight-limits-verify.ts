@@ -90,14 +90,16 @@ for (const [name, file] of [
 
 // ── static: the report page maps the code to a user sentence, keeping the generic line as fallback ──
 {
-  const src = read("app", "rank", "app", "apps", "[id]", "runs", "[runId]", "page.tsx");
+  // (path updated after the shell rename: apps/[id]/runs/[runId] -> applications/[id]/passes/[runId])
+  const src = read("app", "rank", "app", "applications", "[id]", "passes", "[runId]", "page.tsx");
   ok("report page has a FAILURE_LINE map covering the classifier codes", ["provider_auth_failed", "provider_quota", "provider_capacity", "provider_unavailable", "infra_misconfigured", "session_timeout"].every((c) => src.includes(c)));
   ok("report page keeps the generic line for unknown/absent codes", src.includes("This run stopped before it reached a decision."));
 }
 
 // ── static: the launch button shows the credit estimate + maps the new refusals ──
 {
-  const src = read("app", "rank", "app", "apps", "[id]", "launch-button.tsx");
+  // (path updated after the shell rename: apps/[id] -> applications/[id])
+  const src = read("app", "rank", "app", "applications", "[id]", "launch-button.tsx");
   ok("launch button appends the credit estimate from flowIds.length", /flowIds\.length[\s\S]{0,80}credit/.test(src));
   ok("launch button singular/plural credits", /credit\$\{flowIds\.length === 1 \? "" : "s"\}/.test(src));
   ok("launch button maps runs_paused + daily_limit inline", src.includes("runs_paused") && src.includes("daily_limit"));

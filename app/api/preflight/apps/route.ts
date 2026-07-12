@@ -10,6 +10,8 @@ import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { createApplication, deleteApplication } from "@/lib/v-applications";
 import { addConnection, applySetupExtras, normalizeBoundaries, normalizeContextSources, CONNECTION_KINDS } from "@/lib/preflight/connections-db";
+import { passPricingEnabled } from "@/lib/preflight/pass-pricing";
+import { applicationCapReached, getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 
 export const runtime = "nodejs";
@@ -31,6 +33,17 @@ export async function POST(req: Request) {
   // before any navigation (see the audit's security-boundary plan).
   const reason = unsafeHttpsUrlReason(appUrl.trim());
   if (reason) return NextResponse.json({ error: "invalid_url", message: "Enter a public https URL for the deployed app." }, { status: 400 });
+
+  if (passPricingEnabled()) {
+    // Application cap (docs/pricing-verdict-final.md): free tier 1 app; builder_v1 2; pro_v1 10;
+    // scale_v1 uncapped. Enforced ONLY under VRAELIS_PASS_PRICING — with the flag off, creation is
+    // uncapped exactly as today.
+    const owner = email.toLowerCase();
+    const plan = await getPlanV1State(owner);
+    if (await applicationCapReached(owner, plan?.plan ?? null)) {
+      return NextResponse.json({ error: "application_limit", message: "Your plan's connected-application limit is reached. Remove an application or upgrade to connect more." }, { status: 403 });
+    }
+  }
 
   const r = await createApplication(email, { name, appUrl, builder, sourcePrompt, ownershipConfirmed: true });
   if (!r.ok) {

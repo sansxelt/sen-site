@@ -26,6 +26,8 @@ import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { estimateRunCredits, selectFailedFlows } from "@/lib/preflight/flow-selection";
+import { passPricingEnabled } from "@/lib/preflight/pass-pricing";
+import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements-v1";
 import { getRunInternal, parentRunFlows, setParentRun } from "@/lib/preflight/run-report-db";
 import { logEvent } from "@/lib/v-events";
 
@@ -137,8 +139,35 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   const reservationId = randomUUID();
   let creditsHeld = 0;
   let heldReservationId: string | null = null;
+  let paygHeldCents: number | null = null;
 
-  if (billingBypassAllowed()) {
+  if (passPricingEnabled()) {
+    // Per-pass pricing (docs/pricing-verdict-final.md), behind VRAELIS_PASS_PRICING — replaces the legacy
+    // credit hold on this branch. Subscription reruns deduct ONLY the selected flows from the metered
+    // monthly allowance (approved ruling: never a full-pass deduction). PAYG reruns hold CENTS at
+    // rerunPriceCents — $3 x selected flows, CAPPED at the comparable full-pass price ({ rerun: true }).
+    // Same reservation semantics as legacy credits: kept as the charge on completion, refunded by the
+    // worker when nothing ran.
+    if (billingBypassAllowed()) {
+      console.warn(`[preflight] BILLING BYPASS active (PREFLIGHT_INTERNAL_BILLING_BYPASS=1); rerun for ${owner} of run ${parentRunId} will NOT be charged.`);
+    } else {
+      const gate = await gatePassLaunch(owner, flowIds.length, { rerun: true });
+      if (!gate.ok) {
+        return NextResponse.json({ error: gate.error, message: gate.message }, { status: gate.status });
+      }
+      if (gate.mode === "payg") {
+        const ok = await hold(owner, reservationId, gate.cents, "cent");
+        if (!ok) {
+          return NextResponse.json({ error: "insufficient_balance", message: `This targeted rerun costs $${(gate.cents / 100).toFixed(2)}. Add balance to launch it.` }, { status: 402 });
+        }
+        // credits_held carries the held amount in the hold's OWN unit (cents here), so the worker's
+        // unchanged settlement — refund credits_held via the reservation — settles cent holds too.
+        creditsHeld = gate.cents;
+        heldReservationId = reservationId;
+        paygHeldCents = gate.cents;
+      }
+    }
+  } else if (billingBypassAllowed()) {
     console.warn(`[preflight] BILLING BYPASS active (PREFLIGHT_INTERNAL_BILLING_BYPASS=1); rerun for ${owner} of run ${parentRunId} will NOT be charged.`);
   } else {
     const ok = await hold(owner, reservationId, estCredits);
@@ -156,12 +185,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   });
 
   if (!created) {
-    if (heldReservationId) await refund(owner, reservationId, estCredits);
+    // creditsHeld is the hold's own amount in its own unit (legacy credits, or cents on flag-on PAYG).
+    if (heldReservationId) await refund(owner, reservationId, creditsHeld);
     return NextResponse.json({ error: "unavailable", message: "Could not queue the rerun. Try again." }, { status: 503 });
   }
   if ("conflict" in created) {
-    if (heldReservationId) await refund(owner, reservationId, estCredits);
+    if (heldReservationId) await refund(owner, reservationId, creditsHeld);
     return NextResponse.json({ error: "run_exists", runId: created.runId, status: "queued" }, { status: 409 });
+  }
+
+  if (passPricingEnabled()) {
+    // Selected-flow units for subscription metering (a targeted rerun consumes only its selected count)
+    // + the PAYG cents escrow (audit mirror). Best-effort; metering falls back to flow_ids length.
+    await recordRunPassUsage(owner, created.runId, { flowUnits: created.flowCount, heldCents: paygHeldCents });
   }
 
   // Best-effort provenance: link the new run back to its parent (see setParentRun).
