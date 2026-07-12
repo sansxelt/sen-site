@@ -13,6 +13,7 @@ import { addConnection, applySetupExtras, normalizeBoundaries, normalizeContextS
 import { passPricingEnabled } from "@/lib/preflight/pass-pricing";
 import { applicationCapReached, getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
+import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
 
@@ -64,7 +65,13 @@ export async function POST(req: Request) {
   for (const c of (rawConnections as Record<string, unknown>[]).slice(0, 20)) {
     const provider = typeof c?.provider === "string" ? c.provider : "";
     if (!(CONNECTION_KINDS as readonly string[]).includes(provider) || provider === "test_account") continue;
-    await addConnection(email, appId, provider, (c?.meta && typeof c.meta === "object" ? c.meta : {}) as Record<string, unknown>);
+    const added = await addConnection(email, appId, provider, (c?.meta && typeof c.meta === "object" ? c.meta : {}) as Record<string, unknown>);
+    // Audit parity with the connections routes: onboarding-created connections appear in the
+    // Connections tab's audit rail like every other add. application_id + provider ONLY, never
+    // metadata values; a deduped re-add ({existing: true}) logs nothing (idempotent retry logs once).
+    if ("id" in added && !added.existing) {
+      await logEvent({ userId: email.toLowerCase(), eventType: "connection_added", actorType: "owner", source: "preflight", route: "/api/preflight/apps", metadata: { application_id: appId, provider } });
+    }
   }
 
   return NextResponse.json({ id: appId });

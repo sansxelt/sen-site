@@ -32,6 +32,7 @@
     "pricing:copy:test": "tsx scripts/pricing-copy-verify.ts",
     "pricing:v1:ui:test": "tsx scripts/pricing-v1-ui-verify.ts",
     "preflight:connect:test": "tsx scripts/preflight-connect-verify.ts",
+    "connections:manage:test": "tsx scripts/preflight-connections-manage-verify.ts",
     "pricing:pass:test": "tsx scripts/pass-pricing-verify.ts",
     "pricing:entitlements:test": "tsx scripts/preflight-entitlements-verify.ts",
     "preflight:convert-balance": "tsx scripts/preflight-balance-convert.ts",

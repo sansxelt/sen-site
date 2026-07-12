@@ -100,9 +100,15 @@ ok("every connections-db query is owner-scoped (eq user_id)", (connDb.match(/eq\
 ok("openTestAccount is documented worker-only and never IMPORTED by the secrets route",
   connDb.includes("WORKER-ONLY") && !/import[^;]*openTestAccount/.test(secretsRoute));
 
+// The chips + manual forms were extracted to the shared _connections modules (S2) so the management
+// page reuses them; the honesty assertions follow the code.
 const ui = readFileSync("app/rank/app/applications/new/connect-form.tsx", "utf8");
-ok("UI: unbuilt integrations say Coming later (never fake active buttons)", ui.includes("Coming later") && !ui.includes("SoonButton"));
-ok("UI: manual connections are labeled as manual, OAuth honestly deferred", ui.includes("Manual connection") && ui.includes("comes later"));
+const sharedBrand = readFileSync("app/rank/app/applications/_connections/brand.tsx", "utf8");
+const sharedForms = readFileSync("app/rank/app/applications/_connections/forms.tsx", "utf8");
+ok("UI: unbuilt integrations say Coming later (never fake active buttons)",
+  ui.includes("<ComingLater") && sharedBrand.includes("Coming later") && !/function ComingLater[\s\S]*?<button/.test(sharedBrand) && !ui.includes("SoonButton"));
+ok("UI: manual connections are labeled as manual, OAuth honestly deferred (and the shared forms actually render the connect path)",
+  sharedForms.includes("Manual connection") && sharedForms.includes("comes later") && ui.includes('from "../_connections/forms"'));
 ok("UI: credentials are masked client-side and excluded from the persisted draft payload",
   ui.includes("••••") && ui.includes("excluded from saved drafts") && !/JSON\.stringify\(\{[^}]*\baccounts\b/.test(ui));
 ok("UI: conservative boundary defaults (every permit starts false)",

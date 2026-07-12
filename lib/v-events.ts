@@ -86,6 +86,25 @@ export async function recentAccountEvents(userId: string, limit = 10): Promise<E
   } catch { return []; }
 }
 
+// Connection-audit events for ONE application (the management page's history rail). Owner-scoped
+// (eq user_id) AND application-scoped via the sanitized metadata.application_id these events carry.
+// The events themselves never contain metadata VALUES — application_id + provider only.
+const CONNECTION_EVENT_TYPES = ["connection_added", "connection_updated", "connection_verified", "connection_removed"];
+export async function recentConnectionEvents(userId: string, applicationId: string, limit = 10): Promise<EventRow[]> {
+  if (!userId || !applicationId || !isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const { data, error } = await s.from("v_events" as never)
+      .select("id,user_id,test_id,event_type,actor_type,source,metadata,created_at")
+      .eq("user_id", userId.trim().toLowerCase())
+      .eq("metadata->>application_id", applicationId)
+      .in("event_type", CONNECTION_EVENT_TYPES)
+      .order("created_at", { ascending: false }).limit(limit);
+    if (error) return [];
+    return (data as unknown as EventRow[]) ?? [];
+  } catch { return []; }
+}
+
 // Recent events of ONE type for ONE owner since a cutoff — the read side of idempotency guards that
 // log through v_events (e.g. the subscribe route's 10-minute duplicate-checkout window reads back its
 // own "checkout_session_created" rows). Owner-scoped; tolerant of a missing table.

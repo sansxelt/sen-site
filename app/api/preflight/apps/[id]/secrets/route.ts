@@ -14,7 +14,8 @@ import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication } from "@/lib/v-applications";
-import { addTestAccount, listConnections, removeConnection } from "@/lib/preflight/connections-db";
+import { addTestAccount, getConnection, listConnections, removeConnection } from "@/lib/preflight/connections-db";
+import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
 
@@ -48,6 +49,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     }
     return NextResponse.json({ error: result.error }, { status: result.error === "not_found" ? 404 : 503 });
   }
+  // Audit trail (S2): the event carries application id + provider kind ONLY — never a credential,
+  // never a mask, never metadata values.
+  await logEvent({ userId: g.owner, eventType: "connection_added", actorType: "owner", source: "preflight", route: "/api/preflight/apps/[id]/secrets", metadata: { application_id: g.appId, provider: "test_account" } });
   return NextResponse.json({ id: result.id, username_mask: result.usernameMask });
 }
 
@@ -68,9 +72,17 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }
   if (g instanceof NextResponse) return g;
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
+  // This route only ever revokes TEST ACCOUNTS. Non-test-account connections are managed by the
+  // connections routes, which audit the true provider; without this check the hardcoded
+  // provider: "test_account" in the audit event below would mislabel the removal of any other row.
+  const conn = await getConnection(g.owner, g.appId, id);
+  if (!conn || conn.provider !== "test_account") {
+    return NextResponse.json({ error: "not_found", message: "No such credential on this application. Nothing was revoked." }, { status: 404 });
+  }
   // A revoke must never claim success it didn't deliver: zero rows removed (stale id, wrong app) is a 404,
   // because the credential still exists and the owner must know that.
   const ok = await removeConnection(g.owner, g.appId, id);
   if (!ok) return NextResponse.json({ error: "not_found", message: "No such credential on this application. Nothing was revoked." }, { status: 404 });
+  await logEvent({ userId: g.owner, eventType: "connection_removed", actorType: "owner", source: "preflight", route: "/api/preflight/apps/[id]/secrets", metadata: { application_id: g.appId, provider: "test_account" } });
   return NextResponse.json({ ok: true });
 }

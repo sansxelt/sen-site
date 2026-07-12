@@ -4,7 +4,7 @@ import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication } from "@/lib/v-applications";
-import { listConnections, type SafeConnection } from "@/lib/preflight/connections-db";
+import { listConnections } from "@/lib/preflight/connections-db";
 import { getSetupExtras } from "@/lib/preflight/setup-read";
 import { AppTabs } from "../app-tabs";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
@@ -19,19 +19,6 @@ const BUILDER_LABELS: Record<string, string> = {
 
 const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
 
-// The connection graph's display vocabulary: what each provider is called and which part of the
-// application it covers. Unknown providers fall through to their raw key (honest, never invented).
-const PROVIDER_LABELS: Record<string, string> = {
-  github: "GitHub", vercel: "Vercel", custom_deploy: "Custom deployment",
-  supabase: "Supabase", custom_auth: "Custom auth", stripe_test: "Stripe test mode",
-  sentry: "Sentry", openapi: "OpenAPI", webhook: "Webhook", test_account: "Test account",
-};
-const PROVIDER_GROUP: Record<string, string> = {
-  github: "Source", vercel: "Deployment", custom_deploy: "Deployment",
-  supabase: "Data", custom_auth: "Auth", stripe_test: "Billing",
-  sentry: "Monitoring", openapi: "Services", webhook: "Services", test_account: "Credentials",
-};
-
 const CONTEXT_KIND_LABELS: Record<string, string> = {
   prompt: "Build prompt", prd: "PRD", requirements: "Requirements",
   readme: "README", risks: "Risks", roles: "Roles",
@@ -40,37 +27,6 @@ const CONTEXT_KIND_LABELS: Record<string, string> = {
 // Stable UTC render (no hydration mismatch): "2026-07-02 14:31 UTC".
 function when(iso: string): string {
   try { return new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return ""; }
-}
-
-function hostnameOf(u: string): string {
-  try { return new URL(u).hostname; } catch { return u; }
-}
-
-// The safe one-line summary of a connection's metadata (metadata is the non-secret half by contract;
-// secrets never reach this module, see connections-db). Null when the row carries nothing displayable.
-function metaSummary(c: SafeConnection): string | null {
-  const m = c.meta;
-  const s = (k: string): string => (typeof m[k] === "string" ? (m[k] as string).trim() : "");
-  switch (c.provider) {
-    case "github": {
-      const repo = s("repo");
-      return repo ? `${repo}${s("branch") ? ` @ ${s("branch")}` : ""}${s("commit") ? ` (${s("commit").slice(0, 10)})` : ""}` : null;
-    }
-    case "vercel": {
-      const project = s("project");
-      return project ? `${project}${s("deployment_url") ? `, ${hostnameOf(s("deployment_url"))}` : ""}` : null;
-    }
-    case "custom_deploy": {
-      const name = s("provider_name");
-      return name ? `${name}${s("branch") ? `, ${s("branch")}` : ""}${s("commit") ? ` (${s("commit").slice(0, 10)})` : ""}` : null;
-    }
-    case "supabase": return s("project_url") || null;
-    case "custom_auth": return s("system") || null;
-    case "stripe_test": return s("account_label") ? `Test mode, ${s("account_label")}` : "Test mode";
-    case "sentry": return s("dsn") ? hostnameOf(s("dsn")) : null;
-    case "webhook": return s("url") || null;
-    default: return null;
-  }
 }
 
 // One key/value row. Missing values read "Not set" (muted), never a blank.
@@ -88,42 +44,6 @@ function KV({ k, v }: { k: string; v: string | null }) {
 // Uppercase section label + hairline sections, matching the application overview.
 const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
 const sectionStyle = { borderTop: "1px solid var(--line-1)", paddingTop: 22, marginTop: 26 } as const;
-
-// One read-only connection card. Provider + coverage area, the safe metadata summary, and the dates the
-// data layer actually has. Test accounts additionally show their mask + scope; credentials stay sealed.
-function ConnectionCard({ c }: { c: SafeConnection }) {
-  const isTestAccount = c.provider === "test_account";
-  const m = c.meta;
-  const s = (k: string): string => (typeof m[k] === "string" ? (m[k] as string).trim() : "");
-  const summary = isTestAccount ? null : metaSummary(c);
-  return (
-    <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", padding: "13px 15px", display: "grid", gap: 7, alignContent: "start" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-        <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)" }}>
-          {isTestAccount ? (s("label") || "Test account") : (PROVIDER_LABELS[c.provider] ?? c.provider)}
-        </span>
-        <span className="pill" style={{ fontSize: 9.5, flex: "none" }}>{PROVIDER_GROUP[c.provider] ?? "Connection"}</span>
-      </div>
-      {isTestAccount ? (
-        <>
-          {s("username_mask") ? (
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)", wordBreak: "break-all" }}>{s("username_mask")}</div>
-          ) : null}
-          <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5 }}>
-            Scope: {s("scope") || "signed-in flows only"}. Credentials are stored encrypted and are opened only inside a pass.
-          </div>
-        </>
-      ) : summary ? (
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--fg-2)", wordBreak: "break-all" }}>{summary}</div>
-      ) : (
-        <div style={{ fontSize: 12, color: "var(--fg-4)" }}>No metadata recorded</div>
-      )}
-      <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>
-        Connected {when(c.created_at)}{c.last_verified_at ? `, verified ${when(c.last_verified_at)}` : ""}
-      </div>
-    </div>
-  );
-}
 
 // One permit row in the boundaries summary: the permit name plus its real On/Off state in text.
 function PermitRow({ label, on }: { label: string; on: boolean }) {
@@ -212,35 +132,20 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {/* ── Connection graph (read-only) ────────────────────────────────────────────────────────────── */}
+      {/* ── Connections: compact summary; management lives on the Connections tab ──────────────────── */}
       <section style={sectionStyle} aria-label="Connections">
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 4 }}>
           <div style={headLbl}>Connections ({connections.length})</div>
-          <span style={{ fontSize: 12, color: "var(--fg-4)" }}>Managed at connect time for now</span>
+          <Link href={`/applications/${id}/settings/connections`} style={{ fontSize: 12.5, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
+            Manage connections
+          </Link>
         </div>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 14px", maxWidth: 640 }}>
-          What Vraelis knows about this application&apos;s source, deployment, data, and services. Read-only here;
-          editing connections after connect is coming.
+        <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: 0, maxWidth: 640 }}>
+          {connections.length
+            ? `${otherConnections.length} connection${otherConnections.length === 1 ? "" : "s"} and ${testAccounts.length} test account${testAccounts.length === 1 ? "" : "s"} on file.`
+            : "No connections recorded, so passes run with only the application URL."}{" "}
+          Editing metadata, health checks, disconnecting, and the audit history live on the Connections tab.
         </p>
-        {otherConnections.length ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
-            {otherConnections.map((c) => <ConnectionCard key={c.id} c={c} />)}
-          </div>
-        ) : (
-          <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
-            No connections recorded. This application was connected with only its URL, so passes run without
-            source, deployment, or service context.
-          </p>
-        )}
-
-        {testAccounts.length ? (
-          <>
-            <div style={{ ...headLbl, margin: "20px 0 10px" }}>Test accounts ({testAccounts.length})</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10 }}>
-              {testAccounts.map((c) => <ConnectionCard key={c.id} c={c} />)}
-            </div>
-          </>
-        ) : null}
 
         {extras.contextSources.length ? (
           <>
@@ -297,8 +202,8 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         {gaps.length ? (
           <>
             <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "0 0 12px", maxWidth: 640 }}>
-              Each gap below narrows what a Production Pass can verify. Connections are added at connect time
-              for now; contact support to add one to an existing application.
+              Each gap below narrows what a Production Pass can verify. Add connections and test accounts
+              any time from the <Link href={`/applications/${id}/settings/connections`} style={{ color: "var(--acc-deep)", fontWeight: 600 }}>Connections tab</Link>.
             </p>
             <div style={{ display: "grid", gap: 8 }}>
               {gaps.map((g) => (

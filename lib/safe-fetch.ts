@@ -50,6 +50,14 @@ export function unsafeHttpsUrlReason(url: string): string | null {
   return null;
 }
 
+// True when an error is safeFetch's own SSRF/DNS-pin rejection (protocol/port refused, DNS
+// lookup failed, or a resolved address was private/reserved). Callers use this to tell "the
+// URL was blocked before any request went out" apart from a genuine network failure/timeout —
+// the two demand very different remediation.
+export function isBlockedFetchError(e: unknown): boolean {
+  return e instanceof Error && e.message === "blocked";
+}
+
 // Resolve the hostname, reject if ANY resolved address is private/reserved, then pin the
 // connection to the validated IP set (no re-resolution). Throws Error("blocked") on any
 // unsafe destination. https + port 443 only. Returns the (undici) Response so callers can

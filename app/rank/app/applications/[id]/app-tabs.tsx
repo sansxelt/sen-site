@@ -9,6 +9,7 @@ const TABS: { key: string; label: string; path: string }[] = [
   { key: "issues", label: "Issues", path: "/issues" },
   { key: "repairs", label: "Repairs", path: "/repairs" },
   { key: "deployments", label: "Deployments", path: "/deployments" },
+  { key: "connections", label: "Connections", path: "/settings/connections" },
   { key: "settings", label: "Settings", path: "/settings" },
 ];
 
