@@ -21,7 +21,7 @@ const OUTPUT_LABELS: Record<string, string> = {
 };
 
 function BackLink() {
-  return <Link href="/app/checks" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Your checks</Link>;
+  return <Link href="/app/checks" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Your checks</Link>;
 }
 
 // Owner-scoped AI Check report. getCheck is scoped to the signed-in user. A check runs

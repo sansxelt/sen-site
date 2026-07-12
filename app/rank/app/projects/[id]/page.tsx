@@ -26,7 +26,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
     if (managed) {
       return (
         <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-          <Link href="/app/team" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</Link>
+          <Link href="/app/team" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</Link>
           <div className="phead"><div><p className="eyebrow">Program access | Workspace admin</p><h1 className="display">{managed.name}</h1>{managed.description ? <p>{managed.description}</p> : null}</div></div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "0 0 4px", maxWidth: 620, lineHeight: 1.6 }}>You manage this program&apos;s access as a workspace admin. The program&apos;s analytics stay with its owner; you can invite clients and collaborators and manage their roles below.</p>
           <ProjectAccess projectId={id} />
@@ -49,7 +49,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
 
   return (
     <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <Link href="/app/projects" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Programs</Link>
+      <Link href="/app/projects" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Programs</Link>
       <div className="phead">
         <div style={{ minWidth: 0 }}>
           <p className="eyebrow">Program</p>

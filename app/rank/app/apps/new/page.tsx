@@ -6,7 +6,7 @@ import ConnectForm from "./connect-form";
 export const metadata: Metadata = { title: "Connect an app" };
 
 function BackLink() {
-  return <Link href="/app/apps" style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Your apps</Link>;
+  return <Link href="/app/apps" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Your apps</Link>;
 }
 
 // Connect-an-app page for Vraelis Preflight. Gated so a guessed URL redirects out when the flag is off.
