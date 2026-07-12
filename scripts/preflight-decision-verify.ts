@@ -5,6 +5,7 @@
 // Pure decision tests + fake-store executor spies + health-selection tests + reconcile + static source
 // checks for the report UX, the rerun route's critical scope, and the repair tool's safety. No DB, no browser.
 import { readFileSync } from "node:fs";
+import { loadWorkerConfig } from "../worker/preflight/config";
 import { decideRun, executeRun } from "../worker/preflight/execute-run";
 import { FakeRunStore } from "../worker/preflight/run-store-fake";
 import { FakeBrowserProvider } from "../worker/preflight/providers/fake";
@@ -33,6 +34,14 @@ ok("a partial run with a critical failure still decides blocked (failure evidenc
 ok("summary records the coverage so reports and health can tell certification from repair proof",
   decideRun([passed("f-mobile")], [THREE[2]], false).summary.coverage === "partial"
   && decideRun(THREE.map((f) => passed(f.flowId)), THREE, true).summary.coverage === "full");
+
+// ── Production boot guard: a deployed worker may NEVER run a fake browser (a misconfigured Railway
+// service once defaulted to fake and minted a counterfeit READY into production data) ──
+const boots = (env: Record<string, string>) => { try { loadWorkerConfig(env as NodeJS.ProcessEnv); return true; } catch { return false; } };
+ok("a production worker without BROWSER_PROVIDER refuses to boot", !boots({ NODE_ENV: "production" }));
+ok("a production worker with explicit BROWSER_PROVIDER=fake refuses to boot", !boots({ NODE_ENV: "production", BROWSER_PROVIDER: "fake" }));
+ok("a production worker with browserbase + key boots", boots({ NODE_ENV: "production", BROWSER_PROVIDER: "browserbase", BROWSERBASE_API_KEY: "bb_test_not_real" }));
+ok("the fake provider still boots for local lifecycle tests (non-production)", boots({}) && loadWorkerConfig({} as NodeJS.ProcessEnv).provider === "fake");
 
 // ── B: the selected issue resolves (reconciliation is unchanged by the decision model) ──
 {

@@ -15,6 +15,13 @@ const num = (v: string | undefined, d: number) => { const n = Number(v); return 
 
 export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
   const provider = (env.BROWSER_PROVIDER || "fake").toLowerCase() as WorkerConfig["provider"];
+  // A production worker may NEVER run a non-real browser: the fake provider "passes" every step in
+  // milliseconds, so a misconfigured deploy would mint counterfeit READY decisions into customer data
+  // (this happened: a Railway service without BROWSER_PROVIDER defaulted to fake and finalized a READY).
+  // Fail the boot loudly instead — there is deliberately no override.
+  if (env.NODE_ENV === "production" && provider !== "browserbase") {
+    throw new Error(`BROWSER_PROVIDER is "${env.BROWSER_PROVIDER || "(unset)"}" but this is a production runtime (NODE_ENV=production): a deployed worker must run a real browser. Set BROWSER_PROVIDER=browserbase and BROWSERBASE_API_KEY on the service. The fake provider exists only for local lifecycle tests.`);
+  }
   const cfg: WorkerConfig = {
     workerId: env.PREFLIGHT_WORKER_ID || `worker-${crypto.randomBytes(4).toString("hex")}`,
     provider: provider === "browserbase" || provider === "local" ? provider : "fake",
