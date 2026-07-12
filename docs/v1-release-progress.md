@@ -140,4 +140,5 @@ LIVE ON RAILWAY via push (backward compatible by design, proven by the untouched
 SUITE COUNT at window end: 18 suites, all green (security 135/135).
 BLOCKED (operator): migration 7 then 8 per docs/v1.1-operator-return-checklist.md (then I deploy S3/S4);
 S6 authenticated flows needs VRAELIS_SECRET_KEY on Railway; S12 needs the GitHub App registered.
+ALSO COMMITTED (no migration needed; deploys with S3/S4 at the migration flip): S7 contract provenance (provenance:test 69/69): context-aware synthesis + closed provenance set + chips; keyless path emits review-gated connection-signal suggestions.
 STOP-GATES HONORED: no migrations applied, no Stripe/provider changes, no destructive anything.
