@@ -579,16 +579,16 @@ summary::-webkit-details-marker { display: none; }
   position: sticky; top: var(--app-topbar-h, 66px); align-self: start;
   height: calc(100svh / var(--shell-zoom, 1) - var(--app-topbar-h, 66px)); overflow-y: auto;
 }
-.app-side__group { font-family: var(--font-code); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-5); padding: 14px 12px 6px; }
+.app-side__group { font-family: var(--font-code); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-5); padding: 14px 12px 6px; }
 .slink {
   display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px;
-  color: var(--fg-2); text-decoration: none; font-size: 14px; font-weight: 500;
+  color: var(--fg-2); text-decoration: none; font-size: 15.5px; font-weight: 500;
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 .slink:hover { background: var(--bg-3); color: var(--fg-1); }
 .slink.on { background: var(--bg-1); color: var(--fg-1); box-shadow: inset 0 0 0 1px var(--line-2); }
 .slink.on .slink__i { color: var(--acc-deep); }
-.slink__i { width: 17px; height: 17px; flex: none; color: var(--fg-4); display: grid; place-items: center; }
+.slink__i { width: 19px; height: 19px; flex: none; color: var(--fg-4); display: grid; place-items: center; }
 .app-main { min-width: 0; }
 
 /* Stripe Embedded Checkout: the iframe sets its own height. Never clip it or cap
