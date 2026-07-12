@@ -104,7 +104,7 @@ const CSS = `
 .pd-pulse { animation: pd-pulse 0.9s ease-in-out infinite; }
 .pd-seg { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
 .pd-seg::-webkit-scrollbar { display: none; }
-.pd-seg button { padding: 8px 14px; font-size: 13px; white-space: nowrap; }
+.pd-seg button { padding: 8px 15px; font-size: 14px; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .pd-in, .pd-pop, .pd-pulse { animation: none; } }
 `;
 
@@ -122,7 +122,11 @@ export function PassDemo() {
   };
   useEffect(() => clearTimers, []);
 
+  const running = stage < 4;
+  // One rule: if they're on it, they're on it. The active tab never replays, and while a pass is
+  // animating every tab is locked, so mashing buttons (same or different) cannot restart or glitch a run.
   const run = (next: ModeKey) => {
+    if (next === mode || stage < 4) return;
     clearTimers();
     setMode(next);
     setRunId((n) => n + 1);
@@ -144,8 +148,8 @@ export function PassDemo() {
     <div className="win" style={{ textAlign: "left", boxShadow: "var(--shadow-lg)" }}>
       <style>{CSS}</style>
       <div className="win__bar">
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 14, color: "var(--fg-2)" }}>Production Pass</span>
-        <span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>interactive demonstration</span>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15.5, color: "var(--fg-2)" }}>Production Pass</span>
+        <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, letterSpacing: "0.05em", color: "var(--fg-5)", marginLeft: 9 }}>interactive demonstration</span>
         <span style={{ marginLeft: "auto" }} aria-live="polite">
           {done ? <Pill tone={m.verdict.tone} text={m.verdict.pill} /> : <Pill tone="running" text="RUNNING" />}
         </span>
@@ -154,13 +158,18 @@ export function PassDemo() {
       <div style={{ padding: "clamp(18px,2.6vw,28px)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 16 }}>
           <div className="seg pd-seg">
-            {MODES.map((x) => (
-              <button key={x.key} type="button" className={x.key === mode ? "on" : undefined} aria-pressed={x.key === mode} onClick={() => run(x.key)}>
-                {x.label}
-              </button>
-            ))}
+            {MODES.map((x) => {
+              const active = x.key === mode;
+              const locked = running && !active;
+              return (
+                <button key={x.key} type="button" className={active ? "on" : undefined} aria-pressed={active} aria-disabled={active || locked}
+                  onClick={() => run(x.key)} style={locked ? { opacity: 0.45, cursor: "default" } : active ? { cursor: "default" } : undefined}>
+                  {x.label}
+                </button>
+              );
+            })}
           </div>
-          <span style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)" }}>Pick a build state, watch the pass run.</span>
+          <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: "var(--fg-5)" }} aria-live="polite">{running ? "Pass in progress\u2026" : "Pick a build state, watch the pass run."}</span>
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
@@ -174,7 +183,7 @@ export function PassDemo() {
             const label = phase === "done" ? (r.ok ? "Pass" : "Fail") : phase === "running" ? "Running" : "Queued";
             const labelColor = phase === "done" ? (r.ok ? "var(--acc-deep)" : TONES.blocked.fg) : phase === "running" ? TONES.running.fg : "var(--fg-5)";
             return (
-              <div key={f.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 13px", borderRadius: 11, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
+              <div key={f.name} style={{ display: "flex", alignItems: "center", gap: 13, padding: "13px 15px", borderRadius: 12, background: "var(--bg-2)", border: "1px solid var(--line-1)" }}>
                 {phase === "done" ? (
                   <span key={`m${runId}-${i}`} className={runId > 0 ? "pd-pop" : undefined} aria-hidden style={{ ...markBase, color: r.ok ? "var(--acc-deep)" : TONES.blocked.fg, background: r.ok ? "var(--acc-soft)" : TONES.blocked.bg, border: `1px solid ${r.ok ? "var(--acc-line)" : TONES.blocked.line}` }}>
                     {r.ok ? "✓" : "✕"}
@@ -189,8 +198,8 @@ export function PassDemo() {
                   </span>
                 )}
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500 }}>{f.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--fg-4)", lineHeight: 1.45 }}>{phase === "done" ? r.note : f.expect}</div>
+                  <div style={{ fontSize: 14.5, color: "var(--fg-1)", fontWeight: 600 }}>{f.name}</div>
+                  <div style={{ fontSize: 13, color: "var(--fg-4)", lineHeight: 1.5, marginTop: 1 }}>{phase === "done" ? r.note : f.expect}</div>
                 </div>
                 <span style={{ display: "flex", alignItems: "center", gap: 8, flex: "none" }}>
                   {phase === "done" && r.repaired && (
@@ -198,7 +207,7 @@ export function PassDemo() {
                       Repair verified
                     </span>
                   )}
-                  <span style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.07em", textTransform: "uppercase", color: labelColor }}>{label}</span>
+                  <span style={{ fontFamily: "var(--font-code)", fontSize: 11, letterSpacing: "0.07em", textTransform: "uppercase", color: labelColor }}>{label}</span>
                 </span>
               </div>
             );
@@ -219,22 +228,22 @@ export function PassDemo() {
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
                 <Pill tone={m.verdict.tone} text={m.verdict.pill} />
-                <span style={{ fontFamily: "var(--font-code)", fontSize: 12, color: vTone.fg }}>{m.verdict.count}</span>
+                <span style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: vTone.fg }}>{m.verdict.count}</span>
               </div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "clamp(1.15rem, 2.2vw, 1.45rem)", letterSpacing: "-0.01em", color: m.verdict.tone === "ready" ? "var(--acc-deep)" : "var(--fg-1)" }}>
                 {m.verdict.title}
               </div>
-              <div style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.55, marginTop: 6 }}>{m.verdict.line}</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, marginTop: 6 }}>{m.verdict.line}</div>
             </div>
           ) : (
             <div style={{ padding: "16px 18px", borderRadius: 12, background: "var(--bg-2)", border: "1px dashed var(--line-2)" }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 }}>Verdict pending</div>
-              <div style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.55 }}>The pass decides only after every approved flow has run.</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-4)", lineHeight: 1.55 }}>The pass decides only after every approved flow has run.</div>
             </div>
           )}
         </div>
 
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-4)", marginTop: 14, lineHeight: 1.5 }}>
+        <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.55 }}>
           A scripted demonstration of the verdict. The real pass runs your approved flows in a real browser and attaches screenshots, console output, and reproduction steps.
         </div>
       </div>
