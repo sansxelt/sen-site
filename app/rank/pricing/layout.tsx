@@ -3,7 +3,7 @@ import { ogMeta } from "@/lib/og-meta";
 
 export const metadata = ogMeta({
   title: "Pricing",
-  description: "Plans include monthly credits. Top up anytime. 1 credit = 1 valid judgment. Free to start.",
+  description: "Priced by the run, not the seat. Every Production Pass includes real-browser execution, evidence, issue tracking, and an explainable launch decision. First pass free.",
   path: "/pricing",
 });
 

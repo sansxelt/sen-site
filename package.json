@@ -29,6 +29,7 @@
     "preflight:target:test": "tsx scripts/preflight-target-verify.ts",
     "preflight:scope:test": "tsx scripts/preflight-scope-verify.ts",
     "preflight:decision:test": "tsx scripts/preflight-decision-verify.ts",
+    "pricing:copy:test": "tsx scripts/pricing-copy-verify.ts",
     "preflight:invalidate": "tsx scripts/preflight-invalidate-runs.ts",
     "preflight:repair-decision": "tsx scripts/preflight-repair-decision.ts"
   },

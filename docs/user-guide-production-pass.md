@@ -48,9 +48,11 @@ requirements are covered, so you can see gaps before running.
 The application overview has a **Run Production Pass** button once the contract is approved and at least one
 flow is eligible.
 
-Credits:
+Pricing (early access):
 
-- One credit per approved flow in the pass (minimum one). The credits are held when the pass is queued.
+- A Production Pass is priced as a unit: $10 base including up to 5 approved critical flows, then $2 per
+  additional flow. During early access your account balance funds passes; the hold is taken when the pass
+  is queued.
 - A completed pass keeps the hold as the charge, flat for the run, with no surprise extras.
 - If the pass ends without a single flow having run (for example the browser provider failed before your app
   was ever opened), the full hold is refunded automatically.
@@ -82,7 +84,7 @@ From a finished pass you can rerun its flows: the failed ones, the critical ones
 
 A rerun is a **new** pass linked to the original. The original report is never modified. The rerun uses the
 same contract version the original verified against and targets the same deployment, so the comparison is
-honest. Rerun credits work exactly like a normal pass: one per flow rerun, refunded if nothing ran.
+honest. A targeted rerun charges only for the flows it actually executes, and is refunded in full if nothing ran.
 
 ## 7. Issue continuity
 

@@ -25,13 +25,13 @@ export default function TermsPage() {
       ]} />
 
       <H>Accounts</H>
-      <P>You are responsible for your account and for keeping access to it secure. Provide accurate information when you sign up, and do not misuse the service or let others misuse it through your account. Accounts are for one person or organization; do not create multiple accounts to obtain additional free credits.</P>
+      <P>You are responsible for your account and for keeping access to it secure. Provide accurate information when you sign up, and do not misuse the service or let others misuse it through your account. Accounts are for one person or organization; do not create multiple accounts to obtain additional free allowances.</P>
 
       <H>Your content</H>
       <P>You are responsible for the content you submit, check, validate, or share, and you must have the right to use it. You grant Vraelis a limited license to process that content to provide the service, which includes sending it to our subprocessors (for example, the AI model provider that runs a check, and, if you launch a human validation, the real people who evaluate it). Do not submit content that is illegal, infringing, deceptive, or abusive, and do not submit regulated or highly sensitive personal data you are not permitted to share.</P>
 
       <H>Credits and payments</H>
-      <P>One credit runs one AI check. Validating on real people spends one credit per valid human judgment. New accounts start with free promotional credits, which have no cash value. Payments are processed by Stripe. If a check fails to complete, or a validation collects fewer judgments than reserved, the affected credits are returned to your account automatically.</P>
+      <P>Your account balance funds Production Passes, which are charged when they execute. New accounts start with a free promotional pass allowance, which has no cash value. Payments are processed by Stripe. If a pass cannot start, or no flow executes, the hold is returned to your account automatically.</P>
       <P>Subscriptions renew automatically until cancelled, and you can cancel anytime from the app; access continues until the end of the current billing period. Prices, packs, plans, and limits may change over time. Our <Link href="/refunds" style={acc}>Refund and Cancellation policy</Link> explains what is and is not refundable.</P>
 
       <H>How to read a check</H>
@@ -44,7 +44,7 @@ export default function TermsPage() {
       <Ul items={[
         "Fraud, spam, or deceptive use.",
         "Bot or automated abuse, signal manipulation, or duplicate-participation abuse of human validation.",
-        "Creating multiple or alias accounts to farm free credits.",
+        "Creating multiple or alias accounts to farm free allowances.",
         "Scraping, probing, or attacking the service, or attempting to bypass rate limits or plan entitlements.",
         "Submitting infringing, illegal, or regulated content you are not permitted to share.",
         "Using Vraelis to mislead people or to present its output as a guarantee.",

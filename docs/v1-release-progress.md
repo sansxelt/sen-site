@@ -96,3 +96,9 @@ tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run
 - INCIDENT during rollout: the service initially had no BROWSER_PROVIDER, the worker defaulted to the fake provider and finalized a counterfeit READY (run d9a1252f). Contained: run invalidated (failed/infra_misconfigured), zero issues touched, health verified back on the real pass. Root cause fixed in worker/preflight/config.ts: a production runtime refuses to boot on any non-real provider (no override). Tests added (decision suite 33/33).
 - Verification run e5709fc2 through the deployed worker: provider browserbase, real session, 3/3 critical passed, 3 screenshots, READY full coverage, 9s. Dedup fix proven live: the invalidated occupant of the submission key was superseded (-r2), not blocking.
 - Remaining gate: fresh-account UI-only canary.
+
+## 2026-07-12: pricing correction (copy phase)
+- Old feedback-network economics ($1 = 10 credits, a credit per approved flow, 1 credit = 1 AI check, human-judgment credits) removed from every user-facing surface: pricing page + metadata, free-report, refunds, terms, dashboard, account, api-keys, plans, credits, checkout, nurture emails, Stripe line-item copy, user guide.
+- New early-access model published: Free (one complete pass, 3 critical flows, no card) and $10/Production Pass (5 flows included, $2/additional). Pro/Scale render only as a disabled preview; no subscription checkout wired.
+- Billing LOGIC unchanged by design: ledger still holds 1 credit/flow. Migration plan (cents ledger, price-paid balance conversion, Stripe changes, flag-gated estimator swap) in docs/pricing-migration-plan.md; execute it as a unit, never piecemeal.
+- Guard: npm run pricing:copy:test (21/21) fails the build of any resurfaced stale economics.

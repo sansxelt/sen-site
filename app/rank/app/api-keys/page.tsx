@@ -245,7 +245,7 @@ export default function ApiKeysPage() {
       <div className="codebar"><i /><i /><i /><span>shell</span></div>
       <pre className="codeblock"><code>{CURL}</code></pre>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
-        Checks cost credits the same as the web app (1 credit = 1 AI check). Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
+        API checks draw on the same account balance as the web app. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>
 
       <div id="webhooks"><WebhooksSection /></div>

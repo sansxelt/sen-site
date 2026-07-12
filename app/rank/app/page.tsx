@@ -163,7 +163,7 @@ export default async function Dashboard() {
         </>
       ) : (
         <div style={{ position: "relative", overflow: "hidden", borderRadius: "var(--r-xl)", border: "1px solid var(--acc-line)", background: "var(--bg-1)", padding: "clamp(24px, 3.5vw, 38px)", marginBottom: 22, boxShadow: "var(--shadow-md)" }}>
-          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>You have {bal} free credits</div>
+          <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--acc-deep)", marginBottom: 8 }}>Your first Production Pass is free</div>
           <h2 className="display" style={{ fontSize: "clamp(1.4rem, 3vw, 2rem)", marginBottom: 8 }}>Run your first preflight.</h2>
           <p style={{ fontSize: 15, lineHeight: 1.55, maxWidth: 560, color: "var(--fg-2)", marginBottom: 18 }}>Connect your deployed app, approve the critical flows, and Vraelis drives it in a real browser as two real users. You get one launch decision and the exact blockers behind it.</p>
           <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>

@@ -63,8 +63,8 @@ export default async function AccountPage() {
       {/* stats */}
       <div className="tile-grid cols-3" style={{ marginBottom: 26 }}>
         <div className="stat"><div className="stat__l">Plan</div><div className="stat__v">{planName}</div><div className="stat__s">{plan === "free" ? "No subscription" : `Status: ${status}`}{renews ? `, renews ${renews}` : ""}</div></div>
-        <div className="stat"><div className="stat__l">Credit balance</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s">1 credit = 1 AI check</div></div>
-        <div className="stat"><div className="stat__l">Monthly credits</div><div className="stat__v tnum">{(sub?.monthly_credits ?? 0).toLocaleString()}</div><div className="stat__s">{plan === "free" ? "Upgrade for monthly credits" : "Refreshed each cycle"}</div></div>
+        <div className="stat"><div className="stat__l">Credit balance</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s">Funds Production Passes</div></div>
+        <div className="stat"><div className="stat__l">Monthly credits</div><div className="stat__v tnum">{(sub?.monthly_credits ?? 0).toLocaleString()}</div><div className="stat__s">{plan === "free" ? "Monthly plans are coming" : "Refreshed each cycle"}</div></div>
       </div>
 
       {/* manage */}

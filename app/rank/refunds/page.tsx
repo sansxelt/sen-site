@@ -20,8 +20,8 @@ export default function RefundsPage() {
       intro="Plain terms for how credits, subscriptions, and cancellations work. This policy is part of the Terms."
     >
       <H>Credits</H>
-      <P>Credits power the product: one credit runs one AI check, and validating on real people spends one credit per valid human judgment. <strong style={strong}>Purchased credits are non-refundable once bought</strong>, but they do not expire, so there is no pressure to spend them.</P>
-      <P>You are not charged for work you do not get. If a check fails to complete, the credit is returned to your account automatically. If a human validation collects fewer valid judgments than you reserved, the unused credits are returned when it finishes, and responses filtered out for quality never cost a credit.</P>
+      <P>Your balance funds Production Passes: real-browser runs of your approved flows that end in a launch decision. <strong style={strong}>Purchased balance is non-refundable once bought</strong>, but it does not expire, so there is no pressure to spend it.</P>
+      <P>You are not charged for work you do not get. If a pass cannot start, or no flow executes, the hold is returned to your account automatically. Failures on our infrastructure are never billed to you.</P>
 
       <H>Subscriptions</H>
       <P>Paid plans renew automatically until you cancel. <strong style={strong}>You can cancel anytime</strong> from your <Link href="/app/billing" style={acc}>billing settings</Link>; your plan stays active until the end of the current billing period, and you are not charged again after that. We do not provide partial or prorated refunds for the current period, and monthly plan credits that expire at the end of a cycle are not refundable.</P>

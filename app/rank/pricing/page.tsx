@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-// Pricing leads with the outcome (a preflight run), not a tier ladder. Credits are the backend unit: a run
-// holds a credit per approved flow and settles on completion. Recurring plans + enterprise governance live
-// at /enterprise. Team seat prices come live from Stripe via /api/v/team/pricing.
+// Pricing leads with the outcome (a Production Pass), not a tier ladder. Early-access pricing: a pass is
+// priced as a unit ($10 base, five flows included, $2 per additional flow), never per seat and never in
+// microscopic per-flow credits. Monthly plans (Pro/Scale) are deliberately NOT rendered until their
+// functionality and billing exist; do not add subscription checkout here to match a mock. Team seat prices
+// come live from Stripe via /api/v/team/pricing.
 
-const CREDIT_RULES: [string, string][] = [
-  ["Credits fund runs", "You buy credits once. A preflight run holds a credit per approved flow and settles when it finishes."],
-  ["Nothing ran, nothing charged", "If a run cannot start or no flow executes, the full hold is refunded automatically."],
-  ["New accounts start free", "Every new account gets free credits, so you can run a real preflight before paying."],
-  ["Credits never expire", "Top up whenever you need to. Every dollar adds ten credits and they never expire."],
+const PASS_RULES: [string, string][] = [
+  ["Priced by the pass", "One price covers the whole run: browser execution, screenshots, issue tracking, and the launch decision. Never a seat charge."],
+  ["Nothing ran, nothing charged", "If a pass cannot start or no flow executes, you are not charged. Infrastructure failures on our side are always on us."],
+  ["Targeted reruns cost less", "After a fix, rerun just the failed flows. You pay only for the flows the rerun actually executes."],
+  ["Every pass ends in a decision", "BLOCKED, REPAIR VERIFIED, or READY, with the evidence to back it. Never a vague score."],
 ];
 
 type TeamPricing = { configured: boolean; yearlyConfigured: boolean; monthly: { amount: number; currency: string } | null; yearly: { amount: number; currency: string } | null };
@@ -38,7 +40,7 @@ export default function PricingPage() {
         <div className="wrap" style={{ position: "relative", zIndex: 1, paddingTop: "clamp(44px, 6vw, 84px)", paddingBottom: "clamp(20px, 3vw, 30px)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Pricing</p>
           <h1 className="display" style={{ fontSize: "clamp(2.2rem, 4.6vw, 3.6rem)", marginBottom: 16 }}>Priced by the <span className="em">run</span>, not the seat.</h1>
-          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Vraelis runs your AI-built app like production before your users do. New accounts start with <strong style={{ color: "var(--fg-1)" }}>free credits</strong>, so your first run is on us. After that a preflight run holds a credit per approved flow, and <strong style={{ color: "var(--fg-1)" }}>$1 buys 10 credits</strong> that never expire.</p>
+          <p className="lead-copy" style={{ margin: "0 auto", textAlign: "center" }}>Run your AI-built application through a real production review. Every pass includes browser execution, evidence, issue tracking, and an explainable launch decision.</p>
         </div>
       </section>
 
@@ -46,26 +48,26 @@ export default function PricingPage() {
         <div className="wrap" style={{ maxWidth: 900 }}>
           <div className="tile-grid cols-2">
             <div className="price">
-              <div className="price__name">Free to start</div>
+              <div className="price__name">Free</div>
               <div className="price__amt">$0</div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>Free signup credits</div>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Run a real preflight before you pay a cent.</div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>One complete Production Pass</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>See a real launch decision on your own app before paying anything. No card required.</div>
               <ul className="price__feat">
-                <li>A real browser run of your approved flows</li>
-                <li>Two-user state and isolation proof</li>
-                <li>The Production Pass launch decision with evidence</li>
+                <li>Up to 3 critical flows</li>
+                <li>Real-browser execution with screenshot evidence</li>
+                <li>A BLOCKED, REPAIR VERIFIED, or READY decision</li>
               </ul>
               <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Get early access</Link>
             </div>
             <div className="price price--hot">
               <div className="price__name">Pay as you go</div>
-              <div className="price__amt">$1<small>/10 credits</small></div>
-              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>A credit per approved flow</div>
-              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>Top up whenever. Credits never expire, and you only pay for runs that actually execute.</div>
+              <div className="price__amt">$10<small>/Production Pass</small></div>
+              <div style={{ fontFamily: "var(--font-code)", fontSize: 12.5, color: "var(--acc-deep)", fontWeight: 600, marginTop: 6 }}>Includes up to 5 approved critical flows</div>
+              <div style={{ fontSize: 13.5, color: "var(--fg-3)" }}>$2 per additional approved flow. You only pay for passes that actually execute.</div>
               <ul className="price__feat">
-                <li>Real browser evidence, screenshots, and repro steps</li>
-                <li>Rerun the exact failed check after a fix</li>
-                <li>Results in the app, by API, or as a gate in CI</li>
+                <li>Real-browser execution, screenshots, and reproduction steps</li>
+                <li>Linked failed-flow reruns after each fix</li>
+                <li>Results stay with the application, never a seat charge</li>
               </ul>
               <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href={earlyAccess}>Get early access</Link>
             </div>
@@ -73,11 +75,11 @@ export default function PricingPage() {
 
           <div style={{ marginTop: "clamp(36px, 5vw, 56px)" }}>
             <div className="sec-head sec-head--center" style={{ marginBottom: 24 }}>
-              <p className="eyebrow">How credits work</p>
-              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)" }}>You pay for runs that ran, and nothing else.</h2>
+              <p className="eyebrow">How pass pricing works</p>
+              <h2 className="display" style={{ fontSize: "clamp(1.5rem, 2.6vw, 2rem)" }}>You pay for passes that ran, and nothing else.</h2>
             </div>
             <div className="tile-grid cols-4">
-              {CREDIT_RULES.map(([t, d]) => (
+              {PASS_RULES.map(([t, d]) => (
                 <div key={t} className="acard" style={{ gap: 6 }}>
                   <div className="acard__t" style={{ fontSize: 15 }}>{t}</div>
                   <div className="acard__d">{d}</div>
@@ -89,15 +91,15 @@ export default function PricingPage() {
           <div className="tile-grid cols-2" style={{ marginTop: 22 }}>
             <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14, background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
               <div>
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>Buy credits up front</div>
-                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Top up from your console and launch runs whenever you like. Custom amounts from $5 to $999,999, every dollar adds ten credits, and they never expire. Larger volumes by invoice.</p>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>Monthly plans are coming</div>
+                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.55 }}>Bundled monthly passes, higher limits, API access, and team workflows arrive with the platform release. Until then, pay as you go covers everything a launch needs.</p>
               </div>
-              <Link className="btn" style={{ marginTop: "auto", alignSelf: "flex-start" }} href={signedIn ? "/app/credits" : "/signin?callbackUrl=%2Fapp%2Fcredits"}>Buy credits</Link>
+              <Link className="btn btn--ghost" style={{ marginTop: "auto", alignSelf: "flex-start" }} href="/contact">Talk to us about volume</Link>
             </div>
             <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14, background: "var(--bg-2)", borderRadius: "var(--r-xl)" }}>
               <div>
                 <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 6 }}>Working with a team?</div>
-                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team seats are for internal collaborators who launch runs and read reports with you. <strong style={{ color: "var(--fg-1)" }}>Client viewers are free</strong>, so you can share a client-safe report without a paid seat.</p>
+                <p style={{ fontSize: 14, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Team seats are for internal collaborators who launch passes and read reports with you. <strong style={{ color: "var(--fg-1)" }}>Client viewers are free</strong>, so you can share a client-safe report without a paid seat.</p>
               </div>
               <div style={{ marginTop: "auto" }}>
                 {team?.monthly ? (
@@ -112,11 +114,11 @@ export default function PricingPage() {
           </div>
 
           <div className="card" style={{ marginTop: 18, textAlign: "center" }}>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Running preflight at scale, or governing it across an org?</div>
-            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Recurring plans with monthly credits and API access, plus organization governance, verified domains, OIDC single sign-on, and audit export, live on the <Link href="/enterprise" style={{ color: "var(--acc-deep)" }}>Enterprise and security</Link> page.</p>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>Running passes at scale, or governing them across an org?</div>
+            <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto", maxWidth: 660, lineHeight: 1.7 }}>Organization governance, verified domains, OIDC single sign-on, and audit export live on the <Link href="/enterprise" style={{ color: "var(--acc-deep)" }}>Enterprise and security</Link> page.</p>
           </div>
 
-          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Secure checkout on Vraelis, payments processed by Stripe. Recurring plans renew automatically and can be cancelled anytime from your workspace.</p>
+          <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: 20, textAlign: "center", lineHeight: 1.6, maxWidth: 620, marginInline: "auto" }}>Early access: accounts currently run on included early-access balance while per-pass checkout rolls out. Payments are processed by Stripe.</p>
         </div>
       </section>
     </div>

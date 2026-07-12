@@ -8,10 +8,10 @@ const RECOMMENDED = [9, 39, 99, 299, 999];
 const MIN = 5, DEFAULT_MAX = 999999, RATE = 10;
 
 const RULES: [string, string][] = [
-  ["1 credit = 1 AI check", "Spend one credit to check a draft against your criteria."],
-  ["Failed checks refunded", "If a check doesn't complete, the credit is returned automatically."],
-  ["Validate on real people", "Optional: 1 credit per valid human judgment; filtered responses are never charged."],
-  ["Credits never expire", "Buy once, spend whenever you ship."],
+  ["Funds Production Passes", "Your balance covers passes during early access. A pass settles only when it actually executes."],
+  ["Nothing ran, nothing charged", "If a pass cannot start or no flow executes, the hold is returned automatically."],
+  ["Early access pricing", "Per-pass pricing ($10 per Production Pass, 5 flows included) is rolling out. Your balance keeps its full purchase value through the change."],
+  ["Larger volumes", "Invoicing is available for teams that need more than a single top-up."],
 ];
 
 const eyebrow = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 } as const;
@@ -54,7 +54,7 @@ export default function CreditsPage() {
         <div>
           <p className="eyebrow">Credits</p>
           <h1 className="display">Top up credits</h1>
-          <p>$1 = 10 credits. 1 credit = 1 AI check (or 1 valid judgment when you validate on real people). Credits never expire.</p>
+          <p>Your balance funds Production Passes during early access. Per-pass pricing is rolling out; your balance keeps its full purchase value through the change.</p>
         </div>
       </div>
 
@@ -121,7 +121,7 @@ export default function CreditsPage() {
             </div>
             <div style={{ marginTop: 16 }}>
               <button onClick={go} disabled={!valid} className="btn btn--lg" style={{ width: "100%", justifyContent: "center", opacity: valid ? 1 : 0.55 }}>Continue to checkout <span aria-hidden>→</span></button>
-              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis. Credits never expire.</p>
+              <p style={{ fontFamily: "var(--font-code)", fontSize: 11, color: "var(--fg-5)", marginTop: 12, marginBottom: 0, lineHeight: 1.6 }}>Secure checkout on Vraelis, payments processed by Stripe.</p>
             </div>
           </div>
         </div>
@@ -129,7 +129,7 @@ export default function CreditsPage() {
 
       {/* rules */}
       <div style={{ marginTop: 30 }}>
-        <div style={eyebrow}>How credits work</div>
+        <div style={eyebrow}>How your balance works</div>
         <div className="tile-grid cols-4">
           {RULES.map(([t, d]) => (
             <div key={t} className="acard" style={{ gap: 6 }}>

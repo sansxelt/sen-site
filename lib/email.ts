@@ -209,7 +209,7 @@ export function welcomeHtml(name?: string) {
   return baseHtml(`
     <p style="${KICKER_STYLE}">Welcome to Vraelis</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">Your account is live.</h1>
-    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up, with free credits to start. Vraelis is the production layer for AI-built software: connect your AI-built app and Vraelis runs it like production, in a real browser, then hands you a launch decision with the exact blockers to fix before your users find them.</p>
+    <p style="${BODY_STYLE}">${greeting} your Vraelis account is set up, with your first Production Pass included. Vraelis is the production layer for AI-built software: connect your AI-built app and Vraelis runs it like production, in a real browser, then hands you a launch decision with the exact blockers to fix before your users find them.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Your first Production Pass:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>Connect your deployed app and the prompt you built it from.</li>
@@ -347,14 +347,14 @@ export async function sendWelcomeEmail(email: string, name?: string) {
 // Activation nudge: sent once by the lifecycle cron (lib/v-lifecycle.ts) to accounts that
 // signed up but haven't run their first check. One job: get them to run a check.
 function checkActivationHtml(): string {
-  const run = "https://vraelis.com/app/checks/new";
+  const run = "https://vraelis.com/app/apps";
   const sample = "https://vraelis.com/r/check";
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
-      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You've got free credits waiting.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You signed up but haven't run a check yet. It takes about 20 seconds: paste something your AI generated (a support reply, an onboarding message, an agent response) and Vraelis returns per-criterion scores and the exact lines to fix before your users ever see them.</p>
-      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run your first check</a>
+      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">Your first Production Pass is waiting.</h1>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You signed up but haven't run a Production Pass yet. Connect your AI-built app, approve its critical flows, and Vraelis runs them in a real browser, then hands you a launch decision with the exact blockers to fix before your users find them.</p>
+      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run your first Production Pass</a>
       <p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Want to see one first? Here's a sample check: <a href="${sample}" style="color:#0d5c46">vraelis.com/r/check</a></p>
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you created a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
@@ -378,20 +378,20 @@ export async function sendCheckActivationEmail(email: string) {
 
 function lowCreditsHtml(remaining: number): string {
   const plans = "https://vraelis.com/app/plans";
-  const run = "https://vraelis.com/app/checks/new";
+  const run = "https://vraelis.com/app/apps";
   const out = remaining <= 0;
-  const left = remaining === 1 ? "1 free check" : `${remaining} free checks`;
-  const headline = out ? "You're out of free checks." : `You're down to ${left}.`;
+  const left = remaining === 1 ? "1 credit" : `${remaining} credits`;
+  const headline = out ? "Your included balance is used up." : `You're down to ${left}.`;
   const lead = out
-    ? "You've used all your free Vraelis checks, which means you've been catching issues in your AI output before your users ever saw them. To keep going, pick a plan."
-    : `You've been checking your AI output with Vraelis, and your free credits are almost gone (${left} left). To keep gating what your AI ships, pick a plan.`;
+    ? "You've used your included Vraelis balance, which means you've been catching launch blockers before your users ever saw them. To keep going, add balance or pick a plan."
+    : `You've been running Vraelis on what your AI ships, and your included balance is almost gone (${left} left). To keep gating your launches, add balance or pick a plan.`;
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
       <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">${headline}</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">${lead} Every plan is the same simple deal: 1 credit = 1 AI check, with per-criterion scores and the exact lines to fix.</p>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">${lead} Vraelis is priced by the run, not the seat: every Production Pass includes real-browser execution, evidence, and an explainable launch decision.</p>
       <a href="${plans}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">See plans</a>
-      ${out ? "" : `<p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Still have checks to run? <a href="${run}" style="color:#0d5c46">Run one now</a>.</p>`}
+      ${out ? "" : `<p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Still have balance left? <a href="${run}" style="color:#0d5c46">Run a pass now</a>.</p>`}
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
 }
@@ -404,7 +404,7 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
     await resend.emails.send({
       from:    fromAccount,
       to:      email,
-      subject: remaining <= 0 ? "You're out of Vraelis checks" : `${remaining} Vraelis ${remaining === 1 ? "check" : "checks"} left`,
+      subject: remaining <= 0 ? "Your Vraelis balance is used up" : `${remaining} Vraelis credit${remaining === 1 ? "" : "s"} left`,
       html:    lowCreditsHtml(remaining),
     });
   } catch (error) {
@@ -413,14 +413,14 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
 }
 
 function winbackHtml(remaining: number): string {
-  const run = "https://vraelis.com/app/checks/new";
+  const run = "https://vraelis.com/app/apps";
   const credits = remaining === 1 ? "1 credit" : `${remaining} credits`;
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
       <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You've got ${credits} waiting.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You checked some AI output with Vraelis a while back, then things went quiet. Your ${credits} are still here. Next time your AI writes something a customer will see, a support reply, an onboarding message, an agent response, run it through a check first: per-criterion scores and the exact lines to fix, in about 20 seconds.</p>
-      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run a check</a>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You tried Vraelis a while back, then things went quiet. Your ${credits} are still here. Next time your AI ships something users will touch, run a Production Pass first: a real browser walks your critical flows and hands you a launch decision with the exact blockers to fix.</p>
+      <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run a Production Pass</a>
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
 }

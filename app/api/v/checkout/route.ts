@@ -1,6 +1,6 @@
 // POST /api/v/checkout — dynamic credit top-up. Body: { amountDollars }.
 // Builds a Stripe Checkout Session with price_data on the fly (no fixed price
-// IDs), $1 = 10 credits. Embedded (embedded_page) so it mounts on vraelis.com.
+// IDs); the early-access ledger rate is 10 credits per dollar, pending the per-pass pricing migration. Embedded (embedded_page) so it mounts on vraelis.com.
 // The webhook grants the credits on completion (deduped by session id).
 
 import { NextResponse } from "next/server";
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
           unit_amount: amountDollars * 100,
           product_data: {
             name: "Vraelis Credits",
-            description: `${credits.toLocaleString()} credits for AI output checks`,
+            description: `${credits.toLocaleString()} credits, funds Vraelis Production Passes`,
           },
         },
       }],

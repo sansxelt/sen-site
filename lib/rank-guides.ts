@@ -115,7 +115,7 @@ export const GUIDES: Guide[] = [
         },
         {
           "q": "Can I compare two versions of the same reply?",
-          "a": "Yes. Paste both the terse draft and the warmer rewrite. The check scores each one on empathy, resolution, tone, and accuracy and safety, recommends the version to send, and quotes the exact lines that made the difference. One credit covers the check, and you can try it free at /r/check first."
+          "a": "Yes. Paste both the terse draft and the warmer rewrite. The check scores each one on empathy, resolution, tone, and accuracy and safety, recommends the version to send, and quotes the exact lines that made the difference. You can try it free at /r/check first."
         },
         {
           "q": "What's the difference between a tone flag and a safety flag?",
