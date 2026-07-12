@@ -61,7 +61,7 @@ export default function TermsPage() {
       <P>You will defend, indemnify, and hold Vraelis harmless from claims, damages, and costs arising out of the content you submit, your use of any output, or your violation of these terms or of applicable law.</P>
 
       <H>Account deletion</H>
-      <P>You can request account deletion from your <Link href="/app/account" style={acc}>account settings</Link> (a confirm-gated request) or by emailing <a href="mailto:privacy@vraelis.com" style={acc}>privacy@vraelis.com</a>. Requests are reviewed manually, so deletion is not instant. Some records may be retained where required for billing, fraud prevention, security, or legal reasons.</P>
+      <P>You can request account deletion from your <Link href="/account" style={acc}>account settings</Link> (a confirm-gated request) or by emailing <a href="mailto:privacy@vraelis.com" style={acc}>privacy@vraelis.com</a>. Requests are reviewed manually, so deletion is not instant. Some records may be retained where required for billing, fraud prevention, security, or legal reasons.</P>
 
       <H>Availability and changes</H>
       <P>The service may change over time. Features may be added, removed, or updated, and we do not guarantee uninterrupted availability. We may update these terms and will keep this page current; material changes take effect when posted, and continued use means you accept them.</P>

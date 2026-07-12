@@ -46,7 +46,7 @@ export default async function DataPage() {
         <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 6vw, 64px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 8 }}>No analytics in your workspace yet</div>
           <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.55 }}>Run your first evaluation to see decision quality, signal cleanliness, confidence, and category trends here, all from your real results. Analytics shared with you appear above.</p>
-          <Link href="/app/legacy/checks/new" className="btn btn--lg">Run a legacy check →</Link>
+          <Link href="/legacy/checks/new" className="btn btn--lg">Run a legacy check →</Link>
         </div>
       </div>
     );
@@ -60,7 +60,7 @@ export default async function DataPage() {
           <h1 className="display">Decision analytics</h1>
           <p>Decision quality, signal cleanliness, and category trends, derived from your real evaluations and reports.</p>
         </div>
-        <Link href="/app/data-quality" className="btn btn--ghost">Data quality →</Link>
+        <Link href="/data-quality" className="btn btn--ghost">Data quality →</Link>
       </div>
 
       {sharedCard}
@@ -75,7 +75,7 @@ export default async function DataPage() {
       <div className="tile-grid cols-4" style={{ marginBottom: 26 }}>
         <div className="stat"><div className="stat__l">Total responses</div><div className="stat__v tnum">{a.core.responses.toLocaleString()}</div><div className="stat__s">valid + filtered</div></div>
         <div className="stat"><div className="stat__l">Credits used</div><div className="stat__v tnum">{a.credits.used.toLocaleString()}</div><div className="stat__s">on evaluations</div></div>
-        <div className="stat"><div className="stat__l">Credits remaining</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Top up →</Link></div></div>
+        <div className="stat"><div className="stat__l">Credits remaining</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Top up →</Link></div></div>
         <div className="stat"><div className="stat__l">Completed (30d)</div><div className="stat__v tnum">{a.trends.completed30}</div><div className="stat__s">{a.trends.completed7} in last 7 days</div></div>
       </div>
 
@@ -103,7 +103,7 @@ export default async function DataPage() {
       </div>
 
       {/* decision readiness (evaluation health) */}
-      <SectionHead right={<Link href="/app/data-quality" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Signal quality →</Link>}>Decision readiness</SectionHead>
+      <SectionHead right={<Link href="/data-quality" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Signal quality →</Link>}>Decision readiness</SectionHead>
       <div className="card" style={{ marginBottom: 26 }}>
         <Bars rows={[
           { label: "Ready to decide", value: a.health.ready },
@@ -148,7 +148,7 @@ export default async function DataPage() {
       {/* project breakdown */}
       {a.byProject.length > 0 ? (
         <>
-          <SectionHead right={<Link href="/app/projects" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>All projects →</Link>}>Valid judgments by project</SectionHead>
+          <SectionHead right={<Link href="/projects" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>All projects →</Link>}>Valid judgments by project</SectionHead>
           <div className="card" style={{ marginBottom: 26 }}>
             <Bars rows={a.byProject.map((p) => ({ label: projName[p.project_id] ?? "Project", value: p.valid, sub: `${p.completed} completed` })).sort((x, y) => y.value - x.value).slice(0, 8)} />
           </div>
@@ -158,7 +158,7 @@ export default async function DataPage() {
       {/* API & webhook usage (kept from before) */}
       {hasApi ? (
         <>
-          <SectionHead right={<Link href="/app/api-keys" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Full API analytics →</Link>}>API &amp; webhook usage</SectionHead>
+          <SectionHead right={<Link href="/api" style={{ fontSize: 12.5, color: "var(--acc-deep)", textDecoration: "none" }}>Full API analytics →</Link>}>API &amp; webhook usage</SectionHead>
           <div className="card" style={{ marginBottom: 26, display: "flex", gap: 24, flexWrap: "wrap" }}>
             {[["API requests", (counts.api_request_made ?? 0).toLocaleString()], ["Webhooks delivered", (counts.webhook_delivered ?? 0).toLocaleString()], ["Webhook failures", (counts.webhook_failed ?? 0).toLocaleString()], ["Last API / webhook", `${fmtDate(lastApi)} / ${fmtDate(lastHook)}`]].map(([l, v]) => (
               <div key={l} style={{ flex: "1 1 160px" }}><div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>{l}</div><div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 600, color: "var(--fg-1)", marginTop: 4 }}>{v}</div></div>
@@ -174,7 +174,7 @@ export default async function DataPage() {
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Summary, standard, and Scale exports as JSON or CSV: per-criterion scores, the recommended version, flags, and fixes. From any completed check or validation.</p>
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <Link href="/app/data-quality" className="btn btn--ghost">Data quality</Link>
+          <Link href="/data-quality" className="btn btn--ghost">Data quality</Link>
           <Link href="/developers#webhooks" className="btn btn--ghost">Export docs →</Link>
         </div>
       </div>

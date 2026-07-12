@@ -3,13 +3,13 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { SetupRequired } from "../apps/setup-required";
+import { SetupRequired } from "../applications/setup-required";
 import { listRepairs, type RepairRow } from "@/lib/preflight/overview-db";
 
 export const metadata: Metadata = { title: "Repairs" };
 
 // Relative "3m ago / 4h ago / Jul 2". Server component rendered once per request, so a wall-clock
-// relative time carries no hydration-mismatch risk. (Same helper as app/rank/app/apps/page.tsx.)
+// relative time carries no hydration-mismatch risk. (Same helper as app/rank/app/applications/page.tsx.)
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -34,7 +34,7 @@ const STATUS_STYLE: Record<string, { label: string; color: string; bg: string; b
   failed: { label: "Failed", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" },
 };
 
-// Severity pill colours match the run report (app/rank/app/apps/[id]/runs/[runId]/page.tsx).
+// Severity pill colours match the run report (app/rank/app/applications/[id]/passes/[runId]/page.tsx).
 const SEV_COLOR: Record<string, string> = { critical: "var(--err)", high: "#c2831a", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
 
@@ -46,7 +46,7 @@ function RepairRowItem({ repair }: { repair: RepairRow }) {
   // Verified repairs with a recorded rerun deep-link to that verification run; everything else opens the app.
   const verifiedRun = repair.status === "verified" && repair.verificationRunId;
   const href = repair.applicationId
-    ? (verifiedRun ? `/app/apps/${repair.applicationId}/runs/${repair.verificationRunId}` : `/app/apps/${repair.applicationId}`)
+    ? (verifiedRun ? `/applications/${repair.applicationId}/passes/${repair.verificationRunId}` : `/applications/${repair.applicationId}`)
     : null;
   const linkLabel = verifiedRun ? "View verification" : "Open app";
 
@@ -98,7 +98,7 @@ function Section({ heading, rows }: { heading: string; rows: RepairRow[] }) {
 // the user's builder plus the verification rerun that proves the blocker is closed; Vraelis never writes
 // code changes itself, and this page says so plainly.
 export default async function RepairsPage() {
-  const owner = await requirePreflightOwner("/app/repairs");
+  const owner = await requirePreflightOwner("/repairs");
   if (!(await preflightDbReady())) return <SetupRequired />;
   const repairs = await listRepairs(owner);
 
@@ -122,7 +122,7 @@ export default async function RepairsPage() {
           <div className="empty__icon" aria-hidden>◇</div>
           <h3>No verified repairs yet</h3>
           <p>Open a blocker from a Production Pass to get repair guidance. When you push a fix, Vraelis reruns the exact failed check and records the verification here.</p>
-          <Link href="/app/issues" className="btn">View issues</Link>
+          <Link href="/issues" className="btn">View issues</Link>
         </div>
       ) : (
         <>

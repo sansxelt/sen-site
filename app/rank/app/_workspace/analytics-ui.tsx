@@ -40,7 +40,7 @@ export function Bars({ rows, unit = "" }: { rows: { label: string; value: number
 }
 
 // 30-day trend as vertical mini-bars (no dependency). Kept for any lightweight
-// inline use; the fuller /app/data trend cards use <TrendChart> below.
+// inline use; the fuller /data trend cards use <TrendChart> below.
 export function Spark({ data, caption }: { data: number[]; caption?: string }) {
   const max = Math.max(1, ...data);
   return (
@@ -182,6 +182,6 @@ export function Dist({ items }: { items: { label: string; value: number; color: 
   );
 }
 
-// Distribution palettes (shared so /app/data, projects, and quality match).
+// Distribution palettes (shared so /data, projects, and quality match).
 export const CONF_COLORS = { Strong: "var(--acc-deep)", Moderate: "var(--acc)", Tentative: "#C9A227", Inconclusive: "var(--line-3)" };
 export const SIGNAL_COLORS = { Clean: "var(--acc)", Limited: "var(--money)", NeedsMore: "var(--line-3)" };

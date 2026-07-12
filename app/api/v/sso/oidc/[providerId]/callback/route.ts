@@ -31,7 +31,7 @@ export async function GET(req: Request, context: { params: Promise<{ providerId:
   if (!prov.ok) return fail(prov.error === "join_disabled" ? "sso_disabled" : "provision_failed");
 
   const cookie = await mintSsoSession(validated.email);
-  const res = NextResponse.redirect("https://vraelis.com/app/organization", { status: 302 });
+  const res = NextResponse.redirect("https://app.vraelis.com/organization", { status: 302 });
   res.cookies.set({ name: cookie.name, value: cookie.value, ...(cookie.options as object) });
   res.cookies.delete("v_sso_oidc");
   return res;

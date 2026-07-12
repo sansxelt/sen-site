@@ -190,7 +190,7 @@ export async function getWorkspaceContext(email: string, selectedWorkspaceId?: s
 }
 
 // Projects in a workspace that have project-level members (for the owner/admin
-// "Project access" overview on /app/team). Members only — no analytics/private data.
+// "Project access" overview on /team). Members only — no analytics/private data.
 async function workspaceProjectAccess(workspaceId: string): Promise<ProjectAccessSummary[]> {
   try {
     const s = getSupabaseAdminClient();
@@ -241,7 +241,7 @@ export async function inviteMember(actorEmail: string, workspaceId: string, invi
   await logEvent({ userId: actor, eventType: "workspace_member_invited", actorType: "owner", source: "app", metadata: { workspace_id: workspaceId, role } });
   const token = await mintInviteToken("v_workspace_members", (inserted as unknown as { id: string }).id);
   if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "workspace", workspace_id: workspaceId, role } });
-  const email = await dispatchInvite(actor, { type: "workspace", to: invitee, workspaceName: wsRow?.name, role, acceptUrl: inviteAcceptUrl(token, "/app/team"), workspace_id: workspaceId });
+  const email = await dispatchInvite(actor, { type: "workspace", to: invitee, workspaceName: wsRow?.name, role, acceptUrl: inviteAcceptUrl(token, "/team"), workspace_id: workspaceId });
   return { ok: true, email };
 }
 
@@ -474,7 +474,7 @@ export async function inviteProjectMember(actorEmail: string, projectId: string,
   await logEvent({ userId: actor, eventType: "project_member_invited", actorType: "owner", source: "app", metadata: { project_id: projectId, workspace_id: meta?.workspace_id ?? null, role } });
   const token = await mintInviteToken("v_project_members", (inserted as unknown as { id: string }).id);
   if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "project", project_id: projectId, workspace_id: meta?.workspace_id ?? null, role } });
-  const email = await dispatchInvite(actor, { type: "project", to: invitee, projectName: meta?.name, role, acceptUrl: inviteAcceptUrl(token, "/app/shared/projects/" + projectId), project_id: projectId, workspace_id: meta?.workspace_id ?? null });
+  const email = await dispatchInvite(actor, { type: "project", to: invitee, projectName: meta?.name, role, acceptUrl: inviteAcceptUrl(token, "/shared/projects/" + projectId), project_id: projectId, workspace_id: meta?.workspace_id ?? null });
   return { ok: true, email };
 }
 
@@ -494,7 +494,7 @@ export async function resendWorkspaceInvite(actorEmail: string, memberId: string
   await logEvent({ userId: actor, eventType: "workspace_invite_resent", actorType: "owner", source: "app", metadata: { workspace_id: m.workspace_id, role: m.role } });
   const token = await mintInviteToken("v_workspace_members", memberId); // new token + extended expiry
   if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "workspace", workspace_id: m.workspace_id, role: m.role } });
-  const email = await dispatchInvite(actor, { type: "workspace", to: m.email, workspaceName: wsRow?.name, role: m.role, acceptUrl: inviteAcceptUrl(token, "/app/team"), workspace_id: m.workspace_id });
+  const email = await dispatchInvite(actor, { type: "workspace", to: m.email, workspaceName: wsRow?.name, role: m.role, acceptUrl: inviteAcceptUrl(token, "/team"), workspace_id: m.workspace_id });
   return { ok: true, email };
 }
 
@@ -513,7 +513,7 @@ export async function resendProjectInvite(actorEmail: string, memberId: string):
   await logEvent({ userId: actor, eventType: "project_invite_resent", actorType: "owner", source: "app", metadata: { project_id: m.project_id, workspace_id: meta?.workspace_id ?? null, role: m.role } });
   const token = await mintInviteToken("v_project_members", memberId);
   if (token) await logEvent({ userId: actor, eventType: "invite_token_created", actorType: "owner", source: "app", metadata: { invite_type: "project", project_id: m.project_id, workspace_id: meta?.workspace_id ?? null, role: m.role } });
-  const email = await dispatchInvite(actor, { type: "project", to: m.email, projectName: meta?.name, role: m.role, acceptUrl: inviteAcceptUrl(token, "/app/shared/projects/" + m.project_id), project_id: m.project_id, workspace_id: meta?.workspace_id ?? null });
+  const email = await dispatchInvite(actor, { type: "project", to: m.email, projectName: meta?.name, role: m.role, acceptUrl: inviteAcceptUrl(token, "/shared/projects/" + m.project_id), project_id: m.project_id, workspace_id: meta?.workspace_id ?? null });
   return { ok: true, email };
 }
 
@@ -564,7 +564,7 @@ async function projectEvaluations(projectId: string): Promise<{ test_id: string;
 }
 
 // Project-level shares for a user who is NOT already a workspace member of that
-// project's workspace (so /app/team can distinguish workspace vs project access).
+// project's workspace (so /team can distinguish workspace vs project access).
 async function sharedProjectsForEmail(email: string): Promise<SharedProject[]> {
   try {
     const s = getSupabaseAdminClient();
@@ -646,13 +646,13 @@ async function lookupInviteByToken(token: string): Promise<InviteLookup | null> 
     const w = wm as unknown as { id: string; workspace_id: string; email: string; role: Role; status: string; invite_expires_at: string | null } | null;
     if (w) {
       const { data: ws } = await s.from("v_workspaces" as never).select("name").eq("id", w.workspace_id).maybeSingle();
-      return { table: "v_workspace_members", type: "workspace", id: w.id, email: w.email, role: w.role, status: w.status, expires: w.invite_expires_at, workspace_id: w.workspace_id, contextName: (ws as unknown as { name: string } | null)?.name ?? "this workspace", redirect: "/app/team" };
+      return { table: "v_workspace_members", type: "workspace", id: w.id, email: w.email, role: w.role, status: w.status, expires: w.invite_expires_at, workspace_id: w.workspace_id, contextName: (ws as unknown as { name: string } | null)?.name ?? "this workspace", redirect: "/team" };
     }
     const { data: pm } = await s.from("v_project_members" as never).select("id,project_id,workspace_id,email,role,status,invite_expires_at").eq("invite_token_hash", hash).maybeSingle();
     const p = pm as unknown as { id: string; project_id: string; workspace_id: string | null; email: string; role: Role; status: string; invite_expires_at: string | null } | null;
     if (p) {
       const meta = await projectMeta(p.project_id);
-      return { table: "v_project_members", type: "project", id: p.id, email: p.email, role: p.role, status: p.status, expires: p.invite_expires_at, project_id: p.project_id, workspace_id: p.workspace_id, contextName: meta?.name ?? "this project", redirect: `/app/shared/projects/${p.project_id}` };
+      return { table: "v_project_members", type: "project", id: p.id, email: p.email, role: p.role, status: p.status, expires: p.invite_expires_at, project_id: p.project_id, workspace_id: p.workspace_id, contextName: meta?.name ?? "this project", redirect: `/shared/projects/${p.project_id}` };
     }
     return null;
   } catch { return null; }

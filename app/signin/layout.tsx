@@ -32,7 +32,8 @@ export default async function SignInLayout({ children }: { children: ReactNode }
           <a
             href="/"
             style={{
-              display: "inline-flex",
+              display: "flex",
+              width: "fit-content",
               alignItems: "center",
               gap: 7,
               fontSize: 14,

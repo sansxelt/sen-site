@@ -36,7 +36,7 @@ function Frame({ children }: { children: ReactNode }) {
     <div className="rank-root">
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.9)" }}>
         <a href="https://vraelis.com" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em" }}>Vraelis</a>
-        <a href="https://vraelis.com/app/new" className="btn">Run your own evaluation</a>
+        <a href="https://app.vraelis.com/new" className="btn">Run your own evaluation</a>
       </nav>
       <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 60 }}>{children}</div>
       <footer style={{ borderTop: "1px solid var(--line-1)", background: "var(--bg-2)", position: "relative", overflow: "hidden" }}>
@@ -45,7 +45,7 @@ function Frame({ children }: { children: ReactNode }) {
           <p className="eyebrow" style={{ justifyContent: "center" }}>Created with Vraelis</p>
           <div className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 10 }}>Evaluate your creative with <span className="em">real people</span>.</div>
           <p style={{ fontSize: 15, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 22px" }}>Submit your options and get a decision report before launch.</p>
-          <a href="https://vraelis.com/app/new" className="btn btn--lg">Run your own evaluation →</a>
+          <a href="https://app.vraelis.com/new" className="btn btn--lg">Run your own evaluation →</a>
         </div>
       </footer>
     </div>

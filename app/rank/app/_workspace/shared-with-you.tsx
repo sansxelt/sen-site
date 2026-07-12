@@ -17,13 +17,13 @@ export function SharedWithYou({
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 6 }}>Shared with you</div>
       <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 6px" }}>You are viewing analytics for projects and workspaces shared with you. Client viewers see client-safe reports only.</p>
       {sharedProjects.map((p) => (
-        <a key={p.project_id} href={`/app/shared/projects/${p.project_id}`} style={link}>
+        <a key={p.project_id} href={`/shared/projects/${p.project_id}`} style={link}>
           <span style={{ fontSize: 13.5 }}>{p.name} <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>| {p.workspace_name} | {ROLE_LABEL[p.role]}</span></span>
           <span style={{ fontSize: 12, color: "var(--acc-deep)" }}>{p.role === "client_viewer" ? "Reports →" : "Analytics →"}</span>
         </a>
       ))}
       {shared.map((w) => (
-        <a key={w.workspace_id} href="/app/team" style={link}>
+        <a key={w.workspace_id} href="/team" style={link}>
           <span style={{ fontSize: 13.5 }}>{w.name} <span style={{ fontSize: 11.5, color: "var(--fg-4)" }}>| workspace | {ROLE_LABEL[w.role]}</span></span>
           <span style={{ fontSize: 12, color: "var(--acc-deep)" }}>Open →</span>
         </a>

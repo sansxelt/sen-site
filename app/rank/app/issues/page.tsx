@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { SetupRequired } from "../apps/setup-required";
+import { SetupRequired } from "../applications/setup-required";
 import { listAllIssues, type IssueRow } from "@/lib/preflight/overview-db";
 
 export const metadata: Metadata = { title: "Issues" };
 
 // Relative "3m ago / 4h ago / Jul 2". Server component, rendered once per request, so a wall-clock
-// relative time carries no hydration-mismatch risk. Same helper as app/rank/app/apps/page.tsx.
+// relative time carries no hydration-mismatch risk. Same helper as app/rank/app/applications/page.tsx.
 function timeAgo(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -72,7 +72,7 @@ function OpenIssueRow({ issue }: { issue: IssueRow }) {
   const opened = timeAgo(issue.createdAt);
   return (
     <Link
-      href={`/app/apps/${issue.applicationId}`}
+      href={`/applications/${issue.applicationId}`}
       className="card card--hover"
       style={{ display: "flex", flexDirection: "column", gap: 8, padding: "14px 16px", borderLeft: `3px solid ${accent}`, textDecoration: "none", color: "inherit" }}
     >
@@ -93,8 +93,8 @@ function OpenIssueRow({ issue }: { issue: IssueRow }) {
 // that run's report; otherwise it falls back to the application page.
 function ResolvedIssueRow({ issue }: { issue: IssueRow }) {
   const href = issue.resolvedRun
-    ? `/app/apps/${issue.applicationId}/runs/${issue.resolvedRun}`
-    : `/app/apps/${issue.applicationId}`;
+    ? `/applications/${issue.applicationId}/passes/${issue.resolvedRun}`
+    : `/applications/${issue.applicationId}`;
   const opened = timeAgo(issue.createdAt);
   return (
     <Link
@@ -122,7 +122,7 @@ function NoOpenIssues() {
       <div className="empty__icon" aria-hidden>◇</div>
       <h3>No open issues</h3>
       <p>Run a Production Pass and any launch blocker it finds appears here with evidence and reproduction steps.</p>
-      <Link href="/app/apps" className="btn">Go to applications</Link>
+      <Link href="/applications" className="btn">Go to applications</Link>
     </div>
   );
 }
@@ -130,7 +130,7 @@ function NoOpenIssues() {
 // Owner-wide Issues index. Server component behind the preflight owner gate; the data layer degrades to
 // [] when tables are unmigrated or a read fails, so this page never fabricates data.
 export default async function IssuesPage() {
-  const owner = await requirePreflightOwner("/app/issues");
+  const owner = await requirePreflightOwner("/issues");
   if (!(await preflightDbReady())) return <SetupRequired />;
 
   const [open, resolved] = await Promise.all([

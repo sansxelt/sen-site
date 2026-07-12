@@ -50,7 +50,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // Owner-only context, never shown on the public /r/<token> report.
   const project = test.project_id ? await getProject(email, test.project_id) : null;
   const projectLine = project ? (
-    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <Link href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</Link> <span style={{ color: "var(--fg-5)" }}>|</span> <Link href={`/app/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Share this project with a client →</Link></p>
+    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}>Project: <Link href={`/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{project.name}</Link> <span style={{ color: "var(--fg-5)" }}>|</span> <Link href={`/projects/${project.id}`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Share this project with a client →</Link></p>
   ) : null;
   // Owner-only audience profile + screening stats (never on the public /r report).
   const screen = await screeningStats(id);
@@ -58,7 +58,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   // Follow-up lineage, shown on BOTH the collecting and completed report views.
   const lineage = await followupLineage(id, email);
   const lineageHeader = lineage.parent ? (
-    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}><span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", marginRight: 8 }}>Confirmation round</span>Follow-up of <Link href={`/app/tests/${lineage.parent.id}/report`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{lineage.parent.title}</Link></p>
+    <p style={{ fontSize: 13, color: "var(--fg-4)", marginTop: -4, marginBottom: 14 }}><span className="pill" style={{ fontSize: 10, color: "var(--acc-deep)", marginRight: 8 }}>Confirmation round</span>Follow-up of <Link href={`/tests/${lineage.parent.id}/report`} style={{ color: "var(--acc-deep)", textDecoration: "none" }}>{lineage.parent.title}</Link></p>
   ) : null;
 
   // ── In progress (collecting votes) ──
@@ -241,7 +241,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 10 }}>Confirmation rounds</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {lineage.children.map((c) => (
-              <Link key={c.id} href={`/app/tests/${c.id}/report`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13.5, color: "var(--fg-1)", textDecoration: "none" }}>
+              <Link key={c.id} href={`/tests/${c.id}/report`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, fontSize: 13.5, color: "var(--fg-1)", textDecoration: "none" }}>
                 <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}><span className="pill" style={{ fontSize: 9.5, color: "var(--fg-4)", marginRight: 8 }}>{c.type ?? "follow-up"}</span>{c.title}</span>
                 <span style={{ fontSize: 12, color: "var(--acc-deep)" }}>{c.status === "complete" ? "Report →" : "View →"}</span>
               </Link>
@@ -288,8 +288,8 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 22 }}>
         <Link href="/app" className="btn btn--ghost">Dashboard</Link>
-        <Link href="/app/new" className="btn btn--ghost">Create similar evaluation</Link>
-        {bal < 50 && <Link href="/app/credits" className="btn btn--ghost">Buy credits</Link>}
+        <Link href="/new" className="btn btn--ghost">Create similar evaluation</Link>
+        {bal < 50 && <Link href="/credits" className="btn btn--ghost">Buy credits</Link>}
       </div>
 
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-5)", lineHeight: 1.7 }}>

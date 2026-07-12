@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { isAppPath } from "@/lib/app-routes";
 
 const PUBLIC_LINKS = [
   { href: "/how-it-works", label: "How it works" },
@@ -38,26 +39,26 @@ const I = {
 };
 
 // The signed-in product: Vraelis is the production layer for AI-built software. The legacy AI-output checker
-// is deliberately NOT here (it lives flag-gated at /app/legacy/checks); Projects / Analytics / Data quality
+// is deliberately NOT here (it lives flag-gated at /legacy/checks); Projects / Analytics / Data quality
 // belonged to that product and are out of the primary navigation with it.
 const APP_NAV: { group: string; items: { href: string; label: string; d: string }[] }[] = [
   { group: "Product", items: [
     { href: "/app", label: "Overview", d: I.grid },
-    { href: "/app/apps", label: "Applications", d: I.layers },
-    { href: "/app/passes", label: "Production Passes", d: I.shield },
-    { href: "/app/issues", label: "Issues", d: I.alert },
-    { href: "/app/repairs", label: "Repairs", d: I.wrench },
-    { href: "/app/deployments", label: "Deployments", d: I.deploy },
-    { href: "/app/audit", label: "Activity", d: I.clock },
+    { href: "/applications", label: "Applications", d: I.layers },
+    { href: "/passes", label: "Production Passes", d: I.shield },
+    { href: "/issues", label: "Issues", d: I.alert },
+    { href: "/repairs", label: "Repairs", d: I.wrench },
+    { href: "/deployments", label: "Deployments", d: I.deploy },
+    { href: "/activity", label: "Activity", d: I.clock },
   ] },
   { group: "Settings", items: [
-    { href: "/app/team", label: "Team", d: I.user },
-    { href: "/app/organization", label: "Organization", d: I.building },
-    { href: "/app/api-keys", label: "API & Webhooks", d: I.code },
-    { href: "/app/plans", label: "Plans", d: I.layers },
-    { href: "/app/credits", label: "Credits", d: I.coin },
-    { href: "/app/billing", label: "Billing", d: I.card },
-    { href: "/app/account", label: "Account", d: I.user },
+    { href: "/team", label: "Team", d: I.user },
+    { href: "/organization", label: "Organization", d: I.building },
+    { href: "/api", label: "API & Webhooks", d: I.code },
+    { href: "/plans", label: "Plans", d: I.layers },
+    { href: "/credits", label: "Credits", d: I.coin },
+    { href: "/billing", label: "Billing", d: I.card },
+    { href: "/account", label: "Account", d: I.user },
   ] },
 ];
 
@@ -151,8 +152,8 @@ function Footer({ humanEval }: { humanEval: boolean }) {
           </div>
         </div>
         <Col title="Product" links={productLinks} />
-        <Col title="Developers" links={[["/developers", "Developers"], ["/app/api-keys", "API keys"], ["/app/api-keys", "Webhooks"], ["/app/data", "Data exports"]]} />
-        <Col title="Account" links={[["/app", "Dashboard"], ["/app/account", "Account"], ["/app/billing", "Billing"], ["/signin", "Sign in"]]} />
+        <Col title="Developers" links={[["/developers", "Developers"], ["/api", "API keys"], ["/api", "Webhooks"], ["/data", "Data exports"]]} />
+        <Col title="Account" links={[["/app", "Dashboard"], ["/account", "Account"], ["/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
       </div>
       <div className="wrap" style={{ padding: "0 var(--gutter) 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, borderTop: "1px solid var(--line-1)", paddingTop: 24 }}>
@@ -182,7 +183,7 @@ function AppTopbar({ email }: { email: string | null }) {
           small left nudge so the wordmark sits centered over the sidebar column */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        <Link href="/app/apps/new" className="btn" style={{ padding: "9px 16px" }}>+ Connect app</Link>
+        <Link href="/applications/new" className="btn" style={{ padding: "9px 16px" }}>+ Connect app</Link>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(who || "?").slice(0, 1).toUpperCase()}</span>
           <span style={{ fontSize: 13, color: "var(--fg-3)" }} aria-hidden>▾</span>
@@ -193,8 +194,8 @@ function AppTopbar({ email }: { email: string | null }) {
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
               <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
             </div>
-            <Link href="/app/account" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Account</Link>
-            <Link href="/app/billing" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</Link>
+            <Link href="/account" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Account</Link>
+            <Link href="/billing" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</Link>
             <button onClick={() => signOut({ callbackUrl: "/" })} style={{ width: "100%", textAlign: "left", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--err)", background: "transparent", border: "none", cursor: "pointer" }}>Sign out</button>
           </div>
         )}
@@ -236,7 +237,7 @@ function WorkspaceSwitcher() {
 
 function AppSidebar({ humanEval }: { humanEval: boolean }) {
   const pathname = usePathname() || "";
-  const active = (href: string) => href === "/app" ? pathname === "/app" : (pathname === href || pathname.startsWith(href + "/"));
+  const active = (href: string) => href === "/app" ? (pathname === "/app" || pathname === "/") : (pathname === href || pathname.startsWith(href + "/"));
   // Human-eval ingress ("Evaluate & Earn" -> /vote) is hidden unless the flag is on.
   const nav = APP_NAV.map((g) => ({ ...g, items: g.items.filter((it) => humanEval || it.href !== "/vote") }));
   return (
@@ -283,9 +284,12 @@ const SHELL_UI_CSS = "@keyframes vraTextIn{from{opacity:0;transform:translateY(1
   + ".rank-root .app-main>.wrap{padding-top:clamp(12px,1.6vw,20px)!important}"
   + "@media (prefers-reduced-motion:reduce){.rank-root .eyebrow,.rank-root .display,.rank-root .lead-copy{animation:none}.rank-root .btn:active,.rank-root a.card:hover,.rank-root a.card:active,.rank-root a.acard:hover,.rank-root a.acard:active{transform:none}}";
 
-export function RankShell({ signedIn = false, email = null, humanEval = false, children }: { signedIn?: boolean; email?: string | null; humanEval?: boolean; children: ReactNode }) {
+export function RankShell({ signedIn = false, email = null, humanEval = false, appHost = false, children }: { signedIn?: boolean; email?: string | null; humanEval?: boolean; appHost?: boolean; children: ReactNode }) {
   const pathname = usePathname() || "";
-  const inApp = pathname.startsWith("/app");
+  // The product answers on the legacy /app prefix (localhost dev) AND the clean subdomain paths
+  // (/applications, /passes, ...). On app.vraelis.com the overview is served at "/" — the pathname
+  // can't distinguish it from the marketing home, so the server layout passes the host down.
+  const inApp = isAppPath(pathname) || (appHost && pathname === "/");
 
   if (inApp) {
     return (

@@ -84,7 +84,7 @@ export function isAdmin(email: string | null | undefined): boolean {
 // exists to staff it: surfacing validation we cannot deliver would violate the product's own
 // "don't overpromise" bar. Hidden globally unless VRAELIS_HUMAN_EVAL is "1". The eval code, DB
 // tables, and the /vote supply side are all PRESERVED for when a panel exists — this flag only
-// hides the ingress (the "+ New" nav, /app/new, /vote, the validate bridge). Default OFF.
+// hides the ingress (the "+ New" nav, /new, /vote, the validate bridge). Default OFF.
 export function humanEvalEnabled(): boolean {
   return process.env.VRAELIS_HUMAN_EVAL === "1";
 }

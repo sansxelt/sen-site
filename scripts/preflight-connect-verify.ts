@@ -58,7 +58,7 @@ ok("removeConnection counts deleted rows (no false 'revoked' on a zero-row delet
 ok("deleteApplication counts deleted rows too", /deleteApplication[\s\S]{0,600}\.select\("id"\)/.test(readFileSync("lib/v-applications.ts", "utf8")));
 ok("secrets DELETE returns 404 when nothing was revoked", readFileSync("app/api/preflight/apps/[id]/secrets/route.ts", "utf8").includes("Nothing was revoked"));
 // 2. No credential loss on partial failure: every account attempted, failures stay on-page for retry.
-const uiSrc = readFileSync("app/rank/app/apps/new/connect-form.tsx", "utf8");
+const uiSrc = readFileSync("app/rank/app/applications/new/connect-form.tsx", "utf8");
 ok("secret storage attempts EVERY account and keeps failures in state for retry",
   uiSrc.includes("storeAccounts") && uiSrc.includes("Retry storing test accounts") && /failed\.map\(\(f\) => f\.account\)/.test(uiSrc));
 const failStart = uiSrc.indexOf("if (failed.length) {");
@@ -100,7 +100,7 @@ ok("every connections-db query is owner-scoped (eq user_id)", (connDb.match(/eq\
 ok("openTestAccount is documented worker-only and never IMPORTED by the secrets route",
   connDb.includes("WORKER-ONLY") && !/import[^;]*openTestAccount/.test(secretsRoute));
 
-const ui = readFileSync("app/rank/app/apps/new/connect-form.tsx", "utf8");
+const ui = readFileSync("app/rank/app/applications/new/connect-form.tsx", "utf8");
 ok("UI: unbuilt integrations say Coming later (never fake active buttons)", ui.includes("Coming later") && !ui.includes("SoonButton"));
 ok("UI: manual connections are labeled as manual, OAuth honestly deferred", ui.includes("Manual connection") && ui.includes("comes later"));
 ok("UI: credentials are masked client-side and excluded from the persisted draft payload",

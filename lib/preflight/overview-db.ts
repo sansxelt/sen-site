@@ -1,5 +1,5 @@
-// Owner-wide reads for the restructured signed-in product: Production Passes (/app/passes), Issues
-// (/app/issues), Repairs (/app/repairs), and the dashboard counts. Everything is service-role scoped by
+// Owner-wide reads for the restructured signed-in product: Production Passes (/passes), Issues
+// (/issues), Repairs (/repairs), and the dashboard counts. Everything is service-role scoped by
 // user_id = lowercased email (the same ownership model as v-applications.ts / runs-db.ts) and degrades to
 // [] / 0 when the tables are unmigrated or a read fails, so no page ever fabricates data. Server-only.
 // NEVER returns a storage path, provider session id, lease field, or billing internal.

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isAppPath, legacyToNew, firstSegment } from "./lib/app-routes";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -42,8 +43,52 @@ function go(req: NextRequest, pathname: string, kind: "redirect" | "rewrite") {
   return kind === "redirect" ? NextResponse.redirect(url) : NextResponse.rewrite(url);
 }
 
+function goAbs(req: NextRequest, absolute: string) {
+  const url = new URL(absolute, req.nextUrl);
+  url.search = req.nextUrl.search;
+  return NextResponse.redirect(url, 308);
+}
+
 export default function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
+  const host = (req.headers.get("host") || "").toLowerCase();
+  const isAppHost = host === "app.vraelis.com" || host.startsWith("app.localhost");
+  const isProd = host.endsWith("vraelis.com");
+
+  // 0) app.vraelis.com: ONLY the signed-in product, at clean paths (no /app prefix).
+  //    Auth pages live on the main host; API routes serve both hosts unchanged.
+  if (isAppHost) {
+    if (path.startsWith("/api/") || path.startsWith("/r/") || path.startsWith("/og")) return NextResponse.next();
+    if (path === "/signin" || path === "/signup" || path.startsWith("/auth/")) {
+      return goAbs(req, `https://vraelis.com${path}`);                    // auth on the brand site
+    }
+    if (path === "/app" || path.startsWith("/app/")) {
+      return goAbs(req, `https://${host}${legacyToNew(path)}`);           // never show doubled /app here
+    }
+    if (path === "/" || isAppPath(path)) {
+      return go(req, "/rank/app" + (path === "/" ? "" : path), "rewrite"); // the product itself
+    }
+    return goAbs(req, `https://vraelis.com${path}`);                      // marketing never renders here
+  }
+
+  // 0b) Main host: the product moved to the subdomain. Old /app/* links (bookmarks, emails) and the new
+  //     clean roots both redirect across IN PRODUCTION; localhost keeps serving them directly (rewrites
+  //     below) so dev needs no subdomain DNS. Runs BEFORE the retired-sansxel list ("/account" collides).
+  //     CRITICAL: "/api/<anything>" is the real API namespace (NextAuth, preflight routes) and must never
+  //     be redirected or rewritten — only the EXACT "/api" path is the product's API & Webhooks page.
+  if (path.startsWith("/api/")) return NextResponse.next();
+  if (isProd && (path === "/app" || path.startsWith("/app/"))) {
+    return goAbs(req, `https://app.vraelis.com${legacyToNew(path)}`);
+  }
+  if (isAppPath(path) && !path.startsWith("/app")) {
+    if (isProd) return goAbs(req, `https://app.vraelis.com${path}`);
+    return go(req, "/rank/app" + path, "rewrite");                        // localhost dev convenience
+  }
+  if (!isProd && path.startsWith("/app/")) {
+    // dev parity with the prod redirects: old /app/* paths land on the same renamed clean paths.
+    return go(req, legacyToNew(path), "redirect");
+  }
+  if (!isProd && path === "/app") return go(req, "/rank/app", "rewrite"); // localhost overview
 
   // 1) Internal /rank/* -> clean alias.
   if (path === "/rank") return go(req, "/", "redirect");

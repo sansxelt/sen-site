@@ -193,7 +193,7 @@ export async function organizationActivity(email: string, orgId: string, limit =
 }
 
 // ── Server-side audit export (Enterprise Audit Export v1) ─────────────────────
-// Returns the SAME already-sanitized AuditEntry rows the /app/audit view shows — never raw
+// Returns the SAME already-sanitized AuditEntry rows the /activity view shows — never raw
 // metadata, emails, tokens, hashes, Stripe ids, or payloads. Permission is enforced here:
 // workspace scope is self-scoped (the caller's own workspace activity, like the page);
 // organization scope requires org owner/admin (canViewOrganizationAudit). No public/API-key access.

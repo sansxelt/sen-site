@@ -43,7 +43,7 @@ export function OrgClient({ email, ctx, activity, domainAccess = [], sso = null 
           <h1 className="display">Organization</h1>
           <p>Organizations let larger teams govern multiple workspaces, domains, members, billing admins, and audit trails from one account.</p>
         </div>
-        {org ? <Link href="/app/audit" className="btn btn--ghost">Activity →</Link> : null}
+        {org ? <Link href="/activity" className="btn btn--ghost">Activity →</Link> : null}
       </div>
       {org ? <OrgView email={email} ctx={ctx} activity={activity} sso={sso} /> : domainAccess.length ? <JoinCard options={domainAccess} /> : <CreateOrg />}
     </div>
@@ -336,7 +336,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
                 ))}
               </div>
             )}
-            <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Organization-wide audit export is planned. This shows account-level governance events; per-workspace activity stays in each workspace&apos;s <Link href="/app/audit" style={{ color: "var(--acc-deep)" }}>Activity</Link> log.</p>
+            <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "12px 0 0", lineHeight: 1.6 }}>Organization-wide audit export is planned. This shows account-level governance events; per-workspace activity stays in each workspace&apos;s <Link href="/activity" style={{ color: "var(--acc-deep)" }}>Activity</Link> log.</p>
           </div>
         </>
       )}

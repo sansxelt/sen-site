@@ -82,7 +82,7 @@ export function TeamBillingPanel({ workspaceName, billing, canManage = true }: {
         </>
       ) : canManage ? (
         <div style={{ marginTop: 14 }}>
-          <Link href="/app/team" className="btn">Set up team seats →</Link>
+          <Link href="/team" className="btn">Set up team seats →</Link>
         </div>
       ) : (
         <p style={{ fontSize: 12.5, color: "var(--fg-4)", margin: "12px 0 0" }}>Team billing hasn&apos;t been set up by the workspace owner yet.</p>

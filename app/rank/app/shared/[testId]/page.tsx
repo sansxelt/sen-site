@@ -21,26 +21,26 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
 
   const role = await reportAccessRole(email, testId);
   // Owners use their full report page (with controls).
-  if (role === "owner") redirect(`/app/tests/${testId}/report`);
+  if (role === "owner") redirect(`/tests/${testId}/report`);
 
   if (!role) {
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}>
-        <div className="empty"><div className="empty__icon">🔒</div><h3>No access to this decision record</h3><p>This decision record hasn&apos;t been shared with you, or your access was changed. Ask the workspace owner to invite you.</p><Link href="/app/team" className="btn">Back to Team</Link></div>
+        <div className="empty"><div className="empty__icon">🔒</div><h3>No access to this decision record</h3><p>This decision record hasn&apos;t been shared with you, or your access was changed. Ask the workspace owner to invite you.</p><Link href="/team" className="btn">Back to Team</Link></div>
       </div>
     );
   }
 
   const data = await getTestWithOptions(testId);
   if (!data) {
-    return <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}><div className="empty"><div className="empty__icon">∅</div><h3>Decision record not found</h3><Link href="/app/team" className="btn">Back to Team</Link></div></div>;
+    return <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}><div className="empty"><div className="empty__icon">∅</div><h3>Decision record not found</h3><Link href="/team" className="btn">Back to Team</Link></div></div>;
   }
   const { test, options } = data;
   const report = test.status === "complete" ? await getReport(testId) : null;
 
   // Back to the shared project when the viewer reached this via a shared project.
   const inSharedProject = test.project_id ? await canViewSharedProject(email, test.project_id) : false;
-  const back = inSharedProject ? { href: `/app/shared/projects/${test.project_id}`, label: "Program" } : { href: "/app/team", label: "Team" };
+  const back = inSharedProject ? { href: `/shared/projects/${test.project_id}`, label: "Program" } : { href: "/team", label: "Team" };
 
   return (
     <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>

@@ -20,7 +20,7 @@ export function EvaluationList({ rows, projects, showProject = true, showMove = 
         return (
           <div key={r.id} style={{ padding: "13px 18px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ minWidth: 0, flex: "1 1 240px" }}>
-              <a href={`/app/tests/${r.id}/report`} style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-1)", textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{r.followup_type ? <span className="pill" style={{ fontSize: 9, color: "var(--acc-deep)", marginRight: 8, verticalAlign: "middle" }}>Confirmation round</span> : null}{r.title}</a>
+              <a href={`/tests/${r.id}/report`} style={{ fontSize: 14, fontWeight: 600, color: "var(--fg-1)", textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>{r.followup_type ? <span className="pill" style={{ fontSize: 9, color: "var(--acc-deep)", marginRight: 8, verticalAlign: "middle" }}>Confirmation round</span> : null}{r.title}</a>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: 4, display: "flex", gap: 10, flexWrap: "wrap" }}>
                 {showProject && r.project_name ? <span style={{ color: "var(--fg-3)" }}>{r.project_name}</span> : null}
                 <span>{r.votes_valid}/{r.votes_target} qualified signals</span>
@@ -32,7 +32,7 @@ export function EvaluationList({ rows, projects, showProject = true, showMove = 
             <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               {showMove ? <MoveToProject testId={r.id} projectId={r.project_id} projects={projects} /> : null}
               {r.share_enabled && r.share_token ? <CopyReportLink token={r.share_token} /> : null}
-              <a href={`/app/tests/${r.id}/report`} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>{r.status === "complete" ? "Report →" : "View →"}</a>
+              <a href={`/tests/${r.id}/report`} className="btn btn--ghost" style={{ fontSize: 12.5, padding: "6px 12px" }}>{r.status === "complete" ? "Report →" : "View →"}</a>
             </div>
           </div>
         );

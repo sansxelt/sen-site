@@ -12,7 +12,7 @@ export default function DataRightsPage() {
   return (
     <LegalShell eyebrow="Privacy" title="Data rights" intro="Manage your data on Vraelis. Signed-in users can submit requests from account settings; you can also email privacy@vraelis.com.">
       <H>Submit a request</H>
-      <P>From <Link href="/app/account" style={{ color: "var(--acc-deep)" }}>account settings</Link>, signed-in users can submit a request to:</P>
+      <P>From <Link href="/account" style={{ color: "var(--acc-deep)" }}>account settings</Link>, signed-in users can submit a request to:</P>
       <Ul items={[
         "Export the account data we hold about you.",
         "Correct your account information.",

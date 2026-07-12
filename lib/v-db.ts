@@ -689,7 +689,7 @@ export async function listRecentLedger(userId: string, limit = 12): Promise<{ de
   return (data as unknown as { delta: number; reason: string; created_at: string }[]) ?? [];
 }
 
-// Customer analytics aggregate for the owner's data surface (/app/data). Pure
+// Customer analytics aggregate for the owner's data surface (/data). Pure
 // table reads (no events required) so it works for existing accounts immediately.
 export type DataInsights = {
   totals: { tests: number; completed: number; active: number; draft: number; valid: number; filtered: number; publicShared: number };

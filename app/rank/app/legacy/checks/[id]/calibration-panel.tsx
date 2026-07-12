@@ -90,12 +90,12 @@ export function CalibrationPanel({ checkId, calibration, canValidate, tooManyVer
           ) : (
             <div style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55 }}>Real people were split with no clear winner{resolved.humanValid ? `, across ${resolved.humanValid} qualified judgments` : ""}. Not counted for or against the check.</div>
           )}
-          {resolved.testId ? <a href={`/app/tests/${resolved.testId}/report`} style={{ display: "inline-block", marginTop: 8, fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>See the human validation report →</a> : null}
+          {resolved.testId ? <a href={`/tests/${resolved.testId}/report`} style={{ display: "inline-block", marginTop: 8, fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>See the human validation report →</a> : null}
         </div>
       ) : pendingTestId ? (
         <div>
           <div style={{ fontSize: 13.5, color: "var(--fg-2)", lineHeight: 1.55 }}>Real people are evaluating this output now. The result lands here when enough qualified judgments are in.</div>
-          <a href={`/app/tests/${pendingTestId}/report`} style={{ display: "inline-block", marginTop: 8, fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>Track the validation →</a>
+          <a href={`/tests/${pendingTestId}/report`} style={{ display: "inline-block", marginTop: 8, fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>Track the validation →</a>
         </div>
       ) : canValidate ? (
         <div>

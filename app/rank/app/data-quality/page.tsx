@@ -30,7 +30,7 @@ export default async function DataQualityPage() {
           <h1 className="display">Data quality</h1>
           <p>Vraelis filters low-quality responses before they influence your decision reports, so the recommendation reflects clean human signal, not noise.</p>
         </div>
-        <Link href="/app/data" className="btn btn--ghost">← Analytics</Link>
+        <Link href="/data" className="btn btn--ghost">← Analytics</Link>
       </div>
 
       {sharedCard}
@@ -39,7 +39,7 @@ export default async function DataQualityPage() {
         <div className="card" style={{ textAlign: "center", padding: "clamp(32px, 6vw, 64px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, marginBottom: 8 }}>No signal yet</div>
           <p style={{ fontSize: 14, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 20px", lineHeight: 1.55 }}>Run an evaluation and collect judgments to see how much low-quality signal Vraelis filters out for you, too-fast responses, duplicates, and spam.</p>
-          <Link href="/app/legacy/checks/new" className="btn btn--lg">Run a legacy check →</Link>
+          <Link href="/legacy/checks/new" className="btn btn--lg">Run a legacy check →</Link>
         </div>
       ) : (
         <>

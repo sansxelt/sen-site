@@ -26,20 +26,20 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
     if (managed) {
       return (
         <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-          <Link href="/app/team" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</Link>
+          <Link href="/team" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</Link>
           <div className="phead"><div><p className="eyebrow">Program access | Workspace admin</p><h1 className="display">{managed.name}</h1>{managed.description ? <p>{managed.description}</p> : null}</div></div>
           <p style={{ fontSize: 13, color: "var(--fg-4)", margin: "0 0 4px", maxWidth: 620, lineHeight: 1.6 }}>You manage this program&apos;s access as a workspace admin. The program&apos;s analytics stay with its owner; you can invite clients and collaborators and manage their roles below.</p>
           <ProjectAccess projectId={id} />
-          <div style={{ marginTop: 22 }}><Link href={`/app/shared/projects/${id}`} className="btn btn--ghost">Open client-safe view →</Link></div>
+          <div style={{ marginTop: 22 }}><Link href={`/shared/projects/${id}`} className="btn btn--ghost">Open client-safe view →</Link></div>
         </div>
       );
     }
-    if (await getProjectAccessRole(email, id)) redirect(`/app/shared/projects/${id}`);
+    if (await getProjectAccessRole(email, id)) redirect(`/shared/projects/${id}`);
     return (
       <div className="wrap" style={{ maxWidth: 560, paddingTop: "clamp(28px, 5vw, 56px)", textAlign: "center" }}>
         <h1 className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", marginBottom: 12 }}>Program not found</h1>
         <p className="lead-copy" style={{ margin: "0 auto 22px" }}>It may have been removed, or you don&apos;t have access to it.</p>
-        <Link href="/app/projects" className="btn btn--ghost">Back to programs</Link>
+        <Link href="/projects" className="btn btn--ghost">Back to programs</Link>
       </div>
     );
   }
@@ -49,7 +49,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
 
   return (
     <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
-      <Link href="/app/projects" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Programs</Link>
+      <Link href="/projects" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Programs</Link>
       <div className="phead">
         <div style={{ minWidth: 0 }}>
           <p className="eyebrow">Program</p>
@@ -57,7 +57,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
           {project.description ? <p>{project.description}</p> : null}
           <EditProjectForm id={project.id} name={project.name} description={project.description} />
         </div>
-        <Link href="/app/new" className="btn">New workflow <span aria-hidden>→</span></Link>
+        <Link href="/new" className="btn">New workflow <span aria-hidden>→</span></Link>
       </div>
 
       <div className="tile-grid cols-3" style={{ marginBottom: 26, marginTop: 8 }}>
@@ -117,7 +117,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ id: 
         <div className="card" style={{ textAlign: "center", padding: "clamp(24px, 4vw, 40px)" }}>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16, marginBottom: 6 }}>No workflows in this program yet</div>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: "0 auto 16px", maxWidth: 380 }}>Create a decision workflow and add it to this program, or move an existing one here from your dashboard.</p>
-          <Link href="/app/new" className="btn">New workflow →</Link>
+          <Link href="/new" className="btn">New workflow →</Link>
         </div>
       )}
 

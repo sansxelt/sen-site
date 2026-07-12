@@ -68,7 +68,7 @@ export default async function BillingPage() {
           <h1 className="display">Billing</h1>
           <p>{email}</p>
         </div>
-        <Link href="/app/plans" className="btn btn--ghost">Change plan</Link>
+        <Link href="/plans" className="btn btn--ghost">Change plan</Link>
       </div>
 
       <div className="tile-grid cols-2" style={{ marginBottom: 18 }}>
@@ -83,7 +83,7 @@ export default async function BillingPage() {
         <div className="card" style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" }}>Credit balance</div>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--fg-1)" }}>{bal.toLocaleString()}<span style={{ fontSize: 13, color: "var(--fg-4)", fontWeight: 500, marginLeft: 8 }}>credits</span></div>
-          <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: 4 }}><Link href="/app/credits" style={{ color: "var(--acc-deep)" }}>Top up →</Link></p>
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginTop: 4 }}><Link href="/credits" style={{ color: "var(--acc-deep)" }}>Top up →</Link></p>
         </div>
       </div>
 

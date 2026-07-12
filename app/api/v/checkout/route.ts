@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       client_reference_id: email,
       metadata: { type: "credit_topup", credits: String(credits), amountDollars: String(amountDollars), user_id: email },
       allow_promotion_codes: true,
-      return_url: `${SITE_URL}/app/credits?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${SITE_URL}/credits?session_id={CHECKOUT_SESSION_ID}`,
     });
     await logEvent({ userId: email, eventType: "checkout_started", actorType: "owner", source: "web", metadata: { kind: "credit_topup", credits, amount: amountDollars } });
     return NextResponse.json({ clientSecret: checkout.client_secret });

@@ -45,7 +45,7 @@ export default async function ProjectsPage() {
       ) : (
         <div className="tile-grid cols-3">
           {projects.map((p) => (
-            <a key={p.id} href={`/app/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7, minHeight: 120, justifyContent: "flex-start" }}>
+            <a key={p.id} href={`/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7, minHeight: 120, justifyContent: "flex-start" }}>
               <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
               {p.description ? <div className="acard__d" style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.description}</div> : null}
               <div style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", marginTop: "auto" }}>{p.evaluation_count ?? 0} workflow{(p.evaluation_count ?? 0) === 1 ? "" : "s"} | updated {new Date(p.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>

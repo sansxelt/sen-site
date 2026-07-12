@@ -55,7 +55,7 @@ export default function PlansPage() {
             <li>Real-browser execution with screenshots</li>
             <li>BLOCKED, REPAIR VERIFIED, or READY, with evidence</li>
           </ul>
-          <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/apps">Run your free pass</Link>
+          <Link className="btn btn--ghost" style={{ marginTop: "auto", justifyContent: "center" }} href="/applications">Run your free pass</Link>
         </div>
         <div className="price price--hot">
           <div className="price__name">Pay as you go</div>
@@ -67,7 +67,7 @@ export default function PlansPage() {
             <li>Linked failed-flow reruns after each fix</li>
             <li>No seat charge, ever</li>
           </ul>
-          <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/app/credits">Add balance</Link>
+          <Link className="btn" style={{ marginTop: "auto", justifyContent: "center" }} href="/credits">Add balance</Link>
         </div>
       </div>
 

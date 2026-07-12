@@ -126,9 +126,9 @@ export default function NewTest() {
   const status: { t: string; tone: "ok" | "warn" | "bad"; cta?: { label: string; href: string } } =
     !title.trim() ? { t: "Add an evaluation name", tone: "warn" }
     : optionCount < 2 ? { t: `Add ${2 - optionCount} more candidate${2 - optionCount === 1 ? "" : "s"}`, tone: "warn" }
-    : overVotes ? { t: `Over your plan's ${maxVotes}-judgment cap`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
-    : atTestCap ? { t: `You've used your ${activeCap} run${activeCap === 1 ? "" : "s"} this month`, tone: "bad", cta: { label: "Upgrade", href: "/app/plans" } }
-    : lowCredits ? { t: `Need ${votes - balance} more credits`, tone: "bad", cta: { label: "Buy credits", href: "/app/credits" } }
+    : overVotes ? { t: `Over your plan's ${maxVotes}-judgment cap`, tone: "bad", cta: { label: "Upgrade", href: "/plans" } }
+    : atTestCap ? { t: `You've used your ${activeCap} run${activeCap === 1 ? "" : "s"} this month`, tone: "bad", cta: { label: "Upgrade", href: "/plans" } }
+    : lowCredits ? { t: `Need ${votes - balance} more credits`, tone: "bad", cta: { label: "Buy credits", href: "/credits" } }
     : { t: "Ready to launch", tone: "ok" };
   const toneColor = status.tone === "ok" ? "var(--acc-deep)" : status.tone === "warn" ? "var(--money)" : "var(--err)";
 
@@ -167,14 +167,14 @@ export default function NewTest() {
     setBusy(true);
     try {
       const res = await fetch("/api/v/tests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title, context, category, audience, votesTarget: votes, options, projectId: projectId || undefined, targetAudience: targetAudience || undefined }) });
-      if (res.status === 401) { signIn("google", { callbackUrl: "/app/new" }); return; }
+      if (res.status === 401) { signIn("google", { callbackUrl: "/new" }); return; }
       const j = await res.json().catch(() => ({}));
       if (res.status === 402) { setError(`Not enough credits. This evaluation needs ${j.needed}. Earn credits by giving feedback in other evaluations, or top up.`); return; }
       if (res.status === 403 && j.error === "plan_limit") { setError(`You've used your plan's ${j.limit} run${j.limit === 1 ? "" : "s"} this month (completed runs count too). Upgrade to run more.`); return; }
       if (res.status === 413) { setError("One of your images is too large. Try smaller or fewer images."); return; }
       if (res.status === 422 && j.error === "pii_detected") { setError(j.message || "Remove personal data (names, emails, phone numbers) from your candidates before submitting."); return; }
       if (!res.ok) { setError("Couldn't launch the evaluation. Try again."); return; }
-      window.location.href = `/app/tests/${j.id}/report?launched=1`;
+      window.location.href = `/tests/${j.id}/report?launched=1`;
     } catch { setError("Network error. Try again."); }
     finally { setBusy(false); }
   }
@@ -239,7 +239,7 @@ export default function NewTest() {
                   <option value="">No project</option>
                   {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
-                <div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 6 }}>Group this evaluation with related ones. <Link href="/app/projects" style={{ color: "var(--acc-deep)" }}>Manage projects →</Link></div>
+                <div style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 6 }}>Group this evaluation with related ones. <Link href="/projects" style={{ color: "var(--acc-deep)" }}>Manage projects →</Link></div>
               </div>
             </div>
           </section>
@@ -326,7 +326,7 @@ export default function NewTest() {
             <input type="range" min={10} max={effectiveMax} step={1} value={Math.min(votes, effectiveMax)} onChange={(e) => setVotes(parseInt(e.target.value, 10))} style={{ width: "100%", accentColor: "var(--acc-deep)" }} />
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6 }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>1 qualified judgment = 1 credit</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{ctx.signedIn && balance < maxVotes ? <>Your balance {balance.toLocaleString()}. <Link href="/app/credits" style={{ color: "var(--acc-deep)" }}>Add credits</Link></> : <>Plan max {maxVotes.toLocaleString()}. <Link href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</Link></>}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-4)" }}>{ctx.signedIn && balance < maxVotes ? <>Your balance {balance.toLocaleString()}. <Link href="/credits" style={{ color: "var(--acc-deep)" }}>Add credits</Link></> : <>Plan max {maxVotes.toLocaleString()}. <Link href="/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</Link></>}</span>
             </div>
             <p style={{ fontSize: 12, color: "var(--fg-5)", marginTop: 8, lineHeight: 1.5 }}>Higher targets improve confidence and readiness, a starter check (10–25) is directional only (good for a first run, not high-confidence), ~50 for a gut read, ~150 for most evaluations, 500+ before a big call. Vraelis tells you whether the signal is <strong style={{ color: "var(--fg-3)" }}>ready to act on</strong>, not just which candidate is leading. You&apos;re only charged for judgments that pass quality filtering, and unused credits are refunded.</p>
           </section>
@@ -346,7 +346,7 @@ export default function NewTest() {
               <span style={{ fontSize: 13, fontWeight: 700, color: toneColor }}>{status.tone === "ok" ? "✓ " : "• "}{status.t}</span>
               {status.cta && <Link href={status.cta.href} className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>{status.cta.label}</Link>}
             </div>
-            {atTestCap && <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: 0, lineHeight: 1.5 }}>This is a monthly run limit, it resets at the start of next month. Completed and closed runs still count, so finishing your current run won&apos;t free up a slot. <Link href="/app/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</Link> to run more now.</p>}
+            {atTestCap && <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: 0, lineHeight: 1.5 }}>This is a monthly run limit, it resets at the start of next month. Completed and closed runs still count, so finishing your current run won&apos;t free up a slot. <Link href="/plans" style={{ color: "var(--acc-deep)" }}>Upgrade</Link> to run more now.</p>}
             <div style={{ borderTop: "1px solid var(--line-1)", paddingTop: 12 }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 7 }}>Output: Decision Package</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>

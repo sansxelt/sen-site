@@ -259,7 +259,7 @@ export default function NewCheckPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
         <p className="eyebrow" style={{ marginBottom: 0 }}>AI output check</p>
         {balance != null ? (
-          <a href="/app/credits" style={{ textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 12, color: balance === 0 ? "var(--err)" : "var(--fg-3)", border: `1px solid ${balance === 0 ? "var(--err)" : "var(--line-2)"}`, borderRadius: 999, padding: "4px 12px", whiteSpace: "nowrap" }}>
+          <a href="/credits" style={{ textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 12, color: balance === 0 ? "var(--err)" : "var(--fg-3)", border: `1px solid ${balance === 0 ? "var(--err)" : "var(--line-2)"}`, borderRadius: 999, padding: "4px 12px", whiteSpace: "nowrap" }}>
             {balance.toLocaleString()} credit{balance === 1 ? "" : "s"}{balance === 0 ? " · buy more" : ""}
           </a>
         ) : null}
@@ -449,7 +449,7 @@ export default function NewCheckPage() {
               <p style={{ fontSize: 11.5, color: "var(--fg-4)", textAlign: "center", margin: "10px 0 0", lineHeight: 1.5 }} aria-live="polite">
                 {anyUploading ? "Finish processing your uploads before running the check."
                   : anyFailed ? "Remove or retry the failed attachment to continue."
-                  : <>You&apos;re only charged after a successful check.{balance === 0 ? <> Out of credits? <a href="/app/credits" style={{ color: "var(--acc-deep)" }}>Buy more</a>.</> : null}</>}
+                  : <>You&apos;re only charged after a successful check.{balance === 0 ? <> Out of credits? <a href="/credits" style={{ color: "var(--acc-deep)" }}>Buy more</a>.</> : null}</>}
               </p>
             </div>
           </div>

@@ -51,7 +51,7 @@ function decisionStyle(run: { decision: string | null; state: string } | null | 
 function AppCard({ app, run }: { app: Application; run: RunSummary | undefined }) {
   const st = decisionStyle(run);
   return (
-    <Link href={`/app/apps/${app.id}`} className="acard" style={{ textDecoration: "none", gap: 12 }}>
+    <Link href={`/applications/${app.id}`} className="acard" style={{ textDecoration: "none", gap: 12 }}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
         <div style={{ minWidth: 0 }}>
           <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{app.name}</div>
@@ -119,7 +119,7 @@ export default async function Dashboard() {
       </div>
 
       {/* Primary action: connect an app and run a preflight. */}
-      <Link href="/app/apps/new" className="card card--acc" style={{ position: "relative", overflow: "hidden", display: "block", textDecoration: "none", color: "inherit", marginBottom: 18, padding: "clamp(22px, 3vw, 32px)" }}>
+      <Link href="/applications/new" className="card card--acc" style={{ position: "relative", overflow: "hidden", display: "block", textDecoration: "none", color: "inherit", marginBottom: 18, padding: "clamp(22px, 3vw, 32px)" }}>
         <div className="glow glow--soft" style={{ opacity: 0.7 }} />
         <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
           <div style={{ maxWidth: 560 }}>
@@ -132,7 +132,7 @@ export default async function Dashboard() {
       </Link>
 
       {domainAccess.length > 0 && (
-        <Link href="/app/organization" className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18, background: "var(--bg-2)" }}>
+        <Link href="/organization" className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap", textDecoration: "none", color: "inherit", marginBottom: 18, background: "var(--bg-2)" }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: 14.5 }}>You may belong to {domainAccess[0].name}</div>
             <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 2 }}>Your email domain matches a verified organization domain. {domainAccess[0].requestStatus === "pending" ? "Your access request is pending admin approval." : "Request access to join this organization."}</div>
@@ -143,19 +143,19 @@ export default async function Dashboard() {
 
       {/* overview stats: the production posture, at a glance */}
       <div className="tile-grid cols-3" style={{ marginBottom: 24 }}>
-        <div className="stat"><div className="stat__l">Applications</div><div className="stat__v tnum">{apps.length}</div><div className="stat__s"><Link href="/app/apps" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Open all →</Link></div></div>
+        <div className="stat"><div className="stat__l">Applications</div><div className="stat__v tnum">{apps.length}</div><div className="stat__s"><Link href="/applications" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Open all →</Link></div></div>
         <div className="stat"><div className="stat__l">Ready</div><div className="stat__v tnum" style={{ color: readyCount ? "var(--acc-deep)" : undefined }}>{readyCount}</div><div className="stat__s">cleared to launch</div></div>
         <div className="stat"><div className="stat__l">Blocked</div><div className="stat__v tnum" style={{ color: blockedCount ? "#C0392B" : undefined }}>{blockedCount}</div><div className="stat__s">not ready yet</div></div>
-        <div className="stat"><div className="stat__l">Open blockers</div><div className="stat__v tnum" style={{ color: counts.openCriticalIssues ? "#C0392B" : undefined }}>{counts.openCriticalIssues}</div><div className="stat__s"><Link href="/app/issues" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View issues →</Link></div></div>
-        <div className="stat"><div className="stat__l">Passes running</div><div className="stat__v tnum">{counts.runningPasses}</div><div className="stat__s"><Link href="/app/passes" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View passes →</Link></div></div>
-        <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/app/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</Link></div></div>
+        <div className="stat"><div className="stat__l">Open blockers</div><div className="stat__v tnum" style={{ color: counts.openCriticalIssues ? "#C0392B" : undefined }}>{counts.openCriticalIssues}</div><div className="stat__s"><Link href="/issues" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View issues →</Link></div></div>
+        <div className="stat"><div className="stat__l">Passes running</div><div className="stat__v tnum">{counts.runningPasses}</div><div className="stat__s"><Link href="/passes" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>View passes →</Link></div></div>
+        <div className="stat"><div className="stat__l">Credits</div><div className="stat__v tnum">{bal.toLocaleString()}</div><div className="stat__s"><Link href="/credits" style={{ color: "var(--acc-deep)", textDecoration: "none" }}>Buy more →</Link></div></div>
       </div>
 
       {apps.length > 0 ? (
         <>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ ...headLbl, marginBottom: 0 }}>Your applications ({apps.length})</div>
-            <Link href="/app/apps" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All applications →</Link>
+            <Link href="/applications" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All applications →</Link>
           </div>
           <div className="tile-grid cols-3" style={{ marginBottom: 26 }}>
             {apps.slice(0, 6).map((a) => <AppCard key={a.id} app={a} run={latest[a.id]} />)}
@@ -183,7 +183,7 @@ export default async function Dashboard() {
               ))}
             </div>
           </div>
-          <Link href="/app/apps/new" className="btn">Connect your first app <span aria-hidden>→</span></Link>
+          <Link href="/applications/new" className="btn">Connect your first app <span aria-hidden>→</span></Link>
         </div>
       )}
 
@@ -192,11 +192,11 @@ export default async function Dashboard() {
         <>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ ...headLbl, marginBottom: 0 }}>Open blockers ({blockers.length})</div>
-            <Link href="/app/issues" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All issues →</Link>
+            <Link href="/issues" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All issues →</Link>
           </div>
           <div style={{ display: "grid", gap: 8, marginBottom: 26 }}>
             {blockers.map((iss) => (
-              <Link key={iss.id} href={`/app/apps/${iss.applicationId}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: `3px solid ${SEV_COLOR[iss.severity] ?? "var(--fg-4)"}`, borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none", color: "inherit" }}>
+              <Link key={iss.id} href={`/applications/${iss.applicationId}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderLeft: `3px solid ${SEV_COLOR[iss.severity] ?? "var(--fg-4)"}`, borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none", color: "inherit" }}>
                 <span className="pill" style={{ fontSize: 10, color: SEV_COLOR[iss.severity] ?? "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>{iss.severity}</span>
                 <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{iss.title}</span>
                 <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none" }}>{iss.applicationName}</span>
@@ -212,13 +212,13 @@ export default async function Dashboard() {
         <>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ ...headLbl, marginBottom: 0 }}>Recent Production Passes</div>
-            <Link href="/app/passes" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All passes →</Link>
+            <Link href="/passes" style={{ fontSize: 13, color: "var(--acc-deep)", textDecoration: "none" }}>All passes →</Link>
           </div>
           <div style={{ display: "grid", gap: 8 }}>
             {recentPasses.map((p) => {
               const st = decisionStyle(p);
               return (
-                <Link key={p.id} href={`/app/apps/${p.applicationId}/runs/${p.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none", color: "inherit" }}>
+                <Link key={p.id} href={`/applications/${p.applicationId}/passes/${p.id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", textDecoration: "none", color: "inherit" }}>
                   <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
                   <span style={{ fontSize: 13.5, color: "var(--fg-1)", fontWeight: 500, flex: "none" }}>{p.applicationName || "Application"}</span>
                   {p.flowsTotal > 0 && <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-4)", flex: "none" }}>{p.flowsPassed}/{p.flowsTotal} flows</span>}

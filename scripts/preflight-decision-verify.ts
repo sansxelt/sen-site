@@ -121,14 +121,14 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
     pickHealthRun([mk("active", "running", null, "2026-07-12T12:00:00Z"), mk("fullready", "completed", "ready", "2026-07-10T12:00:00Z", "full")])?.id === "active");
 
   // ── C + CTA: report UX source checks (server component helpers are file-local) ──
-  const report = readFileSync("app/rank/app/apps/[id]/runs/[runId]/page.tsx", "utf8");
+  const report = readFileSync("app/rank/app/applications/[id]/passes/[runId]/page.tsx", "utf8");
   ok("C: the report renders REPAIR VERIFIED for a repair_verified decision", report.includes('"repair_verified"') && report.includes("REPAIR VERIFIED"));
   ok("C: the report states full verification is still required", report.includes("Full critical verification is still required before this deployment can be marked READY"));
   ok("CTA: the repair-verified report offers Run full critical verification", report.includes('scope="critical"') && report.includes("Run full critical verification"));
   const route = readFileSync("app/api/preflight/runs/[runId]/rerun/route.ts", "utf8");
   ok("the rerun route implements the critical scope from the contract's eligible critical flows",
     route.includes('scope === "critical"') && route.includes('priority === "critical"'));
-  const overview = readFileSync("app/rank/app/apps/[id]/page.tsx", "utf8");
+  const overview = readFileSync("app/rank/app/applications/[id]/page.tsx", "utf8");
   ok("the application overview keeps health via pickHealthRun and shows Latest repair separately",
     overview.includes("pickHealthRun(runs)") && overview.includes("Latest repair:"));
 

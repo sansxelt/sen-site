@@ -24,7 +24,7 @@ export default function RefundsPage() {
       <P>You are not charged for work you do not get. If a pass cannot start, or no flow executes, the hold is returned to your account automatically. Failures on our infrastructure are never billed to you.</P>
 
       <H>Subscriptions</H>
-      <P>Paid plans renew automatically until you cancel. <strong style={strong}>You can cancel anytime</strong> from your <Link href="/app/billing" style={acc}>billing settings</Link>; your plan stays active until the end of the current billing period, and you are not charged again after that. We do not provide partial or prorated refunds for the current period, and monthly plan credits that expire at the end of a cycle are not refundable.</P>
+      <P>Paid plans renew automatically until you cancel. <strong style={strong}>You can cancel anytime</strong> from your <Link href="/billing" style={acc}>billing settings</Link>; your plan stays active until the end of the current billing period, and you are not charged again after that. We do not provide partial or prorated refunds for the current period, and monthly plan credits that expire at the end of a cycle are not refundable.</P>
 
       <H>Free credits</H>
       <P>Promotional or signup credits are provided at our discretion, have no cash value, and are not refundable or redeemable for money.</P>
@@ -39,7 +39,7 @@ export default function RefundsPage() {
       <P>Please contact us before opening a chargeback with your bank, so we can resolve it directly and faster.</P>
 
       <H>How to cancel</H>
-      <P>Cancel or change a plan from your <Link href="/app/billing" style={acc}>billing settings</Link> in the app, in a couple of clicks, with no email or phone call required. You can manage cards and view invoices through the Stripe billing portal linked there.</P>
+      <P>Cancel or change a plan from your <Link href="/billing" style={acc}>billing settings</Link> in the app, in a couple of clicks, with no email or phone call required. You can manage cards and view invoices through the Stripe billing portal linked there.</P>
 
       <H>Contact</H>
       <P>Questions about a charge or this policy? Email <a href="mailto:help@vraelis.com" style={acc}>help@vraelis.com</a>. See also our <Link href="/terms" style={acc}>Terms</Link> and <Link href="/privacy" style={acc}>Privacy Policy</Link>.</P>

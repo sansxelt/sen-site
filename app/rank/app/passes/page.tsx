@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { SetupRequired } from "../apps/setup-required";
+import { SetupRequired } from "../applications/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
 
 export const metadata: Metadata = { title: "Production Passes" };
@@ -59,7 +59,7 @@ function PassLine({ pass }: { pass: PassRow }) {
   const when = timeAgo(pass.completedAt ?? pass.createdAt);
   return (
     <Link
-      href={`/app/apps/${pass.applicationId}/runs/${pass.id}`}
+      href={`/applications/${pass.applicationId}/passes/${pass.id}`}
       style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", textDecoration: "none", color: "inherit" }}
     >
       <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
@@ -102,7 +102,7 @@ function PassSection({ label, rows }: { label: string; rows: PassRow[] }) {
 // Owner-wide Production Pass history. Server component behind the preflight owner gate; reads only
 // through the overview data layer, which degrades to [] when the tables are unmigrated or a read fails.
 export default async function PassesPage() {
-  const owner = await requirePreflightOwner("/app/passes");
+  const owner = await requirePreflightOwner("/passes");
   if (!(await preflightDbReady())) return <SetupRequired />;
   const passes = await listAllRuns(owner, 60);
 
@@ -129,7 +129,7 @@ export default async function PassesPage() {
             Every preflight run across your applications, newest first, grouped by the launch decision it produced.
           </p>
         </div>
-        <Link href="/app/apps/new" className="btn" style={{ flex: "none" }}>+ Connect app</Link>
+        <Link href="/applications/new" className="btn" style={{ flex: "none" }}>+ Connect app</Link>
       </div>
 
       {passes.length === 0 ? (
@@ -137,7 +137,7 @@ export default async function PassesPage() {
           <div className="empty__icon" aria-hidden>◇</div>
           <h3>No Production Passes yet</h3>
           <p>Connect an application and run its critical flows in a real browser to get a launch decision.</p>
-          <Link href="/app/apps/new" className="btn">Connect an app</Link>
+          <Link href="/applications/new" className="btn">Connect an app</Link>
         </div>
       ) : (
         <>

@@ -165,7 +165,7 @@ export async function canLinkWorkspaceToOrganization(email: string, orgId: strin
   } catch { return false; }
 }
 
-// ── Full context for /app/organization ───────────────────────────────────────
+// ── Full context for /organization ───────────────────────────────────────
 
 export async function getOrganizationContext(email: string): Promise<OrgContext> {
   const empty: OrgContext = { organization: null, myRole: null, canManage: false, isBillingAdmin: false, members: [], domains: [], linkedWorkspaces: [], linkableWorkspaces: [], provisioning: { joinMode: "request", defaultRole: "member" }, joinRequests: [] };

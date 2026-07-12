@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { SetupRequired } from "../apps/setup-required";
+import { SetupRequired } from "../applications/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
 
 export const metadata: Metadata = { title: "Deployments" };
@@ -72,7 +72,7 @@ function DeploymentCard({ group }: { group: DeploymentGroup }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>{metaParts.join(", ")}</span>
         <Link
-          href={`/app/apps/${latest.applicationId}/runs/${latest.id}`}
+          href={`/applications/${latest.applicationId}/passes/${latest.id}`}
           style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none", flex: "none" }}
         >
           View latest pass <span aria-hidden>→</span>
@@ -86,7 +86,7 @@ function DeploymentCard({ group }: { group: DeploymentGroup }) {
 // tested; this page is that history grouped by URL. Deployment guards (verify-on-deploy, deploy blocking)
 // are not built yet, so the only controls here are links to real passes. Honest roadmap card, no toggles.
 export default async function DeploymentsPage() {
-  const owner = await requirePreflightOwner("/app/deployments");
+  const owner = await requirePreflightOwner("/deployments");
   if (!(await preflightDbReady())) return <SetupRequired />;
   const passes = await listAllRuns(owner, 60);
   const groups = groupByDeployment(passes);

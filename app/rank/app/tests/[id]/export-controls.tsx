@@ -40,7 +40,7 @@ export function ExportControls({ testId }: { testId: string }) {
       <Row name="Scale data export" plan={scale ? undefined : "Scale"} desc="Full decision package, adds source quality, collection-link stats, and machine-readable schema_version.">
         {scale
           ? <a href={`${base}?format=json&tier=scale`} download className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Decision package JSON</a>
-          : <Link href="/app/plans" className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>See plans</Link>}
+          : <Link href="/plans" className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>See plans</Link>}
       </Row>
       <Row name="Enterprise dataset" plan="Enterprise" desc="Account-level and governed cohort exports, under data terms.">
         <Link href="/contact" className="btn btn--ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>Contact sales</Link>

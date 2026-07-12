@@ -166,6 +166,16 @@ const authResult = NextAuth((req: NextRequest | undefined) => {
   session: {
     strategy: "jwt",
   },
+  // The session must span vraelis.com AND app.vraelis.com (the product subdomain), so the session cookie
+  // is scoped to the parent domain IN PRODUCTION ONLY (dev keeps host-only cookies so localhost auth is
+  // untouched). Name matches Auth.js's own secure default so nothing else changes. Note: shipping this
+  // resets existing sessions once (cookie identity changes).
+  cookies: process.env.VERCEL_ENV === "production" ? {
+    sessionToken: {
+      name: "__Secure-authjs.session-token",
+      options: { domain: ".vraelis.com", httpOnly: true, sameSite: "lax", path: "/", secure: true },
+    },
+  } : undefined,
   callbacks: {
     async signIn({ user, account }) {
       const tag = `[auth:signIn][${account?.provider ?? "?"}]`;

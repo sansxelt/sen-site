@@ -20,7 +20,7 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
   if (!view) {
     return (
       <div className="wrap" style={{ maxWidth: 720, paddingTop: 48, paddingBottom: 80 }}>
-        <div className="empty"><div className="empty__icon">🔒</div><h3>No access to this project</h3><p>This project hasn&apos;t been shared with you, or your access was changed.</p><Link href="/app/team" className="btn">Back to Team</Link></div>
+        <div className="empty"><div className="empty__icon">🔒</div><h3>No access to this project</h3><p>This project hasn&apos;t been shared with you, or your access was changed.</p><Link href="/team" className="btn">Back to Team</Link></div>
       </div>
     );
   }
@@ -30,7 +30,7 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
 
   return (
     <div className="wrap" style={{ maxWidth: 880, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
-      <Link href="/app/team" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</Link>
+      <Link href="/team" style={{ display: "flex", width: "fit-content", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--fg-3)", textDecoration: "none", marginBottom: 18 }}>← Team</Link>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, flexWrap: "wrap" }}>
         <p className="eyebrow" style={{ margin: 0 }}>Shared program</p>
         <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{ROLE_LABEL[view.role]} | client-safe view</span>
@@ -90,7 +90,7 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
           {completed.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 22 }}>
               {completed.map((e) => (
-                <Link key={e.test_id} href={`/app/shared/${e.test_id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                <Link key={e.test_id} href={`/shared/${e.test_id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "block" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
                     <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16 }}>{e.title}</div>
                     <span style={{ fontSize: 12.5, color: "var(--acc-deep)" }}>View decision record →</span>
@@ -111,7 +111,7 @@ export default async function SharedProjectPage({ params }: { params: Promise<{ 
                 {inProgress.map((e, i) => (
                   <div key={e.test_id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderTop: i === 0 ? "none" : "1px solid var(--line-1)" }}>
                     <span style={{ fontSize: 13.5 }}>{e.title}</span>
-                    <Link href={`/app/shared/${e.test_id}`} style={{ fontSize: 12, color: "var(--acc-deep)" }}>Status →</Link>
+                    <Link href={`/shared/${e.test_id}`} style={{ fontSize: 12, color: "var(--acc-deep)" }}>Status →</Link>
                   </div>
                 ))}
               </div>

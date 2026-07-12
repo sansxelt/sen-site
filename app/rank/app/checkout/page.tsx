@@ -47,18 +47,18 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const sp = await searchParams;
   const planKey = sp.plan && PLAN_CATALOG.some((p) => p.plan === sp.plan) ? sp.plan : "";
   const cycle: "monthly" | "yearly" = sp.cycle === "yearly" ? "yearly" : "monthly";
-  if (!planKey && !sp.amount) redirect("/app/credits");
+  if (!planKey && !sp.amount) redirect("/credits");
   const amount = Math.max(TOPUP_MIN_DOLLARS, Math.min(topupMaxDollars(), parseInt(sp.amount || "0", 10) || 0));
 
   const session = await auth();
   if (!session?.user?.email) {
-    const back = planKey ? `/app/checkout?plan=${planKey}&cycle=${cycle}` : `/app/checkout?amount=${amount}`;
+    const back = planKey ? `/checkout?plan=${planKey}&cycle=${cycle}` : `/checkout?amount=${amount}`;
     redirect(`/signin?callbackUrl=${encodeURIComponent(back)}`);
   }
 
   const plan = PLAN_CATALOG.find((p) => p.plan === planKey);
   const title = plan ? `${plan.name} plan` : `${(amount * 10).toLocaleString()} credits`;
-  const backHref = plan ? "/app/plans" : "/app/credits";
+  const backHref = plan ? "/plans" : "/credits";
   const included: string[] = plan
     ? PLAN_VALUE[plan.plan] ?? [`${plan.monthlyCredits.toLocaleString()} credits every month`, "Credits refresh each billing cycle", "Cancel anytime, no lock-in"]
     : ["Your balance funds Production Passes during early access", "Nothing ran, nothing charged: unused holds refund automatically", "Balance keeps its full purchase value as per-pass pricing rolls out"];

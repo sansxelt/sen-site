@@ -70,11 +70,11 @@ export default async function AccountPage() {
       {/* manage */}
       <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Manage</div>
       <div className="tile-grid cols-2" style={{ marginBottom: 26 }}>
-        {linkCard("/app/plans", "Plan", plan === "free" ? "Upgrade to unlock monthly credits and higher limits." : "Change plan, see what's included, or switch cycle.")}
-        {linkCard("/app/billing", "Billing", "Subscription status, renewal, cancel or resume, payment.")}
-        {linkCard("/app/credits", "Credits", "Top up your balance with packs or a custom amount.")}
-        {linkCard("/app/api-keys", "API & webhooks", "Create API keys, manage webhook endpoints and deliveries.")}
-        {linkCard("/app/data", "Data & exports", "Aggregate results and JSON / CSV exports of your tests.")}
+        {linkCard("/plans", "Plan", plan === "free" ? "Upgrade to unlock monthly credits and higher limits." : "Change plan, see what's included, or switch cycle.")}
+        {linkCard("/billing", "Billing", "Subscription status, renewal, cancel or resume, payment.")}
+        {linkCard("/credits", "Credits", "Top up your balance with packs or a custom amount.")}
+        {linkCard("/api", "API & webhooks", "Create API keys, manage webhook endpoints and deliveries.")}
+        {linkCard("/data", "Data & exports", "Aggregate results and JSON / CSV exports of your tests.")}
       </div>
 
       {/* account activity (your own audit trail) */}

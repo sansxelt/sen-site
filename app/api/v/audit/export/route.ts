@@ -1,6 +1,6 @@
 // GET /api/v/audit/export?scope=workspace|organization&format=csv|json&limit&from&to
 // Enterprise Audit Export v1. Session-only (no public / no API-key access). Returns ONLY the
-// already-sanitized AuditEntry rows the /app/audit view shows — never raw metadata, emails,
+// already-sanitized AuditEntry rows the /activity view shows — never raw metadata, emails,
 // tokens, hashes, Stripe ids, OIDC/SAML material, or payloads. Permission enforced in the lib:
 // workspace = self-scoped; organization = org owner/admin only. CSV is formula-injection-safe.
 import { NextResponse } from "next/server";

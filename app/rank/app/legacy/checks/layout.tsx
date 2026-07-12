@@ -16,7 +16,7 @@ export default function LegacyChecksLayout({ children }: { children: React.React
           Vraelis is now the production layer for AI-built software. Connect your app and run a Production Pass to get a launch decision with real browser evidence. Your past check data has not been deleted; contact us if you need an export.
         </p>
         <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/app/apps/new" className="btn">Connect an app</Link>
+          <Link href="/applications/new" className="btn">Connect an app</Link>
           <Link href="/app" className="btn btn--ghost">Back to overview</Link>
         </div>
       </div>

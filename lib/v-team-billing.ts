@@ -167,8 +167,8 @@ export async function startTeamCheckout(workspaceId: string, ownerEmail: string,
       mode: "subscription",
       line_items: [{ price: priceId, quantity: qty }],
       customer: customerId,
-      success_url: `${SITE}/app/team?team=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE}/app/team?team=cancel`,
+      success_url: `${SITE}/team?team=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${SITE}/team?team=cancel`,
       allow_promotion_codes: true,
       metadata: { type: "team_seats", workspace_id: workspaceId, interval },
       subscription_data: { metadata: { type: "team_seats", workspace_id: workspaceId, interval } },
@@ -189,7 +189,7 @@ export async function openTeamPortal(workspaceId: string, actorEmail: string, _a
     // from minting a Stripe customer under their own email for an unconfigured workspace.
     const customerId = row?.stripe_customer_id;
     if (!customerId) return { error: "not_configured" };
-    const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${SITE}/app/team` });
+    const portal = await stripe.billingPortal.sessions.create({ customer: customerId, return_url: `${SITE}/team` });
     await logEvent({ userId: norm(actorEmail), eventType: intent === "invoices" ? "team_invoice_portal_opened" : "team_billing_portal_opened", actorType, source: "web", metadata: { workspace_id: workspaceId, action: intent } });
     return { url: portal.url };
   } catch (e) { console.error("openTeamPortal:", e); return { error: "portal_failed" }; }
@@ -258,8 +258,8 @@ export async function startMigrationCheckout(workspaceId: string, targetEmail: s
       mode: "subscription",
       line_items: [{ price: priceId, quantity: Math.max(1, qty) }],
       customer: customerId,
-      success_url: `${SITE}/app/team?team=migrated&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE}/app/team?team=cancel`,
+      success_url: `${SITE}/team?team=migrated&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${SITE}/team?team=cancel`,
       allow_promotion_codes: true,
       metadata: { type: "team_seats", workspace_id: workspaceId, interval, ownership_transfer_id: transferId, billing_migration: "true" },
       subscription_data: { metadata: { type: "team_seats", workspace_id: workspaceId, interval, ownership_transfer_id: transferId, billing_migration: "true" } },

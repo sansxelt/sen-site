@@ -95,7 +95,7 @@ export async function createFollowup(email: string, parentId: string, type: stri
 
   await logEvent({ userId: norm(email), testId: parentId, eventType: "followup_created", actorType: "owner", source: "app", metadata: { test_id: parentId, followup_test_id: r.id, followup_type: ft, project_id: test.project_id ?? null, reason } });
   await logEvent({ userId: norm(email), testId: r.id, eventType: "confirmation_round_created", actorType: "owner", source: "app", metadata: { test_id: parentId, followup_test_id: r.id, followup_type: ft, project_id: test.project_id ?? null } });
-  return { ok: true, id: r.id, url: `/app/tests/${r.id}/report?launched=1`, target: votesTarget, type: ft };
+  return { ok: true, id: r.id, url: `/tests/${r.id}/report?launched=1`, target: votesTarget, type: ft };
 }
 
 // Lineage for a report header: the parent it came from + any confirmation rounds spawned.

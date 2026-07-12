@@ -152,7 +152,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
           <h1 className="display">Sandbox console</h1>
           <p>The everyday path is one POST to <code style={{ fontFamily: "var(--font-code)" }}>/api/v1/check</code> (curl below). This console tests the optional human-validation flow end-to-end before spending credits, create a validation run, preview the Decision Package, test exports, and send a signed webhook.</p>
         </div>
-        <Link href="/app/api-keys" className="btn btn--ghost">← API &amp; webhooks</Link>
+        <Link href="/api" className="btn btn--ghost">← API &amp; webhooks</Link>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 22 }}>
@@ -163,7 +163,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
         <div className="card" style={{ marginBottom: 22, borderColor: "var(--acc-line)" }}>
           <div style={cardHead}>API access required</div>
           <p style={{ fontSize: 14, color: "var(--fg-2)", margin: "0 0 12px", lineHeight: 1.6 }}>The API, webhooks, and the sandbox console are part of the <b style={{ color: "var(--fg-1)" }}>Scale</b> plan. The snippets and docs below are free to read. Upgrade to create sandbox evaluations and send webhook tests.</p>
-          <Link href="/app/plans" className="btn">See plans →</Link>
+          <Link href="/plans" className="btn">See plans →</Link>
         </div>
       )}
 
@@ -180,7 +180,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
               <label><span style={{ display: "block", fontSize: 12.5, color: "var(--fg-3)", marginBottom: 5 }}>Option B</span><input value={optB} onChange={(e) => setOptB(e.target.value)} maxLength={120} style={inputStyle} /></label>
             </div>
             <button onClick={createSandbox} disabled={creating} className="btn" style={{ opacity: creating ? 0.6 : 1 }}>{creating ? "Creating…" : "Create sandbox evaluation"}</button>
-            {err && <p style={{ fontSize: 13, color: "var(--money)", margin: "10px 0 0" }}>{err} {err.includes("Scale") && <Link href="/app/plans" style={{ color: "var(--acc-deep)" }}>See plans →</Link>}</p>}
+            {err && <p style={{ fontSize: 13, color: "var(--money)", margin: "10px 0 0" }}>{err} {err.includes("Scale") && <Link href="/plans" style={{ color: "var(--acc-deep)" }}>See plans →</Link>}</p>}
           </div>
 
           {ev && (
@@ -239,7 +239,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
               <div style={lbl}>4 | Send sandbox webhook</div>
               <div className="card" style={{ marginBottom: 18 }}>
                 {endpoints.length === 0 ? (
-                  <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Add a webhook endpoint to send a signed sandbox event. <Link href="/app/api-keys#webhooks" style={{ color: "var(--acc-deep)" }}>Add an endpoint →</Link></p>
+                  <p style={{ fontSize: 13.5, color: "var(--fg-3)", margin: 0 }}>Add a webhook endpoint to send a signed sandbox event. <Link href="/api#webhooks" style={{ color: "var(--acc-deep)" }}>Add an endpoint →</Link></p>
                 ) : (
                   <>
                     <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Sends a signed <code style={{ fontFamily: "var(--font-code)" }}>test.completed</code> with <code style={{ fontFamily: "var(--font-code)" }}>test_event: true</code>, <code style={{ fontFamily: "var(--font-code)" }}>mode: &quot;sandbox&quot;</code>, and a compact Decision Package. No real evaluation required.</p>
@@ -278,7 +278,7 @@ export function SandboxConsole({ hasApiAccess, endpoints }: { hasApiAccess: bool
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <Link href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Decision Package schema</Link>
         <Link href="/developers#sdk" className="btn btn--ghost" style={{ fontSize: 12.5 }}>SDK &amp; developer docs</Link>
-        <Link href="/app/api-keys" className="btn btn--ghost" style={{ fontSize: 12.5 }}>API keys &amp; webhooks</Link>
+        <Link href="/api" className="btn btn--ghost" style={{ fontSize: 12.5 }}>API keys &amp; webhooks</Link>
       </div>
     </div>
   );

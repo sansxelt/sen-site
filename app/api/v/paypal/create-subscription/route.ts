@@ -33,8 +33,8 @@ export async function POST(req: Request) {
     const sub = await createPaypalSubscription({
       planId,
       userEmail: email,
-      returnUrl: `${SITE}/app/plans?paypal_sub=1`,
-      cancelUrl: `${SITE}/app/plans?paypal_cancel=1`,
+      returnUrl: `${SITE}/plans?paypal_sub=1`,
+      cancelUrl: `${SITE}/plans?paypal_cancel=1`,
       // Round-trips through PayPal so the webhook can attribute payments to this user + plan.
       customId: JSON.stringify({ type: "v_plan", email, plan, cycle }),
     });

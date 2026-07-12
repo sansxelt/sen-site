@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       subscription_data: { metadata: { type: "v_plan", plan, cycle, user_id: email } },
       metadata: { type: "v_plan", plan, cycle, user_id: email },
       allow_promotion_codes: true,
-      return_url: `${SITE_URL}/app/plans?session_id={CHECKOUT_SESSION_ID}`,
+      return_url: `${SITE_URL}/plans?session_id={CHECKOUT_SESSION_ID}`,
     });
     return NextResponse.json({ clientSecret: checkout.client_secret });
   } catch (e) {

@@ -19,7 +19,7 @@ export function NewProjectForm({ label = "New project", primary = false }: { lab
     try {
       const r = await fetch("/api/v/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, description: desc }) });
       const j = await r.json().catch(() => ({}));
-      if (r.ok && j.id) { window.location.href = `/app/projects/${j.id}`; return; }
+      if (r.ok && j.id) { window.location.href = `/projects/${j.id}`; return; }
       setErr("Couldn't create the project. Try again.");
     } catch { setErr("Network error. Try again."); }
     finally { setBusy(false); }

@@ -25,7 +25,7 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 22, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <div style={{ fontSize: 13.5, color: "var(--fg-2)" }}><strong style={{ color: "var(--fg-1)" }}>Workspace: {selected.name}</strong> | Role: {ROLE_LABEL[selected.role]} | {clientSafe ? "Client-safe access" : "Read-only"}</div>
-        <Link href="/app/team" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Team →</Link>
+        <Link href="/team" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Team →</Link>
       </div>
 
       {clientSafe ? (
@@ -36,7 +36,7 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
           ) : (
             <div className="tile-grid cols-3">
               {summary.projects.map((p) => (
-                <Link key={p.id} href={`/app/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
+                <Link key={p.id} href={`/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
                   <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
                   <div className="acard__d">{p.completed} report{p.completed === 1 ? "" : "s"} | client-safe</div>
                   <div style={{ fontSize: 12, color: "var(--acc-deep)" }}>View reports →</div>
@@ -63,7 +63,7 @@ export function WorkspaceMemberView({ selected, summary, variant }: { selected: 
           ) : (
             <div className="tile-grid cols-3">
               {summary.projects.map((p) => (
-                <Link key={p.id} href={`/app/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
+                <Link key={p.id} href={`/shared/projects/${p.id}`} className="acard" style={{ textDecoration: "none", gap: 7 }}>
                   <div className="acard__t" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
                   <div className="acard__d">{p.evaluations} workflow{p.evaluations === 1 ? "" : "s"} | {p.completed} decided | {p.validJudgments.toLocaleString()} qualified</div>
                   <div style={{ fontSize: 12, color: "var(--acc-deep)" }}>Open analytics →</div>

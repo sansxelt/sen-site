@@ -50,7 +50,7 @@ function PaypalCredits({ amount }: { amount: number }) {
           setPhase("paying"); setMsg("");
           const r = await fetch("/api/v/paypal/capture-order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: data.orderID }) });
           const j = await r.json().catch(() => ({}));
-          if (r.ok && j.status === "credited") { window.location.href = "/app/credits?paypal=1"; return; }
+          if (r.ok && j.status === "credited") { window.location.href = "/credits?paypal=1"; return; }
           setPhase("error"); setMsg(j.message || "Payment went through but we couldn't add the credits. Email help@vraelis.com and we'll fix it fast.");
         },
         onError: () => { setPhase("error"); setMsg("PayPal ran into a problem. Try again, or pay by card below."); },
