@@ -25,6 +25,7 @@ import { getApplication, listFlows } from "@/lib/v-applications";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
+import { estimateRunCredits, selectFailedFlows } from "@/lib/preflight/flow-selection";
 import { getRunInternal, parentRunFlows, setParentRun } from "@/lib/preflight/run-report-db";
 import { logEvent } from "@/lib/v-events";
 
@@ -34,9 +35,6 @@ export const runtime = "nodejs";
 // guard, and the credit hold is the flat per-run spend cap: a completed run keeps the full hold as the
 // charge, and the worker refunds the whole hold only if no flow ran (no partial remainder).
 const MAX_ACTIVE_RUNS_PER_OWNER = 2;
-const RUN_CREDITS_PER_FLOW = 1;
-const MIN_RUN_CREDITS = 1;
-const FAILED_STATES = new Set(["failed", "blocked"]);
 
 function billingBypassAllowed(): boolean {
   return process.env.PREFLIGHT_INTERNAL_BILLING_BYPASS === "1"
@@ -86,23 +84,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   // Resolve the flow selection from the flows the PARENT actually ran. The client is trusted only as far as
   // its ids intersect the parent's flows; createRun then re-intersects with what is enabled+approved right now.
   const pf = await parentRunFlows(owner, parentRunId);
+  const contractFlows = await listFlows(owner, parent.contractId);
+  const eligibleNow = new Set(contractFlows
+    .filter((f) => f.enabled && (((f as { review_state?: string }).review_state ?? "approved") === "approved"))
+    .map((f) => f.id));
   let flowIds: string[];
   if (scope === "all") {
     flowIds = pf.map((f) => f.testFlowId);
-    if (!flowIds.length) {
-      // The parent produced no flow runs (e.g. it failed before the browser started), so "Run again" falls
-      // back to the contract's currently eligible flows — relaunching the whole contract rather than nothing.
-      const flows = await listFlows(owner, parent.contractId);
-      flowIds = flows.filter((f) => f.enabled && (((f as { review_state?: string }).review_state ?? "approved") === "approved")).map((f) => f.id);
-    }
+    // The parent produced no flow runs (e.g. it failed before the browser started), so "Run again" falls
+    // back to the contract's currently eligible flows — relaunching the whole contract rather than nothing.
+    if (!flowIds.length) flowIds = Array.from(eligibleNow);
   } else if (Array.isArray(scope)) {
     const requested = new Set((scope as unknown[]).filter((x): x is string => typeof x === "string"));
     flowIds = pf.filter((f) => requested.has(f.testFlowId)).map((f) => f.testFlowId);
   } else {
-    // default: 'failed' — re-run only the flows that failed or were blocked.
-    flowIds = pf.filter((f) => FAILED_STATES.has(f.state)).map((f) => f.testFlowId);
+    // default: 'failed' — re-run only the flows that failed or were blocked (shared rule, tested by
+    // scripts/preflight-scope-verify.ts).
+    flowIds = selectFailedFlows(pf);
   }
-  flowIds = Array.from(new Set(flowIds));
+  // One authoritative set from here on: what is estimated and held is exactly what createRun stores on the
+  // run snapshot and the worker executes — a flow disabled since the parent ran drops out BEFORE billing.
+  flowIds = Array.from(new Set(flowIds)).filter((fid) => eligibleNow.has(fid));
   if (!flowIds.length) {
     return NextResponse.json({ error: "nothing_to_rerun", message: "There are no matching flows from this run to re-run." }, { status: 400 });
   }
@@ -123,8 +125,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   const submissionId = (req.headers.get("idempotency-key") || (typeof body?.submission_id === "string" ? body.submission_id : "") || randomUUID()).slice(0, 100);
 
   // Billing reservation, keyed by a FRESH id per attempt so an idempotent replay / lost unique-submission race
-  // can be refunded in isolation without colliding with the winning run's own reservation.
-  const estCredits = Math.max(MIN_RUN_CREDITS, flowIds.length * RUN_CREDITS_PER_FLOW);
+  // can be refunded in isolation without colliding with the winning run's own reservation. The estimate reads
+  // the SAME selected-flow set the run stores and the worker executes (lib/preflight/flow-selection.ts).
+  const estCredits = estimateRunCredits(flowIds.length);
   const reservationId = randomUUID();
   let creditsHeld = 0;
   let heldReservationId: string | null = null;

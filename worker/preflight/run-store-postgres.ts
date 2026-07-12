@@ -7,6 +7,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { RunStore, ClaimedRun, FlowResult, RunDecision, FlowSpec, Step, StepObservation, FlowEvidence } from "./types";
 import { refund } from "../../lib/v-credits";
+import { planFlowSelection } from "../../lib/preflight/flow-selection";
 import { issuesFromRun, planReconcile, type Issue, type OpenIssueRef, type ReconcileFlow } from "../../lib/preflight/issues";
 
 // Owner + billing fields read once per settlement. Missing columns / absent table => null (degrade).
@@ -63,11 +64,29 @@ export class PostgresRunStore implements RunStore {
     await this.reapExpiredLeases();
     const { data: runId, error } = await this.s.rpc("v_preflight_claim", { p_worker: workerId, p_lease_secs: leaseSecs });
     if (error || !runId) return null;
-    const { data: run } = await this.s.from("v_preflight_runs").select("id,application_id,deployment_url,contract_id,lease_expires_at,environment:provider").eq("id", runId).maybeSingle();
-    if (!run) return null;
+    const { data: run, error: runErr } = await this.s.from("v_preflight_runs").select("id,application_id,deployment_url,contract_id,lease_expires_at,flow_ids,environment:provider").eq("id", runId).maybeSingle();
+    if (runErr || !run) {
+      // A missing flow_ids column (migration 4 unapplied) errors this select; say so instead of hanging.
+      if (runErr) console.error(`preflight claim read (${String(runId)}): ${runErr.message} — if this names flow_ids, apply sql/vraelis-preflight-4-selected-flows.sql`);
+      return null; // lease expiry reaps the claimed-but-unread run through failRun
+    }
     const r = run as Record<string, unknown>;
     const { data: flowRows } = await this.s.from("v_test_flows").select("id,name,priority,start_path,steps,max_ms,destructive_allowed,mobile_relevant").eq("contract_id", r.contract_id as string).eq("enabled", true).eq("review_state", "approved").order("order_index", { ascending: true });
-    const flows: FlowSpec[] = ((flowRows as Record<string, unknown>[]) ?? []).map((f) => ({
+    const approved = (flowRows as Record<string, unknown>[]) ?? [];
+
+    // The run snapshot's stored selection is AUTHORITATIVE: execute exactly those flows, in contract order.
+    // The worker never "reloads every approved flow" — that was the targeted-rerun bug (scope=failed
+    // selected 2 flows, the browser ran 3). A missing/empty selection, or one referencing a flow outside
+    // the enabled+approved contract snapshot, is an internal configuration error and fails the run HERE,
+    // before any browser session exists: terminal, never billable (failRun refunds — no flow executed),
+    // and with zero flow results there is nothing for issue reconciliation to act on.
+    const plan = planFlowSelection(r.flow_ids, approved.map((f) => String(f.id)));
+    if (!plan.ok) {
+      await this.failRun(String(r.id), "flow_selection_invalid", `Internal configuration error: ${plan.reason}. No browser session was started.`, false);
+      return null;
+    }
+    const selected = new Set(plan.ids);
+    const flows: FlowSpec[] = approved.filter((f) => selected.has(String(f.id))).map((f) => ({
       flowId: String(f.id), name: String(f.name), priority: (f.priority as FlowSpec["priority"]) ?? "important",
       startPath: (f.start_path as string) ?? undefined, steps: Array.isArray(f.steps) ? (f.steps as Step[]) : [],
       maxMs: Number(f.max_ms) || 120000, destructiveAllowed: !!f.destructive_allowed,
@@ -113,8 +132,9 @@ export class PostgresRunStore implements RunStore {
     const run = await this.loadRunSettlement(runId);
     // A run already settled as completed (charged) must never be resurrected to queued/failed or refunded.
     if (run && run.state === "completed") return;
-    // cancelled and target_mismatch are deterministic (a retry cannot change them) -> terminal immediately.
-    const terminal = code === "cancelled" || code === "target_mismatch" || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
+    // cancelled, target_mismatch, and flow_selection_invalid are deterministic (a retry cannot change
+    // them) -> terminal immediately.
+    const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid" || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
     await this.s.from("v_preflight_runs").update({ state: terminal ? "failed" : "queued", failure_code: code, failure_message: message.slice(0, 500), lease_owner: null, lease_expires_at: null }).eq("id", runId);
     // Refund the FULL reservation ONLY on a terminal failure where no flow executed (discovery / queue /
     // provider-fail-before-browser). A requeue keeps the hold for the retry; a cancel or lease-loss AFTER

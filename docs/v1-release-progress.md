@@ -75,3 +75,11 @@ tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run
 2. Release branch; fan out workstreams: front-page interactivity (ad-ready), kill switch + run caps +
    provider error mapping, ownership/SSRF test suite, loading/error states, docs + runbooks.
 3. Full verify matrix, merge safe work, final release report.
+
+## 2026-07-11: targeted rerun scope + dedup correctness
+- Fixed: the worker executed every approved contract flow regardless of the rerun's selection. The selection is now stored on the run snapshot (v_preflight_runs.flow_ids, migration 4) and is authoritative at claim time; a missing/invalid selection fails as flow_selection_invalid BEFORE any browser session (terminal, refunded, no issue reconciliation).
+- Fixed: invalidated/cancelled/infrastructure-failed runs no longer block rerun deduplication; in-flight and completed-valid runs still do (replacement submission ids: base-r2, -r3, ...).
+- Billing estimate, reservation, stored selection, execution, report counts, and settlement all read one selected-flow set (lib/preflight/flow-selection.ts).
+- New suite: npm run preflight:scope:test (39/39). All other suites green.
+- Marketing shell now renders at 0.72 on desktop (90% of the prior 0.8) so the front page hero + demo fit one viewport.
+- OPERATOR: apply sql/vraelis-preflight-4-selected-flows.sql before queueing new runs (enqueue is fail-closed without it).

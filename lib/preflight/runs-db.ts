@@ -9,6 +9,7 @@
 // cooperative mutations the owner is allowed to make (request cancel; mint a signed artifact URL).
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import { listRuns, listFlows, type RunSummary } from "../v-applications";
+import { dedupBlocksReplacement, submissionIdForAttempt } from "./flow-selection";
 import type { Issue } from "./issues";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -30,6 +31,10 @@ export type RunHeader = {
   // provider_capacity / session_timeout. Never a raw provider message (that stays in failure_message,
   // which is server-side only and deliberately NOT selected here).
   failure_code: string | null;
+  // Provenance extras behind additive migrations 3 + 4; null when unmigrated. selected_flow_ids is the
+  // run snapshot's authoritative flow selection (what "Targeted rerun — 2 flows selected" reads).
+  parent_run_id: string | null;
+  selected_flow_ids: string[] | null;
 };
 export type RunIssue = {
   id: string; flow_id: string | null; severity: string; category: string | null; title: string;
@@ -53,6 +58,18 @@ export async function getRun(owner: string, runId: string): Promise<RunDetail | 
     .eq("user_id", uid).eq("id", runId).maybeSingle();
   if (!runRow) return null;                                        // not owned / not found / not migrated
   const rr = runRow as Record<string, unknown>;
+
+  // Provenance extras behind additive migrations 3 (parent_run_id) + 4 (flow_ids), read separately so a
+  // pre-migration schema only loses these fields (data null on the column error), never the whole payload.
+  let parentRunId: string | null = null;
+  let selectedFlowIds: string[] | null = null;
+  const { data: extras } = await db().from("v_preflight_runs")
+    .select("parent_run_id, flow_ids").eq("user_id", uid).eq("id", runId).maybeSingle();
+  const ex = extras as { parent_run_id?: string | null; flow_ids?: unknown } | null;
+  if (ex) {
+    parentRunId = (ex.parent_run_id as string) ?? null;
+    selectedFlowIds = Array.isArray(ex.flow_ids) ? (ex.flow_ids as unknown[]).map(String) : null;
+  }
 
   // Flow runs (owner-scoped), stable oldest-first.
   const { data: flowRows } = await db().from("v_flow_runs")
@@ -106,6 +123,7 @@ export async function getRun(owner: string, runId: string): Promise<RunDetail | 
     summary: (rr.summary as Record<string, unknown>) ?? {}, deployment_url: (rr.deployment_url as string) ?? null,
     commit_sha: (rr.commit_sha as string) ?? null, created_at: String(rr.created_at ?? ""), completed_at: (rr.completed_at as string) ?? null,
     failure_code: (rr.failure_code as string) ?? null,
+    parent_run_id: parentRunId, selected_flow_ids: selectedFlowIds,
   };
   return { run, flows, issues };
 }
@@ -206,10 +224,19 @@ export type CreateRunResult =
 
 // Queue a run: insert exactly ONE v_preflight_runs row (state 'queued') after RE-READING the currently
 // eligible flows for the contract (TOCTOU guard; the client's flowIds are trusted only as far as they
-// intersect what is enabled+approved right now). Deliberately inserts NO child rows: the worker creates
-// v_flow_runs / v_run_steps as it executes (worker/preflight/run-store-postgres.ts), so pre-creating them
-// here would double them. Returns { conflict, runId } on the unique-submission collision (idempotency) and
-// null when nothing is eligible or the tables are unmigrated. NEVER executes a browser.
+// intersect what is enabled+approved right now). The eligible selection is STORED on the row (flow_ids) —
+// the worker executes exactly that set, never the whole contract. Deliberately inserts NO child rows: the
+// worker creates v_flow_runs / v_run_steps as it executes (worker/preflight/run-store-postgres.ts), so
+// pre-creating them here would double them. NEVER executes a browser.
+//
+// Submission dedup: unique (user_id, submission_id) protects against double-click / concurrent-tab
+// duplicates. But an INVALID prior run (invalidated target_mismatch, cancelled, infrastructure failure)
+// must not occupy the key forever, so on a collision the existing run's state decides
+// (dedupBlocksReplacement): in-flight or completed-valid -> { conflict, runId } (idempotent replay);
+// failed/cancelled -> retry with a deterministic replacement id (base-r2, -r3, ...), keeping the
+// historical row untouched. Returns null when nothing is eligible or the tables are unmigrated.
+const MAX_SUBMISSION_REPLACEMENTS = 5;
+
 export async function createRun(owner: string, input: CreateRunInput): Promise<CreateRunResult> {
   if (!isDatabaseConfigured()) return null;
   const uid = norm(owner);
@@ -218,24 +245,39 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
   const eligible = (await listFlows(uid, input.contractId))
     .filter((f) => requested.has(f.id) && flowApprovedEnabled(f as { enabled: boolean; review_state?: string }));
   if (!eligible.length) return null;
+  const selectedFlowIds = eligible.map((f) => f.id);
 
-  const { data, error } = await db().from("v_preflight_runs").insert({
-    user_id: uid, application_id: input.applicationId, contract_id: input.contractId,
-    contract_version: input.contractVersion, submission_id: input.submissionId,
-    deployment_url: input.deploymentUrl, state: "queued",
-    credits_held: input.creditsHeld, cost_reservation_id: input.reservationId,
-  } as never).select("id").single();
+  for (let attempt = 0; attempt < MAX_SUBMISSION_REPLACEMENTS; attempt++) {
+    const submissionId = submissionIdForAttempt(input.submissionId, attempt);
+    const { data, error } = await db().from("v_preflight_runs").insert({
+      user_id: uid, application_id: input.applicationId, contract_id: input.contractId,
+      contract_version: input.contractVersion, submission_id: submissionId,
+      deployment_url: input.deploymentUrl, state: "queued", flow_ids: selectedFlowIds,
+      credits_held: input.creditsHeld, cost_reservation_id: input.reservationId,
+    } as never).select("id").single();
 
-  if (error) {
-    // unique (user_id, submission_id) -> a run for this submission already exists (idempotent replay).
+    if (!error) return { runId: (data as unknown as { id: string }).id, flowCount: selectedFlowIds.length };
+
+    // unique (user_id, submission_id) -> a run for this submission id already exists.
     if ((error as { code?: string }).code === "23505") {
-      const { data: existing } = await db().from("v_preflight_runs").select("id")
-        .eq("user_id", uid).eq("submission_id", input.submissionId).maybeSingle();
-      return { conflict: true, runId: (existing as { id?: string } | null)?.id ?? null };
+      const { data: existing } = await db().from("v_preflight_runs").select("id, state")
+        .eq("user_id", uid).eq("submission_id", submissionId).maybeSingle();
+      const ex = existing as { id?: string; state?: string } | null;
+      // In flight or completed-valid: the duplicate is refused and the caller gets the existing run.
+      if (!ex?.id || dedupBlocksReplacement(String(ex.state ?? ""))) {
+        return { conflict: true, runId: ex?.id ?? null };
+      }
+      continue; // invalid/cancelled occupant: try the next replacement submission id
+    }
+
+    // Fail-closed, loudly: an unapplied migration 4 must be an actionable error, never a silent
+    // fall-back to "run everything" (that is exactly the targeted-rerun bug this column fixes).
+    if (/flow_ids/i.test((error as { message?: string }).message ?? "")) {
+      console.error("createRun: v_preflight_runs.flow_ids is missing — apply sql/vraelis-preflight-4-selected-flows.sql");
     }
     return null;
   }
-  return { runId: (data as unknown as { id: string }).id, flowCount: eligible.length };
+  return null; // replacement budget exhausted (pathological; nothing was inserted this attempt)
 }
 
 // Persist a run's deterministic issues (first_seen_run = last_seen_run = runId). Best-effort: a missing

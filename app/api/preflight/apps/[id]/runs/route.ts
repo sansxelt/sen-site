@@ -20,16 +20,16 @@ import { getApplication, getApprovedContract, listFlows } from "@/lib/v-applicat
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
+import { estimateRunCredits } from "@/lib/preflight/flow-selection";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
 
 // At most this many of an owner's runs may be in flight at once (worker-load guard; the credit hold is the
-// hard spend limit). Credits held per requested flow; pricing is flat per run, so a completed run keeps the
-// full hold as the charge and the worker refunds the whole hold only if no flow ran (no partial remainder).
+// hard spend limit). Credits held per requested flow (estimateRunCredits); pricing is flat per run, so a
+// completed run keeps the full hold as the charge and the worker refunds the whole hold only if no flow ran
+// (no partial remainder).
 const MAX_ACTIVE_RUNS_PER_OWNER = 2;
-const RUN_CREDITS_PER_FLOW = 1;
-const MIN_RUN_CREDITS = 1;
 
 // The internal billing bypass is only ever honored OUTSIDE production, and even then must be set explicitly.
 // A live production deployment can never skip the hold, regardless of the env var.
@@ -115,7 +115,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // race can be refunded in isolation, never colliding with the winning run's own reservation. estCredits is
   // the flat per-run hold (the spend cap): kept in full as the charge on completion, refunded in full if no
   // flow ran.
-  const estCredits = Math.max(MIN_RUN_CREDITS, flowIds.length * RUN_CREDITS_PER_FLOW);
+  const estCredits = estimateRunCredits(flowIds.length);
   const reservationId = randomUUID();
   let creditsHeld = 0;
   let heldReservationId: string | null = null;

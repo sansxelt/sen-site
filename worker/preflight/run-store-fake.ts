@@ -1,10 +1,13 @@
 // In-memory RunStore for deterministic lifecycle tests (no DB, no applied migration). Models the same
 // contract the Postgres store will implement: atomic claim + lease, ownership-checked heartbeat,
-// cancellation, incremental persistence, atomic finalize, and billing settlement. Single-process only.
+// cancellation, incremental persistence, atomic finalize, billing settlement, and authoritative flow
+// selection. Single-process only.
 import type { RunStore, ClaimedRun, FlowResult, RunDecision, FlowSpec } from "./types";
+import { planFlowSelection } from "../../lib/preflight/flow-selection";
 
 type Row = {
   runId: string; applicationId: string; deploymentUrl: string; environment: string; flows: FlowSpec[];
+  selectedFlowIds: unknown;      // undefined = legacy enqueue (whole flow list is the selection)
   state: string; decision: RunDecision | null; summary: Record<string, unknown>;
   leaseOwner: string | null; leaseExpiresAt: number; attempts: number; maxAttempts: number;
   cancelRequested: boolean; provider: string | null; providerSessionId: string | null;
@@ -16,10 +19,10 @@ export class FakeRunStore implements RunStore {
   constructor(private now: () => number = () => Date.now()) {}
 
   // ── test helpers ──
-  enqueue(input: { runId: string; applicationId: string; deploymentUrl: string; environment?: string; flows: FlowSpec[]; maxAttempts?: number }) {
+  enqueue(input: { runId: string; applicationId: string; deploymentUrl: string; environment?: string; flows: FlowSpec[]; selectedFlowIds?: unknown; maxAttempts?: number }) {
     this.rows.set(input.runId, {
       runId: input.runId, applicationId: input.applicationId, deploymentUrl: input.deploymentUrl, environment: input.environment ?? "preview",
-      flows: input.flows, state: "queued", decision: null, summary: {}, leaseOwner: null, leaseExpiresAt: 0,
+      flows: input.flows, selectedFlowIds: input.selectedFlowIds, state: "queued", decision: null, summary: {}, leaseOwner: null, leaseExpiresAt: 0,
       attempts: 0, maxAttempts: input.maxAttempts ?? 3, cancelRequested: false, provider: null, providerSessionId: null,
       flowResults: [], failureCode: null, billing: "held",
     });
@@ -34,8 +37,22 @@ export class FakeRunStore implements RunStore {
       const claimable = (r.state === "queued") && (!r.leaseOwner || r.leaseExpiresAt < this.now());
       if (!claimable) continue;
       if (r.attempts >= r.maxAttempts) { r.state = "failed"; r.failureCode = "max_attempts"; if (r.billing === "held") r.billing = "refunded"; continue; }
+      // Authoritative flow selection, mirroring PostgresRunStore.claim: when a stored selection exists it
+      // decides exactly what executes; an invalid/empty selection fails the run terminally BEFORE claim
+      // returns (no browser, no charge). Legacy enqueue without selectedFlowIds keeps the whole flow list.
+      let flows = r.flows;
+      if (r.selectedFlowIds !== undefined) {
+        const plan = planFlowSelection(r.selectedFlowIds, r.flows.map((f) => f.flowId));
+        if (!plan.ok) {
+          r.state = "failed"; r.failureCode = "flow_selection_invalid";
+          if (r.billing === "held") r.billing = "refunded";
+          continue;
+        }
+        const selected = new Set(plan.ids);
+        flows = r.flows.filter((f) => selected.has(f.flowId));
+      }
       r.state = "running"; r.leaseOwner = workerId; r.leaseExpiresAt = this.now() + leaseSecs * 1000; r.attempts += 1;
-      return { runId: r.runId, applicationId: r.applicationId, deploymentUrl: r.deploymentUrl, environment: r.environment, flows: r.flows, leaseExpiresAt: r.leaseExpiresAt };
+      return { runId: r.runId, applicationId: r.applicationId, deploymentUrl: r.deploymentUrl, environment: r.environment, flows, leaseExpiresAt: r.leaseExpiresAt };
     }
     return null;
   }
@@ -56,9 +73,10 @@ export class FakeRunStore implements RunStore {
   }
   async failRun(runId: string, code: string, message: string, executedAnyFlow: boolean): Promise<void> {
     const r = this.rows.get(runId); if (!r) return;
-    // Requeue if attempts remain and it wasn't a terminal/cancel; else fail terminally. target_mismatch is
-    // deterministic (a retry cannot heal it), so it is terminal immediately, matching the Postgres store.
-    const terminal = code === "cancelled" || code === "target_mismatch" || r.attempts >= r.maxAttempts;
+    // Requeue if attempts remain and it wasn't a terminal/cancel; else fail terminally. target_mismatch
+    // and flow_selection_invalid are deterministic (a retry cannot heal them), so they are terminal
+    // immediately, matching the Postgres store.
+    const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid" || r.attempts >= r.maxAttempts;
     r.state = terminal ? "failed" : "queued"; r.failureCode = code; r.leaseOwner = null; r.leaseExpiresAt = 0;
     if (!executedAnyFlow && r.billing === "held") r.billing = "refunded"; // no charge if nothing ran
   }

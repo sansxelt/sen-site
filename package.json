@@ -27,6 +27,7 @@
     "desktop:build": "npm --prefix desktop run tauri build",
     "desktop:keygen": "npm --prefix desktop run tauri signer generate -- -w VRAELIS-updater.key",
     "preflight:target:test": "tsx scripts/preflight-target-verify.ts",
+    "preflight:scope:test": "tsx scripts/preflight-scope-verify.ts",
     "preflight:invalidate": "tsx scripts/preflight-invalidate-runs.ts"
   },
   "dependencies": {

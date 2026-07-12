@@ -93,6 +93,8 @@ const FAILURE_LINE: Record<string, string> = {
   provider_unavailable: "The browser provider had an outage. Nothing was charged for flows that never ran.",
   infra_misconfigured: "The run infrastructure was misconfigured. This was on our side, not your deployment.",
   session_timeout: "The browser session timed out before the run could finish.",
+  target_mismatch: "The run harness did not honor this run's target URL, so the result was invalidated. This was on our side, not your deployment. Nothing was charged.",
+  flow_selection_invalid: "This run's flow selection was missing or invalid, so no browser was started. This was on our side, not your deployment. Nothing was charged.",
 };
 
 // The plain-English verdict sentence under the big decision word. Counts come straight from the run
@@ -413,6 +415,9 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
             ) : null}
             {run.commit_sha ? <span>commit {run.commit_sha.slice(0, 10)}</span> : null}
             <span title={when(completedIso)}>{terminal ? `Completed ${ago(completedIso)}` : `Started ${ago(run.created_at)}`}</span>
+            {run.parent_run_id && run.selected_flow_ids?.length ? (
+              <span>Targeted rerun: {run.selected_flow_ids.length} flow{run.selected_flow_ids.length === 1 ? "" : "s"} selected</span>
+            ) : null}
             {summaryLine ? <span>{summaryLine}</span> : null}
             {active ? <span>Updates automatically</span> : null}
           </div>

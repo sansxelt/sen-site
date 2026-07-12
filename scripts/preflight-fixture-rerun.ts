@@ -13,6 +13,7 @@ import { isDatabaseConfigured } from "../lib/supabase-admin";
 import { preflightArtifactBucketExists } from "../lib/preflight/artifacts";
 import { getRunInternal, parentRunFlows, setParentRun } from "../lib/preflight/run-report-db";
 import { createRun } from "../lib/preflight/runs-db";
+import { selectFailedFlows } from "../lib/preflight/flow-selection";
 import { listFlows } from "../lib/v-applications";
 
 // Capture the REAL runtime env BEFORE loading .env.local (a vercel env pull writes VERCEL_ENV=production into
@@ -25,7 +26,6 @@ const MODES = ["broken", "partially_fixed", "fixed"] as const;
 const SCOPES = ["failed", "critical", "all"] as const;
 type Mode = (typeof MODES)[number];
 type Scope = (typeof SCOPES)[number];
-const FAILED_STATES = new Set(["failed", "blocked"]);
 
 function arg(name: string, def?: string): string | undefined {
   const pre = `--${name}=`;
@@ -70,7 +70,11 @@ async function main(): Promise<void> {
 
   // 5. Load the parent run (owner-scoped). Reuse its application + approved contract version + flow identities.
   const parent = await getRunInternal(owner, parentRunId);
-  if (!parent) { console.error("Parent run not found for this owner."); process.exit(1); }
+  if (!parent) {
+    console.error("Parent run not found for this owner.");
+    console.error("  Check you passed a RUN id (printed as 'new run id' / in the report route), not a flow id from the 'selected flows' list.");
+    process.exit(1);
+  }
   if (!parent.contractId) { console.error("Parent run has no contract to rerun against."); process.exit(1); }
 
   const contractFlows = (await listFlows(owner, parent.contractId))
@@ -84,7 +88,7 @@ async function main(): Promise<void> {
   } else {
     const pf = await parentRunFlows(owner, parentRunId);
     if (scope === "all") flowIds = pf.map((f) => f.testFlowId);
-    else flowIds = pf.filter((f) => FAILED_STATES.has(f.state)).map((f) => f.testFlowId);
+    else flowIds = selectFailedFlows(pf); // shared 'failed' rule (scripts/preflight-scope-verify.ts)
     if (!flowIds.length && scope === "all") flowIds = contractFlows.map((f) => f.id); // parent ran nothing -> whole contract
   }
   flowIds = Array.from(new Set(flowIds)).filter((id) => nameById.has(id)); // only currently approved+enabled
@@ -97,7 +101,11 @@ async function main(): Promise<void> {
     deploymentUrl: url, submissionId, flowIds, creditsHeld: 0, reservationId: null,
   });
   if (!created || "conflict" in created) {
-    console.error("Failed to queue rerun:", created && "conflict" in created ? "a rerun for this parent+mode+scope already exists" : "no eligible flows / insert failed");
+    // Conflict now means an ACTIVE or COMPLETED-VALID rerun holds this parent+mode+scope; an invalidated,
+    // cancelled, or infrastructure-failed occupant no longer blocks (createRun queues a replacement).
+    console.error("Failed to queue rerun:", created && "conflict" in created
+      ? `an in-flight or completed rerun for this parent+mode+scope already exists${created.runId ? ` (run ${created.runId})` : ""}`
+      : "no eligible flows / insert failed");
     process.exit(1);
   }
   await setParentRun(owner, created.runId, parentRunId); // provenance (degrades if parent_run_id column absent)
