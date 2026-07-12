@@ -50,6 +50,8 @@ function flowTone(state: string): Tone {
   if (state === "passed") return { label: "Passed", ...TONE_READY };
   if (state === "failed") return { label: "Failed", ...TONE_BLOCKED };
   if (state === "blocked") return { label: "Blocked", ...TONE_BLOCKED };
+  // A boundary refusal, never an application failure: muted, not red.
+  if (state === "blocked_by_policy") return { label: "Blocked by policy", ...TONE_MUTED };
   if (state === "running") return { label: "Running", ...TONE_REVIEW };
   if (state === "skipped") return { label: "Skipped", ...TONE_MUTED };
   const label = state ? state.charAt(0).toUpperCase() + state.slice(1) : "Pending";
@@ -101,6 +103,7 @@ const FAILURE_LINE: Record<string, string> = {
   session_timeout: "The browser session timed out before the run could finish.",
   target_mismatch: "The run harness did not honor this run's target URL, so the result was invalidated. This was on our side, not your deployment. Nothing was charged.",
   flow_selection_invalid: "This run's flow selection was missing or invalid, so no browser was started. This was on our side, not your deployment. Nothing was charged.",
+  blocked_by_policy: "Vraelis did not run these flows: your test boundaries do not permit an action they require. Widen the boundaries on the application's Connections/Settings and run again. Nothing was charged for flows that never ran.",
 };
 
 // The plain-English verdict sentence under the big decision word. Counts come straight from the run
@@ -113,7 +116,11 @@ function verdictLine(decision: string | null, state: string, summary: Record<str
     const n = num(summary.selected_total) || num(summary.flows_total) || 1;
     return `${n} selected flow${n === 1 ? "" : "s"} passed. The reported blocker${n === 1 ? " is" : "s are"} resolved. Full critical verification is still required before this deployment can be marked READY.`;
   }
-  if (decision === "needs_review") return "Nearly there. A non-critical flow needs a human call.";
+  if (decision === "needs_review") {
+    const pb = num(summary.policy_blocked);
+    if (pb > 0) return `${pb} flow${pb === 1 ? "" : "s"} could not run: your test boundaries do not permit an action they require. Widen the boundaries and run again.`;
+    return "Nearly there. A non-critical flow needs a human call.";
+  }
   if (decision === "blocked") {
     const n = Math.max(0, num(summary.critical_total) - num(summary.critical_passed)) || criticalIssueCount;
     return n > 0
@@ -285,6 +292,12 @@ function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flo
   const tone = flowTone(flow.state);
   const failed = flow.state === "failed" || flow.state === "blocked";
   const passed = flow.state === "passed";
+  // A policy-blocked flow names the permission that would let it run, straight from the refused step's
+  // recorded detail (permit_* / allowed_domains). A destructive never-rule refusal names no permit.
+  const policyBlocked = flow.state === "blocked_by_policy";
+  const permitNeeded = policyBlocked
+    ? (flow.steps.map((s) => (s.observed ?? "").match(/permit_[a-z_]+|allowed_domains/)?.[0]).find(Boolean) ?? null)
+    : null;
   return (
     <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "12px 16px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
@@ -293,6 +306,14 @@ function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flo
         <Pill tone={tone} />
         <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{flow.steps.length} step{flow.steps.length === 1 ? "" : "s"}</span>
       </div>
+
+      {policyBlocked ? (
+        <p style={{ fontSize: 12.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "6px 0 0" }}>
+          {permitNeeded
+            ? <>Additional permission required: <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>{permitNeeded}</span></>
+            : "This flow requires an action your test boundaries do not permit."}
+        </p>
+      ) : null}
 
       {flow.steps.length ? (
         <details open={failed} style={{ marginTop: 8 }}>

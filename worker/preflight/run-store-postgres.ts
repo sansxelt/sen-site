@@ -7,6 +7,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { RunStore, ClaimedRun, FlowResult, RunDecision, FlowSpec, Step, StepObservation, FlowEvidence } from "./types";
 import { refund } from "../../lib/v-credits";
+import { normalizeBoundaries, type TestBoundaries } from "../../lib/preflight/boundaries";
 import { planFlowSelection } from "../../lib/preflight/flow-selection";
 import { issuesFromRun, planReconcile, type Issue, type OpenIssueRef, type ReconcileFlow } from "../../lib/preflight/issues";
 
@@ -95,7 +96,20 @@ export class PostgresRunStore implements RunStore {
     // Coverage from THIS run's own contract snapshot only (never aggregated across runs): full means every
     // enabled+approved CRITICAL flow is in the selection. Partial runs can verify a repair, never grant READY.
     const fullCoverage = approved.filter((f) => (f.priority as string) === "critical").every((f) => selected.has(String(f.id)));
-    return { runId: String(r.id), applicationId: String(r.application_id), deploymentUrl: String(r.deployment_url ?? ""), environment: "preview", flows, fullCoverage, leaseExpiresAt: new Date(String(r.lease_expires_at)).getTime() };
+
+    // Test boundaries (S5) via the run's application. DEFENSIVE by design: a pre-migration-5 schema
+    // (test_boundaries column missing) errors this select, and any read failure degrades to null — the
+    // MOST conservative policy (every permit off; core actions still always allowed) — never a crash and
+    // never a skipped run. A recorded value is normalized so a malformed row can only tighten, not widen.
+    let boundaries: TestBoundaries | null = null;
+    try {
+      const { data: appRow, error: appErr } = await this.s.from("v_applications")
+        .select("test_boundaries").eq("id", String(r.application_id)).maybeSingle();
+      const raw = !appErr && appRow ? (appRow as { test_boundaries?: unknown }).test_boundaries : null;
+      if (raw != null && typeof raw === "object") boundaries = normalizeBoundaries(raw);
+    } catch { /* boundaries stay null (conservative) */ }
+
+    return { runId: String(r.id), applicationId: String(r.application_id), deploymentUrl: String(r.deployment_url ?? ""), environment: "preview", flows, fullCoverage, boundaries, leaseExpiresAt: new Date(String(r.lease_expires_at)).getTime() };
   }
 
   async heartbeat(runId: string, workerId: string, leaseSecs: number): Promise<boolean> {
@@ -135,9 +149,9 @@ export class PostgresRunStore implements RunStore {
     const run = await this.loadRunSettlement(runId);
     // A run already settled as completed (charged) must never be resurrected to queued/failed or refunded.
     if (run && run.state === "completed") return;
-    // cancelled, target_mismatch, and flow_selection_invalid are deterministic (a retry cannot change
-    // them) -> terminal immediately.
-    const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid" || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
+    // cancelled, target_mismatch, flow_selection_invalid, and blocked_by_policy are deterministic (a
+    // retry cannot change them — the boundaries do not change on retry) -> terminal immediately.
+    const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid" || code === "blocked_by_policy" || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
     await this.s.from("v_preflight_runs").update({ state: terminal ? "failed" : "queued", failure_code: code, failure_message: message.slice(0, 500), lease_owner: null, lease_expires_at: null }).eq("id", runId);
     // Refund the FULL reservation ONLY on a terminal failure where no flow executed (discovery / queue /
     // provider-fail-before-browser). A requeue keeps the hold for the retry; a cancel or lease-loss AFTER
@@ -273,6 +287,10 @@ export class PostgresRunStore implements RunStore {
     const freshByFlowCat = new Map<string, Issue>();
     for (const result of results) {
       if (!result.flowId) continue;
+      // A blocked_by_policy flow never EXECUTED: it is treated exactly like a flow that did not run —
+      // excluded from reconciliation entirely, so its open issues stay untouched (unverified) and it can
+      // never open, continue, or resolve anything. Policy refusals are never application defects.
+      if (result.state === "blocked_by_policy") continue;
       if (result.state === "passed") { ran.push({ flowId: result.flowId, passed: true, failureCategories: [] }); continue; }
       const fresh = issuesFromRun([result], flows, refs);
       for (const issue of fresh) freshByFlowCat.set(`${result.flowId}|${issue.category ?? ""}`, issue);

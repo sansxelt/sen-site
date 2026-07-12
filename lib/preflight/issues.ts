@@ -62,6 +62,9 @@ export function issuesFromRun(results: FlowResult[], flows: FlowSpec[], flowRequ
   const byId = new Map(flows.map((f) => [f.flowId, f]));
   const out: Issue[] = [];
   for (const r of results) {
+    // blocked_by_policy is a boundary REFUSAL (the step never executed) — NEVER an application defect, so
+    // it can never open an issue. Explicit even though the failed/blocked filter below already excludes it.
+    if (r.state === "blocked_by_policy") continue;
     if (r.state !== "failed" && r.state !== "blocked") continue;
     const flow = byId.get(r.flowId); if (!flow) continue;
     const failedIdx = Math.max(0, r.steps.findIndex((s) => !s.ok));

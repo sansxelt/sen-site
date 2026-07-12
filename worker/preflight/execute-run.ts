@@ -6,6 +6,7 @@
 import type { BrowserProvider, RunStore, ClaimedRun, FlowResult, FlowSpec, RunDecision, StepObservation, ArtifactSink } from "./types";
 import { classifyProviderError } from "./provider-errors";
 import { resolveNavigationUrl, targetInvariantViolation } from "../../lib/preflight/target-url";
+import { classifyStepAction, evaluateBoundary } from "../../lib/preflight/boundaries";
 import { log } from "./redaction";
 
 export type ExecLimits = { leaseSecs: number; maxRunMs: number; maxFlowMs: number; maxStepsPerFlow: number };
@@ -17,13 +18,20 @@ export class CancelledError extends Error { constructor() { super("cancelled"); 
 // the run aborts as an infrastructure failure before any browser work, is terminal (retrying a
 // deterministic resolution bug cannot heal it), opens no issues, and refunds the reservation.
 export class TargetMismatchError extends Error { constructor(reason: string) { super(`target_mismatch: ${reason}`); } }
+// EVERY selected flow was refused by the application's test boundaries before ANY step executed: nothing
+// ran, so nothing may be billed. Terminal (a retry cannot change the boundaries), full refund, no issues.
+export class PolicyBlockedError extends Error { constructor() { super("blocked_by_policy"); } }
 
-async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, deps: ExecDeps, runId: string, runDeadline: number, targetUrl: string): Promise<FlowResult> {
+async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, deps: ExecDeps, runId: string, runDeadline: number, targetUrl: string, run: ClaimedRun, counters: { performedSteps: number }): Promise<FlowResult> {
   const now = deps.now ?? (() => Date.now());
   const steps: StepObservation[] = [];
   const flowDeadline = Math.min(now() + flow.maxMs, runDeadline);
   const boundedSteps = flow.steps.slice(0, deps.limits.maxStepsPerFlow);
   let state: FlowResult["state"] = "passed";
+  // The run target's origin, for the boundary origin rule. null when unparseable (the boundary layer then
+  // refuses absolute external navigations outright — with no valid target there is no legitimate origin).
+  let runOrigin: string | null = null;
+  try { runOrigin = new URL(targetUrl).origin; } catch { runOrigin = null; }
 
   // Set this flow's viewport before its steps: mobile flows run narrow so viewport-gated defects (e.g. a
   // nav overlay covering the primary action) reproduce; desktop flows run wide. Non-fatal on failure.
@@ -44,8 +52,19 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
       requested = step.target || step.value || "";
       exec = { ...step, target: resolveNavigationUrl(requested, targetUrl), value: undefined };
     }
+    // S5 test-boundary gate, BEFORE the step executes. Navigations are judged by their RESOLVED URL (where
+    // the browser will actually go — a stored absolute URL was already rebased onto the run target, which
+    // is exactly why existing approved flows can never trip the origin rule). A refusal never executes the
+    // step, is NEVER an application defect, and ends the flow as blocked_by_policy.
+    const verdict = evaluateBoundary(run.boundaries, classifyStepAction(exec, exec.target, runOrigin));
+    if (!verdict.allowed) {
+      steps.push({ action: exec.action, target: exec.target, ok: false, detail: `blocked_by_policy: ${verdict.reason}`.slice(0, 400), ms: 0 });
+      state = "blocked_by_policy";
+      break;
+    }
     let obs: StepObservation;
     try {
+      counters.performedSteps += 1;   // a step actually reached the page layer (billing honesty for the all-blocked case)
       obs = await page.perform(exec);
     } catch (e) {
       obs = { action: exec.action, target: exec.target, ok: false, detail: `step_error: ${(e as Error).message}`.slice(0, 120), ms: 0 };
@@ -61,7 +80,8 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
   // Deterministic side-channel evidence for the whole flow.
   const consoleErrors = page.drainConsoleErrors();
   const networkFailures = page.drainNetworkFailures();
-  const severity: FlowResult["severity"] = state === "passed" ? undefined : (flow.priority === "critical" ? "critical" : flow.priority === "important" ? "high" : "medium");
+  // blocked_by_policy carries no severity: it is a policy refusal, not evidence of a defect.
+  const severity: FlowResult["severity"] = state === "passed" || state === "blocked_by_policy" ? undefined : (flow.priority === "critical" ? "critical" : flow.priority === "important" ? "high" : "medium");
   return { flowId: flow.flowId, state, severity, steps, evidence: { consoleErrors, networkFailures } };
 }
 
@@ -80,12 +100,19 @@ export function decideRun(results: FlowResult[], flows: FlowSpec[], fullCoverage
   const criticalPassed = results.filter((r) => critById.get(r.flowId) && r.state === "passed").length;
   const criticalFailed = results.some((r) => critById.get(r.flowId) && (r.state === "failed" || r.state === "blocked"));
   const anyFailed = results.some((r) => r.state === "failed" || r.state === "blocked");
-  let decision: RunDecision = criticalFailed ? "blocked" : anyFailed ? "needs_review" : "ready";
+  // blocked_by_policy flows were NEVER executed, so they are excluded from failure evidence entirely.
+  // But a policy-blocked CRITICAL flow means the launch decision is unverifiable: a human must widen the
+  // boundary, so the decision softens to needs_review — never READY (unverified critical) and never
+  // BLOCKED (the application did not fail anything).
+  const policyBlocked = results.filter((r) => r.state === "blocked_by_policy");
+  const criticalPolicyBlocked = policyBlocked.some((r) => critById.get(r.flowId));
+  let decision: RunDecision = criticalFailed ? "blocked" : (anyFailed || criticalPolicyBlocked) ? "needs_review" : "ready";
   if (decision === "ready" && !fullCoverage) decision = "repair_verified";
   return { decision, summary: {
     critical_total: criticalTotal, critical_passed: criticalPassed, flows_total: flows.length,
     flows_passed: results.filter((r) => r.state === "passed").length,
-    blockers: results.filter((r) => critById.get(r.flowId) && r.state !== "passed").length,
+    blockers: results.filter((r) => critById.get(r.flowId) && r.state !== "passed" && r.state !== "blocked_by_policy").length,
+    policy_blocked: policyBlocked.length,
     coverage: fullCoverage ? "full" : "partial", selected_total: flows.length,
   } };
 }
@@ -113,10 +140,11 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
     log({ worker_id: deps.workerId, run_id: run.runId, provider_session_id: session.providerSessionId, event: "session_created", result: "ok" });
 
     const results: FlowResult[] = [];
+    const counters = { performedSteps: 0 };   // steps that actually reached the page (policy refusals never do)
     for (const flow of run.flows) {
       if (await deps.store.cancelRequested(run.runId)) throw new CancelledError();
       executedAny = true;
-      const result = await runFlow(flow, session.page, deps, run.runId, runDeadline, run.deploymentUrl);
+      const result = await runFlow(flow, session.page, deps, run.runId, runDeadline, run.deploymentUrl, run, counters);
       results.push(result);
       await deps.store.persistFlowResult(run.runId, result);      // incremental persistence
       // Evidence: capture the flow's final-state screenshot and upload it. Best-effort — an upload failure
@@ -130,6 +158,14 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
       log({ worker_id: deps.workerId, run_id: run.runId, flow_run_id: flow.flowId, event: "flow_done", result: result.state });
     }
 
+    // If EVERY selected flow was refused by policy before ANY step executed, nothing ran at all: the run
+    // fails terminally as blocked_by_policy with a full refund (nothing ran, nothing billed) instead of
+    // pretending to decide anything. If even one step executed, the run finalizes normally (the executed
+    // work is real and charged; policy-blocked flows soften the decision via decideRun).
+    if (results.length > 0 && counters.performedSteps === 0 && results.every((r) => r.state === "blocked_by_policy")) {
+      throw new PolicyBlockedError();
+    }
+
     await deps.store.setState(run.runId, "analyzing");
     const { decision, summary } = decideRun(results, run.flows, run.fullCoverage !== false);
     await deps.store.finalizeRun(run.runId, decision, summary);   // atomic: decision + charge-on-completion
@@ -138,10 +174,14 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
     // Cancels / lost leases keep their exact codes; everything else is classified into a coarse, owner-safe
     // failure code (classifyProviderError NEVER puts a raw provider string in the code). The truncated real
     // message still rides along as failure_message, which is stored server-side only.
-    const code = e instanceof CancelledError ? "cancelled" : e instanceof LeaseLostError ? "lease_lost" : e instanceof TargetMismatchError ? "target_mismatch" : classifyProviderError(e).code;
+    const code = e instanceof CancelledError ? "cancelled" : e instanceof LeaseLostError ? "lease_lost" : e instanceof TargetMismatchError ? "target_mismatch" : e instanceof PolicyBlockedError ? "blocked_by_policy" : classifyProviderError(e).code;
     // A failed cleanup must never strand the run: failRun requeues (attempts remain) or fails terminally,
-    // and refunds the reservation when no flow ran.
-    await deps.store.failRun(run.runId, code, (e as Error).message.slice(0, 200), executedAny);
+    // and refunds the reservation when no flow ran. blocked_by_policy means NO step ever executed
+    // (verified above), so it is reported as not-executed to guarantee the full refund.
+    const executed = e instanceof PolicyBlockedError ? false : executedAny;
+    await deps.store.failRun(run.runId, code, e instanceof PolicyBlockedError
+      ? "Every selected flow was refused by this application's test boundaries before any step executed. Widen the boundaries and run again. Nothing was charged."
+      : (e as Error).message.slice(0, 200), executed);
     log({ worker_id: deps.workerId, run_id: run.runId, event: "run_failed", result: code });
   } finally {
     // Always close the provider session; a close failure is logged, never thrown (would strand the run).

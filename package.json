@@ -41,7 +41,8 @@
     "routes:test": "tsx scripts/preflight-routes-verify.ts",
     "billing:returns:test": "tsx scripts/billing-returns-verify.ts",
     "context:test": "tsx scripts/preflight-context-verify.ts",
-    "deployments:test": "tsx scripts/preflight-deployments-verify.ts"
+    "deployments:test": "tsx scripts/preflight-deployments-verify.ts",
+    "boundaries:test": "tsx scripts/preflight-boundaries-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

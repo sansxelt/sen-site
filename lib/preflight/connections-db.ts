@@ -8,6 +8,7 @@
 // (safe metadata + masks only). openTestAccount exists for the WORKER only.
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import { sealSecret, openSecret, maskSecretValue, vaultConfigured } from "./secret-vault";
+import type { TestBoundaries } from "./boundaries";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -231,32 +232,11 @@ export async function openTestAccount(owner: string, applicationId: string, conn
 
 // ── Setup extras on the application row (environment / context / boundaries) ──────────────────────────
 
-// Conservative-by-default test boundaries: every permit OFF until the owner turns it on. The fixed
-// never-rules (no destructive actions, no live payment methods, no production-data deletion) are product
-// invariants, not toggles, so they are not stored here.
-export type TestBoundaries = {
-  allowed_domains: string[];
-  permit_account_creation: boolean; permit_db_writes: boolean; permit_email: boolean;
-  permit_test_purchases: boolean; permit_file_upload: boolean;
-};
-export const DEFAULT_BOUNDARIES: TestBoundaries = {
-  allowed_domains: [],
-  permit_account_creation: false, permit_db_writes: false, permit_email: false,
-  permit_test_purchases: false, permit_file_upload: false,
-};
-export function normalizeBoundaries(raw: unknown): TestBoundaries {
-  const r = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  return {
-    allowed_domains: Array.isArray(r.allowed_domains)
-      ? r.allowed_domains.filter((x): x is string => typeof x === "string").map((x) => x.trim().toLowerCase().slice(0, 253)).filter(Boolean).slice(0, 20)
-      : [],
-    permit_account_creation: r.permit_account_creation === true,
-    permit_db_writes: r.permit_db_writes === true,
-    permit_email: r.permit_email === true,
-    permit_test_purchases: r.permit_test_purchases === true,
-    permit_file_upload: r.permit_file_upload === true,
-  };
-}
+// Conservative-by-default test boundaries. The shape, defaults, and normalization moved VERBATIM to
+// lib/preflight/boundaries.ts (PURE — no DB/Next imports) so the worker can enforce them before every
+// step; re-exported here so every existing importer keeps working unchanged.
+export { DEFAULT_BOUNDARIES, normalizeBoundaries } from "./boundaries";
+export type { TestBoundaries } from "./boundaries";
 
 // Product-definition sources: document kinds (prompt/PRD/requirements/readme) plus the guided fields the
 // connect workspace collects (summary/goal/workflows/data/auth_expect/billing_expect and the original

@@ -2,6 +2,7 @@
 // provider (Browserbase) and the run store (Postgres) sit behind interfaces so both are replaceable and
 // the whole lifecycle is testable with in-memory fakes (no DB, no browser, no credentials). Nothing here
 // imports Next or a specific vendor SDK.
+import type { TestBoundaries } from "../../lib/preflight/boundaries"; // pure module (type-only; erased)
 
 // ── Browser provider ──────────────────────────────────────────────────────────────────────────────
 export type CreateBrowserSessionInput = {
@@ -79,12 +80,20 @@ export type ClaimedRun = {
   // store at claim time from this single run's own contract snapshot — coverage is NEVER aggregated across
   // runs (different deployment URLs / contract versions must not combine into a READY).
   fullCoverage: boolean;
+  // The application's test boundaries (v_applications.test_boundaries via the run's application), read at
+  // claim time. null = never recorded / column unapplied — enforced as the MOST conservative policy
+  // (every permit off), which is still fully backward compatible because core actions (all that existing
+  // approved flows do) are always allowed. See lib/preflight/boundaries.ts.
+  boundaries: TestBoundaries | null;
   leaseExpiresAt: number;       // epoch ms
 };
 export type FlowSpec = { flowId: string; name: string; priority: "critical" | "important" | "informational"; startPath?: string; steps: Step[]; maxMs: number; destructiveAllowed: boolean; viewport?: { width: number; height: number } };
 
 export type FlowEvidence = { consoleErrors: string[]; networkFailures: { method: string; path: string; status: number }[] };
-export type FlowResult = { flowId: string; state: "passed" | "failed" | "blocked" | "skipped"; severity?: "critical" | "high" | "medium" | "low"; steps: StepObservation[]; evidence?: FlowEvidence };
+// "blocked_by_policy" (S5): a step was REFUSED by the application's test boundaries before it executed.
+// NEVER an application defect: it opens no issue, is excluded from pass/fail evidence, and can only ever
+// soften a decision to needs_review (a human must widen the boundary) — never READY, never BLOCKED.
+export type FlowResult = { flowId: string; state: "passed" | "failed" | "blocked" | "skipped" | "blocked_by_policy"; severity?: "critical" | "high" | "medium" | "low"; steps: StepObservation[]; evidence?: FlowEvidence };
 // ready is a LAUNCH decision and requires full critical coverage on one run target; repair_verified is the
 // best outcome of a passing partial-coverage (targeted) run — the repair is proven, readiness is not.
 export type RunDecision = "ready" | "needs_review" | "blocked" | "repair_verified";
