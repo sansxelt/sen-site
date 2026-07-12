@@ -1,3 +1,5 @@
+import { safeReturnPath } from "./return-urls";
+
 export const providerLabels = {
   credentials: "Email",
   github: "GitHub",
@@ -34,11 +36,12 @@ export const oauthProviders: Array<{
 ];
 
 export function getSafeRedirectPath(value?: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/account";
-  }
-
-  return value;
+  // Hardened via the single return-URL allowlist (lib/return-urls.ts, V1.1 S1): beyond the original
+  // missing-"/" and "//" checks, backslash tricks (browsers normalize "\" to "/"), encoded slashes and
+  // dots, dot-segment traversal, and control characters all collapse to the safe default too.
+  if (!value) return "/account";
+  const safe = safeReturnPath(value);
+  return safe === "/" && value.trim() !== "/" ? "/account" : safe;
 }
 
 export function getSignInPath(callbackUrl = "/account") {

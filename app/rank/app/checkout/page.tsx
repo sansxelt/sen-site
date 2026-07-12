@@ -5,7 +5,7 @@ import { PLAN_CATALOG } from "@/lib/v-plans";
 import { TOPUP_MIN_DOLLARS, topupMaxDollars } from "@/lib/v-entitlements";
 import { passPricingEnabled, PLAN_CATALOG_V1 } from "@/lib/preflight/pass-pricing";
 import { CheckoutClient, PlanPrice } from "./checkout-client";
-import { PlanPriceV1, v1Blurb, v1Included } from "./checkout-v1";
+import { PlanPriceV1, V1RenewalTerms, v1Blurb, v1Included } from "./checkout-v1";
 
 export const metadata: Metadata = { title: "Checkout" };
 
@@ -95,6 +95,9 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
                 ))}
               </ul>
             </div>
+
+            {/* Native review screen (V1.1 S1): renewal + cancellation behavior in plain words BEFORE payment. */}
+            {v1Plan ? <V1RenewalTerms plan={v1Plan} cycle={cycle} /> : null}
 
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16, fontSize: 12.5, color: "var(--fg-4)" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>

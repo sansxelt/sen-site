@@ -4,12 +4,11 @@
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getStripe, isStripeConfigured, APP_URL } from "@/lib/stripe";
+import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
+import { billingReturnUrls, stripeReturnUrl } from "@/lib/return-urls";
 
 export const runtime = "nodejs";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || APP_URL;
 
 export async function POST() {
   const session = await auth();
@@ -30,9 +29,11 @@ export async function POST() {
         try { await getSupabaseAdminClient().from("v_profiles" as never).update({ stripe_customer_id: customer.id } as never).eq("user_id", norm); } catch { /* best-effort */ }
       }
     }
+    // Return discipline (V1.1 S1): the portal comes back to the canonical portal-return route from
+    // lib/return-urls.ts, which re-fetches subscription state so portal changes show up natively.
     const portal = await stripe.billingPortal.sessions.create({
       customer: customer.id,
-      return_url: `${SITE_URL}/billing`,
+      return_url: stripeReturnUrl(billingReturnUrls().portalReturn),
     });
     return NextResponse.json({ url: portal.url });
   } catch (e) {

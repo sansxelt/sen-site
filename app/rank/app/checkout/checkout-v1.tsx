@@ -34,6 +34,32 @@ export function v1Included(plan: PlanV1, cycle: V1Cycle): string[] {
   ];
 }
 
+// Renewal + cancellation terms shown BEFORE payment (V1.1 S1 native review screen): the buyer reads
+// exactly what recurs, when, and how cancellation behaves in our own words before the Stripe panel is
+// even mounted. Nothing here may promise an unimplemented behavior (verdict ruling 10).
+export function V1RenewalTerms({ plan, cycle }: { plan: PlanV1; cycle: V1Cycle }) {
+  const amt = usdFromCents(cycle === "yearly" ? plan.yearlyCents : plan.monthlyCents);
+  const lines: string[] = [
+    cycle === "yearly"
+      ? `Renews every 12 months until cancelled. ${amt} is charged up front for the year, and your usage is released in monthly buckets, never all at once.`
+      : `Renews monthly until cancelled. ${amt} is charged at the start of each subscription month.`,
+    "Cancel anytime from Billing. Cancellation takes effect at the end of the period you have paid for, so your access and remaining allowance continue until then. No clawback.",
+    "No overage charges: when a month's allowance is used up we refuse the run and say so, we never bill extra on top of your plan.",
+  ];
+  return (
+    <div className="card" style={{ marginTop: 14, padding: 20 }}>
+      <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Renewal and cancellation</div>
+      <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
+        {lines.map((x) => (
+          <li key={x} style={{ display: "flex", gap: 10, fontSize: 13, color: "var(--fg-3)", alignItems: "flex-start", lineHeight: 1.5 }}>
+            <span style={{ width: 5, height: 5, flex: "none", marginTop: 7, borderRadius: "50%", background: "var(--acc-deep)" }} />{x}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 // Mirrors the visual shape of PlanPrice (checkout-client.tsx) but is fully server-rendered from catalog
 // cents — no fetch, because the _v1 amounts are authoritative in code, not read back from Stripe.
 export function PlanPriceV1({ plan, cycle }: { plan: PlanV1; cycle: V1Cycle }) {

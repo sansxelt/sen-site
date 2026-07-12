@@ -147,6 +147,7 @@ function PaypalSubscribe({ plan, cycle }: { plan: string; cycle: "monthly" | "ye
 // prices (the _v1 pricing-cutover plans) — everything else is unchanged.
 export function CheckoutClient({ amount, plan, cycle, paypal = true }: { amount?: number; plan?: string; cycle?: string; paypal?: boolean }) {
   const [error, setError] = useState("");
+  const [errorCode, setErrorCode] = useState("");
   const [ready, setReady] = useState(false);
 
   const fetchClientSecret = useCallback(async () => {
@@ -155,10 +156,13 @@ export function CheckoutClient({ amount, plan, cycle, paypal = true }: { amount?
     const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok || !j.clientSecret) {
+      setErrorCode(typeof j.error === "string" ? j.error : "checkout_failed");
       setError(
         j.error === "billing_unavailable" ? "Billing is temporarily unavailable. Try again later."
         : j.error === "plan_unavailable" ? "This plan isn't available right now. Try another, or contact us."
         : j.error === "signin_required" ? "Please sign in to continue."
+        // Server-side duplicate-checkout guard (409): one subscription per account.
+        : j.error === "already_subscribed" ? "You already have an active plan. Change or cancel it from Billing instead of starting a second subscription."
         : "Couldn't start checkout. Please try again.",
       );
       throw new Error(j.error || "checkout_failed");
@@ -172,7 +176,9 @@ export function CheckoutClient({ amount, plan, cycle, paypal = true }: { amount?
       <div className="card" style={{ borderColor: "var(--line-2)" }}>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 6 }}>Checkout couldn&apos;t start</div>
         <p style={{ color: "var(--fg-3)", fontSize: 14, margin: 0 }}>{error}</p>
-        <button onClick={() => window.location.reload()} className="btn btn--ghost" style={{ marginTop: 14 }}>Try again</button>
+        {errorCode === "already_subscribed"
+          ? <a href="/billing" className="btn" style={{ marginTop: 14 }}>Go to Billing</a>
+          : <button onClick={() => window.location.reload()} className="btn btn--ghost" style={{ marginTop: 14 }}>Try again</button>}
       </div>
     );
   }

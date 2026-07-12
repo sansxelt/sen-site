@@ -86,6 +86,23 @@ export async function recentAccountEvents(userId: string, limit = 10): Promise<E
   } catch { return []; }
 }
 
+// Recent events of ONE type for ONE owner since a cutoff — the read side of idempotency guards that
+// log through v_events (e.g. the subscribe route's 10-minute duplicate-checkout window reads back its
+// own "checkout_session_created" rows). Owner-scoped; tolerant of a missing table.
+export async function recentEventsByType(userId: string, eventType: string, sinceIso: string, limit = 5): Promise<EventRow[]> {
+  if (!userId || !eventType || !isDatabaseConfigured()) return [];
+  try {
+    const s = getSupabaseAdminClient();
+    const { data, error } = await s.from("v_events" as never)
+      .select("id,user_id,test_id,event_type,actor_type,source,metadata,created_at")
+      .eq("user_id", userId.trim().toLowerCase()).eq("event_type", eventType)
+      .gte("created_at", sinceIso)
+      .order("created_at", { ascending: false }).limit(limit);
+    if (error) return [];
+    return (data as unknown as EventRow[]) ?? [];
+  } catch { return []; }
+}
+
 // ADMIN-ONLY: recent audit events across ALL users. The single cross-user read in
 // this module — callers MUST gate with isAdmin() server-side. Optional filters.
 export async function recentAuditEvents(opts: { limit?: number; eventType?: string; actorType?: string; userId?: string; testId?: string } = {}): Promise<EventRow[]> {

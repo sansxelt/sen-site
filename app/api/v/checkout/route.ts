@@ -7,12 +7,12 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { ensureProfile } from "@/lib/v-db";
 import { logEvent } from "@/lib/v-events";
-import { getStripe, isStripeConfigured, APP_URL } from "@/lib/stripe";
+import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { TOPUP_MIN_DOLLARS, topupMaxDollars } from "@/lib/v-entitlements";
+import { topupReturnUrl, stripeReturnUrl } from "@/lib/return-urls";
 
 export const runtime = "nodejs";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || APP_URL;
 const MIN = TOPUP_MIN_DOLLARS, CREDITS_PER_DOLLAR = 10;
 // $999,999 — the hard ceiling for a single Stripe charge. Above this needs invoicing
 // (a future build); elevated accounts get a contact path, not an oversized checkout.
@@ -52,7 +52,9 @@ export async function POST(req: Request) {
       client_reference_id: email,
       metadata: { type: "credit_topup", credits: String(credits), amountDollars: String(amountDollars), user_id: email },
       allow_promotion_codes: true,
-      return_url: `${SITE_URL}/credits?session_id={CHECKOUT_SESSION_ID}`,
+      // Top-ups keep the /credits?session_id= return the credits page already polls (V1.1 S1: only
+      // SUBSCRIPTION checkouts moved to /billing/success). URL from lib/return-urls.ts, never inline.
+      return_url: `${stripeReturnUrl(topupReturnUrl())}?session_id={CHECKOUT_SESSION_ID}`,
     });
     await logEvent({ userId: email, eventType: "checkout_started", actorType: "owner", source: "web", metadata: { kind: "credit_topup", credits, amount: amountDollars } });
     return NextResponse.json({ clientSecret: checkout.client_secret });
