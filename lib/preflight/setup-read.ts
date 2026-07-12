@@ -65,6 +65,33 @@ export async function environmentsByApp(owner: string, appIds: string[]): Promis
   return out;
 }
 
+// Context sources WITH content, for contract synthesis only (S7): the one read path that needs the actual
+// text. Owner-scoped, bounded per source so a giant paste never balloons a prompt assembly, and degrading
+// to [] on a pre-migration-5 schema exactly like getSetupExtras. Content goes to the synthesis prompt
+// builder (which applies its own tighter caps) and nowhere else.
+export type ContextSourceContent = { kind: string; name: string; content: string };
+const SYNTH_SOURCE_CONTENT_CAP = 8000;
+export async function readContextSources(owner: string, applicationId: string): Promise<ContextSourceContent[]> {
+  if (!isDatabaseConfigured()) return [];
+  const { data, error } = await db().from("v_applications")
+    .select("context")
+    .eq("user_id", norm(owner)).eq("id", applicationId).maybeSingle();
+  if (error || !data) return [];
+  const raw = (data as Record<string, unknown>).context;
+  if (!Array.isArray(raw)) return [];
+  return (raw as unknown[]).slice(0, 12).flatMap((entry) => {
+    const e = (entry && typeof entry === "object" ? entry : {}) as Record<string, unknown>;
+    const kind = typeof e.kind === "string" ? e.kind : "";
+    const content = typeof e.content === "string" ? e.content : "";
+    if (!kind || !content.trim()) return [];
+    return [{
+      kind,
+      name: (typeof e.name === "string" && e.name.trim() ? e.name : kind).slice(0, 120),
+      content: content.slice(0, SYNTH_SOURCE_CONTENT_CAP),
+    }];
+  });
+}
+
 // The SOURCE half of the connection graph (github / custom_deploy) for a set of applications, one query.
 // Safe metadata only (repo, branch, commit, provider_name); encrypted_ref is never selected. Unmigrated
 // v_app_connections -> empty map, so pages simply omit the commit/branch line.

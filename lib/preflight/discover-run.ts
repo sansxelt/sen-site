@@ -6,12 +6,18 @@
 //                         successful discovery, and planMerge/applyMergePlan only insert+patch (never
 //                         delete), so existing requirements always survive a bad run.
 //   FAIL-SOFT AI          synthesize() returns null on any model error; discovery then finalizes on the
-//                         deterministic crawl snapshot with requirements left exactly as they were.
+//                         deterministic crawl snapshot. Existing requirements are never rewritten on that
+//                         path; the only additions are the DETERMINISTIC connection-signal suggestions
+//                         (pure, no AI, origin "inference"), and merge only ever inserts + patches.
 import { getApplication, getContract } from "../v-applications";
 import { crawl } from "./discover-crawl";
 import { makeSafeFetcher } from "./crawl-fetch";
-import { synthesize, toSuggestions } from "./discover-synthesis";
-import { planMerge, fingerprint } from "./contract-merge";
+import {
+  synthesize, toSuggestions, availableProvenance, connectionSignalSuggestions, type SynthContext,
+} from "./discover-synthesis";
+import { planMerge, fingerprint, type Suggestion } from "./contract-merge";
+import { listConnections } from "./connections-db";
+import { readContextSources } from "./setup-read";
 import {
   createDiscovery, setDiscoveryState, persistDiscoverySnapshot, failDiscovery,
   listRequirementsForMerge, applyMergePlan, insertFlowSuggestions,
@@ -45,16 +51,43 @@ export async function runDiscovery(owner: string, appId: string, existing?: { id
     }
     const finalState = snapshot.state === "partial" ? "partial" : "completed";
 
+    // S7 context-aware synthesis inputs: the owner's product-definition sources (by kind) and the
+    // connection presence signals ride into the prompt. Both reads degrade to empty on any miss.
+    const [contextSources, connections] = await Promise.all([
+      readContextSources(owner, appId),
+      listConnections(owner, appId),
+    ]);
+    const providers = Array.from(new Set(connections.map((c) => c.provider)));
+    const context: SynthContext = {
+      sources: contextSources.map((s) => ({ kind: s.kind, content: s.content })),
+      connections: providers,
+    };
+
     await setDiscoveryState(owner, id, "synthesizing");
-    const synth = await synthesize(snapshot.pages, contract?.source_prompt ?? null);
+    const synth = await synthesize(snapshot.pages, contract?.source_prompt ?? null, context);
     if (!synth || !contract) {
-      // AI unavailable, or no contract to attach to: keep the last successful requirements untouched and
-      // finalize on the deterministic snapshot. Requirements are unchanged.
+      // AI unavailable, or no contract to attach to. Existing requirements stay exactly as they were;
+      // the DETERMINISTIC path may still contribute the standard connection-signal suggestions (pure,
+      // no AI, origin "inference", disabled until the owner approves).
+      if (contract) {
+        const det: (Suggestion & { enabledDefault: boolean })[] = connectionSignalSuggestions(providers);
+        if (det.length) {
+          const enabledByFp: Record<string, boolean> = {};
+          for (const s of det) enabledByFp[fingerprint(s.category, s.requirement)] = s.enabledDefault;
+          const existingReqs = await listRequirementsForMerge(owner, contract.id);
+          const plan = planMerge(existingReqs, det, version);
+          // A keyless pass carries only the connection signals, so it must NOT mark the last successful
+          // AI discovery's suggestions stale: drop the stale-marking patches, keep inserts + refreshes.
+          plan.updates = plan.updates.filter((u) => u.patch.stale !== true);
+          await setDiscoveryState(owner, id, "persisting");
+          await applyMergePlan(owner, contract.id, plan, version, enabledByFp);
+        }
+      }
       await setDiscoveryState(owner, id, finalState);
       return;
     }
 
-    const suggestions = toSuggestions(synth);
+    const suggestions = toSuggestions(synth, availableProvenance(contract.source_prompt ?? null, context));
     const enabledByFp: Record<string, boolean> = {};
     for (const s of suggestions) enabledByFp[fingerprint(s.category, s.requirement)] = s.enabledDefault;
     const existingReqs = await listRequirementsForMerge(owner, contract.id);

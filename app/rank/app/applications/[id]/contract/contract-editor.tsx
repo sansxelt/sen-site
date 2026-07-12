@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ContractRequirement, Severity } from "@/lib/v-applications";
 import { categoryLabel, SEVERITY_LABELS as SEV_LABEL, SEVERITY_COLORS as SEV_COLOR } from "./labels";
+import { ProvenanceChip } from "./provenance-chip";
 import { Ic, I } from "@/app/rank/_components/icons";
 
 // Client editor for a Production Contract's requirements. Optimistic local state: every toggle / severity
@@ -169,6 +170,7 @@ export function ContractEditor({ contractId, initial, status }: { contractId: st
                   <div style={{ flex: 1, minWidth: 0, opacity: r.enabled ? 1 : 0.5 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
                       <SevPill severity={r.severity} />
+                      <ProvenanceChip source={r.source} origin={r.origin} />
                       {!r.enabled ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)" }}>Disabled</span> : null}
                     </div>
                     <div style={{ fontSize: 14, color: "var(--fg-1)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.requirement}</div>

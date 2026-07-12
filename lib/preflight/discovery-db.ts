@@ -143,7 +143,10 @@ export async function applyMergePlan(
         contract_id: contractId, user_id: uid,
         category: ins.category, requirement: ins.requirement, severity: ins.severity,
         enabled: synthEnabledByFp[ins.fingerprint] ?? false,
-        origin: "discovery", review_state: "suggested", source: "discovery",
+        // S7 provenance: `source` carries the validated single-strongest-source tag (closed set in
+        // discover-synthesis); `origin` is "inference" for deterministic connection-signal suggestions.
+        // Both fall back to the pre-S7 value so an old-style plan still writes honest columns.
+        origin: ins.origin ?? "discovery", review_state: "suggested", source: ins.source ?? "discovery",
         fingerprint: ins.fingerprint, source_refs: ins.source_refs ?? [],
         reasoning_summary: ins.reasoning_summary ?? null,
         discovery_version_created: discoveryVersion,

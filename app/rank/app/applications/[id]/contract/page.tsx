@@ -8,7 +8,8 @@ import {
 import { ContractEditor } from "./contract-editor";
 import { NewDraftButton } from "./new-draft-button";
 import { AppTabs } from "../app-tabs";
-import { categoryLabel, sourceLabel, SEVERITY_LABELS, SEVERITY_COLORS } from "./labels";
+import { categoryLabel, SEVERITY_LABELS, SEVERITY_COLORS } from "./labels";
+import { ProvenanceChip } from "./provenance-chip";
 import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Production Contract" };
@@ -101,17 +102,17 @@ function ApprovedContract({ appId, contract, reqs, flows }: { appId: string; con
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 7 }}>
                     <SevPill severity={r.severity} />
                     <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{categoryLabel(r.category)}</span>
+                    <ProvenanceChip source={r.source} origin={r.origin} />
                     {!r.enabled ? <span style={smallLabel}>Disabled, not tested</span> : null}
                   </div>
                   <div style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.55, wordBreak: "break-word" }}>{r.requirement}</div>
-                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 7, fontSize: 12.5 }}>
-                    <span style={{ color: "var(--fg-4)" }}>Source: {sourceLabel(r.source)}</span>
-                    {r.enabled ? (
-                      n > 0
+                  {r.enabled ? (
+                    <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 7, fontSize: 12.5 }}>
+                      {n > 0
                         ? <span style={{ color: "var(--fg-4)" }}>Covered by {n} approved flow{n === 1 ? "" : "s"}</span>
-                        : <span style={{ color: "var(--err)" }}>Not covered by any flow yet</span>
-                    ) : null}
-                  </div>
+                        : <span style={{ color: "var(--err)" }}>Not covered by any flow yet</span>}
+                    </div>
+                  ) : null}
                 </li>
               );
             })}

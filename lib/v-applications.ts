@@ -25,6 +25,9 @@ export type ProductionContract = {
 export type ContractRequirement = {
   id: string; contract_id: string; category: string; requirement: string; severity: Severity; enabled: boolean;
   source: string | null; confidence: number | null; role: string | null; area: string | null; approved: boolean; order_index: number;
+  // Phase-2 additive column (sql/vraelis-preflight-2-discovery.sql); absent until that migration runs.
+  // "inference" marks a requirement Vraelis proposed from a presence signal rather than observed evidence.
+  origin?: string | null;
 };
 export type TestFlow = {
   id: string; contract_id: string; name: string; goal: string | null; role: string | null; start_path: string | null;
@@ -141,7 +144,9 @@ export async function addRequirement(userId: string, contractId: string, input: 
   if (!requirement) return null;
   const { data } = await db().from("v_contract_requirements").insert({
     contract_id: contractId, user_id: uid, requirement, category: (input.category || "general").slice(0, 60),
-    severity: input.severity ?? "important", source: "user", approved: true, enabled: true,
+    // Provenance (S7): hand-added requirements record source "manual" (the closed provenance set); the
+    // origin column keeps its default "user". Older rows with source "user"/"seed" stay labeled honestly.
+    severity: input.severity ?? "important", source: "manual", approved: true, enabled: true,
     role: input.role ?? null, area: input.area ?? null, order_index: 9999,
   } as never).select("*").single();
   return (data as unknown as ContractRequirement) ?? null;

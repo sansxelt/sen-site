@@ -27,21 +27,48 @@ export function categoryLabel(raw: string | null | undefined): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// Where a requirement came from, in the owner's language. Unknown machine values fall back to a
-// sentence-cased version rather than a raw token; a missing source means the owner added it.
+// Where a requirement came from, in the owner's language. Covers the S7 closed provenance set
+// (prompt | summary | prd | readme | connection:<kind> | manual | inference) plus every legacy value.
+// Unknown machine values fall back to a human phrase, never a raw token; a missing source means the
+// owner added it.
 const SOURCE_LABELS: Record<string, string> = {
-  build_prompt: "Original product prompt",
+  // S7 closed set
+  prompt: "From your prompt",
+  summary: "From product summary",
+  prd: "From PRD",
+  readme: "From README",
+  "connection:stripe_test": "From Stripe connection",
+  "connection:supabase": "From Supabase connection",
+  "connection:sentry": "From Sentry connection",
+  "connection:github": "From GitHub connection",
+  manual: "Added manually",
+  inference: "Vraelis inference",
+  // legacy values that may exist on older rows
+  build_prompt: "From your prompt",
   discovery: "Discovered from the app",
-  user: "Added by you",
-  seed: "Added by you",
-  requirements_file: "Requirements file",
+  user: "Added manually",
+  seed: "Added manually",
+  requirements_file: "From requirements file",
 };
 
 export function sourceLabel(raw: string | null | undefined): string {
-  if (!raw) return "Added by you";
+  if (!raw) return "Added manually";
   const key = raw.trim().toLowerCase();
   const mapped = SOURCE_LABELS[key];
   if (mapped) return mapped;
-  const s = key.replace(/_/g, " ");
+  // Any unrecognized connection kind stays honest without leaking the enum.
+  if (key.startsWith("connection:")) return "From connected service";
+  const s = key.replace(/[_:]/g, " ").trim();
   return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Everything a provenance chip needs. INFERRED requirements (source "inference", or origin "inference"
+// for the deterministic connection-signal ones) are visually distinct: muted chip + an explicit
+// "inferred" qualifier. The qualifier is skipped when the label already says inference.
+export type SourceChipInfo = { label: string; inferred: boolean; qualifier: string | null };
+export function sourceChipInfo(source: string | null | undefined, origin?: string | null): SourceChipInfo {
+  const key = (source || "").trim().toLowerCase();
+  const label = sourceLabel(source);
+  const inferred = key === "inference" || (origin || "").trim().toLowerCase() === "inference";
+  return { label, inferred, qualifier: inferred && key !== "inference" ? "inferred" : null };
 }

@@ -4,7 +4,9 @@
 import type { Severity } from "../v-applications";
 
 export type ReqState = "suggested" | "approved" | "rejected" | "archived";
-export type ReqOrigin = "prompt" | "discovery" | "user" | "imported" | "system";
+// "inference" (S7) marks a requirement Vraelis proposed from a presence signal (e.g. a connected service)
+// rather than observed evidence; the UI renders those with an explicit inferred qualifier.
+export type ReqOrigin = "prompt" | "discovery" | "user" | "imported" | "system" | "inference";
 export type SourceRef = { type: string; url?: string; reference: string };
 
 export type MergeReq = {
@@ -12,7 +14,12 @@ export type MergeReq = {
   origin: ReqOrigin; review_state: ReqState; user_modified: boolean; stale: boolean;
   source_refs: SourceRef[]; discovery_version_last_suggested?: number | null;
 };
-export type Suggestion = { requirement: string; category: string; severity: Severity; source_refs: SourceRef[]; confidence?: number; reasoning_summary?: string };
+// `provenance` (S7) is the validated single-strongest-source tag (closed set in discover-synthesis);
+// `origin` lets a deterministic connection-signal suggestion mark itself "inference" (default: discovery).
+export type Suggestion = {
+  requirement: string; category: string; severity: Severity; source_refs: SourceRef[];
+  confidence?: number; reasoning_summary?: string; provenance?: string; origin?: "discovery" | "inference";
+};
 
 // Stable semantic fingerprint: lowercase, strip punctuation, collapse whitespace, drop leading articles.
 // Category-scoped so the same phrase in two categories stays distinct.
@@ -28,7 +35,7 @@ function mergeRefs(a: SourceRef[], b: SourceRef[]): SourceRef[] {
 }
 
 export type MergePlan = {
-  inserts: { fingerprint: string; requirement: string; category: string; severity: Severity; origin: "discovery"; review_state: "suggested"; source_refs: SourceRef[]; reasoning_summary?: string; discovery_version_last_suggested: number }[];
+  inserts: { fingerprint: string; requirement: string; category: string; severity: Severity; origin: "discovery" | "inference"; review_state: "suggested"; source_refs: SourceRef[]; source?: string; reasoning_summary?: string; discovery_version_last_suggested: number }[];
   updates: { id: string; patch: Partial<MergeReq> }[];
   summary: { added: number; refreshed: number; preserved: number; marked_stale: number; reappeared_kept_rejected: number };
 };
@@ -45,9 +52,10 @@ export function planMerge(existing: MergeReq[], suggestions: Suggestion[], disco
     suggestedFps.add(fp);
     const cur = byFp.get(fp);
     if (!cur) {
-      // New supported requirement -> add as a suggestion (origin discovery). Never auto-enabled here; the
-      // synthesis decides enabled/severity defaults; merge only introduces it for review.
-      plan.inserts.push({ fingerprint: fp, requirement: sug.requirement, category: sug.category, severity: sug.severity, origin: "discovery", review_state: "suggested", source_refs: sug.source_refs, reasoning_summary: sug.reasoning_summary, discovery_version_last_suggested: discoveryVersion });
+      // New supported requirement -> add as a suggestion (origin discovery, or inference for a
+      // connection-signal one). Never auto-enabled here; the synthesis decides enabled/severity defaults;
+      // merge only introduces it for review. The validated provenance tag rides along as `source`.
+      plan.inserts.push({ fingerprint: fp, requirement: sug.requirement, category: sug.category, severity: sug.severity, origin: sug.origin ?? "discovery", review_state: "suggested", source_refs: sug.source_refs, source: sug.provenance, reasoning_summary: sug.reasoning_summary, discovery_version_last_suggested: discoveryVersion });
       plan.summary.added++;
       continue;
     }
