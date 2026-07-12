@@ -122,3 +122,22 @@ tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run
 - Six _v1 Stripe prices verified live (7/7); portal configured by founder; sandbox checkout tested by founder.
 - Sequence run exactly as approved: runs paused -> queue confirmed empty (0 active) -> balance converted (25 promo credits -> 250 cents, sources untouched) -> VRAELIS_PASS_PRICING=1 on Vercel + Railway -> both redeployed -> live verification (v1 ladder up, zero legacy numbers, zero forbidden claims, $15 PAYG) -> kill switch removed, runs resumed.
 - Production is now on per-pass pricing: Builder/Pro/Scale live with monthly/yearly, PAYG $15/$3, one-lifetime free pass, entitlement metering active. NEXT: fresh-account UI-only canary on the new system, then Browserbase Developer upgrade immediately before beta invites/ads.
+
+## 2026-07-12/13: V1.1 AFK window report (founder away ~8h; autonomous execution)
+DEPLOYED to Vercel: S1 billing returns + link audit (39a09fc, earlier) and S2 connection management
+(a1bdaaf): /applications/[id]/settings/connections with six-state lifecycle, SSRF-guarded read-only
+health checks, atomic stale-edit guard, audit rail, idempotent creation; a four-angle code review found
+9 issues, all fixed and locked into the suite (connections:manage:test 104/104).
+COMMITTED + PUSHED, NOT DEPLOYED TO VERCEL (migration gates, per the addendum):
+- S3 context snapshots (31be578): immutable versioned context graph, Context tab, contract + run pinning;
+  fail-clear everywhere migration 7 is missing. context:test 61/61.
+- S4 deployment identity (e4209b6): v_deployments recording + dedupe, report-hero tested-deployment block,
+  New-deployment-unverified banner (never alters the health decision), comparison UI, manual recording;
+  fail-clear on migration 8. deployments:test 77/77.
+LIVE ON RAILWAY via push (backward compatible by design, proven by the untouched suites):
+- S5 worker boundary enforcement (21f3a65): pre-step policy gate, blocked_by_policy flow state (never a
+  defect, never billable when nothing ran, critical policy-block -> needs_review). boundaries:test 77/77.
+SUITE COUNT at window end: 18 suites, all green (security 135/135).
+BLOCKED (operator): migration 7 then 8 per docs/v1.1-operator-return-checklist.md (then I deploy S3/S4);
+S6 authenticated flows needs VRAELIS_SECRET_KEY on Railway; S12 needs the GitHub App registered.
+STOP-GATES HONORED: no migrations applied, no Stripe/provider changes, no destructive anything.
