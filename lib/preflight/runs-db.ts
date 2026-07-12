@@ -10,6 +10,7 @@
 import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin";
 import { listRuns, listFlows, type RunSummary } from "../v-applications";
 import { dedupBlocksReplacement, submissionIdForAttempt } from "./flow-selection";
+import { snapshotIfChanged } from "./context-snapshots";
 import type { Issue } from "./issues";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -256,14 +257,32 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
   if (!eligible.length) return null;
   const selectedFlowIds = eligible.map((f) => f.id);
 
+  // Pin the context version this run launches under (S3). Best-effort per the migration rule:
+  // snapshotIfChanged warns (naming migration 7's sql file) and returns null while v_context_snapshots
+  // is missing, and the insert below only carries the column when a snapshot id was actually obtained,
+  // retrying once without it on a column-missing error, so a launch NEVER fails over context versioning.
+  let contextSnapshotId: string | null = null;
+  try { contextSnapshotId = (await snapshotIfChanged(uid, input.applicationId, "owner"))?.id ?? null; } catch { contextSnapshotId = null; }
+  let pinContext = contextSnapshotId !== null;
+
   for (let attempt = 0; attempt < MAX_SUBMISSION_REPLACEMENTS; attempt++) {
     const submissionId = submissionIdForAttempt(input.submissionId, attempt);
-    const { data, error } = await db().from("v_preflight_runs").insert({
+    const baseRow = {
       user_id: uid, application_id: input.applicationId, contract_id: input.contractId,
       contract_version: input.contractVersion, submission_id: submissionId,
       deployment_url: input.deploymentUrl, state: "queued", flow_ids: selectedFlowIds,
       credits_held: input.creditsHeld, cost_reservation_id: input.reservationId,
-    } as never).select("id").single();
+    };
+    let { data, error } = await db().from("v_preflight_runs")
+      .insert((pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow) as never)
+      .select("id").single();
+    if (error && pinContext && /context_snapshot_id/i.test((error as { message?: string }).message ?? "")) {
+      // The snapshot table exists but the run column does not (partial migration 7). Warn clearly and
+      // retry this same submission id once WITHOUT the column; the run itself must always queue.
+      console.warn("createRun: v_preflight_runs.context_snapshot_id is missing. Apply sql/vraelis-preflight-7-context-snapshots.sql (migration 7). Run queued without a context pin.");
+      pinContext = false;
+      ({ data, error } = await db().from("v_preflight_runs").insert(baseRow as never).select("id").single());
+    }
 
     if (!error) return { runId: (data as unknown as { id: string }).id, flowCount: selectedFlowIds.length };
 

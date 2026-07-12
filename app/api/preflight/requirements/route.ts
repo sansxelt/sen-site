@@ -15,6 +15,7 @@ import {
   addRequirement, updateRequirement, deleteRequirement, approveContract,
   getContractById, contractStatusForRequirement, type Severity,
 } from "@/lib/v-applications";
+import { snapshotIfChanged, pinSnapshotToContract } from "@/lib/preflight/context-snapshots";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,15 @@ export async function POST(req: Request) {
   if (body?.approve === true) {
     if (contract?.status === "approved") return NextResponse.json({ ok: true }); // idempotent; approved_at untouched
     const ok = await approveContract(email, contractId);
+    if (ok && contract) {
+      // Pin the exact context this approval was made against (S3). Best-effort per the migration rule:
+      // snapshotIfChanged and pinSnapshotToContract both warn (naming migration 7's sql file) and no-op
+      // while it is unapplied, and the try/catch guarantees an approval NEVER fails or unwinds here.
+      try {
+        const snap = await snapshotIfChanged(email, contract.application_id, "owner");
+        if (snap) await pinSnapshotToContract(email, contractId, snap.id);
+      } catch { /* the approval stands, unpinned */ }
+    }
     return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "approve_failed", message: "Enable at least one requirement before approving." }, { status: 400 });
   }
 

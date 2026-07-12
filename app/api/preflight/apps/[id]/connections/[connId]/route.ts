@@ -17,6 +17,7 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication } from "@/lib/v-applications";
 import { getConnection, updateConnectionMeta, removeConnection } from "@/lib/preflight/connections-db";
+import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -51,6 +52,8 @@ export async function PATCH(req: Request, ctx: { params: Params }) {
     return NextResponse.json({ error: "unavailable" }, { status: 503 });
   }
   await logEvent({ userId: g.owner, eventType: "connection_updated", actorType: "owner", source: "preflight", route: "/api/preflight/apps/[id]/connections/[connId]", metadata: { application_id: g.appId, provider: conn.provider } });
+  // Context version bump (S3, best-effort per the migration rule): the edit already succeeded.
+  try { await snapshotIfChanged(g.owner, g.appId, "owner"); } catch { /* the edit stands, unversioned */ }
   return NextResponse.json({ ok: true });
 }
 
@@ -64,5 +67,7 @@ export async function DELETE(req: Request, ctx: { params: Params }) {
   const ok = await removeConnection(g.owner, g.appId, g.connId);
   if (!ok) return NextResponse.json({ error: "not_found", message: "No such connection on this application. Nothing was disconnected." }, { status: 404 });
   await logEvent({ userId: g.owner, eventType: "connection_removed", actorType: "owner", source: "preflight", route: "/api/preflight/apps/[id]/connections/[connId]", metadata: { application_id: g.appId, provider: conn.provider } });
+  // Context version bump (S3, best-effort per the migration rule): the disconnect already succeeded.
+  try { await snapshotIfChanged(g.owner, g.appId, "owner"); } catch { /* the disconnect stands, unversioned */ }
   return NextResponse.json({ ok: true });
 }

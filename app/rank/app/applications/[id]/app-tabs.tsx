@@ -4,6 +4,7 @@ import Link from "next/link";
 // active tab is passed in by each page. "Passes" points at /runs because the run routes already live there.
 const TABS: { key: string; label: string; path: string }[] = [
   { key: "overview", label: "Overview", path: "" },
+  { key: "context", label: "Context", path: "/context" },
   { key: "contract", label: "Contract", path: "/contract" },
   { key: "runs", label: "Passes", path: "/runs" },
   { key: "issues", label: "Issues", path: "/issues" },

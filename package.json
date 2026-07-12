@@ -39,7 +39,8 @@
     "preflight:invalidate": "tsx scripts/preflight-invalidate-runs.ts",
     "preflight:repair-decision": "tsx scripts/preflight-repair-decision.ts",
     "routes:test": "tsx scripts/preflight-routes-verify.ts",
-    "billing:returns:test": "tsx scripts/billing-returns-verify.ts"
+    "billing:returns:test": "tsx scripts/billing-returns-verify.ts",
+    "context:test": "tsx scripts/preflight-context-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

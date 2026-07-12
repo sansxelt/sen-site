@@ -10,6 +10,7 @@ import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { createApplication, deleteApplication } from "@/lib/v-applications";
 import { addConnection, applySetupExtras, normalizeBoundaries, normalizeContextSources, CONNECTION_KINDS } from "@/lib/preflight/connections-db";
+import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
 import { passPricingEnabled } from "@/lib/preflight/pass-pricing";
 import { applicationCapReached, getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
@@ -73,6 +74,11 @@ export async function POST(req: Request) {
       await logEvent({ userId: email.toLowerCase(), eventType: "connection_added", actorType: "owner", source: "preflight", route: "/api/preflight/apps", metadata: { application_id: appId, provider } });
     }
   }
+
+  // Record context version 1 (S3). Best-effort by the migration rule: snapshotIfChanged warns and
+  // returns null while migration 7 is unapplied, and the try/catch guarantees a connect NEVER fails
+  // because context versioning could not run. The application above is already created and usable.
+  try { await snapshotIfChanged(email, appId, "owner"); } catch { /* connect stands; context stays unversioned */ }
 
   return NextResponse.json({ id: appId });
 }

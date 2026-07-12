@@ -16,6 +16,7 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication } from "@/lib/v-applications";
 import { listConnections, addConnection } from "@/lib/preflight/connections-db";
+import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -55,6 +56,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   }
   if (!r.existing) {
     await logEvent({ userId: g.owner, eventType: "connection_added", actorType: "owner", source: "preflight", route: "/api/preflight/apps/[id]/connections", metadata: { application_id: g.appId, provider } });
+    // Context version bump (S3, best-effort per the migration rule): the add already succeeded and is
+    // returned below whatever happens here; a deduped re-add changes no context and records nothing.
+    try { await snapshotIfChanged(g.owner, g.appId, "owner"); } catch { /* the add stands, unversioned */ }
   }
   return NextResponse.json({ id: r.id, existing: r.existing === true });
 }

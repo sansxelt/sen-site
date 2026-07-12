@@ -15,6 +15,7 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication } from "@/lib/v-applications";
 import { addTestAccount, getConnection, listConnections, removeConnection } from "@/lib/preflight/connections-db";
+import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -52,6 +53,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   // Audit trail (S2): the event carries application id + provider kind ONLY — never a credential,
   // never a mask, never metadata values.
   await logEvent({ userId: g.owner, eventType: "connection_added", actorType: "owner", source: "preflight", route: "/api/preflight/apps/[id]/secrets", metadata: { application_id: g.appId, provider: "test_account" } });
+  // Context version bump (S3, best-effort per the migration rule). The graph records only that a
+  // test_account connection exists; snapshotIfChanged never sees the credential or the mask.
+  try { await snapshotIfChanged(g.owner, g.appId, "owner"); } catch { /* the credential stands, unversioned */ }
   return NextResponse.json({ id: result.id, username_mask: result.usernameMask });
 }
 
@@ -84,5 +88,7 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }
   const ok = await removeConnection(g.owner, g.appId, id);
   if (!ok) return NextResponse.json({ error: "not_found", message: "No such credential on this application. Nothing was revoked." }, { status: 404 });
   await logEvent({ userId: g.owner, eventType: "connection_removed", actorType: "owner", source: "preflight", route: "/api/preflight/apps/[id]/secrets", metadata: { application_id: g.appId, provider: "test_account" } });
+  // Context version bump (S3, best-effort per the migration rule): the revoke already succeeded.
+  try { await snapshotIfChanged(g.owner, g.appId, "owner"); } catch { /* the revoke stands, unversioned */ }
   return NextResponse.json({ ok: true });
 }
