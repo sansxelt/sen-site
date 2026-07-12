@@ -117,3 +117,8 @@ tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run
 - Pure money core (lib/preflight/pass-pricing.ts, 33/33): $15 pass / 5 flows incl / $3 extra; rerun $3 x flows capped at pass price; builder_v1 $49/$490, pro_v1 $149/$1,490, scale_v1 $399/$3,990 (annual = 10 months); anchor-based monthly windows meter annual subs monthly with no cron.
 - Enforcement (82/82): flow-unit allowance metering (reruns deduct selected flows only), app caps, flow caps, lifetime free pass, cents PAYG holds via existing ledger (unit column), _v1 webhook wiring, signup-grant cut at flip only, balance-conversion tool (dry-run). Legacy behavior byte-identical flag-off.
 - NOT done until founder flips: Stripe prices (operator creates 6), migration 6 SQL, conversion --apply, public pricing UI + checkout (step 11). Rollback = unset flag BEFORE any cent rows exist.
+
+## 2026-07-12: PRICING CUTOVER EXECUTED
+- Six _v1 Stripe prices verified live (7/7); portal configured by founder; sandbox checkout tested by founder.
+- Sequence run exactly as approved: runs paused -> queue confirmed empty (0 active) -> balance converted (25 promo credits -> 250 cents, sources untouched) -> VRAELIS_PASS_PRICING=1 on Vercel + Railway -> both redeployed -> live verification (v1 ladder up, zero legacy numbers, zero forbidden claims, $15 PAYG) -> kill switch removed, runs resumed.
+- Production is now on per-pass pricing: Builder/Pro/Scale live with monthly/yearly, PAYG $15/$3, one-lifetime free pass, entitlement metering active. NEXT: fresh-account UI-only canary on the new system, then Browserbase Developer upgrade immediately before beta invites/ads.
