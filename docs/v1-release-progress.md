@@ -90,3 +90,9 @@ tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run
 - Repair-verified report: REPAIR VERIFIED hero, honest "full verification still required" copy, CTA "Run full critical verification" (new rerun scope=critical).
 - Historical repair tool: npm run preflight:repair-decision (dry-run default) rewrites ONLY the decision on partial-coverage READY runs; full-coverage READY runs are protected.
 - New suite: npm run preflight:decision:test (29/29, spec tests A-L). All suites green (security now 119/119).
+
+## 2026-07-12: Railway worker deployed and verified
+- Railway service (project appealing-love, Hobby) builds via root railway.toml -> worker/preflight/Dockerfile; /health green.
+- INCIDENT during rollout: the service initially had no BROWSER_PROVIDER, the worker defaulted to the fake provider and finalized a counterfeit READY (run d9a1252f). Contained: run invalidated (failed/infra_misconfigured), zero issues touched, health verified back on the real pass. Root cause fixed in worker/preflight/config.ts: a production runtime refuses to boot on any non-real provider (no override). Tests added (decision suite 33/33).
+- Verification run e5709fc2 through the deployed worker: provider browserbase, real session, 3/3 critical passed, 3 screenshots, READY full coverage, 9s. Dedup fix proven live: the invalidated occupant of the submission key was superseded (-r2), not blocking.
+- Remaining gate: fresh-account UI-only canary.
