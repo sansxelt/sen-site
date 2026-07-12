@@ -6,12 +6,19 @@ import { SetupRequired } from "../../setup-required";
 import { getApplication, type RunSummary } from "@/lib/v-applications";
 import { listRunsForApp } from "@/lib/preflight/runs-db";
 import { getSetupExtras, sourceConnectionsByApp, describeSource } from "@/lib/preflight/setup-read";
+import {
+  deploymentStoreReady, listDeployments, compareDeployments, runTestedDeployment,
+  type Deployment,
+} from "@/lib/preflight/deployments-db";
 import { AppTabs } from "../app-tabs";
-import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { RecordDeploymentForm } from "./record-deployment";
+import { I, Ic, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Deployments" };
 
 const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
+const SOURCE_LABELS: Record<string, string> = { manual: "Recorded manually", github_webhook: "GitHub webhook", vercel_webhook: "Vercel webhook" };
+const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)" };
 
 // Stable UTC render (used as a hover title): "2026-07-02 14:31 UTC".
 function when(iso: string | null | undefined): string {
@@ -103,12 +110,16 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
     );
   }
 
-  // Runs + setup extras + the source connection line, all owner-scoped and degrade-to-empty.
-  const [runs, extras, sourceMap] = await Promise.all([
+  // Runs + setup extras + the source connection line + recorded deployment identities (S4), all
+  // owner-scoped and degrade-to-empty. deploymentStoreReady keeps "nothing recorded yet" and
+  // "migration 8 not applied yet" honestly distinct states.
+  const [runs, extras, sourceMap, deploymentsReady] = await Promise.all([
     listRunsForApp(owner, id, 50),
     getSetupExtras(owner, id),
     sourceConnectionsByApp(owner, [id]),
+    deploymentStoreReady(owner),
   ]);
+  const recorded: Deployment[] = deploymentsReady ? await listDeployments(owner, id, 20) : [];
   const groups = groupByDeployment(runs);
   const envLabel = extras.environment ? ENV_LABELS[extras.environment] : null;
   const sourceLine = describeSource(sourceMap.get(id));
@@ -117,6 +128,21 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
   // deployment URL it tested. Real rows only; absent before the first completed pass.
   const lastVerified = runs.find((r) => r.state === "completed" && r.decision && r.deployment_url) ?? null;
   const lv = lastVerified ? verdictPill(lastVerified.decision, lastVerified.state) : null;
+
+  // Verification status of a RECORDED deployment: the newest completed decided pass that tested this
+  // identity (URL match; commits must agree only when both sides recorded one). Never invented.
+  const verifyingRun = (d: Deployment): RunSummary | null =>
+    runs.find((r) => r.state === "completed" && !!r.decision && runTestedDeployment(r, d)) ?? null;
+
+  // Deployment comparison (S4): previous VERIFIED (the newest older row a decided pass actually
+  // tested; honest fallback to the plain previous row) against the current (newest) recorded one.
+  const current = recorded[0] ?? null;
+  const previous = recorded.length >= 2
+    ? (recorded.slice(1).find((d) => verifyingRun(d)) ?? recorded[1])
+    : null;
+  const currentRun = current ? verifyingRun(current) : null;
+  const previousRun = previous ? verifyingRun(previous) : null;
+  const comparisonLines = current && previous ? compareDeployments(previous, current) : [];
 
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -136,6 +162,17 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
       </div>
 
       <AppTabs appId={id} active="deployments" />
+
+      {/* ── Migration-8 notice: deployment identity not active yet (honest, one line, full width) ──── */}
+      {!deploymentsReady ? (
+        <div role="status" style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px", border: "1px solid var(--line-2)", borderLeft: "3px solid #F3DFB0", borderRadius: "var(--r-sm)", background: "var(--bg-1)", marginBottom: 20 }}>
+          <span style={{ color: "#B45309", flex: "none", marginTop: 1 }}><Ic d={I.alert} size={17} sw={1.8} /></span>
+          <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.6, margin: 0 }}>
+            Deployment identity is not active yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
+            Nothing is lost; the pass history below still shows every URL your passes tested.
+          </p>
+        </div>
+      ) : null}
 
       {lastVerified && lv ? (
         <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
@@ -167,6 +204,88 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
         </div>
       ) : null}
 
+      {/* ── Deployment comparison (S4): previous verified against the current recorded deployment ──── */}
+      {current && previous ? (
+        <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
+          <div style={headLbl}>Deployment comparison</div>
+          <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none", width: 128 }}>{previousRun ? "Previous verified" : "Previous"}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-2)", minWidth: 0, wordBreak: "break-all", flex: "1 1 240px" }}>{previous.url}</span>
+              {previousRun ? (() => { const p = verdictPill(previousRun.decision, previousRun.state); return (
+                <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={previousRun.decision} />{p.label}</span>
+              ); })() : (
+                <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)", background: "var(--bg-2)", borderColor: "var(--line-2)", flex: "none" }}>Not tested</span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12, color: "var(--fg-4)", flex: "none", width: 128 }}>Current</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-1)", minWidth: 0, wordBreak: "break-all", flex: "1 1 240px" }}>{current.url}</span>
+              {currentRun ? (() => { const p = verdictPill(currentRun.decision, currentRun.state); return (
+                <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={currentRun.decision} />{p.label}</span>
+              ); })() : (
+                <span className="pill" style={{ fontSize: 10.5, color: "#B45309", background: "#FEF6E7", borderColor: "#F3DFB0", flex: "none" }}>Unverified</span>
+              )}
+            </div>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <div style={{ ...headLbl, fontSize: 10 }}>What changed</div>
+            {comparisonLines.length ? (
+              <ul style={{ margin: "8px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>
+                {comparisonLines.map((c) => <li key={c} style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{c}</li>)}
+              </ul>
+            ) : (
+              <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "8px 0 0" }}>The recorded identity fields match; only the recording time differs.</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── Recorded deployments (S4): the v_deployments identity rows, newest first ────────────────── */}
+      {deploymentsReady ? (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+            <div style={{ ...headLbl, display: "flex", alignItems: "center", gap: 7 }}><Ic d={I.deploy} size={13} sw={2} />Recorded deployments ({recorded.length})</div>
+            <RecordDeploymentForm appId={id} />
+          </div>
+          {recorded.length ? (
+            <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", background: "var(--bg-1)", overflow: "hidden" }}>
+              {recorded.map((d, i) => {
+                const vr = verifyingRun(d);
+                const p = vr ? verdictPill(vr.decision, vr.state) : null;
+                return (
+                  <div key={d.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "11px 14px", borderTop: i === 0 ? "none" : "1px solid var(--line-1)", flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 0, flex: "1 1 280px" }}>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-1)", fontWeight: 600, wordBreak: "break-all" }}>{d.url}</div>
+                      <div style={{ fontSize: 11.5, color: "var(--fg-4)", marginTop: 3 }}>
+                        <span title={when(d.detected_at)}>{SOURCE_LABELS[d.source] ?? d.source} {timeAgo(d.detected_at)}</span>
+                        {d.commit_sha ? `, commit ${d.commit_sha.slice(0, 10)}` : ""}
+                        {d.branch ? `, ${d.branch}` : ""}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 7, flex: "none", alignItems: "center" }}>
+                      {d.environment && ENV_LABELS[d.environment] ? <span className="pill" style={{ fontSize: 10 }}>{ENV_LABELS[d.environment]}</span> : null}
+                      {p && vr ? (
+                        <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border }}><DecisionMark decision={vr.decision} />{p.label}</span>
+                      ) : (
+                        <span className="pill" style={{ fontSize: 10.5, color: "#B45309", background: "#FEF6E7", borderColor: "#F3DFB0" }}>Unverified</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>
+              No deployments recorded yet. Every new Production Pass records the deployment it tests
+              automatically; you can also record one by hand when you ship.
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      {/* ── Pass history by deployment URL (pre-S4 view; every URL a pass has tested) ───────────────── */}
+      <div style={{ ...headLbl, marginBottom: 12 }}>Pass history by deployment</div>
       {groups.length ? (
         <div style={{ display: "grid", gap: 8 }}>
           {groups.map((g) => <DeploymentRow key={g.url} appId={id} g={g} />)}

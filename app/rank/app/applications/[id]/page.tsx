@@ -8,6 +8,7 @@ import {
   type ContractRequirement, type TestFlow, type RunSummary,
 } from "@/lib/v-applications";
 import { listRunsForApp, issuesResolvedByRun } from "@/lib/preflight/runs-db";
+import { unverifiedNewerDeployment } from "@/lib/preflight/deployments-db";
 import { pickHealthRun } from "@/lib/preflight/target-url";
 import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
 import { AppTabs } from "./app-tabs";
@@ -143,6 +144,14 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const latestActive = isActiveRun(latest);
   const decision = latest?.decision ?? null;
 
+  // ── New deployment unverified (S4): when a deployment NEWER than (and different from) the one the
+  // health run tested has been recorded, a banner says so ABOVE the verdict; the decision below never
+  // silently migrates to an untested deployment. Best-effort: pre-migration-8 this is always null and
+  // the page renders exactly as before.
+  const newerDeploy = latest && !latestActive && latest.decision
+    ? await unverifiedNewerDeployment(owner, id, latest)
+    : null;
+
   const latestRepair: RunSummary | null = runs.find((r) => r.state === "completed" && r.decision === "repair_verified") ?? null;
   const repairIsSeparate = !!latestRepair && !!latest && latestRepair.id !== latest.id
     && new Date(latestRepair.created_at).getTime() >= new Date(latest.created_at).getTime();
@@ -204,6 +213,39 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       </div>
 
       <AppTabs appId={id} active="overview" />
+
+      {/* ── NEW DEPLOYMENT UNVERIFIED (S4): above the verdict, never replacing it. The health decision
+          below stays pinned to the deployment that was actually tested; this banner only says a newer,
+          different deployment exists and offers the one honest way forward: run a pass against it. ── */}
+      {newerDeploy ? (
+        <section aria-label="New deployment unverified"
+          style={{ border: "1px solid #F3DFB0", borderLeft: "4px solid #B45309", borderRadius: "var(--r-md)", background: "#FEF6E7", padding: "16px 18px", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span aria-hidden style={{ display: "inline-flex", color: "#B45309" }}><Ic d={I.deploy} size={15} sw={2} /></span>
+            <span style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: 15, color: "#B45309" }}>New deployment unverified</span>
+          </div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, fontWeight: 600, color: "var(--fg-1)", margin: "8px 0 0", wordBreak: "break-all" }}>
+            {newerDeploy.deployment.url}
+          </div>
+          <p style={{ fontSize: 13, color: "var(--fg-2)", lineHeight: 1.55, margin: "6px 0 0" }}>
+            <span title={when(newerDeploy.deployment.detected_at)}>Recorded {timeAgo(newerDeploy.deployment.detected_at)}</span>, after the
+            last verified pass. The status below still describes the deployment that was tested;
+            a READY decision is never carried forward to an untested deployment.
+          </p>
+          {newerDeploy.changes.length ? (
+            <ul style={{ margin: "8px 0 0", paddingLeft: 18, display: "grid", gap: 4 }}>
+              {newerDeploy.changes.map((c) => (
+                <li key={c} style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.5, wordBreak: "break-word" }}>{c}</li>
+              ))}
+            </ul>
+          ) : null}
+          <div style={{ marginTop: 12 }}>
+            {eligibleFlowIds.length > 0
+              ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run Production Pass" />
+              : <Link href={`/applications/${id}/contract`} className="btn">Review Production Contract</Link>}
+          </div>
+        </section>
+      ) : null}
 
       {/* ── PRODUCTION STATUS: the verdict panel ─────────────────────────────────────────────────────── */}
       <section aria-label="Production status"

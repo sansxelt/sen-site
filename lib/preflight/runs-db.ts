@@ -11,6 +11,7 @@ import { getSupabaseAdminClient, isDatabaseConfigured } from "../supabase-admin"
 import { listRuns, listFlows, type RunSummary } from "../v-applications";
 import { dedupBlocksReplacement, submissionIdForAttempt } from "./flow-selection";
 import { snapshotIfChanged } from "./context-snapshots";
+import { deploymentForRun } from "./deployments-db";
 import type { Issue } from "./issues";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
@@ -260,10 +261,17 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
   // Pin the context version this run launches under (S3). Best-effort per the migration rule:
   // snapshotIfChanged warns (naming migration 7's sql file) and returns null while v_context_snapshots
   // is missing, and the insert below only carries the column when a snapshot id was actually obtained,
-  // retrying once without it on a column-missing error, so a launch NEVER fails over context versioning.
+  // retrying without it on a column-missing error, so a launch NEVER fails over context versioning.
   let contextSnapshotId: string | null = null;
   try { contextSnapshotId = (await snapshotIfChanged(uid, input.applicationId, "owner"))?.id ?? null; } catch { contextSnapshotId = null; }
   let pinContext = contextSnapshotId !== null;
+
+  // Pin the deployment identity this run tests (S4), the same best-effort way: deploymentForRun records
+  // (or dedupes onto) the v_deployments row for the run's target URL, warning clearly while migration 8
+  // is missing, and the insert carries deployment_id only when a row id was actually obtained.
+  let deploymentId: string | null = null;
+  try { deploymentId = await deploymentForRun(uid, input.applicationId, input.deploymentUrl); } catch { deploymentId = null; }
+  let pinDeployment = deploymentId !== null;
 
   for (let attempt = 0; attempt < MAX_SUBMISSION_REPLACEMENTS; attempt++) {
     const submissionId = submissionIdForAttempt(input.submissionId, attempt);
@@ -273,15 +281,25 @@ export async function createRun(owner: string, input: CreateRunInput): Promise<C
       deployment_url: input.deploymentUrl, state: "queued", flow_ids: selectedFlowIds,
       credits_held: input.creditsHeld, cost_reservation_id: input.reservationId,
     };
-    let { data, error } = await db().from("v_preflight_runs")
-      .insert((pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow) as never)
-      .select("id").single();
-    if (error && pinContext && /context_snapshot_id/i.test((error as { message?: string }).message ?? "")) {
-      // The snapshot table exists but the run column does not (partial migration 7). Warn clearly and
-      // retry this same submission id once WITHOUT the column; the run itself must always queue.
-      console.warn("createRun: v_preflight_runs.context_snapshot_id is missing. Apply sql/vraelis-preflight-7-context-snapshots.sql (migration 7). Run queued without a context pin.");
-      pinContext = false;
-      ({ data, error } = await db().from("v_preflight_runs").insert(baseRow as never).select("id").single());
+    const rowFor = () => {
+      const row = pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow;
+      return pinDeployment ? { ...row, deployment_id: deploymentId } : row;
+    };
+    let { data, error } = await db().from("v_preflight_runs").insert(rowFor() as never).select("id").single();
+    // ONE combined retry path for BOTH additive pin columns (context_snapshot_id, migration 7;
+    // deployment_id, migration 8). A missing column fails the whole insert atomically (nothing was
+    // written), so re-inserting the SAME submission id after dropping the named pin can never create a
+    // duplicate run. At most one retry per pin; the run itself must always queue.
+    while (error && (pinContext || pinDeployment)) {
+      const msg = (error as { message?: string }).message ?? "";
+      if (pinContext && /context_snapshot_id/i.test(msg)) {
+        console.warn("createRun: v_preflight_runs.context_snapshot_id is missing. Apply sql/vraelis-preflight-7-context-snapshots.sql (migration 7). Run queued without a context pin.");
+        pinContext = false;
+      } else if (pinDeployment && /deployment_id/i.test(msg)) {
+        console.warn("createRun: v_preflight_runs.deployment_id is missing. Apply sql/vraelis-preflight-8-deployments.sql (migration 8). Run queued without a deployment pin.");
+        pinDeployment = false;
+      } else break;
+      ({ data, error } = await db().from("v_preflight_runs").insert(rowFor() as never).select("id").single());
     }
 
     if (!error) return { runId: (data as unknown as { id: string }).id, flowCount: selectedFlowIds.length };

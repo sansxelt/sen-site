@@ -180,9 +180,11 @@ ok("createRun pins context_snapshot_id ONLY when a snapshot id was obtained",
   runsDb.includes("pinContext ? { ...baseRow, context_snapshot_id: contextSnapshotId } : baseRow"));
 ok("createRun retries the insert WITHOUT the column on a column-missing error, warning clearly", (() => {
   const raw = read("lib/preflight/runs-db.ts");
+  // Since S4 the retry is ONE combined path shared with the deployment_id pin (migration 8): the
+  // column-missing error drops the named pin and re-inserts the same submission id.
   return /context_snapshot_id\/i\.test/.test(raw)
     && raw.includes("createRun: v_preflight_runs.context_snapshot_id is missing. Apply sql/vraelis-preflight-7-context-snapshots.sql")
-    && /pinContext = false;[\s\S]{0,200}insert\(baseRow as never\)/.test(raw);
+    && /pinContext = false;[\s\S]{0,700}insert\(rowFor\(\) as never\)/.test(raw);
 })());
 
 const appsRoute = stripComments(read("app/api/preflight/apps/route.ts"));

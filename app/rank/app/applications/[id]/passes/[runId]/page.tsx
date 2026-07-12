@@ -5,6 +5,8 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication } from "@/lib/v-applications";
 import { getRun, type RunFlow, type RunStep, type RunIssue } from "@/lib/preflight/runs-db";
 import { getRunInternal, listFlowRunMeta, type FlowRunMeta } from "@/lib/preflight/run-report-db";
+import { runVersionPins, getDeployment, deploymentStoreReady } from "@/lib/preflight/deployments-db";
+import { getSnapshot } from "@/lib/preflight/context-snapshots";
 import { SetupRequired } from "../../../setup-required";
 import { RerunButton } from "./rerun-button";
 import { CopyButton } from "./copy-button";
@@ -56,6 +58,8 @@ function flowTone(state: string): Tone {
 
 const SEV_COLOR: Record<string, string> = { critical: "#C0392B", high: "#B45309", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
+const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
+const DEPLOY_PROVIDER_LABELS: Record<string, string> = { vercel: "Vercel", railway: "Railway", netlify: "Netlify", custom: "Custom" };
 const CATEGORY_LABEL: Record<string, string> = {
   persistence_failure: "Persistence", session_failure: "Session", cross_account: "Authorization",
   fake_success: "Fake success", stale_ui: "Stale UI", duplicate_action: "Duplicate action",
@@ -364,6 +368,20 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
   }
 
   const { run, flows, issues } = detail;
+
+  // ── Tested deployment identity (S4), all best-effort: the run's pinned deployment row and context
+  // snapshot resolve when their additive migrations are applied; absent pins render nothing, and an
+  // unapplied migration 8 gets one honest line (deploymentStoreReady) instead of a placeholder.
+  const pins = await runVersionPins(owner, runId);
+  const [deployment, contextSnap, deploymentsReady] = await Promise.all([
+    pins.deploymentId ? getDeployment(owner, pins.deploymentId) : Promise.resolve(null),
+    pins.contextSnapshotId ? getSnapshot(owner, pins.contextSnapshotId) : Promise.resolve(null),
+    deploymentStoreReady(owner),
+  ]);
+  const deployEnvLabel = deployment?.environment ? (ENV_LABELS[deployment.environment] ?? null) : null;
+  const deployProviderLabel = deployment?.provider ? (DEPLOY_PROVIDER_LABELS[deployment.provider] ?? deployment.provider) : null;
+  const deployCommit = (deployment?.commit_sha ?? run.commit_sha ?? "").slice(0, 10);
+
   const tone = runTone(run.decision, run.state);
   const terminal = run.decision != null || ["completed", "failed", "cancelled"].includes(run.state);
   const active = !terminal;
@@ -437,6 +455,36 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
                 : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} />
             ) : null}
             <Link href={`/applications/${id}`} className="btn btn--ghost">Back to application</Link>
+          </div>
+
+          {/* Tested deployment (S4): the exact deployment identity this decision applies to. Every field
+              is best-effort: absent data renders nothing, never a placeholder. provider_deployment_id
+              lives ONLY inside the Technical details disclosure below, never in the normal UI. */}
+          <div style={{ marginTop: 22, border: "1px solid var(--line-2)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "14px 16px" }}>
+            <div style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.deploy} size={13} sw={2} />Tested deployment</div>
+            {run.deployment_url ? (
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", marginTop: 8, wordBreak: "break-all" }}>{run.deployment_url}</div>
+            ) : null}
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 16px", marginTop: 8, fontSize: 12.5, color: "var(--fg-3)" }}>
+              {deployEnvLabel ? <span className="pill" style={{ fontSize: 10 }}>{deployEnvLabel}</span> : null}
+              {deployProviderLabel ? <span>Provider: {deployProviderLabel}</span> : null}
+              {deployCommit ? <span>Commit {deployCommit}</span> : null}
+              {deployment?.branch ? <span>Branch {deployment.branch}</span> : null}
+              {internal.contractVersion != null ? <span>Contract v{internal.contractVersion}</span> : null}
+              {contextSnap ? <span>Context v{contextSnap.version}</span> : null}
+              <span title={when(completedIso)}>{terminal ? `Executed ${when(completedIso)}` : `Started ${when(run.created_at)}`}</span>
+            </div>
+            {!deploymentsReady ? (
+              <p style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, margin: "8px 0 0" }}>
+                Deployment identity is not recorded yet: apply <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>sql/vraelis-preflight-8-deployments.sql</span> (migration 8).
+              </p>
+            ) : null}
+            {deployment?.provider_deployment_id ? (
+              <details style={{ marginTop: 10 }}>
+                <summary style={{ cursor: "pointer", fontSize: 12.5, color: "var(--fg-4)" }}>View technical details</summary>
+                <div style={{ ...techLine, marginTop: 6 }}>Provider deployment id: {deployment.provider_deployment_id}</div>
+              </details>
+            ) : null}
           </div>
         </section>
 
