@@ -31,6 +31,7 @@ const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzin
 function decisionStyle(run: PassRow): { label: string; color: string; bg: string; border: string } {
   switch (run.decision) {
     case "ready": return { label: "Ready", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    case "repair_verified": return { label: "Repair verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
     case "needs_review": return { label: "Needs review", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
     case "blocked": return { label: "Blocked", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
     default:

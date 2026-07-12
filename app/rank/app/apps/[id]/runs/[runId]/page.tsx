@@ -35,6 +35,7 @@ const TONE_MUTED = { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--lin
 // never left saying IN PROGRESS.
 function runTone(decision: string | null, state: string): Tone {
   if (decision === "ready") return { label: "READY", ...TONE_READY };
+  if (decision === "repair_verified") return { label: "REPAIR VERIFIED", ...TONE_READY };
   if (decision === "needs_review") return { label: "NEEDS REVIEW", ...TONE_REVIEW };
   if (decision === "blocked") return { label: "BLOCKED", ...TONE_BLOCKED };
   if (state === "cancelled") return { label: "CANCELLED", ...TONE_MUTED };
@@ -101,6 +102,12 @@ const FAILURE_LINE: Record<string, string> = {
 // summary (or the deterministic issues) — nothing invented.
 function verdictLine(decision: string | null, state: string, summary: Record<string, unknown>, criticalIssueCount: number, terminal: boolean, progress: string, failureCode: string | null): string {
   if (decision === "ready") return "Every critical flow held. This deployment is cleared to launch.";
+  if (decision === "repair_verified") {
+    // A targeted rerun proved its selected repair on this target; it did NOT run the other critical flows,
+    // so it never certifies the deployment. Honest copy: verified repair, readiness still pending.
+    const n = num(summary.selected_total) || num(summary.flows_total) || 1;
+    return `${n} selected flow${n === 1 ? "" : "s"} passed. The reported blocker${n === 1 ? " is" : "s are"} resolved. Full critical verification is still required before this deployment can be marked READY.`;
+  }
   if (decision === "needs_review") return "Nearly there. A non-critical flow needs a human call.";
   if (decision === "blocked") {
     const n = Math.max(0, num(summary.critical_total) - num(summary.critical_passed)) || criticalIssueCount;
@@ -424,7 +431,9 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 22 }}>
             {terminal ? (
-              <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} />
+              run.decision === "repair_verified"
+                ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" />
+                : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} />
             ) : null}
             <Link href={`/app/apps/${id}`} className="btn btn--ghost">Back to application</Link>
           </div>

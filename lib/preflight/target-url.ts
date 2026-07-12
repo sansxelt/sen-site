@@ -61,14 +61,22 @@ export function executedTargetMismatch(runTarget: string | null | undefined, exe
   return false;
 }
 
-// Application health must come from the newest VALID completed pass, never from an invalidated or merely
-// terminal run. Preference: the newest ACTIVE run (so "In progress" still surfaces), else the newest
-// completed run WITH a decision, else the newest run of any state (honest fallback for empty histories).
-export type HealthRunLike = { state: string; decision: string | null; created_at: string };
+// Application health must come from the newest VALID FULL-COVERAGE completed pass, never from an
+// invalidated / merely terminal run, and never from a targeted (partial-coverage) rerun: a targeted run
+// may resolve its selected issues and read "Repair verified", but it verified a subset on its own target —
+// it cannot certify or replace the application's launch decision. Preference: the newest ACTIVE run (so
+// "In progress" still surfaces), else the newest completed FULL-coverage run WITH a launch decision, else
+// the newest run of any state (honest fallback for empty histories). Runs finalized before coverage was
+// recorded (no summary.coverage) executed their whole contract, so they count as full.
+export type HealthRunLike = { state: string; decision: string | null; created_at: string; summary?: Record<string, unknown> | null };
 const ACTIVE_STATES = new Set(["queued", "discovering", "running", "analyzing"]);
+export function isLaunchHealthCandidate(r: HealthRunLike): boolean {
+  return r.state === "completed" && r.decision != null && r.decision !== "repair_verified"
+    && (r.summary?.coverage ?? "full") !== "partial";
+}
 export function pickHealthRun<T extends HealthRunLike>(runsNewestFirst: T[]): T | undefined {
   if (!runsNewestFirst.length) return undefined;
   const newest = runsNewestFirst[0];
   if (ACTIVE_STATES.has(newest.state) && !newest.decision) return newest;
-  return runsNewestFirst.find((r) => r.state === "completed" && r.decision != null) ?? newest;
+  return runsNewestFirst.find(isLaunchHealthCandidate) ?? newest;
 }

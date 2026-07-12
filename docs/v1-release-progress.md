@@ -83,3 +83,10 @@ tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run
 - New suite: npm run preflight:scope:test (39/39). All other suites green.
 - Marketing shell now renders at 0.72 on desktop (90% of the prior 0.8) so the front page hero + demo fit one viewport.
 - OPERATOR: apply sql/vraelis-preflight-4-selected-flows.sql before queueing new runs (enqueue is fail-closed without it).
+
+## 2026-07-11: launch decision requires full critical coverage
+- A passing targeted (partial-coverage) rerun now finalizes as decision 'repair_verified': the repair is proven, readiness is not. READY requires every enabled+approved critical flow executed against one run's own target + contract snapshot; coverage is never aggregated across runs.
+- pickHealthRun: launch health = newest valid FULL-coverage completed decision; targeted runs may resolve issues but never replace health. App overview shows the previous launch health plus a separate "Latest repair: <blocker> verified as resolved" line.
+- Repair-verified report: REPAIR VERIFIED hero, honest "full verification still required" copy, CTA "Run full critical verification" (new rerun scope=critical).
+- Historical repair tool: npm run preflight:repair-decision (dry-run default) rewrites ONLY the decision on partial-coverage READY runs; full-coverage READY runs are protected.
+- New suite: npm run preflight:decision:test (29/29, spec tests A-L). All suites green (security now 119/119).

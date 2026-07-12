@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 // Queue a rerun of this run's flows, then navigate to the new run's report. POSTs the selected scope
-// ('failed' re-runs only the failed/blocked flows; 'all' re-runs everything) to the owner-checked rerun
-// route; the server derives the app, contract, deployment target, and flow ids from the parent run — the
-// client sends only the scope. Stays busy after a successful queue (we are navigating away) so a double
-// click can't fire a second rerun.
-export function RerunButton({ appId, runId, scope, label }: { appId: string; runId: string; scope: "failed" | "all"; label: string }) {
+// ('failed' re-runs only the failed/blocked flows; 'all' re-runs everything; 'critical' runs every
+// currently approved critical flow — the full verification a repair-verified run still needs) to the
+// owner-checked rerun route; the server derives the app, contract, deployment target, and flow ids from
+// the parent run — the client sends only the scope. Stays busy after a successful queue (we are navigating
+// away) so a double click can't fire a second rerun.
+export function RerunButton({ appId, runId, scope, label }: { appId: string; runId: string; scope: "failed" | "all" | "critical"; label: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);

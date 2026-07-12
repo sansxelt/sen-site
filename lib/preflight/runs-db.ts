@@ -206,6 +206,15 @@ export async function ownerRunsToday(owner: string): Promise<number> {
   return count ?? 0;
 }
 
+// Titles of the issues a run RESOLVED (owner-scoped; degrades to []). Powers the application overview's
+// "Latest repair: <blocker> verified as resolved" line for a targeted repair-verified run.
+export async function issuesResolvedByRun(owner: string, runId: string, limit = 5): Promise<string[]> {
+  if (!isDatabaseConfigured()) return [];
+  const { data } = await db().from("v_issues")
+    .select("title").eq("user_id", norm(owner)).eq("resolved_run", runId).limit(limit);
+  return ((data as { title?: string }[] | null) ?? []).map((r) => String(r.title ?? "")).filter(Boolean);
+}
+
 // A flow is run-eligible exactly as the worker's claim() filters it: enabled AND review_state 'approved'
 // (review_state defaults to 'approved' in migration 2; treat an absent column as approved).
 function flowApprovedEnabled(f: { enabled: boolean; review_state?: string }): boolean {

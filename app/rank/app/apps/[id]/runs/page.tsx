@@ -31,6 +31,7 @@ type Pill = { label: string; color: string; bg: string; border: string };
 // its lifecycle state as in-progress or untested, muted.
 function runPill(decision: string | null, state: string): Pill {
   if (decision === "ready") return { label: "Ready to ship", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+  if (decision === "repair_verified") return { label: "Repair verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
   if (decision === "needs_review") return { label: "Needs review", color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
   if (decision === "blocked") return { label: "Blocked", color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
   const active = state === "queued" || state === "discovering" || state === "running" || state === "analyzing";

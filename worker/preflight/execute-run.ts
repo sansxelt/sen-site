@@ -67,14 +67,27 @@ async function runFlow(flow: FlowSpec, page: import("./types").PreflightPage, de
 
 // Explainable decision: any critical flow that failed/blocked => blocked; else any failure => needs_review;
 // else ready. Never an aggregate score.
-export function decideRun(results: FlowResult[], flows: FlowSpec[]): { decision: RunDecision; summary: Record<string, unknown> } {
+//
+// Coverage gate: READY is a LAUNCH decision, so it additionally requires FULL critical coverage — every
+// enabled+approved critical flow of the contract executed against this run's own target. A passing run
+// with partial coverage (a targeted rerun) proves its repair, not readiness: its decision is
+// repair_verified. Failures keep their meaning at any coverage (a broken flow on the current target is
+// real evidence either way). The summary records coverage so health selection and reports can tell a
+// certification apart from a repair proof.
+export function decideRun(results: FlowResult[], flows: FlowSpec[], fullCoverage = true): { decision: RunDecision; summary: Record<string, unknown> } {
   const critById = new Map(flows.map((f) => [f.flowId, f.priority === "critical"]));
   const criticalTotal = flows.filter((f) => f.priority === "critical").length;
   const criticalPassed = results.filter((r) => critById.get(r.flowId) && r.state === "passed").length;
   const criticalFailed = results.some((r) => critById.get(r.flowId) && (r.state === "failed" || r.state === "blocked"));
   const anyFailed = results.some((r) => r.state === "failed" || r.state === "blocked");
-  const decision: RunDecision = criticalFailed ? "blocked" : anyFailed ? "needs_review" : "ready";
-  return { decision, summary: { critical_total: criticalTotal, critical_passed: criticalPassed, flows_total: flows.length, flows_passed: results.filter((r) => r.state === "passed").length, blockers: results.filter((r) => critById.get(r.flowId) && r.state !== "passed").length } };
+  let decision: RunDecision = criticalFailed ? "blocked" : anyFailed ? "needs_review" : "ready";
+  if (decision === "ready" && !fullCoverage) decision = "repair_verified";
+  return { decision, summary: {
+    critical_total: criticalTotal, critical_passed: criticalPassed, flows_total: flows.length,
+    flows_passed: results.filter((r) => r.state === "passed").length,
+    blockers: results.filter((r) => critById.get(r.flowId) && r.state !== "passed").length,
+    coverage: fullCoverage ? "full" : "partial", selected_total: flows.length,
+  } };
 }
 
 export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void> {
@@ -118,7 +131,7 @@ export async function executeRun(run: ClaimedRun, deps: ExecDeps): Promise<void>
     }
 
     await deps.store.setState(run.runId, "analyzing");
-    const { decision, summary } = decideRun(results, run.flows);
+    const { decision, summary } = decideRun(results, run.flows, run.fullCoverage !== false);
     await deps.store.finalizeRun(run.runId, decision, summary);   // atomic: decision + charge-on-completion
     log({ worker_id: deps.workerId, run_id: run.runId, event: "run_finalized", result: decision });
   } catch (e) {

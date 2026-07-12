@@ -7,7 +7,8 @@ import {
   getApplication, getContract, listRequirements, listFlows,
   type ContractRequirement, type TestFlow, type RunSummary,
 } from "@/lib/v-applications";
-import { listRunsForApp } from "@/lib/preflight/runs-db";
+import { listRunsForApp, issuesResolvedByRun } from "@/lib/preflight/runs-db";
+import { pickHealthRun } from "@/lib/preflight/target-url";
 import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
 import { AppTabs } from "./app-tabs";
 import { LaunchPassButton } from "./launch-button";
@@ -56,6 +57,7 @@ const isActiveRun = (r: RunSummary | null): boolean => !!r && !r.decision && ACT
 // Run decision -> pill for the pass list.
 function runPill(decision: string | null, state: string): Tone & { label: string } {
   if (decision === "ready") return { label: "Ready", ...TONE_READY };
+  if (decision === "repair_verified") return { label: "Repair verified", ...TONE_READY };
   if (decision === "needs_review") return { label: "Needs review", ...TONE_REVIEW };
   if (decision === "blocked") return { label: "Blocked", ...TONE_BLOCKED };
   return { label: ACTIVE_RUN_STATES.has(state) ? "In progress" : "No decision", ...TONE_MUTED };
@@ -133,10 +135,17 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const builderLabel = app.builder ? (BUILDER_LABELS[app.builder] ?? app.builder) : null;
   const reqCount = reqs.length, flowCount = flows.length;
 
-  // ── Production status: the latest run drives the verdict ──────────────────────────────────────────────
-  const latest: RunSummary | null = runs[0] ?? null;
+  // ── Production status: the newest valid FULL-COVERAGE pass drives the verdict (pickHealthRun). A
+  // targeted rerun may verify a repair, but it never replaces the launch-health decision — it surfaces
+  // separately as "Latest repair" below while the previous launch health stands until full verification.
+  const latest: RunSummary | null = pickHealthRun(runs) ?? null;
   const latestActive = isActiveRun(latest);
   const decision = latest?.decision ?? null;
+
+  const latestRepair: RunSummary | null = runs.find((r) => r.state === "completed" && r.decision === "repair_verified") ?? null;
+  const repairIsSeparate = !!latestRepair && !!latest && latestRepair.id !== latest.id
+    && new Date(latestRepair.created_at).getTime() >= new Date(latest.created_at).getTime();
+  const repairResolvedTitles = repairIsSeparate && latestRepair ? await issuesResolvedByRun(owner, latestRepair.id) : [];
 
   const blockers = openIssues.filter((i) => i.severity === "critical" || i.severity === "high");
   const verifiedRepairCount = repairs.filter((r) => r.applicationId === id && r.status === "verified").length;
@@ -152,6 +161,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   let verdict = "NOT TESTED";
   if (latestActive) { verdict = "IN PROGRESS"; }
   else if (decision === "ready") { hero = TONE_READY; verdict = "READY"; }
+  // Only reachable when NO full-coverage pass exists at all (pickHealthRun's honest fallback): the repair
+  // is verified, but the application still awaits its first full verification — never "READY".
+  else if (decision === "repair_verified") { hero = TONE_READY; verdict = "REPAIR VERIFIED"; }
   else if (decision === "needs_review") { hero = TONE_REVIEW; verdict = "NEEDS REVIEW"; }
   else if (decision === "blocked") { hero = TONE_BLOCKED; verdict = "BLOCKED"; }
 
@@ -163,8 +175,14 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const subParts: string[] = [];
   if (decision === "blocked" && blockers.length > 0) subParts.push(`${blockers.length} critical launch blocker${blockers.length === 1 ? "" : "s"}`);
   if (latest && !latestActive && critTotal > 0) subParts.push(`${critPassed} of ${critTotal} critical flows passed`);
+  if (decision === "repair_verified") subParts.push("Full critical verification is still required before this deployment can be marked READY");
   if (latestActive) subParts.push("A Production Pass is running right now");
   if (!latest) subParts.push("No Production Pass has run against this application yet");
+
+  // Full-verification selection for a repair-verified state: every eligible critical flow.
+  const criticalEligibleIds = flows
+    .filter((f) => f.enabled && (((f as { review_state?: string }).review_state ?? "approved") === "approved") && f.priority === "critical")
+    .map((f) => f.id);
 
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -209,6 +227,15 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           </p>
         ) : null}
 
+        {/* A verified targeted repair NEWER than the launch health: shown separately, never as the verdict.
+            The previous launch health above stands until full verification completes. */}
+        {repairIsSeparate && latestRepair ? (
+          <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--acc-deep)", margin: "12px 0 0", lineHeight: 1.55 }}>
+            Latest repair: {repairResolvedTitles.length ? `${repairResolvedTitles.join(", ")} verified as resolved` : "the selected flows passed and their blockers are verified as resolved"}.{" "}
+            <Link href={`/app/apps/${id}/runs/${latestRepair.id}`} style={{ color: "var(--acc-deep)" }}>View repair report</Link>
+          </p>
+        ) : null}
+
         {/* State-aware action row: one primary path per state. */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-start", marginTop: 20 }}>
           {!contractApproved ? (
@@ -229,6 +256,11 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             <>
               <Link href={`/app/apps/${id}/runs/${latest.id}`} className="btn">View report</Link>
               {eligibleFlowIds.length > 0 ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run new pass" ghost /> : null}
+            </>
+          ) : decision === "repair_verified" && latest ? (
+            <>
+              {criticalEligibleIds.length > 0 ? <LaunchPassButton appId={id} flowIds={criticalEligibleIds} label="Run full critical verification" /> : null}
+              <Link href={`/app/apps/${id}/runs/${latest.id}`} className="btn btn--ghost">View repair report</Link>
             </>
           ) : eligibleFlowIds.length > 0 ? (
             <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run Production Pass" />

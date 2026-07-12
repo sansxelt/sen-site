@@ -94,6 +94,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
     // The parent produced no flow runs (e.g. it failed before the browser started), so "Run again" falls
     // back to the contract's currently eligible flows — relaunching the whole contract rather than nothing.
     if (!flowIds.length) flowIds = Array.from(eligibleNow);
+  } else if (scope === "critical") {
+    // Full critical verification: every currently eligible CRITICAL flow of the contract, independent of
+    // what the parent ran. This is the run that can grant READY after a targeted repair was verified.
+    flowIds = contractFlows
+      .filter((f) => eligibleNow.has(f.id) && (f as { priority?: string }).priority === "critical")
+      .map((f) => f.id);
   } else if (Array.isArray(scope)) {
     const requested = new Set((scope as unknown[]).filter((x): x is string => typeof x === "string"));
     flowIds = pf.filter((f) => requested.has(f.testFlowId)).map((f) => f.testFlowId);

@@ -92,7 +92,10 @@ export class PostgresRunStore implements RunStore {
       maxMs: Number(f.max_ms) || 120000, destructiveAllowed: !!f.destructive_allowed,
       viewport: f.mobile_relevant ? { width: 390, height: 844 } : { width: 1280, height: 800 },
     }));
-    return { runId: String(r.id), applicationId: String(r.application_id), deploymentUrl: String(r.deployment_url ?? ""), environment: "preview", flows, leaseExpiresAt: new Date(String(r.lease_expires_at)).getTime() };
+    // Coverage from THIS run's own contract snapshot only (never aggregated across runs): full means every
+    // enabled+approved CRITICAL flow is in the selection. Partial runs can verify a repair, never grant READY.
+    const fullCoverage = approved.filter((f) => (f.priority as string) === "critical").every((f) => selected.has(String(f.id)));
+    return { runId: String(r.id), applicationId: String(r.application_id), deploymentUrl: String(r.deployment_url ?? ""), environment: "preview", flows, fullCoverage, leaseExpiresAt: new Date(String(r.lease_expires_at)).getTime() };
   }
 
   async heartbeat(runId: string, workerId: string, leaseSecs: number): Promise<boolean> {

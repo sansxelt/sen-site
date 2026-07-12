@@ -51,8 +51,12 @@ export class FakeRunStore implements RunStore {
         const selected = new Set(plan.ids);
         flows = r.flows.filter((f) => selected.has(f.flowId));
       }
+      // Coverage mirrors the Postgres store: full only when every CRITICAL flow of the contract snapshot
+      // (here: the enqueued flow list) is selected. A partial pass verifies a repair, never grants READY.
+      const executing = new Set(flows.map((f) => f.flowId));
+      const fullCoverage = r.flows.filter((f) => f.priority === "critical").every((f) => executing.has(f.flowId));
       r.state = "running"; r.leaseOwner = workerId; r.leaseExpiresAt = this.now() + leaseSecs * 1000; r.attempts += 1;
-      return { runId: r.runId, applicationId: r.applicationId, deploymentUrl: r.deploymentUrl, environment: r.environment, flows, leaseExpiresAt: r.leaseExpiresAt };
+      return { runId: r.runId, applicationId: r.applicationId, deploymentUrl: r.deploymentUrl, environment: r.environment, flows, fullCoverage, leaseExpiresAt: r.leaseExpiresAt };
     }
     return null;
   }

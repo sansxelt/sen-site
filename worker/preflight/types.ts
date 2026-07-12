@@ -72,14 +72,22 @@ export type ClaimedRun = {
   applicationId: string;
   deploymentUrl: string;
   environment: string;
-  flows: FlowSpec[];            // approved, enabled flows only
+  flows: FlowSpec[];            // the run snapshot's SELECTED approved flows (authoritative)
+  // Whether the selection covers EVERY enabled+approved CRITICAL flow of the run's contract. A targeted
+  // rerun (partial coverage) that passes proves its repair, never full production readiness: its best
+  // decision is repair_verified, and it can never become the application's launch health. Computed by the
+  // store at claim time from this single run's own contract snapshot — coverage is NEVER aggregated across
+  // runs (different deployment URLs / contract versions must not combine into a READY).
+  fullCoverage: boolean;
   leaseExpiresAt: number;       // epoch ms
 };
 export type FlowSpec = { flowId: string; name: string; priority: "critical" | "important" | "informational"; startPath?: string; steps: Step[]; maxMs: number; destructiveAllowed: boolean; viewport?: { width: number; height: number } };
 
 export type FlowEvidence = { consoleErrors: string[]; networkFailures: { method: string; path: string; status: number }[] };
 export type FlowResult = { flowId: string; state: "passed" | "failed" | "blocked" | "skipped"; severity?: "critical" | "high" | "medium" | "low"; steps: StepObservation[]; evidence?: FlowEvidence };
-export type RunDecision = "ready" | "needs_review" | "blocked";
+// ready is a LAUNCH decision and requires full critical coverage on one run target; repair_verified is the
+// best outcome of a passing partial-coverage (targeted) run — the repair is proven, readiness is not.
+export type RunDecision = "ready" | "needs_review" | "blocked" | "repair_verified";
 
 export interface RunStore {
   // Atomic claim of one queued run + lease. Returns null when nothing is claimable.

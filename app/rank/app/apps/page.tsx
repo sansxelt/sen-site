@@ -33,6 +33,7 @@ const isActiveRun = (run: RunSummary | null | undefined): boolean => !!run && !r
 function decisionStyle(run: RunSummary | null | undefined): { label: string; color: string; bg: string; border: string } {
   switch (run?.decision) {
     case "ready": return { label: "Ready", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+    case "repair_verified": return { label: "Repair verified", color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
     case "needs_review": return { label: "Needs review", color: "#c2831a", bg: "rgba(194,131,26,0.09)", border: "rgba(194,131,26,0.3)" };
     case "blocked": return { label: "Blocked", color: "var(--err)", bg: "rgba(194,84,12,0.08)", border: "rgba(194,84,12,0.28)" };
     default:
