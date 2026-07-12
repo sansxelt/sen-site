@@ -109,7 +109,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   const app = await getApplication(owner, id);
   if (!app) {
     return (
-      <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+      <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <div className="empty__icon">∅</div>
           <h3>Application not found</h3>
@@ -167,7 +167,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   if (!latest) subParts.push("No Production Pass has run against this application yet");
 
   return (
-    <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
         <Link href="/app/apps" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>

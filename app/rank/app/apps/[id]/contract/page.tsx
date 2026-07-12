@@ -148,7 +148,7 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
     ? await getApprovedContract(owner, id) : null;
 
   return (
-    <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
         <Link href="/app/apps" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>

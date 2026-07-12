@@ -9,7 +9,7 @@ function Bar({ w, h, style }: { w: number | string; h: number; style?: CSSProper
 
 export default function ApplicationDetailLoading() {
   return (
-    <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }} role="status" aria-label="Loading">
+    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }} role="status" aria-label="Loading">
       <style>{`
         .vskel { background: var(--bg-2); border-radius: 10px; animation: vskel-pulse 1.6s ease-in-out infinite; }
         @keyframes vskel-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }

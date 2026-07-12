@@ -105,7 +105,7 @@ export default async function Dashboard() {
   const blockers = openIssues.filter((i) => i.severity === "critical" || i.severity === "high");
 
   return (
-    <div className="wrap" style={{ maxWidth: 1040, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
+    <div className="wrap" style={{ maxWidth: 1280, paddingTop: "clamp(24px, 3vw, 38px)", paddingBottom: 80 }}>
       <div className="phead">
         <div>
           <p className="eyebrow">Vraelis Preflight</p>

@@ -342,7 +342,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
   // Not owned / not found, or the run belongs to a different application than the URL claims.
   if (!detail || !internal || internal.applicationId !== id) {
     return (
-      <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+      <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
           <div className="empty__icon">∅</div>
           <h3>Run not found</h3>
@@ -388,7 +388,7 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 16 }}>
         <Link href="/app/apps" style={{ color: "var(--fg-4)", textDecoration: "none" }}>Applications</Link>
         <span aria-hidden style={{ color: "var(--fg-5)" }}>/</span>

@@ -142,7 +142,7 @@ export default async function IssuesPage() {
   const highCount = open.filter((i) => i.severity === "high").length;
 
   return (
-    <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       {/* header */}
       <div style={{ marginBottom: 24 }}>
         <p className="eyebrow">Vraelis Preflight</p>

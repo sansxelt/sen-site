@@ -107,7 +107,7 @@ export default async function RepairsPage() {
   const other = repairs.filter((r) => !known.has(r.status));
 
   return (
-    <div className="wrap" style={{ maxWidth: 960, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
+    <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       {/* header */}
       <div style={{ marginBottom: 24 }}>
         <p className="eyebrow">Vraelis Preflight</p>
