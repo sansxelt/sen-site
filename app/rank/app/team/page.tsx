@@ -7,6 +7,7 @@ import { teamSeatState, syncTeamCheckout, syncMigrationCheckout } from "@/lib/v-
 import { workspaceOrganizationLink } from "@/lib/v-organization";
 import { TeamClient } from "./team-client";
 import { TeamBillingPanel } from "../billing/team-billing-panel";
+import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Team" };
 
@@ -44,7 +45,13 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
           <>
             <p style={{ fontSize: 13.5, color: "var(--fg-3)", marginBottom: 14 }}>Client viewers can access client-safe reports only.</p>
             <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", marginBottom: 12 }}>Shared with you</div>
-            {summary.projects.length === 0 ? <div className="empty"><div className="empty__icon">📂</div><h3>No projects shared with you yet</h3></div> : (
+            {summary.projects.length === 0 ? (
+              <div className="empty">
+                <EmptyIcon d={I.folder} />
+                <h3>No projects shared with you yet</h3>
+                <p>Ask the owner of {selected.name} to share a project with you. Client-safe reports appear here the moment they do.</p>
+              </div>
+            ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>{summary.projects.map((p) => <a key={p.id} href={`/shared/projects/${p.id}`} className="card" style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontWeight: 600 }}>{p.name}</span><span style={{ fontSize: 12, color: "var(--acc-deep)" }}>View reports →</span></a>)}</div>
             )}
           </>

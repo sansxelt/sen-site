@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Ic, I } from "@/app/rank/_components/icons";
 
 type OrgRole = "owner" | "admin" | "billing_admin" | "member" | "viewer";
 type OrgMember = { id: string; email: string; role: OrgRole; status: "pending" | "active" | "revoked"; can_manage_billing: boolean };
@@ -31,7 +32,7 @@ const ROLE_LABEL: Record<OrgRole, string> = { owner: "Owner", admin: "Organizati
 const INVITABLE: OrgRole[] = ["admin", "billing_admin", "member", "viewer"];
 const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "30px 0 12px" } as const;
 const input = { padding: "10px 13px", borderRadius: "var(--r-sm)", border: "1px solid var(--line-2)", background: "var(--bg-1)", color: "var(--fg-1)", fontSize: 14, outline: "none" } as const;
-const when = (iso: string) => { const d = new Date(iso); const m = Math.round((Date.now() - d.getTime()) / 60000); if (m < 60) return `${Math.max(1, m)}m ago`; const h = Math.round(m / 60); return h < 24 ? `${h}h ago` : d.toLocaleDateString("en-US", { month: "short", day: "numeric" }); };
+const when = (iso: string) => { const d = new Date(iso); const m = Math.round((Date.now() - d.getTime()) / 60000); if (m < 1) return "just now"; if (m < 60) return `${m}m ago`; const h = Math.round(m / 60); if (h < 24) return `${h}h ago`; const days = Math.round(h / 24); return days < 30 ? `${days}d ago` : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); };
 
 export function OrgClient({ email, ctx, activity, domainAccess = [], sso = null }: { email: string; ctx: Ctx; activity: AuditEntry[]; domainAccess?: DomainAccessOption[]; sso?: SsoView | null }) {
   const org = ctx.organization;
@@ -235,7 +236,7 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <span className="pill" style={{ fontSize: 10, color: m.role === "owner" ? "var(--acc-deep)" : "var(--fg-4)" }}>{ROLE_LABEL[m.role]}</span>
-                {ctx.canManage && m.role !== "owner" && m.email !== email ? <button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5 }}>Revoke</button> : null}
+                {ctx.canManage && m.role !== "owner" && m.email !== email ? <button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "4px 10px", fontSize: 11.5, gap: 5 }}><Ic d={I.slash} size={11} sw={2.2} />Revoke</button> : null}
               </div>
             </div>
           ))}
@@ -325,7 +326,10 @@ function OrgView({ email, ctx, activity, sso }: { email: string; ctx: Ctx; activ
           <div style={cardHead}>Organization activity</div>
           <div className="card">
             {activity.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>No organization governance activity yet.</p>
+              <p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>
+                No governance activity yet. Invite a member, verify a domain, or link a workspace above and
+                the event is recorded here immediately.
+              </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column" }}>
                 {activity.map((e, i) => (
@@ -437,7 +441,7 @@ function DomainRow({ d, token, canManage, onVerified, onToken, onRemoved, onHeal
           {!verified && <button onClick={verify} disabled={!!busy} className="btn" style={{ padding: "6px 13px", fontSize: 12.5, opacity: busy ? 0.6 : 1 }}>{busy === "verify" ? "Checking DNS…" : "Verify DNS"}</button>}
           {!verified && <button onClick={regen} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5 }}>{busy === "regen" ? "…" : "Regenerate token"}</button>}
           {verified && <button onClick={recheck} disabled={!!busy} className="btn" style={{ padding: "6px 13px", fontSize: 12.5, opacity: busy ? 0.6 : 1 }}>{busy === "recheck" ? "Re-checking…" : "Re-check DNS"}</button>}
-          <button onClick={remove} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5, color: "var(--money)" }}>{busy === "remove" ? "…" : "Remove"}</button>
+          <button onClick={remove} disabled={!!busy} className="btn btn--ghost" style={{ padding: "6px 13px", fontSize: 12.5, color: "var(--money)", gap: 6 }}>{busy === "remove" ? "…" : <><Ic d={I.trash} size={12} sw={2.2} />Remove</>}</button>
         </div>
       )}
       {!verified && canManage && <p style={{ fontSize: 10.5, color: "var(--fg-5)", margin: "8px 0 0", lineHeight: 1.6 }}>Regenerate only if you lost the original DNS value, it invalidates the previous token.</p>}
@@ -501,7 +505,7 @@ function SsoCard({ sso, pausedDomains = [] }: { sso: SsoView; pausedDomains?: st
                 )}
                 <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
                   {p.status !== "active" ? <button onClick={() => act("enable", p.id)} className="btn" style={{ padding: "5px 12px", fontSize: 12 }} disabled={p.type === "saml"}>Enable</button> : <button onClick={() => act("disable", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12 }}>Disable</button>}
-                  <button onClick={() => act("delete", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12, color: "var(--money)" }}>Delete</button>
+                  <button onClick={() => act("delete", p.id)} className="btn btn--ghost" style={{ padding: "5px 12px", fontSize: 12, color: "var(--money)", gap: 6 }}><Ic d={I.trash} size={12} sw={2.2} />Delete</button>
                 </div>
               </div>
             ))}

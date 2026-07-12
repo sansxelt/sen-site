@@ -4,8 +4,18 @@ import { requirePreflightOwner } from "@/lib/v-preflight-guard";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../applications/setup-required";
 import { listAllRuns, type PassRow } from "@/lib/preflight/overview-db";
+import { environmentsByApp, sourceConnectionsByApp, describeSource } from "@/lib/preflight/setup-read";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Deployments" };
+
+const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
+
+// Stable UTC render (used as a hover title): "2026-07-02 14:31 UTC".
+function when(iso: string | null | undefined): string {
+  if (!iso) return "";
+  try { return new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return ""; }
+}
 
 // Relative "3m ago / 4h ago / Jul 2" for the latest-pass line. Server component, rendered once per
 // request, so a wall-clock relative time carries no hydration-mismatch risk.
@@ -55,7 +65,7 @@ function groupByDeployment(passes: PassRow[]): DeploymentGroup[] {
   return Array.from(groups, ([url, runs]) => ({ url, runs }));
 }
 
-function DeploymentCard({ group }: { group: DeploymentGroup }) {
+function DeploymentCard({ group, envLabel, sourceLine }: { group: DeploymentGroup; envLabel: string | null; sourceLine: string | null }) {
   const latest = group.runs[0];
   const st = decisionStyle(latest);
   const last = timeAgo(latest.completedAt ?? latest.createdAt);
@@ -67,8 +77,16 @@ function DeploymentCard({ group }: { group: DeploymentGroup }) {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-1)", lineHeight: 1.5, wordBreak: "break-all", minWidth: 0 }}>
           {group.url}
         </div>
-        <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border, flex: "none" }}>{st.label}</span>
+        <div style={{ display: "flex", gap: 6, flex: "none" }}>
+          {envLabel ? <span className="pill" style={{ fontSize: 10 }}>{envLabel}</span> : null}
+          <span className="pill" style={{ fontSize: 10, color: st.color, background: st.bg, borderColor: st.border }}><DecisionMark decision={latest.decision} />{st.label}</span>
+        </div>
       </div>
+      {sourceLine ? (
+        <div style={{ fontSize: 12.5, color: "var(--fg-4)" }}>
+          Source: <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{sourceLine}</span>
+        </div>
+      ) : null}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 12.5, color: "var(--fg-4)" }}>{metaParts.join(", ")}</span>
         <Link
@@ -91,6 +109,21 @@ export default async function DeploymentsPage() {
   const passes = await listAllRuns(owner, 60);
   const groups = groupByDeployment(passes);
 
+  // Environment + source (github / custom_deploy) context for the applications behind these deployments.
+  // Both are bulk single queries and degrade to empty maps on a pre-migration schema.
+  const appIds = Array.from(new Set(groups.map((g) => g.runs[0].applicationId).filter(Boolean)));
+  const [envByApp, sourceByApp] = await Promise.all([
+    environmentsByApp(owner, appIds),
+    sourceConnectionsByApp(owner, appIds),
+  ]);
+
+  // The last verified deployment across every application: the newest COMPLETED pass that recorded a
+  // decision and the deployment URL it tested. Real rows only.
+  const lastVerified = passes.find((p) => p.state === "completed" && p.decision && p.deploymentUrl) ?? null;
+  const lv = lastVerified ? decisionStyle(lastVerified) : null;
+  const lvEnv = lastVerified ? (envByApp.get(lastVerified.applicationId) ?? null) : null;
+  const lvSource = lastVerified ? describeSource(sourceByApp.get(lastVerified.applicationId)) : null;
+
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       {/* header */}
@@ -102,15 +135,54 @@ export default async function DeploymentsPage() {
         </p>
       </div>
 
+      {lastVerified && lv ? (
+        <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>
+              Last verified deployment
+            </div>
+            <span className="pill" style={{ fontSize: 10.5, color: lv.color, background: lv.bg, borderColor: lv.border, flex: "none" }}><DecisionMark decision={lastVerified.decision} />{lv.label}</span>
+          </div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)", marginTop: 10, wordBreak: "break-all" }}>
+            {lastVerified.deploymentUrl}
+          </div>
+          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 6 }}>
+            {lastVerified.applicationName ? `${lastVerified.applicationName}, ` : ""}
+            <span title={when(lastVerified.completedAt ?? lastVerified.createdAt)}>completed {timeAgo(lastVerified.completedAt ?? lastVerified.createdAt)}</span>
+            {lvEnv && ENV_LABELS[lvEnv] ? `, ${ENV_LABELS[lvEnv].toLowerCase()} environment` : ""}
+          </div>
+          {lvSource ? (
+            <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 4 }}>
+              Source: <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{lvSource}</span>
+            </div>
+          ) : null}
+          <div style={{ marginTop: 12 }}>
+            <Link href={`/applications/${lastVerified.applicationId}/passes/${lastVerified.id}`}
+              style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
+              View pass report →
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
       {groups.length === 0 ? (
         <div className="empty">
-          <div className="empty__icon" aria-hidden>⬡</div>
+          <EmptyIcon d={I.deploy} />
           <h3>No deployments tested yet</h3>
           <p>Run a Production Pass and the deployment it tests appears here with its verdict.</p>
+          <Link href="/applications" className="btn">Go to applications</Link>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {groups.map((g) => <DeploymentCard key={g.url} group={g} />)}
+          {groups.map((g) => {
+            const appId = g.runs[0].applicationId;
+            const env = envByApp.get(appId);
+            return (
+              <DeploymentCard key={g.url} group={g}
+                envLabel={env ? (ENV_LABELS[env] ?? null) : null}
+                sourceLine={describeSource(sourceByApp.get(appId))} />
+            );
+          })}
         </div>
       )}
 

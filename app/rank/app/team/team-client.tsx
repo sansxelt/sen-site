@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Ic, I } from "@/app/rank/_components/icons";
 
 type Role = "owner" | "admin" | "editor" | "viewer" | "client_viewer";
 type Member = { id: string; user_id: string | null; email: string; role: Role; status: "pending" | "active" | "revoked"; created_at: string; invite_expires_at?: string | null; can_manage_billing?: boolean };
@@ -153,7 +154,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         <div style={cardHead}>Built for governed decision workflows</div>
         <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "8px 18px" }}>
           {["Role-based workspace access", "Client-safe report sharing", "Workspace activity log", "Billing admin separation", "Secure, expiring invite links", "Project-level access control", "Signed webhooks & API keys", "Ownership transfer with audit"].map((g) => (
-            <li key={g} style={{ fontSize: 13, color: "var(--fg-2)", display: "flex", gap: 8, alignItems: "baseline" }}><span style={{ color: "var(--acc-deep)" }}>✓</span>{g}</li>
+            <li key={g} style={{ fontSize: 13, color: "var(--fg-2)", display: "flex", gap: 8, alignItems: "center" }}><span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)", flex: "none" }}><Ic d={I.check} size={12} sw={2.4} /></span>{g}</li>
           ))}
         </ul>
         <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "14px 0 0", lineHeight: 1.6 }}>SSO and enterprise provisioning are planned for larger organizations. <Link href="/contact" style={{ color: "var(--acc-deep)" }}>Contact us for enterprise SSO requirements →</Link></p>
@@ -266,7 +267,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
               {m.role === "owner" || !canManage ? <RolePill role={m.role} /> : (
                 <>
                   <select value={m.role} onChange={(e) => setRole(m.id, e.target.value as Role)} style={{ ...input, padding: "6px 10px", fontSize: 12.5 } as React.CSSProperties}>{INVITABLE.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>
-                  <button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "6px 11px", fontSize: 12.5 }}>Revoke</button>
+                  <button onClick={() => revoke(m.id)} className="btn btn--ghost" style={{ padding: "6px 11px", fontSize: 12.5, gap: 6 }}><Ic d={I.slash} size={12} sw={2.2} />Revoke</button>
                 </>
               )}
             </div>

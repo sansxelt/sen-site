@@ -5,9 +5,19 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication, type RunSummary } from "@/lib/v-applications";
 import { listRunsForApp } from "@/lib/preflight/runs-db";
+import { getSetupExtras, sourceConnectionsByApp, describeSource } from "@/lib/preflight/setup-read";
 import { AppTabs } from "../app-tabs";
+import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Deployments" };
+
+const ENV_LABELS: Record<string, string> = { preview: "Preview", staging: "Staging", production: "Production" };
+
+// Stable UTC render (used as a hover title): "2026-07-02 14:31 UTC".
+function when(iso: string | null | undefined): string {
+  if (!iso) return "";
+  try { return new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return ""; }
+}
 
 // Relative "3m ago / 4h ago / Jul 2" (server component; rendered once per request, no hydration risk).
 function timeAgo(iso: string | null | undefined): string {
@@ -63,9 +73,10 @@ function DeploymentRow({ appId, g }: { appId: string; g: DeploymentGroup }) {
         </div>
         <div style={{ fontSize: 12, color: "var(--fg-4)", marginTop: 3 }}>
           {g.passCount} pass{g.passCount === 1 ? "" : "es"}, latest {timeAgo(g.latest.created_at)}
+          {g.latest.commit_sha ? `, commit ${g.latest.commit_sha.slice(0, 10)}` : ""}
         </div>
       </div>
-      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}>{p.label}</span>
+      <span className="pill" style={{ fontSize: 10.5, color: p.color, background: p.bg, borderColor: p.border, flex: "none" }}><DecisionMark decision={g.latest.decision} />{p.label}</span>
       <span aria-hidden style={{ color: "var(--fg-5)", flex: "none", fontSize: 13 }}>→</span>
     </Link>
   );
@@ -83,7 +94,7 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
     return (
       <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
         <div className="empty">
-          <div className="empty__icon">∅</div>
+          <EmptyIcon d={I.slash} />
           <h3>Application not found</h3>
           <p>This application doesn&apos;t exist, or it belongs to another account.</p>
           <Link href="/applications" className="btn">Back to applications</Link>
@@ -92,8 +103,20 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
     );
   }
 
-  const runs = await listRunsForApp(owner, id, 50);
+  // Runs + setup extras + the source connection line, all owner-scoped and degrade-to-empty.
+  const [runs, extras, sourceMap] = await Promise.all([
+    listRunsForApp(owner, id, 50),
+    getSetupExtras(owner, id),
+    sourceConnectionsByApp(owner, [id]),
+  ]);
   const groups = groupByDeployment(runs);
+  const envLabel = extras.environment ? ENV_LABELS[extras.environment] : null;
+  const sourceLine = describeSource(sourceMap.get(id));
+
+  // The last verified deployment: the newest COMPLETED pass that recorded both a decision and the
+  // deployment URL it tested. Real rows only; absent before the first completed pass.
+  const lastVerified = runs.find((r) => r.state === "completed" && r.decision && r.deployment_url) ?? null;
+  const lv = lastVerified ? verdictPill(lastVerified.decision, lastVerified.state) : null;
 
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -104,12 +127,45 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
       </nav>
 
       <h1 className="display" style={{ fontSize: "clamp(1.7rem, 3vw, 2.4rem)", margin: "6px 0 10px" }}>{app.name}</h1>
-      <a href={app.app_url} target="_blank" rel="noopener noreferrer"
-        style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
-        {app.app_url}
-      </a>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <a href={app.app_url} target="_blank" rel="noopener noreferrer"
+          style={{ fontFamily: "var(--font-mono)", fontSize: 12.5, color: "var(--fg-4)", textDecoration: "none", wordBreak: "break-all" }}>
+          {app.app_url}
+        </a>
+        {envLabel ? <span className="pill" style={{ fontSize: 10.5 }}>{envLabel}</span> : null}
+      </div>
 
       <AppTabs appId={id} active="deployments" />
+
+      {lastVerified && lv ? (
+        <div className="card" style={{ padding: "clamp(16px, 2.2vw, 22px)", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" }}>
+              Last verified deployment
+            </div>
+            <span className="pill" style={{ fontSize: 10.5, color: lv.color, background: lv.bg, borderColor: lv.border, flex: "none" }}><DecisionMark decision={lastVerified.decision} />{lv.label}</span>
+          </div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 13.5, fontWeight: 600, color: "var(--fg-1)", marginTop: 10, wordBreak: "break-all" }}>
+            {lastVerified.deployment_url}
+          </div>
+          <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 6 }}>
+            <span title={when(lastVerified.completed_at ?? lastVerified.created_at)}>Completed {timeAgo(lastVerified.completed_at ?? lastVerified.created_at)}</span>
+            {lastVerified.commit_sha ? `, commit ${lastVerified.commit_sha.slice(0, 10)}` : ""}
+            {envLabel ? `, ${envLabel.toLowerCase()} environment` : ""}
+          </div>
+          {sourceLine ? (
+            <div style={{ fontSize: 12.5, color: "var(--fg-4)", marginTop: 4 }}>
+              Source: <span style={{ fontFamily: "var(--font-mono)", color: "var(--fg-2)" }}>{sourceLine}</span>
+            </div>
+          ) : null}
+          <div style={{ marginTop: 12 }}>
+            <Link href={`/applications/${id}/passes/${lastVerified.id}`}
+              style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none" }}>
+              View pass report →
+            </Link>
+          </div>
+        </div>
+      ) : null}
 
       {groups.length ? (
         <div style={{ display: "grid", gap: 8 }}>
@@ -117,10 +173,10 @@ export default async function AppDeploymentsPage({ params }: { params: Promise<{
         </div>
       ) : (
         <div className="empty">
-          <div className="empty__icon" aria-hidden>∅</div>
+          <EmptyIcon d={I.deploy} />
           <h3>No deployments recorded</h3>
-          <p>Every Production Pass records the deployment URL it ran against. Once passes have run, each deployment and its latest verdict show here.</p>
-          <Link href={`/applications/${id}`} className="btn">Back to overview</Link>
+          <p>Every Production Pass records the deployment URL it ran against. Run one from the overview and that deployment appears here with its verdict.</p>
+          <Link href={`/applications/${id}`} className="btn">Run a pass from the overview</Link>
         </div>
       )}
 

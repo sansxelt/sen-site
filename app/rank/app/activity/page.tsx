@@ -15,13 +15,30 @@ const when = (iso: string) => {
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.round(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 30) return `${days}d ago`;
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
+// Absolute UTC render for the hover title, so a humanized time is always verifiable: "2026-07-02 14:31 UTC".
+const absWhen = (iso: string) => {
+  try { return new Date(iso).toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return ""; }
 };
 
 const cardHead = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)", margin: "28px 0 12px" } as const;
 
-function EventList({ events, empty }: { events: AuditEntry[]; empty: string }) {
-  if (events.length === 0) return <div className="card" style={{ background: "var(--bg-2)" }}><p style={{ fontSize: 13, color: "var(--fg-4)", margin: 0 }}>{empty}</p></div>;
+// Event trail with a purposeful empty state: what will appear here, plus the one action that starts
+// filling it (never a bare card).
+function EventList({ events, empty, action }: { events: AuditEntry[]; empty: string; action: { href: string; label: string } }) {
+  if (events.length === 0) {
+    return (
+      <div className="empty" style={{ padding: "clamp(22px, 3vw, 34px)" }}>
+        <h3 style={{ fontSize: 16 }}>No activity recorded yet</h3>
+        <p style={{ fontSize: 13 }}>{empty}</p>
+        <Link href={action.href} className="btn btn--ghost">{action.label}</Link>
+      </div>
+    );
+  }
   return (
     <div style={{ border: "1px solid var(--line-2)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)" }}>
       {events.map((e, i) => (
@@ -37,7 +54,7 @@ function EventList({ events, empty }: { events: AuditEntry[]; empty: string }) {
               {e.context ? <span>{e.context}</span> : null}
             </div>
           </div>
-          <span style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", whiteSpace: "nowrap" }}>{when(e.when)}</span>
+          <span title={absWhen(e.when)} style={{ fontFamily: "var(--font-code)", fontSize: 11.5, color: "var(--fg-5)", whiteSpace: "nowrap" }}>{when(e.when)}</span>
         </div>
       ))}
     </div>
@@ -100,13 +117,17 @@ export default async function AuditPage() {
 
       {/* Workspace activity */}
       <div style={cardHead}>Workspace activity</div>
-      <EventList events={events} empty="Evaluation launches and completions, credit top-ups, exports, billing actions, invites, and role changes will appear here as you work." />
+      <EventList events={events}
+        empty="Application connections, Production Pass launches and completions, credit top-ups, exports, billing actions, invites, and role changes are recorded here as you work."
+        action={{ href: "/applications", label: "Go to applications" }} />
 
       {/* Organization activity */}
       {org && canOrgAudit && (
         <>
           <div style={cardHead}>Organization activity, {org.name}</div>
-          <EventList events={orgEvents} empty="Organization, domain, SSO, and provisioning changes will appear here." />
+          <EventList events={orgEvents}
+            empty="Organization, domain, SSO, and provisioning changes are recorded here. Verify a domain or invite a member and the event shows up immediately."
+            action={{ href: "/organization", label: "Manage organization" }} />
           <p style={{ fontSize: 11, color: "var(--fg-5)", margin: "10px 0 0", lineHeight: 1.6 }}>Account-level governance events. Organization and workspace activity can be exported as sanitized CSV or JSON above. Scheduled exports and retention controls are planned.</p>
         </>
       )}
