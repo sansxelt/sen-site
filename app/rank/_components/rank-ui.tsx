@@ -7,6 +7,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { isAppPath } from "@/lib/app-routes";
+// The product-wide drawn icon set (one language, no glyph characters). Kept in its own
+// server-safe module so app pages can render the same icons without a client boundary.
+import { Ic, I } from "./icons";
 
 const PUBLIC_LINKS = [
   { href: "/how-it-works", label: "How it works" },
@@ -14,29 +17,6 @@ const PUBLIC_LINKS = [
   { href: "/developers", label: "Developers" },
   { href: "/enterprise", label: "Enterprise" },
 ];
-
-function Ic({ d }: { d: string }) {
-  return <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={d} /></svg>;
-}
-const I = {
-  grid: "M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z",
-  check: "M20 6 9 17l-5-5",
-  plus: "M12 5v14M5 12h14",
-  data: "M3 3v18h18M7 14l3-3 3 3 5-6",
-  coin: "M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
-  layers: "M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5",
-  card: "M3 6h18v12H3zM3 10h18",
-  code: "M8 9l-3 3 3 3M16 9l3 3-3 3",
-  user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M5 21v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1",
-  vote: "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",
-  folder: "M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
-  shield: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4",
-  clock: "M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
-  building: "M4 21V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v17M13 9h6a1 1 0 0 1 1 1v11M3 21h18M7 7h2M7 11h2M7 15h2M16 13h1M16 17h1",
-  alert: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01",
-  wrench: "M14.7 6.3a4 4 0 0 0-5.4 5.4l-6 6a1.5 1.5 0 0 0 2.1 2.1l6-6a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.1-2.1z",
-  deploy: "M12 15V3m0 0l-4 4m4-4l4 4M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4",
-};
 
 // The signed-in product: Vraelis is the production layer for AI-built software. The legacy AI-output checker
 // is deliberately NOT here (it lives flag-gated at /legacy/checks); Projects / Analytics / Data quality
@@ -103,7 +83,7 @@ function PublicNav({ signedIn }: { signedIn: boolean }) {
         <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="vra-nav-secondary" style={link}>{authed ? "Dashboard" : "Sign in"}</Link>
         <Link href={authed ? "/app" : "/signin?callbackUrl=%2Fapp"} className="btn">{authed ? "Open app" : "Get early access"}</Link>
         <button aria-label="Menu" onClick={() => setOpen((v) => !v)} className="vra-nav-burger" style={{ display: "none", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 11, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", color: "var(--fg-1)" }}>
-          <span aria-hidden>{open ? "✕" : "☰"}</span>
+          <Ic d={open ? I.x : I.menu} size={18} sw={2} />
         </button>
       </div>
       {open && (
@@ -164,6 +144,22 @@ function Footer({ humanEval }: { humanEval: boolean }) {
   );
 }
 
+// AccountMenu region: the topbar identity button (custom profile picture with initials fallback)
+// plus the quick menu. The picture comes from /api/v/avatar (a short-TTL signed URL to the PRIVATE
+// avatar bucket; the owner is resolved server-side from the session, never sent by the client).
+// The account page broadcasts "vraelis:avatar" after upload/remove so this stays in sync without
+// a reload. Menu items mirror the sidebar's icons (same Ic stroke set, same assignments).
+const ACCOUNT_MENU: { href: string; label: string; d: string }[] = [
+  { href: "/applications", label: "Applications", d: I.layers },
+  { href: "/plans", label: "Plans", d: I.layers },
+  { href: "/credits", label: "Credits", d: I.coin },
+  { href: "/api", label: "API & Webhooks", d: I.code },
+];
+const ACCOUNT_MENU_FOOT: { href: string; label: string; d: string }[] = [
+  { href: "/account", label: "Account", d: I.user },
+  { href: "/billing", label: "Billing", d: I.card },
+];
+
 function AppTopbar({ email }: { email: string | null }) {
   const [menu, setMenu] = useState(false);
   const pathname = usePathname() || "";
@@ -177,6 +173,16 @@ function AppTopbar({ email }: { email: string | null }) {
     if (who) return;
     fetch("/api/auth/session").then((r) => (r.ok ? r.json() : null)).then((j) => { const e = j?.user?.email; if (e) setWho(e); }).catch(() => {});
   }, [who]);
+  // Profile picture: fetched once per shell mount, updated live by the account page's event.
+  const [avatar, setAvatar] = useState<string | null>(null);
+  useEffect(() => {
+    fetch("/api/v/avatar").then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && typeof j.url === "string") setAvatar(j.url); }).catch(() => {});
+    const onChange = (e: Event) => setAvatar((e as CustomEvent<{ url: string | null }>).detail?.url ?? null);
+    window.addEventListener("vraelis:avatar", onChange);
+    return () => window.removeEventListener("vraelis:avatar", onChange);
+  }, []);
+  const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
+  const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
   return (
     <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
       {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
@@ -185,18 +191,30 @@ function AppTopbar({ email }: { email: string | null }) {
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         <Link href="/applications/new" className="btn" style={{ padding: "9px 16px" }}>+ Connect app</Link>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
-          <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(who || "?").slice(0, 1).toUpperCase()}</span>
-          <span style={{ fontSize: 13, color: "var(--fg-3)" }} aria-hidden>▾</span>
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatar} alt="" aria-hidden width={26} height={26} style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover", display: "block" }} />
+          ) : (
+            <span aria-hidden style={{ width: 26, height: 26, borderRadius: "50%", background: "linear-gradient(135deg, var(--acc), var(--acc-deep))", color: "#fff", display: "grid", placeItems: "center", fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 12 }}>{(who || "?").slice(0, 1).toUpperCase()}</span>
+          )}
+          <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-3)" }}><Ic d={I.chevron} size={12} sw={2.2} /></span>
         </button>
         {menu && (
-          <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 220, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
+          <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: 232, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 14, boxShadow: "var(--shadow-lg)", padding: 8, zIndex: 60 }}>
             <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid var(--line-1)", marginBottom: 6 }}>
               <div style={{ fontFamily: "var(--font-code)", fontSize: 10, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-4)" }}>Signed in</div>
               <div style={{ fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{who || "your account"}</div>
             </div>
-            <Link href="/account" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Account</Link>
-            <Link href="/billing" style={{ display: "block", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" }}>Billing</Link>
-            <button onClick={() => signOut({ callbackUrl: "/" })} style={{ width: "100%", textAlign: "left", padding: "9px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--err)", background: "transparent", border: "none", cursor: "pointer" }}>Sign out</button>
+            {ACCOUNT_MENU.map((l) => (
+              <Link key={l.href} href={l.href} style={item}><span style={itemIcon}><Ic d={l.d} size={15} sw={1.8} /></span>{l.label}</Link>
+            ))}
+            <div aria-hidden style={{ borderTop: "1px solid var(--line-1)", margin: "6px 2px" }} />
+            {ACCOUNT_MENU_FOOT.map((l) => (
+              <Link key={l.href} href={l.href} style={item}><span style={itemIcon}><Ic d={l.d} size={15} sw={1.8} /></span>{l.label}</Link>
+            ))}
+            <button onClick={() => signOut({ callbackUrl: "/" })} style={{ ...item, width: "100%", textAlign: "left", color: "var(--err)", background: "transparent", border: "none", cursor: "pointer", fontFamily: "inherit" }}>
+              <span style={{ ...itemIcon, color: "var(--err)" }}><Ic d={I.signout} size={15} sw={1.8} /></span>Sign out
+            </button>
           </div>
         )}
       </div>
@@ -219,14 +237,14 @@ function WorkspaceSwitcher() {
           <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{current.isPersonal ? "Personal workspace" : current.name}</span>
           <span style={{ display: "block", fontFamily: "var(--font-code)", fontSize: 10, color: "var(--fg-4)", marginTop: 1 }}>{WS_ROLE[current.role] ?? current.role}</span>
         </span>
-        <span style={{ fontSize: 11, color: "var(--fg-4)" }}>▾</span>
+        <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.chevron} size={12} sw={2.2} /></span>
       </button>
       {open && (
         <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: 12, boxShadow: "var(--shadow-lg)", padding: 6, zIndex: 70 }}>
           {data.available.map((w) => (
             <button key={w.id} onClick={() => select(w.id)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "8px 10px", borderRadius: 8, border: "none", background: w.id === current.id ? "var(--acc-soft)" : "transparent", cursor: "pointer", textAlign: "left" }}>
               <span style={{ minWidth: 0 }}><span style={{ display: "block", fontSize: 13, color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.isPersonal ? "Personal workspace" : w.name}</span><span style={{ fontSize: 10.5, color: "var(--fg-4)" }}>{WS_ROLE[w.role] ?? w.role}</span></span>
-              {w.id === current.id ? <span style={{ color: "var(--acc-deep)", fontSize: 12 }}>✓</span> : null}
+              {w.id === current.id ? <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)" }}><Ic d={I.check} size={12} sw={2.4} /></span> : null}
             </button>
           ))}
         </div>
@@ -254,8 +272,8 @@ function AppSidebar({ humanEval }: { humanEval: boolean }) {
         </div>
       ))}
       <div className="app-side__foot" style={{ marginTop: "auto", position: "sticky", bottom: 0, background: "var(--bg-0)", paddingTop: 12, paddingBottom: 4, borderTop: "1px solid var(--line-1)" }}>
-        <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }}><span className="slink__i"><Ic d="M19 12H5M11 18l-6-6 6-6" /></span>Back to site</a>
-        <button onClick={() => signOut({ callbackUrl: "/" })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i"><Ic d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></span>Sign out</button>
+        <a href="https://vraelis.com" className="slink" style={{ color: "var(--fg-3)" }}><span className="slink__i"><Ic d={I.back} /></span>Back to site</a>
+        <button onClick={() => signOut({ callbackUrl: "/" })} className="slink" style={{ color: "var(--fg-3)", width: "100%", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit", fontSize: 15.5, fontWeight: 500 }}><span className="slink__i"><Ic d={I.signout} /></span>Sign out</button>
       </div>
     </aside>
   );
