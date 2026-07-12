@@ -112,3 +112,8 @@ tsc 0, eslint 0, build 0. Suites: reconcile 14/14, fixture-rerun 25/25, seed-run
 
 ## 2026-07-12: app.vraelis.com migration
 - Product moved to app.vraelis.com with clean renamed routes (/applications, /applications/[id]/passes/[runId], /activity, /api); marketing + auth stay on vraelis.com. Session cookie scoped to .vraelis.com in production only (one-time session reset). Legacy /app/* 308s across with full segment mapping incl. /app/checks -> /legacy/checks. /api/* namespace never redirected (exact /api is the product page). Localhost dev works without subdomains (rewrites). Suite: routes:test 38/38. Spec + operator checklist: docs/subdomain-migration-plan.md.
+
+## 2026-07-12: approved pass pricing built FLAG-GATED (VRAELIS_PASS_PRICING, default OFF)
+- Pure money core (lib/preflight/pass-pricing.ts, 33/33): $15 pass / 5 flows incl / $3 extra; rerun $3 x flows capped at pass price; builder_v1 $49/$490, pro_v1 $149/$1,490, scale_v1 $399/$3,990 (annual = 10 months); anchor-based monthly windows meter annual subs monthly with no cron.
+- Enforcement (82/82): flow-unit allowance metering (reruns deduct selected flows only), app caps, flow caps, lifetime free pass, cents PAYG holds via existing ledger (unit column), _v1 webhook wiring, signup-grant cut at flip only, balance-conversion tool (dry-run). Legacy behavior byte-identical flag-off.
+- NOT done until founder flips: Stripe prices (operator creates 6), migration 6 SQL, conversion --apply, public pricing UI + checkout (step 11). Rollback = unset flag BEFORE any cent rows exist.
