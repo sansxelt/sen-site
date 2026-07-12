@@ -567,14 +567,17 @@ summary::-webkit-details-marker { display: none; }
 .badge-now { font-family: var(--font-code); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--acc-deep); background: var(--acc-soft); border: 1px solid var(--acc-line); padding: 3px 9px; border-radius: 99px; }
 
 /* ─── App shell — sidebar that connects the product to the brand ─── */
-.app-shell { display: grid; grid-template-columns: 232px minmax(0,1fr); min-height: calc(100svh - 1px); }
+/* Viewport units are NOT scaled by the desktop zoom (100svh inside a 0.8-zoomed root
+   renders at only 80% of the screen, leaving the sidebar hanging above the bottom),
+   so every svh here is divided by --shell-zoom (1 on phones, set with the zoom below). */
+.app-shell { display: grid; grid-template-columns: 232px minmax(0,1fr); min-height: calc(100svh / var(--shell-zoom, 1) - 1px); }
 .app-side {
   border-right: 1px solid var(--line-2); background: var(--bg-0);
   padding: 18px 14px; display: flex; flex-direction: column; gap: 4px;
   /* sit below the sticky topbar and fill exactly the remaining viewport, so the
      pinned foot (Back to site + Sign out) is visible without scrolling */
   position: sticky; top: var(--app-topbar-h, 66px); align-self: start;
-  height: calc(100svh - var(--app-topbar-h, 66px)); overflow-y: auto;
+  height: calc(100svh / var(--shell-zoom, 1) - var(--app-topbar-h, 66px)); overflow-y: auto;
 }
 .app-side__group { font-family: var(--font-code); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-5); padding: 14px 12px 6px; }
 .slink {
@@ -652,6 +655,6 @@ summary::-webkit-details-marker { display: none; }
    viewport for every visitor (the "90% should be global" note). Phones keep 1:1
    so touch targets and text stay readable. */
 @media (min-width: 768px) {
-  .rank-root { zoom: 0.8; }
-  .rank-root--site { zoom: 0.72; }
+  .rank-root { zoom: 0.8; --shell-zoom: 0.8; }
+  .rank-root--site { zoom: 0.72; --shell-zoom: 0.72; }
 }
