@@ -179,8 +179,8 @@ function AppTopbar({ email }: { email: string | null }) {
   }, [who]);
   return (
     <header style={{ display: "flex", alignItems: "center", gap: 16, height: 64, padding: "0 var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
-      {/* in-app logo returns to the public home (sidebar's "Back to site" does too);
-          small left nudge so the wordmark sits centered over the sidebar column */}
+      {/* in-app logo returns to the APP home (app.vraelis.com/); leaving the product entirely is the
+          sidebar's "Back to site" -> https://vraelis.com. Small left nudge centers over the sidebar. */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
         <Link href="/applications/new" className="btn" style={{ padding: "9px 16px" }}>+ Connect app</Link>

@@ -176,17 +176,6 @@ export default function DevelopersPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="section cta-band" style={{ borderBottom: "none" }}>
-        <div className="glow glow--soft" />
-        <div className="wrap" style={{ maxWidth: 680, textAlign: "center" }}>
-          <h2 className="display" style={{ fontSize: "clamp(1.9rem, 3.6vw, 2.8rem)", marginBottom: 16 }}>Gate every deploy on a <span className="em">launch decision</span>.</h2>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link href="/signin?callbackUrl=%2Fapp" className="btn btn--lg">Get early access <span aria-hidden>→</span></Link>
-            <Link href="/pricing" className="btn btn--ghost btn--lg">View pricing</Link>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
