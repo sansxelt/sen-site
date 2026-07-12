@@ -1,0 +1,14 @@
+# Railway config (repo root, picked up automatically). The ONLY thing Railway hosts from this repo is the
+# Vraelis Preflight WORKER; the Next web app deploys to Vercel and must never be built here. Without this
+# file Railway's Nixpacks auto-detect tries to `npm ci` + build the Next app, which is wrong twice over.
+# Mirrors worker/preflight/railway.toml (kept for documentation next to the worker).
+[build]
+builder = "dockerfile"
+dockerfilePath = "worker/preflight/Dockerfile"
+
+[deploy]
+startCommand = "npx tsx worker/preflight/index.ts"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
