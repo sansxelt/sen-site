@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TestFlow, Severity } from "@/lib/v-applications";
 import { FLOW_ACTIONS, ACTION_LABELS, AUTH_FLOW_ACTIONS, type FlowAction, type FlowStep } from "@/lib/preflight/flow-steps";
 import { Ic, I } from "@/app/rank/_components/icons";
@@ -70,6 +70,10 @@ export function FlowEditor({
   onSaved: (flow: TestFlow) => void;
   onCancel: () => void;
 }) {
+  // Local draft key: a NEW flow is autosaved per contract so an unexpected reload/logout never loses the
+  // in-progress work (the user can still discard). An EDIT is not autosaved (its source of truth is the
+  // saved row); we only recover unsaved NEW-flow drafts.
+  const draftKey = `vraelis-flow-draft-${contractId}`;
   const [name, setName] = useState(flow?.name ?? "");
   const [goal, setGoal] = useState(flow?.goal ?? "");
   const [role, setRole] = useState<string>(flow?.role && roles.includes(flow.role) ? flow.role : (flow?.role || NO_ROLE));
@@ -77,9 +81,48 @@ export function FlowEditor({
   const [steps, setSteps] = useState<DraftStep[]>(toDraftSteps(flow));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [restored, setRestored] = useState(false);
 
   const isEdit = !!flow;
   const hasRoles = roles.length > 0;
+
+  // Restore an autosaved new-flow draft after a reload/kick-out (one-shot, deferred so SSR + first client
+  // render match). Only for a NEW flow, and only when the form is still empty (never clobber typed input).
+  useEffect(() => {
+    if (isEdit) return;
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      try {
+        const raw = localStorage.getItem(draftKey);
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        if (name || goal || steps.length) return;   // user already started typing; do not overwrite
+        if (d.name) setName(d.name);
+        if (d.goal) setGoal(d.goal);
+        if (d.role) setRole(d.role);
+        if (d.priority) setPriority(d.priority);
+        if (Array.isArray(d.steps) && d.steps.length) setSteps(d.steps);
+        if (d.name || (Array.isArray(d.steps) && d.steps.length)) setRestored(true);
+      } catch { /* a corrupt draft is ignored */ }
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Autosave the in-progress NEW flow to localStorage as the user builds it (debounced by React batching).
+  useEffect(() => {
+    if (isEdit) return;
+    try {
+      if (name.trim() || goal.trim() || steps.length) {
+        localStorage.setItem(draftKey, JSON.stringify({ name, goal, role, priority, steps }));
+      } else {
+        localStorage.removeItem(draftKey);
+      }
+    } catch { /* storage unavailable: the editor still works, just no recovery */ }
+  }, [isEdit, draftKey, name, goal, role, priority, steps]);
+
+  function clearDraft() { try { localStorage.removeItem(draftKey); } catch { /* best-effort */ } }
 
   function addStep() { setSteps((xs) => [...xs, emptyStep()]); }
   function removeStep(i: number) { setSteps((xs) => xs.filter((_, j) => j !== i)); }
@@ -116,6 +159,7 @@ export function FlowEditor({
       const saved: TestFlow = isEdit
         ? { ...(flow as TestFlow), name: trimmedName, goal: goal.trim() || null, role: resolvedRole, priority, steps: packed as unknown[] }
         : (j.flow as TestFlow);
+      clearDraft();           // the flow is persisted server-side now; drop the local recovery copy
       onSaved(saved);
     } catch {
       setErr("Network error. The flow was not saved.");
@@ -128,6 +172,11 @@ export function FlowEditor({
       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)" }}>
         {isEdit ? "Edit flow" : "New flow"}
       </div>
+      {restored ? (
+        <div role="status" style={{ fontSize: 12.5, color: "var(--acc-deep)", background: "var(--acc-soft)", border: "1px solid var(--acc-line)", borderRadius: "var(--r-sm)", padding: "8px 11px", lineHeight: 1.5 }}>
+          Recovered your unsaved flow from this device. Keep editing, or discard it below.
+        </div>
+      ) : null}
 
       {/* name + priority */}
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
@@ -245,7 +294,16 @@ export function FlowEditor({
         <button type="button" className="btn btn--lg" onClick={save} disabled={busy} style={{ opacity: busy ? 0.6 : 1 }}>
           {busy ? "Saving…" : isEdit ? "Save flow" : "Add flow"}
         </button>
-        <button type="button" className="btn" onClick={onCancel} disabled={busy} style={{ background: "var(--bg-1)" }}>Cancel</button>
+        <button type="button" className="btn btn--ghost" disabled={busy}
+          onClick={() => {
+            // Discard: for a new flow with unsaved work, confirm before dropping it (and clear the autosave).
+            const dirty = !isEdit && (name.trim() || goal.trim() || steps.length > 0);
+            if (dirty && !window.confirm("Discard this flow? Your unsaved steps will be removed.")) return;
+            if (!isEdit) clearDraft();
+            onCancel();
+          }}>
+          {isEdit ? "Cancel" : "Discard flow"}
+        </button>
       </div>
     </div>
   );
