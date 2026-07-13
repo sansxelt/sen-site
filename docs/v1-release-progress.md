@@ -142,3 +142,60 @@ BLOCKED (operator): migration 7 then 8 per docs/v1.1-operator-return-checklist.m
 S6 authenticated flows needs VRAELIS_SECRET_KEY on Railway; S12 needs the GitHub App registered.
 ALSO COMMITTED (no migration needed; deploys with S3/S4 at the migration flip): S7 contract provenance (provenance:test 69/69): context-aware synthesis + closed provenance set + chips; keyless path emits review-gated connection-signal suggestions.
 STOP-GATES HONORED: no migrations applied, no Stripe/provider changes, no destructive anything.
+
+## 2026-07-13/14: Revenue-protection workstream COMPLETE in code (founder AFK ~12h; autonomous execution)
+All three pre-public-launch blockers from docs/revenue-protection-audit.md are code-complete,
+adversarially verified, committed, and PUSHED on branch revenue/blocker-1-free-pass-dedup.
+NOT merged to main and NOT deployed (deploy gated on operator migrations; see below).
+
+- BLOCKER 1 - OAuth free-pass farming (1322e47): free pass is per CANONICAL INBOX (user_profiles.
+  canonical_email written on EVERY signup path incl. OAuth); freePassUsed is cluster-aware and FAILS
+  CLOSED to PAYG; atomic per-inbox claim (v_free_pass_claims PK) closes the concurrent double-spend race
+  an adversarial review caught (lost claim re-prices to PAYG; won claim released on insert failure;
+  orphans self-heal 1h); operator comp path (v_free_grant_overrides + /api/v/admin/free-grant, audited);
+  IP/device hashed as SIGNAL ONLY (v_free_grant_risk), never a denial key. free:grant:test 53/53.
+- BLOCKER 2 - Stripe dispute/chargeback + webhook dedupe (1b02d88 + a337d83): charge.dispute.created
+  FREEZES execution NON-destructively (billing_access_state='frozen_dispute', previous_plan_v1 snapshot,
+  plan_v1 preserved) across all five spend surfaces via gatePassLaunch mode 'frozen' (403); restore is
+  MANUAL admin-only (/api/v/admin/billing-restore) after a won dispute; DB-UNIQUE event dedupe
+  (stripe_webhook_events) claimed pre-dispatch; a failed CRITICAL handler releases the claim + returns
+  500 so Stripe retries and the freeze lands (review's CRITICAL dropped-freeze, fixed); stale-'processing'
+  claims self-heal after 10m (hard-crash gap from the final review, fixed); _v1 resurrect guard in
+  setPlanV1; retry-safe idempotent emails (stripe_notifications_sent keyed event+type+recipient);
+  checkout metadata.user_id = lowercased owner. dispute:dedupe:test 38/38.
+- BLOCKER 3 - cost governor + velocity + circuit breaker (f64dff2): v_cost_ledger (launch estimate +
+  REAL executed seconds at settlement; both sum - over-count trips earlier); global ceilings $2/rolling-hr
+  + $8/UTC-day, warn 50%/alert 80%/AUTO-PAUSE 100%, DB-durable, reset OPERATOR-ONLY (+15m grace);
+  velocity 8 sessions/hr (429); breaker 3 provider/infra fails per 15m -> OPEN 60m - the set covers EVERY
+  classifyProviderError code (review's CRITICAL allowlist drift, fixed + test-locked); global in-flight
+  cap 12; admin surface /api/v/admin/governor + SEPARATE audited emergency halt (worker honors
+  cancel_requested_at - verified). All checks pre-billing. cost:governor:test 45/45.
+
+ADVERSARIAL VERIFICATION: five review rounds total. Blocker 1: 1 CRITICAL (double-spend race) found +
+fixed + CONFIRMED-CLOSED. Blocker 2: 1 CRITICAL (dropped freeze) + 1 HIGH (attribution key) + 1 MEDIUM
+(email dup) found + fixed + CONFIRMED-CLOSED. Blocker 3: 1 CRITICAL (breaker drift) + 2 MEDIUM + 1 minor
+found + fixed + CONFIRMED-CLOSED. Final full-diff interaction review over all three stacked: NO
+critical/medium; 2 minor observations, both fixed (result-label comment; stale-claim self-heal).
+
+TESTS at window end: full 29-suite battery green (worker 26/26, transport 18/18, artifacts 14/14,
+seed-run 25/25, fixture-rerun 25/25, reconcile 14/14, limits 43/43, security 145/145, target 25/25,
+scope 39/39, decision 33/33, pricing-copy 21/21, pricing-v1-ui 51/51, connect 46/46, connections-manage
+104/104, pricing-pass 33/33, entitlements 82/82, routes 53/53, billing-returns 93/93, context 61/61,
+provenance 69/69, deployments 77/77, boundaries 77/77, settings 53/53, auth-flows 131/131,
+flows-authoring 104/104, free-grant 53/53, dispute-dedupe 38/38, cost-governor 45/45). tsc 0, eslint 0,
+production build compiles.
+
+OPERATOR GATE (in order, per docs/revenue-protection-audit.md): 1) apply sql/vraelis-preflight-9, 10, 11
+(all validated strictly additive: create-if-not-exists / add-column-if-not-exists / insert-on-conflict
+only; safe on populated tables); 2) merge revenue/blocker-1-free-pass-dedup -> main + deploy Vercel AND
+Railway (worker settlement cost + breaker recording live there); 3) Stripe dashboard: confirm
+charge.dispute.created/closed + charge.refunded events are sent to the webhook endpoint; 4) verify live:
+governor status via /api/v/admin/governor, a test-mode dispute freeze, free-pass dedup on an alias
+account. Env knobs (optional, defaults baked): COST_HOURLY_CEILING_CENTS=200, COST_DAILY_CEILING_CENTS=800,
+COST_SESSIONS_PER_HOUR=8, COST_BREAKER_FAILS=3, COST_BREAKER_WINDOW_MIN=15, COST_BREAKER_COOLDOWN_MIN=60,
+COST_GLOBAL_MAX_ACTIVE_RUNS=12, COST_RESET_GRACE_MIN=15, FREE_GRANT_RISK_SALT=(set a real salt).
+
+STOP-GATES HONORED: no money spent/added, no canary launch, no billing bypass, no credits granted, no
+Stripe product/price/trial/coupon changes, no secrets touched, no migrations applied, no production data
+touched, no deploy, no flag flips, no ceiling changes, S6 status unchanged.
+S6 CANARY: PENDING - blocked on legitimate $15 funding (founder decision; untouched per instructions).
