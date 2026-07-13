@@ -5,12 +5,29 @@ import {
   getApplication, getContract, getApprovedContract, listRequirements, listFlows,
   type ContractRequirement, type ProductionContract, type TestFlow, type Severity,
 } from "@/lib/v-applications";
+import { listConnections } from "@/lib/preflight/connections-db";
+import { flowRequiresAuth } from "@/lib/preflight/flow-steps";
 import { ContractEditor } from "./contract-editor";
 import { NewDraftButton } from "./new-draft-button";
 import { AppTabs } from "../app-tabs";
 import { categoryLabel, SEVERITY_LABELS, SEVERITY_COLORS } from "./labels";
 import { ProvenanceChip } from "./provenance-chip";
-import { I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
+
+// The app's test-account role labels (meta.role, falling back to meta.label — the same resolution the
+// launch auth-readiness gate uses). This is the set a flow's sign-in step may target. Owner-scoped read.
+async function testAccountRoles(owner: string, applicationId: string): Promise<string[]> {
+  const conns = await listConnections(owner, applicationId);
+  const out: string[] = [];
+  for (const c of conns) {
+    if (c.provider !== "test_account") continue;
+    const meta = c.meta ?? {};
+    const label = typeof meta.label === "string" && meta.label.trim() ? meta.label.trim() : "Standard user";
+    const role = typeof meta.role === "string" && meta.role.trim() ? meta.role.trim() : label;
+    if (!out.includes(role)) out.push(role);
+  }
+  return out;
+}
 
 export const metadata: Metadata = { title: "Production Contract" };
 
@@ -119,6 +136,37 @@ function ApprovedContract({ appId, contract, reqs, flows }: { appId: string; con
           </ul>
         )}
       </section>
+
+      {/* flows (read-only on an approved contract — matches the requirement behavior) */}
+      <section style={{ marginTop: 28 }}>
+        <div style={{ ...smallLabel, marginBottom: 4 }}>Test flows ({flows.length})</div>
+        {flows.length === 0 ? (
+          <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.55, margin: "10px 0 0" }}>
+            This contract was approved without flows. Create a new draft to add the journeys Vraelis should run.
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {flows.map((f, idx) => {
+              const auth = flowRequiresAuth((f.steps as { action: string }[]) ?? []);
+              const steps = Array.isArray(f.steps) ? f.steps.length : 0;
+              return (
+                <li key={f.id} style={{ padding: "14px 0", borderTop: idx > 0 ? "1px solid var(--line-1)" : "none", opacity: f.enabled ? 1 : 0.55 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
+                    <span className="pill" style={{ color: auth ? "var(--acc-deep)" : "var(--fg-4)", borderColor: auth ? "var(--acc-line)" : "var(--line-2)", background: auth ? "var(--acc-soft)" : "var(--bg-2)", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11 }}>
+                      <Ic d={auth ? I.lock : I.user} size={12} sw={1.9} /> {f.role || (auth ? "Authenticated" : "Unauthenticated")}
+                    </span>
+                    <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{SEVERITY_LABELS[(f.priority as Severity) ?? "important"]}</span>
+                    <span style={{ fontSize: 12, color: "var(--fg-4)" }}>{steps} step{steps === 1 ? "" : "s"}</span>
+                    {!f.enabled ? <span style={smallLabel}>Disabled, not run</span> : null}
+                  </div>
+                  <div style={{ fontSize: 14.5, color: "var(--fg-1)", lineHeight: 1.55, wordBreak: "break-word" }}>{f.name}</div>
+                  {f.goal ? <div style={{ fontSize: 12.5, color: "var(--fg-4)", lineHeight: 1.5, marginTop: 3 }}>{f.goal}</div> : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
@@ -143,7 +191,10 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
 
   const contract = await getContract(owner, id);
   const reqs = contract ? await listRequirements(owner, contract.id) : [];
-  const flows = contract?.status === "approved" ? await listFlows(owner, contract.id) : [];
+  // Flows are loaded for BOTH states: the draft editor lists + authors them, the approved view shows them
+  // read-only. Roles come from the app's connected test accounts (the set a sign-in step may target).
+  const flows = contract ? await listFlows(owner, contract.id) : [];
+  const roles = contract?.status === "draft" ? await testAccountRoles(owner, id) : [];
   // For a draft REVISION (v2+), find the approved version that runs still verify against, so the page can
   // say so honestly (the run-launch route targets the latest approved contract, not the draft).
   const prevApproved = contract && contract.status === "draft" && contract.version > 1
@@ -176,7 +227,7 @@ export default async function ContractPage({ params }: { params: Promise<{ id: s
         contract.status === "approved" ? (
           <ApprovedContract appId={id} contract={contract} reqs={reqs} flows={flows} />
         ) : (
-          <ContractEditor contractId={contract.id} initial={reqs} status={contract.status} />
+          <ContractEditor contractId={contract.id} initial={reqs} status={contract.status} flows={flows} roles={roles} />
         )
       ) : (
         <div className="card" style={{ padding: "clamp(18px, 2.6vw, 26px)" }}>

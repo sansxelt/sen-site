@@ -45,7 +45,8 @@
     "deployments:test": "tsx scripts/preflight-deployments-verify.ts",
     "boundaries:test": "tsx scripts/preflight-boundaries-verify.ts",
     "settings:test": "tsx scripts/preflight-settings-verify.ts",
-    "auth:flows:test": "tsx scripts/preflight-auth-flows-verify.ts"
+    "auth:flows:test": "tsx scripts/preflight-auth-flows-verify.ts",
+    "flows:authoring:test": "tsx scripts/preflight-flow-authoring-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

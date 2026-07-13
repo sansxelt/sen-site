@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ContractRequirement, Severity } from "@/lib/v-applications";
+import type { ContractRequirement, Severity, TestFlow } from "@/lib/v-applications";
 import { categoryLabel, SEVERITY_LABELS as SEV_LABEL, SEVERITY_COLORS as SEV_COLOR } from "./labels";
 import { ProvenanceChip } from "./provenance-chip";
+import { FlowsSection } from "./flows-section";
 import { Ic, I } from "@/app/rank/_components/icons";
 
 // Client editor for a Production Contract's requirements. Optimistic local state: every toggle / severity
@@ -30,7 +31,7 @@ function SevPill({ severity }: { severity: Severity }) {
   );
 }
 
-export function ContractEditor({ contractId, initial, status }: { contractId: string; initial: ContractRequirement[]; status: "draft" | "approved" }) {
+export function ContractEditor({ contractId, initial, status, flows, roles }: { contractId: string; initial: ContractRequirement[]; status: "draft" | "approved"; flows: TestFlow[]; roles: string[] }) {
   const router = useRouter();
   const [reqs, setReqs] = useState<ContractRequirement[]>(initial);
   const [contractStatus, setContractStatus] = useState<"draft" | "approved">(status);
@@ -228,6 +229,9 @@ export function ContractEditor({ contractId, initial, status }: { contractId: st
           </div>
         </div>
       </div>
+
+      {/* Test flows — authored on the draft; frozen once the contract is approved (S8A). */}
+      <FlowsSection contractId={contractId} initial={flows} roles={roles} />
 
       {msg ? (
         <p role="status" aria-live="polite" style={{ fontSize: 13, color: msg.kind === "err" ? "var(--err)" : "var(--acc-deep)", margin: 0 }}>{msg.text}</p>

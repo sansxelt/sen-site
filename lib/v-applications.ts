@@ -9,6 +9,7 @@ import { pickHealthRun } from "./preflight/target-url";
 import { logEvent } from "./v-events";
 import { unsafeHttpsUrlReason } from "./safe-fetch";
 import { canonicalDeploymentUrl } from "./preflight/deployments-db";
+import type { FlowStep } from "./preflight/flow-steps";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -275,6 +276,115 @@ export async function listFlows(userId: string, contractId: string): Promise<Tes
   if (!isDatabaseConfigured()) return [];
   const { data } = await db().from("v_test_flows").select("*").eq("user_id", norm(userId)).eq("contract_id", contractId).order("order_index", { ascending: true });
   return (data as TestFlow[]) ?? [];
+}
+
+// ── Flow authoring (S8A) — owner-scoped, contract-draft-only, mirror of the requirement funcs ──
+// A flow belongs to a contract; it is editable only while that contract is a DRAFT and frozen once the
+// contract is approved (same immutability rule as requirements). The step list is validated by the PURE
+// flow-steps model in the route BEFORE it reaches here — this layer stores already-validated steps and
+// never trusts a client-supplied owner, contract, or flow id (tenancy is the query's eq user_id filter).
+export type FlowInput = {
+  name: string;
+  goal?: string | null;
+  role?: string | null;               // set for authenticated flows; the launch auth-readiness gate reads this
+  steps: FlowStep[];                  // pre-validated by validateSteps
+  priority?: Severity;
+  requirementIds?: string[];
+};
+export type FlowPatch = {
+  name?: string;
+  goal?: string | null;
+  role?: string | null;
+  steps?: FlowStep[];                 // pre-validated when present
+  priority?: Severity;
+  enabled?: boolean;
+  requirementIds?: string[];
+};
+export type FlowMutationError = { error: "contract_approved" | "not_found" | "invalid" | "unavailable" };
+
+// The status of the contract that owns a flow, both lookups owner-scoped (mirror of
+// contractStatusForRequirement). Null when the flow (or its contract) does not exist for this owner.
+export async function contractStatusForFlow(userId: string, flowId: string): Promise<"draft" | "approved" | null> {
+  if (!isDatabaseConfigured()) return null;
+  const uid = norm(userId);
+  const { data } = await db().from("v_test_flows").select("contract_id").eq("user_id", uid).eq("id", flowId).maybeSingle();
+  const contractId = (data as { contract_id?: string } | null)?.contract_id;
+  if (!contractId) return null;
+  const contract = await getContractById(uid, contractId);
+  return contract?.status ?? null;
+}
+
+// Insert a flow onto a DRAFT contract. Owner-scoped: the contract must belong to this owner (ownsContract)
+// and be a draft (refused with contract_approved when approved — flows freeze with the contract). order_index
+// is max+1 within the contract so a new flow sorts last; enabled defaults true. Steps arrive already
+// validated. Returns the row, or a specific error.
+export async function addFlow(userId: string, contractId: string, input: FlowInput): Promise<TestFlow | FlowMutationError> {
+  if (!isDatabaseConfigured()) return { error: "unavailable" };
+  const uid = norm(userId);
+  const contract = await getContractById(uid, contractId);
+  if (!contract) return { error: "not_found" };
+  if (contract.status === "approved") return { error: "contract_approved" };
+  const name = (input.name || "").trim().slice(0, 140);
+  if (!name) return { error: "invalid" };
+
+  // order_index = max+1 among this owner's flows for the contract (a zero-row max yields 0, so first is 1).
+  const existing = await listFlows(uid, contractId);
+  const maxIdx = existing.reduce((m, f) => Math.max(m, typeof f.order_index === "number" ? f.order_index : 0), 0);
+
+  const { data, error } = await db().from("v_test_flows").insert({
+    contract_id: contractId, user_id: uid, name,
+    goal: (input.goal || "").trim().slice(0, 400) || null,
+    role: (input.role || "").trim().slice(0, 60) || null,
+    steps: input.steps,
+    priority: input.priority ?? "important",
+    enabled: true,
+    order_index: maxIdx + 1,
+    requirement_ids: Array.isArray(input.requirementIds) ? input.requirementIds.slice(0, 200) : [],
+  } as never).select("*").single();
+  if (error || !data) return { error: "unavailable" };
+  return data as unknown as TestFlow;
+}
+
+// Owner-scoped patch of a flow. Refused when the owning contract is approved. Only the provided fields
+// change; steps (when present) are already validated. A cross-owner flow id resolves to not_found via the
+// owner-scoped status lookup, never touching another tenant's row.
+export async function updateFlow(userId: string, flowId: string, patch: FlowPatch): Promise<{ ok: true } | FlowMutationError> {
+  if (!isDatabaseConfigured()) return { error: "unavailable" };
+  const uid = norm(userId);
+  const status = await contractStatusForFlow(uid, flowId);
+  if (status === null) return { error: "not_found" };
+  if (status === "approved") return { error: "contract_approved" };
+
+  const fields: Record<string, unknown> = {};
+  if (typeof patch.name === "string") {
+    const name = patch.name.trim().slice(0, 140);
+    if (!name) return { error: "invalid" };
+    fields.name = name;
+  }
+  if (patch.goal !== undefined) fields.goal = (patch.goal || "").trim().slice(0, 400) || null;
+  if (patch.role !== undefined) fields.role = (patch.role || "").trim().slice(0, 60) || null;
+  if (patch.steps !== undefined) fields.steps = patch.steps;
+  if (patch.priority) fields.priority = patch.priority;
+  if (typeof patch.enabled === "boolean") fields.enabled = patch.enabled;
+  if (patch.requirementIds !== undefined) fields.requirement_ids = Array.isArray(patch.requirementIds) ? patch.requirementIds.slice(0, 200) : [];
+  if (!Object.keys(fields).length) return { ok: true };
+
+  const { error } = await db().from("v_test_flows").update(fields as never).eq("user_id", uid).eq("id", flowId);
+  return error ? { error: "unavailable" } : { ok: true };
+}
+
+// Owner-scoped delete of a flow, refused on an approved contract. Honest zero-row: reports removed only
+// when a row was actually deleted (a cross-owner / already-gone id removes nothing and is not "removed").
+export async function deleteFlow(userId: string, flowId: string): Promise<{ ok: true } | FlowMutationError> {
+  if (!isDatabaseConfigured()) return { error: "unavailable" };
+  const uid = norm(userId);
+  const status = await contractStatusForFlow(uid, flowId);
+  if (status === null) return { error: "not_found" };
+  if (status === "approved") return { error: "contract_approved" };
+  const { data, error } = await db().from("v_test_flows").delete().eq("user_id", uid).eq("id", flowId).select("id");
+  if (error) return { error: "unavailable" };
+  if (!Array.isArray(data) || data.length === 0) return { error: "not_found" };
+  return { ok: true };
 }
 
 export async function listRuns(userId: string, applicationId: string, limit = 20): Promise<RunSummary[]> {
