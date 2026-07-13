@@ -5,11 +5,13 @@
 // against yet. The lifecycle logic itself is proven by FakeRunStore (26/26). Billing settlement reuses the
 // existing credit ledger (hold at enqueue -> charge on completion -> refund when nothing ran).
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { RunStore, ClaimedRun, FlowResult, RunDecision, FlowSpec, Step, StepObservation, FlowEvidence } from "./types";
+import type { RunStore, ClaimedRun, FlowResult, RunDecision, FlowSpec, Step, StepObservation, FlowEvidence, TestAccountRef } from "./types";
 import { refund } from "../../lib/v-credits";
 import { normalizeBoundaries, type TestBoundaries } from "../../lib/preflight/boundaries";
 import { planFlowSelection } from "../../lib/preflight/flow-selection";
 import { issuesFromRun, planReconcile, type Issue, type OpenIssueRef, type ReconcileFlow } from "../../lib/preflight/issues";
+import { DETERMINISTIC_AUTH_FAILURE } from "./auth-executor";
+import { redactString } from "./redaction";
 
 // Owner + billing fields read once per settlement. Missing columns / absent table => null (degrade).
 type RunSettlementRow = {
@@ -34,6 +36,31 @@ function billingBypassed(): boolean {
 if (process.env.PREFLIGHT_INTERNAL_BILLING_BYPASS === "1"
     && (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production")) {
   console.warn("[preflight] PREFLIGHT_INTERNAL_BILLING_BYPASS is set but IGNORED in production; real credit settlement (charge + refund) stays active.");
+}
+
+// Redact the flow's side-channel evidence at the sink: console error lines and network-failure paths are the
+// only free-text fields, and each goes through redactString (a no-op when nothing matches). Cheap — the
+// arrays are already bounded + sanitized by the provider; this only scrubs an active credential that somehow
+// rode along. Returns a plain object safe to JSON-serialize into `observed.evidence`.
+function redactEvidence(evidence: FlowEvidence | undefined): FlowEvidence {
+  const e = evidence ?? { consoleErrors: [], networkFailures: [] };
+  return {
+    consoleErrors: (e.consoleErrors ?? []).map((line) => redactString(String(line))),
+    networkFailures: (e.networkFailures ?? []).map((n) => ({ method: n.method, path: redactString(String(n.path)), status: n.status })),
+  };
+}
+
+// VALUE-level scrub of the auth metadata: run every STRING field through redactString (a no-op when nothing
+// matches) while KEEPING every key + non-string value intact. Deliberately NOT redactObject — that drops by
+// key and would clobber legitimate fields (e.g. credentialState, whose name contains "credential"). This is
+// belt-and-suspenders only: the auth metadata is value-safe by construction (never a username/password), so
+// in practice nothing changes; it exists so a future accidental echo into a string field is still scrubbed.
+function redactAuthValues(auth: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(auth)) {
+    out[k] = typeof v === "string" ? redactString(v) : Array.isArray(v) ? v.map((x) => (typeof x === "string" ? redactString(x) : x)) : v;
+  }
+  return out;
 }
 
 export class PostgresRunStore implements RunStore {
@@ -65,7 +92,7 @@ export class PostgresRunStore implements RunStore {
     await this.reapExpiredLeases();
     const { data: runId, error } = await this.s.rpc("v_preflight_claim", { p_worker: workerId, p_lease_secs: leaseSecs });
     if (error || !runId) return null;
-    const { data: run, error: runErr } = await this.s.from("v_preflight_runs").select("id,application_id,deployment_url,contract_id,lease_expires_at,flow_ids,environment:provider").eq("id", runId).maybeSingle();
+    const { data: run, error: runErr } = await this.s.from("v_preflight_runs").select("id,user_id,application_id,deployment_url,contract_id,lease_expires_at,flow_ids,environment:provider").eq("id", runId).maybeSingle();
     if (runErr || !run) {
       // A missing flow_ids column (migration 4 unapplied) errors this select; say so instead of hanging.
       if (runErr) console.error(`preflight claim read (${String(runId)}): ${runErr.message} — if this names flow_ids, apply sql/vraelis-preflight-4-selected-flows.sql`);
@@ -109,7 +136,34 @@ export class PostgresRunStore implements RunStore {
       if (raw != null && typeof raw === "object") boundaries = normalizeBoundaries(raw);
     } catch { /* boundaries stay null (conservative) */ }
 
-    return { runId: String(r.id), applicationId: String(r.application_id), deploymentUrl: String(r.deployment_url ?? ""), environment: "preview", flows, fullCoverage, boundaries, leaseExpiresAt: new Date(String(r.lease_expires_at)).getTime() };
+    // Test accounts (S6): the application's approved sealed test-account connections, METADATA ONLY (id,
+    // label, role, environment). Owner + application scoped, read at claim time; encrypted_ref is
+    // DELIBERATELY not selected — the credential is decrypted later, only at the moment a sign_in_as step
+    // executes, via openTestAccount bound to this run's owner. DEFENSIVE: a pre-migration schema (no
+    // test_account rows / missing meta) degrades to an empty list — an authenticated flow then fails safe
+    // with invalid_or_revoked_credential, never an unauth fallback. Never a crash, never a skipped run.
+    const owner = String(r.user_id ?? "").toLowerCase();
+    let testAccounts: TestAccountRef[] = [];
+    try {
+      if (owner) {
+        const { data: taRows } = await this.s.from("v_app_connections")
+          .select("id,meta,status").eq("user_id", owner).eq("application_id", String(r.application_id))
+          .eq("provider", "test_account");
+        testAccounts = ((taRows as Record<string, unknown>[] | null) ?? [])
+          // Only active (non-revoked) accounts are offered to the executor; a deleted row simply isn't here.
+          .filter((row) => (row.status ?? "connected") !== "revoked")
+          .map((row) => {
+            const meta = (row.meta as Record<string, unknown>) ?? {};
+            const label = typeof meta.label === "string" && meta.label.trim() ? meta.label : "Standard user";
+            // role comes from meta.role when present, else falls back to the label so a role target resolves.
+            const role = typeof meta.role === "string" && meta.role.trim() ? meta.role : label;
+            const environment = typeof meta.environment === "string" && meta.environment.trim() ? meta.environment : null;
+            return { connectionId: String(row.id), label: String(label), role: String(role), environment };
+          });
+      }
+    } catch { /* test accounts stay empty (fail safe: role-requiring flows classify invalid_or_revoked_credential) */ }
+
+    return { runId: String(r.id), applicationId: String(r.application_id), owner, deploymentUrl: String(r.deployment_url ?? ""), environment: "preview", flows, fullCoverage, boundaries, testAccounts, leaseExpiresAt: new Date(String(r.lease_expires_at)).getTime() };
   }
 
   async heartbeat(runId: string, workerId: string, leaseSecs: number): Promise<boolean> {
@@ -130,10 +184,25 @@ export class PostgresRunStore implements RunStore {
     // Owner id is derived server-side from the run; the worker copies it onto child rows for owner-scoped reads.
     const { data: run } = await this.s.from("v_preflight_runs").select("user_id,application_id").eq("id", runId).maybeSingle();
     const userId = (run as { user_id?: string } | null)?.user_id ?? null;
-    const { data: fr } = await this.s.from("v_flow_runs").insert({ preflight_run_id: runId, test_flow_id: result.flowId, user_id: userId, name: result.flowId, state: result.state, observed: { evidence: result.evidence ?? {} }, severity: result.severity ?? null } as never).select("id").single();
+    // Persist the flow's auth metadata (never a secret: role labels, account label, credential state, the
+    // last verified-auth time) alongside the deterministic evidence so the report can show the honest
+    // authenticated-flow summary. auth is absent on unauthenticated flows and is omitted then.
+    //
+    // BELT-AND-SUSPENDERS REDACTION AT THE SINK (S6): the executor already scrubs active credentials before
+    // an observation is recorded, but this sink independently runs every string that reaches the DB through
+    // redactString. So even if some future code path echoed an active credential into a step detail or an
+    // evidence line, it is scrubbed HERE too — the persistence layer is the last line and the one that
+    // carries the stored guarantee. redactString is a no-op when nothing matches, so non-secret details are
+    // unchanged. Only string fields are touched (evidence arrays are console/network strings). The auth
+    // metadata is scrubbed VALUE-level (redactAuthValues) — NOT via redactObject, whose key-based drop would
+    // clobber legitimate fields like `credentialState` (the word "credential" is not a secret here).
+    const evidence = redactEvidence(result.evidence);
+    const observed: Record<string, unknown> = { evidence };
+    if (result.auth) observed.auth = redactAuthValues(result.auth as unknown as Record<string, unknown>);
+    const { data: fr } = await this.s.from("v_flow_runs").insert({ preflight_run_id: runId, test_flow_id: result.flowId, user_id: userId, name: result.flowId, state: result.state, observed, severity: result.severity ?? null } as never).select("id").single();
     const flowRunId = (fr as { id?: string } | null)?.id;
     if (flowRunId && result.steps.length) {
-      await this.s.from("v_run_steps").insert(result.steps.map((st, i) => ({ flow_run_id: flowRunId, idx: i, action: st.action, target: st.target ?? null, expected: null, observed: st.detail, status: st.ok ? "ok" : "fail", ms: st.ms })) as never);
+      await this.s.from("v_run_steps").insert(result.steps.map((st, i) => ({ flow_run_id: flowRunId, idx: i, action: st.action, target: st.target ?? null, expected: null, observed: redactString(st.detail ?? ""), status: st.ok ? "ok" : "fail", ms: st.ms })) as never);
     }
   }
   async finalizeRun(runId: string, decision: RunDecision, summary: Record<string, unknown>): Promise<void> {
@@ -149,9 +218,12 @@ export class PostgresRunStore implements RunStore {
     const run = await this.loadRunSettlement(runId);
     // A run already settled as completed (charged) must never be resurrected to queued/failed or refunded.
     if (run && run.state === "completed") return;
-    // cancelled, target_mismatch, flow_selection_invalid, and blocked_by_policy are deterministic (a
-    // retry cannot change them — the boundaries do not change on retry) -> terminal immediately.
-    const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid" || code === "blocked_by_policy" || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
+    // cancelled, target_mismatch, flow_selection_invalid, blocked_by_policy, and the deterministic
+    // worker-config auth failures are deterministic (a retry cannot change them without operator action — the
+    // boundaries / missing key / revoked credential / MFA wall do not change on retry) -> terminal
+    // immediately. provider_infra_failure follows the normal attempt path (a provider blip may clear).
+    const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid"
+      || code === "blocked_by_policy" || DETERMINISTIC_AUTH_FAILURE.has(code) || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
     await this.s.from("v_preflight_runs").update({ state: terminal ? "failed" : "queued", failure_code: code, failure_message: message.slice(0, 500), lease_owner: null, lease_expires_at: null }).eq("id", runId);
     // Refund the FULL reservation ONLY on a terminal failure where no flow executed (discovery / queue /
     // provider-fail-before-browser). A requeue keeps the hold for the retry; a cancel or lease-loss AFTER
@@ -287,10 +359,12 @@ export class PostgresRunStore implements RunStore {
     const freshByFlowCat = new Map<string, Issue>();
     for (const result of results) {
       if (!result.flowId) continue;
-      // A blocked_by_policy flow never EXECUTED: it is treated exactly like a flow that did not run —
-      // excluded from reconciliation entirely, so its open issues stay untouched (unverified) and it can
-      // never open, continue, or resolve anything. Policy refusals are never application defects.
-      if (result.state === "blocked_by_policy") continue;
+      // A blocked_by_policy or auth_config_failed flow never verified any application behavior: both are
+      // treated exactly like a flow that did not run — excluded from reconciliation entirely, so their open
+      // issues stay untouched (unverified) and they can never open, continue, or resolve anything. Neither
+      // a policy refusal nor a worker/config auth failure is an application defect. (auth_rejected_by_app,
+      // the one real auth defect, arrives here as a normal "failed" state and IS reconciled below.)
+      if (result.state === "blocked_by_policy" || result.state === "auth_config_failed") continue;
       if (result.state === "passed") { ran.push({ flowId: result.flowId, passed: true, failureCategories: [] }); continue; }
       const fresh = issuesFromRun([result], flows, refs);
       for (const issue of fresh) freshByFlowCat.set(`${result.flowId}|${issue.category ?? ""}`, issue);

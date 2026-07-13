@@ -17,6 +17,8 @@ import { auth } from "@/auth";
 import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getApprovedContract, listFlows } from "@/lib/v-applications";
+import { getSetupExtras } from "@/lib/preflight/setup-read";
+import { evaluateAuthReadiness, anyAuthenticated, type PreviewFlow } from "@/lib/preflight/auth-preflight";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
@@ -94,6 +96,29 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const deploymentUrl = (rawUrl || "").trim();
   if (unsafeHttpsUrlReason(deploymentUrl)) {
     return NextResponse.json({ error: "invalid_url", message: "Provide a public https deployment URL." }, { status: 400 });
+  }
+
+  // AUTH PREFLIGHT (S6 slice of S9): if any selected flow is authenticated, verify — worker-independent,
+  // BEFORE any hold/charge — that every required role has an active, environment-matching, DECRYPTABLE test
+  // credential and the worker vault is configured. This safe check opens each credential server-side only to
+  // learn a boolean "decryptable"; the plaintext is never logged, returned, or retained. If anything is not
+  // ready the launch is DISABLED with a specific reason and NO hold is taken. A non-authenticated run skips
+  // this entirely and is unaffected (backward compatible). (Full pass-preview UI is deferred to S9.)
+  const selectedFlows: PreviewFlow[] = flows
+    .filter((f) => flowIds.includes(f.id))
+    .map((f) => ({ flowId: f.id, name: f.name, steps: Array.isArray(f.steps) ? (f.steps as { action: string; target?: string }[]) : [] }));
+  if (anyAuthenticated(selectedFlows)) {
+    const extras = await getSetupExtras(owner, id);
+    const runEnvironment = extras.environment ?? null;
+    const readiness = await evaluateAuthReadiness(owner, id, selectedFlows, runEnvironment, extras.boundaries);
+    if (!readiness.ok) {
+      return NextResponse.json({
+        error: "auth_not_ready",
+        message: readiness.reasons[0] ?? "This run needs a signed-in role that is not ready. Add or re-add the test account under Connections, then run again.",
+        reasons: readiness.reasons,
+        roles: readiness.roles.map((r) => ({ role: r.role, ok: r.ok, credentialState: r.credentialState, environmentMatch: r.environmentMatch })),
+      }, { status: 400 });
+    }
   }
 
   // Per-owner concurrency cap.

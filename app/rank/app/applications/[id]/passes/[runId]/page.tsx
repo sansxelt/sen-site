@@ -52,11 +52,26 @@ function flowTone(state: string): Tone {
   if (state === "blocked") return { label: "Blocked", ...TONE_BLOCKED };
   // A boundary refusal, never an application failure: muted, not red.
   if (state === "blocked_by_policy") return { label: "Blocked by policy", ...TONE_MUTED };
+  // A worker/config auth failure (missing/revoked credential, vault, MFA/CAPTCHA): also not an app failure.
+  if (state === "auth_config_failed") return { label: "Auth not available", ...TONE_MUTED };
   if (state === "running") return { label: "Running", ...TONE_REVIEW };
   if (state === "skipped") return { label: "Skipped", ...TONE_MUTED };
   const label = state ? state.charAt(0).toUpperCase() + state.slice(1) : "Pending";
   return { label, ...TONE_MUTED };
 }
+
+// The auth-failure classifications told as owner-safe sentences. auth_rejected_by_app is NOT here: it is a
+// normal application defect (a broken login) and surfaces as a standard failed flow / launch blocker.
+const AUTH_FAILURE_LINE: Record<string, string> = {
+  invalid_or_revoked_credential: "The test account for this role is missing or was revoked. Add or re-add it under Connections, then run again.",
+  login_ui_not_found: "No sign-in screen was found where this flow expected one. Check the flow's start path.",
+  credential_field_not_found: "The sign-in form's fields could not be located. The login page may have changed.",
+  mfa_required: "This account requires multi-factor authentication. Vraelis will not bypass it. Set up a test account without MFA, or a session that skips it.",
+  captcha_encountered: "A CAPTCHA or bot check blocked sign-in. Vraelis will not bypass it. Allowlist the test runner or use a checkpoint that skips it.",
+  worker_vault_failure: "Vraelis could not decrypt this application's test credentials. This is on our side, not your deployment. Nothing was charged.",
+  provider_infra_failure: "The browser provider failed during sign-in. This is on our side, not your deployment.",
+  boundary_blocked: "An action this flow needed was refused by your test boundaries. Widen the boundaries and run again.",
+};
 
 const SEV_COLOR: Record<string, string> = { critical: "#C0392B", high: "#B45309", medium: "var(--fg-3)", low: "var(--fg-4)" };
 const SEV_LABEL: Record<string, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };
@@ -104,6 +119,15 @@ const FAILURE_LINE: Record<string, string> = {
   target_mismatch: "The run harness did not honor this run's target URL, so the result was invalidated. This was on our side, not your deployment. Nothing was charged.",
   flow_selection_invalid: "This run's flow selection was missing or invalid, so no browser was started. This was on our side, not your deployment. Nothing was charged.",
   blocked_by_policy: "Vraelis did not run these flows: your test boundaries do not permit an action they require. Widen the boundaries on the application's Connections/Settings and run again. Nothing was charged for flows that never ran.",
+  // Worker-config auth failures (S6): a role-requiring run that could not authenticate. Never an application
+  // blocker; refunded because no application work ran.
+  worker_vault_failure: "Vraelis could not decrypt this application's test credentials, so no flow ran. This was on our side, not your deployment. Nothing was charged.",
+  invalid_or_revoked_credential: "The test account needed to sign in is missing or was revoked, so no authenticated flow ran. Add it under Connections and run again. Nothing was charged.",
+  login_ui_not_found: "Vraelis could not find a sign-in screen where these flows expected one, so nothing ran. Check the flow start path. Nothing was charged.",
+  credential_field_not_found: "Vraelis could not locate the sign-in form's fields, so nothing ran. The login page may have changed. Nothing was charged.",
+  mfa_required: "Sign-in required multi-factor authentication, which Vraelis will not bypass. Use a test account without MFA. Nothing was charged.",
+  captcha_encountered: "A CAPTCHA or bot check blocked sign-in, which Vraelis will not bypass. Nothing was charged.",
+  provider_infra_failure: "The browser provider failed during sign-in. This was on our side, not your deployment. Nothing was charged.",
 };
 
 // The plain-English verdict sentence under the big decision word. Counts come straight from the run
@@ -298,11 +322,17 @@ function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flo
   const permitNeeded = policyBlocked
     ? (flow.steps.map((s) => (s.observed ?? "").match(/permit_[a-z_]+|allowed_domains/)?.[0]).find(Boolean) ?? null)
     : null;
+  // Authenticated-flow summary (S6). Every field is owner-safe: the account LABEL (never a username), the
+  // role(s), environment, credential state, session reuse, last verified auth. No secret can appear here.
+  const auth = flow.auth;
+  const authFailLine = auth?.authFailure ? (AUTH_FAILURE_LINE[auth.authFailure] ?? null) : null;
+  const CRED_STATE_LABEL: Record<string, string> = { active: "Active", missing: "Missing", revoked: "Revoked" };
   return (
     <div style={{ border: "1px solid var(--line-1)", borderRadius: "var(--r-md)", background: "var(--bg-1)", padding: "12px 16px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         {passed ? <span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)", flex: "none" }}><Ic d={I.check} size={14} sw={2.2} /></span> : null}
         <span style={{ fontSize: 13.5, fontWeight: failed ? 600 : 500, color: failed ? "var(--fg-1)" : "var(--fg-2)", flex: "1 1 auto", minWidth: 0, wordBreak: "break-word" }}>{displayName}</span>
+        {auth ? <span className="pill" style={{ fontSize: 10, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)", flex: "none" }}>Authenticated</span> : null}
         <Pill tone={tone} />
         <span style={{ fontSize: 12, color: "var(--fg-5)", flex: "none" }}>{flow.steps.length} step{flow.steps.length === 1 ? "" : "s"}</span>
       </div>
@@ -313,6 +343,32 @@ function FlowBlock({ flow, displayName, screenshotIds, runId, showShots }: { flo
             ? <>Additional permission required: <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5 }}>{permitNeeded}</span></>
             : "This flow requires an action your test boundaries do not permit."}
         </p>
+      ) : null}
+
+      {auth ? (
+        <div style={{ marginTop: 8, border: "1px solid var(--line-1)", borderRadius: "var(--r-sm)", background: "var(--bg-2)", padding: "10px 12px" }}>
+          <div style={{ ...labelStyle, display: "flex", alignItems: "center", gap: 6 }}><Ic d={I.lock} size={12} sw={2} />Authenticated flow</div>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "5px 14px", marginTop: 7, fontSize: 12.5, color: "var(--fg-3)" }}>
+            {auth.roles.length ? <span>Role{auth.roles.length === 1 ? "" : "s"}: <span style={{ color: "var(--fg-2)", fontWeight: 600 }}>{auth.roles.join(", ")}</span></span> : null}
+            {auth.accountLabel ? <span>Account: {auth.accountLabel}</span> : null}
+            {auth.environment ? <span className="pill" style={{ fontSize: 10 }}>{ENV_LABELS[auth.environment] ?? auth.environment}</span> : null}
+            <span>Credential:{" "}
+              <span style={{ color: auth.credentialState === "active" ? "var(--acc-deep)" : "#B45309", fontWeight: 600 }}>
+                {CRED_STATE_LABEL[auth.credentialState] ?? auth.credentialState}
+              </span>
+            </span>
+            {auth.sessionReuse ? <span>Session reuse on</span> : null}
+            {auth.verifiedAuthAt ? <span title={when(auth.verifiedAuthAt)}>Verified {ago(auth.verifiedAuthAt)}</span> : null}
+          </div>
+          {auth.credentialState !== "active" ? (
+            <p style={{ fontSize: 12, color: "#B45309", lineHeight: 1.5, margin: "7px 0 0" }}>
+              {auth.credentialState === "revoked" ? "This role's test credential was revoked." : "No test credential is configured for this role."} Add one under Connections and run again.
+            </p>
+          ) : null}
+          {authFailLine ? (
+            <p style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5, margin: "7px 0 0" }}>{authFailLine}</p>
+          ) : null}
+        </div>
       ) : null}
 
       {flow.steps.length ? (

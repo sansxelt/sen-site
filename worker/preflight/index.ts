@@ -10,7 +10,10 @@ import { PostgresRunStore } from "./run-store-postgres";
 import { FakeBrowserProvider } from "./providers/fake";
 import { BrowserbaseBrowserProvider } from "./providers/browserbase";
 import { uploadPreflightArtifact, artifactObjectPath } from "../../lib/preflight/artifacts";
+import { openTestAccount } from "../../lib/preflight/connections-db";
+import { vaultConfigured } from "../../lib/preflight/secret-vault";
 import type { BrowserProvider, ArtifactSink } from "./types";
+import type { WorkerAuthDeps } from "./worker";
 import { log } from "./redaction";
 
 async function main() {
@@ -38,7 +41,14 @@ async function main() {
     },
   } : undefined;
 
-  const worker = new PreflightWorker(cfg, store, provider, artifacts);
+  // Auth deps (S6): the credential opener is openTestAccount (owner+application scoped, decrypt-at-use); it
+  // is bound to the SAME service-role client the store uses. vaultConfigured lets the executor fail closed
+  // when VRAELIS_SECRET_KEY is absent/malformed WITHOUT falling back to unauthenticated execution. Both are
+  // read-only w.r.t. the credential and NEVER echo a value. A run that touches no auth step never calls them.
+  const auth: WorkerAuthDeps = { credentialOpener: openTestAccount, vaultConfigured: vaultConfigured() };
+  if (!auth.vaultConfigured) log({ worker_id: cfg.workerId, event: "vault_unconfigured", result: "auth flows will fail closed (set VRAELIS_SECRET_KEY)" });
+
+  const worker = new PreflightWorker(cfg, store, provider, artifacts, auth);
   worker.start();
 
   // Health endpoint for Railway (no secrets).

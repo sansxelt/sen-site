@@ -34,11 +34,13 @@ export function safeMetadata(input: Record<string, string>): Record<string, stri
 }
 
 // Minimal structural types for the lazily-imported deps (avoid a hard dependency at compile time).
+type PWContext = { cookies: () => Promise<unknown[]>; clearCookies: () => Promise<void>; clearPermissions?: () => Promise<void> };
 type PWPage = {
   goto: (u: string, o?: unknown) => Promise<unknown>; reload: (o?: unknown) => Promise<unknown>; url: () => string;
   getByRole: (r: string, o?: unknown) => PWLocator; getByText: (t: string, o?: unknown) => PWLocator; getByLabel: (t: string, o?: unknown) => PWLocator; locator: (s: string) => PWLocator;
   keyboard: { press: (k: string) => Promise<void> }; screenshot: (o?: unknown) => Promise<Buffer>; setViewportSize: (o: { width: number; height: number }) => Promise<void>;
   on: (ev: string, cb: (a: unknown) => void) => void;
+  context: () => PWContext; evaluate?: (fn: string) => Promise<unknown>;
 };
 type PWLocator = { first: () => PWLocator; click: (o?: unknown) => Promise<void>; fill: (v: string, o?: unknown) => Promise<void>; selectOption: (v: string) => Promise<unknown>; check: (o?: unknown) => Promise<void>; uncheck: (o?: unknown) => Promise<void>; waitFor: (o?: unknown) => Promise<void>; isVisible: () => Promise<boolean>; textContent: () => Promise<string | null>; count: () => Promise<number> };
 
@@ -53,6 +55,7 @@ function resolve(page: PWPage, target: string): { locator: PWLocator; candidates
 export class PlaywrightPreflightPage implements PreflightPage {
   private consoleErrors: string[] = [];
   private netFailures: { method: string; path: string; status: number }[] = [];
+  public screenshotsSuppressed = false;
   constructor(private page: PWPage) {
     page.on("console", (m: unknown) => { const msg = m as { type?: () => string; text?: () => string }; if (msg.type?.() === "error") this.consoleErrors.push(redactString(msg.text?.() || "").slice(0, 300)); });
     page.on("requestfailed", (r: unknown) => { const req = r as { method?: () => string; url?: () => string }; this.netFailures.push({ method: req.method?.() || "GET", path: safePath(req.url?.() || ""), status: 0 }); });
@@ -61,8 +64,105 @@ export class PlaywrightPreflightPage implements PreflightPage {
   currentUrl() { return this.page.url(); }
   drainConsoleErrors() { const c = this.consoleErrors; this.consoleErrors = []; return c; }
   drainNetworkFailures() { const n = this.netFailures; this.netFailures = []; return n; }
-  async captureScreenshot(): Promise<Buffer | null> { try { return await this.page.screenshot({ fullPage: false }); } catch { return null; } }
+  async captureScreenshot(): Promise<Buffer | null> {
+    // Never capture while a secret is being entered: a filled password field must never reach an artifact.
+    if (this.screenshotsSuppressed) return null;
+    try { return await this.page.screenshot({ fullPage: false }); } catch { return null; }
+  }
   async setViewport(width: number, height: number): Promise<void> { try { await this.page.setViewportSize({ width, height }); } catch { /* non-fatal */ } }
+
+  // ── Auth primitives (S6) ──────────────────────────────────────────────────────────────────────────
+  // Detect a login UI by ACCESSIBLE structure only: a password input (type=password), an identity field
+  // (email input, or a username/email-labelled text input), and a submit control. Reads no value.
+  async detectLoginUi(): Promise<import("../types").LoginUi> {
+    try {
+      const pw = this.page.locator('input[type="password"]');
+      const hasPassword = (await pw.count().catch(() => 0)) > 0;
+      if (!hasPassword) return { found: false, identifierKind: null, hasSubmit: false };
+      const emailCount = await this.page.locator('input[type="email"]').count().catch(() => 0);
+      let identifierKind: "email" | "username" | null = emailCount > 0 ? "email" : null;
+      if (!identifierKind) {
+        // A username/email field by accessible name (label), else the first non-password text input.
+        const named = await this.page.getByLabel("Email").first().count?.().catch(() => 0) ?? 0;
+        if (named > 0) identifierKind = "email";
+        else {
+          const userNamed = await this.page.getByLabel("Username").first().count?.().catch(() => 0) ?? 0;
+          identifierKind = userNamed > 0 ? "username"
+            : ((await this.page.locator('input[type="text"], input:not([type])').count().catch(() => 0)) > 0 ? "username" : null);
+        }
+      }
+      const submitCount = (await this.page.locator('button[type="submit"], input[type="submit"]').count().catch(() => 0))
+        + (await this.page.getByRole("button", { name: /sign in|log in|continue|submit/i }).count?.().catch(() => 0) ?? 0);
+      return { found: true, identifierKind, hasSubmit: submitCount > 0 };
+    } catch { return { found: false, identifierKind: null, hasSubmit: false }; }
+  }
+  async fillIdentifier(kind: "email" | "username", value: string): Promise<boolean> {
+    try {
+      const sel = kind === "email" ? 'input[type="email"]' : 'input[type="text"]:not([type="password"]), input:not([type])';
+      const byType = this.page.locator(sel).first();
+      if ((await byType.count().catch(() => 0)) > 0) { await byType.fill(value, { timeout: 10000 }); return true; }
+      // Fall back to an accessible label.
+      await this.page.getByLabel(kind === "email" ? "Email" : "Username").first().fill(value, { timeout: 10000 });
+      return true;
+    } catch { return false; }
+  }
+  // Fill the password. The value is typed and DISCARDED; it never enters an observation, log, or artifact.
+  // Screenshots are suppressed for the duration by the executor (which sets screenshotsSuppressed).
+  async fillSecret(value: string): Promise<boolean> {
+    try { await this.page.locator('input[type="password"]').first().fill(value, { timeout: 10000 }); return true; }
+    catch { return false; }
+  }
+  async submitLogin(): Promise<boolean> {
+    try {
+      const submit = this.page.locator('button[type="submit"], input[type="submit"]').first();
+      if ((await submit.count().catch(() => 0)) > 0) { await submit.click({ timeout: 10000 }); return true; }
+      const byRole = this.page.getByRole("button", { name: /sign in|log in|continue|submit/i }).first();
+      if ((await byRole.count?.().catch(() => 0) ?? 0) > 0) { await byRole.click({ timeout: 10000 }); return true; }
+      // Last resort: press Enter to submit the focused form.
+      await this.page.keyboard.press("Enter");
+      return true;
+    } catch { return false; }
+  }
+  async readAuthState(opts?: { expectRoute?: string; expectElement?: string }): Promise<import("../types").AuthState> {
+    try {
+      // 1. Expected route: the URL contains the configured path/substring.
+      if (opts?.expectRoute && this.page.url().includes(opts.expectRoute)) return { authenticated: true, via: "route", detail: "on the expected authenticated route" };
+      // 2. A visible authenticated element (by accessible name).
+      if (opts?.expectElement) {
+        const vis = await this.page.getByText(opts.expectElement).first().isVisible().catch(() => false);
+        if (vis) return { authenticated: true, via: "element", detail: "an authenticated element is visible" };
+      }
+      // 3. Session/cookie presence: a session-ish cookie exists in the context.
+      const cookies = (await this.page.context().cookies().catch(() => [])) as { name?: string }[];
+      const sessiony = cookies.some((c) => /sess|auth|token|sid|__secure|csrf|jwt|login/i.test(c?.name || ""));
+      // 4. A login form still on the page implies NOT authenticated (unless a route/element already proved it).
+      const stillOnLogin = (await this.page.locator('input[type="password"]').count().catch(() => 0)) > 0;
+      // Detect an MFA/CAPTCHA wall from visible page text so the executor can classify + stop safely.
+      const challenge = await this.detectChallengeText();
+      if (challenge) return { authenticated: false, via: "none", detail: challenge };
+      if (sessiony && !stillOnLogin) return { authenticated: true, via: "session", detail: "a session cookie is present" };
+      return { authenticated: false, via: "none", detail: stillOnLogin ? "still on the login screen" : "no session evidence" };
+    } catch { return { authenticated: false, via: "none", detail: "could not read session state" }; }
+  }
+  // Owner-safe challenge detection: scans for MFA/CAPTCHA wording in the DOM. Returns a short marker string
+  // (never a value) the executor keys off. Best-effort; absence just means "no challenge detected".
+  private async detectChallengeText(): Promise<string | null> {
+    try {
+      for (const t of ["verification code", "authenticator", "two-factor", "2fa", "one-time"]) {
+        if ((await this.page.getByText(t).first().count?.().catch(() => 0) ?? 0) > 0) return "mfa verification code required";
+      }
+      for (const t of ["captcha", "are you human", "reCAPTCHA"]) {
+        if ((await this.page.getByText(t).first().count?.().catch(() => 0) ?? 0) > 0) return "captcha bot check encountered";
+      }
+      return null;
+    } catch { return null; }
+  }
+  async resetContext(): Promise<void> {
+    // Clear cookies + storage so no prior role's session leaks into the next. A fresh browser context is
+    // opened by the session layer between flows in the real impl; here we clear what the page context holds.
+    try { await this.page.context().clearCookies(); } catch { /* best-effort */ }
+    try { if (this.page.evaluate) await this.page.evaluate("try{localStorage.clear();sessionStorage.clear();}catch(e){}"); } catch { /* best-effort */ }
+  }
 
   async perform(step: Step): Promise<StepObservation> {
     const t0 = Date.now();
@@ -85,7 +185,7 @@ export class PlaywrightPreflightPage implements PreflightPage {
         case "new_context": return base(true, "new_context_requested"); // handled at the session layer
         default: return base(false, "unsupported_action");
       }
-    } catch (e) { return base(false, `action_error: ${(e as Error).message}`.slice(0, 140)); }
+    } catch (e) { return base(false, redactString(`action_error: ${(e as Error).message}`).slice(0, 140)); }
   }
 }
 

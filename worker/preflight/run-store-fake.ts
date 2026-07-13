@@ -2,14 +2,16 @@
 // contract the Postgres store will implement: atomic claim + lease, ownership-checked heartbeat,
 // cancellation, incremental persistence, atomic finalize, billing settlement, and authoritative flow
 // selection. Single-process only.
-import type { RunStore, ClaimedRun, FlowResult, RunDecision, FlowSpec } from "./types";
+import type { RunStore, ClaimedRun, FlowResult, RunDecision, FlowSpec, TestAccountRef } from "./types";
 import type { TestBoundaries } from "../../lib/preflight/boundaries";
 import { planFlowSelection } from "../../lib/preflight/flow-selection";
+import { DETERMINISTIC_AUTH_FAILURE } from "./auth-executor";
 
 type Row = {
-  runId: string; applicationId: string; deploymentUrl: string; environment: string; flows: FlowSpec[];
+  runId: string; applicationId: string; owner: string; deploymentUrl: string; environment: string; flows: FlowSpec[];
   selectedFlowIds: unknown;      // undefined = legacy enqueue (whole flow list is the selection)
   boundaries: TestBoundaries | null; // null = legacy enqueue / never recorded (most conservative, core-only)
+  testAccounts: TestAccountRef[]; // approved sealed accounts (metadata only) injected for this run
   state: string; decision: RunDecision | null; summary: Record<string, unknown>;
   leaseOwner: string | null; leaseExpiresAt: number; attempts: number; maxAttempts: number;
   cancelRequested: boolean; provider: string | null; providerSessionId: string | null;
@@ -21,10 +23,10 @@ export class FakeRunStore implements RunStore {
   constructor(private now: () => number = () => Date.now()) {}
 
   // ── test helpers ──
-  enqueue(input: { runId: string; applicationId: string; deploymentUrl: string; environment?: string; flows: FlowSpec[]; selectedFlowIds?: unknown; boundaries?: TestBoundaries | null; maxAttempts?: number }) {
+  enqueue(input: { runId: string; applicationId: string; owner?: string; deploymentUrl: string; environment?: string; flows: FlowSpec[]; selectedFlowIds?: unknown; boundaries?: TestBoundaries | null; testAccounts?: TestAccountRef[]; maxAttempts?: number }) {
     this.rows.set(input.runId, {
-      runId: input.runId, applicationId: input.applicationId, deploymentUrl: input.deploymentUrl, environment: input.environment ?? "preview",
-      flows: input.flows, selectedFlowIds: input.selectedFlowIds, boundaries: input.boundaries ?? null, state: "queued", decision: null, summary: {}, leaseOwner: null, leaseExpiresAt: 0,
+      runId: input.runId, applicationId: input.applicationId, owner: input.owner ?? "", deploymentUrl: input.deploymentUrl, environment: input.environment ?? "preview",
+      flows: input.flows, selectedFlowIds: input.selectedFlowIds, boundaries: input.boundaries ?? null, testAccounts: input.testAccounts ?? [], state: "queued", decision: null, summary: {}, leaseOwner: null, leaseExpiresAt: 0,
       attempts: 0, maxAttempts: input.maxAttempts ?? 3, cancelRequested: false, provider: null, providerSessionId: null,
       flowResults: [], failureCode: null, billing: "held",
     });
@@ -58,7 +60,7 @@ export class FakeRunStore implements RunStore {
       const executing = new Set(flows.map((f) => f.flowId));
       const fullCoverage = r.flows.filter((f) => f.priority === "critical").every((f) => executing.has(f.flowId));
       r.state = "running"; r.leaseOwner = workerId; r.leaseExpiresAt = this.now() + leaseSecs * 1000; r.attempts += 1;
-      return { runId: r.runId, applicationId: r.applicationId, deploymentUrl: r.deploymentUrl, environment: r.environment, flows, fullCoverage, boundaries: r.boundaries, leaseExpiresAt: r.leaseExpiresAt };
+      return { runId: r.runId, applicationId: r.applicationId, owner: r.owner, deploymentUrl: r.deploymentUrl, environment: r.environment, flows, fullCoverage, boundaries: r.boundaries, testAccounts: r.testAccounts, leaseExpiresAt: r.leaseExpiresAt };
     }
     return null;
   }
@@ -80,9 +82,11 @@ export class FakeRunStore implements RunStore {
   async failRun(runId: string, code: string, message: string, executedAnyFlow: boolean): Promise<void> {
     const r = this.rows.get(runId); if (!r) return;
     // Requeue if attempts remain and it wasn't a terminal/cancel; else fail terminally. target_mismatch,
-    // flow_selection_invalid, and blocked_by_policy are deterministic (a retry cannot heal them — the
-    // boundaries do not change on retry), so they are terminal immediately, matching the Postgres store.
-    const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid" || code === "blocked_by_policy" || r.attempts >= r.maxAttempts;
+    // flow_selection_invalid, blocked_by_policy, and the deterministic worker-config auth failures are
+    // deterministic (a retry cannot heal them without operator action — a missing key / revoked credential /
+    // MFA wall does not change on retry), so they are terminal immediately, matching the Postgres store.
+    const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid"
+      || code === "blocked_by_policy" || DETERMINISTIC_AUTH_FAILURE.has(code) || r.attempts >= r.maxAttempts;
     r.state = terminal ? "failed" : "queued"; r.failureCode = code; r.leaseOwner = null; r.leaseExpiresAt = 0;
     if (!executedAnyFlow && r.billing === "held") r.billing = "refunded"; // no charge if nothing ran
   }

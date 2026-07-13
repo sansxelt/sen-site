@@ -25,7 +25,35 @@ function isTerminalRun(state: string): boolean { return (TERMINAL_RUN_STATES as 
 
 // ── Polling payload (owner-safe fields only) ──
 export type RunStep = { idx: number; action: string | null; target: string | null; observed: string | null; status: string | null; ms: number | null };
-export type RunFlow = { name: string; state: string; severity: string | null; steps: RunStep[] };
+// The authenticated-flow summary shown on the report (never a secret): role labels, the account LABEL (from
+// meta.label, never a username), environment, the resolved credential state, whether session reuse is on,
+// the last verified-auth time, and any auth failure classification. Present only on authenticated flows.
+export type RunFlowAuth = {
+  requiresAuth: true; roles: string[]; accountLabel: string | null; environment: string | null;
+  credentialState: "active" | "missing" | "revoked"; sessionReuse: boolean;
+  verifiedAuthAt: string | null; authFailure?: string;
+};
+export type RunFlow = { name: string; state: string; severity: string | null; steps: RunStep[]; auth: RunFlowAuth | null };
+
+// Safely parse the persisted auth blob into the owner-safe RunFlowAuth. Anything unexpected -> null (no
+// authenticated-flow panel rendered). NEVER surfaces a username/password/token — the worker only ever wrote
+// role labels + an account label, but this defensively drops any field that is not on the allowlist.
+function parseFlowAuth(raw: unknown): RunFlowAuth | null {
+  if (!raw || typeof raw !== "object") return null;
+  const a = raw as Record<string, unknown>;
+  if (a.requiresAuth !== true) return null;
+  const cred = a.credentialState;
+  const credentialState: RunFlowAuth["credentialState"] = cred === "missing" || cred === "revoked" ? cred : "active";
+  return {
+    requiresAuth: true,
+    roles: Array.isArray(a.roles) ? a.roles.filter((x): x is string => typeof x === "string").slice(0, 12) : [],
+    accountLabel: typeof a.accountLabel === "string" ? a.accountLabel.slice(0, 80) : null,
+    environment: typeof a.environment === "string" ? a.environment.slice(0, 40) : null,
+    credentialState, sessionReuse: a.sessionReuse === true,
+    verifiedAuthAt: typeof a.verifiedAuthAt === "string" ? a.verifiedAuthAt : null,
+    authFailure: typeof a.authFailure === "string" ? a.authFailure.slice(0, 60) : undefined,
+  };
+}
 export type RunHeader = {
   state: string; decision: string | null; summary: Record<string, unknown>;
   deployment_url: string | null; commit_sha: string | null; created_at: string; completed_at: string | null;
@@ -73,9 +101,10 @@ export async function getRun(owner: string, runId: string): Promise<RunDetail | 
     selectedFlowIds = Array.isArray(ex.flow_ids) ? (ex.flow_ids as unknown[]).map(String) : null;
   }
 
-  // Flow runs (owner-scoped), stable oldest-first.
+  // Flow runs (owner-scoped), stable oldest-first. observed carries the sanitized evidence + the S6 auth
+  // metadata (never a secret: role labels, account label, credential state) for authenticated flows.
   const { data: flowRows } = await db().from("v_flow_runs")
-    .select("id, name, state, severity, created_at")
+    .select("id, name, state, severity, observed, created_at")
     .eq("user_id", uid).eq("preflight_run_id", runId)
     .order("created_at", { ascending: true });
   const flowList = (flowRows as Record<string, unknown>[] | null) ?? [];
@@ -103,6 +132,7 @@ export async function getRun(owner: string, runId: string): Promise<RunDetail | 
   const flows: RunFlow[] = flowList.map((f) => ({
     name: String(f.name ?? ""), state: String(f.state ?? "pending"), severity: (f.severity as string) ?? null,
     steps: stepsByFlow.get(String(f.id)) ?? [],
+    auth: parseFlowAuth((f.observed as Record<string, unknown> | null)?.auth),
   }));
 
   // Deterministic issues for this run, most severe first. evidence here is the sanitized deterministic
