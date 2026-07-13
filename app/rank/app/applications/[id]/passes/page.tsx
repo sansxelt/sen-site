@@ -96,7 +96,7 @@ export default async function AppRunsPage({ params }: { params: Promise<{ id: st
         {app.app_url}
       </a>
 
-      <AppTabs appId={id} active="runs" />
+      <AppTabs appId={id} active="passes" />
 
       {runs.length ? (
         <div style={{ display: "grid", gap: 8 }}>

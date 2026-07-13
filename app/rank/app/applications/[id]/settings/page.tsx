@@ -5,8 +5,9 @@ import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication } from "@/lib/v-applications";
 import { listConnections } from "@/lib/preflight/connections-db";
-import { getSetupExtras } from "@/lib/preflight/setup-read";
+import { getSetupExtras, readContextSources } from "@/lib/preflight/setup-read";
 import { AppTabs } from "../app-tabs";
+import { EditApplicationForm } from "./edit-application";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Application settings" };
@@ -55,9 +56,10 @@ function PermitRow({ label, on }: { label: string; on: boolean }) {
   );
 }
 
-// Read-only settings for one application: the details, the real connection graph, the test boundaries a
-// pass runs under, and what is still missing. Owner-gated server component. No edit flows exist yet, so
-// every section says so honestly instead of faking controls.
+// Settings for one application: an owner edit form for the core fields (name, deployment target URL,
+// environment, description) on top, then the read-only sections below it (connection graph summary, the
+// test boundaries a pass runs under, and what is still missing). Owner-gated server component. Sections
+// that are genuinely not built yet (deletion) say so honestly instead of faking controls.
 export default async function AppSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const owner = await requirePreflightOwner("/applications/" + id);
@@ -78,11 +80,14 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
   }
 
   // Both reads degrade to empty on a pre-migration schema, so this page renders honest "not recorded"
-  // states rather than erroring or inventing data.
-  const [connections, extras] = await Promise.all([
+  // states rather than erroring or inventing data. The context sources (with content) give the current
+  // description = the "summary" source, if any, to seed the edit form.
+  const [connections, extras, contextContent] = await Promise.all([
     listConnections(owner, id),
     getSetupExtras(owner, id),
+    readContextSources(owner, id),
   ]);
+  const currentDescription = contextContent.find((s) => s.kind === "summary")?.content ?? "";
 
   const builderLabel = app.builder ? (BUILDER_LABELS[app.builder] ?? app.builder) : null;
   const envLabel = extras.environment ? ENV_LABELS[extras.environment] : null;
@@ -119,13 +124,16 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
 
       <AppTabs appId={id} active="settings" />
 
-      {/* ── Application details ─────────────────────────────────────────────────────────────────────── */}
-      <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)" }}>
+      {/* ── Edit application (owner-editable core settings) ─────────────────────────────────────────── */}
+      <EditApplicationForm
+        appId={id}
+        initial={{ name: app.name, appUrl: app.app_url, environment: extras.environment ?? "", description: currentDescription }}
+      />
+
+      {/* ── Application details (read-only facts the form does not own) ──────────────────────────────── */}
+      <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", marginTop: 18 }}>
         <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 16.5, color: "var(--fg-1)", margin: 0 }}>Application details</h2>
         <div style={{ display: "grid", gap: 11, marginTop: 14 }}>
-          <KV k="Name" v={app.name} />
-          <KV k="URL" v={app.app_url} />
-          <KV k="Environment" v={envLabel} />
           <KV k="Builder" v={builderLabel} />
           <KV k="Framework" v={app.framework} />
           <KV k="Connected" v={when(app.created_at)} />
@@ -221,12 +229,12 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         )}
       </section>
 
-      {/* ── Renaming and deletion (honest: not built yet) ───────────────────────────────────────────── */}
+      {/* ── Deletion (honest: not built in the UI yet) ──────────────────────────────────────────────── */}
       <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", background: "var(--bg-2)", marginTop: 26 }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", margin: 0 }}>Renaming and deletion</h2>
+        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", margin: 0 }}>Deletion</h2>
         <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "8px 0 0" }}>
-          Renaming an application and deleting it from the UI are coming. Until then, contact support and
-          we&apos;ll make the change for you.
+          Deleting an application from the UI is coming. Until then, contact support and we&apos;ll remove
+          it for you.
         </p>
       </div>
     </div>

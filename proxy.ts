@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isAppPath, legacyToNew, firstSegment } from "./lib/app-routes";
+import { isAppPath, legacyToNew, legacyRunsPath, firstSegment } from "./lib/app-routes";
 
 // vraelis.com: Vraelis Rank. Clean public paths map onto the internal /rank
 // route group; /rank/* bounce back to their clean alias so /rank never shows.
@@ -65,6 +65,10 @@ export default function proxy(req: NextRequest) {
     if (path === "/app" || path.startsWith("/app/")) {
       return goAbs(req, `https://${host}${legacyToNew(path)}`);           // never show doubled /app here
     }
+    // Legacy clean-path run report -> the renamed /passes route (308, canonical app host, query kept). The
+    // target /passes never matches legacyRunsPath, so this cannot loop; runs BEFORE the product rewrite.
+    const appHostRuns = legacyRunsPath(path);
+    if (appHostRuns) return goAbs(req, `https://app.vraelis.com${appHostRuns}`);
     if (path === "/" || isAppPath(path)) {
       return go(req, "/rank/app" + (path === "/" ? "" : path), "rewrite"); // the product itself
     }
@@ -79,6 +83,15 @@ export default function proxy(req: NextRequest) {
   if (path.startsWith("/api/")) return NextResponse.next();
   if (isProd && (path === "/app" || path.startsWith("/app/"))) {
     return goAbs(req, `https://app.vraelis.com${legacyToNew(path)}`);
+  }
+  // Legacy clean-path run report -> renamed /passes (308). In prod it also carries onto the canonical app
+  // host in one hop; on localhost it redirects in place. Runs BEFORE the isAppPath rewrite; /passes itself
+  // never matches legacyRunsPath, so no loop. (The old /app-prefix form is handled by legacyToNew above.)
+  const cleanRuns = legacyRunsPath(path);
+  if (cleanRuns && !path.startsWith("/app")) {
+    if (isProd) return goAbs(req, `https://app.vraelis.com${cleanRuns}`);
+    const url = req.nextUrl.clone(); url.pathname = cleanRuns;                // query preserved by clone()
+    return NextResponse.redirect(url, 308);
   }
   if (isAppPath(path) && !path.startsWith("/app")) {
     if (isProd) return goAbs(req, `https://app.vraelis.com${path}`);

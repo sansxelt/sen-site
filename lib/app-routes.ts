@@ -46,6 +46,22 @@ export function legacyToNew(pathname: string): string {
   return segs.join("/") || "/";
 }
 
+// The run report route was renamed /runs -> /passes in the subdomain migration, but only the OLD /app
+// prefix form (/app/apps/<id>/runs/<run>) is handled by legacyToNew. The NEW clean paths still leak a
+// legacy /runs link from old bookmarks, emails, and share pages: /applications/<id>/runs[/<runId>].
+// legacyRunsPath maps exactly those to their canonical /passes path, PRESERVING id + runId, and returns
+// null for anything else (including /passes itself, so the proxy redirect can never loop). Pure + query-
+// agnostic (the proxy carries the query string separately). Only the report route is remapped: a deeper
+// path like /applications/<id>/runs/<runId>/anything is left alone (null) rather than guessed at.
+export function legacyRunsPath(pathname: string): string | null {
+  const segs = pathname.split("/").filter(Boolean); // ["applications", "<id>", "runs", "<runId>?"]
+  if (segs[0] !== "applications" || !segs[1]) return null;
+  if (segs[2] !== "runs") return null;               // /passes and every other tab return null (no loop)
+  if (segs.length === 3) return `/applications/${segs[1]}/passes`;
+  if (segs.length === 4) return `/applications/${segs[1]}/passes/${segs[3]}`;
+  return null;                                        // deeper/unknown shape: don't guess
+}
+
 // Absolute product URL for auth callbacks and generated links. Production points at the subdomain; dev
 // and previews keep the relative path so localhost auth round-trips without DNS.
 export function appHostUrl(path: string): string {

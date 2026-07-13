@@ -51,8 +51,8 @@ for (const surface of ["pricing", "plans"]) {
     m.includes("$49<small>/mo") && m.includes("$149<small>/mo") && m.includes("$399<small>/mo"));
   ok(`${surface}: yearly renders $490 / $1,490 / $3,990 totals`,
     y.includes("$490<small>/yr") && y.includes("$1,490<small>/yr") && y.includes("$3,990<small>/yr"));
-  ok(`${surface}: yearly shows effective monthly ($41 example) and 2 months free`,
-    y.includes("$41/mo effective") && y.includes("2 months free"));
+  ok(`${surface}: yearly shows effective monthly ($41 example) and the Save 17% label`,
+    y.includes("$41/mo effective") && y.includes("Save 17%") && !y.includes("2 months free"));
   ok(`${surface}: monthly/yearly segmented toggle present`,
     m.includes(`class="seg"`) && m.includes(">Monthly<") && m.includes("Yearly"));
   ok(`${surface}: free tier is $0, one lifetime pass, 3 flows, 1 application, no card`,

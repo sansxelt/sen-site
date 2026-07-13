@@ -1,12 +1,13 @@
 import Link from "next/link";
 
 // Application-scoped tab bar for the app workspace. Server component: pure links, no client state; the
-// active tab is passed in by each page. "Passes" points at /runs because the run routes already live there.
+// active tab is passed in by each page. The run report pages live at /passes (renamed from /runs in the
+// subdomain migration); this tab must point there, or it 404s.
 const TABS: { key: string; label: string; path: string }[] = [
   { key: "overview", label: "Overview", path: "" },
   { key: "context", label: "Context", path: "/context" },
   { key: "contract", label: "Contract", path: "/contract" },
-  { key: "runs", label: "Passes", path: "/runs" },
+  { key: "passes", label: "Passes", path: "/passes" },
   { key: "issues", label: "Issues", path: "/issues" },
   { key: "repairs", label: "Repairs", path: "/repairs" },
   { key: "deployments", label: "Deployments", path: "/deployments" },

@@ -4,7 +4,7 @@
 // wired to the new single source of truth). Pure unit tests + static checks; no DB, no network.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { legacyToNew, isAppPath, appHostUrl } from "../lib/app-routes";
+import { legacyToNew, isAppPath, appHostUrl, legacyRunsPath } from "../lib/app-routes";
 
 let pass = 0, fail = 0;
 const ok = (n: string, c: boolean, d = "") => { console.log(`${c ? "PASS" : "FAIL"}  ${n}${d ? `  (${d})` : ""}`); if (c) pass++; else fail++; };
@@ -47,6 +47,72 @@ for (const p of ["/pricing", "/", "/signin", "/demo", "/how-it-works", "/contact
   if (process.env.NODE_ENV !== "production") {
     ok("appHostUrl stays relative outside production", appHostUrl("/applications") === "/applications");
   }
+}
+
+// ── legacyRunsPath: the CLEAN-path /runs -> /passes redirect (distinct from the /app-prefix mapping) ──
+ok("legacyRunsPath /applications/X/runs -> /applications/X/passes",
+  legacyRunsPath("/applications/X/runs") === "/applications/X/passes");
+ok("legacyRunsPath /applications/X/runs/Y -> /applications/X/passes/Y",
+  legacyRunsPath("/applications/X/runs/Y") === "/applications/X/passes/Y");
+ok("legacyRunsPath preserves a real id + runId",
+  legacyRunsPath("/applications/abc123/runs/run_789") === "/applications/abc123/passes/run_789");
+ok("legacyRunsPath /applications/X/passes -> null (the target must NOT match, so no redirect loop)",
+  legacyRunsPath("/applications/X/passes") === null);
+ok("legacyRunsPath /applications/X/passes/Y -> null (no loop on the report page either)",
+  legacyRunsPath("/applications/X/passes/Y") === null);
+ok("legacyRunsPath leaves other application tabs alone",
+  legacyRunsPath("/applications/X/contract") === null && legacyRunsPath("/applications/X/deployments") === null);
+ok("legacyRunsPath ignores a deeper/unknown shape rather than guessing",
+  legacyRunsPath("/applications/X/runs/Y/extra") === null);
+ok("legacyRunsPath ignores non-application paths",
+  legacyRunsPath("/runs") === null && legacyRunsPath("/pricing") === null && legacyRunsPath("/applications") === null);
+// The proxy carries the query string itself (goAbs sets url.search; the localhost clone keeps it), so
+// legacyRunsPath is path-only by design: the query is never encoded into its return value.
+ok("legacyRunsPath is path-only (query is the proxy's job, never baked into the mapping)",
+  legacyRunsPath("/applications/X/runs") === "/applications/X/passes" && !legacyRunsPath("/applications/X/runs")!.includes("?"));
+
+// ── Static: the proxy wires the clean /runs -> /passes redirect BEFORE the product rewrite, on both hosts ──
+{
+  const proxySrc = readFileSync("proxy.ts", "utf8");
+  ok("proxy imports legacyRunsPath", proxySrc.includes("legacyRunsPath"));
+  const iAppHostRuns = proxySrc.indexOf("legacyRunsPath(path)");
+  ok("proxy calls legacyRunsPath in the app-host branch before the /rank/app rewrite", (() => {
+    const iRewrite = proxySrc.indexOf('"/rank/app" + (path === "/"');
+    return iAppHostRuns !== -1 && iRewrite !== -1 && iAppHostRuns < iRewrite;
+  })());
+  ok("proxy redirects the clean /runs report to the canonical app host /passes (app-host branch)",
+    proxySrc.includes("https://app.vraelis.com${appHostRuns}"));
+  ok("proxy handles the clean /runs redirect on the main host too, before the isAppPath rewrite", (() => {
+    const iClean = proxySrc.indexOf("const cleanRuns = legacyRunsPath(path)");
+    const iIsApp = proxySrc.indexOf("if (isAppPath(path) && !path.startsWith");
+    return iClean !== -1 && iIsApp !== -1 && iClean < iIsApp;
+  })());
+  ok("proxy uses a 308 for the clean /runs redirect (permanent, method-preserving)",
+    proxySrc.includes("NextResponse.redirect(url, 308)") && /goAbs\(req, `https:\/\/app\.vraelis\.com\$\{(appHostRuns|cleanRuns)\}`\)/.test(proxySrc));
+}
+
+// ── Static: no active PAGE link points at a /runs REPORT route (customer-facing nav uses /passes now) ──
+// The report route moved /runs -> /passes. A page Link/href/router.push/redirect to
+// /applications/<id>/runs would 404 or (via the redirect) cost a round trip; every such link must be
+// /passes. The API namespace (/api/preflight/.../runs) and the developers page code SAMPLE (an API call)
+// are the real API and are exempt.
+{
+  const runLinkOffenders: string[] = [];
+  // A customer-facing link to the run report page: href/Link/push/redirect ending at an application's
+  // /runs, i.e. "/applications/<something>/runs" NOT under /api/.
+  const reportLink = /["'`]\/applications\/[^"'`]*\/runs(\/[^"'`]*)?["'`]/g;
+  for (const dir of ["app", "components"]) {
+    for (const file of walk(dir)) {
+      if (!/\.(tsx|ts)$/.test(file)) continue;
+      // The API route files themselves live under app/api and legitimately define /runs handlers; skip them.
+      if (file.replace(/\\/g, "/").includes("/api/")) continue;
+      const src = readFileSync(file, "utf8");
+      if (reportLink.test(src)) runLinkOffenders.push(file);
+      reportLink.lastIndex = 0;
+    }
+  }
+  ok("no active PAGE link points at a /applications/<id>/runs report route (must be /passes)",
+    runLinkOffenders.length === 0, runLinkOffenders.join(", "));
 }
 
 // ── Static: no stale /app/apps nav strings anywhere in shipped code (docs history exempt) ──

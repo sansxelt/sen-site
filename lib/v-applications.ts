@@ -7,6 +7,8 @@
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
 import { pickHealthRun } from "./preflight/target-url";
 import { logEvent } from "./v-events";
+import { unsafeHttpsUrlReason } from "./safe-fetch";
+import { canonicalDeploymentUrl } from "./preflight/deployments-db";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -55,6 +57,94 @@ export async function getApplication(userId: string, id: string): Promise<Applic
   if (!isDatabaseConfigured()) return null;
   const { data } = await db().from("v_applications").select("*").eq("user_id", norm(userId)).eq("id", id).maybeSingle();
   return (data as unknown as Application) ?? null;
+}
+
+// The safe, owner-editable fields of an application. Everything else (builder, framework, ownership,
+// the connection graph) is set at connect time or on its own tab and is intentionally not patchable here.
+export type ApplicationPatch = {
+  name?: string;
+  app_url?: string;
+  environment?: string | null;
+  description?: string;                          // maps to the "summary" context source (merged, not clobbered)
+};
+
+// Result of updateApplication. `updated` is false for a no-op / zero-row (not owned, or nothing valid to
+// change), which callers must render honestly rather than as success. When the deployment target moved to
+// a genuinely different URL (canonical compare), `targetChanged` is true and oldUrl/newUrl carry the pair
+// so the route can record a NEW deployment identity and log the change; historical runs are untouched.
+export type UpdateApplicationResult =
+  | { ok: false; error: string }
+  | { ok: true; updated: boolean; application: Application; targetChanged: boolean; oldUrl: string; newUrl: string };
+
+// Owner-scoped patch of an application's editable fields. Tenancy is enforced by the query itself (eq
+// user_id + id); a client-supplied owner or app id is never trusted. app_url is validated with the same
+// SSRF string guard the connect route uses (https only; no private/loopback/malformed host), so an
+// unsafe target can never be stored. The description is merged into the context array as a single
+// "summary" source, PRESERVING every other product-definition source. Returns updated:false honestly on
+// a zero-row write (not owned / nothing to change). Never rewrites any historical run's deployment_url.
+export async function updateApplication(userId: string, id: string, patch: ApplicationPatch): Promise<UpdateApplicationResult> {
+  if (!isDatabaseConfigured()) return { ok: false, error: "unavailable" };
+  const uid = norm(userId);
+
+  // Load the current row FIRST, owner-scoped: it is the ownership gate, the source of the old URL for the
+  // target-change compare, and the current context array we must merge (not clobber) the description into.
+  const current = await getApplication(uid, id);
+  if (!current) return { ok: false, error: "not_found" };
+
+  const fields: Record<string, unknown> = {};
+
+  if (typeof patch.name === "string") {
+    const name = patch.name.trim().slice(0, 140);
+    if (!name) return { ok: false, error: "name_required" };
+    fields.name = name;
+  }
+
+  let newUrl = current.app_url;
+  if (typeof patch.app_url === "string") {
+    const url = patch.app_url.trim().slice(0, 2000);
+    if (!url) return { ok: false, error: "url_required" };
+    const reason = unsafeHttpsUrlReason(url);
+    if (reason) return { ok: false, error: "invalid_url" };
+    fields.app_url = url;
+    newUrl = url;
+  }
+
+  if (patch.environment !== undefined) {
+    const env = (patch.environment || "").trim().toLowerCase();
+    if (env === "") fields.environment = null;                       // explicit clear
+    else if (env === "preview" || env === "staging" || env === "production") fields.environment = env;
+    else return { ok: false, error: "invalid_environment" };
+  }
+
+  if (typeof patch.description === "string") {
+    // Merge a single "summary" context source; keep every other source exactly as it was. An empty
+    // description removes the summary source rather than storing a blank one.
+    const desc = patch.description.trim().slice(0, 60_000);
+    const raw = Array.isArray((current as unknown as { context?: unknown }).context)
+      ? ((current as unknown as { context: unknown[] }).context)
+      : [];
+    const others = raw.filter((e) => !(e && typeof e === "object" && (e as Record<string, unknown>).kind === "summary"));
+    const next = desc
+      ? [...others, { kind: "summary", name: "Summary", chars: desc.length, added_at: new Date().toISOString(), content: desc }]
+      : others;
+    fields.context = next;
+  }
+
+  if (!Object.keys(fields).length) {
+    return { ok: true, updated: false, application: current, targetChanged: false, oldUrl: current.app_url, newUrl: current.app_url };
+  }
+
+  fields.updated_at = new Date().toISOString();
+  // The update is itself owner-scoped: a cross-owner id matches zero rows and returns updated:false, never
+  // touching another tenant's application. select() confirms the row actually changed (honest zero-row).
+  const { data, error } = await db().from("v_applications").update(fields as never)
+    .eq("user_id", uid).eq("id", id).select("*");
+  if (error) return { ok: false, error: "update_failed" };
+  const rows = (data as Application[] | null) ?? [];
+  if (!rows.length) return { ok: true, updated: false, application: current, targetChanged: false, oldUrl: current.app_url, newUrl: current.app_url };
+
+  const targetChanged = canonicalDeploymentUrl(current.app_url) !== canonicalDeploymentUrl(newUrl);
+  return { ok: true, updated: true, application: rows[0], targetChanged, oldUrl: current.app_url, newUrl };
 }
 
 // Create an application + its initial draft Production Contract (with the build prompt as the contract

@@ -93,7 +93,7 @@ export default function PlansV1({ initialCycle = "monthly" }: { initialCycle?: C
       <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 20 }}>
         <div className="seg" role="group" aria-label="Billing cycle">
           <button type="button" className={cycle === "monthly" ? "on" : ""} onClick={() => setCycle("monthly")}>Monthly</button>
-          <button type="button" className={cycle === "yearly" ? "on" : ""} onClick={() => setCycle("yearly")}>Yearly<span className="seg__save">2 months free</span></button>
+          <button type="button" className={cycle === "yearly" ? "on" : ""} onClick={() => setCycle("yearly")}>Yearly<span className="seg__save">Save 17%</span></button>
         </div>
       </div>
 
