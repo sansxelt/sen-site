@@ -19,7 +19,7 @@ create table if not exists public.stripe_webhook_events (
   stripe_event_id text primary key,            -- Stripe's evt_… id; UNIQUE is the dedupe guarantee
   event_type      text not null,
   object_id       text,                        -- the primary object (sub_…, ch_…, dp_…, in_…) for tracing
-  result          text,                        -- 'processed' | 'skipped_duplicate' | 'error' | 'ignored'
+  result          text,                        -- 'processing' (claimed, in flight) | 'processed' | 'error' | 'ignored'
   processed_at    timestamptz not null default timezone('utc', now())
 );
 

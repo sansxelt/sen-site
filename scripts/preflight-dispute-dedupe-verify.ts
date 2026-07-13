@@ -108,6 +108,14 @@ function main(): void {
   ok("the notification marker table exists with the (event,type,recipient) PRIMARY KEY",
     /create table if not exists public\.stripe_notifications_sent[\s\S]*?primary key \(stripe_event_id, notification_type, recipient\)/.test(read("sql", "vraelis-preflight-10-dispute-dedupe.sql")));
 
+  // ── Hard-crash self-heal: a claim stuck in 'processing' past the TTL is reclaimed so a redelivery
+  //    reprocesses (a hard crash inside handleDisputeCreated can't silently drop a freeze forever). ──
+  ok("claimStripeEvent reclaims a STALE 'processing' claim (TTL) and retries the insert once",
+    /STALE_PROCESSING_MS[\s\S]*?\.eq\("result", "processing"\)\.lt\("processed_at", cutoff\)[\s\S]*?insert\(\{ stripe_event_id: eventId[\s\S]*?return "fresh"/.test(bf));
+  ok("the reclaim can NEVER touch a completed event (delete is conditional on result='processing')",
+    !/claimStripeEvent[\s\S]*?\.delete\(\)\.eq\("stripe_event_id", eventId\)(?!\.eq\("result", "processing"\))/.test(
+      bf.slice(bf.indexOf("export async function claimStripeEvent"), bf.indexOf("export async function markStripeEventResult"))));
+
   // ── The admin restore route is admin-gated on both verbs. ──
   const admin = read("app", "api", "v", "admin", "billing-restore", "route.ts");
   ok("restore route is admin-gated (isAdmin) on BOTH verbs", (admin.match(/if \(!isAdmin\(/g) ?? []).length >= 2);

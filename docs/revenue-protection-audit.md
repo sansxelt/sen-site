@@ -31,8 +31,25 @@ This is the founder-facing summary + fix plan; the full agent report has file:li
   (checkout metadata.user_id = owner). Tests: scripts/preflight-dispute-dedupe-verify.ts
   (dispute:dedupe:test, 36/36). Follow-up (minor, non-blocking): founder alert after dispute-attribution
   retry exhaustion; longer-term a transactional outbox for state+email.
-- BLOCKER 3 (cost governor + kill switches): NOT STARTED.
-- Public launch remains BLOCKED until 3 ships and is adversarially verified.
+- BLOCKER 3 (cost governor + kill switches): FIXED IN CODE, adversarially verified (initial review found
+  a CRITICAL breaker-allowlist drift + 3 more findings; all four fixed and re-verified CONFIRMED-CLOSED;
+  a final full-diff interaction review over all three blockers found no critical/medium bug). NOT YET
+  LIVE — apply sql/vraelis-preflight-11-cost-governor.sql THEN deploy. What shipped: (a) provider-cost
+  ledger (v_cost_ledger; launch estimate + REAL executed seconds at settlement — both sum, over-count
+  trips earlier); (b) global ceilings $2/rolling-hour + $8/UTC-day (env-configurable), warn 50% / alert
+  80% / AUTO-PAUSE 100%, DB-durable (v_runs_governor survives redeploys), reset OPERATOR-ONLY with a 15m
+  grace so in-window spend doesn't instantly re-trip; (c) per-account velocity 8 sessions/rolling-hour
+  (429) + circuit breaker 3 provider/infra failures per 15m -> OPEN, 60m cooldown — the breaker set now
+  covers EVERY classifyProviderError code (the drift that defeated it is test-locked); (d) global
+  in-flight cap 12 (bounds burst overspend + the reset-grace blind spot to ~$3.60/15m); (e) admin surface
+  /api/v/admin/governor (reason/threshold/usage/reset) + a SEPARATE audited emergency halt that cancels
+  in-flight (never the automatic trip). Launches fail before billing while paused/throttled; reports and
+  billing pages stay available. Tests: scripts/preflight-cost-governor-verify.ts (cost:governor:test,
+  45/45). Hardening from the final review: webhook stale-'processing' claim self-heal (a hard crash can
+  no longer permanently dedupe away an unprocessed dispute).
+- ALL THREE BLOCKERS ARE NOW CODE-COMPLETE AND ADVERSARIALLY VERIFIED. Public launch is unblocked ONLY
+  after the operator: applies migrations 9 + 10 + 11 (all strictly additive, validated), merges + deploys,
+  and confirms the live behavior. Until then the deployed product runs the pre-fix code.
 
 ## The two pre-launch BLOCKERS (fix before public availability / any ad)
 

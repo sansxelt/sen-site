@@ -19,13 +19,34 @@ export const FROZEN_DISPUTE = "frozen_dispute" as const;
 // there is no dedupe at all; individual handlers remain idempotent on their own effects).
 export type EventClaim = "fresh" | "duplicate" | "unavailable";
 
+// A claim stuck in 'processing' longer than this was orphaned by a hard crash (OOM/SIGKILL) between the
+// claim and handler completion, or by a failed release — the serverless handler itself can never still be
+// live past its max duration. Reclaiming lets Stripe's redelivery reprocess (handlers are idempotent), so
+// a hard crash inside handleDisputeCreated can no longer silently drop a freeze forever.
+const STALE_PROCESSING_MS = 10 * 60 * 1000; // 10 minutes
+
 export async function claimStripeEvent(eventId: string, eventType: string, objectId: string | null): Promise<EventClaim> {
   if (!eventId || !isDatabaseConfigured()) return "unavailable";
   const { error } = await db().from("stripe_webhook_events" as never)
     .insert({ stripe_event_id: eventId, event_type: eventType, object_id: objectId, result: "processing" } as never);
   if (!error) return "fresh";
-  if (error.code === "23505") return "duplicate"; // already claimed by a prior delivery
-  return "unavailable"; // 42P01 (table missing) / transient — fall through, handlers stay idempotent
+  if (error.code !== "23505") return "unavailable"; // 42P01 (table missing) / transient — handlers stay idempotent
+  // Duplicate: before deduping the delivery away, self-heal an ORPHANED claim — a row still 'processing'
+  // past the TTL (hard crash mid-handler / failed release). The delete is conditional on that exact state,
+  // so a successfully 'processed' row is NEVER reclaimed (no reprocess of a completed event), and the
+  // retry insert re-serializes on the PK so two racers still yield one winner.
+  try {
+    const cutoff = new Date(Date.now() - STALE_PROCESSING_MS).toISOString();
+    const { data: cleared } = await db().from("stripe_webhook_events" as never)
+      .delete().eq("stripe_event_id", eventId).eq("result", "processing").lt("processed_at", cutoff)
+      .select("stripe_event_id");
+    if (Array.isArray(cleared) && cleared.length > 0) {
+      const { error: retry } = await db().from("stripe_webhook_events" as never)
+        .insert({ stripe_event_id: eventId, event_type: eventType, object_id: objectId, result: "processing" } as never);
+      if (!retry) return "fresh";
+    }
+  } catch { /* best-effort self-heal; fall through to duplicate (the pre-fix behavior) */ }
+  return "duplicate"; // already claimed by a live or completed prior delivery
 }
 
 // Record the terminal disposition of a processed event (audit only; best-effort).

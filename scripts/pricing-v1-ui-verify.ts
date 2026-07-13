@@ -131,9 +131,12 @@ ok("legacy components stayed client components, copy intact",
 const subscribe = read("app/api/v/subscribe/route.ts");
 ok("subscribe route accepts _v1 keys only behind passPricingEnabled()",
   subscribe.includes("passPricingEnabled()") && subscribe.includes("PLAN_CATALOG_V1") && subscribe.includes("V1_PLANS.has(requested)"));
-ok("subscribe route keeps the exact v_plan metadata contract for the webhook",
-  subscribe.includes(`subscription_data: { metadata: { type: "v_plan", plan, cycle, user_id: email } }`)
-  && subscribe.includes(`metadata: { type: "v_plan", plan, cycle, user_id: email }`));
+// user_id in the v_plan metadata is the LOWERCASED owner (not the raw-case session email), so the
+// dispute-freeze attribution (blocker 2: ownerForCharge -> metadata.user_id) lands on the exact
+// v_profiles/plan_v1 row plan state is stored under. Same for both the subscription and session metadata.
+ok("subscribe route keeps the exact v_plan metadata contract for the webhook (user_id = lowercased owner)",
+  subscribe.includes(`subscription_data: { metadata: { type: "v_plan", plan, cycle, user_id: owner } }`)
+  && subscribe.includes(`metadata: { type: "v_plan", plan, cycle, user_id: owner }`));
 ok("subscribe route resolves prices from the env scheme covering the six _v1 vars", subscribe.includes("priceIdFor(plan, cycle)"));
 ok("legacy plan keys are still accepted unconditionally", subscribe.includes(`new Set(["starter", "creator", "pro", "scale"])`));
 
