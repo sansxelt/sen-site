@@ -17,9 +17,22 @@ This is the founder-facing summary + fix plan; the full agent report has file:li
   (v_free_grant_overrides + admin route /api/v/admin/free-grant) as the fail-closed safety valve for a
   wrongly-charged legit user; (e) IP/device/ASN captured as SIGNAL ONLY (hashed, never a denial key) in
   v_free_grant_risk. Tests: scripts/preflight-free-grant-dedup-verify.ts (free:grant:test, 53/53).
-- BLOCKER 2 (dispute/chargeback): NOT STARTED.
+- BLOCKER 2 (dispute/chargeback + webhook dedupe): FIXED IN CODE, adversarially verified (two review
+  rounds), all suites green. NOT YET LIVE — apply sql/vraelis-preflight-10-dispute-dedupe.sql THEN deploy.
+  What shipped: (a) charge.dispute.created FREEZES execution NON-DESTRUCTIVELY (v_profiles
+  billing_access_state='frozen_dispute', previous_plan_v1 snapshotted, plan_v1 preserved) blocking ALL
+  five spend surfaces via gatePassLaunch mode 'frozen' (403); restore is MANUAL admin-only
+  (/api/v/admin/billing-restore) after a won dispute. (b) DB-UNIQUE webhook dedupe
+  (stripe_webhook_events, stripe_event_id pk) claimed before dispatch; a failed CRITICAL handler RELEASES
+  the claim and returns 500 so Stripe retries and the freeze lands (closes the adversarial-review CRITICAL
+  dropped-freeze). (c) _v1 resurrect guard: setPlanV1 refuses to re-activate a frozen owner. (d) retry-safe
+  idempotent billing emails (stripe_notifications_sent, keyed event+type+recipient) so a 500-retry never
+  double-sends (closes the MEDIUM review regression). (e) attribution keyed on the lowercased owner
+  (checkout metadata.user_id = owner). Tests: scripts/preflight-dispute-dedupe-verify.ts
+  (dispute:dedupe:test, 36/36). Follow-up (minor, non-blocking): founder alert after dispute-attribution
+  retry exhaustion; longer-term a transactional outbox for state+email.
 - BLOCKER 3 (cost governor + kill switches): NOT STARTED.
-- Public launch remains BLOCKED until 2 and 3 ship and are adversarially verified.
+- Public launch remains BLOCKED until 3 ships and is adversarially verified.
 
 ## The two pre-launch BLOCKERS (fix before public availability / any ad)
 

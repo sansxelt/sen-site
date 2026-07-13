@@ -17,6 +17,7 @@ import {
   monthlyWindow, FREE_TIER, PLAN_CATALOG_V1, type PlanV1,
 } from "./pass-pricing";
 import { resolveCanonicalCluster, activeFreeGrantOverride } from "./free-grant-cluster";
+import { isBillingFrozen } from "./billing-freeze";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -74,7 +75,10 @@ export type PassGateDecision =
   | { mode: "subscription"; ok: true; plan: PlanV1; unitsAfter: number }
   | { mode: "subscription"; ok: false; error: "flow_cap" | "allowance_exhausted"; message: string; status: 400 | 402 }
   | { mode: "free"; ok: true }
-  | { mode: "payg"; ok: true; cents: number };
+  | { mode: "payg"; ok: true; cents: number }
+  // Blocker 2: a dispute/chargeback froze this owner's execution access. Refuses ALL spend surfaces
+  // (new passes, reruns, PAYG, subscription allowance, new free entitlements) until manual restore.
+  | { mode: "frozen"; ok: false; error: "billing_frozen"; message: string; status: 403 };
 
 // Ladder: an active _v1 subscription is gated purely by canRunPass (flow cap + metered monthly
 // allowance; NEVER auto-spilled into paid cents — exhaustion is a refusal, not a surprise charge). No
@@ -237,6 +241,14 @@ export async function applicationCapReached(owner: string, planKey: string | nul
 // hold (the route holds them with unit='cent' under the exact legacy reservation semantics).
 export async function gatePassLaunch(owner: string, selectedFlowCount: number, opts: { rerun?: boolean } = {}): Promise<PassGateDecision> {
   if (!passPricingEnabled()) return { mode: "legacy", ok: true };
+  // Blocker 2: a disputed/chargebacked owner is frozen — refuse EVERY spend surface (this single gate
+  // covers new passes, reruns, PAYG, subscription allowance, and new free entitlements) until an operator
+  // restores access after a won dispute. Checked FIRST so a frozen subscriber can't spend their metered
+  // allowance and a frozen free user can't take a free/PAYG run.
+  if (await isBillingFrozen(owner)) {
+    return { mode: "frozen", ok: false, error: "billing_frozen", status: 403,
+      message: "This account is on hold while a payment dispute is resolved. Contact support to restore access." };
+  }
   const state = await getPlanV1State(owner);
   const plan = state ? planV1(state.plan) : null;
   if (plan) {
@@ -272,6 +284,18 @@ export async function setPlanV1(owner: string, args: { plan: string; cycle: stri
   if (!owner || !isDatabaseConfigured()) return;
   const uid = norm(owner);
   const s = db();
+  // Resurrect guard (blocker 2): if this owner is frozen by a dispute, an out-of-order 'active' webhook
+  // (Stripe redelivers out of order) must NOT re-activate plan_v1. A frozen owner's plan is preserved in
+  // previous_plan_v1 and restored MANUALLY after a won dispute — never by a racing subscription event.
+  // Best-effort read; a missing column (pre-migration) simply skips the guard (no behavior change then).
+  {
+    const { data: frozenRow } = await s.from("v_profiles" as never)
+      .select("billing_access_state").eq("user_id", uid).maybeSingle();
+    if ((frozenRow as { billing_access_state?: string | null } | null)?.billing_access_state === "frozen_dispute") {
+      console.warn(`[entitlements] setPlanV1 suppressed for frozen (disputed) owner ${uid}; plan stays frozen until manual restore.`);
+      return;
+    }
+  }
   let keepAnchor = false;
   if (args.anchorOnlyIfUnset) {
     const { data } = await s.from("v_profiles" as never).select("plan_v1_anchor").eq("user_id", uid).maybeSingle();

@@ -30,6 +30,7 @@ import { notifyOwnerPlanLapse } from "../../../../lib/vraelis-notify";
 import { settlePaidSession } from "../../../../lib/vraelis-payment-settle";
 import { setFlipPlan } from "../../../../lib/flip-db";
 import { isTeamSeatPriceId } from "../../../../lib/v-team-billing";
+import { claimStripeEvent, markStripeEventResult, releaseStripeEvent, freezeBillingAccess, recordDisputeEvent, claimNotification } from "../../../../lib/preflight/billing-freeze";
 
 // Vraelis runs in this same Stripe account. Vraelis checkout sessions +
 // subscriptions carry metadata { owner_email, plan, cycle }. When an
@@ -271,13 +272,18 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
         const amountLabel = plan
           ? (ctx.cycle === "yearly" ? plan.yearlyLabel ?? plan.monthlyLabel : plan.monthlyLabel)
           : "";
-        await sendSubscriptionActivatedEmail({
-          email:       ctx.email,
-          name,
-          planName:    ctx.planName,
-          cycle:       ctx.cycle,
-          amountLabel,
-        });
+        // Retry-safe: this email is not idempotent and the event may be retried (500 on a later state
+        // failure). Claim a single-send marker keyed by (event, type, recipient) so a retry re-runs the
+        // state writes but skips the already-sent email.
+        if (await claimNotification(event.id, "subscription_activated", ctx.email)) {
+          await sendSubscriptionActivatedEmail({
+            email:       ctx.email,
+            name,
+            planName:    ctx.planName,
+            cycle:       ctx.cycle,
+            amountLabel,
+          });
+        }
       }
       break;
     }
@@ -286,8 +292,9 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
       const prevCancel = Boolean(prev.cancel_at_period_end);
       const currCancel = Boolean((subscription as unknown as { cancel_at_period_end?: boolean }).cancel_at_period_end);
 
-      // Transition: cancellation was JUST scheduled (was false, now true).
-      if (currCancel && !prevCancel) {
+      // Transition: cancellation was JUST scheduled (was false, now true). Retry-safe via the per-event
+      // marker (on redelivery, previous_attributes is identical so the transition re-evaluates true).
+      if (currCancel && !prevCancel && await claimNotification(event.id, "cancellation_scheduled", ctx.email)) {
         await sendSubscriptionCancellationScheduledEmail({
           email:    ctx.email,
           name,
@@ -301,7 +308,8 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
       const prevStatus = typeof prev.status === "string" ? prev.status : null;
       if (
         prevStatus && prevStatus !== subscription.status &&
-        ["unpaid", "canceled", "incomplete_expired"].includes(subscription.status)
+        ["unpaid", "canceled", "incomplete_expired"].includes(subscription.status) &&
+        await claimNotification(event.id, "subscription_ended", ctx.email)
       ) {
         await sendSubscriptionEndedEmail({
           email:    ctx.email,
@@ -313,12 +321,14 @@ async function handleSubscriptionChange(event: Stripe.Event, subscription: Strip
     }
 
     case "customer.subscription.deleted": {
-      // Period ended on a scheduled cancel, or admin hard-canceled.
-      await sendSubscriptionEndedEmail({
-        email:    ctx.email,
-        name,
-        planName: ctx.planName,
-      });
+      // Period ended on a scheduled cancel, or admin hard-canceled. Retry-safe via the per-event marker.
+      if (await claimNotification(event.id, "subscription_ended", ctx.email)) {
+        await sendSubscriptionEndedEmail({
+          email:    ctx.email,
+          name,
+          planName: ctx.planName,
+        });
+      }
       break;
     }
   }
@@ -380,7 +390,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
  * renewal).  Initial checkouts are already covered by the welcome email
  * from customer.subscription.created.
  */
-async function handleInvoicePaid(invoice: Stripe.Invoice) {
+async function handleInvoicePaid(invoice: Stripe.Invoice, eventId: string) {
   // Vraelis Rank subscription invoice? Grant monthly credits (deduped) and stop.
   {
     const { handleRankInvoicePaid } = await import("../../../../lib/v-subscriptions");
@@ -401,14 +411,19 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
       })
     : "your next billing date";
 
-  await sendRenewalSucceededEmail({
-    email,
-    name:        await displayNameFor(email),
-    planName:    planNameFromInvoice(invoice),
-    amountLabel: formatInvoiceAmount(invoice),
-    periodEnd:   nextPeriod,
-    invoiceUrl:  invoice.hosted_invoice_url ?? null,
-  });
+  // Retry-safe: the renewal email is not idempotent and the event may be retried (500 on a later state
+  // failure). Single-send marker keyed by (event, type, recipient) — a retry re-runs the credit grant
+  // (itself idempotent per invoice id) but skips the already-sent email.
+  if (await claimNotification(eventId, "renewal_succeeded", email)) {
+    await sendRenewalSucceededEmail({
+      email,
+      name:        await displayNameFor(email),
+      planName:    planNameFromInvoice(invoice),
+      amountLabel: formatInvoiceAmount(invoice),
+      periodEnd:   nextPeriod,
+      invoiceUrl:  invoice.hosted_invoice_url ?? null,
+    });
+  }
 }
 
 /**
@@ -534,6 +549,108 @@ async function handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent) {
   invalidateAddonsCache(userEmail);
 }
 
+// ── Dispute / chargeback / refund ────────────────────────────────────────────
+// Resolve the owner behind a disputed/refunded charge. A charge does not carry our metadata, but its
+// invoice / subscription does. Walk charge -> invoice -> subscription metadata.user_id (our locked
+// checkout identity). Returns null when unattributable (still recorded, just not auto-frozen).
+async function ownerForCharge(charge: Stripe.Charge): Promise<string | null> {
+  // Fast path: some charges carry our metadata directly.
+  const metaOwner = charge.metadata?.user_id || charge.metadata?.userEmail || charge.metadata?.owner_email;
+  if (metaOwner) return metaOwner;
+  try {
+    // charge.invoice is present on the wire but not in the pinned type (like other narrow-casts here).
+    const chargeInvoice = (charge as unknown as { invoice?: string | { id?: string } | null }).invoice;
+    const invoiceId = typeof chargeInvoice === "string" ? chargeInvoice : chargeInvoice?.id ?? null;
+    if (invoiceId) {
+      const invoice = await getStripe().invoices.retrieve(invoiceId);
+      const inv = invoice as unknown as {
+        parent?: { subscription_details?: { metadata?: Record<string, string> } };
+        subscription_details?: { metadata?: Record<string, string> };
+        customer_email?: string | null;
+      };
+      const m = inv.parent?.subscription_details?.metadata ?? inv.subscription_details?.metadata ?? null;
+      if (m?.user_id) return m.user_id;
+      if (inv.customer_email) return inv.customer_email;
+    }
+  } catch (err) {
+    console.error("[stripe webhook] ownerForCharge lookup failed:", err);
+  }
+  // Last resort: the customer's email.
+  try {
+    const custId = typeof charge.customer === "string" ? charge.customer : charge.customer?.id ?? null;
+    if (custId) {
+      const cust = await getStripe().customers.retrieve(custId);
+      if (!cust.deleted && cust.email) return cust.email;
+    }
+  } catch { /* unattributable */ }
+  return null;
+}
+
+// charge.dispute.created — a customer opened a dispute/chargeback. Stripe has already pulled the funds.
+// FREEZE execution access immediately (non-destructive: plan_v1 preserved, previous_plan_v1 snapshotted),
+// so the disputer cannot keep consuming during the weeks-long resolution. Restore is MANUAL after a won
+// dispute. Records the event for the operator regardless of attribution.
+async function handleDisputeCreated(dispute: Stripe.Dispute, eventId: string): Promise<void> {
+  const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id ?? null;
+  // Resolve the owner. A Stripe API failure here MUST propagate (throw), not be swallowed: the outer
+  // webhook catch releases the event claim so Stripe's retry re-runs this handler and the freeze finally
+  // lands. Silently continuing with owner=null would record 'processed' and permanently drop the freeze.
+  const owner = chargeId ? await ownerForCharge(await getStripe().charges.retrieve(chargeId)) : null;
+  const froze = owner ? await freezeBillingAccess(owner, `dispute ${dispute.id} (${dispute.status ?? "created"})`) : false;
+  // Record the audit row FIRST-effort (best-effort inside), then, if we could not freeze an attributable
+  // charge, THROW so the event is retried rather than deduped away as a silent dropped freeze.
+  await recordDisputeEvent({
+    owner, disputeId: dispute.id, chargeId, eventId, kind: "dispute_created",
+    status: dispute.status ?? null, amountCents: typeof dispute.amount === "number" ? dispute.amount : null, frozeAccess: froze,
+  });
+  if (owner && froze) {
+    console.error(`[stripe webhook] DISPUTE opened for ${owner} — FROZE execution; dispute=${dispute.id} amount=${dispute.amount}`);
+    return;
+  }
+  if (owner && !froze) {
+    // Owner resolved but the freeze write did not confirm a transition. freezeBillingAccess returns false
+    // when it errored OR when the owner was already frozen. Re-check: if already frozen, this is fine
+    // (idempotent redelivery). Otherwise the write failed -> throw to retry.
+    const { isBillingFrozen } = await import("../../../../lib/preflight/billing-freeze");
+    if (await isBillingFrozen(owner)) {
+      console.error(`[stripe webhook] DISPUTE ${dispute.id}: owner ${owner} already frozen (idempotent).`);
+      return;
+    }
+    throw new Error(`dispute ${dispute.id}: freeze write for ${owner} did not confirm — retrying`);
+  }
+  // Unattributable: the freeze could not land on any owner. This is a real, revenue-critical failure —
+  // throw so Stripe retries (attribution may succeed once the invoice/charge is fully propagated).
+  throw new Error(`dispute ${dispute.id}: could not attribute charge ${chargeId} to an owner — retrying to freeze`);
+}
+
+// charge.dispute.closed — the dispute resolved (won/lost). Recorded for the operator's restore decision.
+// NO auto-restore (founder ruling: manual restore after a won dispute only) — a 'won' status here just
+// tells the operator it is safe to restore via the admin action.
+async function handleDisputeClosed(dispute: Stripe.Dispute, eventId: string): Promise<void> {
+  const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id ?? null;
+  let owner: string | null = null;
+  if (chargeId) {
+    try { owner = await ownerForCharge(await getStripe().charges.retrieve(chargeId)); } catch { /* recorded without owner */ }
+  }
+  console.error(`[stripe webhook] dispute ${dispute.id} CLOSED status=${dispute.status} owner=${owner ?? "?"} — manual restore required if won.`);
+  await recordDisputeEvent({
+    owner, disputeId: dispute.id, chargeId, eventId, kind: "dispute_closed",
+    status: dispute.status ?? null, amountCents: typeof dispute.amount === "number" ? dispute.amount : null, frozeAccess: false,
+  });
+}
+
+// charge.refunded — a (possibly partial) refund. Recorded for the audit trail. A full refund of a
+// subscription charge is a signal the operator may want to freeze/cancel, but a refund alone is not
+// auto-freezing (many refunds are legitimate goodwill). Left as an operator decision + audit row.
+async function handleChargeRefunded(charge: Stripe.Charge, eventId: string): Promise<void> {
+  const owner = await ownerForCharge(charge);
+  await recordDisputeEvent({
+    owner, disputeId: null, chargeId: charge.id, eventId, kind: "refunded",
+    status: charge.refunded ? "fully_refunded" : "partially_refunded",
+    amountCents: typeof charge.amount_refunded === "number" ? charge.amount_refunded : null, frozeAccess: false,
+  });
+}
+
 // ── Route handler ──────────────────────────────────────────────────────────
 //
 // Behaviour:
@@ -580,6 +697,16 @@ export async function POST(request: Request) {
   if (!event) {
     console.error("Webhook signature verification failed against all secrets");
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
+  }
+
+  // Dedupe by the Stripe event id via a DB UNIQUE constraint (Stripe delivers events more than once and
+  // out of order). A duplicate delivery returns 200 without reprocessing. "unavailable" (table missing /
+  // DB down) falls through — no worse than the pre-table status quo, and every handler is idempotent on
+  // its own effects. Claimed BEFORE dispatch so a reprocess can never double-apply a state change.
+  {
+    const objId = (event.data?.object as { id?: string } | undefined)?.id ?? null;
+    const claim = await claimStripeEvent(event.id, event.type, objId);
+    if (claim === "duplicate") return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
@@ -661,19 +788,47 @@ export async function POST(request: Request) {
       // selected either name still work.
       case "invoice.paid":
       case "invoice.payment_succeeded":
-        await handleInvoicePaid(event.data.object as Stripe.Invoice);
+        await handleInvoicePaid(event.data.object as Stripe.Invoice, event.id);
         break;
 
       case "invoice.upcoming":
         await handleInvoiceUpcoming(event.data.object as Stripe.Invoice);
         break;
 
+      // Dispute / chargeback: freeze execution access immediately (non-destructive), record for audit.
+      case "charge.dispute.created":
+        await handleDisputeCreated(event.data.object as Stripe.Dispute, event.id);
+        break;
+      case "charge.dispute.closed":
+        await handleDisputeClosed(event.data.object as Stripe.Dispute, event.id);
+        break;
+      case "charge.refunded":
+        await handleChargeRefunded(event.data.object as Stripe.Charge, event.id);
+        break;
+
       default:
         break;
     }
+    await markStripeEventResult(event.id, "processed");
   } catch (err) {
     console.error(`[stripe webhook] handler failed for ${event.type}:`, err);
-    // Still return 200 so Stripe doesn't retry on our application bugs.
+    // Release the dedupe claim so a redelivery REPROCESSES this event instead of being permanently
+    // deduped away (handlers are idempotent, so a reprocess is safe).
+    await releaseStripeEvent(event.id);
+    // For revenue-CRITICAL mutating events (disputes / subscription / invoice state), return 500 so
+    // Stripe actually RETRIES on its own backoff schedule — combined with the released claim, that retry
+    // re-runs the handler and the freeze/plan change finally lands. This is what closes the dropped-freeze
+    // hole. For best-effort events (emails, one-time boosts), keep 200 so a cosmetic failure doesn't earn
+    // a retry storm. (A 200 here would tell Stripe "delivered" and it would never redeliver.)
+    const RETRY_ON_FAILURE = new Set([
+      "charge.dispute.created", "charge.dispute.closed", "charge.refunded",
+      "customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted",
+      "invoice.paid", "invoice.payment_succeeded",
+    ]);
+    if (RETRY_ON_FAILURE.has(event.type)) {
+      return NextResponse.json({ error: "handler_failed_retry" }, { status: 500 });
+    }
+    // Best-effort event: still 200 so Stripe doesn't hammer us on a cosmetic error.
   }
 
   return NextResponse.json({ received: true });

@@ -89,8 +89,11 @@ export async function POST(req: Request) {
       line_items: [{ price, quantity: 1 }],
       customer_email: email,
       client_reference_id: email,
-      subscription_data: { metadata: { type: "v_plan", plan, cycle, user_id: email } },
-      metadata: { type: "v_plan", plan, cycle, user_id: email },
+      // user_id is the LOWERCASED owner (the v_profiles/plan_v1 tenancy key), not the raw-case session
+      // email — so the dispute-freeze attribution (ownerForCharge -> metadata.user_id) lands on the exact
+      // same row plan_v1 is stored under, without relying on downstream normalization.
+      subscription_data: { metadata: { type: "v_plan", plan, cycle, user_id: owner } },
+      metadata: { type: "v_plan", plan, cycle, user_id: owner },
       allow_promotion_codes: true,
       return_url: `${stripeReturnUrl(billingReturnUrls().success)}?session_id={CHECKOUT_SESSION_ID}`,
     });
