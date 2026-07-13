@@ -181,6 +181,20 @@ function AppTopbar({ email }: { email: string | null }) {
     window.addEventListener("vraelis:avatar", onChange);
     return () => window.removeEventListener("vraelis:avatar", onChange);
   }, []);
+  // Plan + balance at a glance: read once from /api/v/me (the same source the dashboard uses; no extra
+  // DB work — plan and balance are already loaded there). Refetched when a purchase/launch broadcasts
+  // "vraelis:balance" so the pill never lies about what's in the account after a top-up or a pass.
+  const [acct, setAcct] = useState<{ plan: string; balanceCents: number } | null>(null);
+  useEffect(() => {
+    const load = () => fetch("/api/v/me").then((r) => (r.ok ? r.json() : null)).then((j) => {
+      if (j && j.signedIn) setAcct({ plan: typeof j.plan_v1 === "string" && j.plan_v1 ? j.plan_v1 : String(j.plan ?? "free"), balanceCents: Number(j.balance ?? 0) });
+    }).catch(() => {});
+    load();
+    window.addEventListener("vraelis:balance", load);
+    return () => window.removeEventListener("vraelis:balance", load);
+  }, []);
+  const planLabel = acct ? (acct.plan === "free" ? "Free" : acct.plan.charAt(0).toUpperCase() + acct.plan.slice(1)) : null;
+  const balanceLabel = acct ? `$${(Math.max(0, acct.balanceCents) / 100).toFixed(2)}` : null;
   const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
   const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
   return (
@@ -189,6 +203,20 @@ function AppTopbar({ email }: { email: string | null }) {
           sidebar's "Back to site" -> https://vraelis.com. Small left nudge centers over the sidebar. */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
+        {/* Plan + balance at a glance, right in the bar — no menu dig. Plan chip -> /plans; balance -> /credits
+            (buy more). Hidden until /api/v/me resolves so it never flashes a wrong number. */}
+        {planLabel !== null && (
+          <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)", overflow: "hidden", height: 34 }}>
+            <Link href="/plans" title="Your plan" style={{ display: "inline-flex", alignItems: "center", padding: "0 12px", height: "100%", textDecoration: "none", color: "var(--fg-3)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", fontFamily: "var(--font-code)" }}>
+              {planLabel}
+            </Link>
+            <span aria-hidden style={{ width: 1, alignSelf: "stretch", background: "var(--line-1)" }} />
+            <Link href="/credits" title="Balance — buy more" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "0 12px 0 11px", height: "100%", textDecoration: "none", color: "var(--fg-1)", fontSize: 12.5, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>
+              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.coin} size={13} sw={1.8} /></span>
+              {balanceLabel}
+            </Link>
+          </div>
+        )}
         <Link href="/applications/new" className="btn" style={{ padding: "9px 16px" }}>+ Connect app</Link>
         <button onClick={() => setMenu((v) => !v)} aria-label="Account" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px 6px 6px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", cursor: "pointer", boxShadow: "var(--shadow-sm)" }}>
           {avatar ? (
