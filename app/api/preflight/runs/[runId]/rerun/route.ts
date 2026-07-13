@@ -26,8 +26,9 @@ import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
 import { hold, refund } from "@/lib/v-credits";
 import { createRun, ownerActiveRunCount, ownerRunsToday } from "@/lib/preflight/runs-db";
 import { estimateRunCredits, selectFailedFlows } from "@/lib/preflight/flow-selection";
-import { passPricingEnabled } from "@/lib/preflight/pass-pricing";
+import { passPricingEnabled, rerunPriceCents } from "@/lib/preflight/pass-pricing";
 import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements-v1";
+import { resolveCanonicalCluster, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal, claimFreePass, attachRunToClaim, releaseFreePass } from "@/lib/preflight/free-grant-cluster";
 import { getRunInternal, parentRunFlows, setParentRun } from "@/lib/preflight/run-report-db";
 import { logEvent } from "@/lib/v-events";
 
@@ -140,6 +141,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   let creditsHeld = 0;
   let heldReservationId: string | null = null;
   let paygHeldCents: number | null = null;
+  let usedFreePass = false; // true when this rerun consumed the lifetime free pass (gate mode 'free')
+  let freeClaimCanonical: string | null = null; // set when we WON the atomic free-pass claim (release on insert failure)
 
   if (passPricingEnabled()) {
     // Per-pass pricing (docs/pricing-verdict-final.md), behind VRAELIS_PASS_PRICING — replaces the legacy
@@ -155,16 +158,35 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
       if (!gate.ok) {
         return NextResponse.json({ error: gate.error, message: gate.message }, { status: gate.status });
       }
-      if (gate.mode === "payg") {
-        const ok = await hold(owner, reservationId, gate.cents, "cent");
+      // Free mode must WIN the atomic cluster claim (closes the concurrent double-spend race). A lost
+      // claim re-prices to PAYG at the RERUN price ($3 x selected, capped). 'unavailable' (table not
+      // migrated) proceeds free — the pre-table status quo. See the app run route for the full rationale.
+      let effectiveMode: typeof gate.mode = gate.mode;
+      let repricedCents = 0;
+      if (gate.mode === "free") {
+        const cluster = await resolveCanonicalCluster(owner);
+        const claim = await claimFreePass(owner, cluster.canonical);
+        if (claim === "already_claimed") {
+          effectiveMode = "payg";
+          repricedCents = rerunPriceCents(flowIds.length);
+        } else {
+          if (claim === "won") freeClaimCanonical = cluster.canonical;
+          effectiveMode = "free";
+        }
+      }
+      if (effectiveMode === "payg") {
+        const cents = gate.mode === "payg" ? gate.cents : repricedCents;
+        const ok = await hold(owner, reservationId, cents, "cent");
         if (!ok) {
-          return NextResponse.json({ error: "insufficient_balance", message: `This targeted rerun costs $${(gate.cents / 100).toFixed(2)}. Add balance to launch it.` }, { status: 402 });
+          return NextResponse.json({ error: "insufficient_balance", message: `This targeted rerun costs $${(cents / 100).toFixed(2)}. Add balance to launch it.` }, { status: 402 });
         }
         // credits_held carries the held amount in the hold's OWN unit (cents here), so the worker's
         // unchanged settlement — refund credits_held via the reservation — settles cent holds too.
-        creditsHeld = gate.cents;
+        creditsHeld = cents;
         heldReservationId = reservationId;
-        paygHeldCents = gate.cents;
+        paygHeldCents = cents;
+      } else if (effectiveMode === "free") {
+        usedFreePass = true; // consume any operator comp + capture a risk signal AFTER the run is created
       }
     }
   } else if (billingBypassAllowed()) {
@@ -186,11 +208,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
 
   if (!created) {
     // creditsHeld is the hold's own amount in its own unit (legacy credits, or cents on flag-on PAYG).
+    // Release a won free claim too, so a queue error never locks the owner out of their free pass.
     if (heldReservationId) await refund(owner, reservationId, creditsHeld);
+    if (freeClaimCanonical) await releaseFreePass(owner, freeClaimCanonical);
     return NextResponse.json({ error: "unavailable", message: "Could not queue the rerun. Try again." }, { status: 503 });
   }
   if ("conflict" in created) {
     if (heldReservationId) await refund(owner, reservationId, creditsHeld);
+    if (freeClaimCanonical) await releaseFreePass(owner, freeClaimCanonical);
     return NextResponse.json({ error: "run_exists", runId: created.runId, status: "queued" }, { status: 409 });
   }
 
@@ -198,6 +223,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
     // Selected-flow units for subscription metering (a targeted rerun consumes only its selected count)
     // + the PAYG cents escrow (audit mirror). Best-effort; metering falls back to flow_ids length.
     await recordRunPassUsage(owner, created.runId, { flowUnits: created.flowCount, heldCents: paygHeldCents });
+    if (usedFreePass) {
+      // Free-pass rerun: link the run to its claim, consume any operator comp (single-use), capture a
+      // hashed risk signal. None block the run; all best-effort. Mirrors the app run route.
+      const canonical = freeClaimCanonical ?? (await resolveCanonicalCluster(owner)).canonical;
+      if (freeClaimCanonical) await attachRunToClaim(freeClaimCanonical, created.runId);
+      await consumeFreeGrantOverride(owner, canonical);
+      await recordFreeGrantRisk({
+        owner, canonical, runId: created.runId,
+        ipHash: hashRiskSignal(req.headers.get("x-forwarded-for")?.split(",")[0] ?? req.headers.get("x-real-ip")),
+        deviceHash: hashRiskSignal(req.headers.get("user-agent")),
+        signal: "free_rerun",
+      });
+    }
   }
 
   // Best-effort provenance: link the new run back to its parent (see setParentRun).

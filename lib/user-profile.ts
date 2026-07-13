@@ -2,6 +2,7 @@
 // stale null returns in auth callbacks where the profile is created mid-flow.
 import type { ReleaseChannel, SummaryStyle } from "./account-session";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "./supabase-admin";
+import { canonicalizeEmail } from "./user-credentials";
 
 export type UserProfileRecord = {
   created_at: string;
@@ -96,7 +97,7 @@ export async function upsertUserProfile(
   const normalizedEmail = normalizeEmail(email);
   const now = new Date().toISOString();
 
-  const payload = {
+  const basePayload = {
     display_name: updates.displayName?.trim() || null,
     early_access_requested_at: updates.earlyAccessRequestedAt ?? null,
     email: normalizedEmail,
@@ -106,19 +107,32 @@ export async function upsertUserProfile(
     updated_at: now,
     work_style: updates.workStyle?.trim() || null,
   };
+  // canonical_email is the free-pass dedup cluster key (migration 9). It is written on EVERY signup path
+  // because syncUserProfileIdentity -> upsertUserProfile runs for OAuth too — this is what closes the
+  // OAuth free-pass hole that user_credentials.canonical_email could not (OAuth never writes credentials).
+  // Same canonicalization rule as the credentials column (single source of truth).
+  const payload = { ...basePayload, canonical_email: canonicalizeEmail(normalizedEmail) };
+  const cols = "created_at, display_name, early_access_requested_at, email, focus_area, release_channel, summary_style, updated_at, work_style";
 
-  const { data, error } = await supabase
+  const upsert = (body: Record<string, unknown>) => supabase
     .from("user_profiles" as never)
-    .upsert(payload as never, {
-      onConflict: "email",
-    })
-    .select(
-      "created_at, display_name, early_access_requested_at, email, focus_area, release_channel, summary_style, updated_at, work_style",
-    )
+    .upsert(body as never, { onConflict: "email" })
+    .select(cols)
     .single();
 
+  let { data, error } = await upsert(payload);
+  // Code-ahead-of-migration resilience: if canonical_email does not exist yet (Postgres 42703), retry
+  // WITHOUT it so profile creation — which runs in the auth login callback on every sign-in — never
+  // breaks. The dedup reader fails closed (routes to PAYG) until the column and backfill land, so this
+  // window is revenue-safe, never free-leaking. Any other error still throws.
+  if (error && (error.code === "42703" || /canonical_email/.test(error.message || ""))) {
+    ({ data, error } = await upsert(basePayload));
+  }
   if (error) {
     throw error;
+  }
+  if (!data) {
+    throw new Error("upsertUserProfile: no row returned");
   }
 
   return normalizeProfileRecord(data);

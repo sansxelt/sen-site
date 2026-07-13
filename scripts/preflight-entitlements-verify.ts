@@ -135,7 +135,9 @@ async function main(): Promise<void> {
       iFlag >= 0 && iGate > iFlag && iGate < iLegacyHold);
     ok(`${name}: exactly one gatePassLaunch call`, count(src, "gatePassLaunch(") === 1);
     ok(`${name}: PAYG holds CENTS via the ledger (unit='cent'), keyed by the same reservation`,
-      src.includes(`await hold(owner, reservationId, gate.cents, "cent")`));
+      // The amount is `cents` (a free-mode launch that loses the atomic claim re-prices to PAYG, so the
+      // held amount is gate.cents OR the reprice) — the invariant is the reservation-keyed 'cent' hold.
+      /await hold\(owner, reservationId, (?:gate\.cents|cents), "cent"\)/.test(src));
     ok(`${name}: failure refunds use the hold's own amount (creditsHeld), covering both units`,
       count(src, "await refund(owner, reservationId, creditsHeld);") === 2 && !src.includes("await refund(owner, reservationId, estCredits);"));
     ok(`${name}: records flow_units on the created run, only under the flag`,

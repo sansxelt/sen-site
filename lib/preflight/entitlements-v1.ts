@@ -16,6 +16,7 @@ import {
   passPricingEnabled, planV1, canRunPass, passPriceCents, rerunPriceCents,
   monthlyWindow, FREE_TIER, PLAN_CATALOG_V1, type PlanV1,
 } from "./pass-pricing";
+import { resolveCanonicalCluster, activeFreeGrantOverride } from "./free-grant-cluster";
 
 function norm(e: string): string { return e.trim().toLowerCase(); }
 function db() { return getSupabaseAdminClient(); }
@@ -142,6 +143,19 @@ async function loadRuns(owner: string, startIso?: string, endIso?: string): Prom
   return (data as unknown as RunRow[]) ?? [];
 }
 
+// Load runs for a SET of owners (the canonical cluster) in one query. `ok` reports whether the read
+// succeeded — the free-pass gate needs to distinguish "no runs" from "could not read", because the
+// former means the pass is available and the latter must fail closed. Unlike loadRuns (which degrades to
+// [] for the always-usable metering paths), this surfaces the error so freePassUsed can fail closed.
+async function loadRunsForOwners(owners: string[]): Promise<{ rows: RunRow[]; ok: boolean }> {
+  if (!isDatabaseConfigured() || owners.length === 0) return { rows: [], ok: false };
+  const uids = owners.map(norm);
+  const { data, error } = await db().from("v_preflight_runs" as never)
+    .select("id, state, failure_code, flow_units, flow_ids").in("user_id", uids).limit(1000);
+  if (error) return { rows: [], ok: false };
+  return { rows: (data as unknown as RunRow[]) ?? [], ok: true };
+}
+
 // Which of these runs executed at least one flow (has a v_flow_runs row). Only queried for the terminal
 // failed/cancelled candidates whose metering depends on it.
 async function executedRunIds(runIds: string[]): Promise<Set<string>> {
@@ -176,12 +190,29 @@ export async function flowUnitsUsedInWindow(owner: string, anchorIso: string, no
   return countMeterableUnits(await toMeterable(rows));
 }
 
-// Has the owner's ONE lifetime free pass been used? True as soon as any run consumed allowance
-// (completed, in-flight, or executed-then-failed) — an infra failure or a cancel before execution never
-// burns the free pass.
+// Has the owner's ONE lifetime free pass been used? The free pass is per REAL INBOX, not per exact email:
+// it is consumed if ANY account in the owner's canonical cluster (you+a@ / you+b@ / dotted Gmail / a
+// Google + a GitHub account on the same inbox) has a run that consumed allowance. This is what closes the
+// OAuth free-pass hole — the cluster is resolved from user_profiles.canonical_email, which OAuth signup
+// now populates.
+//
+// FAIL-CLOSED: if we cannot RELIABLY determine eligibility (cluster resolution unreliable, or the runs
+// read errors), the pass is treated as USED so the launch routes to PAYG rather than leaking a free run.
+// The escape valve is an operator comp (activeFreeGrantOverride): a legitimate user wrongly routed to
+// PAYG by a transient error can be granted a free pass out of band, which short-circuits to "not used".
+//
+// A run consumes allowance when completed, in-flight, or executed-then-failed — an infra failure or a
+// cancel before execution never burns the free pass (runConsumesAllowance).
 export async function freePassUsed(owner: string): Promise<boolean> {
-  const rows = await loadRuns(owner);
-  // Fast path: any completed or in-flight run settles it without touching v_flow_runs.
+  const cluster = await resolveCanonicalCluster(owner);
+  // Operator comp always wins: an explicit grant means the free pass is available regardless of history
+  // or reliability. Checked first so a comped user is never blocked by a fail-closed path.
+  if (await activeFreeGrantOverride(owner, cluster.canonical)) return false;
+  // Cluster resolution unreliable (DB error / column missing) -> cannot trust dedup -> fail closed.
+  if (!cluster.ok) return true;
+  const { rows, ok } = await loadRunsForOwners(cluster.members);
+  if (!ok) return true; // runs read failed -> cannot confirm the pass is unused -> fail closed
+  // Fast path: any completed or in-flight run across the cluster settles it without touching v_flow_runs.
   if (rows.some((r) => r.state !== "failed" && r.state !== "cancelled")) return true;
   return freePassConsumed(await toMeterable(rows));
 }

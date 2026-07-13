@@ -3,9 +3,27 @@
 Scope: billing/entitlement/cost surface under VRAELIS_PASS_PRICING=1. No code changed in this pass.
 This is the founder-facing summary + fix plan; the full agent report has file:line evidence.
 
+## STATUS (2026-07-13)
+
+- BLOCKER 1 (OAuth free-pass farming): FIXED IN CODE, adversarially verified CONFIRMED-CLOSED, all suites
+  green. NOT YET LIVE — activate by applying sql/vraelis-preflight-9-free-grant-dedup.sql THEN deploying
+  (code is deploy-safe ahead of the migration: it fails closed / degrades to the pre-table status quo).
+  What shipped: (a) canonical_email on user_profiles written on EVERY signup path incl. OAuth, so the free
+  pass is per real inbox (cluster), closing the OAuth alias hole; (b) freePassUsed resolves the canonical
+  cluster and FAILS CLOSED to PAYG on any unreliable read; (c) an ATOMIC per-inbox claim
+  (v_free_pass_claims, canonical_email PK) taken before createRun, which closes the concurrent-launch
+  double-spend race an adversarial review caught in the first version (a lost claim re-prices to PAYG,
+  a won claim is released on insert failure, orphans self-heal after 1h); (d) operator comp path
+  (v_free_grant_overrides + admin route /api/v/admin/free-grant) as the fail-closed safety valve for a
+  wrongly-charged legit user; (e) IP/device/ASN captured as SIGNAL ONLY (hashed, never a denial key) in
+  v_free_grant_risk. Tests: scripts/preflight-free-grant-dedup-verify.ts (free:grant:test, 53/53).
+- BLOCKER 2 (dispute/chargeback): NOT STARTED.
+- BLOCKER 3 (cost governor + kill switches): NOT STARTED.
+- Public launch remains BLOCKED until 2 and 3 ship and are adversarially verified.
+
 ## The two pre-launch BLOCKERS (fix before public availability / any ad)
 
-1. OAUTH FREE-PASS FARMING (highest leverage). The lifetime free pass is per lowercased-email owner,
+1. OAUTH FREE-PASS FARMING (highest leverage). [FIXED — see STATUS above.] The lifetime free pass is per lowercased-email owner,
    decided by scanning v_preflight_runs (entitlements-v1.ts freePassUsed). The canonical-email alias dedup
    (register route + user_credentials unique index) covers CREDENTIALS signup ONLY. OAuth signup
    (auth.ts syncUserProfileIdentity) never writes user_credentials.canonical_email, so you+a@gmail /
