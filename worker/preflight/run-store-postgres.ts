@@ -13,6 +13,22 @@ import { issuesFromRun, planReconcile, type Issue, type OpenIssueRef, type Recon
 import { DETERMINISTIC_AUTH_FAILURE } from "./auth-executor";
 import { redactString } from "./redaction";
 
+// Provider/infrastructure failure codes that feed the per-account circuit breaker (blocker 3): a burst of
+// these is the refund/infra loop. This set MUST stay in sync with every code classifyProviderError()
+// (provider-errors.ts) can emit — an allowlist that drifts from the classifier silently defeats the
+// breaker (a 429 capacity error, the most common burst failure, would slip through). Every provider
+// classifier code IS an infra failure (never an app defect: app defects are FAILED flow states like
+// auth_rejected_by_app / a broken journey, which do NOT reach failRun as a code). Plus the two worker
+// auth/infra codes (vault + the mid-flow provider_infra_failure) and lease_expired.
+const PROVIDER_INFRA_FAILURE: ReadonlySet<string> = new Set<string>([
+  // classifyProviderError() outputs — keep exhaustive with provider-errors.ts ProviderErrorCode:
+  "provider_auth_failed", "provider_quota", "provider_capacity", "provider_unavailable",
+  "infra_misconfigured", "session_timeout", "run_error",
+  // worker auth/infra + lease (both the reaper's lease_expired AND the executor's mid-run lease_lost —
+  // a lease-flapping loop is infra churn too):
+  "provider_infra_failure", "worker_vault_failure", "lease_expired", "lease_lost",
+]);
+
 // Owner + billing fields read once per settlement. Missing columns / absent table => null (degrade).
 type RunSettlementRow = {
   user_id?: string | null; application_id?: string | null; contract_id?: string | null;
@@ -213,6 +229,36 @@ export class PostgresRunStore implements RunStore {
       const run = await this.loadRunSettlement(runId);
       if (run) await this.settleCompletion(runId, run);
     } catch (e) { console.warn(`preflight finalize settlement (${runId}):`, (e as Error).message); }
+    // Cost governor (blocker 3): record the run's REAL executed provider time at settlement, in addition
+    // to the conservative launch estimate. The launch estimate drives the fast trip; this reconciles the
+    // ceiling toward true spend. Both rows SUM (conservative OVER-count is the safe direction for a
+    // ceiling — it trips earlier, never later, than reality). Best-effort; never strands the completed run.
+    try { await this.recordRealProviderCost(runId); } catch (e) { console.warn(`preflight cost record (${runId}):`, (e as Error).message); }
+  }
+
+  // Sum the actual executed step durations for a run (real browser time) and record a provider-cost row.
+  // Uses the persisted v_run_steps.ms (real per-step time), so the governor's ceiling reflects genuine
+  // Browserbase seconds rather than only the flat launch estimate.
+  private async recordRealProviderCost(runId: string): Promise<void> {
+    const { data: run } = await this.s.from("v_preflight_runs").select("user_id").eq("id", runId).maybeSingle();
+    const userId = (run as { user_id?: string } | null)?.user_id;
+    if (!userId) return;
+    // Real executed time = sum of step ms across this run's flow runs.
+    const { data: frRows } = await this.s.from("v_flow_runs").select("id").eq("preflight_run_id", runId);
+    const flowRunIds = ((frRows as { id?: string }[] | null) ?? []).map((r) => r.id).filter(Boolean) as string[];
+    if (flowRunIds.length === 0) return;
+    const { data: stepRows } = await this.s.from("v_run_steps").select("ms").in("flow_run_id", flowRunIds);
+    const totalMs = ((stepRows as { ms?: number }[] | null) ?? []).reduce((s, r) => s + (Number(r.ms) || 0), 0);
+    const seconds = Math.ceil(totalMs / 1000);
+    // Rate matches the app-side default (COST_BROWSERBASE_CENTS_PER_MIN, ~2c/min) — worker cannot import
+    // the app env helper cleanly, so it reads the same env var with the same default.
+    const centsPerMin = Number(process.env.COST_BROWSERBASE_CENTS_PER_MIN);
+    const rate = Number.isFinite(centsPerMin) && centsPerMin >= 0 ? centsPerMin : 2;
+    const cents = Math.ceil(seconds / 60) * rate;
+    await this.s.from("v_cost_ledger" as never).insert({
+      user_id: String(userId).trim().toLowerCase(), run_id: runId,
+      browserbase_seconds: seconds, ai_tokens: 0, artifact_bytes: 0, estimated_cents: cents,
+    } as never);
   }
   async failRun(runId: string, code: string, message: string, executedAnyFlow: boolean): Promise<void> {
     const run = await this.loadRunSettlement(runId);
@@ -225,6 +271,15 @@ export class PostgresRunStore implements RunStore {
     const terminal = code === "cancelled" || code === "target_mismatch" || code === "flow_selection_invalid"
       || code === "blocked_by_policy" || DETERMINISTIC_AUTH_FAILURE.has(code) || (run?.attempts ?? 0) >= (run?.max_attempts ?? 3);
     await this.s.from("v_preflight_runs").update({ state: terminal ? "failed" : "queued", failure_code: code, failure_message: message.slice(0, 500), lease_owner: null, lease_expires_at: null }).eq("id", runId);
+    // Cost governor (blocker 3): a PROVIDER/INFRA failure feeds the per-account circuit breaker (3 in 15m
+    // -> OPEN). This is the refund/infra-loop signal — recorded for EVERY infra failure (retry or terminal),
+    // since a fast fail-then-refund churn is exactly what the breaker must catch. App-defect FAILED flows
+    // (auth_rejected_by_app, a broken journey) are NOT infra and are never recorded here. Self-contained
+    // insert via the worker's own client (no app-lib import); best-effort, never blocks settlement.
+    if (run?.user_id && PROVIDER_INFRA_FAILURE.has(code)) {
+      try { await this.s.from("v_provider_attempts" as never).insert({ user_id: String(run.user_id).trim().toLowerCase(), run_id: runId, outcome: "infra_failure" } as never); }
+      catch (e) { console.warn(`preflight infra-attempt (${runId}):`, (e as Error).message); }
+    }
     // Refund the FULL reservation ONLY on a terminal failure where no flow executed (discovery / queue /
     // provider-fail-before-browser). A requeue keeps the hold for the retry; a cancel or lease-loss AFTER
     // work began is charged by retaining the hold ("settle completed work; release the rest" -- the per-run

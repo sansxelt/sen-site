@@ -48,7 +48,8 @@
     "auth:flows:test": "tsx scripts/preflight-auth-flows-verify.ts",
     "flows:authoring:test": "tsx scripts/preflight-flow-authoring-verify.ts",
     "free:grant:test": "tsx scripts/preflight-free-grant-dedup-verify.ts",
-    "dispute:dedupe:test": "tsx scripts/preflight-dispute-dedupe-verify.ts"
+    "dispute:dedupe:test": "tsx scripts/preflight-dispute-dedupe-verify.ts",
+    "cost:governor:test": "tsx scripts/preflight-cost-governor-verify.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

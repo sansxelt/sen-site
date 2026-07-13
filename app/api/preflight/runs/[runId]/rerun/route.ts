@@ -29,6 +29,7 @@ import { estimateRunCredits, selectFailedFlows } from "@/lib/preflight/flow-sele
 import { passPricingEnabled, rerunPriceCents } from "@/lib/preflight/pass-pricing";
 import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements-v1";
 import { resolveCanonicalCluster, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal, claimFreePass, attachRunToClaim, releaseFreePass } from "@/lib/preflight/free-grant-cluster";
+import { isRunsGovernorPaused, globalActiveRunsAtCap, checkAccountVelocity, recordProviderAttempt, recordProviderCost, maybeTripGlobalBudget, estimateProviderCents } from "@/lib/preflight/cost-governor";
 import { getRunInternal, parentRunFlows, setParentRun } from "@/lib/preflight/run-report-db";
 import { logEvent } from "@/lib/v-events";
 
@@ -51,10 +52,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   if (runsDisabled()) {
     return NextResponse.json({ error: "runs_paused", message: "New Production Passes are temporarily paused. Existing reports remain available." }, { status: 503 });
   }
+  // Cost-governor auto-pause (blocker 3): DB-durable, survives redeploys. Same behavior as the env kill
+  // switch — new runs paused, reports untouched. Checked BEFORE billing.
+  if (await isRunsGovernorPaused()) {
+    return NextResponse.json({ error: "runs_paused", message: "New Production Passes are temporarily paused. Existing reports remain available." }, { status: 503 });
+  }
+  // Global in-flight brake (blocker 3, Finding 2): bounds how far a burst can outrun the cost auto-pause.
+  if (await globalActiveRunsAtCap()) {
+    return NextResponse.json({ error: "runs_busy", message: "Vraelis is at capacity right now. Please try again in a moment." }, { status: 503 });
+  }
   const email = (await auth())?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const owner = email.toLowerCase();
   const { runId: parentRunId } = await params;
+
+  // Per-account velocity cap + circuit breaker (blocker 3): stops the refund/infra loop before billing.
+  {
+    const v = await checkAccountVelocity(owner);
+    if (v) return NextResponse.json({ error: v.reason, message: v.message }, { status: 429, headers: { "Retry-After": String(v.retryAfterSec) } });
+  }
 
   if (!(await preflightDbReady())) {
     return NextResponse.json({ error: "setup_required", message: "Preflight is not fully set up yet." }, { status: 503 });
@@ -246,5 +262,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
     route: `/api/preflight/runs/${parentRunId}/rerun`,
     metadata: { application_id: parent.applicationId, parent_run_id: parentRunId, run_id: created.runId, flow_count: created.flowCount, credits_held: creditsHeld },
   });
+
+  // Cost governor (blocker 3): record the provider-session attempt + a conservative launch-time cost
+  // estimate, then evaluate the ceilings and auto-pause at 100%. Mirrors the app run route.
+  await recordProviderAttempt(owner, created.runId, "session");
+  await recordProviderCost({ owner, runId: created.runId, browserbaseSeconds: created.flowCount * 60, estimatedCents: estimateProviderCents({ browserbaseSeconds: created.flowCount * 60 }) });
+  await maybeTripGlobalBudget();
+
   return NextResponse.json({ runId: created.runId, status: "queued", flowCount: created.flowCount });
 }
