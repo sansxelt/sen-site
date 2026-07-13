@@ -8,6 +8,15 @@
     ?mode=broken            (default) persistence fails + mobile nav overlay
     ?mode=partially_fixed   persistence works + mobile nav overlay remains
     ?mode=fixed             everything passes
+    ?mode=auth              a REAL login gate for the S6 authenticated-flow canary:
+                            the dashboard is hidden until a correct test credential
+                            signs in; wrong passwords are genuinely rejected; a
+                            signed-in-only element + a sign-out action are present.
+                            Test-only credential (published on purpose, no secret):
+                              email:    tester@vraelis-fixture.test
+                              password: FixturePass123
+                            Auth is client-side + in-memory only (sessionStorage),
+                            no backend, no real accounts, no production data.
 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -272,10 +281,64 @@
       margin: 0;
     }
   }
+
+  /*
+    ---- Auth mode (S6 canary) ----
+    A real login gate: the dashboard <main> is hidden until a correct credential
+    signs in. sessionStorage holds only a "signed in" flag (never the password).
+    The signed-in view shows an authenticated-only element (#account-badge) and a
+    real sign-out control (#signout-btn). Wrong passwords are genuinely rejected.
+  */
+  .auth-card {
+    max-width: 380px;
+    margin: 40px auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .auth-card h2 { margin: 0 0 4px; font-size: 20px; }
+  .auth-card p.sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+  .auth-card label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 0 6px; }
+  .auth-card input {
+    width: 100%; padding: 10px 12px; font-size: 15px; border: 1px solid var(--line);
+    border-radius: 8px; background: #fff; color: var(--ink);
+  }
+  .auth-card input:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); }
+  .auth-card .btn-signin {
+    appearance: none; border: none; background: var(--brand); color: var(--brand-ink);
+    font-size: 15px; font-weight: 600; padding: 11px 16px; border-radius: 8px; cursor: pointer;
+    width: 100%; margin-top: 18px;
+  }
+  .auth-error {
+    display: none; margin-top: 14px; color: #b3261e; background: #fdeceb;
+    border: 1px solid #f4c7c3; border-radius: 8px; padding: 9px 12px; font-size: 13px;
+  }
+  .auth-error.show { display: block; }
+  #account-badge {
+    font-size: 12px; color: var(--ok); border: 1px solid #bfe6cd; background: #edfaf1;
+    border-radius: 999px; padding: 3px 10px; white-space: nowrap;
+  }
+  .btn-signout {
+    appearance: none; background: transparent; border: 1px solid rgba(248,250,252,0.35);
+    color: var(--nav-ink); border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer;
+  }
+  /* In auth mode, hide the dashboard until signed in; hide the login card once signed in. */
+  body.mode-auth main { display: none; }
+  body.mode-auth.signed-in main { display: block; }
+  body.mode-auth.signed-in #auth-gate { display: none; }
+  /* The account badge + sign-out live in the nav, only when signed in. */
+  #auth-nav { display: none; gap: 10px; align-items: center; }
+  body.mode-auth.signed-in #auth-nav { display: flex; }
+  body:not(.mode-auth) #auth-gate { display: none; }
 </style>
 
 <nav class="topnav" aria-label="Primary">
   <span class="brand">Vraelis Fixture Dashboard</span>
+  <span id="auth-nav">
+    <span id="account-badge" role="status">Signed in as tester</span>
+    <button type="button" class="btn-signout" id="signout-btn">Sign out</button>
+  </span>
   <button
     type="button"
     class="hamburger"
@@ -285,6 +348,21 @@
     aria-expanded="false"
   >&#9776;</button>
 </nav>
+
+<!-- Auth mode login gate (only shown when ?mode=auth and not signed in). A real form:
+     the dashboard stays hidden until the correct test credential authenticates. -->
+<section class="auth-card" id="auth-gate" aria-label="Sign in">
+  <h2>Sign in</h2>
+  <p class="sub">Sign in to view your projects.</p>
+  <form id="login-form" novalidate>
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" autocomplete="username" placeholder="you@example.com" />
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autocomplete="current-password" placeholder="Your password" />
+    <button type="submit" class="btn-signin" id="signin-btn">Sign in</button>
+  </form>
+  <div class="auth-error" id="auth-error" role="alert">Incorrect email or password.</div>
+</section>
 <div class="navlinks" id="navlinks" role="menu" aria-label="Navigation">
   <a href="#" role="menuitem">Overview</a>
   <a href="#" role="menuitem">Settings</a>
@@ -324,8 +402,15 @@
   (function () {
     "use strict";
 
-    var ALLOWED = ["broken", "partially_fixed", "fixed"];
+    var ALLOWED = ["broken", "partially_fixed", "fixed", "auth"];
     var STORAGE_KEY = "vraelis-fixture-projects";
+    var AUTH_FLAG = "vraelis-fixture-signed-in";
+
+    // The ONE test-only credential this fixture accepts. Published on purpose: it is
+    // not a secret, guards nothing real, and exists solely so the S6 canary can prove
+    // a real login. The password is NEVER stored; only a boolean "signed in" flag is.
+    var TEST_EMAIL = "tester@vraelis-fixture.test";
+    var TEST_PASSWORD = "FixturePass123";
 
     var params = new URLSearchParams(window.location.search);
     var mode = params.get("mode");
@@ -333,6 +418,46 @@
       mode = "broken"; // default
     }
     document.body.classList.add("mode-" + mode);
+
+    // ---- Auth mode: a real login gate (client-side, in-memory, no backend) ----
+    if (mode === "auth") {
+      var loginForm = document.getElementById("login-form");
+      var emailEl = document.getElementById("email");
+      var passwordEl = document.getElementById("password");
+      var authError = document.getElementById("auth-error");
+      var signoutBtn = document.getElementById("signout-btn");
+
+      function isSignedIn() {
+        try { return window.sessionStorage.getItem(AUTH_FLAG) === "1"; } catch (e) { return false; }
+      }
+      function reflectSignedIn() {
+        document.body.classList.toggle("signed-in", isSignedIn());
+      }
+      // Session is per-tab and cleared on sign-out; a reset browser context starts signed out.
+      reflectSignedIn();
+
+      loginForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var email = (emailEl.value || "").trim().toLowerCase();
+        var pw = passwordEl.value || "";
+        // Real check: only the exact test credential authenticates. Wrong password is rejected.
+        if (email === TEST_EMAIL && pw === TEST_PASSWORD) {
+          try { window.sessionStorage.setItem(AUTH_FLAG, "1"); } catch (e2) {}
+          // Never keep the password anywhere: clear the field immediately.
+          passwordEl.value = "";
+          authError.classList.remove("show");
+          reflectSignedIn();
+        } else {
+          authError.classList.add("show");
+          passwordEl.value = "";
+        }
+      });
+
+      signoutBtn.addEventListener("click", function () {
+        try { window.sessionStorage.removeItem(AUTH_FLAG); } catch (e) {}
+        reflectSignedIn();
+      });
+    }
 
     // Persistence is real: 'broken' keeps records in memory only (a refresh
     // loses them), the other modes write to localStorage.

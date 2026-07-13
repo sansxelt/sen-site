@@ -37,6 +37,14 @@ target one mode by URL:
 - `?mode=broken` (default) - persistence failure **and** mobile nav overlay.
 - `?mode=partially_fixed` - persistence works; mobile nav overlay remains.
 - `?mode=fixed` - everything passes.
+- `?mode=auth` - a **real login gate** for the S6 authenticated-flow canary. The
+  dashboard is hidden behind a genuine email + password form; only the published
+  test-only credential (`tester@vraelis-fixture.test` / `FixturePass123`) signs in,
+  wrong passwords are rejected, and a signed-in-only badge plus a real sign-out
+  control appear once authenticated. Client-side and in-memory (sessionStorage holds
+  only a "signed in" flag, never the password); no backend, no real account, no
+  production data. The credential is not a secret: it guards nothing real and exists
+  only so Vraelis can prove a real login end to end.
 
 Examples:
 
