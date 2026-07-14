@@ -31,6 +31,10 @@ function ago(iso: string): string {
 // Decision + status tones (the shared decision palette: ready / needs_review / blocked / muted).
 type Tone = { label: string; color: string; bg: string; border: string };
 const TONE_READY = { color: "var(--acc-deep)", bg: "var(--acc-soft)", border: "var(--acc-line)" };
+// REPAIR VERIFIED is POSITIVE but PROVISIONAL — verified, yet not launch-cleared. It must read distinctly
+// from the solid READY green at a glance (founder: keep REPAIR VERIFIED visibly distinct from READY), so it
+// uses the teal accent TINT rather than the full ready green.
+const TONE_REPAIR = { color: "#0A7B54", bg: "var(--accent-dim, #E8FBF6)", border: "var(--accent-border, #B7EFE4)" };
 const TONE_REVIEW = { color: "#B45309", bg: "#FEF6E7", border: "#F3DFB0" };
 const TONE_BLOCKED = { color: "#C0392B", bg: "#FBEBEA", border: "#F0C7C2" };
 const TONE_MUTED = { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--line-2)" };
@@ -39,7 +43,7 @@ const TONE_MUTED = { color: "var(--fg-4)", bg: "var(--bg-2)", border: "var(--lin
 // never left saying IN PROGRESS.
 function runTone(decision: string | null, state: string): Tone {
   if (decision === "ready") return { label: "READY", ...TONE_READY };
-  if (decision === "repair_verified") return { label: "REPAIR VERIFIED", ...TONE_READY };
+  if (decision === "repair_verified") return { label: "REPAIR VERIFIED", ...TONE_REPAIR };
   if (decision === "needs_review") return { label: "NEEDS REVIEW", ...TONE_REVIEW };
   if (decision === "blocked") return { label: "BLOCKED", ...TONE_BLOCKED };
   if (state === "cancelled") return { label: "CANCELLED", ...TONE_MUTED };

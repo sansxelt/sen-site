@@ -49,6 +49,8 @@ function timeAgo(iso: string | null | undefined): string {
 // The launch-decision tones. Every status carries its label in text; color never stands alone.
 type Tone = { fg: string; bg: string; line: string };
 const TONE_READY: Tone = { fg: "var(--acc-deep)", bg: "var(--acc-soft)", line: "var(--acc-line)" };
+// REPAIR VERIFIED: positive but provisional (not launch-cleared) — distinct from the solid READY green.
+const TONE_REPAIR: Tone = { fg: "#0A7B54", bg: "var(--accent-dim, #E8FBF6)", line: "var(--accent-border, #B7EFE4)" };
 const TONE_REVIEW: Tone = { fg: "#B45309", bg: "#FEF6E7", line: "#F3DFB0" };
 const TONE_BLOCKED: Tone = { fg: "#C0392B", bg: "#FBEBEA", line: "#F0C7C2" };
 const TONE_MUTED: Tone = { fg: "var(--fg-4)", bg: "var(--bg-2)", line: "var(--line-2)" };
@@ -176,7 +178,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
   else if (decision === "ready") { hero = TONE_READY; verdict = "READY"; }
   // Only reachable when NO full-coverage pass exists at all (pickHealthRun's honest fallback): the repair
   // is verified, but the application still awaits its first full verification — never "READY".
-  else if (decision === "repair_verified") { hero = TONE_READY; verdict = "REPAIR VERIFIED"; }
+  else if (decision === "repair_verified") { hero = TONE_REPAIR; verdict = "REPAIR VERIFIED"; }
   else if (decision === "needs_review") { hero = TONE_REVIEW; verdict = "NEEDS REVIEW"; }
   else if (decision === "blocked") { hero = TONE_BLOCKED; verdict = "BLOCKED"; }
 
