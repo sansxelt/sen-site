@@ -266,6 +266,21 @@ ok("the FlowEditor uses a ROLE dropdown for sign_in_as/switch_role (a friendly p
 ok("the step builder adds actions from FLOW_ACTIONS via labels (no raw enum shown)",
   flowEditor.includes("FLOW_ACTIONS.map") && flowEditor.includes("ACTION_LABELS[a]"));
 ok("the step builder can reorder (up/down) and remove steps", flowEditor.includes("move(i, -1)") && flowEditor.includes("move(i, 1)") && flowEditor.includes("removeStep("));
+// The "Verify it persisted" macro scaffolds refresh + assert_visible (ONE field to complete), not
+// assert_text (which needs two and would 400 on save if left blank). Regression lock for the review fix.
+// Scope the check to the addPersisted function BODY so unrelated assert_text references elsewhere in the
+// editor (its own step type) don't confuse the negative assertion.
+const addPersistedBody = (flowEditor.match(/function addPersisted\(\)\s*\{[\s\S]*?\n {2}\}/) || [""])[0];
+ok("the persisted-state preset expands to refresh + assert_visible (single field to complete)",
+  addPersistedBody.includes('"refresh"') && addPersistedBody.includes('"assert_visible"') && !addPersistedBody.includes('"assert_text"'));
+// save() surfaces a clear per-step reason for an incomplete step instead of relying on a generic server 400.
+ok("the editor validates step completeness client-side before saving (stepIncompleteReason)",
+  flowEditor.includes("stepIncompleteReason") && /for \(let i = 0; i < steps\.length; i\+\+\)/.test(flowEditor));
+// The pass-preview panel reads the plan NAME (plan.name), never interpolates the PlanV1 object (which would
+// render "[object Object]" to a subscriber). Regression lock for the review fix.
+const passPreview = read("app/rank/app/applications/[id]/contract/pass-preview.tsx");
+ok("the pass preview renders decision.plan.name, never the raw plan object",
+  passPreview.includes("decision.plan.name") && !/\$\{decision\.plan\}/.test(passPreview));
 ok("the FlowsSection has an honest empty state", flowsSection.includes("No flows yet"));
 ok("the FlowsSection lists name, role chip, step count, enabled toggle",
   flowsSection.includes("RoleChip") && flowsSection.includes("step") && flowsSection.includes('type="checkbox"') && flowsSection.includes("toggleEnabled"));

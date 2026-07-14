@@ -144,12 +144,15 @@ export function FlowEditor({
   // "Submit / Save" is a friendly PRESET that produces a normal click step (the worker resolves the button
   // by its accessible label) — no new action type, no raw selector.
   function addSubmit() { setSteps((xs) => (xs.length >= MAX_STEPS ? xs : [...xs, { action: "click", target: "Save", value: "", expect: "" }])); }
-  // "Verify it persisted" is a MACRO that expands to two real steps: refresh, then check the text is still
-  // there. Only adds when BOTH fit under the cap, so the macro can never partially overflow MAX_STEPS.
+  // "Verify it persisted" is a MACRO that expands to two real steps: refresh, then check something is still
+  // visible. assert_visible needs only ONE field (the thing to look for), so the owner has a single blank to
+  // complete after adding it. Only adds when BOTH steps fit under the cap, so the macro can never partially
+  // overflow MAX_STEPS. The scaffolded assert_visible is intentionally blank — the owner names what should
+  // have persisted; save() surfaces a clear per-step reason until they do.
   function addPersisted() {
     setSteps((xs) => (xs.length + 2 > MAX_STEPS ? xs : [...xs,
       { action: "refresh", target: "", value: "", expect: "" },
-      { action: "assert_text", target: "", value: "", expect: "" },
+      { action: "assert_visible", target: "", value: "", expect: "" },
     ]));
   }
   function removeStep(i: number) { setSteps((xs) => xs.filter((_, j) => j !== i)); }
@@ -164,11 +167,31 @@ export function FlowEditor({
     });
   }
 
+  // A client-side, owner-facing reason a step is not ready to save yet — so an incomplete step (e.g. the
+  // "Verify it persisted" preset before its assertion is filled in) gives a message that names the step and
+  // exactly what it needs, instead of a generic server 400. Mirrors validateSteps' required fields; the
+  // server stays authoritative and re-validates.
+  function stepIncompleteReason(s: DraftStep, n: number): string | null {
+    const need = (msg: string) => `Step ${n} (${ACTION_LABELS[s.action]}): ${msg}`;
+    if (needsRole(s.action) && !s.target) return need("choose a role.");
+    if (s.action === "click" || s.action === "assert_visible") { if (!s.target.trim()) return need("name what to act on."); }
+    if (s.action === "fill") { if (!s.target.trim()) return need("name the field."); if (!s.value.trim()) return need("enter the value to type."); }
+    if (s.action === "assert_text") { if (!s.target.trim()) return need("name where to check."); if (!s.expect.trim()) return need("enter the text you expect."); }
+    if (s.action === "assert_url") { if (!s.expect.trim()) return need("enter the path you expect (e.g. /dashboard)."); }
+    return null;
+  }
+
   async function save() {
     if (busy) return;
     const trimmedName = name.trim();
     if (!trimmedName) { setErr("Give the flow a name."); return; }
     if (steps.length === 0) { setErr("Add at least one step."); return; }
+    // Catch incomplete steps up front with a message that points at the exact step (better than a generic
+    // server 400). The "Verify it persisted" preset scaffolds an assertion the owner must complete.
+    for (let i = 0; i < steps.length; i++) {
+      const reason = stepIncompleteReason(steps[i], i + 1);
+      if (reason) { setErr(reason); return; }
+    }
     setBusy(true); setErr(null);
     const packed = steps.map(packStep);
     // Derive the flow's role from its sign-in steps, else the explicit role select (or none). The launch

@@ -1,10 +1,16 @@
 // GET /api/preflight/apps/[id]/pass-preview?flow_ids=<csv>
 //
-// READ-ONLY price + entitlement preview for a Production Pass BEFORE launch. Returns exactly what the
-// launch path (POST .../runs) would decide for the same owner + selected flows, by calling the SAME
-// gatePassLaunch — so the preview can never diverge from the actual charge. Does NOT create a hold, does
-// NOT touch the ledger, does NOT mutate anything. Owner-scoped: identity comes only from the server
-// session; the application must belong to that owner (getApplication) before anything is read.
+// READ-ONLY price + entitlement preview for a Production Pass BEFORE launch. Returns what the launch path
+// (POST .../runs) would decide for the same owner + selected flows, by calling the SAME gatePassLaunch, so
+// the previewed price matches the charge in the normal case. Does NOT create a hold, does NOT touch the
+// ledger, does NOT mutate anything. Owner-scoped: identity comes only from the server session; the
+// application must belong to that owner (getApplication) before anything is read.
+//
+// ONE deliberate non-divergence exception: the preview is non-mutating, so it does NOT take the atomic
+// free-pass claim the launch path takes (claimFreePass). If a concurrent same-inbox launch wins the one
+// lifetime free pass between this preview and the owner's own launch, the preview may have shown "Included"
+// while the launch re-prices to PAYG. That is correct behavior (a preview must never burn the pass just to
+// price it); the launch remains authoritative and the owner is shown the real price at launch.
 
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";

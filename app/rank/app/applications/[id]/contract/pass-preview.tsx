@@ -9,9 +9,13 @@ import { usdFromCents } from "@/lib/preflight/pass-pricing-format";
 // hardcoded string can never drift from the real price (pricing-v1-ui-verify enforces this). The flag is
 // server-side: with pricing off the route returns mode 'legacy' and this shows a neutral "included" note.
 
+// Mirrors the server PassGateDecision (lib/preflight/entitlements-v1.ts). The subscription-ok branch
+// carries the PlanV1 OBJECT (not a string), so plan.name is the display label — interpolating the whole
+// object would render "[object Object]".
+type PlanRef = { key: string; name: string };
 type Decision =
   | { mode: "legacy"; ok: true }
-  | { mode: "subscription"; ok: true; plan: string; unitsAfter: number }
+  | { mode: "subscription"; ok: true; plan: PlanRef; unitsAfter: number }
   | { mode: "subscription"; ok: false; error: string; message: string }
   | { mode: "free"; ok: true }
   | { mode: "payg"; ok: true; cents: number }
@@ -69,7 +73,7 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
     case "subscription":
       if (decision.ok) {
         headline = <span style={price}>Included</span>;
-        note = `On your ${decision.plan} plan. ${decision.unitsAfter} flow ${decision.unitsAfter === 1 ? "unit" : "units"} left this month after this pass.`;
+        note = `On your ${decision.plan.name} plan. ${decision.unitsAfter} flow ${decision.unitsAfter === 1 ? "unit" : "units"} left this month after this pass.`;
       } else {
         headline = <span style={{ ...price, color: "var(--err)" }}>Not available</span>;
         note = decision.message;
