@@ -32,7 +32,11 @@ const ACTION_TO_CLASS: Record<ApiStep["action"], StepClass> = {
   extract: "extract", verify_persisted: "verify_persisted",
 };
 
-export type ApiFetch = (url: string, init: { method: string; headers: Record<string, string>; body?: string }) =>
+// redirect is ALWAYS "manual" (SSRF hardening): safeFetch only validates + pins the FIRST URL's host, so a
+// 30x from the validated target could otherwise redirect to an unvalidated/private host. We never follow
+// redirects; a 30x is surfaced as its status like any other response. Matches every other outbound caller
+// in the codebase (lib/v-webhooks.ts, lib/v-sso.ts, crawl).
+export type ApiFetch = (url: string, init: { method: string; headers: Record<string, string>; body?: string; redirect: "manual" }) =>
   Promise<{ status: number; headers: Record<string, string>; text: string }>;
 
 export type ApiFlowResult = { ok: boolean; steps: StepObservation[]; failedIndex: number | null };
@@ -49,11 +53,28 @@ function maskHeaders(h: Record<string, string>, secretValues: Set<string>): Reco
   }
   return out;
 }
+// JSON keys whose VALUES are credential-bearing regardless of shape — an opaque server-minted token/session
+// id that the vendor-format regex can't recognize. We mask these proactively so a /login response body like
+// {"token":"tok_opaque..."} never lands raw in evidence (redaction review finding).
+const SECRET_JSON_KEYS = /"(token|access_token|refresh_token|id_token|secret|password|passwd|pwd|api[_-]?key|apikey|authorization|auth|session|session_id|sessionid|cookie|bearer|credential|client_secret|private_key)"\s*:\s*"([^"]*)"/gi;
+
 function sanitizeBody(raw: string | undefined, secretValues: Set<string>): string | undefined {
   if (raw == null) return undefined;
-  let s = redactSecretyValue(raw);
+  // 1) mask credential-bearing JSON keys by NAME (catches opaque tokens the shape-regex misses).
+  let s = raw.replace(SECRET_JSON_KEYS, (_m, key: string) => `"${key}":"***"`);
+  // 2) vendor-format shape redaction (sk_/JWT/AKIA/...).
+  s = redactSecretyValue(s);
+  // 3) mask any KNOWN value (configured secret OR runtime-extracted) that appears verbatim.
   for (const sec of secretValues) if (sec && s.includes(sec)) s = s.split(sec).join("***");
   return s.slice(0, MAX_BODY_CHARS);
+}
+
+// Redact a URL path for evidence: run the shape regex AND mask any known secret/extracted value that was
+// interpolated into it (e.g. /reset/{{var:token}} -> a harvested token in the path).
+function sanitizePath(path: string, secretValues: Set<string>): string {
+  let s = redactSecretyValue(path);
+  for (const sec of secretValues) if (sec && s.includes(sec)) s = s.split(sec).join("***");
+  return s;
 }
 
 // Minimal dependency-free JSON path: $.a.b, $.items[0].id, a.b.
@@ -113,6 +134,9 @@ export type RunApiFlowInput = {
 export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult> {
   const steps = input.steps.slice(0, MAX_STEPS);
   const secrets = new Map(Object.entries(input.secrets));
+  // Values to mask in ALL evidence. Starts with the configured vault secrets and GROWS as `extract`
+  // harvests values from responses — a runtime-harvested credential re-injected into a later request
+  // (custom header, path, or body) must be masked wherever it appears (redaction review finding).
   const secretValues = new Set(Object.values(input.secrets).filter(Boolean));
   const vars = new Map<string, unknown>();
   const headers = new Map<string, string>();
@@ -164,9 +188,10 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
         const bodyObj = step.action === "http_request" && step.body != null ? deepSubstitute(step.body, vars, secrets) : undefined;
         const bodyStr = bodyObj != null ? JSON.stringify(bodyObj) : undefined;
         const outHeaders: Record<string, string> = { ...Object.fromEntries(headers), ...(bodyStr ? { "content-type": "application/json" } : {}) };
-        const reqEv = { method, path: resolvedPath, headers: maskHeaders(outHeaders, secretValues), body: sanitizeBody(bodyStr, secretValues) };
+        const safePath = sanitizePath(resolvedPath, secretValues);
+        const reqEv = { method, path: safePath, headers: maskHeaders(outHeaders, secretValues), body: sanitizeBody(bodyStr, secretValues) };
         let res: { status: number; headers: Record<string, string>; text: string };
-        try { res = await input.fetcher(url, { method, headers: outHeaders, body: bodyStr }); }
+        try { res = await input.fetcher(url, { method, headers: outHeaders, body: bodyStr, redirect: "manual" }); }
         catch (e) { obs = rec(false, `request failed: ${(e as Error).message.slice(0, 80)}`, [httpTxnEvidence(iso, reqEv)]); break; }
         let json: unknown = undefined;
         try { json = res.text ? JSON.parse(res.text) : undefined; } catch { /* non-JSON */ }
@@ -174,7 +199,7 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
         const respEv = { status: res.status, headers: maskHeaders(res.headers, secretValues), body: sanitizeBody(res.text, secretValues) };
         const ev = [httpTxnEvidence(iso, reqEv, respEv)];
         if (step.action === "http_request") {
-          obs = rec(true, `${method} ${resolvedPath} -> ${res.status}`, ev);
+          obs = rec(true, `${method} ${safePath} -> ${res.status}`, ev);
         } else {
           const got = readJsonPath(json, step.jsonPath);
           const ok = got.found && (step.equals === undefined || JSON.stringify(got.value) === JSON.stringify(step.equals));
@@ -209,6 +234,9 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
         const got = readJsonPath(lastResponse.json, step.path);
         if (!got.found) { obs = rec(false, `extract: ${step.path} not found`); break; }
         vars.set(step.into, got.value);
+        // Treat every harvested string value as a secret-to-mask: if it is later re-injected into a header,
+        // path, or body it must never appear raw in evidence (redaction review finding).
+        if (typeof got.value === "string" && got.value) secretValues.add(got.value);
         obs = rec(true, `extracted ${step.path} -> ${step.into}`);
         break;
       }

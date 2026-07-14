@@ -124,6 +124,65 @@ async function main() {
       !serialized.includes("Bearer tok_fixture_admin"));
   }
 
+  // REDACTION FINDING 1: an OPAQUE server-minted token (never a configured secret) in a response body must
+  // be redacted by JSON key name — the shape-regex + configured-secret masks would miss it.
+  {
+    const flow: ApiStep[] = [
+      { action: "http_auth", scheme: "bearer", secretRef: "admin_token" },
+      { action: "http_request", method: "POST", path: "/session/new", saveAs: "s" },
+    ];
+    const r = await runApiFlow({ baseUrl: BASE, steps: flow, secrets, fetcher: makeApiFixture("fixed"), clock });
+    // Inspect the actual response-body evidence (the http_txn ref), unescaped.
+    const respBodies = r.steps.flatMap((s) => s.evidence).filter((e) => e.kind === "http_txn").map((e) => JSON.parse(e.ref).response?.body ?? "");
+    ok("REDACTION: an opaque runtime-minted token in a RESPONSE body is redacted (masked by JSON key name)",
+      respBodies.every((b: string) => !b.includes("sess_opaque_9f8e7d6c5b4a3210")) && respBodies.some((b: string) => b.includes('"session_id":"***"')));
+  }
+
+  // REDACTION FINDING 2: a HARVESTED token re-injected into the URL PATH must not appear raw in evidence.
+  {
+    const flow: ApiStep[] = [
+      { action: "http_auth", scheme: "bearer", secretRef: "admin_token" },
+      { action: "http_request", method: "POST", path: "/session/new" },
+      { action: "extract", path: "$.session_id", into: "sid" },
+      { action: "http_request", method: "GET", path: "/reset/{{var:sid}}" },   // harvested token in the PATH
+    ];
+    const r = await runApiFlow({ baseUrl: BASE, steps: flow, secrets, fetcher: makeApiFixture("fixed"), clock });
+    const serialized = JSON.stringify(r.steps);
+    ok("REDACTION: a harvested token re-injected into the URL path is redacted in evidence + detail",
+      !serialized.includes("sess_opaque_9f8e7d6c5b4a3210"));
+  }
+
+  // REDACTION FINDING 2b: a HARVESTED token re-injected into a CUSTOM (non-allowlisted) header must be masked.
+  {
+    const flow: ApiStep[] = [
+      { action: "http_auth", scheme: "bearer", secretRef: "admin_token" },
+      { action: "http_request", method: "POST", path: "/session/new" },
+      { action: "extract", path: "$.session_id", into: "sid" },
+      { action: "set_header", name: "X-Session-Token", value: "{{var:sid}}" },   // custom auth header
+      { action: "http_request", method: "GET", path: "/health" },
+    ];
+    const r = await runApiFlow({ baseUrl: BASE, steps: flow, secrets, fetcher: makeApiFixture("fixed"), clock });
+    const serialized = JSON.stringify(r.steps);
+    ok("REDACTION: a harvested token in a CUSTOM header (X-Session-Token) is masked in evidence",
+      !serialized.includes("sess_opaque_9f8e7d6c5b4a3210"));
+  }
+
+  // SSRF FINDING 3: a 30x redirect from the (validated) target must NOT be followed to the external host.
+  // With redirect:"manual" the fetcher surfaces the 302; the adapter never fetches evil.example.
+  {
+    let followedEvil = false;
+    const trackingFetcher = async (url: string, init: { method: string; headers: Record<string, string>; body?: string; redirect: "manual" }) => {
+      if (new URL(url).host.includes("evil.example")) followedEvil = true;
+      // honor redirect:"manual" by returning the 302 as-is (never chasing location).
+      ok("SSRF: the adapter passes redirect:'manual' to the fetcher", init.redirect === "manual");
+      return makeApiFixture("fixed")(url, init);
+    };
+    const flow: ApiStep[] = [{ action: "http_request", method: "GET", path: "/redirect-away" }];
+    const r = await runApiFlow({ baseUrl: BASE, steps: flow, secrets, fetcher: trackingFetcher, clock });
+    ok("SSRF: a 30x redirect is surfaced as its status (302), the external host is never fetched",
+      r.steps[0].detail.includes("302") && !followedEvil);
+  }
+
   // Unsupported step must be rejected BEFORE any execution/billing — capability gate.
   {
     const supports = (c: StepClass) => API_CAPABILITIES.steps.has(c);

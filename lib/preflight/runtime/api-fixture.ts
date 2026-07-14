@@ -42,10 +42,29 @@ export function makeApiFixture(mode: ApiMode) {
       return json(401, { error: "invalid_credentials" });
     }
 
-    // Redaction trap: echoes back the Authorization header value. The adapter must NEVER let this reach
+    // Redaction trap 1: echoes back the Authorization header value. The adapter must NEVER let this reach
     // evidence unredacted — the canary asserts the token does not appear in the recorded observation.
     if (path === "/echo-auth" && method === "GET") {
       return json(200, { received_authorization: init.headers["Authorization"] || init.headers["authorization"] || "" });
+    }
+
+    // Redaction trap 2: mints a FRESH opaque session token NOT known to the caller as a configured secret.
+    // The adapter must redact it in the response body (by JSON key name) AND anywhere it is later re-injected
+    // (path / custom header) after being extracted. Proves the fix for the "opaque runtime-minted credential"
+    // and "harvested credential re-injected" findings — the token here is never in the test's secret set.
+    if (path === "/session/new" && method === "POST") {
+      return json(200, { session_id: "sess_opaque_9f8e7d6c5b4a3210", note: "use this to reset" });
+    }
+    // Echoes the path back (so a harvested token re-injected into the URL would surface if not redacted).
+    const resetMatch = path.match(/^\/reset\/([^/]+)$/);
+    if (resetMatch && method === "GET") {
+      return json(200, { reset_for: resetMatch[1] });
+    }
+
+    // SSRF trap: returns a 302 redirect to an EXTERNAL host. The adapter must NOT follow it (redirect:manual)
+    // — it should surface the 30x status, never fetch the evil host.
+    if (path === "/redirect-away" && method === "GET") {
+      return { status: 302, headers: { location: "https://evil.example/steal" }, text: "" };
     }
 
     // Everything below requires a valid token.
