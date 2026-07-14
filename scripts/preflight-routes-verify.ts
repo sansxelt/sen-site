@@ -145,6 +145,15 @@ const shell = readFileSync("app/rank/_components/rank-ui.tsx", "utf8");
 ok("rank-ui imports isAppPath from lib/app-routes", /import \{[^}]*isAppPath[^}]*\} from "@\/lib\/app-routes"/.test(shell));
 ok("RankShell inApp check uses isAppPath", shell.includes("isAppPath(pathname)") && !shell.includes('pathname.startsWith("/app")'));
 
+// ── Static: the signed-in app shell is pinned to per-request rendering so auth() can never be served
+//    from a session-less prerendered/cached shell (the signed-out hero + signed-in menu split). Both the
+//    layout (covers every clean-path child) and the Dashboard page (its signed-out branch is the visible
+//    symptom) must export force-dynamic. Regression lock for the session-split fix. ──
+const rankLayout = readFileSync("app/rank/layout.tsx", "utf8");
+const dashPage = readFileSync("app/rank/app/page.tsx", "utf8");
+ok("app/rank/layout.tsx pins force-dynamic (auth() runs per request)", /export const dynamic\s*=\s*"force-dynamic"/.test(rankLayout));
+ok("app/rank/app/page.tsx pins force-dynamic (no session-less prerender of the dashboard)", /export const dynamic\s*=\s*"force-dynamic"/.test(dashPage));
+
 // ── Static: the guard sends logged-out deep links to sign-in with an app-host callback ──
 const guard = readFileSync("lib/v-preflight-guard.ts", "utf8");
 ok("guard builds its signin callback with appHostUrl", guard.includes("appHostUrl(") && /encodeURIComponent\(appHostUrl\(/.test(guard));

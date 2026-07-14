@@ -15,6 +15,12 @@ import { DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
+// Per-request render: this page branches on auth() (signed-in dashboard vs the signed-out "Continue with
+// Google" hero). Without this pin it can be served from a session-less prerendered shell, showing the
+// signed-out hero to a signed-in user while the client-resolved topbar shows the signed-in menu. Belt-
+// and-suspenders with the same export on app/rank/layout.tsx.
+export const dynamic = "force-dynamic";
+
 const headLbl = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--fg-4)", marginBottom: 12 };
 
 const ACTIVE_RUN_STATES = new Set(["queued", "discovering", "running", "analyzing"]);

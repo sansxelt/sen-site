@@ -4,6 +4,14 @@ import { auth } from "@/auth";
 import { humanEvalEnabled } from "@/lib/v-entitlements";
 import { RankShell } from "./_components/rank-ui";
 
+// Pin the whole signed-in app shell to per-request rendering. auth() reads headers() (a request-time
+// API), but with app/rank/app/loading.tsx present and no dynamic config, Vercel can serve a prerendered
+// static shell that saw NO session cookie — which renders the signed-out state and gets cached, so a
+// signed-in visitor sees the "sign in" body while the client-resolved topbar shows the signed-in menu.
+// force-dynamic makes auth() run on every request so the SERVER render is always correct (same fix the
+// repo already uses on account/memory, account/contributors, (site)/contribute).
+export const dynamic = "force-dynamic";
+
 export default async function RankLayout({ children }: { children: ReactNode }) {
   const session = await auth();
   const email = session?.user?.email ?? null;
