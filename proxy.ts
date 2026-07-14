@@ -115,9 +115,12 @@ export default function proxy(req: NextRequest) {
   // 2) Archived / retired -> home.
   if (
     path === "/flip" || path.startsWith("/flip/") ||
-    ["/how", "/automates", "/showcase", "/v"].includes(path) ||
-    path.startsWith("/v/account") || path.startsWith("/v/articles") ||
-    path.startsWith("/v/how") || path.startsWith("/v/demo") || path.startsWith("/v/pricing")
+    ["/how", "/automates", "/showcase"].includes(path) ||
+    // All retired Rank /v/* pages -> home. The legal /v/* vanity paths (privacy/terms/refunds/contact)
+    // are already redirected to their clean paths by VANITY_EXACT above, so they never reach here; this
+    // catch-all closes the gap where /v/automates, /v/showcase, /v/checkout used to fall through and render
+    // the retired product.
+    path === "/v" || path.startsWith("/v/")
   ) {
     return go(req, "/", "redirect");
   }

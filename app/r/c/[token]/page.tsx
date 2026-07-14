@@ -58,7 +58,7 @@ export default async function SharedCheck({ params }: { params: Promise<{ token:
             <div className="empty__icon">∅</div>
             <h3>This report isn&apos;t available</h3>
             <p>The link may have been turned off by its owner, or it never existed.</p>
-            <Link href="/r/check" className="btn">See a sample check</Link>
+            <Link href="/free-report" className="btn">Verify your app with Vraelis</Link>
           </div>
         </div>
       </div>
@@ -72,15 +72,15 @@ export default async function SharedCheck({ params }: { params: Promise<{ token:
 
         <CheckReport result={check.result} title={check.title} createdAt={check.created_at} />
 
-        {/* CTA, the loop: a shared report sends its viewer to run their own. */}
+        {/* CTA, the loop: a shared report sends its viewer to the CURRENT product (Production Pass). */}
         <div style={{ textAlign: "center", marginTop: 40, paddingTop: 28, borderTop: "1px solid var(--line-1)" }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginBottom: 6 }}>Check your own AI output</div>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--fg-1)", marginBottom: 6 }}>Verify your AI-built app before you launch</div>
           <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 auto 16px", maxWidth: 440 }}>
-            Vraelis scores any AI output on your criteria and quotes the exact lines to fix, in about 20 seconds. Your first check is free.
+            Vraelis runs your app&apos;s critical user journeys in a real browser and returns a launch decision with the evidence behind it. Your first Production Pass is free.
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
-            <Link href="/app/checks/new" className="btn btn--lg">Run a free check <span aria-hidden>→</span></Link>
-            <Link href="/r/check" className="btn btn--ghost btn--lg">See a sample</Link>
+            <Link href="/free-report" className="btn btn--lg">Run your first Production Pass, free <span aria-hidden>→</span></Link>
+            <Link href="/how-it-works" className="btn btn--ghost btn--lg">How it works</Link>
           </div>
         </div>
       </div>

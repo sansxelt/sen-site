@@ -5,10 +5,13 @@ import { FREE_REPORT_URL } from "@/lib/links";
 // Public, static sample human-validation report, linked from the home "See a real
 // report" CTA. It mirrors the real /r/[token] report structure with illustrative
 // data, and says so plainly. No real evaluation, no real people, no live numbers.
+// Retired human-validation (Rank) sample. noindex so it is not advertised to search / prospects; the
+// current product is the Production Pass (/free-report, /how-it-works).
 export const metadata = ogMeta({
   title: "Sample validation report",
-  description: "A sample human validation report with real structure and illustrative data. See how real people read back your AI output: the recommendation, why they judged that way, what to change, and an honest method note.",
+  description: "A sample human validation report with real structure and illustrative data.",
   path: "/r/sample",
+  index: false,
 });
 
 const CANDIDATES: [string, string, boolean][] = [

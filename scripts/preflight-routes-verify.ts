@@ -154,6 +154,22 @@ const dashPage = readFileSync("app/rank/app/page.tsx", "utf8");
 ok("app/rank/layout.tsx pins force-dynamic (auth() runs per request)", /export const dynamic\s*=\s*"force-dynamic"/.test(rankLayout));
 ok("app/rank/app/page.tsx pins force-dynamic (no session-less prerender of the dashboard)", /export const dynamic\s*=\s*"force-dynamic"/.test(dashPage));
 
+// ── Static: no prospect-reachable surface points at the RETIRED products (checker /r/check, Rank
+//    /r/sample, /new). The current product entry is /free-report or /how-it-works. ──
+const guideDetail = readFileSync("app/rank/guides/[slug]/page.tsx", "utf8");
+ok("guide detail CTA points at the current product, not the retired /r/check", !guideDetail.includes('href="/r/check"') && guideDetail.includes("/free-report"));
+const sitemapSrc = readFileSync("app/sitemap.ts", "utf8");
+ok("sitemap does NOT advertise the retired /r/check or /r/sample samples", !sitemapSrc.includes('page("/r/check"') && !sitemapSrc.includes('page("/r/sample"'));
+const rCheck = readFileSync("app/r/check/page.tsx", "utf8");
+const rSample = readFileSync("app/r/sample/page.tsx", "utf8");
+ok("the retired /r/check + /r/sample samples are noindex", /index:\s*false/.test(rCheck) && /index:\s*false/.test(rSample));
+const proxySrc2 = readFileSync("proxy.ts", "utf8");
+ok("proxy redirects ALL retired /v/* to home (catch-all, after the legal vanity paths)", /path === "\/v" \|\| path\.startsWith\("\/v\/"\)/.test(proxySrc2));
+const rToken = readFileSync("app/r/[token]/page.tsx", "utf8");
+const rcToken = readFileSync("app/r/c/[token]/page.tsx", "utf8");
+ok("shared report CTAs point at the current product (/free-report), not the retired /new or /app/checks/new",
+  !rToken.includes("app.vraelis.com/new") && !rcToken.includes('href="/app/checks/new"') && rToken.includes("/free-report") && rcToken.includes("/free-report"));
+
 // ── Static: the guard sends logged-out deep links to sign-in with an app-host callback ──
 const guard = readFileSync("lib/v-preflight-guard.ts", "utf8");
 ok("guard builds its signin callback with appHostUrl", guard.includes("appHostUrl(") && /encodeURIComponent\(appHostUrl\(/.test(guard));

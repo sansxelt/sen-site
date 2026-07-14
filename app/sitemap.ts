@@ -25,8 +25,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     page("/how-it-works", 0.8),
     page("/developers", 0.8),
     page("/enterprise", 0.7),
-    page("/r/check", 0.7),      // public sample AI check
-    page("/r/sample", 0.5),     // public sample human-validation report
+    // (removed /r/check and /r/sample — retired AI-checker + human-eval samples; not the current product)
+    page("/free-report", 0.7),
     page("/guides", 0.7, "weekly"),
     ...allGuideSlugs().map((slug) => page(`/guides/${slug}`, 0.6)),
     page("/contact", 0.5),

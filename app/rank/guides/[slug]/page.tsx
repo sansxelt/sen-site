@@ -71,7 +71,7 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
           <p key={i} className="lead-copy" style={{ fontSize: 16, color: "var(--fg-2)", lineHeight: 1.7, margin: "0 0 14px" }}>{p}</p>
         ))}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "22px 0 8px" }}>
-          <Link href="/r/check" className="btn">Check your {guide.outputType.replace(/_/g, " ")}, free <span aria-hidden>→</span></Link>
+          <Link href="/free-report" className="btn">Run your first Production Pass, free <span aria-hidden>→</span></Link>
           <Link href="/how-it-works" className="btn btn--ghost">How Vraelis works</Link>
         </div>
 

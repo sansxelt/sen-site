@@ -8,10 +8,13 @@ import type { EvalResult } from "@/lib/v-evaluator";
 // exact CheckReport component the real product uses, so it can't drift from the live
 // report, with illustrative data on a made-up support reply. Everything here is an
 // example: no real evaluation ran, and it says so plainly at the top and bottom.
+// Retired AI-output checker sample. noindex so it is not advertised to search / prospects; the current
+// product is the Production Pass (/free-report, /how-it-works).
 export const metadata = ogMeta({
   title: "Sample AI output check",
-  description: "A sample AI output check with the real report structure and illustrative data. See what Vraelis returns in ~20 seconds: per-criterion scores, the version to ship, and line-level flags quoted verbatim with a concrete fix.",
+  description: "A sample AI output check with the real report structure and illustrative data.",
   path: "/r/check",
+  index: false,
 });
 
 // Two illustrative versions of a support reply to a double-charged customer. Version A

@@ -36,16 +36,16 @@ function Frame({ children }: { children: ReactNode }) {
     <div className="rank-root">
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px var(--gutter)", borderBottom: "1px solid var(--line-1)", background: "rgba(250,248,244,0.9)" }}>
         <a href="https://vraelis.com" style={{ textDecoration: "none", color: "var(--fg-1)", fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.035em" }}>Vraelis</a>
-        <a href="https://app.vraelis.com/new" className="btn">Run your own evaluation</a>
+        <a href="https://vraelis.com/free-report" className="btn">Verify your app, free</a>
       </nav>
       <div className="wrap" style={{ maxWidth: 820, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 60 }}>{children}</div>
       <footer style={{ borderTop: "1px solid var(--line-1)", background: "var(--bg-2)", position: "relative", overflow: "hidden" }}>
         <div className="glow glow--soft" />
         <div className="wrap" style={{ position: "relative", padding: "clamp(40px, 6vw, 76px) var(--gutter)", textAlign: "center" }}>
           <p className="eyebrow" style={{ justifyContent: "center" }}>Created with Vraelis</p>
-          <div className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 10 }}>Evaluate your creative with <span className="em">real people</span>.</div>
-          <p style={{ fontSize: 15, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 22px" }}>Submit your options and get a decision report before launch.</p>
-          <a href="https://app.vraelis.com/new" className="btn btn--lg">Run your own evaluation →</a>
+          <div className="display" style={{ fontSize: "clamp(1.6rem, 3vw, 2.3rem)", marginBottom: 10 }}>Verify your AI-built app <span className="em">before you launch</span>.</div>
+          <p style={{ fontSize: 15, color: "var(--fg-3)", maxWidth: 440, margin: "0 auto 22px" }}>Run your critical user journeys in a real browser and get a launch decision with evidence.</p>
+          <a href="https://vraelis.com/free-report" className="btn btn--lg">Run your first Production Pass, free →</a>
         </div>
       </footer>
     </div>
@@ -59,7 +59,7 @@ function Unavailable() {
         <div className="empty__icon">∅</div>
         <h3 style={{ fontSize: "1.4rem" }}>This report isn&apos;t available</h3>
         <p>The link may have been disabled by its owner, or it doesn&apos;t exist.</p>
-        <a href="https://vraelis.com" className="btn">Create your own evaluation →</a>
+        <a href="https://vraelis.com/free-report" className="btn">Verify your app with Vraelis →</a>
       </div>
     </Frame>
   );
