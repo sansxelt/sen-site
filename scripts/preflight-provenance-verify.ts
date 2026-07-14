@@ -263,6 +263,13 @@ ok("approveContract still refuses a contract with zero enabled requirements",
 const editor = read("app/rank/app/applications/[id]/contract/contract-editor.tsx");
 ok("the editor's approve button still gates on enabled requirements",
   editor.includes("disabled={busyApprove || enabledCount === 0}"));
+// HF3: requirement wording is editable on a DRAFT via the existing PATCH (updateRequirement accepts
+// `requirement`). The editor only mounts on a draft and the PATCH route rejects edits to an approved
+// contract, so this stays consistent with contract versioning.
+ok("the draft editor can edit a requirement's text (saveEdit -> sendPatch with requirement)",
+  editor.includes("saveEdit") && /sendPatch\(\{ id: r\.id, requirement:/.test(editor));
+ok("the requirement edit reverts optimistically on failure (no silent loss)",
+  /patchLocal\(r\.id, \{ requirement: prev \}\)/.test(editor));
 
 // ── Static: the chips render in both contract surfaces, on-design ──
 console.log("\n── contract UI static ──");

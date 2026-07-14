@@ -58,11 +58,27 @@ export function ContractEditor({ contractId, initial, status, flows, roles }: { 
     setReqs((xs) => xs.map((x) => (x.id === id ? { ...x, ...patch } : x)));
   }
 
-  async function sendPatch(body: { id: string; enabled?: boolean; severity?: Severity }): Promise<boolean> {
+  async function sendPatch(body: { id: string; enabled?: boolean; severity?: Severity; requirement?: string }): Promise<boolean> {
     try {
       const r = await fetch("/api/preflight/requirements", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       return r.ok;
     } catch { return false; }
+  }
+
+  // Inline text edit (HF3): the requirement wording is editable on a DRAFT contract. The PATCH route +
+  // updateRequirement already accept `requirement`; this wires the UI. Optimistic with revert-on-failure.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  function beginEdit(r: ContractRequirement) { setMsg(null); setEditingId(r.id); setEditText(r.requirement); }
+  function cancelEdit() { setEditingId(null); setEditText(""); }
+  async function saveEdit(r: ContractRequirement) {
+    const next = editText.trim();
+    if (!next || next === r.requirement) { cancelEdit(); return; }
+    const prev = r.requirement;
+    patchLocal(r.id, { requirement: next }); // optimistic
+    setEditingId(null);
+    const ok = await sendPatch({ id: r.id, requirement: next });
+    if (!ok) { patchLocal(r.id, { requirement: prev }); setMsg({ kind: "err", text: "Could not save that edit. Your change was reverted." }); }
   }
 
   async function toggleEnabled(r: ContractRequirement) {
@@ -174,9 +190,29 @@ export function ContractEditor({ contractId, initial, status, flows, roles }: { 
                       <ProvenanceChip source={r.source} origin={r.origin} />
                       {!r.enabled ? <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-5)" }}>Disabled</span> : null}
                     </div>
-                    <div style={{ fontSize: 14, color: "var(--fg-1)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.requirement}</div>
+                    {editingId === r.id ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        <textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          aria-label={`Edit requirement text`}
+                          rows={2}
+                          maxLength={2000}
+                          autoFocus
+                          onKeyDown={(e) => { if (e.key === "Escape") cancelEdit(); }}
+                          style={{ width: "100%", padding: "8px 10px", fontSize: 14, color: "var(--fg-1)", background: "var(--bg-1)", border: "1px solid var(--line-2)", borderRadius: "var(--r-sm)", outline: "none", resize: "vertical", fontFamily: "var(--font-sans)" }}
+                        />
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button type="button" className="btn" onClick={() => saveEdit(r)} style={{ padding: "6px 12px", fontSize: 12.5 }}>Save</button>
+                          <button type="button" className="btn btn--ghost" onClick={cancelEdit} style={{ padding: "6px 12px", fontSize: 12.5 }}>Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 14, color: "var(--fg-1)", lineHeight: 1.5, wordBreak: "break-word" }}>{r.requirement}</div>
+                    )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "none" }}>
+                    <button type="button" onClick={() => beginEdit(r)} aria-label={`Edit requirement: ${r.requirement}`} disabled={editingId === r.id} style={{ ...deleteBtnStyle, opacity: editingId === r.id ? 0.4 : 1 }}><Ic d={I.pencil} size={13} sw={1.9} /></button>
                     <select value={r.severity} onChange={(e) => changeSeverity(r, e.target.value as Severity)} aria-label={`Severity for: ${r.requirement}`} style={selectStyle}>
                       {SEVERITIES.map((s) => <option key={s} value={s}>{SEV_LABEL[s]}</option>)}
                     </select>
