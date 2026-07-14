@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Ic, I } from "@/app/rank/_components/icons";
 import type { NextAction, RibbonFact } from "@/lib/preflight/command-center";
+import { LaunchPassButton } from "./launch-button";
 
 // The Application Command Center: one decision strip that answers, in five seconds, what state this
 // release is in and the ONE thing to do next. Not a dashboard — the verdict in its decision tone, a single
@@ -17,15 +18,19 @@ const RIBBON_COLOR: Record<RibbonFact["tone"], string> = {
 };
 
 export function CommandCenter({
-  verdict, subline, tone, action, ribbon,
+  appId, verdict, subline, tone, action, ribbon, launchFlowIds,
 }: {
+  appId: string;
   verdict: string;            // READY / BLOCKED / NEEDS REVIEW / REPAIR VERIFIED / IN PROGRESS / NOT TESTED
   subline: string | null;     // the one honest supporting line for the verdict
   tone: Tone;
   action: NextAction;
   ribbon: RibbonFact[];
+  launchFlowIds: string[];    // the flow ids a LAUNCH action queues (already resolved eligible|critical)
 }) {
   const isQuiet = action.tone === "quiet";
+  // A launch action renders the REAL launch control (posts /runs) — never a link to a page that can't run.
+  const isLaunch = !!action.launch && launchFlowIds.length > 0;
   return (
     <section
       aria-label="Launch decision and next action"
@@ -42,14 +47,18 @@ export function CommandCenter({
         {/* The ONE dominant next action. A quiet (healthy) state uses a ghost button so it doesn't shout. */}
         <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6, maxWidth: 320 }}>
           <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.09em", textTransform: "uppercase", color: tone.fg, opacity: 0.7 }}>Next</div>
-          <Link
-            href={action.href}
-            className={isQuiet ? "btn btn--ghost" : "btn btn--lg"}
-            style={{ display: "inline-flex", alignItems: "center", gap: 9, whiteSpace: "nowrap" }}
-          >
-            {action.label}
-            <span aria-hidden style={{ display: "inline-flex" }}><Ic d={I.back} size={15} sw={2.2} style={{ transform: "scaleX(-1)" }} /></span>
-          </Link>
+          {isLaunch ? (
+            <LaunchPassButton appId={appId} flowIds={launchFlowIds} label={action.label} ghost={isQuiet} />
+          ) : (
+            <Link
+              href={action.href}
+              className={isQuiet ? "btn btn--ghost" : "btn btn--lg"}
+              style={{ display: "inline-flex", alignItems: "center", gap: 9, whiteSpace: "nowrap" }}
+            >
+              {action.label}
+              <span aria-hidden style={{ display: "inline-flex" }}><Ic d={I.back} size={15} sw={2.2} style={{ transform: "scaleX(-1)" }} /></span>
+            </Link>
+          )}
           <p style={{ fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.45, margin: "2px 0 0" }}>{action.why}</p>
         </div>
       </div>

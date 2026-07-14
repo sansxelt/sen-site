@@ -9,7 +9,7 @@ import {
 } from "@/lib/v-applications";
 import { listRunsForApp, issuesResolvedByRun } from "@/lib/preflight/runs-db";
 import { unverifiedNewerDeployment } from "@/lib/preflight/deployments-db";
-import { pickHealthRun } from "@/lib/preflight/target-url";
+import { pickHealthRun, isLaunchHealthCandidate } from "@/lib/preflight/target-url";
 import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
 import { AppTabs } from "./app-tabs";
 import { LaunchPassButton } from "./launch-button";
@@ -220,11 +220,16 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     newerUnverifiedDeploy: !!newerDeploy,
     criticalTotal: critTotal,
     criticalPassed: critPassed,
+    // The latest run counts as full coverage only when it is a real launch-health candidate (a
+    // full-coverage run WITH a decision) — a targeted/partial repair run's subset must not read as coverage.
+    coverageFull: !!latest && !latestActive && isLaunchHealthCandidate(latest),
     deploymentLabel,
     contractVersion: contract?.version ?? null,
   };
   const cmdAction = nextAction(commandState);
   const cmdRibbon = stateRibbon(commandState);
+  // The flow ids a LAUNCH action queues (resolved here; the resolver only says eligible|critical).
+  const cmdLaunchFlowIds = cmdAction.launch?.flowIds === "critical" ? criticalEligibleIds : cmdAction.launch?.flowIds === "eligible" ? eligibleFlowIds : [];
 
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
@@ -249,7 +254,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       {/* ── COMMAND CENTER: the primary operating strip — verdict + the ONE dominant next action + the
           true-facts ribbon. The detailed sections below support it; they never repeat the verdict. ── */}
       <div style={{ marginTop: 8, marginBottom: 22 }}>
-        <CommandCenter verdict={verdict} subline={subParts.length > 0 ? `${subParts.join(". ")}.` : null} tone={hero} action={cmdAction} ribbon={cmdRibbon} />
+        <CommandCenter appId={id} verdict={verdict} subline={subParts.length > 0 ? `${subParts.join(". ")}.` : null} tone={hero} action={cmdAction} ribbon={cmdRibbon} launchFlowIds={cmdLaunchFlowIds} />
       </div>
 
       {/* ── NEW DEPLOYMENT UNVERIFIED (S4): above the verdict, never replacing it. The health decision
