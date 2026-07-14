@@ -14,6 +14,8 @@ import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
 import { AppTabs } from "./app-tabs";
 import { LaunchPassButton } from "./launch-button";
 import { PassPreview } from "./contract/pass-preview";
+import { CommandCenter } from "./command-center";
+import { nextAction, stateRibbon, type CommandState } from "@/lib/preflight/command-center";
 import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Application" };
@@ -195,6 +197,35 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
     .filter((f) => f.enabled && (((f as { review_state?: string }).review_state ?? "approved") === "approved") && f.priority === "critical")
     .map((f) => f.id);
 
+  // ── Command Center: one dominant next action + the true-facts ribbon, from the real state above. ──
+  const deploymentLabel = (() => {
+    const url = latest?.deployment_url ?? app.app_url;
+    if (!url) return null;
+    try { const u = new URL(url); return `${u.host}${u.pathname === "/" ? "" : u.pathname}`; } catch { return url; }
+  })();
+  const commandState: CommandState = {
+    appId: id,
+    contractExists: !!contract,
+    contractApproved,
+    requirementCount: reqCount,
+    flowCount,
+    eligibleFlowCount: eligibleFlowIds.length,
+    criticalEligibleCount: criticalEligibleIds.length,
+    // decision is one of the known verdicts or null; narrow the upstream string to the resolver's union.
+    decision: (decision === "ready" || decision === "blocked" || decision === "needs_review" || decision === "repair_verified") ? decision : null,
+    runActive: latestActive,
+    latestRunId: latest?.id ?? null,
+    blockerCount: blockers.length,
+    repairPendingFullVerify: decision === "repair_verified" || (repairIsSeparate && decision !== "ready"),
+    newerUnverifiedDeploy: !!newerDeploy,
+    criticalTotal: critTotal,
+    criticalPassed: critPassed,
+    deploymentLabel,
+    contractVersion: contract?.version ?? null,
+  };
+  const cmdAction = nextAction(commandState);
+  const cmdRibbon = stateRibbon(commandState);
+
   return (
     <div className="wrap" style={{ maxWidth: 1240, paddingTop: "clamp(24px, 3vw, 40px)", paddingBottom: 80 }}>
       <nav aria-label="Breadcrumb" style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontSize: 13, marginBottom: 14 }}>
@@ -214,6 +245,12 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
       </div>
 
       <AppTabs appId={id} active="overview" />
+
+      {/* ── COMMAND CENTER: the primary operating strip — verdict + the ONE dominant next action + the
+          true-facts ribbon. The detailed sections below support it; they never repeat the verdict. ── */}
+      <div style={{ marginTop: 8, marginBottom: 22 }}>
+        <CommandCenter verdict={verdict} subline={subParts.length > 0 ? `${subParts.join(". ")}.` : null} tone={hero} action={cmdAction} ribbon={cmdRibbon} />
+      </div>
 
       {/* ── NEW DEPLOYMENT UNVERIFIED (S4): above the verdict, never replacing it. The health decision
           below stays pinned to the deployment that was actually tested; this banner only says a newer,
@@ -250,80 +287,41 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         </section>
       ) : null}
 
-      {/* ── PRODUCTION STATUS: the verdict panel ─────────────────────────────────────────────────────── */}
-      <section aria-label="Production status"
-        style={{ borderRadius: "var(--r-xl)", border: `1px solid ${hero.line}`, background: hero.bg, padding: "clamp(22px, 3.2vw, 34px)" }}>
-        <div style={{ fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: hero.fg, marginBottom: 10 }}>
-          Production status
-        </div>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(1.9rem, 3.5vw, 2.6rem)", lineHeight: 1.05, letterSpacing: "-0.02em", color: hero.fg }}>
-          {verdict}
-        </div>
-        {subParts.length > 0 ? (
-          <p style={{ fontSize: 14.5, fontWeight: 500, color: "var(--fg-2)", margin: "12px 0 0", lineHeight: 1.5 }}>{subParts.join(". ")}.</p>
-        ) : null}
-        {latest ? (
-          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "6px 0 0", lineHeight: 1.55, wordBreak: "break-all" }}>
-            {latest.deployment_url ? <>{latestActive ? "Testing deployment" : "Last tested deployment"}: {latest.deployment_url}, </> : null}
-            <span title={when(latest.completed_at ?? latest.created_at)} style={{ whiteSpace: "nowrap" }}>
-              {latest.deployment_url
-                ? (latestActive ? `started ${timeAgo(latest.created_at)}` : `completed ${timeAgo(latest.completed_at ?? latest.created_at)}`)
-                : (latestActive ? `Started ${timeAgo(latest.created_at)}` : `Completed ${timeAgo(latest.completed_at ?? latest.created_at)}`)}
-            </span>
-          </p>
-        ) : null}
-
-        {/* A verified targeted repair NEWER than the launch health: shown separately, never as the verdict.
-            The previous launch health above stands until full verification completes. */}
-        {repairIsSeparate && latestRepair ? (
-          <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--acc-deep)", margin: "12px 0 0", lineHeight: 1.55 }}>
-            Latest repair: {repairResolvedTitles.length ? `${repairResolvedTitles.join(", ")} verified as resolved` : "the selected flows passed and their blockers are verified as resolved"}.{" "}
-            <Link href={`/applications/${id}/passes/${latestRepair.id}`} style={{ color: "var(--acc-deep)" }}>View repair report</Link>
-          </p>
-        ) : null}
-
-        {/* State-aware action row: one primary path per state. */}
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-start", marginTop: 20 }}>
-          {!contractApproved ? (
-            <Link href={`/applications/${id}/contract`} className="btn">{reqCount === 0 ? "Author your Production Contract" : "Review Production Contract"}</Link>
-          ) : latestActive && latest ? (
-            <Link href={`/applications/${id}/passes/${latest.id}`} className="btn">View running pass</Link>
-          ) : decision === "blocked" && latest ? (
-            <>
-              <Link href={`/applications/${id}/passes/${latest.id}`} className="btn">View blockers</Link>
-              {eligibleFlowIds.length > 0 ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run new pass" ghost /> : null}
-            </>
-          ) : decision === "ready" && latest ? (
-            <>
-              <Link href={`/applications/${id}/passes/${latest.id}`} className="btn btn--ghost">View verified pass</Link>
-              {eligibleFlowIds.length > 0 ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run new pass" /> : null}
-            </>
-          ) : decision === "needs_review" && latest ? (
-            <>
-              <Link href={`/applications/${id}/passes/${latest.id}`} className="btn">View report</Link>
-              {eligibleFlowIds.length > 0 ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run new pass" ghost /> : null}
-            </>
-          ) : decision === "repair_verified" && latest ? (
-            <>
-              {criticalEligibleIds.length > 0 ? <LaunchPassButton appId={id} flowIds={criticalEligibleIds} label="Run full critical verification" /> : null}
-              <Link href={`/applications/${id}/passes/${latest.id}`} className="btn btn--ghost">View repair report</Link>
-            </>
-          ) : eligibleFlowIds.length > 0 ? (
-            <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run Production Pass" />
-          ) : (
-            <Link href={`/applications/${id}/contract`} className="btn">Add flows to your contract</Link>
-          )}
-        </div>
-
-        {/* Cost transparency AT the launch point (HF1): the same gate-parity price the pass will charge,
-            shown beside the launch button whenever a pass can be launched here — not just on the Contract
-            tab. Hidden while a run is active (the number is about the NEXT launch, not the running one). */}
-        {contractApproved && !latestActive && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
-          <div style={{ marginTop: 14, maxWidth: 420 }}>
-            <PassPreview appId={id} flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds} />
+      {/* ── TESTED DEPLOYMENT + repair detail: supporting the Command Center verdict, never repeating it.
+          The deployment this decision applies to, when it ran, the run behind it, and the latest repair. ── */}
+      {latest ? (
+        <section aria-label="Tested deployment" style={sectionStyle}>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0, lineHeight: 1.55, wordBreak: "break-all" }}>
+              {latest.deployment_url ? <>{latestActive ? "Testing deployment" : "Last tested deployment"}: {latest.deployment_url}, </> : null}
+              <span title={when(latest.completed_at ?? latest.created_at)} style={{ whiteSpace: "nowrap" }}>
+                {latest.deployment_url
+                  ? (latestActive ? `started ${timeAgo(latest.created_at)}` : `completed ${timeAgo(latest.completed_at ?? latest.created_at)}`)
+                  : (latestActive ? `Started ${timeAgo(latest.created_at)}` : `Completed ${timeAgo(latest.completed_at ?? latest.created_at)}`)}
+              </span>
+            </p>
+            <Link href={`/applications/${id}/passes/${latest.id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--acc-deep)", textDecoration: "none", flex: "none" }}>
+              {latestActive ? "View running pass" : decision === "blocked" ? "View blockers" : decision === "needs_review" ? "View report" : "View pass report"} <span aria-hidden>→</span>
+            </Link>
           </div>
-        ) : null}
-      </section>
+          {/* A verified targeted repair NEWER than the launch health: shown separately, never as the verdict.
+              The previous launch health stands until full verification completes. */}
+          {repairIsSeparate && latestRepair ? (
+            <p style={{ fontSize: 13.5, fontWeight: 600, color: "var(--acc-deep)", margin: "12px 0 0", lineHeight: 1.55 }}>
+              Latest repair: {repairResolvedTitles.length ? `${repairResolvedTitles.join(", ")} verified as resolved` : "the selected flows passed and their blockers are verified as resolved"}.{" "}
+              <Link href={`/applications/${id}/passes/${latestRepair.id}`} style={{ color: "var(--acc-deep)" }}>View repair report</Link>
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
+      {/* Cost + readiness for the NEXT pass (HF1/HF2): the gate-parity price and sign-in readiness, shown
+          where a pass can be launched. Hidden while a run is active (it is about the next launch). */}
+      {contractApproved && !latestActive && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
+        <div style={{ maxWidth: 420 }}>
+          <PassPreview appId={id} flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds} />
+        </div>
+      ) : null}
 
       {/* ── Open blockers: what stands between this app and READY ────────────────────────────────────── */}
       {blockers.length > 0 && latest ? (

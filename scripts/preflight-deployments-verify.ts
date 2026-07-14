@@ -211,14 +211,18 @@ const HEALTH = "app/rank/app/applications/[id]/page.tsx";
 const health = read(HEALTH);
 ok("banner present with honest carry-forward copy",
   health.includes("New deployment unverified") && health.includes("never carried forward to an untested deployment"));
-ok("banner renders ABOVE the verdict hero", (() => {
+ok("banner renders ABOVE the tested-deployment detail (the decision is never carried to an untested deploy)", (() => {
+  // The verdict now lives in the Command Center strip; the newer-deploy banner still renders above the
+  // tested-deployment detail that describes the decision's deployment.
   const banner = health.indexOf('aria-label="New deployment unverified"');
-  const hero = health.indexOf('aria-label="Production status"');
-  return banner !== -1 && hero !== -1 && banner < hero;
+  const detail = health.indexOf('aria-label="Tested deployment"');
+  return banner !== -1 && detail !== -1 && banner < detail;
 })());
-ok("the verdict computation never reads the newer deployment (the banner cannot replace the decision)", (() => {
+ok("the VERDICT computation never reads the newer deployment (the banner cannot replace the decision)", (() => {
+  // Scope strictly to the verdict/hero/subParts block — NOT the later CommandState, which legitimately
+  // reads newerDeploy for the state ribbon (that does not change the decision).
   const start = health.indexOf("let hero");
-  const end = health.indexOf("return (", start);
+  const end = health.indexOf("const criticalEligibleIds", start);
   return start !== -1 && end > start && !health.slice(start, end).includes("newerDeploy");
 })());
 ok("banner carries the change lines and the Run Production Pass CTA (existing LaunchPassButton)", (() => {
