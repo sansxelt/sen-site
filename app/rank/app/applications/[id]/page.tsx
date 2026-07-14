@@ -242,7 +242,9 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           <div style={{ marginTop: 12 }}>
             {eligibleFlowIds.length > 0
               ? <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run Production Pass" />
-              : <Link href={`/applications/${id}/contract`} className="btn">Review Production Contract</Link>}
+              : <Link href={`/applications/${id}/contract`} className="btn">
+                  {reqCount === 0 ? "Author your Production Contract" : contractApproved ? "Add flows to your contract" : "Review Production Contract"}
+                </Link>}
           </div>
         </section>
       ) : null}
@@ -282,7 +284,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
         {/* State-aware action row: one primary path per state. */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-start", marginTop: 20 }}>
           {!contractApproved ? (
-            <Link href={`/applications/${id}/contract`} className="btn">Review Production Contract</Link>
+            <Link href={`/applications/${id}/contract`} className="btn">{reqCount === 0 ? "Author your Production Contract" : "Review Production Contract"}</Link>
           ) : latestActive && latest ? (
             <Link href={`/applications/${id}/passes/${latest.id}`} className="btn">View running pass</Link>
           ) : decision === "blocked" && latest ? (
@@ -308,7 +310,7 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
           ) : eligibleFlowIds.length > 0 ? (
             <LaunchPassButton appId={id} flowIds={eligibleFlowIds} label="Run Production Pass" />
           ) : (
-            <Link href={`/applications/${id}/contract`} className="btn">Review Production Contract</Link>
+            <Link href={`/applications/${id}/contract`} className="btn">Add flows to your contract</Link>
           )}
         </div>
       </section>
@@ -363,8 +365,10 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             </div>
             <div style={{ fontSize: 12.5, color: "var(--fg-3)", marginTop: 4 }}>
               {contract
-                ? `${reqCount} requirement${reqCount === 1 ? "" : "s"}, ${flowCount} flow${flowCount === 1 ? "" : "s"}`
-                : "Contract is being prepared. It will be ready to review shortly."}
+                ? (reqCount === 0
+                    ? "No requirements yet. Open the contract to define what Vraelis should verify."
+                    : `${reqCount} requirement${reqCount === 1 ? "" : "s"}, ${flowCount} flow${flowCount === 1 ? "" : "s"}`)
+                : "Open the contract to define what Vraelis should verify."}
             </div>
           </div>
           {contract ? (

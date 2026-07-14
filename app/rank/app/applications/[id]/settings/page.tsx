@@ -8,6 +8,7 @@ import { listConnections } from "@/lib/preflight/connections-db";
 import { getSetupExtras, readContextSources } from "@/lib/preflight/setup-read";
 import { AppTabs } from "../app-tabs";
 import { EditApplicationForm } from "./edit-application";
+import { DeleteApplication } from "./delete-application";
 import { I, EmptyIcon } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Application settings" };
@@ -229,14 +230,8 @@ export default async function AppSettingsPage({ params }: { params: Promise<{ id
         )}
       </section>
 
-      {/* ── Deletion (honest: not built in the UI yet) ──────────────────────────────────────────────── */}
-      <div className="card" style={{ padding: "clamp(18px, 2.4vw, 24px)", background: "var(--bg-2)", marginTop: 26 }}>
-        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, color: "var(--fg-1)", margin: 0 }}>Deletion</h2>
-        <p style={{ fontSize: 13, color: "var(--fg-3)", lineHeight: 1.55, margin: "8px 0 0" }}>
-          Deleting an application from the UI is coming. Until then, contact support and we&apos;ll remove
-          it for you.
-        </p>
-      </div>
+      {/* ── Deletion (owner-scoped, typed-confirmation, wired to the DELETE route) ────────────────────── */}
+      <DeleteApplication appId={id} appName={app.name} />
     </div>
   );
 }

@@ -174,8 +174,19 @@ ok("the current description (summary source) seeds the form",
   page.includes("readContextSources(") && page.includes('s.kind === "summary"'));
 ok("read-only sections are KEPT below the form (connections summary, boundaries, missing)",
   page.includes("Connections (") && page.includes("Test boundaries") && page.includes("Missing from this application"));
-ok("no longer claims renaming is 'coming' (the form now does it); deletion note stays honest",
-  !page.includes("Renaming an application and deleting") && page.includes("Deleting an application from the UI is coming"));
+ok("no longer claims renaming or deletion is 'coming' (both are built now)",
+  !page.includes("Renaming an application and deleting") && !page.includes("Deleting an application from the UI is coming") && page.includes("<DeleteApplication"));
+
+// The delete control (B3): calls the owner-scoped DELETE route, requires a typed name confirmation, and
+// never trusts the client for ownership (the server re-derives owner + returns 404 on a zero-row delete).
+const del = read("app/rank/app/applications/[id]/settings/delete-application.tsx");
+ok("delete calls the DELETE /api/preflight/apps route (owner-scoped server-side)",
+  del.includes('method: "DELETE"') && del.includes("/api/preflight/apps?id="));
+ok("delete requires a typed-name confirmation before it can fire (no accidental one-click delete)",
+  del.includes("confirmText") && del.includes("matches") && /disabled=\{!matches/.test(del));
+ok("delete surfaces an honest failure and never fakes success", del.includes("was not deleted") || del.includes("Could not delete"));
+ok("delete never sends an owner/user id from the client (server derives it from the session)",
+  !/user_id|owner:|email:/.test(del));
 
 // ── Design rules: no em dash, no middle dot, no emoji in the new copy ──
 console.log("\n── design rules ──");

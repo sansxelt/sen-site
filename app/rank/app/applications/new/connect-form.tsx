@@ -37,6 +37,7 @@ function friendlyError(code: unknown): string {
     case "name_and_url_required": return "Add both an application name and its URL.";
     case "ownership_required": return "Confirm you own or are authorized to test this app.";
     case "invalid_url": return "Enter a public https URL for the deployed app.";
+    case "application_limit": return "You've reached your plan's application limit. Delete an application from its Settings, or upgrade your plan, then try again.";
     case "unavailable": return "Preflight isn't available right now. Try again in a moment.";
     default: return "Something went wrong. Try again.";
   }

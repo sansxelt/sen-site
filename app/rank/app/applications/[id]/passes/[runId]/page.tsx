@@ -9,6 +9,7 @@ import { runVersionPins, getDeployment, deploymentStoreReady } from "@/lib/prefl
 import { getSnapshot } from "@/lib/preflight/context-snapshots";
 import { SetupRequired } from "../../../setup-required";
 import { RerunButton } from "./rerun-button";
+import { CancelRunButton } from "./cancel-run-button";
 import { CopyButton } from "./copy-button";
 import { AutoRefresh } from "./auto-refresh";
 import { Ic, I, EmptyIcon } from "@/app/rank/_components/icons";
@@ -530,7 +531,11 @@ export default async function RunReportPage({ params }: { params: Promise<{ id: 
               run.decision === "repair_verified"
                 ? <RerunButton appId={id} runId={runId} scope="critical" label="Run full critical verification" />
                 : <RerunButton appId={id} runId={runId} scope={hasFailures ? "failed" : "all"} label={hasFailures ? "Rerun failed flows" : "Run again"} />
-            ) : null}
+            ) : (
+              // Non-terminal run: let the owner stop it (stuck/queued or mis-launched). The worker aborts
+              // cooperatively and its terminal-failure path refunds the hold when no flow executed.
+              <CancelRunButton appId={id} runId={runId} />
+            )}
             <Link href={`/applications/${id}`} className="btn btn--ghost">Back to application</Link>
           </div>
 
