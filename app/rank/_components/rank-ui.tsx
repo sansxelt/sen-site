@@ -194,7 +194,6 @@ function AppTopbar({ email }: { email: string | null }) {
     return () => window.removeEventListener("vraelis:balance", load);
   }, []);
   const planLabel = acct ? (acct.plan === "free" ? "Free" : acct.plan.charAt(0).toUpperCase() + acct.plan.slice(1)) : null;
-  const planInitial = planLabel ? planLabel.slice(0, 1).toUpperCase() : null;
   const balanceLabel = acct ? `$${(Math.max(0, acct.balanceCents) / 100).toFixed(2)}` : null;
   const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
   const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
@@ -204,27 +203,34 @@ function AppTopbar({ email }: { email: string | null }) {
           sidebar's "Back to site" -> https://vraelis.com. Small left nudge centers over the sidebar. */}
       <span style={{ marginLeft: 14, marginTop: 4, display: "inline-flex", alignItems: "center" }}><Brand href="/" /></span>
       <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12, position: "relative" }}>
-        {/* Plan + balance at a glance, right in the bar — no menu dig. Two SEPARATE elements next to each
-            other (per founder): a circular plan badge (its initial) -> /plans, and a rounded credits pill
-            showing the exact balance -> /credits. Hidden until /api/v/me resolves so it never flashes a
-            wrong number. The plan circle matches the avatar's diameter so the three read as a set. */}
+        {/* Plan + balance at a glance, right in the bar — no menu dig. Two matched pills (per founder): the
+            plan by its FULL NAME (accent-tinted, ties to the brand avatar) -> /plans, and the credits pill
+            with a properly-centered coin + exact balance -> /credits. Hidden until /api/v/me resolves so it
+            never flashes a wrong number. Both share height/radius/shadow so they read as one status set. */}
         {planLabel !== null && (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Plan pill — full plan name. Teal tint from the confirmed brand accent tokens
+                (--accent-dim / --accent-border, defined in globals.css). Explicit emerald text
+                (#0A7B54, the brand green the stylesheet itself names) so it stays legible on the
+                cream top bar regardless of theme-token resolution. */}
             <Link
               href="/plans"
               title={`${planLabel} plan`}
               aria-label={`Your plan: ${planLabel}`}
-              style={{ display: "inline-grid", placeItems: "center", width: 34, height: 34, borderRadius: "50%", border: "1px solid var(--line-2)", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)", textDecoration: "none", color: "var(--fg-2)", fontFamily: "var(--font-code)", fontSize: 13, fontWeight: 700, letterSpacing: "0.02em", flex: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--accent-border)", background: "var(--accent-dim)", textDecoration: "none", color: "#0A7B54", fontSize: 12.5, fontWeight: 700, letterSpacing: "0.01em", whiteSpace: "nowrap", flex: "none" }}
             >
-              {planInitial}
+              {planLabel}
             </Link>
+            {/* Credits pill — styling matched to the sibling account button so the two read as a set.
+                Coin icon centered in a fixed square box (its '$' stroke sits left-of-axis in the
+                24x24 path, which is why it looked off-center before). */}
             <Link
               href="/credits"
               title={`Balance ${balanceLabel} — buy more`}
               aria-label={`Credit balance ${balanceLabel}`}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 34, padding: "0 13px 0 11px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)", textDecoration: "none", color: "var(--fg-1)", fontSize: 12.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", flex: "none" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)", textDecoration: "none", color: "var(--fg-1)", fontSize: 12.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", flex: "none" }}
             >
-              <span aria-hidden style={{ display: "inline-flex", color: "var(--fg-4)" }}><Ic d={I.coin} size={13} sw={1.8} /></span>
+              <span aria-hidden style={{ display: "grid", placeItems: "center", width: 15, height: 15, color: "var(--fg-4)", flex: "none" }}><Ic d={I.coin} size={14} sw={1.8} /></span>
               {balanceLabel}
             </Link>
           </div>
