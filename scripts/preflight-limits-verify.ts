@@ -96,12 +96,16 @@ for (const [name, file] of [
   ok("report page keeps the generic line for unknown/absent codes", src.includes("This run stopped before it reached a decision."));
 }
 
-// ── static: the launch button shows the credit estimate + maps the new refusals ──
+// ── static: the launch button no longer guesses a price (cost comes from the gate-parity PassPreview) ──
 {
   // (path updated after the shell rename: apps/[id] -> applications/[id])
   const src = read("app", "rank", "app", "applications", "[id]", "launch-button.tsx");
-  ok("launch button appends the credit estimate from flowIds.length", /flowIds\.length[\s\S]{0,80}credit/.test(src));
-  ok("launch button singular/plural credits", /credit\$\{flowIds\.length === 1 \? "" : "s"\}/.test(src));
+  // HF1: the old "(N credits)" suffix was the LEGACY model and wrong under pass pricing; it was removed so
+  // the button can never show a price that contradicts the actual charge. The authoritative cost is the
+  // PassPreview panel (same gate as launch), rendered beside the button on the Overview + Contract tab.
+  ok("launch button does NOT append a hardcoded credit count", !/credit\$\{flowIds\.length/.test(src) && !/flowIds\.length[\s\S]{0,40}credit/.test(src));
+  ok("cost transparency comes from PassPreview beside the launch button (Overview)",
+    read("app", "rank", "app", "applications", "[id]", "page.tsx").includes("<PassPreview"));
   ok("launch button maps runs_paused + daily_limit inline", src.includes("runs_paused") && src.includes("daily_limit"));
 }
 

@@ -41,14 +41,14 @@ export function LaunchPassButton({ appId, flowIds, label, ghost }: { appId: stri
     }
   }
 
-  // Cost transparency: show the exact hold before the click. Mirrors the server's estimate (1 credit per
-  // selected flow, the flat per-run hold), never an invented number.
-  const display = flowIds.length > 0 ? `${label} (${flowIds.length} credit${flowIds.length === 1 ? "" : "s"})` : label;
-
+  // The button no longer guesses a price. The old "(N credits)" suffix was the LEGACY model and is wrong
+  // under pass pricing (the real cost is a free pass / dollars / a plan's monthly units). The authoritative
+  // cost is shown by the PassPreview panel rendered beside this button, which calls the same gate the
+  // launch takes — so the number the user sees always matches the charge.
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
       <button type="button" className={ghost ? "btn btn--ghost" : "btn"} onClick={run} disabled={busy} style={{ opacity: busy ? 0.6 : 1 }}>
-        {busy ? "Starting…" : display}
+        {busy ? "Starting…" : label}
       </button>
       {err ? <p role="status" aria-live="polite" style={{ fontSize: 12.5, color: "var(--err)", margin: 0, maxWidth: 360 }}>{err}</p> : null}
     </div>

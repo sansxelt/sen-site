@@ -13,6 +13,7 @@ import { pickHealthRun } from "@/lib/preflight/target-url";
 import { listAllIssues, listRepairs } from "@/lib/preflight/overview-db";
 import { AppTabs } from "./app-tabs";
 import { LaunchPassButton } from "./launch-button";
+import { PassPreview } from "./contract/pass-preview";
 import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 export const metadata: Metadata = { title: "Application" };
@@ -313,6 +314,15 @@ export default async function ApplicationDetailPage({ params }: { params: Promis
             <Link href={`/applications/${id}/contract`} className="btn">Add flows to your contract</Link>
           )}
         </div>
+
+        {/* Cost transparency AT the launch point (HF1): the same gate-parity price the pass will charge,
+            shown beside the launch button whenever a pass can be launched here — not just on the Contract
+            tab. Hidden while a run is active (the number is about the NEXT launch, not the running one). */}
+        {contractApproved && !latestActive && (decision === "repair_verified" ? criticalEligibleIds.length > 0 : eligibleFlowIds.length > 0) ? (
+          <div style={{ marginTop: 14, maxWidth: 420 }}>
+            <PassPreview appId={id} flowIds={decision === "repair_verified" ? criticalEligibleIds : eligibleFlowIds} />
+          </div>
+        ) : null}
       </section>
 
       {/* ── Open blockers: what stands between this app and READY ────────────────────────────────────── */}
