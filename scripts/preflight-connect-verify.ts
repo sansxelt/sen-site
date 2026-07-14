@@ -59,6 +59,14 @@ ok("deleteApplication counts deleted rows too", /deleteApplication[\s\S]{0,600}\
 ok("secrets DELETE returns 404 when nothing was revoked", readFileSync("app/api/preflight/apps/[id]/secrets/route.ts", "utf8").includes("Nothing was revoked"));
 // 2. No credential loss on partial failure: every account attempted, failures stay on-page for retry.
 const uiSrc = readFileSync("app/rank/app/applications/new/connect-form.tsx", "utf8");
+// The summary's REQUIRED set must include EVERY field the submit button gates on — otherwise the panel
+// shows "all required complete" while the button is still disabled (the app name was the hidden gate).
+ok("the connect button gates on url + name + ownership (canSubmit)",
+  /canSubmit = urlOk && nameOk && own/.test(uiSrc));
+ok("the REQUIRED summary lists Application name (so it can't say complete while the button is disabled)",
+  uiSrc.includes('summaryRow("Application name", nameOk)') && /requiredDone = .*nameOk \? 1 : 0/.test(uiSrc));
+ok("a disabled connect button explains the first unmet requirement (never a dead button with no reason)",
+  uiSrc.includes("!canSubmit && !busy") && uiSrc.includes("Add an application name to continue"));
 ok("secret storage attempts EVERY account and keeps failures in state for retry",
   uiSrc.includes("storeAccounts") && uiSrc.includes("Retry storing test accounts") && /failed\.map\(\(f\) => f\.account\)/.test(uiSrc));
 const failStart = uiSrc.indexOf("if (failed.length) {");

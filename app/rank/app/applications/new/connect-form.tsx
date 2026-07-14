@@ -187,8 +187,12 @@ export default function ConnectWorkspace() {
   ];
   const recDone = recommended.filter(([, v]) => v).length;
   const urlOk = /^https:\/\/.+\..+/.test(appUrl.trim());
-  const requiredDone = (urlOk ? 1 : 0) + (own ? 1 : 0);
-  const canSubmit = urlOk && name.trim().length > 0 && own && !busy && !createdAppId;
+  const nameOk = name.trim().length > 0;
+  // Application name is REQUIRED to submit (see canSubmit) — count it so the summary can never show
+  // "all required complete" while the button is still disabled for a missing name.
+  const requiredDone = (urlOk ? 1 : 0) + (nameOk ? 1 : 0) + (own ? 1 : 0);
+  const requiredTotal = 3;
+  const canSubmit = urlOk && nameOk && own && !busy && !createdAppId;
 
   function readTextFile(file: File, cb: (name: string, content: string) => void) {
     if (file.size > 300_000) { setErr(`${file.name} is over 300KB. Trim it to the relevant sections.`); return; }
@@ -419,6 +423,7 @@ export default function ConnectWorkspace() {
             <div style={{ display: "grid", gap: 7 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--fg-2)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Required</div>
               {summaryRow("Application URL", urlOk)}
+              {summaryRow("Application name", nameOk)}
               {summaryRow("Ownership authorization", own)}
             </div>
             <div style={{ display: "grid", gap: 7, borderTop: "1px solid var(--line-1)", paddingTop: 10 }}>
@@ -442,10 +447,20 @@ export default function ConnectWorkspace() {
                 <button type="button" className="btn btn--lg" disabled={!canSubmit} onClick={onSubmit} style={{ width: "100%", justifyContent: "center", opacity: canSubmit ? 1 : 0.55 }}>
                   {busy ? "Connecting…" : "Connect application"}
                 </button>
+                {/* Never a dead button with no reason: name the first unmet requirement so the user knows
+                    exactly what to do (the recommended connections are NOT required to continue). */}
+                {!canSubmit && !busy ? (
+                  <p style={{ fontSize: 12, color: "var(--fg-4)", textAlign: "center", margin: "2px 0 0" }}>
+                    {!urlOk ? "Add a valid https application URL to continue."
+                      : !nameOk ? "Add an application name to continue."
+                      : !own ? "Confirm you own or are authorized to test this app."
+                      : "Complete the required fields to continue."}
+                  </p>
+                ) : null}
                 <button type="button" className="btn btn--ghost" onClick={saveDraft} style={{ width: "100%", justifyContent: "center" }}>Save draft</button>
               </>
             )}
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", textAlign: "center" }}>{requiredDone} of 2 required, {recDone} of {recommended.length} recommended</div>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-5)", textAlign: "center" }}>{requiredDone} of {requiredTotal} required, {recDone} of {recommended.length} recommended</div>
           </div>
         </aside>
       </div>
