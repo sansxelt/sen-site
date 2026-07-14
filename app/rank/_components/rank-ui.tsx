@@ -184,17 +184,23 @@ function AppTopbar({ email }: { email: string | null }) {
   // Plan + balance at a glance: read once from /api/v/me (the same source the dashboard uses; no extra
   // DB work — plan and balance are already loaded there). Refetched when a purchase/launch broadcasts
   // "vraelis:balance" so the pill never lies about what's in the account after a top-up or a pass.
-  const [acct, setAcct] = useState<{ plan: string; balanceCents: number } | null>(null);
+  // /api/v/me `balance` is a CREDIT COUNT (lib/v-credits.ts balance() sums unit='credit' rows) — NOT
+  // cents and NOT dollars. Render it as a bare integer count labeled "credits", matching the trusted
+  // surfaces (app/rank/app/credits/page.tsx "credits available"). Do NOT divide by any factor or prefix
+  // with a currency symbol: the top-up RATE lives in credits/page.tsx and is not a per-cent conversion,
+  // and this credit-only sum can't be dollar-formatted anyway.
+  const [acct, setAcct] = useState<{ plan: string; credits: number } | null>(null);
   useEffect(() => {
     const load = () => fetch("/api/v/me").then((r) => (r.ok ? r.json() : null)).then((j) => {
-      if (j && j.signedIn) setAcct({ plan: typeof j.plan_v1 === "string" && j.plan_v1 ? j.plan_v1 : String(j.plan ?? "free"), balanceCents: Number(j.balance ?? 0) });
+      if (j && j.signedIn) setAcct({ plan: typeof j.plan_v1 === "string" && j.plan_v1 ? j.plan_v1 : String(j.plan ?? "free"), credits: Number(j.balance ?? 0) });
     }).catch(() => {});
     load();
     window.addEventListener("vraelis:balance", load);
     return () => window.removeEventListener("vraelis:balance", load);
   }, []);
   const planLabel = acct ? (acct.plan === "free" ? "Free" : acct.plan.charAt(0).toUpperCase() + acct.plan.slice(1)) : null;
-  const balanceLabel = acct ? `$${(Math.max(0, acct.balanceCents) / 100).toFixed(2)}` : null;
+  const creditCount = acct ? Math.max(0, Math.round(acct.credits)) : null;
+  const balanceLabel = creditCount !== null ? creditCount.toLocaleString() : null;
   const item = { display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 9, fontSize: 13.5, color: "var(--fg-2)", textDecoration: "none" } as const;
   const itemIcon = { display: "inline-flex", color: "var(--fg-4)", flex: "none" } as const;
   return (
@@ -226,8 +232,8 @@ function AppTopbar({ email }: { email: string | null }) {
                 24x24 path, which is why it looked off-center before). */}
             <Link
               href="/credits"
-              title={`Balance ${balanceLabel} — buy more`}
-              aria-label={`Credit balance ${balanceLabel}`}
+              title={`${balanceLabel} credits — buy more`}
+              aria-label={`Credit balance: ${balanceLabel} credits`}
               style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 34, padding: "0 14px", borderRadius: 99, border: "1px solid var(--line-2)", background: "var(--bg-1)", boxShadow: "var(--shadow-sm)", textDecoration: "none", color: "var(--fg-1)", fontSize: 12.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap", flex: "none" }}
             >
               <span aria-hidden style={{ display: "grid", placeItems: "center", width: 15, height: 15, color: "var(--fg-4)", flex: "none" }}><Ic d={I.coin} size={14} sw={1.8} /></span>
