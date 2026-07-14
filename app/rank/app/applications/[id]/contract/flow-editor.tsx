@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { TestFlow, Severity } from "@/lib/v-applications";
-import { FLOW_ACTIONS, ACTION_LABELS, AUTH_FLOW_ACTIONS, type FlowAction, type FlowStep } from "@/lib/preflight/flow-steps";
+import { FLOW_ACTIONS, ACTION_LABELS, AUTH_FLOW_ACTIONS, MAX_STEPS, type FlowAction, type FlowStep } from "@/lib/preflight/flow-steps";
 import { Ic, I } from "@/app/rank/_components/icons";
 
 // The MINIMUM real flow editor (S8A): name, optional goal, a role select (the app's test-account roles plus
@@ -27,7 +27,10 @@ const SEV_LABEL: Record<Severity, string> = { critical: "Critical", important: "
 function needsRole(a: FlowAction): boolean { return a === "sign_in_as" || a === "switch_role"; }
 function needsTarget(a: FlowAction): boolean { return a === "navigate" || a === "click" || a === "fill" || a === "assert_visible" || a === "assert_text"; }
 function needsValue(a: FlowAction): boolean { return a === "fill"; }
-function needsExpect(a: FlowAction): boolean { return a === "assert_text"; }
+function needsExpect(a: FlowAction): boolean { return a === "assert_text" || a === "assert_url"; }
+// verify_authenticated / verify_unauthorized OPTIONALLY carry an expected route (stored in value) and an
+// expected on-page element (stored in expect). Both are optional; a bare "verify signed in" still works.
+function optionalVerifyRoute(a: FlowAction): boolean { return a === "verify_authenticated" || a === "verify_unauthorized"; }
 
 // A per-action placeholder for the target field, so the owner knows what to type.
 function targetPlaceholder(a: FlowAction): string {
@@ -37,6 +40,13 @@ function targetPlaceholder(a: FlowAction): string {
   if (a === "assert_visible") return "Your projects (a heading, label, or text you expect to see)";
   if (a === "assert_text") return "Status banner (where to check the text)";
   return "";
+}
+
+// The placeholder for the EXPECT field, whose meaning depends on the action (route vs on-page text).
+function expectPlaceholder(a: FlowAction): string {
+  if (a === "assert_url") return "/dashboard (the path you expect to be on)";
+  if (a === "assert_text") return "Saved (the exact text you expect)";
+  return "Welcome back (optional: text you expect on the page)"; // verify_* element
 }
 
 type DraftStep = { action: FlowAction; target: string; value: string; expect: string };
@@ -51,13 +61,19 @@ function toDraftSteps(flow: TestFlow | null): DraftStep[] {
   });
 }
 
-// Strip a draft step down to the fields its action actually uses, for the POST/PATCH payload.
+// Strip a draft step down to the fields its action actually uses, for the POST/PATCH payload. The server
+// re-validates and re-normalizes, so this only needs to send the right fields per action.
 function packStep(s: DraftStep): FlowStep {
   const out: FlowStep = { action: s.action };
   if (needsRole(s.action)) out.target = s.target;
   else if (needsTarget(s.action) && s.target.trim()) out.target = s.target;
   if (needsValue(s.action) && s.value.trim()) out.value = s.value;
   if (needsExpect(s.action) && s.expect.trim()) out.expect = s.expect;
+  // verify_authenticated / verify_unauthorized: optional route (value) + optional element (expect).
+  if (optionalVerifyRoute(s.action)) {
+    if (s.value.trim()) out.value = s.value;
+    if (s.expect.trim()) out.expect = s.expect;
+  }
   return out;
 }
 
@@ -124,7 +140,18 @@ export function FlowEditor({
 
   function clearDraft() { try { localStorage.removeItem(draftKey); } catch { /* best-effort */ } }
 
-  function addStep() { setSteps((xs) => [...xs, emptyStep()]); }
+  function addStep() { setSteps((xs) => (xs.length >= MAX_STEPS ? xs : [...xs, emptyStep()])); }
+  // "Submit / Save" is a friendly PRESET that produces a normal click step (the worker resolves the button
+  // by its accessible label) — no new action type, no raw selector.
+  function addSubmit() { setSteps((xs) => (xs.length >= MAX_STEPS ? xs : [...xs, { action: "click", target: "Save", value: "", expect: "" }])); }
+  // "Verify it persisted" is a MACRO that expands to two real steps: refresh, then check the text is still
+  // there. Only adds when BOTH fit under the cap, so the macro can never partially overflow MAX_STEPS.
+  function addPersisted() {
+    setSteps((xs) => (xs.length + 2 > MAX_STEPS ? xs : [...xs,
+      { action: "refresh", target: "", value: "", expect: "" },
+      { action: "assert_text", target: "", value: "", expect: "" },
+    ]));
+  }
   function removeStep(i: number) { setSteps((xs) => xs.filter((_, j) => j !== i)); }
   function patchStep(i: number, patch: Partial<DraftStep>) { setSteps((xs) => xs.map((s, j) => (j === i ? { ...s, ...patch } : s))); }
   function move(i: number, dir: -1 | 1) {
@@ -243,7 +270,7 @@ export function FlowEditor({
                   </div>
 
                   {/* per-action fields — a ROLE dropdown for sign_in_as/switch_role (NO password field ever) */}
-                  {(needsRole(s.action) || needsTarget(s.action)) ? (
+                  {(needsRole(s.action) || needsTarget(s.action) || needsExpect(s.action) || optionalVerifyRoute(s.action)) ? (
                     <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10, paddingLeft: 32 }}>
                       {needsRole(s.action) ? (
                         <div style={{ flex: "1 1 220px", minWidth: 0 }}>
@@ -266,10 +293,22 @@ export function FlowEditor({
                           <input id={`step-value-${i}`} value={s.value} onChange={(e) => patchStep(i, { value: e.target.value })} maxLength={400} placeholder="The text to enter (never a password)" style={inputStyle} />
                         </div>
                       ) : null}
+                      {/* verify_authenticated / verify_unauthorized: OPTIONAL expected route (stored in value). */}
+                      {optionalVerifyRoute(s.action) ? (
+                        <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+                          <label style={lab} htmlFor={`step-route-${i}`}>Expected page (optional)</label>
+                          <input id={`step-route-${i}`} value={s.value} onChange={(e) => patchStep(i, { value: e.target.value })} maxLength={400} placeholder="/dashboard (a path on this app)" style={inputStyle} />
+                        </div>
+                      ) : null}
                       {needsExpect(s.action) ? (
                         <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-                          <label style={lab} htmlFor={`step-expect-${i}`}>Expected text</label>
-                          <input id={`step-expect-${i}`} value={s.expect} onChange={(e) => patchStep(i, { expect: e.target.value })} maxLength={400} placeholder="The text you expect to see" style={inputStyle} />
+                          <label style={lab} htmlFor={`step-expect-${i}`}>{s.action === "assert_url" ? "Expected path" : "Expected text"}</label>
+                          <input id={`step-expect-${i}`} value={s.expect} onChange={(e) => patchStep(i, { expect: e.target.value })} maxLength={400} placeholder={expectPlaceholder(s.action)} style={inputStyle} />
+                        </div>
+                      ) : optionalVerifyRoute(s.action) ? (
+                        <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+                          <label style={lab} htmlFor={`step-expect-${i}`}>On-page text (optional)</label>
+                          <input id={`step-expect-${i}`} value={s.expect} onChange={(e) => patchStep(i, { expect: e.target.value })} maxLength={400} placeholder={expectPlaceholder(s.action)} style={inputStyle} />
                         </div>
                       ) : null}
                     </div>
@@ -283,9 +322,15 @@ export function FlowEditor({
             })}
           </ol>
         )}
-        <button type="button" onClick={addStep} className="btn" style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
-          <Ic d={I.plus} size={13} sw={2.2} /> Add step
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <button type="button" onClick={addStep} disabled={steps.length >= MAX_STEPS} className="btn" style={{ display: "inline-flex", alignItems: "center", gap: 7, opacity: steps.length >= MAX_STEPS ? 0.5 : 1 }}>
+            <Ic d={I.plus} size={13} sw={2.2} /> Add step
+          </button>
+          {/* Quick presets built from real steps — no new action types, no raw selectors. */}
+          <button type="button" onClick={addSubmit} disabled={steps.length >= MAX_STEPS} className="btn btn--ghost" style={{ opacity: steps.length >= MAX_STEPS ? 0.5 : 1 }}>+ Submit / Save</button>
+          <button type="button" onClick={addPersisted} disabled={steps.length + 2 > MAX_STEPS} className="btn btn--ghost" style={{ opacity: steps.length + 2 > MAX_STEPS ? 0.5 : 1 }} title="Adds: refresh, then check the text is still there">+ Verify it persisted</button>
+          {steps.length >= MAX_STEPS ? <span style={{ fontSize: 12, color: "var(--fg-4)" }}>Max {MAX_STEPS} steps.</span> : null}
+        </div>
       </div>
 
       {err ? <p role="alert" style={{ fontSize: 13, color: "var(--err)", margin: 0 }}>{err}</p> : null}

@@ -41,13 +41,15 @@ function assertValid(steps: unknown, o = opt): FlowStep[] {
 console.log("── 1. validateSteps: every action accepted with the right fields ──");
 
 // The curated authorable set is exactly the twelve documented actions (no raw selectors / screenshots).
-ok("FLOW_ACTIONS is exactly the twelve curated authorable actions",
+ok("FLOW_ACTIONS is exactly the thirteen curated authorable actions",
   JSON.stringify([...FLOW_ACTIONS].sort()) === JSON.stringify([
-    "assert_text", "assert_visible", "click", "fill", "navigate", "refresh",
+    "assert_text", "assert_url", "assert_visible", "click", "fill", "navigate", "refresh",
     "reset_context", "sign_in_as", "sign_out", "switch_role", "verify_authenticated", "verify_unauthorized",
   ].sort()));
-ok("no raw Playwright actions leak into the authorable set (no select/press/new_context/screenshot/assert_url)",
-  !(["select", "press", "check", "uncheck", "wait_for", "new_context", "screenshot", "assert_url", "wait"] as string[]).some((a) => (FLOW_ACTIONS as readonly string[]).includes(a)));
+// assert_url is a CURATED semantic action ("check the page is on /path"), not a raw Playwright selector —
+// so it is authorable. The genuinely raw actions below must still never be authorable.
+ok("no raw Playwright actions leak into the authorable set (no select/press/new_context/screenshot/wait)",
+  !(["select", "press", "check", "uncheck", "wait_for", "new_context", "screenshot", "wait"] as string[]).some((a) => (FLOW_ACTIONS as readonly string[]).includes(a)));
 ok("every authorable action has an owner-facing label (no raw enum leaks in the UI)",
   FLOW_ACTIONS.every((a) => typeof ACTION_LABELS[a] === "string" && ACTION_LABELS[a].length > 0 && ACTION_LABELS[a] !== a));
 
@@ -57,13 +59,24 @@ ok("navigate: empty target accepted (worker rebases to the app root)", assertVal
 ok("click: needs a target, accepted", assertValid([{ action: "click", target: "Create project" }])[0].target === "Create project");
 ok("assert_visible: needs a target, accepted", assertValid([{ action: "assert_visible", target: "Your projects" }])[0].target === "Your projects");
 ok("assert_text: needs target + expect, accepted", (() => { const s = assertValid([{ action: "assert_text", target: "banner", expect: "Saved" }])[0]; return s.target === "banner" && s.expect === "Saved"; })());
+ok("assert_url: relative expect (route) accepted", (() => { const s = assertValid([{ action: "assert_url", expect: "/dashboard" }])[0]; return s.expect === "/dashboard" && s.target === undefined; })());
 ok("fill: needs target + value, accepted", (() => { const s = assertValid([{ action: "fill", target: "Name", value: "Acme" }])[0]; return s.target === "Name" && s.value === "Acme"; })());
 ok("refresh: no fields, accepted", (() => { const s = assertValid([{ action: "refresh" }])[0]; return s.action === "refresh" && s.target === undefined; })());
 ok("sign_in_as: role in the available set accepted", assertValid([{ action: "sign_in_as", target: "Standard user" }])[0].target === "Standard user");
 ok("switch_role: role in the available set accepted", assertValid([{ action: "switch_role", target: "Admin user" }])[0].target === "Admin user");
 for (const a of ["verify_authenticated", "verify_unauthorized", "sign_out", "reset_context"]) {
-  ok(`${a}: no fields, accepted`, assertValid([{ action: a }])[0].action === a);
+  ok(`${a}: accepted with no fields`, assertValid([{ action: a }])[0].action === a);
 }
+// verify_authenticated / verify_unauthorized: optionally carry an expected route (value) + element (expect),
+// which the worker consumes (execute-run: expect = { route: step.value, element: step.expect }).
+ok("verify_authenticated: optional route(value) + element(expect) preserved", (() => {
+  const s = assertValid([{ action: "verify_authenticated", value: "/dashboard", expect: "Welcome back" }])[0];
+  return s.value === "/dashboard" && s.expect === "Welcome back";
+})());
+ok("verify_unauthorized: optional route(value) preserved", (() => {
+  const s = assertValid([{ action: "verify_unauthorized", value: "/signin" }])[0];
+  return s.value === "/signin";
+})());
 
 // Normalization drops fields the action does not use (no empty strings stored).
 ok("normalization: a click never stores a value/expect even if the client sent them",
@@ -86,6 +99,9 @@ ok("click without a target is rejected", !validateSteps([{ action: "click" }], o
 ok("navigate to an ABSOLUTE url (another origin) is rejected", !validateSteps([{ action: "navigate", target: "https://evil.example/steal" }], opt).ok);
 ok("navigate to a protocol-relative url is rejected", !validateSteps([{ action: "navigate", target: "//evil.example" }], opt).ok);
 ok("navigate to a javascript: url is rejected", !validateSteps([{ action: "navigate", target: "javascript:alert(1)" }], opt).ok);
+ok("assert_url without an expected path is rejected", !validateSteps([{ action: "assert_url" }], opt).ok);
+ok("assert_url to an ABSOLUTE url (another origin) is rejected", !validateSteps([{ action: "assert_url", expect: "https://evil.example/ok" }], opt).ok);
+ok("verify_authenticated with an absolute expected route is rejected", !validateSteps([{ action: "verify_authenticated", value: "https://evil.example" }], opt).ok);
 ok("an empty step list is rejected", !validateSteps([], opt).ok);
 ok("a non-array is rejected", !validateSteps("navigate" as unknown, opt).ok);
 

@@ -17,7 +17,7 @@ import { redactSecretyValue } from "./connections-db";
 // expose raw Playwright selectors as the primary editing experience"). navigate/click/fill/assert_*/refresh
 // are the plain-journey actions; the six auth actions are the S6 semantic auth primitives.
 export const FLOW_ACTIONS = [
-  "navigate", "click", "fill", "assert_visible", "assert_text", "refresh",
+  "navigate", "click", "fill", "assert_visible", "assert_text", "assert_url", "refresh",
   "sign_in_as", "verify_authenticated", "verify_unauthorized", "switch_role", "sign_out", "reset_context",
 ] as const;
 export type FlowAction = (typeof FLOW_ACTIONS)[number];
@@ -133,6 +133,18 @@ export function validateSteps(rawSteps: unknown, opts: { rolesAvailable: string[
         step.expect = expect;
         break;
       }
+      case "assert_url": {
+        // Verify the browser is on the expected route. The worker checks page.url().includes(expect), so
+        // `expect` is a route fragment (e.g. /dashboard). Keep it RELATIVE for the same reason navigate is:
+        // an authored absolute URL on another origin can never be honored, so we reject it to keep the
+        // intent honest and owner-safe.
+        if (!expect) return { ok: false, reason: `Step ${n}: enter the path you expect to be on (e.g. /dashboard).` };
+        if (!isRelativeTarget(expect)) {
+          return { ok: false, reason: `Step ${n}: check a path on this app (e.g. /dashboard), not another website.` };
+        }
+        step.expect = expect;
+        break;
+      }
       case "fill": {
         if (!target) return { ok: false, reason: `Step ${n}: name the field to fill (its label or placeholder).` };
         if (!value) return { ok: false, reason: `Step ${n}: enter the value to type into the field.` };
@@ -140,9 +152,22 @@ export function validateSteps(rawSteps: unknown, opts: { rolesAvailable: string[
         step.value = value;
         break;
       }
-      case "refresh":
       case "verify_authenticated":
-      case "verify_unauthorized":
+      case "verify_unauthorized": {
+        // Optional expectations the worker already consumes (execute-run reads value=expected route,
+        // expect=expected element for these). Both are optional — the bare "verify signed in / signed out"
+        // check still works with neither. When provided, value is a RELATIVE route fragment (same rule as
+        // navigate/assert_url) and expect is element text; both already passed the credential guard above.
+        if (value) {
+          if (!isRelativeTarget(value)) {
+            return { ok: false, reason: `Step ${n}: the expected page must be a path on this app (e.g. /dashboard), not another website.` };
+          }
+          step.value = value;
+        }
+        if (expect) step.expect = expect;
+        break;
+      }
+      case "refresh":
       case "sign_out":
       case "reset_context":
         // No fields: these actions carry no target/value/expect.
@@ -177,6 +202,7 @@ export const ACTION_LABELS: Record<FlowAction, string> = {
   fill: "Fill a field",
   assert_visible: "Check something is visible",
   assert_text: "Check text says",
+  assert_url: "Check the page is",
   refresh: "Refresh the page",
   sign_in_as: "Sign in as a role",
   verify_authenticated: "Verify signed in",

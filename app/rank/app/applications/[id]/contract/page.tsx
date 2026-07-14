@@ -12,6 +12,7 @@ import { NewDraftButton } from "./new-draft-button";
 import { AppTabs } from "../app-tabs";
 import { categoryLabel, SEVERITY_LABELS, SEVERITY_COLORS } from "./labels";
 import { ProvenanceChip } from "./provenance-chip";
+import { PassPreview } from "./pass-preview";
 import { Ic, I, EmptyIcon, DecisionMark } from "@/app/rank/_components/icons";
 
 // The app's test-account role labels (meta.role, falling back to meta.label — the same resolution the
@@ -167,6 +168,14 @@ function ApprovedContract({ appId, contract, reqs, flows }: { appId: string; con
           </ul>
         )}
       </section>
+
+      {/* Pass preview — what a Production Pass over the approved flows would cost / deduct, priced by the
+          same gate as launch. Only shown when there are approved flows to run. */}
+      {approvedFlows.length > 0 ? (
+        <section style={{ marginTop: 28 }}>
+          <PassPreview appId={appId} flowIds={approvedFlows.map((f) => f.id)} />
+        </section>
+      ) : null}
     </div>
   );
 }
