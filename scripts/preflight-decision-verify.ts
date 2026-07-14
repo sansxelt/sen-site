@@ -125,6 +125,10 @@ async function spyRun(selectedFlowIds: unknown, runId: string, deploymentUrl: st
   ok("C: the report renders REPAIR VERIFIED for a repair_verified decision", report.includes('"repair_verified"') && report.includes("REPAIR VERIFIED"));
   ok("C: the report states full verification is still required", report.includes("Full critical verification is still required before this deployment can be marked READY"));
   ok("CTA: the repair-verified report offers Run full critical verification", report.includes('scope="critical"') && report.includes("Run full critical verification"));
+  // Evidence-first: each blocker shows its lineage (new here vs recurring from an earlier run) from the
+  // real first_seen_run field — never fabricated.
+  ok("EVIDENCE: a blocker shows issue lineage (Recurring vs First seen here) from first_seen_run",
+    report.includes("issue.first_seen_run") && report.includes("Recurring") && report.includes("First seen here"));
   const route = readFileSync("app/api/preflight/runs/[runId]/rerun/route.ts", "utf8");
   ok("the rerun route implements the critical scope from the contract's eligible critical flows",
     route.includes('scope === "critical"') && route.includes('priority === "critical"'));

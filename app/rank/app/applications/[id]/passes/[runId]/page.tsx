@@ -234,15 +234,22 @@ function BlockerStory({ issue, index, flowName, screenshotIds, runId }: { issue:
         <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 650, fontSize: "clamp(19px, 2vw, 21px)", lineHeight: 1.35, color: "var(--fg-1)", margin: 0, flex: "1 1 300px", minWidth: 0, wordBreak: "break-word" }}>
           {index + 1}. {issue.title}
         </h3>
-        <div style={{ display: "flex", gap: 7, flex: "none" }}>
+        <div style={{ display: "flex", gap: 7, flex: "none", flexWrap: "wrap" }}>
           <span className="pill" style={{ fontSize: 10.5, color: sevColor, borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{SEV_LABEL[issue.severity] ?? issue.severity}</span>
           <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-3)", borderColor: "var(--line-2)", background: "var(--bg-2)" }}>{catLabel(issue.category)}</span>
+          {/* Issue lineage: is this NEW here or RECURRING from an earlier run? Backed by first_seen_run. */}
+          {issue.first_seen_run && issue.first_seen_run !== runId ? (
+            <span className="pill" style={{ fontSize: 10.5, color: "#B45309", borderColor: "#F3DFB0", background: "#FEF6E7" }} title="This issue was first detected in an earlier run">Recurring</span>
+          ) : (
+            <span className="pill" style={{ fontSize: 10.5, color: "var(--fg-4)", borderColor: "var(--line-2)", background: "var(--bg-2)" }} title="First detected in this run">First seen here</span>
+          )}
         </div>
       </div>
 
       {flowName ? (
         <p style={{ fontSize: 13.5, color: "var(--fg-3)", lineHeight: 1.5, margin: "8px 0 0" }}>
           Vraelis hit this while running the &quot;{flowName}&quot; flow in a real browser.
+          {issue.first_seen_run && issue.first_seen_run !== runId ? " It was first seen in an earlier run and is still present." : ""}
         </p>
       ) : null}
 
