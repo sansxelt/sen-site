@@ -10,6 +10,7 @@
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium webkit",
     "preflight:verify-db": "tsx scripts/preflight-verify-db.ts",
+    "preflight:verify-mig12": "tsx scripts/preflight-verify-migration-12.ts",
     "preflight:worker": "tsx worker/preflight/index.ts",
     "preflight:worker:test": "tsx scripts/preflight-worker-lifecycle-verify.ts",
     "preflight:smoke:browserbase": "tsx scripts/preflight-smoke-browserbase.ts",
