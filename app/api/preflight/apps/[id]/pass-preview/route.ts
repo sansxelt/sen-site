@@ -18,6 +18,8 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getApprovedContract, listFlows } from "@/lib/v-applications";
 import { gatePassLaunch } from "@/lib/preflight/entitlements-v1";
+import { evaluateAuthReadiness, anyAuthenticated, type PreviewFlow } from "@/lib/preflight/auth-preflight";
+import { getSetupExtras } from "@/lib/preflight/setup-read";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,5 +62,24 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const rerun = url.searchParams.get("rerun") === "1";
   const decision = await gatePassLaunch(owner, selectedCount, { rerun });
 
-  return NextResponse.json({ selectedCount, eligibleCount: eligible.length, decision });
+  // Auth-readiness BEFORE the click (HF2): surface whether each signed-in role the selected flows need has
+  // an active, environment-matching, DECRYPTABLE test credential — the SAME evaluateAuthReadiness the launch
+  // path runs, so the user learns a missing/revoked role here instead of as a red error after clicking
+  // Launch. Read-only: the decryptable probe learns a boolean server-side and never returns/logs plaintext.
+  // Only evaluated when a selected flow is authenticated (a plain journey skips it, unchanged).
+  const selectedIds = rawIds.length ? new Set(rawIds.filter((fid) => eligibleIds.has(fid))) : eligibleIds;
+  const selectedFlows: PreviewFlow[] = eligible
+    .filter((f) => selectedIds.has(f.id))
+    .map((f) => ({ flowId: f.id, name: f.name, steps: Array.isArray(f.steps) ? (f.steps as { action: string; target?: string }[]) : [] }));
+  let readiness: { requiresAuth: boolean; ok: boolean; roles: { role: string; ok: boolean; credentialState: string; environmentMatch: boolean; reason?: string }[]; reasons: string[] } | null = null;
+  if (anyAuthenticated(selectedFlows)) {
+    const extras = await getSetupExtras(owner, id);
+    const r = await evaluateAuthReadiness(owner, id, selectedFlows, extras.environment ?? null, extras.boundaries);
+    readiness = {
+      requiresAuth: r.requiresAuth, ok: r.ok, reasons: r.reasons,
+      roles: r.roles.map((x) => ({ role: x.role, ok: x.ok, credentialState: x.credentialState, environmentMatch: x.environmentMatch, reason: x.reason })),
+    };
+  }
+
+  return NextResponse.json({ selectedCount, eligibleCount: eligible.length, decision, readiness });
 }

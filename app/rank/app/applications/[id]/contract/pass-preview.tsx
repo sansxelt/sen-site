@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usdFromCents } from "@/lib/preflight/pass-pricing-format";
 
 // Pass Preview: shows exactly what a Production Pass would cost / deduct for the selected flows BEFORE
@@ -21,7 +22,9 @@ type Decision =
   | { mode: "payg"; ok: true; cents: number; unverified?: boolean }
   | { mode: "frozen"; ok: false; error: string; message: string };
 
-type Preview = { selectedCount: number; eligibleCount: number; decision: Decision };
+type RoleReadiness = { role: string; ok: boolean; credentialState: string; environmentMatch: boolean; reason?: string };
+type Readiness = { requiresAuth: boolean; ok: boolean; roles: RoleReadiness[]; reasons: string[] };
+type Preview = { selectedCount: number; eligibleCount: number; decision: Decision; readiness: Readiness | null };
 
 const box: React.CSSProperties = { border: "1px solid var(--line-2)", borderRadius: "var(--r-md, 12px)", background: "var(--bg-2)", padding: "14px 16px" };
 const lab: React.CSSProperties = { fontFamily: "var(--font-mono)", fontSize: 10.5, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--fg-4)" };
@@ -102,6 +105,31 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
       </div>
       <div style={{ marginTop: 10 }}>{headline}</div>
       {note ? <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: "8px 0 0", lineHeight: 1.5 }}>{note}</p> : null}
+
+      {/* Auth readiness (HF2): shown before the click for a pass whose flows sign in as a role. Each role
+          reads ready / needs attention, so a missing/revoked/env-mismatched test account is caught here
+          rather than as a red error after Launch. Never shows a secret or username. */}
+      {data.readiness && data.readiness.requiresAuth ? (
+        <div style={{ marginTop: 12, borderTop: "1px solid var(--line-1)", paddingTop: 10 }}>
+          <div style={{ ...lab, marginBottom: 6 }}>Sign-in readiness</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {data.readiness.roles.map((r) => (
+              <div key={r.role} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
+                <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", flex: "none", background: r.ok ? "var(--acc-deep, #0A7B54)" : "var(--err)" }} />
+                <span style={{ color: "var(--fg-1)", fontWeight: 600 }}>{r.role}</span>
+                <span style={{ color: r.ok ? "var(--fg-3)" : "var(--err)" }}>
+                  {r.ok ? "ready" : (r.reason || (r.credentialState === "missing" ? "no test account" : r.credentialState === "revoked" ? "account revoked" : !r.environmentMatch ? "environment mismatch" : "not ready"))}
+                </span>
+              </div>
+            ))}
+          </div>
+          {!data.readiness.ok ? (
+            <Link href={`/applications/${appId}/settings/connections`} style={{ display: "inline-block", marginTop: 8, fontSize: 12.5, fontWeight: 600, color: "var(--acc-deep, #0A7B54)", textDecoration: "none" }}>
+              Manage test accounts →
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
