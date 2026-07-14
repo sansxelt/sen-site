@@ -94,6 +94,22 @@ async function main(): Promise<void> {
     const g = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 1, rerun: true });
     ok("PAYG targeted rerun of 1 flow -> $3 (rerunPriceCents)", g.mode === "payg" && g.ok && g.cents === rerunPriceCents(1) && g.cents === 300);
   }
+  // B1 fail-closed transparency: an UNRELIABLE free-pass read routes to PAYG (unchanged) but flags
+  // `unverified` so the UI can say "couldn't verify, try again later" — never implying permanent denial.
+  {
+    const unrel = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 3, freePassReliable: false });
+    const rel = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 3, freePassReliable: true });
+    ok("unreliable free-pass read -> PAYG with unverified=true, SAME charge as a reliable used-pass",
+      unrel.mode === "payg" && unrel.ok && unrel.unverified === true && rel.mode === "payg" && rel.ok && rel.cents === unrel.cents);
+    ok("a genuinely-used pass (reliable read) is NOT flagged unverified",
+      rel.mode === "payg" && rel.ok && !("unverified" in rel && rel.unverified));
+    ok("default (no freePassReliable) is treated as reliable -> not unverified",
+      (() => { const g = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 3 }); return g.mode === "payg" && g.ok && !("unverified" in g && g.unverified); })());
+    // unverified must NEVER change the gate: an unreliable read that would be free-eligible still charges
+    // exactly the same, and above the free tier the flag is irrelevant (already PAYG on merit).
+    const above = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 6, freePassReliable: false });
+    ok("unverified never alters the charge (6-flow PAYG price unchanged)", above.mode === "payg" && above.ok && above.cents === passPriceCents(6));
+  }
   {
     const g = decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: true, selectedFlows: 10, rerun: true });
     ok("PAYG rerun of 10 flows capped at the comparable pass ($30)", g.mode === "payg" && g.ok && g.cents === 3000 && g.cents <= passPriceCents(10));

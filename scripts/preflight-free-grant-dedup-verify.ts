@@ -45,17 +45,24 @@ function main(): void {
     hashRiskSignal("203.0.113.7") === h);
   ok("different inputs -> different hashes", hashRiskSignal("203.0.113.8") !== h);
 
-  // ── STATIC: freePassUsed must FAIL CLOSED. The three fail-closed returns and the override escape valve
-  //    are the whole security contract; a regression here silently re-opens the farm. ──
+  // ── STATIC: free-pass eligibility must FAIL CLOSED. The eligibility read lives in freePassEligibility
+  //    (freePassUsed is a thin wrapper over it); its fail-closed returns and the override escape valve are
+  //    the whole security contract. A regression here silently re-opens the farm. The `reliable` flag on
+  //    the fail-closed returns is purely informational (drives the "couldn't verify" UI copy) and NEVER
+  //    changes the fail-closed result: every unreliable path still returns used:true. ──
   const ent = read("lib", "preflight", "entitlements-v1.ts");
-  ok("freePassUsed resolves the canonical cluster (not just the exact email)",
-    /freePassUsed[\s\S]*?resolveCanonicalCluster\(owner\)/.test(ent));
-  ok("freePassUsed checks the operator comp FIRST (comped user never blocked)",
-    /freePassUsed[\s\S]*?activeFreeGrantOverride\([\s\S]*?return false/.test(ent));
-  ok("freePassUsed fails closed when cluster resolution is unreliable (!cluster.ok -> return true)",
-    /if \(!cluster\.ok\) return true/.test(ent));
-  ok("freePassUsed fails closed when the runs read errors (!ok -> return true)",
-    /if \(!ok\) return true;/.test(ent));
+  ok("freePassUsed is a thin wrapper over freePassEligibility (single source of the fail-closed logic)",
+    /freePassUsed\(owner[^)]*\)[\s\S]*?return \(await freePassEligibility\(owner\)\)\.used/.test(ent));
+  ok("freePassEligibility resolves the canonical cluster (not just the exact email)",
+    /freePassEligibility[\s\S]*?resolveCanonicalCluster\(owner\)/.test(ent));
+  ok("freePassEligibility checks the operator comp FIRST (comped user never blocked)",
+    /freePassEligibility[\s\S]*?activeFreeGrantOverride\([\s\S]*?return \{ used: false, reliable: true \}/.test(ent));
+  ok("fails closed to used:true when cluster resolution is unreliable (!cluster.ok)",
+    /if \(!cluster\.ok\) return \{ used: true, reliable: false \}/.test(ent));
+  ok("fails closed to used:true when the runs read errors (!ok)",
+    /if \(!ok\) return \{ used: true, reliable: false \}/.test(ent));
+  ok("both fail-closed returns keep used:true (the flag only marks reliability, never opens the gate)",
+    (ent.match(/return \{ used: true, reliable: false \}/g) || []).length >= 2);
   ok("the cluster runs loader surfaces read failure as ok:false (does NOT degrade to empty like loadRuns)",
     /loadRunsForOwners[\s\S]*?if \(error\) return \{ rows: \[\], ok: false \}/.test(ent));
 

@@ -18,7 +18,7 @@ type Decision =
   | { mode: "subscription"; ok: true; plan: PlanRef; unitsAfter: number }
   | { mode: "subscription"; ok: false; error: string; message: string }
   | { mode: "free"; ok: true }
-  | { mode: "payg"; ok: true; cents: number }
+  | { mode: "payg"; ok: true; cents: number; unverified?: boolean }
   | { mode: "frozen"; ok: false; error: string; message: string };
 
 type Preview = { selectedCount: number; eligibleCount: number; decision: Decision };
@@ -64,7 +64,11 @@ export function PassPreview({ appId, flowIds }: { appId: string; flowIds?: strin
   switch (decision.mode) {
     case "payg":
       headline = <span style={price}>{usdFromCents(decision.cents)}</span>;
-      note = "Charged when you launch. No hold is placed until every readiness check passes.";
+      // unverified: the free-pass eligibility read failed transiently and we fell back to PAYG. Honest,
+      // non-permanent copy — the user is NOT told they are permanently ineligible.
+      note = decision.unverified
+        ? "We couldn't verify your free-pass eligibility right now. Try again later or continue with Pay as you go."
+        : "Charged when you launch. No hold is placed until every readiness check passes.";
       break;
     case "free":
       headline = <span style={price}>Included</span>;

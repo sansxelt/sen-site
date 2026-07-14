@@ -75,7 +75,12 @@ export type PassGateDecision =
   | { mode: "subscription"; ok: true; plan: PlanV1; unitsAfter: number }
   | { mode: "subscription"; ok: false; error: "flow_cap" | "allowance_exhausted"; message: string; status: 400 | 402 }
   | { mode: "free"; ok: true }
-  | { mode: "payg"; ok: true; cents: number }
+  // `unverified` is PURELY INFORMATIONAL (never changes the charge or the gate): true when the free-pass
+  // eligibility read could not be confirmed (a transient DB error), so the owner was fail-closed to PAYG.
+  // The UI shows a "couldn't verify, try again later or continue with PAYG" note — it must NOT imply
+  // permanent ineligibility. A genuinely-used free pass leaves this undefined/false. The fail-closed
+  // routing itself is unchanged (founder ruling: never fail open — that re-opens free-pass farming).
+  | { mode: "payg"; ok: true; cents: number; unverified?: boolean }
   // Blocker 2: a dispute/chargeback froze this owner's execution access. Refuses ALL spend surfaces
   // (new passes, reruns, PAYG, subscription allowance, new free entitlements) until manual restore.
   | { mode: "frozen"; ok: false; error: "billing_frozen"; message: string; status: 403 };
@@ -85,7 +90,10 @@ export type PassGateDecision =
 // subscription: the lifetime free pass covers a selection within FREE_TIER.flowsPerPass; everything else
 // is PAYG at the public per-pass price ($15 base; reruns $3 x selected, capped at the comparable pass).
 export function decidePassGate(input: {
-  plan: PlanV1 | null; unitsUsedInWindow: number; freePassUsed: boolean; selectedFlows: number; rerun?: boolean;
+  // freePassReliable (optional, default true): when false, the free-pass eligibility read could not be
+  // confirmed and the owner was fail-closed to PAYG. Surfaced as `unverified` on the payg decision for an
+  // honest "try again later" note. It NEVER changes the charge or the gate — only whether we explain it.
+  plan: PlanV1 | null; unitsUsedInWindow: number; freePassUsed: boolean; selectedFlows: number; rerun?: boolean; freePassReliable?: boolean;
 }): PassGateDecision {
   if (input.plan) {
     const gate = canRunPass(input.plan, input.unitsUsedInWindow, input.selectedFlows);
@@ -96,7 +104,9 @@ export function decidePassGate(input: {
   }
   if (!input.freePassUsed && input.selectedFlows <= FREE_TIER.flowsPerPass) return { mode: "free", ok: true };
   const cents = input.rerun ? rerunPriceCents(input.selectedFlows) : passPriceCents(input.selectedFlows);
-  return { mode: "payg", ok: true, cents };
+  // unverified only when the pass was "used" due to an UNRELIABLE read (not a genuine consumption).
+  const unverified = input.freePassReliable === false && input.selectedFlows <= FREE_TIER.flowsPerPass;
+  return unverified ? { mode: "payg", ok: true, cents, unverified: true } : { mode: "payg", ok: true, cents };
 }
 
 // ── Stripe price-id resolver for the six operator-created _v1 prices ─────────────────────────────────
@@ -207,18 +217,27 @@ export async function flowUnitsUsedInWindow(owner: string, anchorIso: string, no
 //
 // A run consumes allowance when completed, in-flight, or executed-then-failed — an infra failure or a
 // cancel before execution never burns the free pass (runConsumesAllowance).
-export async function freePassUsed(owner: string): Promise<boolean> {
+// Full eligibility result: `used` is what the gate acts on; `reliable` is false ONLY when we fail-closed to
+// "used" because an eligibility read could not be confirmed (transient error) — never for a genuinely-used
+// pass. Callers that want to explain the fail-closed PAYG to the user read `reliable`; the gate decision is
+// identical either way (fail closed).
+export async function freePassEligibility(owner: string): Promise<{ used: boolean; reliable: boolean }> {
   const cluster = await resolveCanonicalCluster(owner);
   // Operator comp always wins: an explicit grant means the free pass is available regardless of history
   // or reliability. Checked first so a comped user is never blocked by a fail-closed path.
-  if (await activeFreeGrantOverride(owner, cluster.canonical)) return false;
+  if (await activeFreeGrantOverride(owner, cluster.canonical)) return { used: false, reliable: true };
   // Cluster resolution unreliable (DB error / column missing) -> cannot trust dedup -> fail closed.
-  if (!cluster.ok) return true;
+  if (!cluster.ok) return { used: true, reliable: false };
   const { rows, ok } = await loadRunsForOwners(cluster.members);
-  if (!ok) return true; // runs read failed -> cannot confirm the pass is unused -> fail closed
+  if (!ok) return { used: true, reliable: false }; // runs read failed -> cannot confirm unused -> fail closed
   // Fast path: any completed or in-flight run across the cluster settles it without touching v_flow_runs.
-  if (rows.some((r) => r.state !== "failed" && r.state !== "cancelled")) return true;
-  return freePassConsumed(await toMeterable(rows));
+  if (rows.some((r) => r.state !== "failed" && r.state !== "cancelled")) return { used: true, reliable: true };
+  return { used: freePassConsumed(await toMeterable(rows)), reliable: true };
+}
+
+// Backwards-compatible thin wrapper: the boolean the rest of the code already uses.
+export async function freePassUsed(owner: string): Promise<boolean> {
+  return (await freePassEligibility(owner)).used;
 }
 
 // Application cap: FREE_TIER 1; builder_v1 2; pro_v1 10; scale_v1 uncapped (maxApplications null). A
@@ -257,8 +276,8 @@ export async function gatePassLaunch(owner: string, selectedFlowCount: number, o
     const units = state?.anchor ? await flowUnitsUsedInWindow(owner, state.anchor) : 0;
     return decidePassGate({ plan, unitsUsedInWindow: units, freePassUsed: true, selectedFlows: selectedFlowCount, rerun: opts.rerun });
   }
-  const used = await freePassUsed(owner);
-  return decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: used, selectedFlows: selectedFlowCount, rerun: opts.rerun });
+  const elig = await freePassEligibility(owner);
+  return decidePassGate({ plan: null, unitsUsedInWindow: 0, freePassUsed: elig.used, selectedFlows: selectedFlowCount, rerun: opts.rerun, freePassReliable: elig.reliable });
 }
 
 // ── Usage recording + webhook plan state (writes) ────────────────────────────────────────────────────

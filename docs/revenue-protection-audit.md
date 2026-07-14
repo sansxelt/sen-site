@@ -5,6 +5,24 @@ This is the founder-facing summary + fix plan; the full agent report has file:li
 
 ## STATUS (2026-07-13)
 
+- B1 FAIL-CLOSED CHECK — DECISION (founder, 2026-07-13): the free-pass eligibility check STAYS fail-closed.
+  A customer-journey audit flagged that freePassUsed() routes a new user to PAYG when the eligibility read
+  is unreliable. Resolution:
+    * The original production defect (canonical_email column absent -> every read errored -> everyone fell
+      to the fail-closed branch) is RESOLVED by migration 9. canonical_email on user_profiles is now present
+      and verified in production (verify SQL section B, all PASS), so the column-missing trigger no longer
+      occurs.
+    * The remaining trigger is a rare TRANSIENT read failure. Routing that to PAYG is INTENTIONAL
+      revenue-protection behavior (founder ruling: fail closed), not a broken fallback: failing OPEN would
+      re-admit the OAuth-alias free-pass farming this blocker exists to close.
+    * Escape valve unchanged: support may grant an audited one-time comp via the existing admin path
+      (/api/v/admin/free-grant -> v_free_grant_overrides), which freePassUsed() honors FIRST.
+    * NO self-serve "request review" flow is being added — it would create a new abuse surface + support
+      workflow before public launch.
+    * Customer-facing copy on a transient eligibility failure must not imply permanent ineligibility:
+      "We couldn't verify your free-pass eligibility right now. Try again later or continue with Pay as you go."
+  Do not weaken this gate.
+
 - BLOCKER 1 (OAuth free-pass farming): FIXED IN CODE, adversarially verified CONFIRMED-CLOSED, all suites
   green. NOT YET LIVE — activate by applying sql/vraelis-preflight-9-free-grant-dedup.sql THEN deploying
   (code is deploy-safe ahead of the migration: it fails closed / degrades to the pre-table status quo).
