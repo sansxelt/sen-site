@@ -7,9 +7,14 @@ production worker driving a real browser.
 
 > STATUS (2026-07-14): the demo INFRASTRUCTURE is complete and deployed (Command Center, evidence-first
 > report with issue lineage, native repair loop with REPAIR VERIFIED visibly distinct from READY). The
-> fixture app + its three modes exist. Recording the demo is **gated on the S6 live canary** — it needs a
-> funded pass and the live worker/Browserbase chain, which is the founder's operator step. Do NOT fabricate
-> the recording; run it for real once S6 is PASS.
+> fixture app + its three modes exist. Recording the demo is **gated on one real S6 canary run** — the live
+> worker/Browserbase chain producing a real decision. Do NOT fabricate the recording; run it for real once
+> S6 is PASS.
+>
+> NO $15 REQUIRED. The canary runs on the account's **lifetime free Production Pass** ($0). Verified from
+> code: a free pass hits the SAME createRun -> same worker -> same real browser as a paid pass (the payment
+> mode only changes the hold/charge branch, not the run). The credit/charging flow was verified separately
+> and is done; a paid PAYG pass is a later, optional 30-second check, not a launch gate.
 
 ## The fixture (deterministic, already built)
 
@@ -26,9 +31,9 @@ refresh*, *mobile navigation must not block the primary action*.
 
 ## Operator preconditions (once, before recording)
 
-1. S6 canary is PASS (real funded pass verified end-to-end; no leaks; pre-billing block proven).
+1. S6 canary is PASS (one real pass verified end-to-end on the FREE pass; no leaks; pre-billing block proven).
 2. `fixtures/preflight-demo` deployed to Vercel (preview is fine) — see docs/preflight-activation.md.
-3. A demo account with a funded balance (normal Vraelis payment) OR its lifetime free pass available.
+3. A demo account with its **lifetime free Production Pass available** (no payment needed). A funded balance is optional — only if you also want to sanity-check a PAYG pass, which is not required for S6.
 4. The worker is live and healthy (Railway: `worker_start`, `browserbaseConfigured=true`).
 
 Everything below is driven through the PUBLIC product UI (app.vraelis.com) — never the seed driver.
@@ -82,5 +87,5 @@ launch" (READY).*
 
 - [ ] Record at a fixed viewport; do the mobile-blocker beat at the narrow viewport where the defect lives.
 - [ ] Two takes: the 15s hook and the 45s loop, from the same account, same fixture.
-- [ ] Confirm the balance/entitlement deducts correctly on each real launch (it is a real, billed pass).
+- [ ] Confirm the free pass is consumed correctly on the first real launch (entitlement moves to used); no charge on the free pass.
 - [ ] Keep the founder account out of it — use the demo account.
