@@ -43,6 +43,7 @@
     "api:runtime:test": "tsx scripts/preflight-api-runtime-verify.ts",
     "runtime:model:test": "tsx scripts/preflight-runtime-model-verify.ts",
     "web:characterization:test": "tsx scripts/preflight-web-characterization-verify.ts",
+    "agent:test": "tsx scripts/preflight-agent-verify.ts",
     "billing:returns:test": "tsx scripts/billing-returns-verify.ts",
     "context:test": "tsx scripts/preflight-context-verify.ts",
     "provenance:test": "tsx scripts/preflight-provenance-verify.ts",
