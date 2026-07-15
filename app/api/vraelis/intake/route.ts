@@ -21,6 +21,7 @@ import { generateLeadReply } from "@/lib/vraelis-ai";
 import { sendLeadReply } from "@/lib/vraelis-email";
 import { notifyOwnerNewLeadEvent } from "@/lib/vraelis-notify";
 import { limitOr429 } from "@/lib/vraelis-ratelimit";
+import { leadAgentEnabled } from "@/lib/v-entitlements";
 import { trackServer } from "@/lib/analytics";
 
 const CORS = {
@@ -34,6 +35,8 @@ export function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
+  // Retired lead-agent intake endpoint: uniform 404 unless the product is explicitly enabled (default off).
+  if (!leadAgentEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
   // Rate limit: 20 new leads / 10 min per IP.
   const limited = await limitOr429(req, "intake", 20, 600, CORS);
   if (limited) return limited;

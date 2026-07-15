@@ -27,6 +27,7 @@ import { startWorkspacePayment } from "@/lib/vraelis-connect";
 import { continueLeadConversation, type ConvoTurn } from "@/lib/vraelis-ai";
 import { notifyOwnerStatusEvent } from "@/lib/vraelis-notify";
 import { limitOr429 } from "@/lib/vraelis-ratelimit";
+import { leadAgentEnabled } from "@/lib/v-entitlements";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +40,8 @@ export function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
+  // Retired lead-agent conversation endpoint: uniform 404 unless the product is explicitly enabled (default off).
+  if (!leadAgentEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
   // Rate limit: 40 AI turns / 10 min per IP (AI-cost abuse protection).
   const limited = await limitOr429(req, "continue", 40, 600, CORS);
   if (limited) return limited;

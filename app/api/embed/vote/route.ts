@@ -7,11 +7,16 @@ import { NextResponse } from "next/server";
 import { recordVote } from "@/lib/v-db";
 import { assessVote, hashToken, ipFromHeaders } from "@/lib/v-quality";
 import { deriveSource } from "@/lib/v-sources";
+import { humanEvalEnabled } from "@/lib/v-entitlements";
 import { screeningQuestionsForTest, evaluateQualification, recordScreeningOutcome } from "@/lib/v-screening";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  // Retired human-evaluation write path. Gated with the same flag as the /vote + /embed/vote surfaces: when
+  // human evaluation is off (the default and current production state), this anonymous public write endpoint
+  // does not exist. Uniform 404 so it can never accept votes into the retired system.
+  if (!humanEvalEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const body = await req.json().catch(() => ({}));
   const testId = String(body?.testId || "");
   const voter = String(body?.voterId || "").trim().slice(0, 64).replace(/[^a-zA-Z0-9_-]/g, "");

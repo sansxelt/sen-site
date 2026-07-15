@@ -15,33 +15,29 @@ type Usage = {
 };
 
 const ENDPOINT_LABEL: Record<string, string> = {
-  "tests.create": "Create test", "tests.get": "Get test", "tests.export": "Export results", credits: "Check credits", other: "Other",
+  "runs.create": "Queue a Production Pass", "runs.get": "Get a run", "tests.create": "Queue a Production Pass",
+  "tests.get": "Get a run", "tests.export": "Export results", credits: "Check balance", other: "Other",
 };
 const DEV_EVENT_LABEL: Record<string, string> = {
   api_request_made: "API request", export_downloaded: "Export downloaded", webhook_delivered: "Webhook delivered",
-  webhook_failed: "Webhook failed", test_launched: "Test launched", api_key_created: "API key created",
+  webhook_failed: "Webhook failed", test_launched: "Production Pass queued", preflight_run_queued: "Production Pass queued", api_key_created: "API key created",
 };
 const shortDate = (s: string | null) => { if (!s) return "-"; try { return new Date(s).toLocaleDateString("en-US", { month: "short", day: "numeric" }); } catch { return "-"; } };
 
-const CURL = `# Check an AI output. Set a threshold and the response tells you passed: true|false.
-curl -X POST https://vraelis.com/api/v1/check \\
+const CURL = `# Queue a Production Pass against a build, then read the launch decision.
+curl -X POST https://vraelis.com/api/preflight/apps/APP_ID/runs \\
   -H "X-Api-Key: YOUR_KEY" -H "Content-Type: application/json" \\
-  -d '{
-    "output_type": "support_reply",
-    "candidates": ["Paste the AI output you are about to ship"],
-    "threshold": { "overall": 75, "criteria": { "accuracy": 80 } }
-  }'
-# -> { "passed": true, "recommended": {...}, "candidates": [ per-criterion scores ],
-#      "flags": [ { "span": "...", "issue": "overpromise", "fix": "..." } ] }
+  -H "Idempotency-Key: $(uuidgen)" \\
+  -d '{ "deployment_url": "https://your-preview.example.com", "flows": "critical" }'
+# -> { "runId": "run_...", "status": "queued" }
 
-# Batch-check a whole release in one call (up to 10 outputs). Fail the build if any fail.
-curl -X POST https://vraelis.com/api/v1/check \\
-  -H "X-Api-Key: YOUR_KEY" -H "Content-Type: application/json" \\
-  -d '{ "items": [ { "output_type": "onboarding", "candidates": ["..."] } ], "threshold": { "overall": 75 } }'
-# -> { "batch": true, "passed": true, "ok_count": 1, "count": 1, "results": [ ... ] }
+# Poll the run until it finishes, then gate your release on the decision.
+curl https://vraelis.com/api/preflight/runs/RUN_ID -H "X-Api-Key: YOUR_KEY"
+# -> { "run": { "state": "completed", "decision": "ready", "summary": {...} },
+#      "issues": [ { "severity": "critical", "title": "...", "repro": "..." } ] }
 
-# Check your credit balance
-curl https://vraelis.com/api/v1/credits -H "X-Api-Key: YOUR_KEY"`;
+# Anything but "ready" should stop the deploy. Evidence (screenshots, traces) is
+# fetched separately through a short-lived, owner-checked signed URL.`;
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<Key[]>([]);
@@ -85,7 +81,7 @@ export default function ApiKeysPage() {
         <div>
           <p className="eyebrow">Developers</p>
           <h1 className="display">API &amp; webhooks</h1>
-          <p>API keys and signed webhooks for your Vraelis integration. Triggering Production Passes from CI is opening in early access; usage analytics and webhook reliability are below.</p>
+          <p>API keys and signed webhooks for your Vraelis integration. Trigger Production Passes from CI, gate the deploy on the launch decision, and read the evidence back; usage analytics and webhook reliability are below.</p>
         </div>
       </div>
 
@@ -101,27 +97,17 @@ export default function ApiKeysPage() {
         </div>
       </div>
 
-      <div className="card cta-band" style={{ marginBottom: 14, background: "var(--bg-2)", borderRadius: "var(--r-xl)", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap", justifyContent: "space-between" }}>
-        <div style={{ flex: 1, minWidth: 240 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Preference data exports</div>
-          <p style={{ fontSize: 13, color: "var(--fg-3)", margin: 0 }}>Export completed results as JSON or CSV. Winner, breakdown, quality, comments, and AI analysis.</p>
-        </div>
-        <Link href="/sandbox" className="btn btn--ghost" style={{ whiteSpace: "nowrap" }}>Test exports →</Link>
-      </div>
-
-      {/* Test your integration, opens the in-app sandbox console */}
+      {/* Integrate from CI: trigger a Production Pass and gate the deploy on the decision. */}
       <div className="card" style={{ marginBottom: 24 }}>
         <div style={{ display: "flex", gap: 14, alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap" }}>
           <div style={{ flex: "1 1 320px", minWidth: 0 }}>
-            <div style={cardHead}>Test your integration</div>
-            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Use the sandbox console to create a sandbox evaluation, preview a Decision Package, test exports, and send a signed webhook event, with sample data, 0 credits, 0 quota, and nothing in your production analytics.</p>
-            <Link href="/sandbox" className="btn">Open sandbox console →</Link>
+            <div style={cardHead}>Gate your deploys from CI</div>
+            <p style={{ fontSize: 13, color: "var(--fg-3)", margin: "0 0 12px" }}>Queue a Production Pass against a preview build, wait for the launch decision, and stop the release on anything but READY. One job, real-browser evidence, no dashboard to watch.</p>
+            <Link href="/developers" className="btn">See the CI gate →</Link>
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 14 }}>
           <Link href="/developers" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Developer overview</Link>
-          <a href="/schemas/decision-package-v2.json" className="btn btn--ghost" style={{ fontSize: 12.5 }}>JSON Schema</a>
-          <Link href="/developers#sdk" className="btn btn--ghost" style={{ fontSize: 12.5 }}>SDK starter</Link>
           <Link href="/developers#webhooks" className="btn btn--ghost" style={{ fontSize: 12.5 }}>Webhook signing</Link>
         </div>
       </div>
@@ -209,7 +195,7 @@ export default function ApiKeysPage() {
                   <div className="stat"><div className="stat__l">Last delivery</div><div className="stat__v tnum" style={{ fontSize: 20 }}>{shortDate(u.webhook.lastAt)}</div></div>
                 </div>
               ) : (
-                <div className="empty" style={{ marginBottom: 14 }}><EmptyIcon d={I.swap} /><h3>No webhooks yet</h3><p>Add an endpoint below to receive a signed test.completed event the moment a test finishes. Delivery success, failures, and retries show here.</p></div>
+                <div className="empty" style={{ marginBottom: 14 }}><EmptyIcon d={I.swap} /><h3>No webhooks yet</h3><p>Add an endpoint below to receive a signed run.completed event the moment a Production Pass finishes. Delivery success, failures, and retries show here.</p></div>
               )}
             </>
           )}
@@ -246,7 +232,7 @@ export default function ApiKeysPage() {
       <div className="codebar"><i /><i /><i /><span>shell</span></div>
       <pre className="codeblock"><code>{CURL}</code></pre>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--fg-5)", marginTop: 14, lineHeight: 1.6 }}>
-        API checks draw on the same account balance as the web app. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
+        Production Passes triggered over the API draw on the same account balance as the web app. Auth via <code style={{ color: "var(--fg-3)" }}>X-Api-Key</code> or <code style={{ color: "var(--fg-3)" }}>Authorization: Bearer</code>.
       </p>
 
       <div id="webhooks"><WebhooksSection /></div>

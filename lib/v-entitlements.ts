@@ -99,6 +99,14 @@ export function isAdmin(email: string | null | undefined): boolean {
 // "don't overpromise" bar. Hidden globally unless VRAELIS_HUMAN_EVAL is "1". The eval code, DB
 // tables, and the /vote supply side are all PRESERVED for when a panel exists — this flag only
 // hides the ingress (the "+ New" nav, /new, /vote, the validate bridge). Default OFF.
+// The lead-agent / intake-widget product (the embeddable /widget.js chat widget + the hosted /f/[key] intake
+// form + the /api/vraelis/intake endpoints) is RETIRED. Its code and DB tables are preserved, but the public
+// surface is off unless VRAELIS_LEAD_AGENT is "1". Default OFF, so the intake form 404s and the intake API
+// refuses — no retired lead-agent product is publicly operational.
+export function leadAgentEnabled(): boolean {
+  return process.env.VRAELIS_LEAD_AGENT === "1";
+}
+
 export function humanEvalEnabled(): boolean {
   return process.env.VRAELIS_HUMAN_EVAL === "1";
 }

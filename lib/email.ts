@@ -113,7 +113,7 @@ function baseHtml(content: string) {
         <!-- ── Brand header ──────────────────────────────────── -->
         <tr><td style="padding:0 4px 20px;">
           <span style="font-size:18px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">Vraelis</span>
-          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">QA for AI output.</span>
+          <span style="margin-left:10px;font-size:11px;font-weight:500;color:#737373;letter-spacing:0.06em;text-transform:uppercase;">Production verification for AI-built software.</span>
         </td></tr>
 
         <!-- ── Message card ──────────────────────────────────── -->
@@ -346,18 +346,18 @@ export async function sendWelcomeEmail(email: string, name?: string) {
   }
 }
 
-// Activation nudge: sent once by the lifecycle cron (lib/v-lifecycle.ts) to accounts that
-// signed up but haven't run their first check. One job: get them to run a check.
+// Activation nudge: sent once by the lifecycle cron (lib/v-lifecycle.ts) to accounts that signed up but
+// haven't run their first Production Pass. One job: get them to run their first pass.
 function checkActivationHtml(): string {
   const run = "https://app.vraelis.com/applications";
-  const sample = "https://vraelis.com/r/check";
+  const learn = "https://vraelis.com/how-it-works";
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
       <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">Your first Production Pass is waiting.</h1>
       <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You signed up but haven't run a Production Pass yet. Connect your AI-built app, approve its critical flows, and Vraelis runs them in a real browser, then hands you a launch decision with the exact blockers to fix before your users find them.</p>
       <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run your first Production Pass</a>
-      <p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Want to see one first? Here's a sample check: <a href="${sample}" style="color:#0d5c46">vraelis.com/r/check</a></p>
+      <p style="font-size:13px;line-height:1.6;color:#8a8f96;margin:24px 0 0">Want to see how it works first? <a href="${learn}" style="color:#0d5c46">vraelis.com/how-it-works</a></p>
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you created a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
 }
@@ -371,7 +371,7 @@ export async function sendCheckActivationEmail(email: string) {
       from:    fromAccount,
       replyTo: "help@vraelis.com",
       to:      email,
-      subject: "Run your first check on Vraelis (about 20 seconds)",
+      subject: "Run your first Production Pass on Vraelis",
       html:    checkActivationHtml(),
     });
   } catch (error) {
@@ -408,7 +408,7 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
       from:    fromAccount,
       replyTo: "help@vraelis.com",
       to:      email,
-      subject: remaining <= 0 ? "Your Vraelis balance is used up" : `${remaining} Vraelis credit${remaining === 1 ? "" : "s"} left`,
+      subject: remaining <= 0 ? "Your Vraelis balance is used up" : "Your Vraelis balance is running low",
       html:    lowCreditsHtml(remaining),
     });
   } catch (error) {
@@ -418,12 +418,11 @@ export async function sendLowCreditsEmail(email: string, remaining: number) {
 
 function winbackHtml(remaining: number): string {
   const run = "https://app.vraelis.com/applications";
-  const credits = remaining === 1 ? "1 credit" : `${remaining} credits`;
   return `<!doctype html><html><body style="margin:0;background:#FAF8F4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1a1a1a">
     <div style="max-width:520px;margin:0 auto;padding:32px 24px">
       <div style="font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;color:#0d5c46;margin-bottom:24px">Vraelis</div>
-      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You've got ${credits} waiting.</h1>
-      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You tried Vraelis a while back, then things went quiet. Your ${credits} are still here. Next time your AI ships something users will touch, run a Production Pass first: a real browser walks your critical flows and hands you a launch decision with the exact blockers to fix.</p>
+      <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">You still have Vraelis balance waiting.</h1>
+      <p style="font-size:15px;line-height:1.6;color:#42484f;margin:0 0 20px">You tried Vraelis a while back, then things went quiet. Your account balance is still here. Next time your AI ships something users will touch, run a Production Pass first: a real browser walks your critical flows and hands you a launch decision with the exact blockers to fix.</p>
       <a href="${run}" style="display:inline-block;background:#0d5c46;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:13px 26px;border-radius:10px">Run a Production Pass</a>
       <p style="font-size:12px;line-height:1.5;color:#a0a4aa;margin:24px 0 0">You're getting this because you have a Vraelis account. If you'd rather not get product nudges, just reply and we'll stop.</p>
     </div></body></html>`;
@@ -438,7 +437,7 @@ export async function sendWinbackEmail(email: string, remaining: number) {
       from:    fromAccount,
       replyTo: "help@vraelis.com",
       to:      email,
-      subject: `Your Vraelis ${remaining === 1 ? "credit is" : "credits are"} still here`,
+      subject: "Your Vraelis balance is still here",
       html:    winbackHtml(remaining),
     });
   } catch (error) {
@@ -677,7 +676,7 @@ export function subscriptionCancellationScheduledHtml(name: string, planName: st
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
       <li>You keep every paid feature until <strong style="color:#0a0a0a;">${endsOn}</strong>.</li>
       <li>On that date, your account drops to the Free plan automatically. Nothing is deleted, just the paid features pause.</li>
-      <li>All your saved outputs, history, and API keys stay exactly where they are.</li>
+      <li>All your applications, past Production Passes, reports, and API keys stay exactly where they are.</li>
     </ul>
 
     <a href="https://app.vraelis.com/billing" class="vrl-btn" style="${BTN_STYLE}">Resume subscription</a>
@@ -695,8 +694,8 @@ export function subscriptionEndedHtml(name: string, planName: string) {
     <p style="${BODY_STYLE}">${greeting} your paid period is over and your account is now on the Free plan. This could be because you scheduled a cancellation that just hit, or because payment retries ran out after a failed charge.</p>
     <p style="${BODY_STYLE}"><strong style="color:#0a0a0a;">Here&apos;s what changes:</strong></p>
     <ul style="margin:0 0 22px;padding-left:20px;font-size:14px;line-height:1.8;color:#404040;">
-      <li><strong style="color:#0a0a0a;">Kept:</strong> your account, saved outputs, history, and profile settings, all intact.</li>
-      <li><strong style="color:#0a0a0a;">Paused:</strong> paid features (higher API limits, deeper memory, priority generation).</li>
+      <li><strong style="color:#0a0a0a;">Kept:</strong> your account, applications, past Production Passes and reports, and profile settings, all intact.</li>
+      <li><strong style="color:#0a0a0a;">Paused:</strong> paid-plan features (higher monthly Production Pass volume, more connected applications, and team seats).</li>
       <li><strong style="color:#0a0a0a;">Charges:</strong> nothing further will be charged unless you pick a plan again.</li>
     </ul>
     <a href="https://vraelis.com/pricing" class="vrl-btn" style="${BTN_STYLE}">Pick a plan again</a>
@@ -986,15 +985,15 @@ export function inviteHtml(opts: Omit<InviteEmail, "to">) {
   const roleLabel = INVITE_ROLE_LABEL[opts.role] ?? escapeHtml(opts.role);
   const clientSafe = opts.role === "client_viewer";
   const access = clientSafe
-    ? "You'll have client-safe access to this project's decision reports — read-only, with no access to private workspace controls."
+    ? "You'll have client-safe access to this team's shared reports — read-only, with no access to private workspace controls."
     : isProject
-      ? `You'll have ${roleLabel} access to this project's evaluations and reports.`
+      ? `You'll have ${roleLabel} access to this team's applications and reports.`
       : `You'll join this workspace as ${roleLabel}.`;
   return baseHtml(`
     <p style="${KICKER_STYLE}">${isProject ? "Project invite" : "Workspace invite"}</p>
     <h1 class="vrl-h1" style="${H1_STYLE}">You were invited to ${isProject ? "review " : ""}${context}.</h1>
     <p style="${BODY_STYLE}">You&apos;ve been invited to ${isProject ? "review" : "join"} <strong style="color:#0a0a0a;">${context}</strong> as <strong style="color:#0a0a0a;">${roleLabel}</strong>. ${access}</p>
-    <p style="${BODY_STYLE}">Vraelis helps teams turn qualified human signal into decision reports.</p>
+    <p style="${BODY_STYLE}">Vraelis verifies AI-built applications before launch: real-browser runs against your exact build, the evidence, and a launch decision.</p>
     <a href="${opts.acceptUrl}" class="vrl-btn" style="${BTN_STYLE}">${isProject ? "View project" : "Accept invite"}</a>
     <div style="${HR_STYLE}"></div>
     <p style="${META_STYLE}">Sign in with <strong style="color:#0a0a0a;">this email address</strong> to access the ${isProject ? "project" : "workspace"} — your invite activates automatically.</p>

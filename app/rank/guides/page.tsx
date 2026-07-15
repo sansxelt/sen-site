@@ -2,10 +2,14 @@ import Link from "next/link";
 import { ogMeta } from "@/lib/og-meta";
 import { GUIDES } from "@/lib/rank-guides";
 
+// This "AI output QA" guides section is content for the RETIRED AI-output-checker product. The route now
+// redirects to /how-it-works (see proxy.ts) and is removed from the sitemap; this neutral, noindexed metadata
+// is a backstop so no retired title/OG can be indexed or previewed even if the page is reached directly.
 export const metadata = ogMeta({
-  title: "AI Output QA Guides | Vraelis",
-  description: "Practical guides for reviewing AI-generated output before it ships: what to score, the failure modes to catch, and a pre-ship checklist for each type of output.",
+  title: "Vraelis",
+  description: "Production verification for AI-built applications and systems.",
   path: "/guides",
+  index: false,
 });
 
 export default function GuidesIndex() {
@@ -35,7 +39,7 @@ export default function GuidesIndex() {
       <div style={{ marginTop: 40, textAlign: "center", paddingTop: 28, borderTop: "1px solid var(--line-1)" }}>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 19, color: "var(--fg-1)", marginBottom: 8 }}>The copy is the easy part</div>
         <p style={{ fontSize: 14, color: "var(--fg-3)", lineHeight: 1.6, margin: "0 auto 16px", maxWidth: 440 }}>
-          AI built the product. Vraelis finishes the engineering: it runs your AI-built app like production, in a real browser, and returns a launch decision with the exact blockers to fix.
+          Vraelis runs your AI-built app like production, in a real browser, and returns a launch decision with the exact blockers to fix.
         </p>
         <Link href="/how-it-works" className="btn btn--lg">See how Vraelis works <span aria-hidden>→</span></Link>
       </div>

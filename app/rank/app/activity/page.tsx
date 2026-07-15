@@ -87,13 +87,13 @@ export default async function AuditPage() {
         <div>
           <p className="eyebrow">Trust &amp; governance</p>
           <h1 className="display">Activity</h1>
-          <p>A read-only trail of everything that happens in your workspace, evaluations, credits, billing, team access, and governance.</p>
+          <p>A read-only trail of everything that happens in your workspace: Production Passes, balance, billing, team access, and governance.</p>
         </div>
         <Link href="/enterprise" className="btn btn--ghost">Trust overview →</Link>
       </div>
 
       <div className="card" style={{ background: "var(--bg-2)", marginBottom: 18 }}>
-        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your evaluation runs, credit top-ups, exports, billing changes, team access, and governance events, organization changes, domain verification, SSO, ownership transfers. Activity never includes participant identities, payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw evaluation data.</p>
+        <p style={{ fontSize: 12.5, color: "var(--fg-3)", margin: 0, lineHeight: 1.6 }}>Vraelis records your Production Pass runs, balance top-ups, exports, billing changes, team access, and governance events, organization changes, domain verification, SSO, ownership transfers. Activity never includes payment details, Stripe identifiers, invite or DNS tokens, token hashes, webhook secrets, OIDC codes, SAML assertions, or raw run evidence.</p>
       </div>
 
       {/* Export */}

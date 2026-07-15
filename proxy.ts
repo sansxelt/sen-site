@@ -125,6 +125,13 @@ export default function proxy(req: NextRequest) {
     return go(req, "/", "redirect");
   }
 
+  // 2a) Retired "AI output QA" guides — an SEO content section for the retired AI-output-checker product
+  // (not the current production-verification product, and orphaned from the live nav). Redirect the index
+  // and every guide slug to the current product story so no retired positioning is reachable or indexed.
+  if (path === "/guides" || path.startsWith("/guides/")) {
+    return go(req, "/how-it-works", "redirect");
+  }
+
   // 2b) Retired sansxel "Vraelis AI" surface (the old marketing + app: glasses
   // hero, product, platform, learn, chat, account, pay, …). vraelis.com is
   // Vraelis Rank now, and `/` already serves Rank, so these stray routes just
@@ -153,5 +160,9 @@ export default function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/|.*\\.[a-zA-Z0-9]+$).*)"],
+  // Run on every path EXCEPT Next internals and genuine static assets. Excluding only a fixed list of
+  // asset extensions (not "anything with a dot") is deliberate: the old `.*\.[a-zA-Z0-9]+$` pattern let any
+  // dotted path (e.g. /learn/a.b) BYPASS every retirement redirect and render a retired route. A real page
+  // path can contain a dot, so we must not skip the proxy for it.
+  matcher: ["/((?!_next/|[^?]*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|css|js|mjs|map|txt|xml|json|woff2?|ttf|otf|eot|pdf|mp4|webm|wasm)(?:$|\\?)).*)"],
 };

@@ -36,18 +36,18 @@ export function GET() {
 
         {/* headline + subline */}
         <div style={{ display: "flex", flexDirection: "column", gap: "26px" }}>
-          <div style={{ display: "flex", fontSize: "96px", fontWeight: 800, letterSpacing: "-0.045em", lineHeight: 1.0 }}>
-            QA for AI output
+          <div style={{ display: "flex", fontSize: "76px", fontWeight: 800, letterSpacing: "-0.04em", lineHeight: 1.02, maxWidth: "1000px" }}>
+            Know how your system will behave before production
           </div>
           <div style={{ display: "flex", width: "132px", height: "6px", borderRadius: "3px", background: "#16C081" }} />
-          <div style={{ display: "flex", fontSize: "41px", fontWeight: 500, color: "rgba(255,255,255,0.66)", letterSpacing: "-0.01em" }}>
-            Scores and line-level fixes in ~20s
+          <div style={{ display: "flex", fontSize: "38px", fontWeight: 500, color: "rgba(255,255,255,0.66)", letterSpacing: "-0.01em" }}>
+            Requirements, run against your exact build, with evidence
           </div>
         </div>
 
         {/* footer */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "24px", color: "rgba(255,255,255,0.42)" }}>
-          <div style={{ display: "flex" }}>Catch your AI&apos;s bad output before your users do.</div>
+          <div style={{ display: "flex" }}>Production verification for AI-built systems.</div>
           <div style={{ display: "flex" }}>vraelis.com</div>
         </div>
       </div>

@@ -132,7 +132,7 @@ function Footer({ humanEval }: { humanEval: boolean }) {
           </div>
         </div>
         <Col title="Product" links={productLinks} />
-        <Col title="Developers" links={[["/developers", "Developers"], ["/api", "API keys"], ["/api", "Webhooks"], ["/data", "Data exports"]]} />
+        <Col title="Developers" links={[["/developers", "Developers"], ["/api", "API keys"], ["/api", "Webhooks"], ["/developers", "Data exports"]]} />
         <Col title="Account" links={[["/app", "Dashboard"], ["/account", "Account"], ["/billing", "Billing"], ["/signin", "Sign in"]]} />
         <Col title="Legal" links={[["/enterprise", "Enterprise & security"], ["/privacy", "Privacy"], ["/terms", "Terms"], ["/refunds", "Refunds"], ["/data-rights", "Data rights"], ["/subprocessors", "Subprocessors"], ["/trademark", "Trademark"], ["/contact", "Contact"]]} />
       </div>

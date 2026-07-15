@@ -14,10 +14,9 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const guide = getGuide(slug);
-  if (!guide) return ogMeta({ title: "Guide not found", description: "This guide is not available.", path: `/guides/${slug}`, index: false });
-  const c = guide.content;
-  return ogMeta({ title: `${c.metaTitle} | Vraelis`, description: c.metaDescription, path: `/guides/${slug}` });
+  // Retired "AI output QA" guide content: the route redirects to /how-it-works (proxy.ts) and is out of the
+  // sitemap. Neutral, noindexed metadata is a backstop so no retired title/OG is indexable if reached direct.
+  return ogMeta({ title: "Vraelis", description: "Production verification for AI-built applications and systems.", path: `/guides/${slug}`, index: false });
 }
 
 const kicker = { fontFamily: "var(--font-code)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-4)" } as const;

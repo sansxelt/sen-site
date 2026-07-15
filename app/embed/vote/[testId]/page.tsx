@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getTestWithOptions } from "@/lib/v-db";
+import { humanEvalEnabled } from "@/lib/v-entitlements";
 import { screeningQuestionsForTest } from "@/lib/v-screening";
 import { EmbedVote } from "./embed-vote";
 import { EmbedStage } from "./embed-stage";
 
-export const metadata: Metadata = { title: "Evaluate — Vraelis", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Vraelis", robots: { index: false, follow: false } };
 
-// Standalone, self-contained evaluation widget meant to be iframed on any site
-// (see /embed.js). Inline styles so it renders cleanly regardless of host CSS.
+// Standalone, self-contained evaluation widget meant to be iframed on any site (see /embed.js). Inline
+// styles so it renders cleanly regardless of host CSS. This is part of the RETIRED human-evaluation
+// product: it stays gated behind the same flag as /vote and the eval ingress — when the flag is off (the
+// default and current production state), the widget is a clean 404 so the retired participant surface can
+// never render publicly. Code preserved for a future evaluator panel.
 export default async function EmbedVotePage({ params }: { params: Promise<{ testId: string }> }) {
+  if (!humanEvalEnabled()) notFound();
   const { testId } = await params;
   const data = await getTestWithOptions(testId);
   const live = data && data.test.status === "active";

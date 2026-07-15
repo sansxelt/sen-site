@@ -25,9 +25,9 @@ const INVITABLE: Role[] = ["admin", "editor", "viewer", "client_viewer"];
 const ROLE_LABEL: Record<Role, string> = { owner: "Owner", admin: "Admin", editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
 const ROLE_DESC: Record<Role, string> = {
   owner: "Full workspace control. Manages the team and owns billing.",
-  admin: "Manage members and project access. See analytics and reports.",
-  editor: "Create and edit evaluations and projects. See analytics and reports.",
-  viewer: "Read-only workspace access to projects, evaluations, and reports.",
+  admin: "Manage members and application access. See analytics and reports.",
+  editor: "Author contracts and flows, and launch Production Passes. See analytics and reports.",
+  viewer: "Read-only workspace access to applications, passes, and reports.",
   client_viewer: "Client-safe reports only, no team, billing, API, or private internals.",
 };
 const PROJ_ROLE_LABEL: Record<ProjRole, string> = { editor: "Editor", viewer: "Viewer", client_viewer: "Client viewer" };
@@ -137,7 +137,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
         <div>
           <p className="eyebrow">Workspace</p>
           <h1 className="display">Team</h1>
-          <p>Run evaluations with your team and share client-ready decision reports, without exposing private controls.</p>
+          <p>Run Production Passes with your team and share client-ready reports, without exposing private controls.</p>
         </div>
         <Link href="/activity" className="btn btn--ghost">Workspace activity →</Link>
       </div>
@@ -151,7 +151,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
 
       {/* Governance / enterprise readiness */}
       <div className="card" style={{ marginBottom: 18, background: "var(--bg-2)" }}>
-        <div style={cardHead}>Built for governed decision workflows</div>
+        <div style={cardHead}>Built for governed production verification</div>
         <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "8px 18px" }}>
           {["Role-based workspace access", "Client-safe report sharing", "Workspace activity log", "Billing admin separation", "Secure, expiring invite links", "Project-level access control", "Signed webhooks & API keys", "Ownership transfer with audit"].map((g) => (
             <li key={g} style={{ fontSize: 13, color: "var(--fg-2)", display: "flex", gap: 8, alignItems: "center" }}><span aria-hidden style={{ display: "inline-flex", color: "var(--acc-deep)", flex: "none" }}><Ic d={I.check} size={12} sw={2.4} /></span>{g}</li>
@@ -273,7 +273,7 @@ export function TeamClient({ email, initial, billing, transfer, orgLink }: { ema
             </div>
           </div>
         ))}
-        {active.length === 1 && <div style={{ padding: "16px", fontSize: 13, color: "var(--fg-4)", borderTop: "1px solid var(--line-1)" }}>Your workspace is just you for now. Invite collaborators or clients to review decision reports with you.</div>}
+        {active.length === 1 && <div style={{ padding: "16px", fontSize: 13, color: "var(--fg-4)", borderTop: "1px solid var(--line-1)" }}>Your workspace is just you for now. Invite collaborators or clients to review your reports with you.</div>}
       </div>
       {isOwner && active.some((m) => (["admin", "editor", "viewer"] as Role[]).includes(m.role)) && (
         <p style={{ fontSize: 11.5, color: "var(--fg-5)", margin: "-8px 0 18px", lineHeight: 1.6 }}>Billing admins can view invoices and manage team billing, but cannot transfer ownership or access personal billing. Client viewers can never be billing admins.</p>

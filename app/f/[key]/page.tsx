@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getWorkspaceByIntakeKey } from "@/lib/vraelis-db";
+import { leadAgentEnabled } from "@/lib/v-entitlements";
 import { IntakeForm } from "./intake-form";
 
 export const metadata: Metadata = {
-  title: "Get in touch",
+  title: "Vraelis",
   robots: { index: false, follow: false },
 };
 
@@ -12,6 +14,8 @@ export default async function IntakeFormPage({
 }: {
   params: Promise<{ key: string }>;
 }) {
+  // Retired lead-agent intake form: 404 unless the product is explicitly enabled (default off).
+  if (!leadAgentEnabled()) notFound();
   const { key } = await params;
   const workspace = await getWorkspaceByIntakeKey(key);
   const businessName = workspace?.business_name || "us";

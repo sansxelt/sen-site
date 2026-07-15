@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { ensureProfile, getPlan } from "@/lib/v-db";
 import { ensureSignupGrant, balance } from "@/lib/v-credits";
-import { isAdmin } from "@/lib/v-entitlements";
+import { isAdmin, humanEvalEnabled } from "@/lib/v-entitlements";
 import { resolveWorkspaceSelection, workspaceProjectSummaries } from "@/lib/v-workspace";
 import { getDomainAccessForEmail } from "@/lib/v-organization";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
@@ -91,9 +91,16 @@ export default async function Dashboard() {
   await ensureProfile(email, session.user?.name ?? undefined);
   await ensureSignupGrant(email);
 
-  const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
-  if (selected && !selected.isPersonal) {
-    return <WorkspaceMemberView selected={selected} summary={await workspaceProjectSummaries(selected)} variant="dashboard" />;
+  // WorkspaceMemberView is the RETIRED human-evaluation analytics dashboard (decision programs, judgments).
+  // Preflight teams reuse the same v_workspaces, so a Preflight member selecting a shared workspace must NOT
+  // land on it — gate it behind the human-eval flag. When off (current production), fall through to the
+  // standard Preflight dashboard below, which already scopes to the caller's shared applications
+  // (listApplicationsForMember). Only when human evaluation is enabled does the legacy member view render.
+  if (humanEvalEnabled()) {
+    const { selected } = await resolveWorkspaceSelection(email, (await cookies()).get("vws")?.value);
+    if (selected && !selected.isPersonal) {
+      return <WorkspaceMemberView selected={selected} summary={await workspaceProjectSummaries(selected)} variant="dashboard" />;
+    }
   }
 
   const owner = email.toLowerCase();
