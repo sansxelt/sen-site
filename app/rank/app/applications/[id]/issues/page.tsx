@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { requirePreflightAppAccess } from "@/lib/v-preflight-guard";
+import { capabilities } from "@/lib/preflight/role-capabilities";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { SetupRequired } from "../../setup-required";
 import { getApplication } from "@/lib/v-applications";
@@ -74,7 +75,9 @@ const sectionHead = { fontFamily: "var(--font-display)", fontWeight: 600, fontSi
 // read degrades to an empty state, so nothing here is ever fabricated.
 export default async function AppIssuesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const owner = (await requirePreflightAppAccess(id, "/applications/" + id))?.owner ?? "";
+  const access = await requirePreflightAppAccess(id, "/applications/" + id);
+  const owner = access?.owner ?? "";
+  const caps = capabilities(access?.role);
   if (!(await preflightDbReady())) return <SetupRequired />;
 
   const app = await getApplication(owner, id);
