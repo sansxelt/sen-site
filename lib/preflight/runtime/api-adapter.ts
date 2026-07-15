@@ -144,7 +144,12 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
 
   const resolveUrl = (path: string): string | null => {
     try {
-      const u = new URL(path, input.baseUrl.endsWith("/") ? input.baseUrl : input.baseUrl + "/");
+      // JOIN base + path (Stripe-style API-client semantics), never URL-RESOLVE: with a base that carries a
+      // path prefix (https://host/api/v2), resolving "/users" would silently strip the prefix and hit the
+      // origin root. A step path must be an absolute path on the API — never a full or protocol-relative
+      // URL (those could re-aim the request; rejected before any join).
+      if (!path.startsWith("/") || path.startsWith("//") || path.includes("://")) return null;
+      const u = new URL(input.baseUrl.replace(/\/+$/, "") + path);
       const base = new URL(input.baseUrl);
       if (u.origin !== base.origin) return null; // never leave the app's own API origin (boundary)
       return u.toString();
@@ -158,8 +163,8 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
     const stepClass = ACTION_TO_CLASS[step.action];
     const t0 = input.clock();
     const iso = new Date(t0).toISOString();
-    const rec = (ok: boolean, detail: string, evidence: EvidenceItem[] = []): StepObservation =>
-      ({ stepClass, ok, detail, ms: Math.max(0, input.clock() - t0), evidence });
+    const rec = (ok: boolean, detail: string, evidence: EvidenceItem[] = [], transport?: "unreachable" | "blocked"): StepObservation =>
+      ({ stepClass, ok, detail, ms: Math.max(0, input.clock() - t0), evidence, ...(transport ? { transport } : {}) });
 
     let obs: StepObservation;
     switch (step.action) {
@@ -192,7 +197,14 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
         const reqEv = { method, path: safePath, headers: maskHeaders(outHeaders, secretValues), body: sanitizeBody(bodyStr, secretValues) };
         let res: { status: number; headers: Record<string, string>; text: string };
         try { res = await input.fetcher(url, { method, headers: outHeaders, body: bodyStr, redirect: "manual" }); }
-        catch (e) { obs = rec(false, `request failed: ${(e as Error).message.slice(0, 80)}`, [httpTxnEvidence(iso, reqEv)]); break; }
+        catch (e) {
+          // The fetcher may tag WHY it threw so the decision layer can tell a transport failure (infra) from
+          // an SSRF/safe-fetch rejection (a product/security signal, never free infra). Default to
+          // "unreachable" only for a bare throw with no tag.
+          const kind = (e as { transportKind?: "unreachable" | "blocked" }).transportKind ?? "unreachable";
+          obs = rec(false, `request failed: ${kind}`, [httpTxnEvidence(iso, reqEv)], kind);
+          break;
+        }
         let json: unknown = undefined;
         try { json = res.text ? JSON.parse(res.text) : undefined; } catch { /* non-JSON */ }
         lastResponse = { status: res.status, json };
@@ -201,6 +213,10 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
         if (step.action === "http_request") {
           obs = rec(true, `${method} ${safePath} -> ${res.status}`, ev);
         } else {
+          // verify_persisted must confirm the resource was actually RETRIEVED (a 2xx) before trusting the
+          // body — otherwise a 404/500 error body that coincidentally carries the expected value at the JSON
+          // path would falsely pass the persistence check. Status first, then the path assertion.
+          if (res.status < 200 || res.status >= 300) { obs = rec(false, `persisted check failed: ${res.status} (not retrievable)`, ev); break; }
           const got = readJsonPath(json, step.jsonPath);
           const ok = got.found && (step.equals === undefined || JSON.stringify(got.value) === JSON.stringify(step.equals));
           obs = rec(ok, ok ? `persisted: ${step.jsonPath} matches` : `persisted check failed: ${step.jsonPath}`, ev);

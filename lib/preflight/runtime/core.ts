@@ -90,6 +90,11 @@ export type StepObservation = {
   detail: string;                // owner-safe outcome; never a secret
   ms: number;
   evidence: EvidenceItem[];      // 0..n; kinds must be declared in the adapter's capabilities
+  // Set ONLY when a request never yielded an HTTP response (the fetcher threw). "unreachable" = a genuine
+  // transport failure (DNS/connect) -> classify infra. "blocked" = the SSRF/safe-fetch guard rejected the
+  // destination (non-https, private/metadata host) -> a PRODUCT/security signal, never free infra. A normal
+  // assertion failure leaves this undefined. Decision layers key on THIS, never on parsing `detail`.
+  transport?: "unreachable" | "blocked";
 };
 
 // ── Normalized flow result + decision grain ─────────────────────────────────────────────────────────
