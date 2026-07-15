@@ -26,6 +26,14 @@ export function legacyCheckerEnabled(): boolean {
   return process.env.VRAELIS_LEGACY_CHECKER_ENABLED !== "0";
 }
 
+// API RUNTIME BETA surface flag. Two gates protect the API-runtime customer surfaces, BOTH required (fail
+// closed): this env flag (is the surface deployed/enabled at all) AND apiRuntimeBetaAllowed(email) (is THIS
+// account allowlisted). The env flag lets us ship the code dark and flip the whole surface off instantly;
+// the per-account allowlist decides who sees it. Mirrors preflightEnabled() + requirePreflightOwner().
+export function apiRuntimeEnabled(): boolean {
+  return on(process.env.VRAELIS_API_RUNTIME_BETA_ENABLED);
+}
+
 // Kill switch for NEW runs only. When on, the run + rerun routes refuse to queue (503 runs_paused) while
 // every existing report stays readable and the worker keeps draining already-claimed work. It never hides
 // history and never touches read routes.

@@ -46,6 +46,7 @@
     "web:characterization:test": "tsx scripts/preflight-web-characterization-verify.ts",
     "agent:test": "tsx scripts/preflight-agent-verify.ts",
     "api:canary:test": "tsx scripts/preflight-api-canary-surface-verify.ts",
+    "api:beta:test": "tsx scripts/preflight-api-beta-verify.ts",
     "billing:returns:test": "tsx scripts/billing-returns-verify.ts",
     "context:test": "tsx scripts/preflight-context-verify.ts",
     "provenance:test": "tsx scripts/preflight-provenance-verify.ts",

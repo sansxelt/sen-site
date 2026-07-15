@@ -48,6 +48,18 @@ export function apiAccessAllowed(plan: string | null | undefined, email: string)
   return allow.includes((email || "").trim().toLowerCase());
 }
 
+// API RUNTIME BETA — account-level allowlist for the customer-facing API verification product (distinct
+// from the Rank `.api` entitlement above, which gates the older programmatic API). The API runtime engine is
+// live-proven but gated to selected accounts during beta. Same fail-closed pattern as apiAccessAllowed /
+// isAdmin: an account is enabled ONLY if its lowercased email is in VRAELIS_API_RUNTIME_BETA (comma-
+// separated). Default OFF for everyone — no env, no access. Enforce server-side at every API-target route +
+// page, exactly as preflightEnabled() is enforced.
+export function apiRuntimeBetaAllowed(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const allow = (process.env.VRAELIS_API_RUNTIME_BETA || "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean);
+  return allow.includes(email.trim().toLowerCase());
+}
+
 // ── One-time credit top-up limits ──────────────────────────────────────────────
 // $999,999.99 is the hard ceiling for a SINGLE Stripe charge (99,999,999 cents).
 // So this is the max any one top-up checkout can be, for everyone.
