@@ -206,6 +206,45 @@ export async function addTestAccount(owner: string, applicationId: string, input
   return { id: (data as { id: string }).id, usernameMask };
 }
 
+// API BETA: store an API credential (bearer token / api key / basic) in the SAME vault, as a distinct
+// provider "api_credential". The single secret value is sealed; the client only ever sees a mask + the label
+// + the scheme. Mirrors addTestAccount's discipline exactly. `scheme` decides how the executor applies it
+// (bearer -> Authorization: Bearer; api_key -> a header, default X-API-Key; basic -> Authorization: Basic).
+export async function addApiCredential(owner: string, applicationId: string, input: { label: string; secret: string; scheme: "bearer" | "api_key" | "basic"; headerName?: string }): Promise<{ id: string; secretMask: string } | { error: string }> {
+  if (!isDatabaseConfigured()) return { error: "unavailable" };
+  if (!vaultConfigured()) return { error: "vault_unconfigured" };
+  if (!(await ownsApplication(owner, applicationId))) return { error: "not_found" };
+  const label = (input.label || "API credential").slice(0, 60);
+  const secret = (input.secret || "").trim();
+  const scheme = input.scheme;
+  if (!secret) return { error: "credentials_required" };
+  if (scheme !== "bearer" && scheme !== "api_key" && scheme !== "basic") return { error: "bad_scheme" };
+  const sealed = sealSecret({ secret });
+  const secretMask = maskSecretValue(secret);
+  const { data, error } = await db().from("v_app_connections").insert({
+    application_id: applicationId, user_id: norm(owner), provider: "api_credential",
+    status: "connected", encrypted_ref: sealed,
+    meta: { label, secret_mask: secretMask, scheme, ...(input.headerName ? { header_name: input.headerName.slice(0, 80) } : {}) },
+  } as never).select("id").single();
+  if (error || !data) return { error: "unavailable" };
+  return { id: (data as { id: string }).id, secretMask };
+}
+
+// EXECUTOR-ONLY: open an API credential's sealed secret + its scheme for a real request. Owner-scoped. Never
+// call from a route that could echo the value; the executor injects it into the adapter's in-memory map only.
+export async function openApiCredential(owner: string, applicationId: string, connectionId: string): Promise<{ secret: string; scheme: "bearer" | "api_key" | "basic"; headerName?: string } | null> {
+  if (!isDatabaseConfigured()) return null;
+  const { data } = await db().from("v_app_connections").select("encrypted_ref,meta")
+    .eq("user_id", norm(owner)).eq("application_id", applicationId).eq("id", connectionId)
+    .eq("provider", "api_credential").maybeSingle();
+  const row = data as { encrypted_ref?: string; meta?: { scheme?: string; header_name?: string } } | null;
+  if (!row?.encrypted_ref) return null;
+  const opened = openSecret(row.encrypted_ref);
+  const scheme = row.meta?.scheme;
+  if (scheme !== "bearer" && scheme !== "api_key" && scheme !== "basic") return null;
+  return { secret: String(opened.secret ?? ""), scheme, ...(row.meta?.header_name ? { headerName: row.meta.header_name } : {}) };
+}
+
 // Revoke any connection (including a test account): the row is deleted, the ciphertext with it. Returns
 // true ONLY when a row was actually removed (adversarial review finding: a zero-row delete is not an
 // error to PostgREST, and a false "revoked" on a credential is a lie the owner acts on).
