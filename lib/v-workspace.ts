@@ -76,6 +76,15 @@ export const canViewAnalytics = (r: Role | null) => r === "owner" || r === "admi
 export const canViewReports = (r: Role | null) => r != null && ROLES.includes(r) && r !== ("revoked" as Role);
 export const isClientViewer = (r: Role | null) => r === "client_viewer";
 
+// Role capability ladder (most-privileged first), used by hasAtLeastRole. client_viewer is a SIDE role
+// (report-only), not a rung on the ladder — it is deliberately excluded so "at least viewer" never admits a
+// client_viewer to non-report surfaces. A null role (no membership) never satisfies any minimum.
+const ROLE_RANK: Record<Exclude<Role, "client_viewer">, number> = { owner: 4, admin: 3, editor: 2, viewer: 1 };
+export function hasAtLeastRole(role: Role | null | undefined, min: Exclude<Role, "client_viewer">): boolean {
+  if (!role || role === "client_viewer") return false;
+  return ROLE_RANK[role] >= ROLE_RANK[min];
+}
+
 function deriveName(email: string): string {
   const local = norm(email).split("@")[0] || "My";
   return `${local.charAt(0).toUpperCase()}${local.slice(1)}'s workspace`;
@@ -121,7 +130,7 @@ export async function membershipFor(email: string, workspaceId: string): Promise
   } catch { return null; }
 }
 
-async function listMembers(workspaceId: string): Promise<Member[]> {
+export async function listMembers(workspaceId: string): Promise<Member[]> {
   try {
     const s = getSupabaseAdminClient();
     let q = await s.from("v_workspace_members" as never).select("id,workspace_id,user_id,email,role,status,created_at,invite_expires_at,can_manage_billing").eq("workspace_id", workspaceId).neq("status", "revoked").order("created_at", { ascending: true });

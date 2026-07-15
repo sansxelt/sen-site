@@ -4,30 +4,26 @@
 // Uniform 404 for any non-allowlisted or non-enabled caller (never reveals the beta exists).
 
 import { NextResponse } from "next/server";
-import { apiBetaOwner } from "@/lib/preflight/api-beta-gate";
-import { getApplication } from "@/lib/v-applications";
+import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { getApiTarget, createApiTarget, getLatestApiBuild, setApiBuild } from "@/lib/preflight/runtime/targets-db";
 
 export const runtime = "nodejs";
-const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 });
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const owner = await apiBetaOwner();
-  if (!owner) return notFound();
   const { id } = await params;
-  const app = await getApplication(owner, id);
-  if (!app) return notFound();
+  const g = await gateApiRuntimeApp(id, "viewer"); // reading the target is viewer+
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
   const target = await getApiTarget(owner, id);
   const build = target ? await getLatestApiBuild(owner, target.id) : null;
   return NextResponse.json({ target, build });
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const owner = await apiBetaOwner();
-  if (!owner) return notFound();
   const { id } = await params;
-  const app = await getApplication(owner, id);
-  if (!app) return notFound();
+  const g = await gateApiRuntimeApp(id, "editor"); // creating/updating the target + build is editor+
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
 
   let body: { environment?: string; label?: string; baseUrl?: string; version?: string };
   try { body = (await req.json()) as typeof body; } catch { return NextResponse.json({ error: "bad_body" }, { status: 400 }); }

@@ -4,8 +4,7 @@
 // customer-safe language (no internal decision/reason enums). Uniform 404.
 
 import { NextResponse } from "next/server";
-import { apiBetaOwner } from "@/lib/preflight/api-beta-gate";
-import { getApplication } from "@/lib/v-applications";
+import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { getApiTarget } from "@/lib/preflight/runtime/targets-db";
 import { readApiRun } from "@/lib/preflight/runtime/api-run-store";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -26,10 +25,10 @@ function safeDetail(d: string): string {
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string; runId: string }> }) {
-  const owner = await apiBetaOwner();
-  if (!owner) return notFound();
   const { id, runId } = await params;
-  if (!(await getApplication(owner, id))) return notFound();
+  const g = await gateApiRuntimeApp(id, "viewer"); // reading one run's report is viewer+
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
   const target = await getApiTarget(owner, id);
   if (!target) return notFound();
 

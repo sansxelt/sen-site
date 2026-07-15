@@ -11,36 +11,31 @@
 //     returns the existing row, and no duplicate audit event is written)
 //   - audit events carry application_id + provider ONLY, never metadata values
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { preflightEnabled } from "@/lib/v-preflight-flags";
-import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { getApplication } from "@/lib/v-applications";
 import { listConnections, addConnection } from "@/lib/preflight/connections-db";
 import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
+import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
+import type { Role } from "@/lib/v-workspace";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
 
-async function gate(params: Promise<{ id: string }>): Promise<{ owner: string; appId: string } | NextResponse> {
-  if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  if (!(await preflightDbReady())) return NextResponse.json({ error: "setup_required" }, { status: 503 });
+// Listing connections is viewer+; adding one is editor+. `owner` = app owner (data-plane key).
+async function gate(params: Promise<{ id: string }>, minRole: Exclude<Role, "client_viewer">): Promise<{ owner: string; appId: string } | NextResponse> {
   const { id } = await params;
-  const app = await getApplication(email.toLowerCase(), id);
-  if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  return { owner: email.toLowerCase(), appId: id };
+  const g = await gatePreflightApp(id, minRole);
+  if (!g.ok) return gateReasonResponse(g.reason);
+  return { owner: g.owner, appId: id };
 }
 
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const g = await gate(ctx.params);
+  const g = await gate(ctx.params, "viewer");
   if (g instanceof NextResponse) return g;
   const connections = await listConnections(g.owner, g.appId);
   return NextResponse.json({ connections });
 }
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const g = await gate(ctx.params);
+  const g = await gate(ctx.params, "editor");
   if (g instanceof NextResponse) return g;
   const body = await req.json().catch(() => ({}));
   const provider = typeof body?.provider === "string" ? body.provider : "";

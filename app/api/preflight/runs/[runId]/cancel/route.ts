@@ -7,6 +7,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { requestRunCancel } from "@/lib/preflight/runs-db";
+import { applicationAccessForRun } from "@/lib/preflight/team-access";
+import { hasAtLeastRole } from "@/lib/v-workspace";
 
 export const runtime = "nodejs";
 
@@ -16,7 +18,12 @@ export async function POST(_req: Request, { params }: { params: Promise<{ runId:
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const { runId } = await params;
 
-  const result = await requestRunCancel(email.toLowerCase(), runId);
+  // Cancelling a live run is an EDITOR+ action. Resolve the run's app owner; a view-only member is
+  // forbidden, a non-member gets a uniform 404. requestRunCancel stays owner-scoped.
+  const access = await applicationAccessForRun(email, runId);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) return NextResponse.json({ error: "forbidden", message: "You have view-only access to this application." }, { status: 403 });
+  const result = await requestRunCancel(access.owner, runId);
   if (result === "not_found") return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (result === "unavailable") return NextResponse.json({ error: "unavailable" }, { status: 503 });
   return NextResponse.json({ ok: true }, { headers: { "cache-control": "no-store" } });

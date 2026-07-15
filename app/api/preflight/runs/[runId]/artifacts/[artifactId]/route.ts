@@ -10,6 +10,7 @@ import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { getRunArtifactPath } from "@/lib/preflight/runs-db";
 import { signedArtifactUrl } from "@/lib/preflight/artifacts";
+import { applicationAccessForRun } from "@/lib/preflight/team-access";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ runId: 
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const { runId, artifactId } = await params;
 
-  const path = await getRunArtifactPath(email.toLowerCase(), runId, artifactId);
+  // Evidence (screenshot/trace) is part of the run report — any member with access to the shared app may
+  // view it (viewer+). Resolve the run's app owner; getRunArtifactPath stays owner-scoped so the artifact
+  // path is always the app owner's.
+  const access = await applicationAccessForRun(email, runId);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const path = await getRunArtifactPath(access.owner, runId, artifactId);
   if (!path) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   const url = await signedArtifactUrl(path, 120);

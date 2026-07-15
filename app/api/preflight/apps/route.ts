@@ -14,6 +14,8 @@ import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
 import { passPricingEnabled } from "@/lib/preflight/pass-pricing";
 import { applicationCapReached, getPlanV1State } from "@/lib/preflight/entitlements-v1";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
+import { applicationAccess } from "@/lib/preflight/team-access";
+import { getOrCreatePersonalWorkspace, hasAtLeastRole } from "@/lib/v-workspace";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -47,7 +49,12 @@ export async function POST(req: Request) {
     }
   }
 
-  const r = await createApplication(email, { name, appUrl, builder, sourcePrompt, ownershipConfirmed: true });
+  // Attach the new app to the creator's personal workspace so team sharing works immediately (migration 14
+  // only backfills EXISTING apps). Best-effort: getOrCreatePersonalWorkspace returns null pre-migration or on
+  // a transient blip, in which case workspace_id stays null and the app is owner-only (today's behavior) until
+  // the founder runs migration 14, which backfills it. The creator is always the owner regardless.
+  const personalWs = await getOrCreatePersonalWorkspace(email);
+  const r = await createApplication(email, { name, appUrl, builder, sourcePrompt, ownershipConfirmed: true, workspaceId: personalWs?.id ?? null });
   if (!r.ok) {
     const status = r.error === "unavailable" ? 503 : 400;
     return NextResponse.json({ error: r.error }, { status });
@@ -89,8 +96,13 @@ export async function DELETE(req: Request) {
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
-  // Honest result: a zero-row delete (not owned / already gone) must not read as "deleted".
-  const ok = await deleteApplication(email, id);
+  // Deleting a shared application is an OWNER/ADMIN action (it removes it for the whole workspace). A
+  // non-member gets a uniform 404; an editor/viewer is forbidden. Delete runs on the app OWNER's data plane.
+  const access = await applicationAccess(email, id);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "admin")) return NextResponse.json({ error: "forbidden", message: "Only the application owner or a workspace admin can remove it." }, { status: 403 });
+  // Honest result: a zero-row delete (already gone) must not read as "deleted".
+  const ok = await deleteApplication(access.owner, id);
   if (!ok) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ ok: true });
 }

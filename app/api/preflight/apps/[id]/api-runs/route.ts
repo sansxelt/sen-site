@@ -10,7 +10,7 @@
 
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { apiBetaOwner } from "@/lib/preflight/api-beta-gate";
+import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { runsDisabled } from "@/lib/v-preflight-flags";
 import { isRunsGovernorPaused } from "@/lib/preflight/cost-governor";
 import { getApplication } from "@/lib/v-applications";
@@ -31,13 +31,15 @@ export const maxDuration = 120;
 const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 });
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const owner = await apiBetaOwner();
-  if (!owner) return notFound();
+  const { id } = await params;
+  // Launching an API run is EDITOR+. Resolves the app OWNER (billing/data key) + caller role; both caller and
+  // owner must have API-runtime access. owner = app owner, so an editor's run charges the OWNER (owner-anchored
+  // billing) exactly like the web launch route.
+  const g = await gateApiRuntimeApp(id, "editor");
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
   if (runsDisabled()) return NextResponse.json({ error: "runs_paused", message: "New runs are temporarily paused. Existing reports remain available." }, { status: 503 });
   if (await isRunsGovernorPaused()) return NextResponse.json({ error: "runs_paused", message: "New runs are temporarily paused. Existing reports remain available." }, { status: 503 });
-
-  const { id } = await params;
-  if (!(await getApplication(owner, id))) return notFound();
 
   let body: { flowIds?: unknown; rerun?: boolean; idempotencyKey?: string };
   try { body = (await req.json()) as typeof body; } catch { return NextResponse.json({ error: "bad_body" }, { status: 400 }); }

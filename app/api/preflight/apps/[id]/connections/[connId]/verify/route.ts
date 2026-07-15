@@ -16,10 +16,7 @@
 // number (never raw provider errors), and a failed check updates only status + note — previously
 // valid metadata is never destroyed. Audit event carries application_id + provider only.
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { preflightEnabled } from "@/lib/v-preflight-flags";
-import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { getApplication } from "@/lib/v-applications";
+import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { getConnection, recordConnectionCheck } from "@/lib/preflight/connections-db";
 import { planHealthCheck, healthStatusFromHttp, CHECK_NOTES, CHECK_TIMEOUT_MS } from "@/lib/preflight/connection-health";
 import { unsafeHttpsUrlReason, safeFetch, isBlockedFetchError } from "@/lib/safe-fetch";
@@ -79,14 +76,11 @@ async function probeGithubRepo(repo: string): Promise<CheckResult> {
 }
 
 export async function POST(req: Request, ctx: { params: Params }) {
-  if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  if (!(await preflightDbReady())) return NextResponse.json({ error: "setup_required" }, { status: 503 });
-  const owner = email.toLowerCase();
   const { id, connId } = await ctx.params;
-  const app = await getApplication(owner, id);
-  if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  // Health-checking a connection is EDITOR+ (it makes an outbound request on the app's behalf). owner = app owner.
+  const g = await gatePreflightApp(id, "editor");
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
   if (!checkRateLimit(`connverify:${owner}`, 10, 10 * 60 * 1000)) {
     return NextResponse.json({ error: "rate_limited", message: "Too many health checks. Try again in a few minutes." }, { status: 429 });
   }

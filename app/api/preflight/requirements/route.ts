@@ -16,26 +16,34 @@ import {
   getContractById, contractStatusForRequirement, type Severity,
 } from "@/lib/v-applications";
 import { snapshotIfChanged, pinSnapshotToContract } from "@/lib/preflight/context-snapshots";
+import { applicationAccessForContract, applicationAccessForRequirement } from "@/lib/preflight/team-access";
+import { hasAtLeastRole } from "@/lib/v-workspace";
 
 export const runtime = "nodejs";
 
 const SEVERITIES: Severity[] = ["critical", "important", "informational"];
 const sev = (v: unknown): Severity | undefined => (typeof v === "string" && (SEVERITIES as string[]).includes(v) ? (v as Severity) : undefined);
 
-async function owner() { return (await auth())?.user?.email || null; }
-
 const approvedImmutable = () => NextResponse.json(
   { error: "contract_approved", message: "Approved contracts are immutable. Create a new draft to make changes." },
   { status: 409 },
 );
+const forbidden = () => NextResponse.json({ error: "forbidden", message: "You have view-only access to this application." }, { status: 403 });
 
 export async function POST(req: Request) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = await owner();
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  const callerEmail = (await auth())?.user?.email;
+  if (!callerEmail) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const contractId = typeof body?.contract_id === "string" ? body.contract_id : "";
   if (!contractId) return NextResponse.json({ error: "missing_contract" }, { status: 400 });
+
+  // TEAM ACCESS: resolve the contract to the app OWNER + caller role. Editing requirements / approving the
+  // contract is EDITOR+. owner = app owner (data-plane key); a non-member 404s, a view-only member 403s.
+  const access = await applicationAccessForContract(callerEmail, contractId);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) return forbidden();
+  const email = access.owner;
 
   // Owner-scoped read; null means not-found/not-owned and falls through to the normal failure paths.
   const contract = await getContractById(email, contractId);
@@ -66,11 +74,16 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = await owner();
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  const callerEmail = (await auth())?.user?.email;
+  if (!callerEmail) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const id = typeof body?.id === "string" ? body.id : "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
+  // Resolve the requirement -> app owner + role. Editing a requirement is EDITOR+.
+  const access = await applicationAccessForRequirement(callerEmail, id);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) return forbidden();
+  const email = access.owner;
   if ((await contractStatusForRequirement(email, id)) === "approved") return approvedImmutable();
   const ok = await updateRequirement(email, id, {
     enabled: typeof body?.enabled === "boolean" ? body.enabled : undefined,
@@ -82,10 +95,14 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = await owner();
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  const callerEmail = (await auth())?.user?.email;
+  if (!callerEmail) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
+  const access = await applicationAccessForRequirement(callerEmail, id);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) return forbidden();
+  const email = access.owner;
   if ((await contractStatusForRequirement(email, id)) === "approved") return approvedImmutable();
   const ok = await deleteRequirement(email, id);
   return ok ? NextResponse.json({ ok: true }) : NextResponse.json({ error: "delete_failed" }, { status: 400 });

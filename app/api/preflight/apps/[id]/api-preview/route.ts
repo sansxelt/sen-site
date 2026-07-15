@@ -4,8 +4,7 @@
 // blockers that would refuse the launch (target/base URL/flows/credentials/unsupported action). Uniform 404.
 
 import { NextResponse } from "next/server";
-import { apiBetaOwner } from "@/lib/preflight/api-beta-gate";
-import { getApplication } from "@/lib/v-applications";
+import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { getApiTarget, getLatestApiBuild, listApiFlows } from "@/lib/preflight/runtime/targets-db";
 import { listConnections } from "@/lib/preflight/connections-db";
 import { computeReadiness } from "@/lib/preflight/runtime/api-readiness";
@@ -13,13 +12,12 @@ import { priceApiLaunch } from "@/lib/preflight/runtime/api-beta-billing";
 import { API_ACTION_LABELS } from "@/lib/preflight/runtime/api-steps";
 
 export const runtime = "nodejs";
-const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 });
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const owner = await apiBetaOwner();
-  if (!owner) return notFound();
   const { id } = await params;
-  if (!(await getApplication(owner, id))) return notFound();
+  const g = await gateApiRuntimeApp(id, "viewer"); // previewing (reading price/readiness) is viewer+
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
 
   const url = new URL(req.url);
   const selectedFlowIds = (url.searchParams.get("flowIds") || "").split(",").map((s) => s.trim()).filter(Boolean);

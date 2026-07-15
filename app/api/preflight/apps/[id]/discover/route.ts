@@ -7,12 +7,11 @@
 // persisted so a same-key replay of an in-flight run resolves to it.
 
 import { NextResponse, after } from "next/server";
-import { auth } from "@/auth";
-import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { getApplication } from "@/lib/v-applications";
 import { allowStrict } from "@/lib/vraelis-ratelimit";
 import { getActiveDiscovery, createDiscovery } from "@/lib/preflight/discovery-db";
 import { runDiscovery } from "@/lib/preflight/discover-run";
+import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 
 export const runtime = "nodejs";
 // A discovery does a bounded crawl (~20s) + a synthesis LLM call (~50s) in after(); keep the budget above
@@ -20,11 +19,11 @@ export const runtime = "nodejs";
 export const maxDuration = 120;
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  const owner = email.toLowerCase();
   const { id } = await params;
+  // Discovery revises the shared contract -> EDITOR+. owner = the app owner (data-plane key).
+  const g = await gatePreflightApp(id, "editor");
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
 
   const app = await getApplication(owner, id);
   if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });

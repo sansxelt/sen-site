@@ -329,9 +329,9 @@ function vocabularyContainmentTests() {
   ok("read route sanitizes internal transport-failure detail", readSrc.includes("could not be completed"));
 }
 
-// ── gate module: routes call the canonical 404 gate, not ad-hoc checks ───────────────────────────────
+// ── gate module: routes call the canonical gate, not ad-hoc checks ───────────────────────────────────
 function gateWiringTests() {
-  console.log("\n── every customer route enforces the canonical gate (uniform 404) ──");
+  console.log("\n── every customer route enforces the canonical gate (uniform 404 for non-access) ──");
   const ROUTES = [
     "app/api/preflight/apps/[id]/runtime-targets/route.ts",
     "app/api/preflight/apps/[id]/api-credentials/route.ts",
@@ -343,12 +343,17 @@ function gateWiringTests() {
   ];
   for (const r of ROUTES) {
     const src = readFileSync(r, "utf8");
-    const usesGate = src.includes("apiBetaOwner");
-    const uniform404 = /status:\s*404/.test(src);
-    const noForbiddenStatus = !/status:\s*40[13]\b/.test(src.replace(/status:\s*400/g, "")); // no 401/403 gate leaks (400 body-validation is fine)
-    ok(`${r.split("/").slice(-2).join("/")} uses apiBetaOwner + returns 404, never 401/403`, usesGate && uniform404 && noForbiddenStatus);
+    // The canonical gate is now gateApiRuntimeApp (team-aware: surface + caller API access + app membership,
+    // returning the app OWNER for owner-anchored billing). It maps a denial through gateReasonResponse to a
+    // uniform 404 for a non-member/non-API caller, and a 403 only for a real VIEW-ONLY member on a write
+    // (who already knows the app exists — not a gate leak). apiBetaOwner is still accepted for any route that
+    // keeps it. So we require: uses gateApiRuntimeApp OR apiBetaOwner; and never a raw 401 gate leak.
+    const usesGate = src.includes("gateApiRuntimeApp") || src.includes("apiBetaOwner");
+    const uniform404 = src.includes("gateReasonResponse") || /status:\s*404/.test(src);
+    const noUnauthorizedLeak = !/status:\s*401\b/.test(src); // never a 401 (that hints the surface exists to an unauth'd caller)
+    ok(`${r.split("/").slice(-2).join("/")} uses the canonical gate + uniform 404, never a 401 leak`, usesGate && uniform404 && noUnauthorizedLeak);
   }
-  // The gate itself must require BOTH conditions.
+  // The base gate module still requires BOTH conditions (surface + account access).
   const gate = readFileSync("lib/preflight/api-beta-gate.ts", "utf8");
   ok("gate requires apiRuntimeEnabled AND apiRuntimeBetaAllowed", gate.includes("apiRuntimeEnabled") && gate.includes("apiRuntimeBetaAllowed"));
 }

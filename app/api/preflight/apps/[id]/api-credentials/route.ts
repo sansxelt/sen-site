@@ -5,18 +5,17 @@
 // Uniform 404 for any non-allowlisted/non-enabled caller.
 
 import { NextResponse } from "next/server";
-import { apiBetaOwner } from "@/lib/preflight/api-beta-gate";
-import { getApplication } from "@/lib/v-applications";
+import { gateApiRuntimeApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { addApiCredential, removeConnection, listConnections } from "@/lib/preflight/connections-db";
 
 export const runtime = "nodejs";
 const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 });
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const owner = await apiBetaOwner();
-  if (!owner) return notFound();
   const { id } = await params;
-  if (!(await getApplication(owner, id))) return notFound();
+  const g = await gateApiRuntimeApp(id, "viewer"); // masked list is viewer+ (secret is never returned)
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
   const all = await listConnections(owner, id);
   const credentials = all
     .filter((c) => c.provider === "api_credential")
@@ -25,10 +24,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const owner = await apiBetaOwner();
-  if (!owner) return notFound();
   const { id } = await params;
-  if (!(await getApplication(owner, id))) return notFound();
+  const g = await gateApiRuntimeApp(id, "editor"); // storing a sealed credential is editor+
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
 
   let body: { label?: string; secret?: string; scheme?: string; headerName?: string };
   try { body = (await req.json()) as typeof body; } catch { return NextResponse.json({ error: "bad_body" }, { status: 400 }); }
@@ -48,10 +47,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const owner = await apiBetaOwner();
-  if (!owner) return notFound();
   const { id } = await params;
-  if (!(await getApplication(owner, id))) return notFound();
+  const g = await gateApiRuntimeApp(id, "editor"); // revoking a credential is editor+
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
   const connId = new URL(req.url).searchParams.get("id") || "";
   if (!connId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   const ok = await removeConnection(owner, id, connId);

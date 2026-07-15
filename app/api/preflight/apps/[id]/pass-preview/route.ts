@@ -13,27 +13,22 @@
 // price it); the launch remains authoritative and the owner is shown the real price at launch.
 
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { preflightEnabled } from "@/lib/v-preflight-flags";
-import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { getApplication, getApprovedContract, listFlows } from "@/lib/v-applications";
+import { getApprovedContract, listFlows } from "@/lib/v-applications";
 import { gatePassLaunch } from "@/lib/preflight/entitlements-v1";
 import { evaluateAuthReadiness, anyAuthenticated, type PreviewFlow } from "@/lib/preflight/auth-preflight";
 import { getSetupExtras } from "@/lib/preflight/setup-read";
+import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  // Same gate as the other app routes: flag -> session -> db-ready -> ownership. Client ids never trusted.
-  if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  if (!(await preflightDbReady())) return NextResponse.json({ error: "setup_required" }, { status: 503 });
-  const owner = email.toLowerCase();
   const { id } = await ctx.params;
-  const app = await getApplication(owner, id);
-  if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  // Previewing a pass is a READ (viewer+). owner = app owner, so the previewed price/allowance is the
+  // OWNER's (a launch by any editor charges the owner) — consistent with the launch route.
+  const g = await gatePreflightApp(id, "viewer");
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
 
   // Resolve the SAME contract the launch path uses (latest APPROVED, never the draft).
   const contract = await getApprovedContract(owner, id);

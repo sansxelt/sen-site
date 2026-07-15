@@ -17,6 +17,8 @@ import { auth } from "@/auth";
 import { preflightEnabled, runsDisabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, getApprovedContract, listFlows } from "@/lib/v-applications";
+import { applicationAccess } from "@/lib/preflight/team-access";
+import { hasAtLeastRole } from "@/lib/v-workspace";
 import { getSetupExtras } from "@/lib/preflight/setup-read";
 import { evaluateAuthReadiness, anyAuthenticated, type PreviewFlow } from "@/lib/preflight/auth-preflight";
 import { unsafeHttpsUrlReason } from "@/lib/safe-fetch";
@@ -63,18 +65,34 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   const email = (await auth())?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  const owner = email.toLowerCase();
   const { id } = await params;
 
+  // TEAM ACCESS: resolve the caller to the app's OWNER (the data-plane key) + the caller's role. Access is
+  // granted to the owner or an active workspace member; anyone else gets a uniform 404 (indistinguishable
+  // from "does not exist"). `owner` is the app owner from here on — every owner-scoped read/write, credit
+  // hold, cap, and the velocity guard are keyed to the OWNER, so a member launching a run spends the OWNER's
+  // credits and counts against the OWNER's quotas (owner-anchored billing). Degrades to owner-only when the
+  // app has no workspace (single-user, unchanged).
+  const access = await applicationAccess(email, id);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const owner = access.owner;
+  // Launching a paid run is an EDITOR+ action. A viewer/client_viewer is a real member but read-only, so a
+  // forbidden here is honest (they already know the app exists). Non-members never reach this — they 404 above.
+  if (!hasAtLeastRole(access.role, "editor")) {
+    return NextResponse.json({ error: "forbidden", message: "You have view-only access to this application. Ask an editor or the owner to launch a Production Pass." }, { status: 403 });
+  }
+
   // Per-account velocity cap + circuit breaker (blocker 3): stops the refund/infra loop (a fast
-  // fail-then-refund churn) before any billing. Fails open on a read blip (velocity is a guard, not the
-  // hard spend limit — the billing hold + global governor are).
+  // fail-then-refund churn) before any billing. Keyed to the app OWNER (whose account bears the cost). Fails
+  // open on a read blip (velocity is a guard, not the hard spend limit — the billing hold + global governor
+  // are).
   {
     const v = await checkAccountVelocity(owner);
     if (v) return NextResponse.json({ error: v.reason, message: v.message }, { status: 429, headers: { "Retry-After": String(v.retryAfterSec) } });
   }
 
-  // Ownership: the app must exist AND belong to this owner (getApplication is user-scoped).
+  // The app is already resolved + access-checked above; re-read it in the OWNER's scope for the full row
+  // (deployment URL, etc.). This is the owner's own app, so getApplication(owner, id) always returns it.
   const app = await getApplication(owner, id);
   if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -278,7 +296,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   await logEvent({
     userId: owner, eventType: "preflight_run_queued", actorType: "owner", source: "app",
     route: `/api/preflight/apps/${id}/runs`,
-    metadata: { application_id: id, run_id: created.runId, flow_count: created.flowCount, credits_held: creditsHeld },
+    // userId stays the app OWNER (the dashboard queries runs by owner). When a workspace member launched the
+    // run, record who actually did it (actor) for audit — the credits were still the owner's.
+    metadata: { application_id: id, run_id: created.runId, flow_count: created.flowCount, credits_held: creditsHeld, ...(access.level === "workspace" ? { actor: email.toLowerCase(), actor_role: access.role } : {}) },
   });
 
   // Cost governor (blocker 3): record this launch as a provider-session ATTEMPT (drives the per-account

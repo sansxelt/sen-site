@@ -31,6 +31,8 @@ import { gatePassLaunch, recordRunPassUsage } from "@/lib/preflight/entitlements
 import { resolveCanonicalCluster, consumeFreeGrantOverride, recordFreeGrantRisk, hashRiskSignal, claimFreePass, attachRunToClaim, releaseFreePass } from "@/lib/preflight/free-grant-cluster";
 import { isRunsGovernorPaused, globalActiveRunsAtCap, checkAccountVelocity, recordProviderAttempt, recordProviderCost, maybeTripGlobalBudget, estimateProviderCents } from "@/lib/preflight/cost-governor";
 import { getRunInternal, parentRunFlows, setParentRun } from "@/lib/preflight/run-report-db";
+import { applicationAccessForRun } from "@/lib/preflight/team-access";
+import { hasAtLeastRole } from "@/lib/v-workspace";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -63,10 +65,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
   }
   const email = (await auth())?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  const owner = email.toLowerCase();
   const { runId: parentRunId } = await params;
 
-  // Per-account velocity cap + circuit breaker (blocker 3): stops the refund/infra loop before billing.
+  // TEAM ACCESS: resolve the parent run to the app OWNER (data-plane key) + caller role. A rerun re-launches a
+  // paid run, so it is EDITOR+. owner = the app owner from here, so the rerun charges the OWNER (owner-anchored
+  // billing) exactly like the launch route. A view-only member is forbidden; a non-member gets a uniform 404.
+  const access = await applicationAccessForRun(email, parentRunId);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) {
+    return NextResponse.json({ error: "forbidden", message: "You have view-only access to this application. Ask an editor or the owner to re-run a Production Pass." }, { status: 403 });
+  }
+  const owner = access.owner;
+
+  // Per-account velocity cap + circuit breaker (blocker 3): stops the refund/infra loop before billing. Keyed
+  // to the app OWNER (whose account bears the cost).
   {
     const v = await checkAccountVelocity(owner);
     if (v) return NextResponse.json({ error: v.reason, message: v.message }, { status: 429, headers: { "Retry-After": String(v.retryAfterSec) } });
@@ -76,8 +88,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ runId: 
     return NextResponse.json({ error: "setup_required", message: "Preflight is not fully set up yet." }, { status: 503 });
   }
 
-  // Ownership: the PARENT run must be owned. getRunInternal is user-scoped, so a run that is not this owner's
-  // (or does not exist) returns null and we 404 without leaking existence.
+  // The parent run is already resolved + access-checked above; re-read it in the OWNER's scope for the full
+  // internal row. getRunInternal(owner,…) always returns it (it's the owner's own run).
   const parent = await getRunInternal(owner, parentRunId);
   if (!parent) return NextResponse.json({ error: "not_found" }, { status: 404 });
 

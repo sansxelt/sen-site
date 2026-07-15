@@ -10,29 +10,25 @@
 //   - owner-scoped end to end: the app must belong to the signed-in email or everything 404s
 //   - the worker reads credentials via openTestAccount (worker-side), never through any web route
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { preflightEnabled } from "@/lib/v-preflight-flags";
-import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { getApplication } from "@/lib/v-applications";
 import { addTestAccount, getConnection, listConnections, removeConnection } from "@/lib/preflight/connections-db";
 import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
+import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
+import type { Role } from "@/lib/v-workspace";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
 
-async function gate(req: Request, params: Promise<{ id: string }>): Promise<{ owner: string; appId: string } | NextResponse> {
-  if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  if (!(await preflightDbReady())) return NextResponse.json({ error: "setup_required" }, { status: 503 });
+// Storing/removing a sealed credential is EDITOR+. The masked GET is viewer+ (plaintext is never returned by
+// any web route — the worker reads secrets server-side only). `owner` is the app owner (data-plane key).
+async function gate(params: Promise<{ id: string }>, minRole: Exclude<Role, "client_viewer">): Promise<{ owner: string; appId: string } | NextResponse> {
   const { id } = await params;
-  const app = await getApplication(email.toLowerCase(), id);
-  if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  return { owner: email.toLowerCase(), appId: id };
+  const g = await gatePreflightApp(id, minRole);
+  if (!g.ok) return gateReasonResponse(g.reason);
+  return { owner: g.owner, appId: id };
 }
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const g = await gate(req, ctx.params);
+  const g = await gate(ctx.params, "editor");
   if (g instanceof NextResponse) return g;
   const body = await req.json().catch(() => ({}));
   const result = await addTestAccount(g.owner, g.appId, {
@@ -60,7 +56,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 }
 
 export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const g = await gate(req, ctx.params);
+  const g = await gate(ctx.params, "viewer");
   if (g instanceof NextResponse) return g;
   const all = await listConnections(g.owner, g.appId);
   // Masked view only; listConnections never selects the ciphertext to begin with.
@@ -72,7 +68,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
 }
 
 export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const g = await gate(req, ctx.params);
+  const g = await gate(ctx.params, "editor");
   if (g instanceof NextResponse) return g;
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });

@@ -17,6 +17,8 @@ import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { preflightDbReady } from "@/lib/preflight/db-ready";
 import { getApplication, updateApplication } from "@/lib/v-applications";
 import { recordDeployment } from "@/lib/preflight/deployments-db";
+import { applicationAccess } from "@/lib/preflight/team-access";
+import { hasAtLeastRole } from "@/lib/v-workspace";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
@@ -26,17 +28,20 @@ function safeHost(url: string): string {
   try { return new URL(url).host.slice(0, 120); } catch { return ""; }
 }
 
+// Editing application settings is an EDITOR+ action. Resolve the caller to the app OWNER (the data-plane key)
+// + role via the workspace resolver: the owner or an active member passes the 404 gate; a view-only member is
+// forbidden (they already know the app exists); a non-member 404s. `owner` is the app owner from here, so the
+// update writes into the owner's data plane regardless of which teammate made the edit.
 async function gate(params: Promise<{ id: string }>): Promise<{ owner: string; appId: string } | NextResponse> {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const email = (await auth())?.user?.email;
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   if (!(await preflightDbReady())) return NextResponse.json({ error: "setup_required" }, { status: 503 });
-  const owner = email.toLowerCase();
   const { id } = await params;
-  // Ownership gate BEFORE any mutation: an unowned or missing id is a 404, exactly like the other routes.
-  const app = await getApplication(owner, id);
-  if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  return { owner, appId: id };
+  const access = await applicationAccess(email, id);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) return NextResponse.json({ error: "forbidden", message: "You have view-only access to this application." }, { status: 403 });
+  return { owner: access.owner, appId: id };
 }
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {

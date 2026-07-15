@@ -7,42 +7,43 @@
 // unsupported actions, other-origin paths, and unknown credential labels — BEFORE storage.
 
 import { NextResponse } from "next/server";
-import { apiBetaOwner } from "@/lib/preflight/api-beta-gate";
-import { getApplication, getApprovedContract } from "@/lib/v-applications";
+import { gateApiRuntimeApp } from "@/lib/preflight/team-access";
+import type { Role } from "@/lib/v-workspace";
+import { getApprovedContract } from "@/lib/v-applications";
 import { getApiTarget, listApiFlows, createApiFlow, updateApiFlow, deleteApiFlow } from "@/lib/preflight/runtime/targets-db";
 import { listConnections } from "@/lib/preflight/connections-db";
 import { validateApiSteps } from "@/lib/preflight/runtime/api-steps";
 
 export const runtime = "nodejs";
 const notFound = () => NextResponse.json({ error: "not_found" }, { status: 404 });
+const forbidden = () => NextResponse.json({ error: "forbidden", message: "You have view-only access to this application." }, { status: 403 });
 
 async function credentialLabels(owner: string, appId: string): Promise<string[]> {
   const all = await listConnections(owner, appId);
   return all.filter((c) => c.provider === "api_credential").map((c) => String((c.meta as { label?: string })?.label ?? "")).filter(Boolean);
 }
 
-async function ctx(id: string) {
-  const owner = await apiBetaOwner();
-  if (!owner) return null;
-  const app = await getApplication(owner, id);
-  if (!app) return null;
-  const target = await getApiTarget(owner, id);
-  if (!target) return { owner, app, target: null };
-  return { owner, app, target };
+// Resolve the app OWNER (data-plane key) + target. GET is viewer+, writes are editor+. A view-only member on
+// a write gets `forbidden`; a non-member/non-API caller gets a uniform 404 (indistinguishable).
+async function ctx(id: string, minRole: Exclude<Role, "client_viewer">): Promise<{ owner: string; target: Awaited<ReturnType<typeof getApiTarget>> } | { deny: NextResponse }> {
+  const g = await gateApiRuntimeApp(id, minRole);
+  if (!g.ok) return { deny: g.reason === "forbidden" ? forbidden() : notFound() };
+  const target = await getApiTarget(g.owner, id);
+  return { owner: g.owner, target };
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const c = await ctx(id);
-  if (!c) return notFound();
+  const c = await ctx(id, "viewer");
+  if ("deny" in c) return c.deny;
   if (!c.target) return NextResponse.json({ flows: [] });
   return NextResponse.json({ flows: await listApiFlows(c.owner, id, c.target.id) });
 }
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const c = await ctx(id);
-  if (!c) return notFound();
+  const c = await ctx(id, "editor");
+  if ("deny" in c) return c.deny;
   if (!c.target) return NextResponse.json({ error: "api_target_required", message: "Set up your API target first." }, { status: 400 });
 
   let body: { name?: string; goal?: string; priority?: string; steps?: unknown };
@@ -62,8 +63,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const c = await ctx(id);
-  if (!c || !c.target) return notFound();
+  const c = await ctx(id, "editor");
+  if ("deny" in c) return c.deny;
+  if (!c.target) return notFound();
 
   let body: { id?: string; name?: string; goal?: string; priority?: string; steps?: unknown; enabled?: boolean };
   try { body = (await req.json()) as typeof body; } catch { return NextResponse.json({ error: "bad_body" }, { status: 400 }); }
@@ -86,8 +88,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const c = await ctx(id);
-  if (!c || !c.target) return notFound();
+  const c = await ctx(id, "editor");
+  if ("deny" in c) return c.deny;
+  if (!c.target) return notFound();
   const flowId = new URL(req.url).searchParams.get("id") || "";
   if (!flowId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
   const ok = await deleteApiFlow(c.owner, id, c.target.id, flowId);

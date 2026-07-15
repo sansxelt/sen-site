@@ -12,9 +12,9 @@
 
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
-import { getApplication, getContract } from "@/lib/v-applications";
+import { getContract } from "@/lib/v-applications";
+import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
 import { logEvent } from "@/lib/v-events";
 
@@ -23,14 +23,12 @@ export const runtime = "nodejs";
 type Row = Record<string, unknown>;
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  const owner = email.toLowerCase();
   const { id } = await params;
+  // Revising the Production Contract is EDITOR+. owner = the app owner (data-plane key).
+  const g = await gatePreflightApp(id, "editor");
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
 
-  const app = await getApplication(owner, id);
-  if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!isDatabaseConfigured()) return NextResponse.json({ error: "unavailable" }, { status: 503 });
 
   // getContract returns the LATEST version for the app; only an approved latest can be revised. If a

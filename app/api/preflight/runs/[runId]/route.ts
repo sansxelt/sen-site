@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { preflightEnabled } from "@/lib/v-preflight-flags";
 import { getRun } from "@/lib/preflight/runs-db";
+import { applicationAccessForRun } from "@/lib/preflight/team-access";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ runId: 
   if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const { runId } = await params;
 
-  const detail = await getRun(email.toLowerCase(), runId);
+  // A run report is a READ shared with the app's workspace (viewer+). Resolve the run's app owner; a
+  // non-member/client_viewer gets a uniform 404 (any role owner..viewer may read the report). getRun stays
+  // owner-scoped, so the payload is always the app owner's run.
+  const access = await applicationAccessForRun(email, runId);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const detail = await getRun(access.owner, runId);
   if (!detail) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json(detail, { headers: { "cache-control": "no-store" } });
 }

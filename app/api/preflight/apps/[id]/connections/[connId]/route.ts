@@ -12,27 +12,21 @@
 //     are 404 (a removed connection is never silently recreated, and a repeat DELETE resolves as 404)
 //   - audit events carry application_id + provider ONLY, never metadata values
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { preflightEnabled } from "@/lib/v-preflight-flags";
-import { preflightDbReady } from "@/lib/preflight/db-ready";
-import { getApplication } from "@/lib/v-applications";
 import { getConnection, updateConnectionMeta, removeConnection } from "@/lib/preflight/connections-db";
 import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
+import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 import { logEvent } from "@/lib/v-events";
 
 export const runtime = "nodejs";
 
 type Params = Promise<{ id: string; connId: string }>;
 
+// Editing/removing a connection is EDITOR+. `owner` = the app owner (data-plane key).
 async function gate(params: Params): Promise<{ owner: string; appId: string; connId: string } | NextResponse> {
-  if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  if (!(await preflightDbReady())) return NextResponse.json({ error: "setup_required" }, { status: 503 });
   const { id, connId } = await params;
-  const app = await getApplication(email.toLowerCase(), id);
-  if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  return { owner: email.toLowerCase(), appId: id, connId };
+  const g = await gatePreflightApp(id, "editor");
+  if (!g.ok) return gateReasonResponse(g.reason);
+  return { owner: g.owner, appId: id, connId };
 }
 
 export async function PATCH(req: Request, ctx: { params: Params }) {

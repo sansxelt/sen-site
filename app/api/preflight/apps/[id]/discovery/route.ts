@@ -3,23 +3,18 @@
 // (no raw HTML / no page bodies) so the client can poll progress. { state: "none" } when never run.
 
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { preflightEnabled } from "@/lib/v-preflight-flags";
-import { getApplication } from "@/lib/v-applications";
 import { getLatestDiscovery } from "@/lib/preflight/discovery-db";
+import { gatePreflightApp, gateReasonResponse } from "@/lib/preflight/team-access";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = (await auth())?.user?.email;
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
-  const owner = email.toLowerCase();
   const { id } = await params;
-
-  const app = await getApplication(owner, id);
-  if (!app) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  // Polling discovery status is a READ (viewer+). owner = app owner (data-plane key).
+  const g = await gatePreflightApp(id, "viewer");
+  if (!g.ok) return gateReasonResponse(g.reason);
+  const owner = g.owner;
 
   const latest = await getLatestDiscovery(owner, id);
   if (!latest) return NextResponse.json({ state: "none" });

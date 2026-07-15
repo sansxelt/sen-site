@@ -22,18 +22,19 @@ import { validateSteps, flowRoles, type FlowStep } from "@/lib/preflight/flow-st
 import { getSupabaseAdminClient, isDatabaseConfigured } from "@/lib/supabase-admin";
 import { logEvent } from "@/lib/v-events";
 import { snapshotIfChanged } from "@/lib/preflight/context-snapshots";
+import { applicationAccessForContract, applicationAccessForFlow } from "@/lib/preflight/team-access";
+import { hasAtLeastRole } from "@/lib/v-workspace";
 
 export const runtime = "nodejs";
 
 const SEVERITIES: Severity[] = ["critical", "important", "informational"];
 const sev = (v: unknown): Severity | undefined => (typeof v === "string" && (SEVERITIES as string[]).includes(v) ? (v as Severity) : undefined);
 
-async function owner() { return (await auth())?.user?.email || null; }
-
 const approvedImmutable = () => NextResponse.json(
   { error: "contract_approved", message: "Approved contracts are immutable. Create a new draft to change its flows." },
   { status: 409 },
 );
+const forbidden = () => NextResponse.json({ error: "forbidden", message: "You have view-only access to this application." }, { status: 403 });
 
 // The test-account ROLE LABELS configured for an application, read owner + application scoped from the
 // connection graph (meta.role, falling back to meta.label — the same resolution the launch auth-readiness
@@ -65,11 +66,17 @@ async function validated(email: string, applicationId: string, rawSteps: unknown
 
 export async function POST(req: Request) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = await owner();
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  const callerEmail = (await auth())?.user?.email;
+  if (!callerEmail) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const contractId = typeof body?.contract_id === "string" ? body.contract_id : "";
   if (!contractId) return NextResponse.json({ error: "missing_contract" }, { status: 400 });
+
+  // TEAM ACCESS: contract -> app owner + role. Authoring flows is EDITOR+. owner = app owner (data-plane key).
+  const access = await applicationAccessForContract(callerEmail, contractId);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) return forbidden();
+  const email = access.owner;
 
   // Load the owning contract owner-scoped FIRST: it is the ownership gate, the source of the app id, and
   // the approval check. Null (not owned / not found) falls through to the normal failure path.
@@ -104,11 +111,17 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = await owner();
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  const callerEmail = (await auth())?.user?.email;
+  if (!callerEmail) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const id = typeof body?.id === "string" ? body.id : "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
+
+  // Resolve the flow -> app owner + role. Editing a flow is EDITOR+.
+  const access = await applicationAccessForFlow(callerEmail, id);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) return forbidden();
+  const email = access.owner;
 
   // Approved-immutable guard BEFORE any mutation. contractStatusForFlow is owner-scoped: a cross-owner /
   // missing flow returns null (404), never mutating another tenant's row.
@@ -150,10 +163,15 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   if (!preflightEnabled()) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const email = await owner();
-  if (!email) return NextResponse.json({ error: "signin_required" }, { status: 401 });
+  const callerEmail = (await auth())?.user?.email;
+  if (!callerEmail) return NextResponse.json({ error: "signin_required" }, { status: 401 });
   const id = new URL(req.url).searchParams.get("id") || "";
   if (!id) return NextResponse.json({ error: "missing_id" }, { status: 400 });
+
+  const access = await applicationAccessForFlow(callerEmail, id);
+  if (!access) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!hasAtLeastRole(access.role, "editor")) return forbidden();
+  const email = access.owner;
 
   const status = await contractStatusForFlow(email, id);
   if (status === null) return NextResponse.json({ error: "not_found" }, { status: 404 });
