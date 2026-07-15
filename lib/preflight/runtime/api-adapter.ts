@@ -163,8 +163,8 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
     const stepClass = ACTION_TO_CLASS[step.action];
     const t0 = input.clock();
     const iso = new Date(t0).toISOString();
-    const rec = (ok: boolean, detail: string, evidence: EvidenceItem[] = [], transport?: "unreachable" | "blocked"): StepObservation =>
-      ({ stepClass, ok, detail, ms: Math.max(0, input.clock() - t0), evidence, ...(transport ? { transport } : {}) });
+    const rec = (ok: boolean, detail: string, evidence: EvidenceItem[] = [], transport?: "unreachable" | "blocked", transportReason?: string): StepObservation =>
+      ({ stepClass, ok, detail, ms: Math.max(0, input.clock() - t0), evidence, ...(transport ? { transport } : {}), ...(transportReason ? { transportReason } : {}) });
 
     let obs: StepObservation;
     switch (step.action) {
@@ -200,9 +200,12 @@ export async function runApiFlow(input: RunApiFlowInput): Promise<ApiFlowResult>
         catch (e) {
           // The fetcher may tag WHY it threw so the decision layer can tell a transport failure (infra) from
           // an SSRF/safe-fetch rejection (a product/security signal, never free infra). Default to
-          // "unreachable" only for a bare throw with no tag.
-          const kind = (e as { transportKind?: "unreachable" | "blocked" }).transportKind ?? "unreachable";
-          obs = rec(false, `request failed: ${kind}`, [httpTxnEvidence(iso, reqEv)], kind);
+          // "unreachable" only for a bare throw with no tag. A "blocked" throw may also carry a SANITIZED
+          // reason class (never the destination) which we record in the observation + detail.
+          const tag = e as { transportKind?: "unreachable" | "blocked"; transportReason?: string | null };
+          const kind = tag.transportKind ?? "unreachable";
+          const reason = kind === "blocked" && typeof tag.transportReason === "string" ? tag.transportReason : undefined;
+          obs = rec(false, `request failed: ${kind}${reason ? ` (${reason})` : ""}`, [httpTxnEvidence(iso, reqEv)], kind, reason);
           break;
         }
         let json: unknown = undefined;

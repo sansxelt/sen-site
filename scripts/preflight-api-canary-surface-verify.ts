@@ -12,6 +12,7 @@ import {
   type CanaryStore, type CanaryDeps, type CanaryIssueRow, type CanaryPhaseResult,
 } from "../lib/preflight/runtime/canary";
 import { runApiFlow, type ApiFetch, type ApiStep } from "../lib/preflight/runtime/api-adapter";
+import { safeFetch, isBlockedFetchError, blockedFetchReason } from "../lib/safe-fetch";
 
 let pass = 0, fail = 0;
 function ok(name: string, cond: boolean, detail = "") {
@@ -32,8 +33,9 @@ const fixtureFetcher: ApiFetch = async (url, init) => {
   // trips the safe-fetch guard -> transport:"blocked" (indeterminate). Any other non-fixture host defaults
   // to unreachable.
   if (u.origin !== FIXTURE_ORIGIN) {
-    const e = new Error("blocked") as Error & { transportKind?: string };
-    e.transportKind = u.hostname.endsWith(".invalid") ? "blocked" : "unreachable";
+    const e = new Error("blocked") as Error & { transportKind?: string; transportReason?: string | null };
+    if (u.hostname.endsWith(".invalid")) { e.transportKind = "blocked"; e.transportReason = "unresolved_host"; }
+    else { e.transportKind = "unreachable"; e.transportReason = null; }
     throw e;
   }
   const m = /^\/api\/canary-fixture\/([a-z_]+)(\/.*)?$/.exec(u.pathname);
@@ -72,6 +74,7 @@ function makeMemoryStore() {
     async recordUsage(owner, runId) { ledger.push({ run_id: runId, estimated_cents: 0 }); },
     async ledgerCount(runId) { return ledger.filter((l) => l.run_id === runId).length; },
     async webSnapshot() { return { runId: WEB_RUN.id, decision: WEB_RUN.decision }; },
+    async ensureWebBaseline() { return { runId: WEB_RUN.id, decision: WEB_RUN.decision }; },
   };
   return { store, runs, decisions, issues, ledger, builds, WEB_RUN };
 }
@@ -125,6 +128,9 @@ async function main() {
   ok("ZERO usage ledger rows (failed before billing)", cap.ledgerRows === 0);
   ok("no issue lineage from a policy-blocked flow", cap.issues.opened.length === 0);
   ok("decision reflects review, not a product verdict", cap.decision === "needs_review", String(cap.decision));
+  // policy_blocked counts flows REFUSED at the capability gate (this is the ONE place it should be > 0).
+  ok("policy_blocked === 1 (a flow was refused before any request)", cap.summary.policy_blocked === 1, String(cap.summary.policy_blocked));
+  ok("transport_blocked === 0 (nothing ran to be transport-blocked)", cap.summary.transport_blocked === 0, String(cap.summary.transport_blocked));
 
   console.log("\n── INFRA: genuine transport-unreachable (TEST-NET) -> INFRASTRUCTURE FAILURE, never BLOCKED ──");
   const infra = (results.infra = await runCanaryPhase(deps, "infra"));
@@ -143,12 +149,29 @@ async function main() {
   ok("no usage recorded for a blocked request", ssrf.ledgerRows === 0);
   ok("the failing step is tagged transport:'blocked' (structural, not string-matched)",
     ssrf.evidence[0]?.steps.some((s) => s.transport === "blocked") ?? false);
+  // The SSRF block is its OWN counter — policy_blocked stays 0 (the flow RAN a request), transport_blocked is 1.
+  ok("policy_blocked === 0 (the flow ran a request; it was NOT policy-refused)", ssrf.summary.policy_blocked === 0, String(ssrf.summary.policy_blocked));
+  ok("transport_blocked === 1 (a request was SSRF-blocked at the transport layer)", ssrf.summary.transport_blocked === 1, String(ssrf.summary.transport_blocked));
+  ok("block_reasons records a SANITIZED reason class (unresolved_host here), never a destination",
+    Array.isArray(ssrf.summary.block_reasons) && ssrf.summary.block_reasons.includes("unresolved_host"), JSON.stringify(ssrf.summary.block_reasons));
+  ok("the recorded reason exposes NO host/IP/port (fixed enum only)",
+    (ssrf.summary.block_reasons as string[]).every((r) => ["private_address","metadata_endpoint","unresolved_host","unsupported_scheme","port_not_allowed","blocked"].includes(r)));
 
   console.log("\n── CANCEL: a cancelled run settles with no decision row and no usage ──");
   const cancel = (results.cancel = await runCanaryPhase(deps, "cancel"));
   ok("run recorded as cancelled with NO decision", cancel.decision === null);
   ok("no decision row was inserted", !mem.decisions.some((d) => d.runId === cancel.runId));
   ok("no usage ledger row", cancel.ledgerRows === 0);
+
+  console.log("\n── WEB_INDEPENDENCE: a known web decision is untouched by a full API run ──");
+  const wi = (results.web_independence = await runCanaryPhase(deps, "web_independence"));
+  ok("a web baseline decision exists BEFORE the API run", wi.web.before?.decision === "ready", JSON.stringify(wi.web.before));
+  ok("the API run itself is READY (it really ran the full matrix)", wi.decision === "ready", String(wi.decision));
+  ok("the web decision is IDENTICAL after the API run (positive independence proof)",
+    wi.web.after?.decision === wi.web.before?.decision && wi.web.after?.runId === wi.web.before?.runId,
+    `before=${JSON.stringify(wi.web.before)} after=${JSON.stringify(wi.web.after)}`);
+  ok("the API run bound its decision to the API target, NOT the web baseline run",
+    mem.decisions.some((d) => d.runId === wi.runId && d.runId !== wi.web.before?.runId));
 
   console.log("\n── cross-phase invariants ──");
   ok("web decision is COMPLETELY independent (baseline web run untouched across all phases)",
@@ -213,6 +236,24 @@ async function main() {
     });
     ok("a genuine transport failure tags transport:'unreachable' (infra)",
       !r.ok && r.steps[r.failedIndex!]?.transport === "unreachable");
+  }
+
+  console.log("\n── safe-fetch sanitized block-reason classification (offline paths) ──");
+  // The scheme + port rejections throw synchronously before any DNS/network, so they're testable offline.
+  // Each carries message==="blocked" (unchanged) PLUS a sanitized reason class that exposes no destination.
+  for (const [url, wantReason] of [
+    ["http://example.com/x", "unsupported_scheme"],
+    ["https://example.com:8443/x", "port_not_allowed"],
+  ] as const) {
+    let caught: unknown;
+    try { await safeFetch(url, { method: "GET" } as RequestInit); } catch (e) { caught = e; }
+    ok(`safeFetch(${url.slice(0, 28)}...) blocks with reason '${wantReason}'`,
+      isBlockedFetchError(caught) && blockedFetchReason(caught) === wantReason,
+      `got reason=${blockedFetchReason(caught)}`);
+    ok(`  ...and message stays exactly "blocked" (existing callers unbroken)`,
+      caught instanceof Error && caught.message === "blocked");
+    ok(`  ...and the reason exposes no host/port (fixed enum)`,
+      ["private_address","metadata_endpoint","unresolved_host","unsupported_scheme","port_not_allowed","blocked"].includes(blockedFetchReason(caught) ?? ""));
   }
 
   console.log(`\n${pass}/${pass + fail} passed`);

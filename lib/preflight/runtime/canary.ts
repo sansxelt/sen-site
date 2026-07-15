@@ -22,8 +22,8 @@ import { runApiFlow, API_CAPABILITIES, type ApiStep, type ApiFetch } from "./api
 import { decideRuntime } from "./decide";
 import type { Decision, FailureClass, FlowResult, StepObservation } from "./core";
 
-export type CanaryPhase = "broken" | "repair" | "fixed" | "capability" | "infra" | "ssrf_block" | "cancel";
-export const CANARY_PHASES: readonly CanaryPhase[] = ["broken", "repair", "fixed", "capability", "infra", "ssrf_block", "cancel"];
+export type CanaryPhase = "broken" | "repair" | "fixed" | "capability" | "infra" | "ssrf_block" | "cancel" | "web_independence";
+export const CANARY_PHASES: readonly CanaryPhase[] = ["broken", "repair", "fixed", "capability", "infra", "ssrf_block", "cancel", "web_independence"];
 export const CANARY_ADAPTER_VERSION = API_CAPABILITIES.version;   // "api-1"
 export const CANARY_CONTRACT_VERSION = 1;
 export const CANARY_APP_NAME = "API Canary (internal)";
@@ -135,6 +135,9 @@ export type CanaryStore = {
   recordUsage(owner: string, runId: string, apiRequests: number): Promise<void>;
   ledgerCount(runId: string): Promise<number>;
   webSnapshot(appId: string, apiTargetId: string): Promise<{ runId: string; decision: string | null } | null>;
+  // Ensure exactly one known WEB run exists on the CANARY app (idempotent; scoped to the canary app, never a
+  // real customer app) so runtime independence has a concrete before/after web decision to compare.
+  ensureWebBaseline(owner: string, appId: string): Promise<{ runId: string; decision: string | null }>;
 };
 
 export type CanaryDeps = {
@@ -174,6 +177,9 @@ const PHASE_CONFIG: Record<Exclude<CanaryPhase, "cancel">, { flows: CanaryFlow[]
   capability: { flows: [CAPABILITY_PROBE], mode: "fixed" },
   infra: { flows: CANARY_FLOWS.filter((f) => f.id === "health"), mode: "fixed" },
   ssrf_block: { flows: CANARY_FLOWS.filter((f) => f.id === "health"), mode: "fixed" },
+  // web_independence runs the FULL fixed matrix (a real API run) while a known web baseline exists — the
+  // web.before/after snapshots in the result prove the web decision is untouched by the API run.
+  web_independence: { flows: CANARY_FLOWS, mode: "fixed" },
 };
 
 // The infra phase targets a publicly-routable-LOOKING but guaranteed-unroutable IP (RFC 5737 TEST-NET-1):
@@ -187,6 +193,9 @@ const SSRF_BLOCK_BASE = "https://canary-unreachable.invalid";    // non-resolvin
 export async function runCanaryPhase(deps: CanaryDeps, phase: CanaryPhase): Promise<CanaryPhaseResult> {
   const appId = await deps.store.ensureApp(deps.owner);
   const targetId = await deps.store.ensureApiTarget(deps.owner, appId);
+  // For the web-independence phase, guarantee a known WEB run exists on the canary app FIRST, so the
+  // before/after snapshots have a concrete web decision to compare (proves an API run cannot alter it).
+  if (phase === "web_independence") await deps.store.ensureWebBaseline(deps.owner, appId);
   const webBefore = await deps.store.webSnapshot(appId, targetId);
   const submissionId = `api-canary:${phase}:${deps.clock()}`;
 
@@ -272,10 +281,22 @@ export async function runCanaryPhase(deps: CanaryDeps, phase: CanaryPhase): Prom
   });
   const flowIds = cfg.flows.map((f) => f.id);
   const matrixHash = canaryMatrixHash(flowIds);
+  // Distinct counters for two DIFFERENT events (never conflate them):
+  //   policy_blocked   = flows the runtime REFUSED to execute at the capability/policy gate (never ran, 0
+  //                      requests) — e.g. a browser step against the API runtime.
+  //   transport_blocked = flows that RAN a request which the safe-fetch SSRF guard then rejected at the
+  //                      transport layer (private/metadata/non-https destination). These are failed flows
+  //                      with transport === "blocked", NOT blocked_by_policy.
+  const failedSteps = results.flatMap((r) => r.steps);
+  const transportBlocked = failedSteps.filter((s) => s.transport === "blocked").length;
+  // The sanitized block-reason CLASSES seen this run (deduped) — safe to persist; never a destination.
+  const blockReasons = [...new Set(failedSteps.filter((s) => s.transport === "blocked" && s.transportReason).map((s) => s.transportReason as string))];
   const fullSummary = {
     ...summary, phase, mode: cfg.mode, flow_ids: flowIds, api_requests: apiRequests,
     matrix_hash: matrixHash, adapter_version: CANARY_ADAPTER_VERSION,
     policy_blocked: results.filter((r) => r.state === "blocked_by_policy").length,
+    transport_blocked: transportBlocked,
+    block_reasons: blockReasons,
   };
 
   // ── persist: build + terminal run + decision (full binding) ──
@@ -429,6 +450,22 @@ export function makeSupabaseCanaryStore(
       const web = ((data as { id: string; decision: string | null; runtime_target_id: string | null }[] | null) ?? [])
         .find((r) => r.runtime_target_id !== apiTargetId);
       return web ? { runId: web.id, decision: web.decision } : null;
+    },
+    async ensureWebBaseline(owner, appId) {
+      // Idempotent: one known web run on the CANARY app (submission_id marks it). runtime_target_id stays
+      // null (reads as web); decision "ready" is a fixed, recognizable baseline. Never touches a real app.
+      const sub = "api-canary:web-baseline";
+      const { data } = await s.from("v_preflight_runs").select("id,decision")
+        .eq("application_id", appId).eq("submission_id", sub).limit(1);
+      const found = (data as { id: string; decision: string | null }[] | null)?.[0];
+      if (found) return { runId: found.id, decision: found.decision };
+      const runId = await one("v_preflight_runs", {
+        user_id: owner, application_id: appId, state: "completed", decision: "ready",
+        summary: { source: "canary_web_baseline" }, submission_id: sub,
+        deployment_url: "https://app.vraelis.com/api/canary-fixture/fixed/health", credits_held: 0,
+        runtime_target_id: null, started_at: new Date().toISOString(), completed_at: new Date().toISOString(),
+      });
+      return { runId, decision: "ready" };
     },
   };
 }

@@ -58,16 +58,44 @@ export function isBlockedFetchError(e: unknown): boolean {
   return e instanceof Error && e.message === "blocked";
 }
 
+// A SANITIZED category for WHY safeFetch blocked — a fixed enum of reason CLASSES, never the
+// destination host/IP/port. Safe to record in evidence/logs. Read via blockedFetchReason().
+export type BlockedReason =
+  | "unsupported_scheme"   // not https
+  | "port_not_allowed"     // https but not :443
+  | "unresolved_host"      // hostname did not resolve (NXDOMAIN / SERVFAIL / timeout / zero addresses)
+  | "metadata_endpoint"    // a resolved address is the cloud metadata IP (169.254.169.254)
+  | "private_address"      // a resolved address is private/reserved/loopback/link-local
+  | "blocked";             // generic fallback
+// Every safeFetch rejection carries `message === "blocked"` (unchanged — existing callers depend on it)
+// PLUS a non-sensitive `reason` category on the error object. This reader returns it, or null if absent.
+export function blockedFetchReason(e: unknown): BlockedReason | null {
+  const r = (e as { reason?: unknown })?.reason;
+  return typeof r === "string" ? (r as BlockedReason) : null;
+}
+// Build safeFetch's rejection: message stays exactly "blocked"; the sanitized reason class rides alongside.
+function blockedError(reason: BlockedReason): Error & { reason: BlockedReason } {
+  return Object.assign(new Error("blocked"), { reason });
+}
+
 // Resolve the hostname, reject if ANY resolved address is private/reserved, then pin the
 // connection to the validated IP set (no re-resolution). Throws Error("blocked") on any
 // unsafe destination. https + port 443 only. Returns the (undici) Response so callers can
 // read status AND body.
 export async function safeFetch(url: string, init: RequestInit): Promise<Response> {
   const u = new URL(url);
-  if (u.protocol !== "https:" || (u.port && u.port !== "443")) throw new Error("blocked");
+  if (u.protocol !== "https:") throw blockedError("unsupported_scheme");
+  if (u.port && u.port !== "443") throw blockedError("port_not_allowed");
   let addrs: { address: string; family: number }[];
-  try { addrs = await dns.lookup(u.hostname, { all: true }); } catch { throw new Error("blocked"); }
-  if (!addrs.length || addrs.some((a) => isPrivateIp(a.address))) throw new Error("blocked");
+  // A lookup failure / zero addresses = the host simply doesn't resolve. This is NOT DNS rebinding — the
+  // actual rebinding defense is the pinned connect.lookup below (undici can't re-resolve to a private IP
+  // between validation and connect). Labeling it "unresolved_host" keeps evidence honest for operators.
+  try { addrs = await dns.lookup(u.hostname, { all: true }); } catch { throw blockedError("unresolved_host"); }
+  if (!addrs.length) throw blockedError("unresolved_host");
+  // Classify the WORST resolved address so the reason is meaningful (metadata is the sharpest signal).
+  const meta = addrs.some((a) => a.address === "169.254.169.254");
+  if (meta) throw blockedError("metadata_endpoint");
+  if (addrs.some((a) => isPrivateIp(a.address))) throw blockedError("private_address");
   // Pin undici to the validated address set so it can't re-resolve between validation and
   // connect. undici's connect.lookup expects the dns.lookup({all:true}) array form. Use
   // undici's own fetch so the Agent dispatcher is version-matched (global fetch rejects a

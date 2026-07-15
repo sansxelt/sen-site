@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { auth } from "@/auth";
 import { isAdmin } from "@/lib/v-entitlements";
-import { safeFetch, isBlockedFetchError } from "@/lib/safe-fetch";
+import { safeFetch, isBlockedFetchError, blockedFetchReason } from "@/lib/safe-fetch";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { recordProviderCost } from "@/lib/preflight/cost-governor";
 import {
@@ -79,7 +79,12 @@ export async function POST(req: NextRequest) {
       // Tag WHY the fetch failed so the canary classifies it correctly: a safe-fetch SSRF rejection
       // (non-https / private / metadata host) is a PRODUCT/security signal — the app under test is
       // misconfigured — NOT free infrastructure. A DNS/connect failure is a genuine transport (infra) event.
-      (e as { transportKind?: string }).transportKind = isBlockedFetchError(e) ? "blocked" : "unreachable";
+      const blocked = isBlockedFetchError(e);
+      const tagged = e as { transportKind?: string; transportReason?: string | null };
+      tagged.transportKind = blocked ? "blocked" : "unreachable";
+      // Carry the SANITIZED block-reason CLASS (never the destination) so evidence records why the SSRF guard
+      // fired — private_address / metadata_endpoint / unresolved_host / unsupported_scheme / port_not_allowed.
+      tagged.transportReason = blocked ? blockedFetchReason(e) : null;
       throw e;
     }
   };

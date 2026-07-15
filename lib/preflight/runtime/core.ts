@@ -95,6 +95,10 @@ export type StepObservation = {
   // destination (non-https, private/metadata host) -> a PRODUCT/security signal, never free infra. A normal
   // assertion failure leaves this undefined. Decision layers key on THIS, never on parsing `detail`.
   transport?: "unreachable" | "blocked";
+  // A SANITIZED reason CLASS for a "blocked" transport (private_address | metadata_endpoint | unresolved_host
+  // | unsupported_scheme | port_not_allowed). A fixed enum of categories — NEVER the destination host/IP.
+  // Safe to persist in evidence. Undefined unless transport === "blocked".
+  transportReason?: string;
 };
 
 // ── Normalized flow result + decision grain ─────────────────────────────────────────────────────────
