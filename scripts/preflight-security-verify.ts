@@ -175,10 +175,14 @@ console.log("\n── routes: auth() + ownership-scoped loader before any mutati
   walk(routeDir);
   ok("app/api/preflight: route files found", routes.length >= 10, `${routes.length} route files`);
 
+  // The API-beta routes authenticate through the canonical apiBetaOwner() gate (which itself calls auth() +
+  // enforces the account allowlist — verified separately below), instead of calling auth() inline. Accept
+  // that as a valid authenticated entry point; anything else must still call auth() directly.
+  const AUTH_ENTRY = /\bauth\s*\(\s*\)|\bapiBetaOwner\s*\(\s*\)/;
   for (const r of routes.sort()) {
     const raw = read(r);
     const src = stripComments(raw);
-    ok(`${r}: calls auth()`, /\bauth\s*\(\s*\)/.test(src));
+    ok(`${r}: authenticates (auth() or the apiBetaOwner gate)`, AUTH_ENTRY.test(src));
     if (!r.includes("[")) continue; // ownership-loader requirement applies to [id]/[runId] routes
 
     // Skip past imports so an imported symbol name never counts as the "call".
@@ -193,6 +197,14 @@ console.log("\n── routes: auth() + ownership-scoped loader before any mutati
       ok(`${r}: no direct mutation in route (read/cooperative only)`, true);
     }
   }
+
+  // The API-beta gate that stands in for inline auth() MUST itself authenticate AND enforce BOTH beta
+  // conditions, returning null (=> a uniform 404 at the route) when either fails — never a 401/403 that would
+  // reveal the private surface exists.
+  const gate = stripComments(read("lib/preflight/api-beta-gate.ts"));
+  ok("api-beta gate calls auth()", /\bauth\s*\(\s*\)/.test(gate));
+  ok("api-beta gate requires the env flag AND the account allowlist", gate.includes("apiRuntimeEnabled") && gate.includes("apiRuntimeBetaAllowed"));
+  ok("api-beta gate returns null (=> route 404s) rather than a 401/403 signal", /return null/.test(gate));
 }
 
 // ══ 3. ARTIFACTS — signed URLs only via signedArtifactUrl, TTL <= 300, storage_path never surfaces ══════

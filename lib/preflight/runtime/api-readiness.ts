@@ -49,13 +49,21 @@ export function computeReadiness(input: ReadinessInput): ReadinessResult {
 
   const credSet = new Set(input.credentialLabels.map((c) => c.trim().toLowerCase()));
   for (const f of selected) {
-    const v = validateApiSteps(f.steps, { credentialLabels: input.credentialLabels });
-    if (!v.ok) { if (!blockers.includes("flow_invalid")) blockers.push("flow_invalid"); continue; }
-    // Every credential a flow references must still exist (a revoked credential blocks BEFORE billing).
-    for (const label of apiFlowCredentials(v.steps as ApiFlowStep[])) {
-      if (!credSet.has(label.trim().toLowerCase())) { if (!blockers.includes("credential_missing")) blockers.push("credential_missing"); }
+    // Check credential references FIRST on the raw steps, so a missing/revoked credential surfaces as the
+    // specific "credential_missing" reason rather than being swallowed as a generic "flow_invalid" (a
+    // sign_in referencing an unknown label would otherwise fail validation as invalid).
+    const rawSignIns = Array.isArray(f.steps) ? (f.steps as { action?: string; credentialLabel?: string }[]).filter((s) => s?.action === "sign_in") : [];
+    let credGap = false;
+    for (const s of rawSignIns) {
+      const label = (s.credentialLabel ?? "").trim().toLowerCase();
+      if (!label || !credSet.has(label)) { credGap = true; if (!blockers.includes("credential_missing")) blockers.push("credential_missing"); }
     }
+    if (credGap) continue; // don't ALSO report flow_invalid for the same missing-credential cause
+    // With credentials present, validate the rest (unsupported action, bad path, etc.).
+    const v = validateApiSteps(f.steps, { credentialLabels: input.credentialLabels });
+    if (!v.ok) { if (!blockers.includes("flow_invalid")) blockers.push("flow_invalid"); }
   }
+  void apiFlowCredentials; // (kept imported for other callers; not needed here after the raw-step check)
 
   return {
     blockers, launchable: blockers.length === 0, selectedCount: selected.length,

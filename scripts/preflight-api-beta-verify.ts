@@ -10,6 +10,10 @@ import {
 } from "../lib/preflight/runtime/api-steps";
 import { executeApiRun, type ApiRunStore, type SecretResolver, type ApiCustomerFlow } from "../lib/preflight/runtime/api-executor";
 import type { ApiFetch } from "../lib/preflight/runtime/api-adapter";
+import { computeReadiness } from "../lib/preflight/runtime/api-readiness";
+import { unsafeBaseUrlReason } from "../lib/preflight/runtime/targets-db";
+import { priceApiLaunch } from "../lib/preflight/runtime/api-beta-billing";
+import { estimateRunCredits } from "../lib/preflight/flow-selection";
 import { readFileSync } from "node:fs";
 
 let pass = 0, fail = 0;
@@ -198,9 +202,119 @@ async function executorTests() {
   ok("api-executor imports api-adapter + decide, NOT canary", /from "\.\/api-adapter"/.test(src) && /from "\.\/decide"/.test(src) && !/from "\.\/canary"/.test(src));
 }
 
+// ── readiness: every hard blocker refuses BEFORE billing ─────────────────────────────────────────────
+function readinessTests() {
+  console.log("\n── readiness blocks the exact pre-billing conditions ──");
+  const okFlow = { id: "f1", name: "x", priority: "critical", enabled: true, steps: [{ action: "call", method: "GET", path: "/x" }, { action: "expect_status", status: 200 }] };
+  const base = { hasTarget: true, baseUrl: "https://api.test", environment: "production", buildVersion: null, flows: [okFlow], selectedFlowIds: ["f1"], credentialLabels: [] };
+  ok("launchable when everything is set", computeReadiness(base).launchable === true);
+  ok("no target -> blocked", computeReadiness({ ...base, hasTarget: false }).blockers.includes("no_target"));
+  ok("no base URL -> blocked", computeReadiness({ ...base, baseUrl: null }).blockers.includes("no_base_url"));
+  ok("no selected flows -> blocked", computeReadiness({ ...base, selectedFlowIds: [] }).blockers.includes("no_flows"));
+  ok("a flow with an unsupported action -> blocked",
+    computeReadiness({ ...base, flows: [{ ...okFlow, steps: [{ action: "drop_table" }] }] }).blockers.includes("flow_invalid"));
+  ok("a flow referencing a MISSING credential -> blocked (before billing)",
+    computeReadiness({ ...base, flows: [{ ...okFlow, steps: [{ action: "sign_in", credentialLabel: "gone" }, { action: "call", method: "GET", path: "/x" }] }], credentialLabels: [] }).blockers.includes("credential_missing"));
+  ok("a REVOKED credential (label no longer present) -> blocked",
+    computeReadiness({ ...base, flows: [{ ...okFlow, steps: [{ action: "sign_in", credentialLabel: "old" }, { action: "call", method: "GET", path: "/x" }] }], credentialLabels: ["new"] }).blockers.includes("credential_missing"));
+  ok("blocked readiness is NOT launchable", computeReadiness({ ...base, hasTarget: false }).launchable === false);
+}
+
+// ── base-URL safety guard (author-time) ──────────────────────────────────────────────────────────────
+function urlGuardTests() {
+  console.log("\n── unsafe base URLs are rejected at author time ──");
+  ok("http rejected", unsafeBaseUrlReason("http://api.test") !== null);
+  ok("non-443 port rejected", unsafeBaseUrlReason("https://api.test:8443") !== null);
+  ok("localhost rejected", unsafeBaseUrlReason("https://localhost") !== null);
+  ok(".internal rejected", unsafeBaseUrlReason("https://svc.internal") !== null);
+  ok("private 10.x rejected", unsafeBaseUrlReason("https://10.0.0.5") !== null);
+  ok("metadata 169.254 rejected", unsafeBaseUrlReason("https://169.254.169.254") !== null);
+  ok("a normal public https URL is allowed", unsafeBaseUrlReason("https://api.customer.com/v2") === null);
+}
+
+// ── no internal / fixture vocabulary in the customer route + UI source ───────────────────────────────
+function vocabularyContainmentTests() {
+  console.log("\n── customer routes + UI expose NO internal/fixture vocabulary ──");
+  const FILES = [
+    "app/api/preflight/apps/[id]/api-runs/[runId]/route.ts",
+    "app/api/preflight/apps/[id]/api-runs/list/route.ts",
+    "app/api/preflight/apps/[id]/api-preview/route.ts",
+    "app/rank/app/applications/[id]/api-runtime/api-workspace.tsx",
+  ];
+  // These internal tokens must never be RENDERED to a customer. Scan only NON-COMMENT, non-map-key content:
+  // strip // line comments and /* */ blocks so a doc-comment mentioning "no fixture terms" isn't a false hit.
+  // infra_failure/not_verified are legitimate as INPUT map keys (decision enum -> customer verdict), so they
+  // are allowed only on a line that also contains a customer verdict mapping; matrix_hash/adapter_version
+  // must not appear at all in rendered output.
+  const HARD_BANNED = ["canary", "fixture", "blocked_by_policy", "matrix_hash", "adapter_version", "transportreason", "canary_password"];
+  const stripComments = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").filter((l) => !l.trim().startsWith("//")).join("\n");
+  for (const f of FILES) {
+    const src = stripComments(readFileSync(f, "utf8")).toLowerCase();
+    const hit = HARD_BANNED.filter((b) => src.includes(b));
+    ok(`no banned internal/fixture term in rendered ${f.split("/").pop()}`, hit.length === 0, hit.join(", "));
+    // infra_failure / not_verified may appear ONLY as a decision-map KEY (followed by a customer verdict),
+    // never bare in output. Assert any occurrence is on a mapping line.
+    for (const key of ["infra_failure", "not_verified"]) {
+      // Allowed only where the token is a MAP KEY: `<key>:` or `"<key>":` (quoted or bare), or on a verdict
+      // mapping line. Any other bare occurrence (emitted into output) is a leak.
+      const keyAsMapKey = new RegExp(`["']?${key}["']?\\s*:`);
+      const badLines = src.split("\n").filter((l) => l.includes(key) && !keyAsMapKey.test(l) && !/=>|verdict/.test(l));
+      ok(`${key} appears only as a mapping key in ${f.split("/").pop()}`, badLines.length === 0, badLines.join(" | ").slice(0, 80));
+    }
+  }
+  // The read route must MAP internal decision enums to customer verdicts (READY/BLOCKED/...), never emit the
+  // raw enum. Assert the verdict map exists and the raw enums only appear as MAP KEYS, not output.
+  const readSrc = readFileSync("app/api/preflight/apps/[id]/api-runs/[runId]/route.ts", "utf8");
+  ok("read route maps decisions to customer verdicts", readSrc.includes('"BLOCKED"') && readSrc.includes('"REPAIR VERIFIED"') && readSrc.includes("VERDICT"));
+  ok("read route sanitizes internal transport-failure detail", readSrc.includes("could not be completed"));
+}
+
+// ── gate module: routes call the canonical 404 gate, not ad-hoc checks ───────────────────────────────
+function gateWiringTests() {
+  console.log("\n── every customer route enforces the canonical gate (uniform 404) ──");
+  const ROUTES = [
+    "app/api/preflight/apps/[id]/runtime-targets/route.ts",
+    "app/api/preflight/apps/[id]/api-credentials/route.ts",
+    "app/api/preflight/apps/[id]/api-flows/route.ts",
+    "app/api/preflight/apps/[id]/api-preview/route.ts",
+    "app/api/preflight/apps/[id]/api-runs/route.ts",
+    "app/api/preflight/apps/[id]/api-runs/[runId]/route.ts",
+    "app/api/preflight/apps/[id]/api-runs/list/route.ts",
+  ];
+  for (const r of ROUTES) {
+    const src = readFileSync(r, "utf8");
+    const usesGate = src.includes("apiBetaOwner");
+    const uniform404 = /status:\s*404/.test(src);
+    const noForbiddenStatus = !/status:\s*40[13]\b/.test(src.replace(/status:\s*400/g, "")); // no 401/403 gate leaks (400 body-validation is fine)
+    ok(`${r.split("/").slice(-2).join("/")} uses apiBetaOwner + returns 404, never 401/403`, usesGate && uniform404 && noForbiddenStatus);
+  }
+  // The gate itself must require BOTH conditions.
+  const gate = readFileSync("lib/preflight/api-beta-gate.ts", "utf8");
+  ok("gate requires apiRuntimeEnabled AND apiRuntimeBetaAllowed", gate.includes("apiRuntimeEnabled") && gate.includes("apiRuntimeBetaAllowed"));
+}
+
+// ── billing parity: preview price === launch price for the same flow count ───────────────────────────
+async function billingParityTests() {
+  console.log("\n── preview price === launch price (same authoritative source) ──");
+  // With pass pricing OFF (default), priceApiLaunch returns legacy credits = estimateRunCredits(n) for BOTH
+  // preview and launch (they call the same function). Prove they agree for several counts.
+  const prev = process.env.VRAELIS_PASS_PRICING; delete process.env.VRAELIS_PASS_PRICING;
+  for (const n of [1, 3, 5]) {
+    const a = await priceApiLaunch("c@x.com", n);
+    const b = await priceApiLaunch("c@x.com", n);
+    ok(`price is deterministic + parity for ${n} flow(s)`, JSON.stringify(a) === JSON.stringify(b) && a.mode === "legacy" && a.credits === estimateRunCredits(n));
+  }
+  if (prev === undefined) delete process.env.VRAELIS_PASS_PRICING; else process.env.VRAELIS_PASS_PRICING = prev;
+}
+
 async function run() {
   main();
   await executorTests();
+  readinessTests();
+  urlGuardTests();
+  vocabularyContainmentTests();
+  gateWiringTests();
+  await billingParityTests();
   console.log(`\n${pass}/${pass + fail} passed`);
   if (fail > 0) process.exit(1);
 }
