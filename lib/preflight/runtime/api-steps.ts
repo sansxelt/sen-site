@@ -205,9 +205,9 @@ export function mapToApiStep(step: ApiFlowStep, resolveCredential: (label: strin
       return { action: "http_auth", scheme: c.scheme, secretRef: c.secretRef, ...(c.headerName ? { headerName: c.headerName } : {}) };
     }
     case "add_header":
-      return { action: "set_header", name: step.name!, value: step.value! };
+      return { action: "set_header", name: step.name!, value: rewriteVars(step.value!) };
     case "call":
-      return { action: "http_request", method: step.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE", path: step.path!, ...(step.body != null ? { body: JSON.parse(step.body) } : {}) };
+      return { action: "http_request", method: step.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE", path: rewriteVars(step.path!), ...(step.body != null ? { body: JSON.parse(rewriteVars(step.body)) } : {}) };
     case "expect_status":
       return { action: "assert_status", equals: step.status! };
     case "expect_field":
@@ -217,8 +217,16 @@ export function mapToApiStep(step: ApiFlowStep, resolveCredential: (label: strin
     case "save_value":
       return { action: "extract", path: normField(step.field!), into: step.into! };
     case "confirm_saved":
-      return { action: "verify_persisted", path: step.path!, jsonPath: normField(step.field!), ...(step.value !== undefined ? { equals: coerce(step.value) } : {}) };
+      return { action: "verify_persisted", path: rewriteVars(step.path!), jsonPath: normField(step.field!), ...(step.value !== undefined ? { equals: coerce(step.value) } : {}) };
   }
+}
+
+// Request chaining: a customer reuses a value they saved (save_value -> into: "token") by writing {{token}}
+// in a later path, header, or body. We translate the friendly {{name}} form into the adapter's {{var:name}}
+// syntax at launch, so the customer never sees or types internal syntax. {{secret:...}} is NOT accepted from
+// customer text (secrets are only ever referenced via the saved-credential sign-in step, never inline).
+export function rewriteVars(s: string): string {
+  return s.replace(/\{\{\s*([A-Za-z][A-Za-z0-9_]{0,39})\s*\}\}/g, (_m, name) => `{{var:${name}}}`);
 }
 
 // A stored field like "id" or "data.name" becomes the adapter's "$.id" / "$.data.name" JSON path.

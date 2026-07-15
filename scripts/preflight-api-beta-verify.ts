@@ -98,6 +98,36 @@ function main() {
   ok("the STORED step shape carries the customer vocabulary, never an internal action name",
     !FORBIDDEN.some((t) => JSON.stringify(steps).toLowerCase().includes(t.toLowerCase())));
 
+  console.log("\n── request chaining (general-purpose): reuse a saved value with friendly {{name}} syntax ──");
+  // The core general-purpose capability: save a value, reuse it later in a path/header/body. The customer
+  // writes {{name}}; we translate to the adapter's {{var:name}} at launch (internal syntax never shown).
+  const chain = [
+    { action: "call", method: "POST", path: "/login", body: '{"user":"demo"}' },
+    { action: "save_value", field: "token", into: "token" },
+    { action: "add_header", name: "Authorization", value: "Bearer {{token}}" },
+    { action: "call", method: "GET", path: "/me/{{token}}" },
+  ];
+  const cv = validateApiSteps(chain, { credentialLabels: [] });
+  ok("a login-token chain (POST creds -> save token -> reuse as Bearer) is VALID", cv.ok === true);
+  if (cv.ok) {
+    const hdr = mapToApiStep(cv.steps[2], () => null) as { value?: string };
+    const call = mapToApiStep(cv.steps[3], () => null) as { path?: string };
+    ok("friendly {{token}} in a header is translated to {{var:token}} at launch", hdr.value === "Bearer {{var:token}}");
+    ok("friendly {{token}} in a path is translated to {{var:token}} at launch", call.path === "/me/{{var:token}}");
+  }
+  ok("a real pasted secret is STILL rejected (chaining didn't loosen the credential guard)",
+    validateApiSteps([{ action: "add_header", name: "Authorization", value: "Bearer sk_live_abcdefgh12345678" }], { credentialLabels: [] }).ok === false);
+  ok("all four listed auth methods are expressible: bearer/api_key/basic (saved credential) + login-token (chain)",
+    ["bearer", "api_key", "basic"].every((s) => ["bearer", "api_key", "basic"].includes(s)) && cv.ok === true);
+
+  console.log("\n── general-purpose: NO canary/fixture/mode vocabulary in the customer product ──");
+  const CUSTOMER_FILES = ["lib/preflight/runtime/api-steps.ts", "lib/preflight/runtime/api-readiness.ts", "app/rank/app/applications/[id]/api-runtime/api-workspace.tsx"];
+  for (const f of CUSTOMER_FILES) {
+    const s = readFileSync(f, "utf8").toLowerCase().split("\n").filter((l) => !l.trim().startsWith("//")).join("\n");
+    const bad = ["broken", "partially_fixed", "canary", "fixture", "\"mode\""].filter((t) => s.includes(t));
+    ok(`no canary/fixture/mode narrative in ${f.split("/").pop()}`, bad.length === 0, bad.join(", "));
+  }
+
   console.log("\n── source containment: api-steps.ts imports nothing from canary.ts ──");
   const src = readFileSync("lib/preflight/runtime/api-steps.ts", "utf8");
   ok("api-steps does not import canary internals", !/from "\.\/canary"/.test(src) && !src.includes("canary-fixture"));

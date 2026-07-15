@@ -198,8 +198,8 @@ export function ApiWorkspace({ appId, initial }: { appId: string; initial: Initi
               </ul>
             )}
             <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-              <button style={btnPrimary} disabled={!preview.readiness.launchable || busy === "launch"} onClick={() => launch(false)}>{busy === "launch" ? "Running…" : "Verify (full run)"}</button>
-              <button style={btn} disabled={!preview.readiness.launchable || busy === "launch"} onClick={() => launch(true)} title="Re-check only the selected flows after a fix">Re-run selected (after a fix)</button>
+              <button style={btnPrimary} disabled={!preview.readiness.launchable || busy === "launch"} onClick={() => launch(false)}>{busy === "launch" ? "Running…" : "Run verification"}</button>
+              <button style={btn} disabled={!preview.readiness.launchable || busy === "launch"} onClick={() => launch(true)} title="Re-check only the selected flows against a newer build">Re-run selected</button>
             </div>
           </div>
         ) : <p style={{ color: "var(--fg-3)", fontSize: 13 }}>Select at least one flow to see the price and launch.</p>}
@@ -278,6 +278,11 @@ function FlowBuilder({ creds, actions, onSave, busy }: { creds: Cred[]; actions:
           </div>
         ))}
       </div>
+      {steps.length > 0 && (
+        <p style={{ fontSize: 11.5, color: "var(--fg-4)", margin: "0 0 8px" }}>
+          Tip: reuse a value you saved by writing <code style={{ background: "var(--bg-2)", padding: "1px 4px", borderRadius: 4 }}>{"{{name}}"}</code> in a later path, header, or body — e.g. save the response <code style={{ background: "var(--bg-2)", padding: "1px 4px", borderRadius: 4 }}>token</code>, then use <code style={{ background: "var(--bg-2)", padding: "1px 4px", borderRadius: 4 }}>{"Bearer {{token}}"}</code> in an Authorization header.
+        </p>
+      )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
         {actions.map((a) => <button key={a.id} style={{ ...btn, padding: "5px 9px", fontSize: 12 }} onClick={() => addStep(a.id)}>+ {a.label}</button>)}
       </div>
