@@ -148,8 +148,10 @@ type RunRow = { id: string; state: string; failure_code: string | null; flow_uni
 
 async function loadRuns(owner: string, startIso?: string, endIso?: string): Promise<RunRow[]> {
   if (!isDatabaseConfigured()) return [];
+  // WEB runs only (runtime_target_id IS NULL). Web billing/metering must not count an API-runtime run: an API
+  // run must neither burn the web free pass nor consume the web metered allowance (it is billed on its own).
   let q = db().from("v_preflight_runs" as never)
-    .select("id, state, failure_code, flow_units, flow_ids").eq("user_id", norm(owner));
+    .select("id, state, failure_code, flow_units, flow_ids").eq("user_id", norm(owner)).is("runtime_target_id", null);
   if (startIso) q = q.gte("created_at", startIso);
   if (endIso) q = q.lt("created_at", endIso);
   const { data, error } = await q.limit(1000);
@@ -164,8 +166,10 @@ async function loadRuns(owner: string, startIso?: string, endIso?: string): Prom
 async function loadRunsForOwners(owners: string[]): Promise<{ rows: RunRow[]; ok: boolean }> {
   if (!isDatabaseConfigured() || owners.length === 0) return { rows: [], ok: false };
   const uids = owners.map(norm);
+  // WEB runs only: the lifetime free pass is a WEB entitlement. An API-runtime run must not count as "used",
+  // so a customer's API run can never burn the web free pass their web launch depends on.
   const { data, error } = await db().from("v_preflight_runs" as never)
-    .select("id, state, failure_code, flow_units, flow_ids").in("user_id", uids).limit(1000);
+    .select("id, state, failure_code, flow_units, flow_ids").in("user_id", uids).is("runtime_target_id", null).limit(1000);
   if (error) return { rows: [], ok: false };
   return { rows: (data as unknown as RunRow[]) ?? [], ok: true };
 }

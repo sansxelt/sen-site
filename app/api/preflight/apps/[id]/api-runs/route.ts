@@ -14,12 +14,12 @@ import { apiBetaOwner } from "@/lib/preflight/api-beta-gate";
 import { runsDisabled } from "@/lib/v-preflight-flags";
 import { isRunsGovernorPaused } from "@/lib/preflight/cost-governor";
 import { getApplication } from "@/lib/v-applications";
-import { getApiTarget, getLatestApiBuild, listApiFlows, findRunBySubmission } from "@/lib/preflight/runtime/targets-db";
+import { getApiTarget, getLatestApiBuild, listApiFlows } from "@/lib/preflight/runtime/targets-db";
 import { listConnections, openApiCredential } from "@/lib/preflight/connections-db";
 import { computeReadiness } from "@/lib/preflight/runtime/api-readiness";
 import { priceApiLaunch, takeApiHold } from "@/lib/preflight/runtime/api-beta-billing";
 import { executeApiRun, type ApiCustomerFlow, type SecretResolver } from "@/lib/preflight/runtime/api-executor";
-import { makeApiRunStore } from "@/lib/preflight/runtime/api-run-store";
+import { makeApiRunStore, claimApiRun, finalizeApiRun } from "@/lib/preflight/runtime/api-run-store";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { recordProviderCost } from "@/lib/preflight/cost-governor";
 import { safeFetch, isBlockedFetchError } from "@/lib/safe-fetch";
@@ -61,34 +61,47 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "not_ready", blockers: readiness.reasons }, { status: 400 });
   }
 
-  // Idempotency: a stable submission id per (idempotencyKey|flow set). A replay returns the existing run,
-  // never a second execution or a second hold (double-click protection).
+  // ATOMIC double-launch guard: CLAIM the run (insert keyed by submission_id) BEFORE any billing. The unique
+  // (user_id, submission_id) constraint makes a concurrent/replayed launch's claim fail, so only ONE proceeds
+  // to hold + execute. A losing claim returns the existing run — no second hold, no second execution.
   const idem = (body.idempotencyKey || "").trim() || `${rerun ? "rerun" : "run"}:${[...selectedFlowIds].sort().join(",")}`;
   const submissionId = `api:${target!.id}:${idem}`;
-  const existing = await findRunBySubmission(owner, submissionId);
-  if (existing) return NextResponse.json({ runId: existing, replayed: true }, { status: 200 });
-
-  // PRICE (authoritative — same call the preview uses) then HOLD.
+  const sb = getSupabaseAdminClient();
   const price = await priceApiLaunch(owner, readiness.selectedCount, { rerun });
-  const held = await takeApiHold(owner, price);
-  if (!held.ok) return NextResponse.json({ error: held.error, message: held.message }, { status: held.status });
+  // We compute the price first (to know the hold amount to record on the claim), but the CLAIM is what
+  // serializes concurrent launches — the hold is taken only after we win the claim.
+  const claimAmount = price.mode === "payg" ? price.cents : price.mode === "legacy" ? price.credits : 0;
+  let claim: { runId: string } | { existingRunId: string };
+  try { claim = await claimApiRun(sb, { owner, appId: id, targetId: target!.id, deploymentUrl: build!.base_url!, submissionId, creditsHeld: claimAmount }); }
+  catch { return NextResponse.json({ error: "unavailable", message: "Could not start the run. Try again." }, { status: 503 }); }
+  if ("existingRunId" in claim) return NextResponse.json({ runId: claim.existingRunId, replayed: true }, { status: 200 });
+  const claimedRunId = claim.runId;
 
-  // Secret resolver: opens the vault credential by LABEL, server-side, at execution time. The value goes
-  // ONLY into the adapter's in-memory map. Cache openings per label so a repeated sign_in doesn't re-open.
+  // PRE-OPEN every referenced credential BEFORE billing. A revoked credential still has its LABEL on a flow
+  // (readiness only checks the label), but its sealed value can no longer be opened — so we verify each one
+  // actually opens here, and refuse (finalize the claim, NO hold taken) if any can't. This is the "revoked
+  // credential blocks BEFORE billing" guarantee: no hold is placed for a run that can't authenticate.
   const opened = new Map<string, { secretRef: string; scheme: "bearer" | "api_key" | "basic"; headerName?: string; value: string } | null>();
-  const resolveSecret: SecretResolver = (label) => {
-    // Synchronous resolver over a pre-opened map (filled just below before execution).
-    return opened.get(label.trim().toLowerCase()) ?? null;
-  };
-  // Pre-open every credential a selected flow references (executor's resolver is sync).
+  const resolveSecret: SecretResolver = (label) => opened.get(label.trim().toLowerCase()) ?? null;
   const selected = flows.filter((f) => selectedFlowIds.includes(f.id) && f.enabled);
   const referenced = new Set<string>();
   for (const f of selected) for (const s of f.steps as ApiFlowStep[]) if (s.action === "sign_in" && s.credentialLabel) referenced.add(s.credentialLabel);
-  for (const label of referenced) {
-    const conn = credConns.find((c) => String((c.meta as { label?: string })?.label ?? "").trim().toLowerCase() === label.trim().toLowerCase());
-    if (!conn) { opened.set(label.trim().toLowerCase(), null); continue; }
-    const cred = await openApiCredential(owner, id, conn.id);
-    opened.set(label.trim().toLowerCase(), cred ? { secretRef: conn.id, scheme: cred.scheme, headerName: cred.headerName, value: cred.secret } : null);
+  for (const labelRaw of referenced) {
+    const label = labelRaw.trim().toLowerCase();
+    const conn = credConns.find((c) => String((c.meta as { label?: string })?.label ?? "").trim().toLowerCase() === label);
+    const cred = conn ? await openApiCredential(owner, id, conn.id) : null;
+    if (!cred) {
+      await finalizeApiRun(sb, claimedRunId, { state: "failed", decision: null, summary: { aborted: "credential_unavailable" } });
+      return NextResponse.json({ error: "credential_unavailable", message: "A saved credential this run needs is no longer available. Re-add it and try again." }, { status: 400 });
+    }
+    opened.set(label, { secretRef: conn!.id, scheme: cred.scheme, headerName: cred.headerName, value: cred.secret });
+  }
+
+  // HOLD (claim won, credentials all open). On a hold failure, finalize the claim so a retry works.
+  const held = await takeApiHold(owner, price);
+  if (!held.ok) {
+    await finalizeApiRun(sb, claimedRunId, { state: "failed", decision: null, summary: { aborted: "insufficient_balance" } });
+    return NextResponse.json({ error: held.error, message: held.message }, { status: held.status });
   }
 
   // SSRF-safe fetcher (identical wrapper to the founder canary route).
@@ -115,7 +128,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const result = await executeApiRun({
       owner, appId: id, targetId: target!.id, buildId: build!.id, baseUrl: build!.base_url!,
       flows: customerFlows, fullCoverage, creditsHeld: held.hold.creditsHeld, submissionId,
-      fetcher, resolveSecret, store: makeApiRunStore(getSupabaseAdminClient(), recordProviderCost), clock: () => Date.now(),
+      preClaimedRunId: claimedRunId,
+      fetcher, resolveSecret, store: makeApiRunStore(sb, recordProviderCost), clock: () => Date.now(),
     });
     // SETTLE exactly once: productive work keeps the hold (charge); otherwise refund.
     await held.hold.settle(result.chargedFullHold);

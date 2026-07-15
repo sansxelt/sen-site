@@ -48,6 +48,9 @@ export type ApiRunStore = {
     decision: Decision | null; summary: Record<string, unknown>; deploymentUrl: string; submissionId: string;
     creditsHeld: number;
   }): Promise<string>;
+  // Finalize a PRE-CLAIMED run (double-launch guard): update the already-inserted claim row with the decision
+  // + terminal state, instead of inserting a new run. Used when the route claimed the run before billing.
+  finalizeRun(runId: string, patch: { state: "completed" | "failed"; decision: Decision | null; summary: Record<string, unknown> }): Promise<void>;
   insertStepRows(runId: string, flows: { flowId: string; name: string; state: FlowResult["state"]; steps: StepObservation[] }[]): Promise<void>;
   insertDecision(row: {
     owner: string; appId: string; targetId: string; buildId: string; runId: string;
@@ -70,6 +73,7 @@ export type ExecuteApiRunInput = {
   fullCoverage: boolean;              // false for a targeted rerun (a partial rerun can never mint READY)
   creditsHeld: number;               // what the route held; persisted onto the run
   submissionId: string;
+  preClaimedRunId?: string;          // when set, finalize this claim row instead of inserting a new run
   fetcher: ApiFetch;                 // production = safeFetch wrapper (SSRF-safe); test = in-memory
   resolveSecret: SecretResolver;
   store: ApiRunStore;
@@ -156,16 +160,26 @@ export async function executeApiRun(input: ExecuteApiRunInput): Promise<ExecuteA
     adapter_version: API_BETA_ADAPTER_VERSION,
   };
 
-  // A run that made ZERO real requests (every flow auth-not-ready / capability-rejected) did no productive
-  // work -> the route must REFUND. An infra run also refunds (an infrastructure failure costs nothing).
-  const anyProductiveWork = apiRequests > 0 && failureClass !== "infra";
+  // A run only counts as productive (keep the hold = charge) when it made >=1 real request AND reached a
+  // genuine PRODUCT verdict. A run with ZERO requests (auth-not-ready / capability-rejected), an INFRA
+  // failure (transport unreachable), OR an INDETERMINATE outcome (the safe-fetch SSRF guard blocked every
+  // request, so no verification actually happened) -> REFUND. Neither infra nor indeterminate costs the
+  // customer anything, and neither is a product BLOCKED.
+  const anyProductiveWork = apiRequests > 0 && failureClass == null;
   const runState: "completed" | "failed" = failureClass === "infra" ? "failed" : "completed";
 
-  // Persist terminal-state run (NEVER queued) + per-step evidence + decision.
-  const runId = await input.store.insertTerminalRun({
-    owner: input.owner, appId: input.appId, targetId: input.targetId, buildId: input.buildId, state: runState,
-    decision, summary: fullSummary, deploymentUrl: input.baseUrl, submissionId: input.submissionId, creditsHeld: input.creditsHeld,
-  });
+  // Persist terminal-state run (NEVER queued) + per-step evidence + decision. When the route pre-claimed the
+  // run (double-launch guard), FINALIZE that claim row instead of inserting a new one.
+  let runId: string;
+  if (input.preClaimedRunId) {
+    runId = input.preClaimedRunId;
+    await input.store.finalizeRun(runId, { state: runState, decision, summary: fullSummary });
+  } else {
+    runId = await input.store.insertTerminalRun({
+      owner: input.owner, appId: input.appId, targetId: input.targetId, buildId: input.buildId, state: runState,
+      decision, summary: fullSummary, deploymentUrl: input.baseUrl, submissionId: input.submissionId, creditsHeld: input.creditsHeld,
+    });
+  }
   await input.store.insertStepRows(runId, evidenceByFlow);
   await input.store.insertDecision({
     owner: input.owner, appId: input.appId, targetId: input.targetId, buildId: input.buildId, runId,
@@ -197,7 +211,10 @@ export async function executeApiRun(input: ExecuteApiRunInput): Promise<ExecuteA
 
   if (anyProductiveWork) await input.store.recordUsage(input.owner, runId, apiRequests);
 
-  // Leak scan (belt-and-braces): no referenced secret value may appear in persisted evidence/summary.
+  // Leak scan (belt-and-braces). PRIMARY redaction happens in the adapter: it masks configured secrets AND
+  // runtime-HARVESTED values (its growing secretValues set) in every evidence payload before they reach here
+  // — proven in the API-runtime suite. This secondary scan re-checks the persisted blob for the CONFIGURED
+  // secret values (the ones this executor holds); harvested-value masking is the adapter's guarantee.
   const persistedBlob = JSON.stringify({ evidenceByFlow, fullSummary });
   const leaked = [...secretValues].some((v) => v && persistedBlob.includes(v));
 

@@ -119,6 +119,7 @@ async function executorTests() {
     const issues: { id: string; category: string | null; status: string }[] = [], ledger: Record<string, unknown>[] = [];
     const store: ApiRunStore = {
       async insertTerminalRun(r) { const row = { id: id("run"), ...r }; runs.push(row); return row.id; },
+      async finalizeRun(runId, patch) { const r = runs.find((x) => x.id === runId); if (r) Object.assign(r, patch); },
       async insertStepRows(runId, flows) { stepRows.push({ runId, flows }); },
       async insertDecision(r) { const row = { id: id("dec"), ...r }; decisions.push(row); return row.id; },
       async openIssues() { return issues.filter((i) => i.status === "open"); },
@@ -196,6 +197,21 @@ async function executorTests() {
   ok("hold NOT kept (infra costs nothing) -> REFUND", infra.chargedFullHold === false);
   ok("no usage, no issue", m5.ledger.length === 0 && infra.issues.opened.length === 0);
   ok("run state failed (not a product BLOCKED)", m5.runs[0]?.state === "failed" && infra.decision !== "blocked");
+
+  console.log("\n── executor INDETERMINATE (SSRF-blocked): needs_review, REFUND, no bill (post-review fix) ──");
+  const m6 = memStore();
+  const blockedFetcher: ApiFetch = async () => { const e = new Error("blocked") as Error & { transportKind?: string }; e.transportKind = "blocked"; throw e; };
+  const indet = await executeApiRun({ owner: "c@x.com", appId: "app1", targetId: "tgt1", buildId: "b1", baseUrl: "https://blocked.invalid", flows: [flow], fullCoverage: true, creditsHeld: 1500, submissionId: "s6", fetcher: blockedFetcher, resolveSecret: resolver, store: m6.store, clock });
+  ok("failureClass indeterminate", indet.failureClass === "indeterminate");
+  ok("an SSRF-blocked run does NOT keep the hold (chargedFullHold false -> refund)", indet.chargedFullHold === false);
+  ok("no usage ledger row for a blocked run", m6.ledger.length === 0);
+
+  console.log("\n── executor PRE-CLAIMED run: finalizes the claim row, never a second insert (dup-launch guard) ──");
+  const m7 = memStore();
+  m7.runs.push({ id: "claim_1", state: "completed", decision: null } as never); // simulate the route's pre-claim
+  const claimed = await executeApiRun({ owner: "c@x.com", appId: "app1", targetId: "tgt1", buildId: "b1", baseUrl: "https://api.customer.test", flows: [flow], fullCoverage: true, creditsHeld: 1500, submissionId: "s7", preClaimedRunId: "claim_1", fetcher: fixture("fixed"), resolveSecret: resolver, store: m7.store, clock });
+  ok("executor reused the pre-claimed run id (no second run row inserted)", claimed.runId === "claim_1" && m7.runs.filter((r) => (r as { id: string }).id.startsWith("run_")).length === 0);
+  ok("the claim row was finalized with the real decision", (m7.runs.find((r) => (r as { id: string }).id === "claim_1") as { decision?: string })?.decision === "ready");
 
   console.log("\n── executor source containment: imports engine primitives, NOT canary ──");
   const src = readFileSync("lib/preflight/runtime/api-executor.ts", "utf8");

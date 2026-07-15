@@ -27,11 +27,13 @@ export type PassRow = {
   flowsTotal: number; flowsPassed: number; criticalTotal: number; criticalPassed: number;
 };
 
+// WEB Production Passes only (runtime_target_id IS NULL). An API-runtime run must never appear in the web
+// passes list; API runs are shown in the API surface. Migration 12 added the column, so the filter is valid.
 export async function listAllRuns(owner: string, limit = 50): Promise<PassRow[]> {
   if (!isDatabaseConfigured()) return [];
   const { data, error } = await db().from("v_preflight_runs")
     .select("id, application_id, state, decision, summary, deployment_url, created_at, completed_at")
-    .eq("user_id", norm(owner)).order("created_at", { ascending: false }).limit(limit);
+    .eq("user_id", norm(owner)).is("runtime_target_id", null).order("created_at", { ascending: false }).limit(limit);
   if (error || !data) return [];
   const rows = data as Record<string, unknown>[];
   const names = await appNames(owner, rows.map((r) => String(r.application_id ?? "")));

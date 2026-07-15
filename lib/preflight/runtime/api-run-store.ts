@@ -68,6 +68,33 @@ export async function listApiRuns(s: SupabaseClient, owner: string, appId: strin
 // minutes — the run-linked ledger row itself IS the usage record (its uniqueness = no-duplicate-billing).
 type RecordCost = (i: { owner: string | null; runId: string | null; estimatedCents?: number }) => Promise<void>;
 
+// Atomic double-launch guard: insert a CLAIM row keyed by submission_id BEFORE any billing/execution. The
+// unique (user_id, submission_id) constraint makes a concurrent/duplicate launch's insert fail with 23505 —
+// so only ONE launch ever proceeds to hold + execute. Returns { runId } on a won claim, or { existingRunId }
+// when another launch already owns this submission (the route then returns that run, no hold, no execute).
+// The claim row starts terminal-state "completed" (so the worker never sees a "queued" API run even mid-flight)
+// with a null decision; finalizeApiRun updates it to the real decision after execution.
+export async function claimApiRun(s: SupabaseClient, row: { owner: string; appId: string; targetId: string; deploymentUrl: string; submissionId: string; creditsHeld: number }): Promise<{ runId: string } | { existingRunId: string }> {
+  const { data, error } = await s.from("v_preflight_runs").insert({
+    user_id: row.owner, application_id: row.appId, state: "completed", decision: null, summary: { claiming: true },
+    submission_id: row.submissionId, deployment_url: row.deploymentUrl, credits_held: row.creditsHeld,
+    runtime_target_id: row.targetId, adapter_version: API_BETA_ADAPTER_VERSION,
+    started_at: new Date().toISOString(),
+  } as never).select("id").single();
+  if (!error && data) return { runId: (data as { id: string }).id };
+  if ((error as { code?: string })?.code === "23505") {
+    const { data: ex } = await s.from("v_preflight_runs").select("id").eq("user_id", row.owner).eq("submission_id", row.submissionId).maybeSingle();
+    const id = (ex as { id: string } | null)?.id;
+    if (id) return { existingRunId: id };
+  }
+  throw new Error(`claim failed: ${error?.message ?? "no id"}`);
+}
+
+// Finalize a claimed run with its decision + summary + terminal state after execution.
+export async function finalizeApiRun(s: SupabaseClient, runId: string, patch: { state: "completed" | "failed"; decision: string | null; summary: Record<string, unknown> }): Promise<void> {
+  await s.from("v_preflight_runs").update({ state: patch.state, decision: patch.decision, summary: patch.summary, completed_at: new Date().toISOString() } as never).eq("id", runId);
+}
+
 export function makeApiRunStore(s: SupabaseClient, recordProviderCost: RecordCost): ApiRunStore {
   const one = async (table: string, row: Record<string, unknown>): Promise<string> => {
     const { data, error } = await s.from(table).insert(row as never).select("id").single();
@@ -107,6 +134,10 @@ export function makeApiRunStore(s: SupabaseClient, recordProviderCost: RecordCos
           });
         }
       }
+    },
+
+    async finalizeRun(runId, patch) {
+      await s.from("v_preflight_runs").update({ state: patch.state, decision: patch.decision, summary: patch.summary, completed_at: now() } as never).eq("id", runId);
     },
 
     insertDecision: (r) =>

@@ -387,16 +387,19 @@ export async function deleteFlow(userId: string, flowId: string): Promise<{ ok: 
   return { ok: true };
 }
 
+// WEB runs only. runtime_target_id IS NULL is a web run (migration 12/13); an API-runtime run carries the app's
+// api target id and must NEVER be read into a web list or the web health decision. This is the single guard
+// that keeps an API decision from becoming the app's web verdict.
 export async function listRuns(userId: string, applicationId: string, limit = 20): Promise<RunSummary[]> {
   if (!isDatabaseConfigured()) return [];
-  const { data } = await db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).eq("application_id", applicationId).order("created_at", { ascending: false }).limit(limit);
+  const { data } = await db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).eq("application_id", applicationId).is("runtime_target_id", null).order("created_at", { ascending: false }).limit(limit);
   return (data as RunSummary[]) ?? [];
 }
 
-// Latest run per application, for dashboard status chips. One query, grouped in memory.
+// Latest run per application, for dashboard status chips. One query, grouped in memory. WEB runs only.
 export async function latestRunByApp(userId: string, appIds: string[]): Promise<Record<string, RunSummary>> {
   if (!isDatabaseConfigured() || !appIds.length) return {};
-  const { data } = await db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).in("application_id", appIds).order("created_at", { ascending: false });
+  const { data } = await db().from("v_preflight_runs").select("id,application_id,state,decision,summary,deployment_url,commit_sha,created_at,completed_at").eq("user_id", norm(userId)).in("application_id", appIds).is("runtime_target_id", null).order("created_at", { ascending: false });
   // Application HEALTH comes from pickHealthRun, never "newest terminal row": the newest ACTIVE run still
   // surfaces as in-progress, but a failed / invalidated run (e.g. a harness target_mismatch) can never
   // displace the newest VALID completed decision.

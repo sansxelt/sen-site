@@ -20,22 +20,24 @@ export type ApiPrice =
   | { mode: "blocked"; error: string; status: number; message: string };
 
 // The single price source for BOTH preview and launch. Never mutates. `rerun` picks the (capped) rerun price.
+//
+// API-BETA BILLING RULE (founder constraint: "API usage cannot consume or certify web coverage"): an API run
+// is ALWAYS a per-run charge (PAYG cents when pass-pricing is on, legacy credits when off). It NEVER draws on
+// the web subscription allowance and NEVER consumes the lifetime web free pass — so a subscriber can't run
+// unlimited free API passes, and no API run can burn the web free pass a web launch depends on. We still call
+// gatePassLaunch ONLY to honor a hard account block (frozen/disputed billing); we ignore its free/subscription
+// modes for the API path and always price the run itself.
 export async function priceApiLaunch(owner: string, flowCount: number, opts: { rerun?: boolean } = {}): Promise<ApiPrice> {
   if (!passPricingEnabled()) {
     const credits = estimateRunCredits(flowCount);
     return { mode: "legacy", credits, label: `${credits} credit${credits === 1 ? "" : "s"}` };
   }
   const gate = await gatePassLaunch(owner, flowCount, opts);
-  if (!gate.ok) return { mode: "blocked", error: gate.error, status: gate.status, message: gate.message };
-  if (gate.mode === "payg") {
-    const cents = opts.rerun ? rerunPriceCents(flowCount) : gate.cents;
-    return { mode: "payg", cents, label: `$${(cents / 100).toFixed(2)}` };
-  }
-  if (gate.mode === "free") return { mode: "free", label: "Included (free pass)" };
-  if (gate.mode === "subscription") return { mode: "subscription", label: "Included in your plan" };
-  // legacy (flag on but no plan state) — shouldn't happen under passPricingEnabled, but stay safe.
-  const credits = estimateRunCredits(flowCount);
-  return { mode: "legacy", credits, label: `${credits} credit${credits === 1 ? "" : "s"}` };
+  // Only a HARD refusal (frozen/disputed billing) blocks; free/subscription/payg all price as a per-run PAYG
+  // charge for the API path. A frozen account returns ok:false and is surfaced as blocked.
+  if (!gate.ok && gate.mode === "frozen") return { mode: "blocked", error: gate.error, status: gate.status, message: gate.message };
+  const cents = opts.rerun ? rerunPriceCents(flowCount) : passPriceCents(flowCount);
+  return { mode: "payg", cents, label: `$${(cents / 100).toFixed(2)}` };
 }
 
 // A held reservation for one launch attempt. `settle()` charges (keeps) or refunds based on the executor's
