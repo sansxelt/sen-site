@@ -38,6 +38,14 @@ export async function createApiTarget(owner: string, appId: string, input: { env
   return { ok: true, target: data as ApiRuntimeTarget };
 }
 
+// Double-launch guard: an existing terminal run for this (owner, submission_id) means a concurrent/replayed
+// launch already ran. Returns that run's id so the route can return it instead of executing (and billing)
+// again. Reuses the existing unique (user_id, submission_id) constraint on v_preflight_runs.
+export async function findRunBySubmission(owner: string, submissionId: string): Promise<string | null> {
+  const { data } = await db().from("v_preflight_runs").select("id").eq("user_id", norm(owner)).eq("submission_id", submissionId).limit(1);
+  return (data as { id: string }[] | null)?.[0]?.id ?? null;
+}
+
 // The latest build (base URL + identity) for a target.
 export async function getLatestApiBuild(owner: string, targetId: string): Promise<ApiBuild | null> {
   const { data } = await db().from("v_builds").select("id,runtime_target_id,base_url,version")
@@ -57,6 +65,50 @@ export async function setApiBuild(owner: string, targetId: string, input: { base
     .select("id,runtime_target_id,base_url,version").single();
   if (error || !data) return { ok: false, reason: "Could not save the API base URL." };
   return { ok: true, build: data as ApiBuild };
+}
+
+// ── API flow storage (v_test_flows scoped by runtime_target_id; migration 13) ─────────────────────────
+// API flows live in v_test_flows like web flows, but carry runtime_target_id = the API target, so they never
+// mix with web flows and the overview blocker filter can scope by target. `steps` holds the CUSTOMER
+// vocabulary (ApiFlowStep[]); translation to ApiStep happens in the executor at launch, never in the DB.
+export type ApiFlowRow = {
+  id: string; name: string; goal: string | null; priority: "critical" | "important" | "informational";
+  steps: unknown[]; enabled: boolean; review_state: string | null;
+};
+
+export async function listApiFlows(owner: string, appId: string, targetId: string): Promise<ApiFlowRow[]> {
+  const { data } = await db().from("v_test_flows").select("id,name,goal,priority,steps,enabled,review_state")
+    .eq("user_id", norm(owner)).eq("application_id", appId).eq("runtime_target_id", targetId).order("order_index", { ascending: true });
+  return ((data as ApiFlowRow[] | null) ?? []).map((f) => ({ ...f, steps: Array.isArray(f.steps) ? f.steps : [] }));
+}
+
+export async function createApiFlow(owner: string, appId: string, targetId: string, contractId: string | null, input: { name: string; goal?: string; priority?: "critical" | "important" | "informational"; steps: unknown[] }): Promise<{ ok: true; id: string } | { ok: false; reason: string }> {
+  const { data, error } = await db().from("v_test_flows").insert({
+    user_id: norm(owner), application_id: appId, runtime_target_id: targetId, contract_id: contractId,
+    name: input.name.slice(0, 140), goal: (input.goal || "").slice(0, 400) || null, priority: input.priority || "critical",
+    steps: input.steps, enabled: true, review_state: "approved", order_index: Date.now() % 1_000_000,
+  } as never).select("id").single();
+  if (error || !data) return { ok: false, reason: "Could not save the flow." };
+  return { ok: true, id: (data as { id: string }).id };
+}
+
+export async function updateApiFlow(owner: string, appId: string, targetId: string, flowId: string, patch: { name?: string; goal?: string; priority?: "critical" | "important" | "informational"; steps?: unknown[]; enabled?: boolean }): Promise<boolean> {
+  const set: Record<string, unknown> = {};
+  if (patch.name !== undefined) set.name = patch.name.slice(0, 140);
+  if (patch.goal !== undefined) set.goal = (patch.goal || "").slice(0, 400) || null;
+  if (patch.priority !== undefined) set.priority = patch.priority;
+  if (patch.steps !== undefined) set.steps = patch.steps;
+  if (patch.enabled !== undefined) set.enabled = patch.enabled;
+  if (Object.keys(set).length === 0) return true;
+  const { data } = await db().from("v_test_flows").update(set as never)
+    .eq("user_id", norm(owner)).eq("application_id", appId).eq("runtime_target_id", targetId).eq("id", flowId).select("id");
+  return Array.isArray(data) && data.length > 0;
+}
+
+export async function deleteApiFlow(owner: string, appId: string, targetId: string, flowId: string): Promise<boolean> {
+  const { data } = await db().from("v_test_flows").delete()
+    .eq("user_id", norm(owner)).eq("application_id", appId).eq("runtime_target_id", targetId).eq("id", flowId).select("id");
+  return Array.isArray(data) && data.length > 0;
 }
 
 // Cheap create-time string guard for the API base URL (https + host must not be an obvious private literal).
